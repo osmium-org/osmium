@@ -1,0 +1,24 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+div#wrapper {
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    margin: 0 auto -1.6em;
+}
+
+div#footer, div#push {
+    height: 1.5em;
+}
+
+div#footer > p {
+    line-height: 1.5em;
+    text-align: right;
+    margin: 0;
+    padding: 0;
+    padding-right: 0.25em;
+}

@@ -1,0 +1,7 @@
+RewriteEngine On
+
+RewriteRule ^/?$ src/main.php [L,QSA]
+RewriteRule ^/?favicon\.ico$ static/favicon.png [L]
+RewriteRule ^/?register$ src/register.php [L,QSA]
+RewriteRule ^/?logout$ src/logout.php [L,QSA]
+RewriteRule ^/?renew_api$ src/renew_api.php [L,QSA]

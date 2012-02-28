@@ -1,0 +1,25 @@
+Database setup
+==============
+
+Only PostgreSQL is supported. You must have a database with two
+schemas, one named "eve" that contains the static data dump of the EVE
+database, the other one named "osmium" (use the osmium.sql file to
+create it).
+
+Caveats
+=======
+
+Make sure the "cache" directory is writeable by your http user.
+
+If you are NOT using the Apache HTTP Server, you will have to adapt
+the rules in the .htaccess file.
+
+Dependencies
+============
+
+* PHP >= 5.3 with:
+    PostgreSQL extension,
+    cURL extension,
+    SimpleXML support.
+
+* PostgreSQL >= 9.0
