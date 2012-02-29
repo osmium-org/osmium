@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 /* Osmium
  * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
@@ -18,10 +19,12 @@
 
 require __DIR__.'/../inc/root.php';
 
-osmium_header('', '.');
+$host = $__osmium_config['host'];
+$port = $__osmium_config['port'];
+$user = $__osmium_config['user'];
+$password = $__osmium_config['password'];
+$dbname = $__osmium_config['dbname'];
 
-echo "<h1>Osmium — ".OSMIUM_SHORTDESC."</h1>\n";
+putenv('PGPASSWORD='.$password);
 
-echo "<p class='create_new'><a href='./new'>Create a new fitting</a></p>\n";
-
-osmium_footer();
+passthru('pg_dump --host '.escapeshellarg($host).' --port '.escapeshellarg($port).' --username '.escapeshellarg($user).' --format plain --schema-only --no-owner --no-privileges --no-tablespaces --verbose --no-unlogged-table-data --file '.escapeshellarg(__DIR__.'/../osmium.sql').' --schema osmium '.escapeshellarg($dbname));
