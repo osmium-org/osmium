@@ -66,9 +66,10 @@ if(isset($_POST['account_name'])) {
 
       osmium_pg_query_params('INSERT INTO osmium.accounts (account_name, password_hash, key_id, verification_code, creation_date, last_login_date, character_id, character_name, corporation_id, corporation_name, alliance_id, alliance_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name));
 
+      osmium_post_login($_POST['account_name'], false);
       $_POST = array();
-
-      /* TODO: login & redirect to the main page */
+      header('Location: ./', true, 303);
+      die();
     }
   }
 }

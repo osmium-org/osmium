@@ -22,6 +22,8 @@ osmium_header('', '.');
 
 echo "<h1>Osmium — ".OSMIUM_SHORTDESC."</h1>\n";
 
-echo "<p class='create_new'><a href='./new'>Create a new fitting</a></p>\n";
+if(osmium_logged_in()) {
+  echo "<p class='create_new'><a href='./new'>Create a new fitting</a></p>\n";
+}
 
 osmium_footer();
