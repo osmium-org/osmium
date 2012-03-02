@@ -22,3 +22,8 @@ div#footer > p {
     padding: 0;
     padding-right: 0.25em;
 }
+
+img.slot_icon {
+    height: 2em;
+    width: 2em;
+}
