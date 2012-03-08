@@ -145,28 +145,53 @@ if(isset($_POST['update_modules'])) {
     /* Remove modules */
     foreach($_POST['select'] as $type => $indices) {
       foreach($indices as $ind => $whatever) {
+	$module = $__osmium_fit['slots'][$type][$ind];
+	$__osmium_fit['slotcount']['low'] -= $module['extralows'];
+	$__osmium_fit['slotcount']['medium'] -= $module['extrameds'];
+	$__osmium_fit['slotcount']['high'] -= $module['extrahighs'];
 	unset($__osmium_fit['slots'][$type][$ind]);
+      }
+    }
+  } else if($_POST['update_modules_action'] == 2) {
+    /* Update charges */
+    foreach($_POST['select'] as $type => $indices) {
+      foreach($indices as $ind => $whatever) {
+	$__osmium_fit['slots'][$type][$ind]['chargeid'] = (int)$_POST['charge'][$type][$ind];
       }
     }
   }
 }
 
 echo "<p class='update_modules'>";
-echo "On selected modules: <select name='update_modules_action'>\n<option value='0'>——— Select an action ———</option>\n<option value='1'>Remove module</option>\n";
+echo "On selected modules: <select name='update_modules_action'>\n<option value='0'>——— Select an action ———</option>\n";
+echo "<option value='1'>Remove module</option>\n";
+echo "<option value='2'>Update charges</option>\n";
 echo "</select>\n<input type='submit' name='update_modules' value='Do it!' />\n</p>\n";
 
 if(isset($_POST['confirm']) && $_POST['new_module_id'] > 0 && $_POST['quantity'] > 0) {
   $qty = (int)$_POST['quantity'];
   $typeid = $_POST['new_module_id'];
   if($qty > 8) $qty = 8;
-  $r = pg_fetch_row(osmium_pg_query_params('SELECT typename FROM osmium.invmodules WHERE typeid = $1', array($typeid)));
+  $r = pg_fetch_row(osmium_pg_query_params('SELECT typename, extralowslots, extramedslots, extrahighslots FROM osmium.invmodules WHERE typeid = $1', array($typeid)));
   if($r !== false) {
-    list($typename) = $r;
+    list($typename, $extralows, $extrameds, $extrahighs) = $r;
     list($type) = pg_fetch_row(osmium_pg_query_params('SELECT effectid FROM eve.dgmtypeeffects WHERE typeid = $1 AND effectid IN ('.implode(',', array_keys($slot_types)).') LIMIT 1', array($typeid)));
     $type = $slot_types[$type];
 
+    $charges = osmium_get_charges($typeid);
+
     for($i = 0; $i < $qty; ++$i) {
-      $__osmium_fit['slots'][$type][] = array($typeid, $typename, null, null);
+      $__osmium_fit['slots'][$type][] = array('typeid' => $typeid, 
+					      'typename' => $typename, 
+					      'extralows' => $extralows, 
+					      'extrameds' => $extrameds, 
+					      'extrahighs' => $extrahighs, 
+					      'charges' => $charges,
+					      'chargeid' => null, 
+					      );
+      $__osmium_fit['slotcount']['low'] += $extralows;
+      $__osmium_fit['slotcount']['medium'] += $extrameds;
+      $__osmium_fit['slotcount']['high'] += $extrahighs;
     }
   } 
 }
@@ -181,15 +206,31 @@ foreach($slot_types as $type) {
   $fitted_count = 0;
   if(isset($__osmium_fit['slots'][$type]) && is_array($__osmium_fit['slots'][$type])) {
     foreach($__osmium_fit['slots'][$type] as $idx => $fitted) {
-      list($typeid, $typename, $chargeid, $chargename) = $fitted;
+      $typeid = $fitted['typeid'];
+      $typename = $fitted['typename'];
+      $chargeid = $fitted['chargeid'];
       echo "<tr>\n<td><img class='slot_icon' src='./static/icons/slot_$type.png' alt='$type slot' title='$type slot' /></td>\n<td><img src='http://image.eveonline.com/Type/".$typeid."_64.png' alt='' class='slot_icon' /></td>\n";
       echo "<td>$typename</td>\n";
-      if($chargeid === null) {
-	echo "<td></td>\n<td></td>\n";
+      
+      if($chargeid === null || $chargeid === 0) {
+	echo "<td></td>\n";
       } else {
 	echo "<td><img src='http://image.eveonline.com/Type/".$chargeid."_64.png' alt='' class='slot_icon' /></td>\n";
-	echo "<td>$chargename</td>\n";
       }
+
+      echo "<td>\n";
+      if(count($fitted['charges']) > 0) {
+	echo "<select name='charge[$type][$idx]'>\n<option value='0'>——— No charge ———</option>\n";
+	foreach($fitted['charges'] as $id => $chargename) {
+	  if($id == $chargeid) {
+	    $selected = " selected='selected'";
+	  } else $selected = '';
+	  echo "<option value='$id'$selected>$chargename</option>\n";
+	}
+	echo "</select>\n";
+      }
+      echo "</td>\n";
+
       echo "<td><input type='checkbox' name='select[$type][$idx]' /></td>\n</tr>\n";
       ++$fitted_count;
       $has_slots = true;
@@ -229,3 +270,13 @@ echo "</li>\n";
 
 echo "</ol>\n";
 osmium_footer();
+
+function osmium_get_charges($typeid) {
+  $charges = array();
+  $q = osmium_pg_query_params('SELECT chargeid, chargename FROM osmium.invcharges WHERE moduleid = $1 ORDER BY chargename ASC', array($typeid));
+  while($r = pg_fetch_row($q)) {
+    $charges[$r[0]] = $r[1];
+  }
+
+  return $charges;
+}
