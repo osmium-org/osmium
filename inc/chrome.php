@@ -30,17 +30,53 @@ function osmium_header($title = '', $relative = '.') {
 
   echo "<!DOCTYPE html>\n<html>\n<head>\n";
   echo "<meta charset='UTF-8' />\n";
+  echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
+  echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
   echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
   echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
   echo "<title>$title</title>\n";
   echo "</head>\n<body>\n<div id='wrapper'>\n";
 
+  echo "<nav>\n<ul>\n";
+  echo osmium_nav_link($relative.'/', "Main page");
+  if(osmium_logged_in()) {
+    echo osmium_nav_link($relative.'/new', "New fitting");
+    echo osmium_nav_link($relative.'/renew_api', "API settings");
+  } else {
+
+  }
+
+  echo "</ul>\n";
   osmium_statebox($relative);
+  echo "</nav>\n";
 }
 
 function osmium_footer() {
   global $__osmium_chrome_relative;
-  echo "<div id='push'></div>\n</div>\n<div id='footer'>\n";
+  echo "<div id='push'></div>\n</div>\n<footer>\n";
   echo "<p><strong>Osmium ".OSMIUM_VERSION." @ ".gethostname()."</strong> — (Artefact2/Indalecia) — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
-  echo "</div>\n</body>\n</html>\n";
+  echo "</footer>\n</body>\n</html>\n";
+}
+
+function osmium_nav_link($dest, $label) {
+  if(osmium_break_uri($dest) == osmium_break_uri($_SERVER['REQUEST_URI'])) {
+    return "<li><strong><a href='$dest'>$label</a></strong></li>\n";
+  }
+
+  return "<li><a href='$dest'>$label</a></li>\n";
+}
+
+function osmium_break_uri($uri) {
+  $uri = explode('?', $uri, 2)[0];
+  $uri = explode('/', $uri);
+  return array_pop($uri);
+}
+
+function osmium_js_snippet($js_file) {
+  return "<script>\n".file_get_contents(OSMIUM_ROOT.'/src/snippets/'.$js_file.'.js')."</script>\n";
+}
+
+function osmium_json($data, $flags = 0) {
+  header('Content-Type: application/json');
+  die(json_encode($data, $flags));
 }

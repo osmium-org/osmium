@@ -17,266 +17,225 @@
  */
 
 require __DIR__.'/../inc/root.php';
+require __DIR__.'/../inc/json_common.php';
+
+const MAX_STEP = 5;
 
 if(!osmium_logged_in()) {
   osmium_fatal(403, 'Sorry, anonymous users cannot create fittings. Please login first and retry.');
 }
 
-$__osmium_fit =& $__osmium_state['fit'];
+osmium_header('Create a new fitting', '.');;
+echo "<script>var osmium_tok = '".osmium_tok()."';</script>\n";
 
-/* effectid => slot type */
-$slot_types = array(
-		    12 => 'high',
-		    13 => 'medium',
-		    11 => 'low',
-		    2663 => 'rig',
-		    3772 => 'subsystem'
+if(!isset($_SESSION['__osmium_create_fit_step'])) {
+  $_SESSION['__osmium_create_fit_step'] = 1;
+}
+
+$step =& $_SESSION['__osmium_create_fit_step'];
+
+$steps = array(
+	       1 => 'ship_select',
+	       2 => 'modules_select',
+	       3 => 'charges_select',
+	       4 => 'drones_select',
+	       5 => 'final_settings',
 );
 
-/* --------- */
-
-if(isset($_POST['reset_all'])) {
-  $__osmium_fit = array();
+if(isset($_POST['prev_step'])) {
+  if(call_user_func('osmium_'.$steps[$step].'_pre')) --$step;
+} else if(isset($_POST['next_step'])) {
+  if(call_user_func('osmium_'.$steps[$step].'_post')) ++$step;
+} else if(isset($_POST['finalize'])) {
+  if(call_user_func('osmium_'.$steps[MAX_STEP].'_post')) osmium_finalize();
 }
 
-if(isset($_POST['change_hull'])) {
-  $__osmium_fit['previous_hull_id'] = isset($__osmium_fit['hull_id']) ? $__osmium_fit['hull_id'] : 0;
-  unset($__osmium_fit['hull_name']);
-  unset($__osmium_fit['hull_id']);
-} else if(isset($_POST['new_hull_id'])) {
-  $new_hull_id = $_POST['new_hull_id'];
-  if((int)$new_hull_id > 0) {
-    $__osmium_fit['hull_id'] = (int)$new_hull_id;
-  }
-}
+if($step < 1) $step = 1;
+if($step > MAX_STEP) $step = MAX_STEP;
 
-if(isset($__osmium_fit['hull_id']) && !isset($__osmium_fit['hull_name'])) {
-  $row = pg_fetch_row(osmium_pg_query_params('SELECT typename FROM osmium.invships WHERE typeid = $1', array($__osmium_fit['hull_id'])));
-  if($row === false) unset($__osmium_fit['hull_id']);
-  else {
-    $__osmium_fit['hull_name'] = $row[0];
-    $row = pg_fetch_row(osmium_pg_query_params('SELECT lowslots, medslots, hislots, rigslots, subsystemslots FROM osmium.dgmslots WHERE typeid = $1', array($__osmium_fit['hull_id'])));
-    $__osmium_fit['slotcount']['low'] = $row[0];
-    $__osmium_fit['slotcount']['medium'] = $row[1];
-    $__osmium_fit['slotcount']['high'] = $row[2];
-    $__osmium_fit['slotcount']['rig'] = $row[3];
-    $__osmium_fit['slotcount']['subsystem'] = $row[4];
-  }
-}
+call_user_func('osmium_'.$steps[$step]);
 
-/* --------- */
-
-osmium_header('Create a new fitting', '.');;
-
-echo "<h1>Create a new fitting</h1>\n";
-
-if(is_array($__osmium_fit) && count($__osmium_fit) >= 1) {
-  echo "<form method='post' action='./new'>\n<p class='clear_fit'><input type='submit' name='reset_all' value='Clear fitting' /> This will clear all the changes you have made to this page. Use it if you want to start over.</p>\n</form>\n";
-}
-
-echo "<ol>\n";
-
-echo "<li>\n<h2>Hull</h2>\n";
-
-if(isset($__osmium_fit['hull_name'])) {
-  echo "<form method='post' action='./new'>\n<p><img src='http://image.eveonline.com/Render/".$__osmium_fit['hull_id']."_128.png' alt='' /> <strong>".$__osmium_fit['hull_name']."</strong> <input type='submit' name='change_hull' value='Change' /></p>\n</form>\n";
-} else {
-  $previous = isset($__osmium_fit['previous_hull_id']) ? $__osmium_fit['previous_hull_id'] : 0;
-
-  echo "<form method='post' action='./new'>\n<p>\n";
-  echo "<select name='new_hull_id'>\n";
-  echo "<option value='0'>——— Select a ship ———</option>\n";
-
-  $q = osmium_pg_query_params('SELECT typeid, typename, groupname FROM osmium.invships ORDER BY groupname ASC, typename ASC', array());
-  $previous_groupname = null;
-  while($row = pg_fetch_row($q)) {
-    list($typeid, $typename, $groupname) = $row;
-    if($groupname !== $previous_groupname) {
-      if($previous_groupname !== null) echo "</optgroup>\n";
-      echo "<optgroup label='$groupname'>\n";
-
-      $previous_groupname = $groupname;
-    }
-
-    if($typeid == $previous) {
-      $selected = " selected='selected'";
-      $has_selected = true;
-    } else $selected = '';
-
-    echo "<option value='$typeid'$selected>$typename</option>\n";
-  }
-
-  echo "</optgroup>\n";
-  echo "</select>\n<input type='submit' value='Confirm choice' />";
-  echo "</p>\n</form>\n";
-}
-
-echo "</li>\n";
-
-/* --------- */
-
-echo "<li>\n<h2>Modules &amp; Charges</h2>\n<form method='post' action='./new'>\n";
-
-echo "<p class='add_module'>Add a module: ";
-if(isset($_POST['new_module_name']) && strlen($_POST['new_module_name']) >= 3 && !empty($_POST['new_module_search'])) {
-  echo "<select name='new_module_id'>\n";
-  $q = osmium_pg_query_params('SELECT typeid, typename FROM osmium.invmodules WHERE typename ~* $1', array('.*'.$_POST['new_module_name'].'.*'));
-  while($r = pg_fetch_row($q)) {
-    $have_some_modules = true;
-    list($typeid, $typename) = $r;
-    echo "<option value='$typeid'>$typename</option>\n";
-  }
-
-  if(!isset($have_some_modules)) {
-    echo "<option value='0'>——— No matches found ———</option>";
-    $disabled = "disabled='disabled' ";
-  } else {
-    $disabled = '';
-  }
-
-  echo "</select> <input type='submit' name='confirm' value='Add module(s)' $disabled/> <input type='submit' name='cancel' value='Cancel' />\n<br />\nQuantity: <input type='text' name='quantity' maxlength='1' value='1' />";
-} else {
-  echo "<input type='text' name='new_module_name' placeholder='Search for module name (at least 3 characters)' /> <input type='submit' value='Search' name='new_module_search' />";
-}
-echo "</p>\n";
-
-if(isset($_POST['update_modules'])) {
-  if($_POST['update_modules_action'] == 1) {
-    /* Remove modules */
-    foreach($_POST['select'] as $type => $indices) {
-      foreach($indices as $ind => $whatever) {
-	$module = $__osmium_fit['slots'][$type][$ind];
-	$__osmium_fit['slotcount']['low'] -= $module['extralows'];
-	$__osmium_fit['slotcount']['medium'] -= $module['extrameds'];
-	$__osmium_fit['slotcount']['high'] -= $module['extrahighs'];
-	unset($__osmium_fit['slots'][$type][$ind]);
-      }
-    }
-  } else if($_POST['update_modules_action'] == 2) {
-    /* Update charges */
-    foreach($_POST['select'] as $type => $indices) {
-      foreach($indices as $ind => $whatever) {
-	$__osmium_fit['slots'][$type][$ind]['chargeid'] = (int)$_POST['charge'][$type][$ind];
-      }
-    }
-  }
-}
-
-echo "<p class='update_modules'>";
-echo "On selected modules: <select name='update_modules_action'>\n<option value='0'>——— Select an action ———</option>\n";
-echo "<option value='1'>Remove module</option>\n";
-echo "<option value='2'>Update charges</option>\n";
-echo "</select>\n<input type='submit' name='update_modules' value='Do it!' />\n</p>\n";
-
-if(isset($_POST['confirm']) && $_POST['new_module_id'] > 0 && $_POST['quantity'] > 0) {
-  $qty = (int)$_POST['quantity'];
-  $typeid = $_POST['new_module_id'];
-  if($qty > 8) $qty = 8;
-  $r = pg_fetch_row(osmium_pg_query_params('SELECT typename, extralowslots, extramedslots, extrahighslots FROM osmium.invmodules WHERE typeid = $1', array($typeid)));
-  if($r !== false) {
-    list($typename, $extralows, $extrameds, $extrahighs) = $r;
-    list($type) = pg_fetch_row(osmium_pg_query_params('SELECT effectid FROM eve.dgmtypeeffects WHERE typeid = $1 AND effectid IN ('.implode(',', array_keys($slot_types)).') LIMIT 1', array($typeid)));
-    $type = $slot_types[$type];
-
-    $charges = osmium_get_charges($typeid);
-
-    for($i = 0; $i < $qty; ++$i) {
-      $__osmium_fit['slots'][$type][] = array('typeid' => $typeid, 
-					      'typename' => $typename, 
-					      'extralows' => $extralows, 
-					      'extrameds' => $extrameds, 
-					      'extrahighs' => $extrahighs, 
-					      'charges' => $charges,
-					      'chargeid' => null, 
-					      );
-      $__osmium_fit['slotcount']['low'] += $extralows;
-      $__osmium_fit['slotcount']['medium'] += $extrameds;
-      $__osmium_fit['slotcount']['high'] += $extrahighs;
-    }
-  } 
-}
-
-echo "<table class='modules'>\n";
-echo "<thead>\n<tr>\n<th>Slot</th>\n<th colspan='2'>Name</th>\n<th colspan='2'>Charge / Script</th>\n<th>Select?</th>\n</tr>\n</thead>\n<tfoot></tfoot>\n<tbody>\n";
-
-$extra_slots_warning = array();
-$has_slots = false;
-foreach($slot_types as $type) {
-  $max = isset($__osmium_fit['slotcount'][$type]) ? $__osmium_fit['slotcount'][$type] : 0;
-  $fitted_count = 0;
-  if(isset($__osmium_fit['slots'][$type]) && is_array($__osmium_fit['slots'][$type])) {
-    foreach($__osmium_fit['slots'][$type] as $idx => $fitted) {
-      $typeid = $fitted['typeid'];
-      $typename = $fitted['typename'];
-      $chargeid = $fitted['chargeid'];
-      echo "<tr>\n<td><img class='slot_icon' src='./static/icons/slot_$type.png' alt='$type slot' title='$type slot' /></td>\n<td><img src='http://image.eveonline.com/Type/".$typeid."_64.png' alt='' class='slot_icon' /></td>\n";
-      echo "<td>$typename</td>\n";
-      
-      if($chargeid === null || $chargeid === 0) {
-	echo "<td></td>\n";
-      } else {
-	echo "<td><img src='http://image.eveonline.com/Type/".$chargeid."_64.png' alt='' class='slot_icon' /></td>\n";
-      }
-
-      echo "<td>\n";
-      if(count($fitted['charges']) > 0) {
-	echo "<select name='charge[$type][$idx]'>\n<option value='0'>——— No charge ———</option>\n";
-	foreach($fitted['charges'] as $id => $chargename) {
-	  if($id == $chargeid) {
-	    $selected = " selected='selected'";
-	  } else $selected = '';
-	  echo "<option value='$id'$selected>$chargename</option>\n";
-	}
-	echo "</select>\n";
-      }
-      echo "</td>\n";
-
-      echo "<td><input type='checkbox' name='select[$type][$idx]' /></td>\n</tr>\n";
-      ++$fitted_count;
-      $has_slots = true;
-    }
-  }
-
-  if($fitted_count > $max) $extra_slots_warning[] = $type;
-
-  for(; $fitted_count < $max; ++$fitted_count) {
-    echo "<tr>\n<td><img class='slot_icon' src='./static/icons/slot_$type.png' alt='$type slot' title='$type slot' /></td>\n<td></td>\n<td><em>Empty $type slot</em></td>\n<td></td>\n<td></td>\n<td></td>\n</tr>\n";
-    $has_slots = true;
-  }
-}
-
-if(!$has_slots) {
-  echo "<tr><td colspan='6'>No slots available.</td></tr>\n";
-}
-
-echo "</tbody>\n</table>\n";
-echo "</form>\n";
-foreach($extra_slots_warning as $type) {
-  echo "<p class='extra_slots_warning'>Warning: you may have too many $type slots fitted!</p>\n";
-}
-echo "</li>\n";
-
-/* --------- */
-
-echo "<li>\n<h2>Drones &amp; Cargohold</h2>\n";
-echo "</li>\n";
-
-/* --------- */
-
-echo "<li>\n<h2>Description &amp; privacy settings</h2>\n";
-echo "</li>\n";
-
-/* --------- */
-
-echo "</ol>\n";
 osmium_footer();
 
-function osmium_get_charges($typeid) {
-  $charges = array();
-  $q = osmium_pg_query_params('SELECT chargeid, chargename FROM osmium.invcharges WHERE moduleid = $1 ORDER BY chargename ASC', array($typeid));
-  while($r = pg_fetch_row($q)) {
-    $charges[$r[0]] = $r[1];
+function osmium_form_prevnext() {
+  global $step;
+
+  $prevd = $step == 1 ? "disabled='disabled' " : '';
+
+  if($step == MAX_STEP) {
+    $next = "<input type='submit' name='finalize' value='Finalize fitting' class='final_step' />";
+  } else {
+    $next = "<input type='submit' name='next_step' value='Next step &gt;' class='next_step' />";
   }
 
-  return $charges;
+  echo "<tr>\n<td></td>\n<td>\n";
+  echo "<div style='float: right;'>$next</div>\n";
+  echo "<input type='submit' name='prev_step' value='&lt; Previous step' class='prev_step' $prevd/>\n";
+  echo "</td>\n</tr>\n";
+}
+
+function osmium_h1($name) {
+  global $step;
+  echo "<h1>New fitting, step $step of ".MAX_STEP.": $name</h1>\n";
+}
+
+/* ----------------------------------------------------- */
+
+function osmium_ship_select() {
+  $fit =& osmium_get_fit();
+
+  osmium_h1('select ship hull');
+  osmium_form_begin();
+
+  $q = osmium_pg_query_params('SELECT typeid, typename, groupname FROM osmium.invships ORDER BY groupname ASC, typename ASC', array());
+  $o = array();
+  while($row = pg_fetch_row($q)) {
+    $o[$row[2]][$row[0]] = $row[1];
+  }
+
+  if(isset($fit['hull']['typeid'])) $_POST['hullid'] = $fit['hull']['typeid'];
+  osmium_select('', 'hullid', $o, 16, null, OSMIUM_HAS_OPTGROUPS | OSMIUM_FIELD_REMEMBER_VALUE);
+
+  osmium_form_prevnext();
+  osmium_form_end();
+}
+
+function osmium_ship_select_pre() { /* Unreachable code for the 1st step */ return true; };
+function osmium_ship_select_post() {
+  if(!osmium_create_fit($_POST['hullid'])) {
+    osmium_add_field_error('hullid', "You sent an invalid typeid.");
+    return false;
+  }
+
+  return true;
+};
+
+/* ----------------------------------------------------- */
+
+function osmium_searchbox() {
+  echo "<div id='searchbox'>\n<h2 class='has_spinner'>Search modules";
+  echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
+  echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
+  echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
+  echo "<input type='text' placeholder='Search modules...' />\n";
+  echo "<input type='submit' value='Search' />\n<br />\n";
+  $filters = unserialize(osmium_settings_get('module_search_filter', serialize(array())));
+  $filters = array_combine($v = array_values($filters), $v);
+  $req = osmium_pg_query_params('SELECT metagroupname, metagroupid FROM osmium.invmetagroups ORDER BY metagroupname ASC', array());
+  echo "<p id='search_filters'>\nFilter modules: ";
+  while($row = pg_fetch_row($req)) {
+    list($name, $id) = $row;
+    if(isset($filters[$id])) {
+      $nods = ' style="display:none;"';
+      $ds = '';
+    } else {
+      $ds = ' style="display:none;"';
+      $nods = '';
+    }
+
+    echo "<img src='./static/icons/metagroup_$id.png' alt='Show $name modules' title='Show $name modules' class='meta_filter' id='meta_filter_$id' data-metagroupid='$id' data-toggle='meta_filter_{$id}_disabled' data-filterval='0' $nods/>";
+    echo "<img src='./static/icons/metagroup_{$id}_ds.png' alt='Hide $name modules' title='Hide $name modules' class='meta_filter ds' id='meta_filter_{$id}_disabled' data-metagroupid='$id' data-toggle='meta_filter_$id' data-filterval='1' $ds/>\n";
+  }
+
+  echo "</p>\n</form>\n<ul id='search_results'></ul>\n</div>\n";
+
+  foreach($filters as &$val) $val = "$val: 0";
+  echo "<script>var search_params = {".implode(',', $filters)."};</script>\n";
+}
+
+function osmium_modulelist() {
+  echo "<div id='loadoutbox'>\n<h2 class='has_spinner'>Loadout";
+  echo "<img src='./static/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
+  echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
+  static $categories = array(
+		      'high' => 'High', 
+		      'medium' => 'Medium', 
+		      'low' => 'Low', 
+		      'rig' => 'Rig', 
+		      'subsystem' => 'Subsystem'
+		      );
+  $fit = osmium_get_fit();
+  echo "<table id='slot_count'>\n<tr>\n";
+  foreach($categories as $type => $fname) {
+    echo "<th><img src='./static/icons/slot_$type.png' alt='$fname slots' title='$fname slots' /> <strong id='{$type}_count'></strong></th>\n";
+  }
+  echo "</tr>\n</table>\n";
+  foreach($categories as $type => $fname) {
+    echo "<div id='{$type}_slots' class='loadout_slot_cat'>\n<h3>$fname slots</h3>";
+    echo "<ul></ul>\n";
+    echo "</div>\n";
+  }
+  osmium_form_begin();
+  osmium_form_prevnext();
+  osmium_form_end();
+  echo "</div>\n";
+}
+
+function osmium_shortlist() {
+  echo "<div id='shortlistbox'>\n<h2 class='has_spinner'>Shortlist";
+  echo "<img src='./static/icons/spinner.gif' id='shortlistbox_spinner' class='spinner' alt='' /><br />\n";
+  echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
+  echo "<ul id='modules_shortlist'>\n";
+  echo "</ul>\n</div>\n";
+}
+
+function osmium_modules_select() {
+  osmium_h1('select modules');
+
+  osmium_searchbox();
+  osmium_shortlist();
+  osmium_modulelist();
+  echo osmium_js_snippet('new_fitting');
+  echo "<script>\n$(function() {\n";
+  echo "osmium_shortlist_load(".json_encode(osmium_get_module_shortlist()).");\n";
+  echo "osmium_loadout_load(".json_encode(osmium_get_fit()).");\n";
+  echo "});\n</script>\n";
+}
+
+function osmium_modules_select_pre() { return true; };
+function osmium_modules_select_post() { return true; };
+
+/* ----------------------------------------------------- */
+
+function osmium_charges_select() {
+  osmium_h1('select charges');
+  osmium_form_begin();
+
+  osmium_form_prevnext();
+  osmium_form_end();
+}
+
+function osmium_charges_select_pre() { return true; };
+function osmium_charges_select_post() { return true; };
+
+/* ----------------------------------------------------- */
+
+function osmium_drones_select() {
+  osmium_h1('select drones');
+  osmium_form_begin();
+
+  osmium_form_prevnext();
+  osmium_form_end();
+}
+
+function osmium_drones_select_pre() { return true; };
+function osmium_drones_select_post() { return true; };
+
+/* ----------------------------------------------------- */
+
+function osmium_final_settings() {
+  osmium_h1('final adjustments');
+  osmium_form_begin();
+
+  osmium_form_prevnext();
+  osmium_form_end();
+}
+
+function osmium_final_settings_pre() { return true; };
+function osmium_final_settings_post() { return true; };
+
+/* ----------------------------------------------------- */
+
+function osmium_finalize() {
+
 }

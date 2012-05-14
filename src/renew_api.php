@@ -51,7 +51,7 @@ osmium_header('Update API credentials', '.');
 echo "<h1>Update API credentials</h1>\n";
 
 if(isset($_GET['non_consensual']) && $_GET['non_consensual'] === '1') {
-  echo "<p class='expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$__osmium_state['a']['character_name']."</strong>), please enter a new API key in the form below.</p>\n";
+  echo "<p class='warning_box expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$__osmium_state['a']['character_name']."</strong>), please enter a new API key in the form below.</p>\n";
 }
 
 osmium_form_begin();

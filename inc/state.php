@@ -46,7 +46,7 @@ function osmium_post_login($account_name, $use_cookie = false) {
     setcookie('Osmium', $token, $expiration_date, '/', $_SERVER['HTTP_HOST'], false, true);
   }
 
-  $__osmium_state['logout_token'] = uniqid('Logout_', true);
+  $__osmium_state['logout_token'] = uniqid('OsmiumTok_', true);
 
   osmium_check_api_key();
 }
@@ -61,7 +61,7 @@ function osmium_logoff($global = false) {
   }
 
   setcookie('Osmium', false, 42, '/', $_SERVER['HTTP_HOST'], false, true);
-  $__osmium_state = array();
+  $_SESSION = array();
 }
 
 function osmium_get_client_attributes() {
@@ -90,10 +90,15 @@ function osmium_login_box($relative) {
   
   global $__osmium_login_state;
   if(isset($__osmium_login_state['error'])) {
-    $error = "<p class='login_error'>".$__osmium_login_state['error']."</p>\n";
+    $error = "<p class='error_box'>\n".$__osmium_login_state['error']."\n</p>\n";
   } else $error = '';
 
-  echo "<form method='post' action='".$_SERVER['REQUEST_URI']."' />\n<p id='login_box'>\n$error<input type='text' name='account_name' placeholder='Account name' $value/>\n<input type='password' name='password' placeholder='Password' />\n<input type='submit' name='__osmium_login' value='Login' /> or <a href='$relative/register'>create an account</a><br />\n<input type='checkbox' name='remember' id='remember' $remember/> <label for='remember'>Remember me on this computer</label>\n</p>\n</form>\n";
+  echo "<div id='state_box' class='login'>\n";
+  echo "<form method='post' action='".$_SERVER['REQUEST_URI']."'>\n";
+  echo "$error<p>\n<input type='text' name='account_name' placeholder='Account name' $value/>\n";
+  echo "<input type='password' name='password' placeholder='Password' />\n";
+  echo "<input type='submit' name='__osmium_login' value='Login' /> (<small><input type='checkbox' name='remember' id='remember' $remember/> <label for='remember'>Remember me</label></small>) or <a href='$relative/register'>create an account</a><br />\n";
+  echo "</p>\n</form>\n</div>\n";
 }
 
 function osmium_logoff_box($relative) {
@@ -102,7 +107,7 @@ function osmium_logoff_box($relative) {
   $id = $__osmium_state['a']['character_id'];
   $tok = urlencode($__osmium_state['logout_token']);
 
-  echo "<p id='logout_box'>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>$name</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)</p>\n";
+  echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>$name</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 function osmium_try_login() {
@@ -199,4 +204,33 @@ function osmium_api_maybe_redirect($relative) {
     header('Location: '.$relative.'/renew_api?non_consensual=1', true, 303);
     die();
   }
+}
+
+function osmium_settings_get($key, $default = null) {
+  if(!osmium_logged_in()) return $default;
+
+  global $__osmium_state;
+  $accountid = $__osmium_state['a']['account_id'];
+  $ret = $default;
+
+  $k = osmium_pg_query_params('SELECT value FROM osmium.account_settings WHERE account_id = $1 AND key = $2', array($accountid, $key));
+  while($r = pg_fetch_row($k)) {
+    $ret = $r[0];
+  }
+
+  return $ret;
+}
+
+function osmium_settings_put($key, $value) {
+  if(!osmium_logged_in()) return;
+
+  global $__osmium_state;
+  $accountid = $__osmium_state['a']['account_id'];
+  osmium_pg_query_params('DELETE FROM osmium.account_settings WHERE account_id = $1 AND key = $2', array($accountid, $key));
+  osmium_pg_query_params('INSERT INTO osmium.account_settings (account_id, key, value) VALUES ($1, $2, $3)', array($accountid, $key, $value));
+}
+
+function osmium_tok() {
+  global $__osmium_state;
+  return $__osmium_state['logout_token'];
 }

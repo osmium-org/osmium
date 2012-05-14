@@ -17,6 +17,8 @@
  */
 
 const OSMIUM_FIELD_REMEMBER_VALUE = 1;
+const OSMIUM_ALLOW_MULTISELECT = 2;
+const OSMIUM_HAS_OPTGROUPS = 4;
 
 $__osmium_form_errors = array();
 
@@ -55,12 +57,7 @@ function osmium_add_field_error($name, $error) {
   $__osmium_form_errors[$name][] = $error;
 }
 
-function osmium_generic_field($label, $type, $name, $id = null, $flags = 0) {
-  if($id === null) $id = $name;
-  if($flags & OSMIUM_FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
-    $value = "value='".htmlspecialchars($_POST[$name], ENT_QUOTES)."' ";
-  } else $value = '';
-
+function osmium_generic_row($name, $td1, $td2) {
   $class = '';
 
   global $__osmium_form_errors;
@@ -76,9 +73,18 @@ function osmium_generic_field($label, $type, $name, $id = null, $flags = 0) {
   }
 
   echo "<tr$class>\n";
-  echo "<td><label for='$id'>".htmlspecialchars($label)."</label></td>\n";
-  echo "<td><input type='$type' name='$name' id='$id' $value/></td>\n";
+  echo "<td>$td1</td>\n";
+  echo "<td>$td2</td>\n";
   echo "</tr>\n";
+}
+
+function osmium_generic_field($label, $type, $name, $id = null, $flags = 0) {
+  if($id === null) $id = $name;
+  if($flags & OSMIUM_FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
+    $value = "value='".htmlspecialchars($_POST[$name], ENT_QUOTES)."' ";
+  } else $value = '';
+
+  osmium_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' $value/>");
 }
 
 function osmium_submit($value = '') {
@@ -96,4 +102,47 @@ function osmium_separator() {
 
 function osmium_text($text) {
   echo "<tr>\n<td colspan='2'>".$text."</td>\n</tr>\n";
+}
+
+function osmium_select($label, $name, $options, $size = null, $id = null, $flags = 0) {
+  if($id === null) $id = $name;
+
+  if($flags & OSMIUM_ALLOW_MULTISELECT) $multiselect = ' multiple="multiple"';
+  else $multiselect = '';
+
+  if($size === null) $size = '';
+  else $size = " size='$size'";
+
+  $fOptions = '';
+  if($flags & OSMIUM_HAS_OPTGROUPS) {
+    foreach($options as $category => $group) {
+      $fOptions .= "<optgroup label='$category'>\n";
+      $fOptions .= osmium_format_optgroup($name, $group, $flags);
+      $fOptions .= "</optgroup>\n";
+    }
+  } else $options = osmium_format_optgroup($name, $options, $flags);
+
+  if($flags & OSMIUM_ALLOW_MULTISELECT) {
+    $name = $name.'[]';
+  }
+
+  osmium_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'$size$multiselect>\n$fOptions\n</select>\n");
+}
+
+function osmium_format_optgroup($name, $options, $flags) {
+  $f = '';
+  foreach($options as $value => $label) {
+    $selected = '';
+    if($flags & OSMIUM_FIELD_REMEMBER_VALUE) {
+      if(isset($_POST[$name]) 
+	 && (
+	     (($flags & OSMIUM_ALLOW_MULTISELECT) && in_array($value, $_POST[$name]))
+	     || (!($flags & OSMIUM_ALLOW_MULTISELECT) && $_POST[$name] == $value))) {
+	$selected = ' selected="selected"';
+      }
+    }
+    $f .= "<option value='$value'$selected>$label</option>\n";
+  }
+  
+  return $f;
 }

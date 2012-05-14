@@ -2,6 +2,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
 div#wrapper {
@@ -11,19 +12,288 @@ div#wrapper {
     margin: 0 auto -1.6em;
 }
 
-div#footer, div#push {
+footer, div#push {
     height: 1.5em;
 }
 
-div#footer > p {
-    line-height: 1.5em;
+footer > p {
+    line-height: 2em;
     text-align: right;
     margin: 0;
     padding: 0;
     padding-right: 0.25em;
+    font-size: 0.8em;
+}
+
+footer, footer a {
+    color: #888 !important;
+}
+
+a, a:visited {
+    color: blue;
+}
+
+a:hover {
+    color: #000088;
+}
+
+a:active, a:focus {
+    color: red;
+}
+
+img {
+    vertical-align: middle;
+}
+
+img.spinner {
+    visibility: hidden;
 }
 
 img.slot_icon {
     height: 2em;
     width: 2em;
+}
+
+p.error_box, tr.error_message p,
+p.warning_box {
+    border: 1px solid #CC3300;
+    color: #CC3300;
+    margin: 0;
+    margin-bottom: 0.5em;
+    padding: 0.5em;
+    text-align: center;
+}
+
+p.warning_box {
+    border-color: #888800;
+    color: #888800;
+}
+
+nav {
+    width: 100%;
+    border-bottom: 1px dotted #CCC;
+    text-align: right;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    height: 2em;
+}
+
+nav > ul {
+    list-style-type: none;
+    float: left;
+    margin: 0;
+    padding: 0;
+    height: 2em;
+}
+
+nav > ul > li {
+    display: inline-block;
+    margin: 0;
+    height: 2em;
+    padding: 0;
+    padding-left: 1em;
+    padding-top: 0.25em;
+}
+
+nav > ul > li > strong > a {
+    color: black !important;
+    text-decoration: none;
+}
+
+nav > div#state_box {
+    padding-right: 0.5em;
+}
+
+nav > div#state_box, nav > div#state_box > form {
+    height: 2em;
+}
+
+nav > div#state_box p {
+    margin: 0;
+    line-height: 1.75em;
+}
+
+input:active {
+    border-color: red;
+}
+
+input:focus {
+    border-color: orange;
+}
+
+div#state_box input[type="text"], div#state_box input[type="password"] {
+    width: 8em;
+}
+
+nav > div#state_box p {
+    display: inline-block;
+}
+
+nav > div#state_box p.error_box {
+    padding: 0.1em 0.25em 0.1em 0.25em;
+}
+
+input[type="submit"].next_step, input[type="submit"].final_step {
+    font-weight: bold;
+}
+
+input[type="submit"].next_step, input[type="submit"].final_step, input[type="submit"].prev_step {
+    font-size: 1.4em;
+}
+
+select#hullid {
+    font-size: 1.4em;
+}
+
+div#searchbox {
+    padding-left: 0.5em;
+    width: 20em;
+    float: left;
+}
+
+div#shortlistbox {
+    width: 20em;
+    float: right;
+    padding-right: 0.5em;
+}
+
+div#loadoutbox {
+    margin-left: 21em;
+    margin-right: 21em;
+    border-left: 1px dotted #CCC;
+    border-right: 1px dotted #CCC;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+div#loadoutbox > form > table {
+    width: 100%;
+    margin-top: 1em;
+}
+
+div#searchbox input[type="text"] {
+    width: 16em;
+}
+
+div#loadoutbox > h2, div#shortlistbox > h2, div#searchbox > h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+div#searchbox p#search_filters {
+    padding: 0;
+    margin: 0;
+    padding-bottom: 0.25em;
+}
+
+img.meta_filter {
+    cursor: pointer;
+}
+
+img.meta_filter.ds {
+    opacity: 0.2;
+}
+
+ul#search_results, ul#modules_shortlist,
+div.loadout_slot_cat > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul#search_results > li.module,
+ul#modules_shortlist > li.module,
+div.loadout_slot_cat > ul > li.module {
+    cursor: move;
+}
+
+li.module, li.shortlist_dummy, li.empty_slot {
+    border: 1px solid #CCC;
+    margin: 0.25em;
+    background-color: white;
+    height: 32px;
+    line-height: 32px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+    padding-left: 2.25em;
+    display: inline-block;
+    width: 17em;
+}
+
+li.module > img, li.empty_slot > img {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    height: 32px;
+}
+
+li.shortlist_dummy, li.empty_slot {
+    border: 1px dashed #888;
+    color: #888;
+}
+
+li.shortlist_dummy {
+    width: 19em;
+    padding-left: 0.25em;
+}
+
+h2.has_spinner {
+    position: relative;
+}
+
+h2.has_spinner > img.spinner {
+    position: absolute;
+    right: 0;
+}
+
+em.help {
+    color: #A8A8A8;
+    font-size: 0.8em;
+}
+
+table#slot_count {
+    text-align: center;
+    width: 100%;
+}
+
+table#slot_count img {
+    width: 3em;
+}
+
+div#loadoutbox > div.loadout_slot_cat {
+    display: none;
+}
+
+table#slot_count strong {
+    display: inline-block;
+    padding: 0.25em;
+}
+
+table#slot_count strong.overflow,
+li.module.overflow {
+    background-color: #FCC;
+}
+
+ul#modules_shortlist > li.module > a.delete {
+    float: right;
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+ul#modules_shortlist > li.module > a.delete > img {
+    width: 1em;
+    height: 1em;
+}
+
+ul#modules_shortlist > li.module:hover {
+    padding-right: 1em;
+    width: 16em;
+}
+
+ul#modules_shortlist > li.module:hover > a.delete {
+    display: inline-block;
 }

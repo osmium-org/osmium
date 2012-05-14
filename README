@@ -1,10 +1,7 @@
-Database setup
-==============
+Osmium
+======
 
-Only PostgreSQL is supported. You must have a database with two
-schemas, one named "eve" that contains the static data dump of the EVE
-database, the other one named "osmium" (use the osmium.sql file to
-create it).
+Osmium is a user-friendly fitting tool for the EVE Online game.
 
 Caveats
 =======
@@ -23,3 +20,52 @@ Dependencies
     SimpleXML support.
 
 * PostgreSQL >= 9.0
+
+Initial database setup
+======================
+
+Assuming your PostgreSQL database name is "osmium" and it is owned by
+the "osmium_user" user, follow these steps:
+
+1. Get the latest EVE DB dump on this page: <http://zofu.no-ip.de/>
+   (Choose the PostgreSQL version.)
+
+2. Create the "eve" schema in your database:
+
+   CREATE SCHEMA eve;
+
+3. Import the EVE DB dump in the newly created schema:
+
+   (echo "SET search_path TO eve;" && cat DB_DUMP.sql) | psql osmium osmium_user
+
+4. Create the "osmium" schema and import the tables/views:
+
+   pg_restore -O osmium_pgsql.backup | psql osmium osmium_user
+
+
+Updating the EVE DB dump
+========================
+
+Because of the tight dependencies between the EVE tables and the
+Osmium tables, upgrading the EVE DB (for example after an expansion)
+is not as simple as it ought to be. You can do it using the following
+steps:
+
+1. Backup your Osmium schema.
+
+   pg_dump -n osmium -U osmium_user osmium -F c > OSMIUM_DUMP.backup
+
+2. Delete the "osmium" and "eve" schemas.
+
+   DROP SCHEMA osmium CASCADE;
+   DROP SCHEMA eve CASCADE;
+
+3. Follow steps 1, 2 and 3 of the previous section ("Initial database
+   setup").
+
+4. Restore your Osmium schema.
+
+   pg_restore -O OSMIUM_DUMP.backup | psql osmium osmium_user
+
+   If you run into integrity issues, you may have to delete some
+   fittings that use removed modules/ships.
