@@ -207,7 +207,8 @@ div.loadout_slot_cat > ul > li.module {
     cursor: move;
 }
 
-li.module, li.shortlist_dummy, li.empty_slot {
+li.module, li.shortlist_dummy, 
+li.empty_slot, li.mod_placeholder {
     border: 1px solid #CCC;
     margin: 0.25em;
     background-color: white;
@@ -229,7 +230,8 @@ li.module > img, li.empty_slot > img {
     height: 32px;
 }
 
-li.shortlist_dummy, li.empty_slot {
+li.shortlist_dummy, li.empty_slot,
+li.mod_placeholder {
     border: 1px dashed #888;
     color: #888;
 }

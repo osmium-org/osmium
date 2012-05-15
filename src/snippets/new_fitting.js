@@ -123,6 +123,7 @@ $(function() {
 	update: osmium_shortlist_commit,
 	items: ".module",
 	helper: "clone",
+	placeholder: "mod_placeholder",
 	connectWith: "div.loadout_slot_cat > ul",
 	start: function(event, ui) {
 	    $("ul#modules_shortlist li.module").eq($(ui.item).index()).after(
@@ -166,11 +167,25 @@ $(function() {
 
     $("div.loadout_slot_cat > ul").sortable({
 	update: osmium_loadout_commit,
-	items: ".module"
+	items: ".module",
+	placeholder: "mod_placeholder",
+	start: function(event, ui) {
+	    $("ul#search_results, div.loadout_slot_cat").css('opacity', '0.2');
+	    $("div#" + $(ui.item).data("slottype") + "_slots").css('opacity', '1.0');
+	},
+	stop: function(event, ui) {
+	    $("ul#search_results, div.loadout_slot_cat").css('opacity', '1.0');
+	}
     });
 
     $(document).on('dblclick', "ul#search_results > li.module, ul#modules_shortlist > li.module", function(obj) {
-	$("div#" + $(this).data('slottype') + "_slots > ul").prepend($(this).clone());
+	var phony = $("div#" + $(this).data('slottype') + "_slots > ul > li.empty_slot");
+	if(phony.length == 0) {
+	    $("div#" + $(this).data('slottype') + "_slots > ul").append($(this).clone());
+	} else {
+	    phony.first().before($(this).clone());
+	    phony.first().remove();
+	}
 	osmium_loadout_commit();
     });
 
