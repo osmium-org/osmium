@@ -62,20 +62,22 @@ function osmium_create_fit($typeid) {
 					      'subsystem' => $subsystemslots
 					      ),
 			 );
-    
-    $fit['modules'] = array(
-			    'high' => array(), 
-			    'medium' => array(), 
-			    'low' => array(), 
-			    'rig' => array(), 
-			    'subsystem' => array()
-			    );
+
+    if(!isset($fit['modules'])) {
+      $fit['modules'] = array(
+			      'high' => array(), 
+			      'medium' => array(), 
+			      'low' => array(), 
+			      'rig' => array(), 
+			      'subsystem' => array()
+			      );
       
-    for($i = 0; $i < $highslots; ++$i) $fit['modules']['high'][] = -1;
-    for($i = 0; $i < $medslots; ++$i) $fit['modules']['medium'][] = -1;
-    for($i = 0; $i < $lowslots; ++$i) $fit['modules']['low'][] = -1;
-    for($i = 0; $i < $rigslots; ++$i) $fit['modules']['rig'][] = -1;
-    for($i = 0; $i < $subsystemslots; ++$i) $fit['modules']['subsystem'][] = -1;
+      for($i = 0; $i < $highslots; ++$i) $fit['modules']['high'][] = -1;
+      for($i = 0; $i < $medslots; ++$i) $fit['modules']['medium'][] = -1;
+      for($i = 0; $i < $lowslots; ++$i) $fit['modules']['low'][] = -1;
+      for($i = 0; $i < $rigslots; ++$i) $fit['modules']['rig'][] = -1;
+      for($i = 0; $i < $subsystemslots; ++$i) $fit['modules']['subsystem'][] = -1;
+    }
   }
 
   return $row !== false;
