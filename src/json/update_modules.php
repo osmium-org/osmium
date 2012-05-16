@@ -67,12 +67,6 @@ if(isset($_GET['token']) && $_GET['token'] == osmium_tok()) {
     }
   }
 
-  foreach($modules as $type => &$mods) {
-    for($i = count($mods); $i < $fit['hull']['slotcount'][$type]; ++$i) {
-      $mods[] = -1;
-    }
-  }
-
   $fit['modules'] = $modules;
   osmium_json($fit);
 } else {

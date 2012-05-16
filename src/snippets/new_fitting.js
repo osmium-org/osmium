@@ -51,29 +51,27 @@ osmium_shortlist_commit = function() {
 };
 
 osmium_populate_slots = function(json, slot_type) {
-    var used_slots = 0;
+    var used_slots = json['modules'][slot_type].length;
     var max_slots = json['hull']['slotcount'][slot_type];
 
-    for(var i = 0; i < json['modules'][slot_type].length && i < 16; ++i) {
-	if(json['modules'][slot_type][i] === -1) {
-	    $("div#" + slot_type + "_slots > ul").append("<li class='" + slot_type + "_slot empty_slot'><img src='./static/icons/slot_" + slot_type + ".png' alt='' /> Empty " + slot_type + " slot</li>\n");
-	} else {
-	    ++used_slots;
-	    var c = '';
-	    if(used_slots > max_slots) c = ' overflow';
-	    $("div#" + slot_type + "_slots > ul").append(
-		"<li class='module" 
-		    + c + "' data-slottype='" 
-		    + json['modules'][slot_type][i]['slottype'] 
-		    + "' data-typeid='" + json['modules'][slot_type][i]['typeid'] 
-		    + "'><img src='http://image.eveonline.com/Type/" 
-		    + json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
-		    + json['modules'][slot_type][i]['typename'] + "</li>\n"
-	    );
-	}
+    for(var i = 0; i < used_slots && i < 16; ++i) {
+	var c = '';
+	if(i >= max_slots) c = ' overflow';
+	$("div#" + slot_type + "_slots > ul").append(
+	    "<li class='module" 
+		+ c + "' data-slottype='" 
+		+ json['modules'][slot_type][i]['slottype'] 
+		+ "' data-typeid='" + json['modules'][slot_type][i]['typeid'] 
+		+ "'><img src='http://image.eveonline.com/Type/" 
+		+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
+		+ json['modules'][slot_type][i]['typename'] + "</li>\n"
+	);
+    }
+    for(var i = used_slots; i < max_slots; ++i) {
+	$("div#" + slot_type + "_slots > ul").append("<li class='" + slot_type + "_slot empty_slot'><img src='./static/icons/slot_" + slot_type + ".png' alt='' /> Empty " + slot_type + " slot</li>\n");
     }
 
-    if(json['modules'][slot_type].length == 0) {
+    if(max_slots == 0) {
 	$("div#" + slot_type + "_slots").hide();
     } else {
 	$("div#" + slot_type + "_slots").show();
