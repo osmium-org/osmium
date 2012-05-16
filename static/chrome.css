@@ -145,7 +145,7 @@ select#hullid {
     font-size: 1.4em;
 }
 
-div#searchbox {
+div#searchbox, div#presetsbox {
     padding-left: 0.5em;
     width: 20em;
     float: left;
@@ -157,7 +157,7 @@ div#shortlistbox {
     padding-right: 0.5em;
 }
 
-div#loadoutbox {
+div#loadoutbox, div#chargegroupsbox {
     margin-left: 21em;
     margin-right: 21em;
     border-left: 1px dotted #CCC;
@@ -175,7 +175,8 @@ div#searchbox input[type="text"] {
     width: 16em;
 }
 
-div#loadoutbox > h2, div#shortlistbox > h2, div#searchbox > h2 {
+div#loadoutbox > h2, div#shortlistbox > h2, 
+div#searchbox > h2, div#presetsbox > h2 {
     text-align: center;
     margin-top: 0;
 }
@@ -223,7 +224,8 @@ li.empty_slot, li.mod_placeholder {
     width: 17em;
 }
 
-li.module > img, li.empty_slot > img {
+li.module > img, li.empty_slot > img,
+ul.chargegroup > li > img.module_icon {
     position: absolute;
     top: -1px;
     left: 0;
@@ -298,4 +300,91 @@ ul#modules_shortlist > li.module:hover {
 
 ul#modules_shortlist > li.module:hover > a.delete {
     display: inline-block;
+}
+
+div#chargegroupsbox {
+    margin-right: 1em;
+    border-right: 0;
+}
+
+ul#chargegroups, ul#chargegroups > li > ul.chargegroup {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul#chargegroups > li,
+div#chargegroupsbox > form > table {
+    margin-bottom: 2em;
+    width: 20em;
+}
+
+ul#chargegroups > li > ul.chargegroup > li {
+    border: 1px solid #CCC;
+    margin: 0.125em;
+    display: inline-block;
+    width: 19em;
+    position: relative;
+    height: 32px;
+}
+
+ul.chargegroup > li > img.charge_icon {
+    position: absolute;
+    top: -1px;
+    left: 32px;
+    height: 32px;
+}
+
+ul.chargegroup > li > select {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 64px;
+}
+
+ul.chargegroup > li.ui-selected,
+ul#presets > li.selected {
+    background-color: #DDFFDD;
+}
+
+ul.chargegroup > li.ui-selecting {
+    background-color: #FFFFCC;
+}
+
+ul#presets > li > span {
+    float: right;
+    visibility: hidden;
+    font-size: 0.9em;
+    color: #888;
+    padding-right: 0.25em;
+}
+
+ul#presets > li:hover > span {
+    visibility: visible;
+}
+
+ul#presets > li > span > a,
+ul#presets > li > span {
+    color: #CCC;
+}
+
+ul#presets > li > form > input.new_name {
+    width: 8em;
+}
+
+ul#presets {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul#presets > li {
+    height: 2em;
+    border-top: 1px dotted #888;
+    line-height: 2em;
+}
+
+ul#presets > li:first-child {
+    border-top: none;
 }

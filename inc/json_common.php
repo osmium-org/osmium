@@ -16,6 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+function osmium_slottypes() {
+  return array('high', 'medium', 'low', 'rig', 'subsystem');
+}
+
 function osmium_get_module_shortlist($shortlist = null) {
   if(!osmium_logged_in()) return array();
 

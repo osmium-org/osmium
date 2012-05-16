@@ -86,28 +86,20 @@ osmium_populate_slots = function(json, slot_type) {
 };
 
 osmium_loadout_load = function(json) {
-    $("div#high_slots > ul").empty();
-    $("div#medium_slots > ul").empty();
-    $("div#low_slots > ul").empty();
-    $("div#rig_slots > ul").empty();
-    $("div#subsystem_slots > ul").empty();
-
-    osmium_populate_slots(json, "high");
-    osmium_populate_slots(json, "medium");
-    osmium_populate_slots(json, "low");
-    osmium_populate_slots(json, "rig");
-    osmium_populate_slots(json, "subsystem");
+    for(var i = 0; i < osmium_slottypes.length; ++i) {
+	$("div#" + osmium_slottypes[i] + "_slots > ul").empty();
+	osmium_populate_slots(json, osmium_slottypes[i]);
+    }
 };
 
 osmium_loadout_commit = function() {
     $("img#loadoutbox_spinner").css("visibility", "visible");
     var params = {};
-    var slots = ['high', 'medium', 'low', 'rig', 'subsystem'];
     params['token'] = osmium_tok;
-    for(var i = 0; i < slots.length; ++i) {
-	var elts = $("div#" + slots[i] + "_slots > ul > li.module");
+    for(var i = 0; i < osmium_slottypes.length; ++i) {
+	var elts = $("div#" + osmium_slottypes[i] + "_slots > ul > li.module");
 	for(var j = 0; j < elts.length; ++j) {
-	    params[slots[i] + j] = elts.eq(j).data('typeid');
+	    params[osmium_slottypes[i] + j] = elts.eq(j).data('typeid');
 	}
     }
     $.getJSON('./src/json/update_modules.php', params, function(json) {
