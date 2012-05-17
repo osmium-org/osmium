@@ -16,9 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function osmium_slottypes() {
-  return array('high', 'medium', 'low', 'rig', 'subsystem');
-}
 
 function osmium_get_module_shortlist($shortlist = null) {
   if(!osmium_logged_in()) return array();
@@ -29,10 +26,15 @@ function osmium_get_module_shortlist($shortlist = null) {
  
   $out = array();
   $rows = array();
-  $req = osmium_pg_query_params('SELECT typename, invmodules.typeid, slottype FROM osmium.invmodules JOIN osmium.dgmmoduleattributes ON dgmmoduleattributes.typeid = invmodules.typeid WHERE invmodules.typeid IN ('
-				.implode(',', array_merge(array(-1), $shortlist)).')', array());
+  $req = osmium_pg_query_params('SELECT typename, invmodules.typeid FROM osmium.invmodules WHERE invmodules.typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')', array());
   while($row = pg_fetch_row($req)) {
-    $rows[$row[1]] = array('typename' => $row[0], 'typeid' => $row[1], 'slottype' => $row[2]);
+    $rows[$row[1]] = array('typename' => $row[0], 'typeid' => $row[1]);
+  }
+
+  $modattr = array();
+  osmium_get_attributes_and_effects($typeids, $modattr);
+  foreach($rows as &$row) {
+    $row['slottype'] = osmium_get_module_slottype($modattr[$row['typeid']]['effects']);
   }
 
   foreach($shortlist as $typeid) {
@@ -41,46 +43,4 @@ function osmium_get_module_shortlist($shortlist = null) {
   }
 
   return $out;
-}
-
-function &osmium_get_fit() {
-  if(!osmium_logged_in()) return array();
-  return $_SESSION['__osmium_fit'];
-}
-
-function osmium_create_fit($typeid) {
-  $fit =& osmium_get_fit();
-
-  $row = pg_fetch_row(osmium_pg_query_params('SELECT invships.typeid, typename, lowslots, medslots, hislots, rigslots, subsystemslots FROM osmium.invships JOIN osmium.dgmshipslots ON dgmshipslots.typeid = invships.typeid WHERE invships.typeid = $1', array($typeid)));
-
-  if($row !== false) {
-    list($typeid, $typename, $lowslots, $medslots, $highslots, $rigslots, $subsystemslots) = $row;
-    $fit['hull'] = array(
-			 'typeid' => $typeid,
-			 'typename' => $typename,
-			 'slotcount' => array(
-					      'high' => $highslots,
-					      'medium' => $medslots,
-					      'low' => $lowslots,
-					      'rig' => $rigslots,
-					      'subsystem' => $subsystemslots
-					      ),
-			 );
-
-    if(!isset($fit['modules'])) {
-      $fit['modules'] = array(
-			      'high' => array(), 
-			      'medium' => array(), 
-			      'low' => array(), 
-			      'rig' => array(), 
-			      'subsystem' => array()
-			      );
-    }
-
-    if(!isset($fit['charges'])) {
-      $fit['charges'] = array(array('name' => 'Default'));
-    }
-  }
-
-  return $row !== false;
 }

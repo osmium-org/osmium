@@ -33,19 +33,26 @@ foreach($_GET as $i => $val) {
   if($val == 0) $filters[] = $i;
 }
 
-$query = osmium_pg_query_params('SELECT invmodules.typeid, typename, slottype
+$query = osmium_pg_query_params('SELECT invmodules.typeid, typename
 FROM osmium.invmodules
-JOIN osmium.dgmmoduleattributes ON dgmmoduleattributes.typeid = invmodules.typeid
 WHERE metagroupid NOT IN ('.implode(',', array_merge(array(-1), $filters)).')
 AND typename ~* $1
 ORDER BY metagroupid ASC, typename ASC
-LIMIT '.(MAX_MODULES + 1), array('.*'.$q.'.*'));
+LIMIT '.(MAX_MODULES + 1), array($q));
 
 $out = array();
+$typeids = array();
 $i = 0;
 while($row = pg_fetch_row($query)) {
-  $out[] = array('typeid' => $row[0], 'typename' => $row[1], 'slottype' => $row[2]);
+  $out[] = array('typeid' => $row[0], 'typename' => $row[1]);
+  $typeids[] = $row[0];
   ++$i;
+}
+
+$modattr = array();
+osmium_get_attributes_and_effects($typeids, $modattr);
+foreach($out as &$row) {
+  $row['slottype'] = osmium_get_module_slottype($modattr[$row['typeid']]['effects']);
 }
 
 if($i == MAX_MODULES + 1) {

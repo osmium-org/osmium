@@ -43,6 +43,7 @@ require OSMIUM_ROOT.'/inc/forms.php';
 require OSMIUM_ROOT.'/inc/pg.php';
 require OSMIUM_ROOT.'/inc/api.php';
 require OSMIUM_ROOT.'/inc/state.php';
+require OSMIUM_ROOT.'/inc/fit.php';
 
 osmium_prg();
 
