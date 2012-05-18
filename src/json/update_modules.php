@@ -16,20 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/json_common.php';
+namespace Osmium\Json\UpdateModules;
 
-if(!osmium_logged_in()) {
-  osmium_json(array());
+require __DIR__.'/../../inc/root.php';
+require __DIR__.'/../../inc/ajax_common.php';
+
+if(!\Osmium\State\is_logged_in()) {
+  \Osmium\Chrome\return_json(array());
 }
 
 
-if(isset($_GET['token']) && $_GET['token'] == osmium_tok()) {
-  $fit = &osmium_get_fit();
+if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
+  $fit =& \Osmium\Fit\get_fit();
   $modules = array();
   $typeids = array();
 
-  foreach(osmium_slottypes() as $type) {
+  foreach(\Osmium\Fit\get_slottypes() as $type) {
     $i = 0;
     while(isset($_GET[$type.$i])) {
       $modules[$type][] = ($typeid = $_GET[$type.$i]);
@@ -38,8 +40,8 @@ if(isset($_GET['token']) && $_GET['token'] == osmium_tok()) {
     }
   }
 
-  osmium_update_modules(array_keys($typeids), $modules);
-  osmium_json($fit);
+  \Osmium\Fit\update_modules(array_keys($typeids), $modules);
+  \Osmium\Chrome\return_json($fit);
 } else {
-  osmium_json(array());
+  \Osmium\Chrome\return_json(array());
 }

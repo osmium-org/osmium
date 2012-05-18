@@ -16,14 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function osmium_header($title = '', $relative = '.') {
+namespace Osmium\Chrome;
+
+function print_header($title = '', $relative = '.') {
   global $__osmium_chrome_relative;
   $__osmium_chrome_relative = $relative;
 
-  osmium_api_maybe_redirect($relative);
+  \Osmium\State\api_maybe_redirect($relative);
 
   if($title == '') {
-    $title = 'Osmium / '.OSMIUM_SHORTDESC;
+    $title = 'Osmium / '.\Osmium\SHORT_DESCRIPTION;
   } else {
     $title .= ' / Osmium';
   }
@@ -38,45 +40,45 @@ function osmium_header($title = '', $relative = '.') {
   echo "</head>\n<body>\n<div id='wrapper'>\n";
 
   echo "<nav>\n<ul>\n";
-  echo osmium_nav_link($relative.'/', "Main page");
-  if(osmium_logged_in()) {
-    echo osmium_nav_link($relative.'/new', "New fitting");
-    echo osmium_nav_link($relative.'/renew_api', "API settings");
+  echo get_navigation_link($relative.'/', "Main page");
+  if(\Osmium\State\is_logged_in()) {
+    echo get_navigation_link($relative.'/new', "New fitting");
+    echo get_navigation_link($relative.'/renew_api', "API settings");
   } else {
 
   }
 
   echo "</ul>\n";
-  osmium_statebox($relative);
+  \Osmium\State\print_login_or_logout_box($relative);
   echo "</nav>\n";
 }
 
-function osmium_footer() {
+function print_footer() {
   global $__osmium_chrome_relative;
   echo "<div id='push'></div>\n</div>\n<footer>\n";
-  echo "<p><strong>Osmium ".OSMIUM_VERSION." @ ".gethostname()."</strong> — (Artefact2/Indalecia) — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
+  echo "<p><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong> — (Artefact2/Indalecia) — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
   echo "</footer>\n</body>\n</html>\n";
 }
 
-function osmium_nav_link($dest, $label) {
-  if(osmium_break_uri($dest) == osmium_break_uri($_SERVER['REQUEST_URI'])) {
+function get_navigation_link($dest, $label) {
+  if(get_significant_uri($dest) == get_significant_uri($_SERVER['REQUEST_URI'])) {
     return "<li><strong><a href='$dest'>$label</a></strong></li>\n";
   }
 
   return "<li><a href='$dest'>$label</a></li>\n";
 }
 
-function osmium_break_uri($uri) {
+function get_significant_uri($uri) {
   $uri = explode('?', $uri, 2)[0];
   $uri = explode('/', $uri);
   return array_pop($uri);
 }
 
-function osmium_js_snippet($js_file) {
-  return "<script>\n".file_get_contents(OSMIUM_ROOT.'/src/snippets/'.$js_file.'.js')."</script>\n";
+function print_js_snippet($js_file) {
+  echo "<script>\n".file_get_contents(\Osmium\ROOT.'/src/snippets/'.$js_file.'.js')."</script>\n";
 }
 
-function osmium_json($data, $flags = 0) {
+function return_json($data, $flags = 0) {
   header('Content-Type: application/json');
   die(json_encode($data, $flags));
 }

@@ -16,25 +16,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\AjaxCommon;
 
-function osmium_get_module_shortlist($shortlist = null) {
-  if(!osmium_logged_in()) return array();
+
+function get_module_shortlist($shortlist = null) {
+  if(!\Osmium\State\is_logged_in()) return array();
 
   if($shortlist === null) {
-    $shortlist = unserialize(osmium_settings_get('shortlist_modules', serialize(array())));
+    $shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
   }
  
   $out = array();
   $rows = array();
-  $req = osmium_pg_query_params('SELECT typename, invmodules.typeid FROM osmium.invmodules WHERE invmodules.typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')', array());
-  while($row = pg_fetch_row($req)) {
+  $req = \Osmium\Db\query_params('SELECT typename, invmodules.typeid FROM osmium.invmodules WHERE invmodules.typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')', array());
+  while($row = \Osmium\Db\fetch_row($req)) {
     $rows[$row[1]] = array('typename' => $row[0], 'typeid' => $row[1]);
   }
 
   $modattr = array();
-  osmium_get_attributes_and_effects($typeids, $modattr);
+  \Osmium\Fit\get_attributes_and_effects($typeids, $modattr);
   foreach($rows as &$row) {
-    $row['slottype'] = osmium_get_module_slottype($modattr[$row['typeid']]['effects']);
+    $row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
   }
 
   foreach($shortlist as $typeid) {

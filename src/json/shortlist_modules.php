@@ -16,15 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/json_common.php';
+namespace Osmium\Json\ShortlistModules;
 
-if(!osmium_logged_in()) {
-  osmium_json(array());
+require __DIR__.'/../../inc/root.php';
+require __DIR__.'/../../inc/ajax_common.php';
+
+if(!\Osmium\State\is_logged_in()) {
+  \Osmium\Chrome\return_json(array());
 }
 
 
-if(isset($_GET['token']) && $_GET['token'] == osmium_tok()) {
+if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
   $shortlist = array();
   $keys = array();
 
@@ -38,9 +40,9 @@ if(isset($_GET['token']) && $_GET['token'] == osmium_tok()) {
     ++$i;
   }
 
-  osmium_settings_put('shortlist_modules', serialize($shortlist));
+  \Osmium\State\put_setting('shortlist_modules', serialize($shortlist));
 } else {
-  $shortlist = unserialize(osmium_settings_get('shortlist_modules', serialize(array())));
+  $shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
 }
 
-osmium_json(osmium_get_module_shortlist($shortlist));
+\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_module_shortlist($shortlist));

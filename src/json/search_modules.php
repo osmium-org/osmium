@@ -16,10 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Json\SearchModules;
+
 require __DIR__.'/../../inc/root.php';
 
-if(!osmium_logged_in()) {
-  osmium_json(array());
+if(!\Osmium\State\is_logged_in()) {
+  \Osmium\Chrome\return_json(array());
 }
 
 const MAX_MODULES = 10;
@@ -33,7 +35,7 @@ foreach($_GET as $i => $val) {
   if($val == 0) $filters[] = $i;
 }
 
-$query = osmium_pg_query_params('SELECT invmodules.typeid, typename
+$query = \Osmium\Db\query_params('SELECT invmodules.typeid, typename
 FROM osmium.invmodules
 WHERE metagroupid NOT IN ('.implode(',', array_merge(array(-1), $filters)).')
 AND typename ~* $1
@@ -43,16 +45,16 @@ LIMIT '.(MAX_MODULES + 1), array($q));
 $out = array();
 $typeids = array();
 $i = 0;
-while($row = pg_fetch_row($query)) {
+while($row = \Osmium\Db\fetch_row($query)) {
   $out[] = array('typeid' => $row[0], 'typename' => $row[1]);
   $typeids[] = $row[0];
   ++$i;
 }
 
 $modattr = array();
-osmium_get_attributes_and_effects($typeids, $modattr);
+\Osmium\Fit\get_attributes_and_effects($typeids, $modattr);
 foreach($out as &$row) {
-  $row['slottype'] = osmium_get_module_slottype($modattr[$row['typeid']]['effects']);
+  $row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
 }
 
 if($i == MAX_MODULES + 1) {
@@ -64,6 +66,6 @@ if($i == MAX_MODULES + 1) {
   $warning = false;
 }
 
-osmium_settings_put('module_search_filter', serialize($filters));
+\Osmium\State\put_setting('module_search_filter', serialize($filters));
 
-osmium_json(array('payload' => $out, 'warning' => $warning));
+\Osmium\Chrome\return_json(array('payload' => $out, 'warning' => $warning));

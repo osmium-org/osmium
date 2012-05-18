@@ -16,14 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Page\Main;
+
 require __DIR__.'/../inc/root.php';
 
-osmium_header('', '.');
+\Osmium\Chrome\print_header('', '.');
 
-echo "<h1>Osmium — ".OSMIUM_SHORTDESC."</h1>\n";
+echo "<h1>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
 
-if(osmium_logged_in()) {
+if(\Osmium\State\is_logged_in()) {
   echo "<p class='create_new'><a href='./new'>Create a new fitting</a></p>\n";
 }
 
-osmium_footer();
+\Osmium\Chrome\print_footer();

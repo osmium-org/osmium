@@ -16,29 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function osmium_slottypes() {
+namespace Osmium\Fit;
+
+function get_slottypes() {
   return array('high', 'medium', 'low', 'rig', 'subsystem');
 }
 
-function &osmium_get_fit() {
-  if(!osmium_logged_in()) return array();
+function &get_fit() {
   return $_SESSION['__osmium_fit'];
 }
 
-function &osmium_get_fit_private() {
-  if(!osmium_logged_in()) return array();
+function &get_fit_private() {
   return $_SESSION['__osmium_fit_private'];
 }
 
-function osmium_create_fit($typeid) {
-  $fit =& osmium_get_fit();
-  $fitp =& osmium_get_fit_private();
+function init_fit($typeid) {
+  $fit =& get_fit();
+  $fitp =& get_fit_private();
 
-  $row = pg_fetch_row(osmium_pg_query_params('SELECT invships.typeid, typename FROM osmium.invships WHERE invships.typeid = $1', array($typeid)));
+  $row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT invships.typeid, typename FROM osmium.invships WHERE invships.typeid = $1', array($typeid)));
 
   if($row === false) return false;
 
-  osmium_get_attributes_and_effects(array($typeid), $fitp['hull']);
+  get_attributes_and_effects(array($typeid), $fitp['hull']);
   $fitp['hull'] = $fitp['hull'][$row[0]];
 
   $fit['hull'] = array(
@@ -46,10 +46,10 @@ function osmium_create_fit($typeid) {
 		       'typename' => $row[1]
 		       );
 
-  osmium_init_base_slots($fit, $fitp);
+  init_base_slots($fit, $fitp);
   
   if(!isset($fit['modules'])) {
-    foreach(osmium_slottypes() as $type) {
+    foreach(get_slottypes() as $type) {
       $fit['modules'][$type] = array();
     }
   }
@@ -61,7 +61,7 @@ function osmium_create_fit($typeid) {
   return true;
 }
 
-function osmium_update_modules($typeids, $modules) {
+function update_modules($typeids, $modules) {
   static $slot_modifiers = 
     array(
 	  'low' => 'lowSlotModifier', 
@@ -69,26 +69,26 @@ function osmium_update_modules($typeids, $modules) {
 	  'high' => 'hiSlotModifier'
 	  );
 
-  $fitp =& osmium_get_fit_private();
-  $fit =& osmium_get_fit();
+  $fitp =& get_fit_private();
+  $fit =& get_fit();
 
-  osmium_get_modules_attributes_and_effects($typeids, $fitp['modules'], $fitp['modules']);
-  osmium_init_base_slots($fit, $fitp);
+  get_modules_attributes_and_effects($typeids, $fitp['modules'], $fitp['modules']);
+  init_base_slots($fit, $fitp);
 
   $typeids[] = -1;
   $names = array();
-  $r = osmium_pg_query_params('SELECT typeid, typename FROM osmium.invmodules WHERE typeid IN ('.implode(',', $typeids).')', array());
-  while($row = pg_fetch_row($r)) {
+  $r = \Osmium\Db\query_params('SELECT typeid, typename FROM osmium.invmodules WHERE typeid IN ('.implode(',', $typeids).')', array());
+  while($row = \Osmium\Db\fetch_row($r)) {
     $names[$row[0]] = $row[1];
   }
 
-  foreach(osmium_slottypes() as $type) {
+  foreach(get_slottypes() as $type) {
     $fit['modules'][$type] = array();
   }
 
   foreach($modules as $type => $a) {
     foreach($a as $i => $typeid) {
-      $trueslottype = osmium_get_module_slottype($fitp['modules'][$typeid]['effects']);
+      $trueslottype = get_module_slottype($fitp['modules'][$typeid]['effects']);
       if($trueslottype === false) continue;
 
       $fit['modules'][$trueslottype][] = array('typeid' => $typeid, 'typename' => $names[$typeid]);
@@ -101,11 +101,11 @@ function osmium_update_modules($typeids, $modules) {
   }
 }
 
-function osmium_format_in_array($arr) {
+function format_in_array($arr) {
   return implode(',', array_map(function($x) { return "'$x'"; }, $arr));
 }
 
-function osmium_get_attributes_and_effects($typeids, &$out) {
+function get_attributes_and_effects($typeids, &$out) {
   static $interesting_effects = 
     array(
 	  'loPower',
@@ -130,24 +130,34 @@ function osmium_get_attributes_and_effects($typeids, &$out) {
   $typeidIN = implode(',', $typeids);
   
   $out['effects'] = array();
-  $effectsq = osmium_pg_query_params('SELECT typeid, effectname, dgmeffects.effectid FROM eve.dgmeffects JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid WHERE typeid IN ('.$typeidIN.') AND effectname IN ('.osmium_format_in_array($interesting_effects).')', array());
-  while($row = pg_fetch_assoc($effectsq)) {
+  $effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid
+  FROM eve.dgmeffects 
+  JOIN eve.dgmtypeeffects 
+  ON dgmeffects.effectid = dgmtypeeffects.effectid 
+  WHERE typeid IN ('.$typeidIN.') 
+  AND effectname IN ('.format_in_array($interesting_effects).')', array());
+  while($row = \Osmium\Db\fetch_assoc($effectsq)) {
     $tid = $row['typeid'];
     unset($row['typeid']);
     $out[$tid]['effects'][$row['effectname']] = $row;
   }
 
   $out['attributes'] = array();
-  $effectsq = osmium_pg_query_params('SELECT typeid, attributename, dgmattributetypes.attributeid, COALESCE(valuefloat, valueint) AS value FROM eve.dgmattributetypes JOIN eve.dgmtypeattributes ON dgmattributetypes.attributeid = dgmtypeattributes.attributeid WHERE typeid IN ('.$typeidIN.') AND attributename IN ('.osmium_format_in_array($interesting_attributes).')', array());
-  while($row = pg_fetch_assoc($effectsq)) {
+  $effectsq = \Osmium\Db\query_params('SELECT typeid, attributename, dgmattributetypes.attributeid,
+  COALESCE(valuefloat, valueint) AS value 
+  FROM eve.dgmattributetypes 
+  JOIN eve.dgmtypeattributes ON dgmattributetypes.attributeid = dgmtypeattributes.attributeid 
+  WHERE typeid IN ('.$typeidIN.') 
+  AND attributename IN ('.format_in_array($interesting_attributes).')', array());
+  while($row = \Osmium\Db\fetch_assoc($effectsq)) {
     $tid = $row['typeid'];
     unset($row['typeid']);
     $out[$tid]['attributes'][$row['attributename']] = $row;
   }
 }
 
-function osmium_init_base_slots(&$fit, $fitp) {
-  foreach(array_combine(osmium_slottypes(), 
+function init_base_slots(&$fit, $fitp) {
+  foreach(array_combine(get_slottypes(), 
 			array('hiSlots', 'medSlots', 'lowSlots', 'rigSlots', 'maxSubSystems')) 
 	  as $type => $attributename) {
     if(isset($fitp['hull']['attributes'][$attributename])) {
@@ -158,7 +168,7 @@ function osmium_init_base_slots(&$fit, $fitp) {
   }
 }
 
-function osmium_get_modules_attributes_and_effects($typeids, &$out, $cache) {
+function get_modules_attributes_and_effects($typeids, &$out, $cache) {
   $out = array();
   foreach($typeids as &$typeid) {
     if(isset($cache[$typeid])) {
@@ -167,10 +177,10 @@ function osmium_get_modules_attributes_and_effects($typeids, &$out, $cache) {
     }
   }
 
-  osmium_get_attributes_and_effects($typeids, $out);
+  get_attributes_and_effects($typeids, $out);
 }
 
-function osmium_get_module_slottype($effects) {
+function get_module_slottype($effects) {
   if(isset($effects['loPower'])) return 'low';
   if(isset($effects['medPower'])) return 'medium';
   if(isset($effects['hiPower'])) return 'high';

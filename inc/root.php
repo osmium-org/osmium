@@ -16,41 +16,52 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function osmium_fatal($code, $message) {
+namespace Osmium;
+
+function fatal($code, $message) {
   header('Content-Type: text/plain', true, $code);
   die((string)$message);
 }
 
-define('OSMIUM_ROOT', realpath(__DIR__.'/../'));
-define('OSMIUM_VERSION', '0.1');
-define('OSMIUM_SHORTDESC', 'the collaborative place to share your fittings!');
+function get_ini_setting($key) {
+  static $cnf = null;
+  if($cnf === null) {
+    if(!file_exists(INI_CONFIGURATION_FILE) || !is_readable(INI_CONFIGURATION_FILE)) {
+      fatal(500, "Configuration file '".INI_CONFIGURATION_FILE."' not found or not readable.");
+    }
+    $cnf = parse_ini_file(INI_CONFIGURATION_FILE);
+  }
 
-if(!is_dir($cache = OSMIUM_ROOT.'/cache') || !is_writeable($cache)) {
-  osmium_fatal(500, "Cache directory $cache is not writeable.");
+  return isset($cnf[$key]) ? $cnf[$key] : null;
 }
 
-session_save_path($cache);
+const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
+const VERSION = '0.1.0';
+
+define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
+define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
+define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
+
+if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
+  osmium_fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
+}
+
+session_save_path(CACHE_DIRECTORY);
 session_start();
 
-if(!file_exists($cnf = OSMIUM_ROOT.'/config.ini') || !is_readable($cnf)) {
-  osmium_fatal(500, "Configuration file $cnf not found or not readable.");
-}
+require ROOT.'/inc/chrome.php';
+require ROOT.'/inc/forms.php';
+require ROOT.'/inc/db.php';
+require ROOT.'/inc/eveapi.php';
+require ROOT.'/inc/state.php';
+require ROOT.'/inc/fit.php';
 
-$__osmium_config = parse_ini_file($cnf);
-
-require OSMIUM_ROOT.'/inc/chrome.php';
-require OSMIUM_ROOT.'/inc/forms.php';
-require OSMIUM_ROOT.'/inc/pg.php';
-require OSMIUM_ROOT.'/inc/api.php';
-require OSMIUM_ROOT.'/inc/state.php';
-require OSMIUM_ROOT.'/inc/fit.php';
-
-osmium_prg();
+\Osmium\Forms\post_redirect_get();
 
 if(isset($_POST['__osmium_login'])) {
-  osmium_try_login();
+  \Osmium\State\try_login();
 }
 
-if(!osmium_logged_in()) {
-  osmium_try_recover();
+if(!\Osmium\State\is_logged_in()) {
+  \Osmium\State\try_recover();
 }

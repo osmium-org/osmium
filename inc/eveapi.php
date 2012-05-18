@@ -16,53 +16,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const OSMIUM_API_ROOT = 'https://api.eveonline.com';
-const OSMIUM_LOCK_FILE_TIMEOUT = 10; /* Number of seconds until a lock file is considered stale */
+namespace Osmium\EveApi;
 
-function osmium_api($name, array $params) {
+const API_ROOT = 'https://api.eveonline.com';
+const LOCK_FILE_TIMEOUT = 10; /* Number of seconds until a lock file is considered stale */
+
+function fetch($name, array $params) {
   /* We sort the $params array to always have the same hash even when
      the paramaters are not given in the same order. It makes
      sense. */
   ksort($params);
   $hash = 'API_'.hash('sha256', serialize($name).serialize($params));
-  $cacheDir = OSMIUM_ROOT.'/cache';
+  $cacheDir = \Osmium\CACHE_DIRECTORY;
   $c_file = $cacheDir.'/'.$hash;
   $lock_file = $cacheDir.'/LOCK_'.$hash;
 
   if(file_exists($c_file) && filemtime($c_file) >= time()) {
-    $xml = new SimpleXMLElement(file_get_contents($c_file));
+    $xml = new \SimpleXMLElement(file_get_contents($c_file));
     return $xml;
   }
 
   if(file_exists($lock_file)) {
-    if(filemtime($lock_file) < time() - OSMIUM_LOCK_FILE_TIMEOUT) {
+    if(filemtime($lock_file) < time() - LOCK_FILE_TIMEOUT) {
       /* Stale lock file, ignore */
     } else {
       /* Try to return outdated cache */
       if(file_exists($c_file)) {
 	try {
-	  $xml = new SimpleXMLElement(file_get_contents($c_file));
+	  $xml = new \SimpleXMLElement(file_get_contents($c_file));
 	  return $xml;
 	} catch(Exception $e) {
 	  /* Invalid XML file cached, let's try again */
 	  @unlink($c_file);
-	  return osmium_api($name, $params);
+	  return fetch($name, $params);
 	}
       } else {
 	/* Wait for the lock file to disappear */
 	do {
 	  clearstatcache();
 	  usleep(100000);
-	} while(file_exists($lock_file) && filemtime($lock_file) >= time() - OSMIUM_LOCK_FILE_TIMEOUT);
+	} while(file_exists($lock_file) && filemtime($lock_file) >= time() - LOCK_FILE_TIMEOUT);
 	/* Try again */
-	return osmium_api($name, $params);
+	return fetch($name, $params);
       }
     }
   }
 
   touch($lock_file);
 
-  $c = curl_init(OSMIUM_API_ROOT.$name);
+  $c = curl_init(API_ROOT.$name);
   curl_setopt($c, CURLOPT_POST, true);
   curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($params, '', '&'));
@@ -72,7 +74,7 @@ function osmium_api($name, array $params) {
   $xml = false;
   $ex = null;
   try {
-    $xml = new SimpleXMLElement($raw_xml);
+    $xml = new \SimpleXMLElement($raw_xml);
   } catch(Exception $e) {
     $ex = $e;
   }

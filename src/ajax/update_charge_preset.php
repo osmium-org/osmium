@@ -16,23 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Ajax\UpdateChargePreset;
+
 require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/json_common.php';
+require __DIR__.'/../../inc/ajax_common.php';
 
-if(!osmium_logged_in()) {
+if(!\Osmium\State\is_logged_in()) {
   die();
 }
 
-if(!isset($_GET['token']) || $_GET['token'] != osmium_tok()) {
+if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
   die();
 }
 
-$fit =& osmium_get_fit();
+$fit =& \Osmium\Fit\get_fit();
 
 if($_GET['action'] == 'update') {
   $idx = intval($_GET['index']);
   $fit['charges'][$idx]['name'] = $_GET['name'];
-  foreach(osmium_slottypes() as $type) {
+  foreach(\Osmium\Fit\get_slottypes() as $type) {
     $i = 0;
     $fit['charges'][$idx][$type] = array();
     for($i = 0; $i < 16; ++$i) {

@@ -16,22 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Db;
+
 $__osmium_pg_link = null;
 
-function osmium_pg_connect() {
-  global $__osmium_config, $__osmium_pg_link;
-  $host = $__osmium_config['host'];
-  $port = $__osmium_config['port'];
-  $user = $__osmium_config['user'];
-  $password = $__osmium_config['password'];
-  $dbname = $__osmium_config['dbname'];
+function connect() {
+  global $__osmium_pg_link;
+  $host = \Osmium\get_ini_setting('host');
+  $port = \Osmium\get_ini_setting('port');
+  $user = \Osmium\get_ini_setting('user');
+  $password = \Osmium\get_ini_setting('password');
+  $dbname = \Osmium\get_ini_setting('dbname');
 
   return $__osmium_pg_link = pg_connect("host=$host port=$port user=$user password=$password dbname=$dbname");
 }
 
-function osmium_pg_query_params($query, array $params) {
+function query_params($query, array $params) {
   global $__osmium_pg_link;
-  if($__osmium_pg_link === null) osmium_pg_connect();
+  if($__osmium_pg_link === null) connect();
 
   return pg_query_params($__osmium_pg_link, $query, $params);
+}
+
+function fetch_row($resource) {
+  return pg_fetch_row($resource);
+}
+
+function fetch_assoc($resource) {
+  return pg_fetch_assoc($resource);
 }

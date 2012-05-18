@@ -16,40 +16,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Page\Register;
+
 require __DIR__.'/../inc/root.php';
 
-if(osmium_logged_in()) {
-  osmium_fatal(403, "You are already logged in.");
+if(\Osmium\State\is_logged_in()) {
+  \Osmium\fatal(403, "You are already logged in.");
 }
 
 if(isset($_POST['account_name'])) {
-  $q = osmium_pg_query_params('SELECT COUNT(account_id) FROM osmium.accounts WHERE account_name = $1', array($_POST['account_name']));
-  list($q) = pg_fetch_row($q);
+  $q = \Osmium\Db\query_params('SELECT COUNT(account_id) FROM osmium.accounts WHERE account_name = $1', array($_POST['account_name']));
+  list($q) = \Osmium\Db\fetch_row($q);
 
   $pw = $_POST['password_0'];
   $pw1 = $_POST['password_1'];
 
   if($q !== '0') {
-    osmium_add_field_error('account_name', 'Sorry, this account name is already taken.');
+    \Osmium\Forms\add_field_error('account_name', 'Sorry, this account name is already taken.');
   } else if(!preg_match('%[a-zA-Z]%', $pw) || !preg_match('%[0-9]%', $pw) || mb_strlen($pw) < 5) {
-    osmium_add_field_error('password_0', 'Your password must be at least 5 characters long, and contain at least one letter (a-z, A-Z) and one number (0-9).');
+    \Osmium\Forms\add_field_error('password_0', 'Your password must be at least 5 characters long, and contain at least one letter (a-z, A-Z) and one number (0-9).');
   } else if($pw !== $pw1) {
-    osmium_add_field_error('password_1', 'The two password are not equal.');
+    \Osmium\Forms\add_field_error('password_1', 'The two password are not equal.');
   } else {
     $key_id = $_POST['key_id'];
     $v_code = $_POST['v_code'];
-    $api = osmium_api('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
+    $api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
 
     if(isset($api->error) && !empty($api->error)) {
-      osmium_add_field_error('key_id', (string)$api->error);
+      \Osmium\Forms\add_field_error('key_id', (string)$api->error);
     } else if((string)$api->result->key["type"] !== 'Character') {
-      osmium_add_field_error('key_id', 'Invalid key type. Make sure you only select one character (instead of "All").');
+      \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select one character (instead of "All").');
     } else if((int)$api->result->key["accessMask"] !== 0) {
-      osmium_add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
+      \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
     } else {
       $character_id = (int)$api->result->key->rowset->row["characterID"];
       
-      $char_info = osmium_api('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
+      $char_info = \Osmium\EveApi\fetch('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
 
       $character_name = (string)$char_info->result->characterName;
       $corporation_id = (int)$char_info->result->corporationID;
@@ -60,13 +62,11 @@ if(isset($_POST['account_name'])) {
       if($alliance_id == 0) $alliance_id = null;
       if($alliance_name == '') $alliance_name = null;
 
-      require_once OSMIUM_ROOT.'/lib/PasswordHash.php';
-      $pwHash = new PasswordHash(10, false);
-      $hash = $pwHash->HashPassword($pw);
+      $hash = \Osmium\State\hash_password($pw);
 
-      osmium_pg_query_params('INSERT INTO osmium.accounts (account_name, password_hash, key_id, verification_code, creation_date, last_login_date, character_id, character_name, corporation_id, corporation_name, alliance_id, alliance_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name));
+      \Osmium\Db\query_params('INSERT INTO osmium.accounts (account_name, password_hash, key_id, verification_code, creation_date, last_login_date, character_id, character_name, corporation_id, corporation_name, alliance_id, alliance_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name));
 
-      osmium_post_login($_POST['account_name'], false);
+      \Osmium\State\do_post_login($_POST['account_name'], false);
       $_POST = array();
       header('Location: ./', true, 303);
       die();
@@ -74,28 +74,32 @@ if(isset($_POST['account_name'])) {
   }
 }
 
-osmium_header('Account creation', '.');
+\Osmium\Chrome\print_header('Account creation', '.');
 
 echo "<h1>Account creation</h1>\n";
 
-osmium_form_begin();
-osmium_generic_field('Account name', 'text', 'account_name', null, OSMIUM_FIELD_REMEMBER_VALUE);
-osmium_generic_field('Password', 'password', 'password_0', null, OSMIUM_FIELD_REMEMBER_VALUE);
-osmium_generic_field('Password (repeat)', 'password', 'password_1', null, OSMIUM_FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_form_begin();
+\Osmium\Forms\print_generic_field('Account name', 'text', 'account_name', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_generic_field('Password', 'password', 'password_0', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_generic_field('Password (repeat)', 'password', 'password_1', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
-osmium_separator();
+\Osmium\Forms\print_separator();
 
-osmium_text("<p>You can create an API key here:<br />
+\Osmium\Forms\print_text("<p>You can create an API key here:<br />
 <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/0'>https://support.eveonline.com/api/Key/CreatePredefined/0</a></strong><br />
 <strong>Make sure you only select one character.</strong><br />
 (Be sure not to tick any boxes on the right.)</p>");
 
-osmium_generic_field('API Key ID', 'text', 'key_id', null, OSMIUM_FIELD_REMEMBER_VALUE);
-osmium_generic_field('Verification Code', 'text', 'v_code', null, OSMIUM_FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_generic_field('Verification Code', 'text', 'v_code', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
-osmium_separator();
+\Osmium\Forms\print_separator();
 
-osmium_submit();
-osmium_form_end();
-
-osmium_footer();
+\Osmium\Forms\print_submit();
+\Osmium\Forms\print_form_end();
+\Osmium\Chrome\print_footer();

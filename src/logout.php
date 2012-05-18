@@ -16,24 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Page\Logout;
+
 require __DIR__.'/../inc/root.php';
 
-if(!osmium_logged_in()) {
-  osmium_fatal(403, "Not logged in.");
+if(!\Osmium\State\is_logged_in()) {
+  \Osmium\fatal(403, "Not logged in.");
 }
 
 if(!isset($_GET['tok'])) {
-  osmium_fatal(403, "No token.");
+  \Osmium\fatal(403, "No token.");
 }
 
 $tok = urldecode($_GET['tok']);
-if($tok != $__osmium_state['logout_token']) {
-  osmium_fatal(403, "Invalid token.");
+if($tok != \Osmium\State\get_token()) {
+  \Osmium\fatal(403, "Invalid token.");
 }
 
 $global = isset($_GET['global']) && $_GET['global'];
 
-osmium_logoff($global);
+\Osmium\State\logoff($global);
 
 header('HTTP/1.1 303 See Other', true, 303);
 header('Location: ./', true, 303);

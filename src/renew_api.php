@@ -16,9 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\Page\RenewApi;
+
 require __DIR__.'/../inc/root.php';
 
-if(!osmium_logged_in()) {
+if(!\Osmium\State\is_logged_in()) {
   osmium_fatal(403, "You are not logged in.");
 }
 
@@ -26,18 +28,18 @@ if(isset($_POST['key_id'])) {
   $key_id = $_POST['key_id'];
   $v_code = $_POST['v_code'];
 
-  $api = osmium_api('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
+  $api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
 
   if(isset($api->error) && !empty($api->error)) {
-    osmium_add_field_error('key_id', (string)$api->error);
+    \Osmium\Forms\add_field_error('key_id', (string)$api->error);
   } else if((string)$api->result->key["type"] !== 'Character') {
-      osmium_add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$__osmium_state['a']['character_name'].'.');
-    } else if((int)$api->result->key["accessMask"] !== 0) {
-      osmium_add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
+    \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$__osmium_state['a']['character_name'].'.');
+  } else if((int)$api->result->key["accessMask"] !== 0) {
+    \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
   } else if((int)$api->result->key->rowset->row['characterID'] != $__osmium_state['a']['character_id']) {
-    osmium_add_field_error('key_id', 'Wrong character. Please select the character '.$__osmium_state['a']['character_name'].'.');
+    \Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$__osmium_state['a']['character_name'].'.');
   } else {
-    osmium_pg_query_params('UPDATE osmium.accounts SET key_id = $1, verification_code = $2 WHERE account_id = $3', array($key_id, $v_code, $__osmium_state['a']['account_id']));
+    \Osmium\Db\query_params('UPDATE osmium.accounts SET key_id = $1, verification_code = $2 WHERE account_id = $3', array($key_id, $v_code, $__osmium_state['a']['account_id']));
     unset($__osmium_state['renew_api']);
     session_commit();
     header('Location: ./', true, 303);
@@ -46,7 +48,7 @@ if(isset($_POST['key_id'])) {
 }
 
 $__osmium_state_renew_api_ignore = 1; /* Don't redirect forever to this page. */
-osmium_header('Update API credentials', '.');
+\Osmium\Chrome\print_header('Update API credentials', '.');
 
 echo "<h1>Update API credentials</h1>\n";
 
@@ -54,17 +56,19 @@ if(isset($_GET['non_consensual']) && $_GET['non_consensual'] === '1') {
   echo "<p class='warning_box expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$__osmium_state['a']['character_name']."</strong>), please enter a new API key in the form below.</p>\n";
 }
 
-osmium_form_begin();
+\Osmium\Forms\print_form_begin();
 
-osmium_text("<p>You can create an API key here:<br />
+\Osmium\Forms\print_text("<p>You can create an API key here:<br />
 <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/0'>https://support.eveonline.com/api/Key/CreatePredefined/0</a></strong><br />
 <strong>Make sure that you only select the character ".$__osmium_state['a']['character_name'].".</strong><br />
 (Be sure not to tick any boxes on the right.)</p>");
 
-osmium_generic_field('API Key ID', 'text', 'key_id', null, OSMIUM_FIELD_REMEMBER_VALUE);
-osmium_generic_field('Verification Code', 'text', 'v_code', null, OSMIUM_FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_generic_field('Verification Code', 'text', 'v_code', null, 
+				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
-osmium_submit();
-osmium_form_end();
+\Osmium\Forms\print_submit();
+\Osmium\Forms\print_form_end();
 
-osmium_footer();
+\Osmium\Chrome\print_footer();
