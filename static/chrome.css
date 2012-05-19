@@ -316,16 +316,21 @@ ul#chargegroups, ul#chargegroups > li > ul.chargegroup {
 ul#chargegroups > li,
 div#chargegroupsbox > form > table {
     margin-bottom: 2em;
-    width: 20em;
+    width: 70px;
+}
+
+div#chargegroupsbox > form > table {
+    width: 24em;
 }
 
 ul#chargegroups > li > ul.chargegroup > li {
     border: 1px solid #CCC;
     margin: 0.125em;
     display: inline-block;
-    width: 19em;
+    width: 70px;
     position: relative;
     height: 32px;
+    border-right: none;
 }
 
 ul.chargegroup > li > img.charge_icon {
@@ -337,9 +342,8 @@ ul.chargegroup > li > img.charge_icon {
 
 ul.chargegroup > li > select {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
+    top: -1px;
+    bottom: -1px;
     left: 64px;
 }
 
