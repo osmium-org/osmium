@@ -188,3 +188,11 @@ function get_module_slottype($effects) {
   if(isset($effects['subSystem'])) return 'subsystem';
   return false;
 }
+
+function reset() {
+  $fit =& get_fit();
+  $fitp =& get_fit_private();
+
+  $fit = array();
+  $fitp = array();
+}

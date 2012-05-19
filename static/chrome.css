@@ -2,6 +2,9 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+}
+
+html, body, input[type='submit'], button {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
@@ -137,8 +140,15 @@ input[type="submit"].next_step, input[type="submit"].final_step {
     font-weight: bold;
 }
 
+input[type="submit"].dangerous {
+    border-color: red !important;
+    background-color: #FFF0F0 !important;
+}
+
 input[type="submit"].next_step, input[type="submit"].final_step, input[type="submit"].prev_step {
-    font-size: 1.4em;
+    font-size: 1em;
+    border-color: darkgreen;
+    background-color: #F0FFF0;
 }
 
 select#hullid {
