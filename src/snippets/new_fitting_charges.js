@@ -48,7 +48,7 @@ osmium_commit_preset = function(index) {
     };
     serialized_current_preset['name'] = charge_presets[index]['name'];
     for(var i = 0; i < osmium_slottypes.length; ++i) {
-	for(var j = 0; j < charge_presets[index][osmium_slottypes[i]].length; ++j) {
+	for(var j in charge_presets[index][osmium_slottypes[i]]) {
 	    serialized_current_preset[osmium_slottypes[i] + j] 
 		= charge_presets[index][osmium_slottypes[i]][j];
 	}
@@ -59,6 +59,18 @@ osmium_commit_preset = function(index) {
     });
 };
 
+osmium_set_charge = function(slottype, index, new_val) {
+    if(new_val == -1) {
+	delete charge_presets[selected_preset][slottype]["" + index];
+    } else {
+	if(!(slottype in charge_presets[selected_preset])) {
+	    charge_presets[selected_preset][slottype] = {};
+	}
+
+	charge_presets[selected_preset][slottype]["" + index] = new_val;
+    }
+};
+
 $(function() {
     $("ul#chargegroups > li > ul.chargegroup").selectable({
 	items: 'li',
@@ -67,11 +79,7 @@ $(function() {
     $(document).on('change', 'ul#chargegroups > li > ul.chargegroup > li.ui-selected > select', function(obj) {
 	var new_val = $(this).val();
 	$(this).parent().parent().find('li.ui-selected > select').each(function() {
-	    if(new_val == -1) {
-		delete charge_presets[selected_preset][$(this).data('slottype')]["" + $(this).parent().index()];
-	    } else {
-		charge_presets[selected_preset][$(this).data('slottype')]["" + $(this).parent().index()] = new_val;
-	    }
+	    osmium_set_charge($(this).data('slottype'), $(this).parent().index(), new_val);
 	    $(this).val(new_val);
 	});
 	$(this).parent().parent().find('select').trigger('refresh_picture');
@@ -88,11 +96,7 @@ $(function() {
 	$(this).parent().children('img.charge_icon').attr('src', new_src);
     });
     $(document).on('change', 'ul#chargegroups > li > ul.chargegroup > li:not(.ui-selected) > select', function(obj) {
-	if($(this).val() == -1) {
-	    delete charge_presets[selected_preset][$(this).data('slottype')]["" + $(this).parent().index()];
-	} else {
-	    charge_presets[selected_preset][$(this).data('slottype')]["" + $(this).parent().index()] = $(this).val();
-	}
+	osmium_set_charge($(this).data('slottype'), $(this).parent().index(), $(this).val());
 	$(this).trigger('refresh_picture');
 	osmium_commit_preset(selected_preset);
     });
