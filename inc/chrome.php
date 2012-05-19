@@ -51,6 +51,7 @@ function print_header($title = '', $relative = '.') {
   echo "</ul>\n";
   \Osmium\State\print_login_or_logout_box($relative);
   echo "</nav>\n";
+  echo "<noscript>\n<p id='nojs_warning'>To get the full Osmium experience, please enable Javascript for host <strong>".$_SERVER['HTTP_HOST']."</strong>.</p></noscript>\n";
 }
 
 function print_footer() {

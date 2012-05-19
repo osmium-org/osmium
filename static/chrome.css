@@ -388,3 +388,14 @@ ul#presets > li {
 ul#presets > li:first-child {
     border-top: none;
 }
+
+p#nojs_warning {
+    text-align: center;
+    width: 100%;
+    border-bottom: 1px dotted red;
+    height: 2em;
+    line-height: 2em;
+    margin: 0;
+    padding: 0;
+    background-color: #FFD8D8;
+}
