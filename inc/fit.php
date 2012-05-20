@@ -46,7 +46,7 @@ function init_fit($typeid) {
 		       'typename' => $row[1]
 		       );
 
-  init_base_slots($fit, $fitp);
+  reset_process_hull_attributes($fit, $fitp);
   
   if(!isset($fit['modules'])) {
     foreach(get_slottypes() as $type) {
@@ -62,18 +62,11 @@ function init_fit($typeid) {
 }
 
 function update_modules($typeids, $modules) {
-  static $slot_modifiers = 
-    array(
-	  'low' => 'lowSlotModifier', 
-	  'medium' => 'medSlotModifier', 
-	  'high' => 'hiSlotModifier'
-	  );
-
   $fitp =& get_fit_private();
   $fit =& get_fit();
 
   get_modules_attributes_and_effects($typeids, $fitp['modules'], $fitp['modules']);
-  init_base_slots($fit, $fitp);
+  reset_process_hull_attributes($fit, $fitp);
 
   $typeids[] = -1;
   $names = array();
@@ -90,13 +83,11 @@ function update_modules($typeids, $modules) {
     foreach($a as $i => $typeid) {
       $trueslottype = get_module_slottype($fitp['modules'][$typeid]['effects']);
       if($trueslottype === false) continue;
-
-      $fit['modules'][$trueslottype][] = array('typeid' => $typeid, 'typename' => $names[$typeid]);
-      foreach($slot_modifiers as $mtype => $mattribute) {
-	if(isset($fitp['modules'][$typeid]['attributes'][$mattribute])) {
-	  $fit['hull']['slotcount'][$mtype] += $fitp['modules'][$typeid]['attributes'][$mattribute]['value'];
-	}
-      }
+      $fit['modules'][$trueslottype][] = ($m = array('typeid' => $typeid, 
+						     'typename' => $names[$typeid]));
+      process_module_attributes($m, $fitp['modules'][$typeid]['attributes'], 
+				$fitp['modules'][$typeid]['effects'], 
+				$fit, $fitp);      
     }
   }
 }
@@ -113,6 +104,9 @@ function get_attributes_and_effects($typeids, &$out) {
 	  'hiPower',
 	  'rigSlot',
 	  'subSystem',
+	  'eliteBonusGunshipDroneCapacity2',
+	  'eliteBonusHeavyGunshipDroneCapacity2',
+	  'shipBonusDroneCapacityGF',
 	  );
   static $interesting_attributes = 
     array(
@@ -124,12 +118,20 @@ function get_attributes_and_effects($typeids, &$out) {
 	  'hiSlotModifier',
 	  'medSlotModifier',
 	  'lowSlotModifier',
+	  'droneCapacity',
+	  'eliteBonusGunship2',
+	  'eliteBonusHeavyGunship2',
+	  'shipBonusGF',
 	  );
+
+  foreach($typeids as $tid) {
+    $out[$tid]['effects'] = array();
+    $out[$tid]['attributes'] = array();
+  }
 
   $typeids[] = -1;
   $typeidIN = implode(',', $typeids);
   
-  $out['effects'] = array();
   $effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid
   FROM eve.dgmeffects 
   JOIN eve.dgmtypeeffects 
@@ -142,7 +144,6 @@ function get_attributes_and_effects($typeids, &$out) {
     $out[$tid]['effects'][$row['effectname']] = $row;
   }
 
-  $out['attributes'] = array();
   $effectsq = \Osmium\Db\query_params('SELECT typeid, attributename, dgmattributetypes.attributeid,
   COALESCE(valuefloat, valueint) AS value 
   FROM eve.dgmattributetypes 
@@ -156,15 +157,42 @@ function get_attributes_and_effects($typeids, &$out) {
   }
 }
 
-function init_base_slots(&$fit, $fitp) {
+function reset_process_hull_attributes(&$fit, $fitp) {
+  $attributes = $fitp['hull']['attributes'];
+  $effects = $fitp['hull']['effects'];
+
   foreach(array_combine(get_slottypes(), 
 			array('hiSlots', 'medSlots', 'lowSlots', 'rigSlots', 'maxSubSystems')) 
 	  as $type => $attributename) {
-    if(isset($fitp['hull']['attributes'][$attributename])) {
-      $fit['hull']['slotcount'][$type] = $fitp['hull']['attributes'][$attributename]['value'];
-    } else {
-      $fit['hull']['slotcount'][$type] = 0;
+    $fit['hull']['slotcount'][$type] = isset($attributes[$attributename]) ?
+      $attributes[$attributename]['value'] : 0;
+  }
+
+  $fit['hull']['dronecapacity'] = isset($attributes['droneCapacity']) ?
+    $attributes['droneCapacity']['value'] : 0;
+
+  if(isset($effects['eliteBonusGunshipDroneCapacity2'])) {
+    $fit['hull']['dronecapacity'] += 5 * $attributes['eliteBonusGunship2']['value'];
+  }
+  if(isset($effects['eliteBonusHeavyGunshipDroneCapacity2'])) {
+    $fit['hull']['dronecapacity'] += 5 * $attributes['eliteBonusHeavyGunship2']['value'];
+  }
+  if(isset($effects['shipBonusDroneCapacityGF'])) {
+    $fit['hull']['dronecapacity'] += 5 * $attributes['shipBonusGF']['value'];
+  }
+}
+
+function process_module_attributes($module, $attributes, $effects, &$fit, $fitp) {
+  foreach(array('low' => 'lowSlotModifier', 
+		'medium' => 'medSlotModifier', 
+		'high' => 'hiSlotModifier') as $mtype => $mattribute) {
+    if(isset($attributes[$mattribute])) {
+      $fit['hull']['slotcount'][$mtype] += $attributes[$mattribute]['value'];
     }
+  }
+
+  if(isset($attributes['droneCapacity'])) {
+    $fit['hull']['dronecapacity'] += $attributes['droneCapacity']['value'];
   }
 }
 

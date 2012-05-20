@@ -4,7 +4,7 @@ html, body {
     height: 100%;
 }
 
-html, body, input[type='submit'], button {
+html, body, input[type='submit'], button, select, optgroup, option {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 

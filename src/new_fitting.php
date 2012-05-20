@@ -51,6 +51,9 @@ if(isset($_POST['prev_step'])) {
   if(call_user_func(__NAMESPACE__.'\\'.$steps[$step].'_post')) ++$step;
 } else if(isset($_POST['finalize'])) {
   if(call_user_func(__NAMESPACE__.'\\'.$steps[FINAL_STEP].'_post')) finalize();
+} else if(isset($_POST['reset_fit'])) {
+  $step = 1;
+  \Osmium\Fit\reset();
 }
 
 if($step < 1) $step = 1;
@@ -75,6 +78,7 @@ function print_form_prevnext() {
 
   echo "<tr>\n<td></td>\n<td>\n";
   echo "<div style='float: right;'>$next</div>\n";
+  echo "<input type='submit' name='reset_fit' value='« Reset all state' class='prev_step dangerous' />\n";
   echo "<input type='submit' name='prev_step' value='&lt; Previous step' class='prev_step' $prevd/>\n";
   echo "</td>\n</tr>\n";
 }
@@ -108,8 +112,8 @@ function ship_select() {
 
 function ship_select_pre() { /* Unreachable code for the 1st step */ };
 function ship_select_post() {
-  if(!\Osmium\Fit\init_fit($_POST['hullid'])) {
-    \Osmium\Forms\add_field_error('hullid', "You sent an invalid typeid.");
+  if(!isset($_POST['hullid']) || !\Osmium\Fit\init_fit($_POST['hullid'])) {
+    \Osmium\Forms\add_field_error('hullid', "Please select a ship first. (You can still change your mind later!)");
     return false;
   }
 
@@ -322,6 +326,9 @@ function charges_select_post() { return true; };
 
 function drones_select() {
   print_h1('select drones');
+  $fit =& \Osmium\Fit\get_fit();
+
+  echo "<h2>Maximum drone capacity: ".$fit['hull']['dronecapacity']." m<sup>3</sup></h2>\n";
 
   \Osmium\Forms\print_form_begin();
   print_form_prevnext();
