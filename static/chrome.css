@@ -4,7 +4,7 @@ html, body {
     height: 100%;
 }
 
-html, body, input[type='submit'], button, select, optgroup, option {
+html, body, input, button, select, optgroup, option {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
@@ -12,11 +12,12 @@ div#wrapper {
     min-height: 100%;
     height: auto !important;
     height: 100%;
-    margin: 0 auto -1.6em;
+    margin: 0 auto -1.7em;
 }
 
 footer, div#push {
     height: 1.5em;
+    clear: both;
 }
 
 footer > p {

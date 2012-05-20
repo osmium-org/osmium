@@ -127,7 +127,7 @@ function print_modules_searchbox() {
   echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
   echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
   echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
-  echo "<input type='text' placeholder='Search modules...' />\n";
+  echo "<input type='text' placeholder='Search by name or category...' />\n";
   echo "<input type='submit' value='Search' />\n<br />\n";
   $filters = unserialize(\Osmium\State\get_setting('module_search_filter', serialize(array())));
   $filters = array_combine($v = array_values($filters), $v);
