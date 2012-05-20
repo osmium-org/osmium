@@ -19,7 +19,9 @@
 namespace Osmium;
 
 function fatal($code, $message) {
-  header('Content-Type: text/plain', true, $code);
+  if(!headers_sent()) {
+    header('Content-Type: text/plain', true, $code);
+  }
   die((string)$message);
 }
 

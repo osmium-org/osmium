@@ -33,7 +33,9 @@ function connect() {
 
 function query_params($query, array $params) {
   global $__osmium_pg_link;
-  if($__osmium_pg_link === null) connect();
+  if($__osmium_pg_link === null && !connect()) {
+    \Osmium\fatal(500, 'Could not connect to the database.');
+  }
 
   return pg_query_params($__osmium_pg_link, $query, $params);
 }
