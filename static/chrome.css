@@ -156,7 +156,8 @@ select#hullid {
     font-size: 1.4em;
 }
 
-div#searchbox, div#presetsbox {
+div#searchbox, div#presetsbox,
+div#dronelistbox {
     padding-left: 0.5em;
     width: 20em;
     float: left;
@@ -187,7 +188,8 @@ div#searchbox input[type="text"] {
 }
 
 div#loadoutbox > h2, div#shortlistbox > h2, 
-div#searchbox > h2, div#presetsbox > h2 {
+div#searchbox > h2, div#presetsbox > h2,
+div#dronelistbox > h2 {
     text-align: center;
     margin-top: 0;
 }
@@ -207,22 +209,25 @@ img.meta_filter.ds {
 }
 
 ul#search_results, ul#modules_shortlist,
-div.loadout_slot_cat > ul {
+div.loadout_slot_cat > ul,
+div#dronebay > ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
 }
 
 ul#search_results > li.module,
+ul#search_results > li.drone,
 ul#modules_shortlist > li.module,
-div.loadout_slot_cat > ul > li.module {
+div.loadout_slot_cat > ul > li.module,
+div#dronebay > ul > li.drone {
     cursor: move;
 }
 
-li.module, li.shortlist_dummy, 
-li.empty_slot, li.mod_placeholder {
+li.module, li.shortlist_dummy, li.drone,
+li.empty_slot, li.mod_placeholder, li.drone_placeholder {
     border: 1px solid #CCC;
-    margin: 0.25em;
+    margin: 0.125em;
     background-color: white;
     height: 32px;
     line-height: 32px;
@@ -231,11 +236,16 @@ li.empty_slot, li.mod_placeholder {
     white-space: nowrap;
     position: relative;
     padding-left: 2.25em;
-    display: inline-block;
+    display: inline-block !important;
     width: 17em;
 }
 
-li.module > img, li.empty_slot > img,
+li.drone, li.drone_placeholder {
+    height: 31px;
+    line-height: 31px;
+}
+
+li.module > img, li.empty_slot > img, li.drone > img,
 ul.chargegroup > li > img.module_icon {
     position: absolute;
     top: -1px;
@@ -244,12 +254,13 @@ ul.chargegroup > li > img.module_icon {
 }
 
 li.shortlist_dummy, li.empty_slot,
-li.mod_placeholder {
+li.mod_placeholder, li.drone_placeholder {
     border: 1px dashed #888;
     color: #888;
 }
 
-li.shortlist_dummy {
+li.shortlist_dummy,
+li.drone_placeholder {
     width: 19em;
     padding-left: 0.25em;
 }
@@ -281,12 +292,14 @@ div#loadoutbox > div.loadout_slot_cat {
     display: none;
 }
 
-table#slot_count strong {
+table#slot_count strong,
+p#dronecapacity > strong.overflow {
     display: inline-block;
     padding: 0.25em;
 }
 
 table#slot_count strong.overflow,
+p#dronecapacity > strong.overflow,
 li.module.overflow {
     background-color: #FCC;
 }
@@ -413,4 +426,29 @@ p#nojs_warning {
     margin: 0;
     padding: 0;
     background-color: #FFD8D8;
+}
+
+div#dronelistbox > form {
+    margin-bottom: 0.5em;
+}
+
+div#dronelistbox > ul#search_results {
+    margin-top: 0.5em;
+}
+
+div#dronebay {
+    margin-left: 21em;
+    padding-right: 1em;
+    padding-left: 1em;
+    width: 25em;
+    border-left: 1px dotted #CCC;
+}
+
+div#dronebay > form > table {
+    margin-top: 1em;
+    width: 25em;
+}
+
+div#dronebay > p#dronecapacity > img {
+    height: 3em;
 }

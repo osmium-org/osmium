@@ -324,15 +324,37 @@ function charges_select_post() { return true; };
 
 /* ----------------------------------------------------- */
 
-function drones_select() {
-  print_h1('select drones');
-  $fit =& \Osmium\Fit\get_fit();
+function print_drone_searchbox() {
+  echo "<div id='dronelistbox'>\n<h2 class='has_spinner'>Search drones";
+  echo "<img src='./static/icons/spinner.gif' id='dronelistbox_spinner' class='spinner' alt='' /><br />\n";
+  echo "<em class='help'>(Double-click to add to bay)</em>\n</h2>\n";
+  echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
+  echo "<input type='text' placeholder='Search by name or category...' />\n";
+  echo "<input type='submit' value='Search' />\n";
+  echo "</form>\n<ul id='search_results'></ul>\n</div>\n";
+}
 
-  echo "<h2>Maximum drone capacity: ".$fit['hull']['dronecapacity']." m<sup>3</sup></h2>\n";
+function print_dronebay() {
+  echo "<div id='dronebay'>\n<h2 class='has_spinner'>Drone bay";
+  echo "<img src='./static/icons/spinner.gif' id='dronebay_spinner' class='spinner' alt='' /><br />\n";
+  echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
+  echo "<p id='dronecapacity'><img src='./static/icons/dronecapacity.png' alt='Drone capacity' title='Drone capacity' /> <strong></strong> m<sup>3</sup></p>";
+  echo "<ul></ul>\n";
 
   \Osmium\Forms\print_form_begin();
   print_form_prevnext();
   \Osmium\Forms\print_form_end();
+  echo "</div>\n";
+}
+
+function drones_select() {
+  print_h1('select drones');
+  $fit =& \Osmium\Fit\get_fit();
+
+  print_drone_searchbox();
+  print_dronebay();
+  \Osmium\Chrome\print_js_snippet('new_fitting_drones');
+  echo "<script>osmium_load_drones(".json_encode($fit).");</script>\n";
 }
 
 function drones_select_pre() { return true; };

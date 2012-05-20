@@ -57,6 +57,10 @@ function init_fit($typeid) {
   if(!isset($fit['charges'])) {
     $fit['charges'] = array(array('name' => 'Default'));
   }
+
+  if(!isset($fit['drones'])) {
+    $fit['drones'] = array();
+  }
   
   return true;
 }
@@ -89,6 +93,47 @@ function update_modules($typeids, $modules) {
 				$fitp['modules'][$typeid]['effects'], 
 				$fit, $fitp);      
     }
+  }
+}
+
+function update_drones($drones) {
+  $keys = array_keys($drones);
+  $keys[] = -1;
+  
+  $rows = array();
+  $out = array();
+  $r = \Osmium\Db\query_params('SELECT typeid, typename, volume FROM osmium.invdrones WHERE typeid IN ('.format_in_array($keys).')', array());
+  while($row = \Osmium\Db\fetch_row($r)) {
+    $rows[$row[0]] = $row;
+  }
+
+  foreach($drones as $typeid => $count) {
+    $out[] = 
+      array(
+	    'typeid' => $typeid,
+	    'typename' => $rows[$typeid][1],
+	    'volume' => $rows[$typeid][2],
+	    'count' => $count,
+	    );
+  }
+
+  $fit =& get_fit();
+  $fit['drones'] = $out;
+}
+
+function pop_drone($typeid) {
+  $fit =& get_fit();
+  foreach($fit['drones'] as $i => $drone) {
+    if($drone['typeid'] != $typeid) continue;
+
+    if($drone['count'] >= 2) {
+      $fit['drones'][$i]['count']--;
+    } else if($drone['count'] == 1) {
+      unset($fit['drones'][$i]);
+      $fit['drones'] = array_values($fit['drones']);
+    }
+
+    break;
   }
 }
 
