@@ -31,11 +31,7 @@ if(!\Osmium\State\is_logged_in()) {
 echo "<script>\nvar osmium_tok = '".\Osmium\State\get_token()."';\n";
 echo "var osmium_slottypes = ".json_encode(\Osmium\Fit\get_slottypes()).";\n</script>\n";
 
-if(!isset($_SESSION['__osmium_create_fit_step'])) {
-  $_SESSION['__osmium_create_fit_step'] = 1;
-}
-
-$step =& $_SESSION['__osmium_create_fit_step'];
+$step = \Osmium\State\get_state('create_fit_step', 1);
 
 $steps = array(
 	       1 => 'ship_select',
@@ -46,11 +42,11 @@ $steps = array(
 );
 
 if(isset($_POST['prev_step'])) {
-  if(call_user_func(__NAMESPACE__.'\\'.$steps[$step].'_pre')) --$step;
+  if(call_local($steps[$step].'_pre')) --$step;
 } else if(isset($_POST['next_step'])) {
-  if(call_user_func(__NAMESPACE__.'\\'.$steps[$step].'_post')) ++$step;
+  if(call_local($steps[$step].'_post')) ++$step;
 } else if(isset($_POST['finalize'])) {
-  if(call_user_func(__NAMESPACE__.'\\'.$steps[FINAL_STEP].'_post')) finalize();
+  if(call_local($steps[FINAL_STEP].'_post')) finalize();
 } else if(isset($_POST['reset_fit'])) {
   $step = 1;
 
@@ -62,11 +58,21 @@ if(isset($_POST['prev_step'])) {
 if($step < 1) $step = 1;
 if($step > FINAL_STEP) $step = FINAL_STEP;
 
-call_user_func(__NAMESPACE__.'\\'.$steps[$step]);
+call_local($steps[$step]);
 
+\Osmium\State\put_state('create_fit_step', $step);
 \Osmium\Chrome\print_footer();
 
 /* ----------------------------------------------------- */
+
+function call_local($name) {
+  $func_name = __NAMESPACE__.'\\'.$name;
+  if(is_callable($func_name)) {
+    return call_user_func($func_name);
+  }
+
+  return false;
+}
 
 function print_form_prevnext() {
   global $step;
