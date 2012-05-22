@@ -27,7 +27,7 @@ if(!\Osmium\State\is_logged_in()) {
 
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-  $fit =& \Osmium\Fit\get_fit();
+  $fit = \Osmium\State\get_state('new_fit', array());
   $drones = array();
   $i = 0;
   
@@ -40,7 +40,8 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
     ++$i;
   }
 
-  \Osmium\Fit\update_drones($drones);
+  \Osmium\Fit\update_drones($fit, $drones);
+  \Osmium\State\put_state('new_fit', $fit);
   \Osmium\Chrome\return_json($fit);
 } else {
   \Osmium\Chrome\return_json(array());

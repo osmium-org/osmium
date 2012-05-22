@@ -29,7 +29,7 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
   die();
 }
 
-$fit =& \Osmium\Fit\get_fit();
+$fit = \Osmium\State\get_state('new_fit', array());
 
 if($_GET['action'] == 'update') {
   $idx = intval($_GET['index']);
@@ -47,3 +47,5 @@ if($_GET['action'] == 'update') {
   unset($fit['charges'][$idx]);
   $fit['charges'] = array_values($fit['charges']); /* Reorder the numeric keys */
 }
+
+\Osmium\State\put_state('new_fit', $fit);

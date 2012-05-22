@@ -18,35 +18,29 @@
 
 namespace Osmium\Fit;
 
+/* KEEP THIS NAMESPACE PURE. */
+
 function get_slottypes() {
   return array('high', 'medium', 'low', 'rig', 'subsystem');
 }
 
-function &get_fit() {
-  return $_SESSION['__osmium_fit'];
-}
-
-function &get_fit_private() {
-  return $_SESSION['__osmium_fit_private'];
-}
-
-function init_fit($typeid) {
-  $fit =& get_fit();
-  $fitp =& get_fit_private();
-
-  $row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT invships.typeid, typename FROM osmium.invships WHERE invships.typeid = $1', array($typeid)));
+function init_fit(&$fit, $typeid) {
+  $row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT typename FROM osmium.invships WHERE typeid = $1', array($typeid)));
 
   if($row === false) return false;
 
-  get_attributes_and_effects(array($typeid), $fitp['hull']);
-  $fitp['hull'] = $fitp['hull'][$row[0]];
+  $fit['cache'] = array();
 
-  $fit['hull'] = array(
-		       'typeid' => $row[0],
-		       'typename' => $row[1]
-		       );
+  get_attributes_and_effects(array($typeid), $fit['cache']['hull']);
+  $fit['cache']['hull'] = $fit['cache']['hull'][$typeid];
 
-  reset_process_hull_attributes($fit, $fitp);
+  $fit['hull'] = 
+    array(
+	  'typeid' => $typeid,
+	  'typename' => $row[0]
+	  );
+
+  reset_process_hull_attributes($fit);
   
   if(!isset($fit['modules'])) {
     foreach(get_slottypes() as $type) {
@@ -65,12 +59,9 @@ function init_fit($typeid) {
   return true;
 }
 
-function update_modules($typeids, $modules) {
-  $fitp =& get_fit_private();
-  $fit =& get_fit();
-
-  get_modules_attributes_and_effects($typeids, $fitp['modules'], $fitp['modules']);
-  reset_process_hull_attributes($fit, $fitp);
+function update_modules(&$fit, $typeids, $modules) {
+  get_modules_attributes_and_effects($typeids, $fit['cache']['modules'], $fit['cache']['modules']);
+  reset_process_hull_attributes($fit);
 
   $typeids[] = -1;
   $names = array();
@@ -85,18 +76,19 @@ function update_modules($typeids, $modules) {
 
   foreach($modules as $type => $a) {
     foreach($a as $i => $typeid) {
-      $trueslottype = get_module_slottype($fitp['modules'][$typeid]['effects']);
+      $trueslottype = get_module_slottype($fit['cache']['modules'][$typeid]['effects']);
       if($trueslottype === false) continue;
       $fit['modules'][$trueslottype][] = ($m = array('typeid' => $typeid, 
 						     'typename' => $names[$typeid]));
-      process_module_attributes($m, $fitp['modules'][$typeid]['attributes'], 
-				$fitp['modules'][$typeid]['effects'], 
-				$fit, $fitp);      
+      process_module_attributes($fit, 
+				$m, 
+				$fit['cache']['modules'][$typeid]['attributes'], 
+				$fit['cache']['modules'][$typeid]['effects']);      
     }
   }
 }
 
-function update_drones($drones) {
+function update_drones(&$fit, $drones) {
   $keys = array_keys($drones);
   $keys[] = -1;
   
@@ -117,12 +109,10 @@ function update_drones($drones) {
 	    );
   }
 
-  $fit =& get_fit();
   $fit['drones'] = $out;
 }
 
-function pop_drone($typeid) {
-  $fit =& get_fit();
+function pop_drone(&$fit, $typeid) {
   foreach($fit['drones'] as $i => $drone) {
     if($drone['typeid'] != $typeid) continue;
 
@@ -202,9 +192,9 @@ function get_attributes_and_effects($typeids, &$out) {
   }
 }
 
-function reset_process_hull_attributes(&$fit, $fitp) {
-  $attributes = $fitp['hull']['attributes'];
-  $effects = $fitp['hull']['effects'];
+function reset_process_hull_attributes(&$fit) {
+  $attributes = $fit['cache']['hull']['attributes'];
+  $effects = $fit['cache']['hull']['effects'];
 
   foreach(array_combine(get_slottypes(), 
 			array('hiSlots', 'medSlots', 'lowSlots', 'rigSlots', 'maxSubSystems')) 
@@ -227,7 +217,7 @@ function reset_process_hull_attributes(&$fit, $fitp) {
   }
 }
 
-function process_module_attributes($module, $attributes, $effects, &$fit, $fitp) {
+function process_module_attributes(&$fit, $module, $attributes, $effects) {
   foreach(array('low' => 'lowSlotModifier', 
 		'medium' => 'medSlotModifier', 
 		'high' => 'hiSlotModifier') as $mtype => $mattribute) {
@@ -262,10 +252,6 @@ function get_module_slottype($effects) {
   return false;
 }
 
-function reset() {
-  $fit =& get_fit();
-  $fitp =& get_fit_private();
-
+function reset(&$fit) {
   $fit = array();
-  $fitp = array();
 }

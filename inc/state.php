@@ -239,9 +239,25 @@ function put_setting($key, $value) {
   $accountid = $__osmium_state['a']['account_id'];
   \Osmium\Db\query_params('DELETE FROM osmium.account_settings WHERE account_id = $1 AND key = $2', array($accountid, $key));
   \Osmium\Db\query_params('INSERT INTO osmium.account_settings (account_id, key, value) VALUES ($1, $2, $3)', array($accountid, $key, $value));
+
+  return $value;
 }
 
 function get_token() {
   global $__osmium_state;
   return $__osmium_state['logout_token'];
+}
+
+function get_state($key, $default = null) {
+  if(isset($_SESSION['__osmium_state'][$key])) {
+    return $_SESSION['__osmium_state'][$key];
+  } else return $default;
+}
+
+function put_state($key, $value) {
+  if(!isset($_SESSION['__osmium_state']) || !is_array($_SESSION['__osmium_state'])) {
+    $_SESSION['__osmium_state'] = array();
+  }
+
+  return $_SESSION['__osmium_state'][$key] = $value;
 }

@@ -53,7 +53,10 @@ if(isset($_POST['prev_step'])) {
   if(call_user_func(__NAMESPACE__.'\\'.$steps[FINAL_STEP].'_post')) finalize();
 } else if(isset($_POST['reset_fit'])) {
   $step = 1;
-  \Osmium\Fit\reset();
+
+  $fit = \Osmium\State\get_state('new_fit');
+  \Osmium\Fit\reset($fit);
+  \Osmium\State\put_state('new_fit', $fit);
 }
 
 if($step < 1) $step = 1;
@@ -91,7 +94,7 @@ function print_h1($name) {
 /* ----------------------------------------------------- */
 
 function ship_select() {
-  $fit =& \Osmium\Fit\get_fit();
+  $fit = \Osmium\State\get_state('new_fit', array());
 
   print_h1('select ship hull');
   \Osmium\Forms\print_form_begin();
@@ -112,11 +115,13 @@ function ship_select() {
 
 function ship_select_pre() { /* Unreachable code for the 1st step */ };
 function ship_select_post() {
-  if(!isset($_POST['hullid']) || !\Osmium\Fit\init_fit($_POST['hullid'])) {
+  $fit = \Osmium\State\get_state('new_fit', array());
+  if(!isset($_POST['hullid']) || !\Osmium\Fit\init_fit($fit, $_POST['hullid'])) {
     \Osmium\Forms\add_field_error('hullid', "Please select a ship first. (You can still change your mind later!)");
     return false;
   }
 
+  \Osmium\State\put_state('new_fit', $fit);
   return true;
 };
 
@@ -158,7 +163,6 @@ function print_modulelist() {
   echo "<img src='./static/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
   echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
   
-  $fit = \Osmium\Fit\get_fit();
   $categories = array();
   foreach(\Osmium\Fit\get_slottypes() as $type) {
     $categories[$type] = ucfirst($type);
@@ -196,9 +200,14 @@ function modules_select() {
   print_modules_shortlist();
   print_modulelist();
   \Osmium\Chrome\print_js_snippet('new_fitting');
+
+  $fit = \Osmium\State\get_state('new_fit', array());
   echo "<script>\n$(function() {\n";
   echo "osmium_shortlist_load(".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n";
-  echo "osmium_loadout_load(".json_encode(\Osmium\Fit\get_fit()).");\n";
+  echo "osmium_loadout_load(".json_encode(array(
+						'hull' => $fit['hull'], 
+						'modules' => $fit['modules'],
+						)).");\n";
   echo "});\n</script>\n";
 }
 
@@ -238,7 +247,7 @@ function print_charge_groups() {
 }
 
 function get_charges() {
-  $fit =& \Osmium\Fit\get_fit();
+  $fit = \Osmium\State\get_state('new_fit', array());
   $typeids = array();
   foreach($fit['modules'] as $type => $a) {
     foreach($a as $k) {
@@ -285,7 +294,7 @@ function get_charges() {
 }
 
 function print_chargegroup($groupid, $typeids, $charges) {
-  $fit =& \Osmium\Fit\get_fit();
+  $fit = \Osmium\State\get_state('new_fit', array());
   echo "<ul class='chargegroup'>\n";
   foreach($fit['modules'] as $type => $a) {
     foreach($a as $i => $module) {
@@ -313,7 +322,7 @@ function charges_select() {
   print_charge_presetsbox();
   print_charge_groups();
 
-  $fit =& \Osmium\Fit\get_fit();
+  $fit = \Osmium\State\get_state('new_fit', array());
   echo "<script>\nvar charge_presets = ".json_encode($fit['charges']).";\nvar selected_preset = 0;\n</script>\n";
 
   \Osmium\Chrome\print_js_snippet('new_fitting_charges');
@@ -349,12 +358,15 @@ function print_dronebay() {
 
 function drones_select() {
   print_h1('select drones');
-  $fit =& \Osmium\Fit\get_fit();
+  $fit = \Osmium\State\get_state('new_fit', array());
 
   print_drone_searchbox();
   print_dronebay();
   \Osmium\Chrome\print_js_snippet('new_fitting_drones');
-  echo "<script>osmium_load_drones(".json_encode($fit).");</script>\n";
+  echo "<script>osmium_load_drones(".json_encode(array(
+						       'hull' => $fit['hull'],
+						       'drones' => $fit['drones'],
+						       )).");</script>\n";
 }
 
 function drones_select_pre() { return true; };
