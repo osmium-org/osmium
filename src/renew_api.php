@@ -24,6 +24,8 @@ if(!\Osmium\State\is_logged_in()) {
   osmium_fatal(403, "You are not logged in.");
 }
 
+$a = \Osmium\State\get_state('a');
+
 if(isset($_POST['key_id'])) {
   $key_id = $_POST['key_id'];
   $v_code = $_POST['v_code'];
@@ -33,21 +35,20 @@ if(isset($_POST['key_id'])) {
   if(isset($api->error) && !empty($api->error)) {
     \Osmium\Forms\add_field_error('key_id', (string)$api->error);
   } else if((string)$api->result->key["type"] !== 'Character') {
-    \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$__osmium_state['a']['character_name'].'.');
+    \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$a['character_name'].'.');
   } else if((int)$api->result->key["accessMask"] !== 0) {
     \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
-  } else if((int)$api->result->key->rowset->row['characterID'] != $__osmium_state['a']['character_id']) {
-    \Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$__osmium_state['a']['character_name'].'.');
+  } else if((int)$api->result->key->rowset->row['characterID'] != $a['character_id']) {
+    \Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$a['character_name'].'.');
   } else {
-    \Osmium\Db\query_params('UPDATE osmium.accounts SET key_id = $1, verification_code = $2 WHERE account_id = $3', array($key_id, $v_code, $__osmium_state['a']['account_id']));
-    unset($__osmium_state['renew_api']);
+    \Osmium\Db\query_params('UPDATE osmium.accounts SET key_id = $1, verification_code = $2 WHERE account_id = $3', array($key_id, $v_code, $a['account_id']));
+    \Osmium\State\put_state('must_renew_api', false);
     session_commit();
     header('Location: ./', true, 303);
     die();
   }
 }
 
-$__osmium_state_renew_api_ignore = 1; /* Don't redirect forever to this page. */
 \Osmium\Chrome\print_header('Update API credentials', '.');
 
 echo "<h1>Update API credentials</h1>\n";

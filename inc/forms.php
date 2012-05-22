@@ -28,18 +28,19 @@ function post_redirect_get() {
   $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
   if(isset($_POST) && count($_POST) > 0) {
-    $_SESSION['__osmium_prg_data'] = array($uri, $_POST);
+    \Osmium\State\put_state('prg_data', array($uri, $_POST));
     session_commit();
     header('HTTP/1.1 303 See Other', true, 303);
     header('Location: '.$uri, true, 303);
     die();
   }
 
-  if(isset($_SESSION['__osmium_prg_data'])) {
-    list($from_uri, $prg_data) = $_SESSION['__osmium_prg_data'];
+  $prg = \Osmium\State\get_state('prg_data', null);
+  if($prg !== null) {
+    list($from_uri, $prg_data) = $prg;
     if($from_uri === $uri) $_POST = $prg_data;
 
-    unset($_SESSION['__osmium_prg_data']);
+    \Osmium\State\put_state('prg_data', null);
   }
 }
 

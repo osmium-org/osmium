@@ -192,7 +192,7 @@ function check_api_key() {
     /* Error code details: http://wiki.eve-id.net/APIv2_Eve_ErrorList_XML */
     if(200 <= $err_code && $err_code < 300) {
       /* Most likely user error */
-      $__osmium_state['renew_api'] = true;
+      \Osmium\State\put_state('must_renew_api', true);
     } else {
       /* Most likely internal error */
       global $__osmium_login_state;
@@ -206,12 +206,14 @@ function check_api_key() {
 
 function api_maybe_redirect($relative) {
   global $__osmium_state;
-  global $__osmium_state_renew_api_ignore;
 
   if(!is_logged_in()) return;
 
-  if(isset($__osmium_state['renew_api']) && $__osmium_state['renew_api'] === true
-     && !$__osmium_state_renew_api_ignore) {
+  $must_renew_api = \Osmium\State\get_state('must_renew_api', false);
+  $pagename = explode('?', $_SERVER['REQUEST_URI'], 2);
+  $pagename = explode('/', $pagename[0]);
+  $pagename = array_pop($pagename);
+  if($must_renew_api === true && $pagename != 'renew_api') {
     header('Location: '.$relative.'/renew_api?non_consensual=1', true, 303);
     die();
   }
