@@ -90,6 +90,15 @@ function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
   print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' $value/>");
 }
 
+function print_textarea($label, $name, $id = null, $flags = 0) {
+  if($id === null) $id = $name;
+  if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
+    $value = htmlspecialchars($_POST[$name]);
+  } else $value = '';
+
+  print_generic_row($name, "<label for='$id'>$label</label>", "<textarea name='$name' id='$id'>$value</textarea>");
+}
+
 function print_submit($value = '') {
   if($value !== '') {
     $value = "value='".htmlspecialchars($value, ENT_QUOTES)."' ";
