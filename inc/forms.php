@@ -123,7 +123,7 @@ function print_select($label, $name, $options, $size = null, $id = null, $flags 
       $fOptions .= format_optgroup($name, $group, $flags);
       $fOptions .= "</optgroup>\n";
     }
-  } else $options = format_optgroup($name, $options, $flags);
+  } else $fOptions = format_optgroup($name, $options, $flags);
 
   if($flags & ALLOW_MULTISELECT) {
     $name = $name.'[]';
