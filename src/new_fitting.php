@@ -62,6 +62,8 @@ if($step > FINAL_STEP) $step = FINAL_STEP;
 
 call_local($steps[$step]);
 
+echo "<script>$(function() { $('input[name=\"reset_fit\"]').click(function() { return confirm('This will reset all the changes you made. Continue?'); }); });</script>\n";
+
 \Osmium\State\put_state('create_fit_step', $step);
 \Osmium\Chrome\print_footer();
 
