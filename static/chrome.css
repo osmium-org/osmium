@@ -8,6 +8,10 @@ html, body, input, button, select, optgroup, option {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
+textarea, input[type='text'], input[type='password'], select, optgroup, option {
+    font-family: monospace;
+}
+
 div#wrapper {
     min-height: 100%;
     height: auto !important;
@@ -121,7 +125,7 @@ input:active {
     border-color: red;
 }
 
-input:focus {
+input:focus, textarea:focus {
     border-color: orange;
 }
 
@@ -451,4 +455,62 @@ div#dronebay > form > table {
 
 div#dronebay > p#dronecapacity > img {
     height: 3em;
+}
+
+form > table > tbody > tr > td > input[type='text'],
+form > table > tbody > tr > td > input[type='password'],
+form > table > tbody > tr > td > textarea {
+    width: 100%;
+    height: 1.5em;
+    line-height: 1.5em;
+}
+
+form > table > tbody > tr > th > label {
+    display: block;
+    text-align: right;
+    height: 1.5em;
+    line-height: 1.5em;
+}
+
+form > table > tbody > tr > td > select {
+    height: 1.7em;
+    line-height: 1.7em;
+}
+
+form > table > tbody > tr > td > select[size] {
+    height: auto;
+}
+
+form > table > tbody > tr > th,
+form > table > tbody > tr > td {
+    padding: 0.5em;
+    vertical-align: top;
+    border-top: 1px dotted #CCC;
+}
+
+form > table > tbody > tr.separator > th,
+form > table > tbody > tr.separator > td,
+form > table > tbody > tr.separator + tr > th,
+form > table > tbody > tr.separator + tr > td {
+    border-top: none;
+}
+
+tr.separator > td > hr {
+    height: 1px;
+    color: #AAA;
+    background-color: #AAA;
+    border: none;
+}
+
+form > table > tbody > tr {
+    height: 2em;
+}
+
+form > table > tbody > tr > td > textarea {
+    height: 15em;
+}
+
+input, textarea, select {
+    border: 1px solid #777;
+    background-color: white;
 }

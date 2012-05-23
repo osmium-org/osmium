@@ -76,7 +76,7 @@ function print_generic_row($name, $td1, $td2) {
   }
 
   echo "<tr$class>\n";
-  echo "<td>$td1</td>\n";
+  echo "<th>$td1</th>\n";
   echo "<td>$td2</td>\n";
   echo "</tr>\n";
 }
@@ -109,7 +109,7 @@ function print_submit($value = '') {
 }
 
 function print_separator() {
-  echo "<tr>\n<td colspan='2'><hr /></td>\n</tr>\n";
+  echo "<tr class='separator'>\n<td colspan='2'><hr /></td>\n</tr>\n";
 }
 
 function print_text($text) {
