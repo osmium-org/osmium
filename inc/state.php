@@ -25,30 +25,30 @@ const COOKIE_AUTH_DURATION = 604800; /* 7 days */
 
 function is_logged_in() {
   global $__osmium_state;
-  return isset($__osmium_state['a']['character_id']) && $__osmium_state['a']['character_id'] > 0;
+  return isset($__osmium_state['a']['characterid']) && $__osmium_state['a']['characterid'] > 0;
 }
 
 function do_post_login($account_name, $use_cookie = false) {
   global $__osmium_state;
   $__osmium_state = array();
 
-  \Osmium\Db\query_params('UPDATE osmium.accounts SET last_login_date = $1 WHERE account_name = $2', array(time(), $account_name));
-
-  $q = \Osmium\Db\query_params('SELECT account_id, account_name, key_id, verification_code, creation_date, last_login_date, character_id, character_name, corporation_id, corporation_name, alliance_id, alliance_name FROM osmium.accounts WHERE account_name = $1', array($account_name));
+  $q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.accounts WHERE accountname = $1', array($account_name));
   $__osmium_state['a'] = \Osmium\Db\fetch_assoc($q);
 
   if($use_cookie) {
     $token = uniqid('Osmium_', true);
-    $account_id = $__osmium_state['a']['account_id'];
+    $account_id = $__osmium_state['a']['accountid'];
     $attributes = get_client_attributes();
     $expiration_date = time() + COOKIE_AUTH_DURATION;
 
-    \Osmium\Db\query_params('INSERT INTO osmium.cookie_tokens (token, account_id, client_attributes, expiration_date) VALUES ($1, $2, $3, $4)', array($token, $account_id, $attributes, $expiration_date));
+    \Osmium\Db\query_params('INSERT INTO osmium.cookietokens (token, accountid, clientattributes, expirationdate) VALUES ($1, $2, $3, $4)', array($token, $account_id, $attributes, $expiration_date));
 
     setcookie('Osmium', $token, $expiration_date, '/', $_SERVER['HTTP_HOST'], false, true);
   }
 
-  $__osmium_state['logout_token'] = uniqid('OsmiumTok_', true);
+  $__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
+
+  \Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
 
   check_api_key();
 }
@@ -58,8 +58,8 @@ function logoff($global = false) {
   if($global && !is_logged_in()) return;
 
   if($global) {
-    $account_id = $__osmium_state['a']['account_id'];
-    \Osmium\Db\query_params('DELETE FROM osmium.cookie_tokens WHERE account_id = $1', array($account_id));
+    $account_id = $__osmium_state['a']['accountid'];
+    \Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE accountid = $1', array($account_id));
   }
 
   setcookie('Osmium', false, 42, '/', $_SERVER['HTTP_HOST'], false, true);
@@ -105,9 +105,9 @@ function print_login_box($relative) {
 
 function print_logoff_box($relative) {
   global $__osmium_state;
-  $name = $__osmium_state['a']['character_name'];
-  $id = $__osmium_state['a']['character_id'];
-  $tok = urlencode($__osmium_state['logout_token']);
+  $name = $__osmium_state['a']['charactername'];
+  $id = $__osmium_state['a']['characterid'];
+  $tok = urlencode(get_token());
 
   echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>$name</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
@@ -131,7 +131,7 @@ function try_login() {
   $pw = $_POST['password'];
   $remember = isset($_POST['remember']) && $_POST['remember'] === 'on';
 
-  list($hash) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT password_hash FROM osmium.accounts WHERE account_name = $1', array($account_name)));
+  list($hash) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT passwordhash FROM osmium.accounts WHERE accountname = $1', array($account_name)));
 
   if(check_password($pw, $hash)) {
     do_post_login($account_name, $remember);
@@ -149,13 +149,13 @@ function try_recover() {
   $now = time();
   $login = false;
 
-  list($has_token) = pg_fetch_row(\Osmium\Db\query_params('SELECT COUNT(token) FROM osmium.cookie_tokens WHERE token = $1 AND expiration_date >= $2', array($token, $now)));
+  list($has_token) = pg_fetch_row(\Osmium\Db\query_params('SELECT COUNT(token) FROM osmium.cookietokens WHERE token = $1 AND expirationdate >= $2', array($token, $now)));
 
   if($has_token == 1) {
-    list($account_id, $client_attributes) = pg_fetch_row(\Osmium\Db\query_params('SELECT account_id, client_attributes FROM osmium.cookie_tokens WHERE token = $1', array($token)));
+    list($account_id, $client_attributes) = pg_fetch_row(\Osmium\Db\query_params('SELECT accountid, clientattributes FROM osmium.cookietokens WHERE token = $1', array($token)));
 
     if(check_client_attributes($client_attributes)) {
-      $k = pg_fetch_row(\Osmium\Db\query_params('SELECT account_name FROM osmium.accounts WHERE account_id = $1', array($account_id)));
+      $k = pg_fetch_row(\Osmium\Db\query_params('SELECT accountname FROM osmium.accounts WHERE accountid = $1', array($account_id)));
       if($k !== false) {
 	list($name) = $k;
 	do_post_login($name, true);
@@ -163,7 +163,7 @@ function try_recover() {
       }
     }
 
-    \Osmium\Db\query_params('DELETE FROM osmium.cookie_tokens WHERE token = $1', array($token));
+    \Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', array($token));
   }
 
   if(!$login) {
@@ -175,8 +175,8 @@ function check_api_key() {
   if(!is_logged_in()) return;
   global $__osmium_state;
 
-  $key_id = $__osmium_state['a']['key_id'];
-  $v_code = $__osmium_state['a']['verification_code'];
+  $key_id = $__osmium_state['a']['keyid'];
+  $v_code = $__osmium_state['a']['verificationcode'];
   $info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
 
   if(!($info instanceof \SimpleXMLElement)) {
@@ -223,10 +223,10 @@ function get_setting($key, $default = null) {
   if(!is_logged_in()) return $default;
 
   global $__osmium_state;
-  $accountid = $__osmium_state['a']['account_id'];
+  $accountid = $__osmium_state['a']['accountid'];
   $ret = $default;
 
-  $k = \Osmium\Db\query_params('SELECT value FROM osmium.account_settings WHERE account_id = $1 AND key = $2', array($accountid, $key));
+  $k = \Osmium\Db\query_params('SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
   while($r = \Osmium\Db\fetch_row($k)) {
     $ret = $r[0];
   }
@@ -238,16 +238,16 @@ function put_setting($key, $value) {
   if(!is_logged_in()) return;
 
   global $__osmium_state;
-  $accountid = $__osmium_state['a']['account_id'];
-  \Osmium\Db\query_params('DELETE FROM osmium.account_settings WHERE account_id = $1 AND key = $2', array($accountid, $key));
-  \Osmium\Db\query_params('INSERT INTO osmium.account_settings (account_id, key, value) VALUES ($1, $2, $3)', array($accountid, $key, $value));
+  $accountid = $__osmium_state['a']['accountid'];
+  \Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
+  \Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, $value));
 
   return $value;
 }
 
 function get_token() {
   global $__osmium_state;
-  return $__osmium_state['logout_token'];
+  return $__osmium_state['logouttoken'];
 }
 
 function get_state($key, $default = null) {

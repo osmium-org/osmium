@@ -35,13 +35,13 @@ if(isset($_POST['key_id'])) {
   if(isset($api->error) && !empty($api->error)) {
     \Osmium\Forms\add_field_error('key_id', (string)$api->error);
   } else if((string)$api->result->key["type"] !== 'Character') {
-    \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$a['character_name'].'.');
+    \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$a['charactername'].'.');
   } else if((int)$api->result->key["accessMask"] !== 0) {
     \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
-  } else if((int)$api->result->key->rowset->row['characterID'] != $a['character_id']) {
-    \Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$a['character_name'].'.');
+  } else if((int)$api->result->key->rowset->row['characterID'] != $a['characterid']) {
+    \Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$a['charactername'].'.');
   } else {
-    \Osmium\Db\query_params('UPDATE osmium.accounts SET key_id = $1, verification_code = $2 WHERE account_id = $3', array($key_id, $v_code, $a['account_id']));
+    \Osmium\Db\query_params('UPDATE osmium.accounts SET keyid = $1, verificationcode = $2 WHERE accountid = $3', array($key_id, $v_code, $a['accountid']));
     \Osmium\State\put_state('must_renew_api', false);
     session_commit();
     header('Location: ./', true, 303);
@@ -54,14 +54,14 @@ if(isset($_POST['key_id'])) {
 echo "<h1>Update API credentials</h1>\n";
 
 if(isset($_GET['non_consensual']) && $_GET['non_consensual'] === '1') {
-  echo "<p class='warning_box expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$__osmium_state['a']['character_name']."</strong>), please enter a new API key in the form below.</p>\n";
+  echo "<p class='warning_box expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$a['charactername']."</strong>), please enter a new API key in the form below.</p>\n";
 }
 
 \Osmium\Forms\print_form_begin();
 
 \Osmium\Forms\print_text("<p>You can create an API key here:<br />
 <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/0'>https://support.eveonline.com/api/Key/CreatePredefined/0</a></strong><br />
-<strong>Make sure that you only select the character ".$__osmium_state['a']['character_name'].".</strong><br />
+<strong>Make sure that you only select the character ".$a['charactername'].".</strong><br />
 (Be sure not to tick any boxes on the right.)</p>");
 
 \Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 

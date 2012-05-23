@@ -25,7 +25,7 @@ if(\Osmium\State\is_logged_in()) {
 }
 
 if(isset($_POST['account_name'])) {
-  $q = \Osmium\Db\query_params('SELECT COUNT(account_id) FROM osmium.accounts WHERE account_name = $1', array($_POST['account_name']));
+  $q = \Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountname = $1', array($_POST['account_name']));
   list($q) = \Osmium\Db\fetch_row($q);
 
   $pw = $_POST['password_0'];
@@ -64,7 +64,7 @@ if(isset($_POST['account_name'])) {
 
       $hash = \Osmium\State\hash_password($pw);
 
-      \Osmium\Db\query_params('INSERT INTO osmium.accounts (account_name, password_hash, key_id, verification_code, creation_date, last_login_date, character_id, character_name, corporation_id, corporation_name, alliance_id, alliance_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name));
+      \Osmium\Db\query_params('INSERT INTO osmium.accounts (accountname, passwordhash, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name));
 
       \Osmium\State\do_post_login($_POST['account_name'], false);
       $_POST = array();
