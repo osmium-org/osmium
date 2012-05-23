@@ -472,8 +472,8 @@ function update_metadata() {
  
   $view_perm = $_POST['view_perms'];
   $edit_perm = $_POST['edit_perms'];
-  $visibility = $_POST['visibility'];
-  $pw = $_POST['pw'];
+  $visibility = isset($_POST['visibility']) ? $_POST['visibility'] : null;
+  $pw = isset($_POST['pw']) ? $_POST['pw'] : '';
 
   if(!in_array($view_perm, array(
 				 \Osmium\Fit\VIEW_EVERYONE,
