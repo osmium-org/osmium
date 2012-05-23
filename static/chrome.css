@@ -4,7 +4,7 @@ html, body {
     height: 100%;
 }
 
-html, body, input, button, select, optgroup, option {
+html, body, input[type='submit'], button {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
@@ -468,11 +468,11 @@ form > table > tbody > tr > td > textarea {
 form > table > tbody > tr > th > label {
     display: block;
     text-align: right;
-    height: 1.5em;
     line-height: 1.5em;
 }
 
 form > table > tbody > tr > td > select {
+    width: 100%;
     height: 1.7em;
     line-height: 1.7em;
 }
@@ -488,11 +488,25 @@ form > table > tbody > tr > td {
     border-top: 1px dotted #CCC;
 }
 
+form > table > tbody > tr:first-child > th,
+form > table > tbody > tr:first-child > td,
 form > table > tbody > tr.separator > th,
 form > table > tbody > tr.separator > td,
 form > table > tbody > tr.separator + tr > th,
-form > table > tbody > tr.separator + tr > td {
+form > table > tbody > tr.separator + tr > td,
+form > table > tbody > tr.error_message + tr > th,
+form > table > tbody > tr.error_message + tr > td {
     border-top: none;
+}
+
+tr.error_message > th,
+tr.error_message > td {
+    padding-bottom: 0;
+}
+
+tr.error_message + tr > th,
+tr.error_message + tr > td {
+    padding-top: 0;
 }
 
 tr.separator > td > hr {
@@ -502,10 +516,6 @@ tr.separator > td > hr {
     border: none;
 }
 
-form > table > tbody > tr {
-    height: 2em;
-}
-
 form > table > tbody > tr > td > textarea {
     height: 15em;
 }
@@ -513,4 +523,14 @@ form > table > tbody > tr > td > textarea {
 input, textarea, select {
     border: 1px solid #777;
     background-color: white;
+}
+
+tr.error > td > input {
+    border: 1px solid #CC3300;
+}
+
+input[disabled='disabled'], textarea[disabled='disabled'], select[disabled='disabled'] {
+    color: #444;
+    border-color: black;
+    background-color: #F0F0F0;
 }

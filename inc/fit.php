@@ -20,6 +20,20 @@ namespace Osmium\Fit;
 
 /* KEEP THIS NAMESPACE PURE. */
 
+const VIEW_EVERYONE = 0;
+const VIEW_PASSWORD_PROTECTED = 1;
+const VIEW_ALLIANCE_ONLY = 2;
+const VIEW_CORPORATION_ONLY = 3;
+const VIEW_OWNER_ONLY = 4;
+
+const EDIT_OWNER_ONLY = 0;
+const EDIT_OWNER_AND_FITTING_MANAGER_ONLY = 1;
+const EDIT_CORPORATION_ONLY = 2;
+const EDIT_ALLIANCE_ONLY = 3;
+
+const VISIBILITY_PUBLIC = 0;
+const VISIBILITY_PRIVATE = 1;
+
 function get_slottypes() {
   return array('high', 'medium', 'low', 'rig', 'subsystem');
 }
