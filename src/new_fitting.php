@@ -540,5 +540,12 @@ function final_settings_post() {
 /* ----------------------------------------------------- */
 
 function finalize() {
+  $fit = \Osmium\State\get_state('new_fit', array());
+  \Osmium\Fit\sanitize($fit);
 
+  $a = \Osmium\State\get_state('a');
+  \Osmium\Fit\commit($fit, $a['accountid']);
+  \Osmium\State\put_state('new_fit', $fit);
+
+  /* TODO: redirect to the "view fitting" page here. */
 }

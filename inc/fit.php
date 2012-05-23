@@ -269,3 +269,95 @@ function get_module_slottype($effects) {
 function reset(&$fit) {
   $fit = array();
 }
+
+function sanitize(&$fit) {
+  /* Unset any extra charges of nonexistent modules. */
+  foreach($fit['charges'] as $i => $data) {
+    foreach(get_slottypes() as $name) {
+      if(!isset($fit['charges'][$i][$name])) continue;
+
+      foreach($fit['charges'][$i][$name] as $j => $chargeid) {
+	if(!isset($fit['modules'][$name][$j])) {
+	  unset($fit['charges'][$i][$name][$j]);
+	}
+      }
+    }
+  }
+}
+
+function commit(&$fit, $ownerid) {
+  $fittingid = null;
+
+  \Osmium\Db\query('BEGIN;');
+
+  if(!isset($fit['metadata']['id'])) {
+    /* Initial insert */
+    $r = \Osmium\Db\query_params('INSERT INTO osmium.fittings (ownerid, name, description, viewpermission, editpermission, visibility, hullid, creationdate, passwordhash, lastupdated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULL) RETURNING fittingid', 
+			    array(
+				  $ownerid,
+				  $fit['metadata']['name'],
+				  $fit['metadata']['description'],
+				  $fit['metadata']['view_permission'],
+				  $fit['metadata']['edit_permission'],
+				  $fit['metadata']['visibility'],
+				  $fit['hull']['typeid'],
+				  time(),
+				  isset($fit['metadata']['password']) ? $fit['metadata']['password'] : '',
+				  ));
+    list($fittingid) = \Osmium\Db\fetch_row($r);
+  } else {
+    /* Update */
+    $fittingid = $fit['metadata']['id'];
+    \Osmium\Db\query_params('UPDATE osmium.fittings SET ownerid = $1, name = $2, description = $3, viewpermission = $4, editpermission = $5, visibility = $6, hullid = $7, passwordhash = $8, lastupdated = $9 WHERE fittingid = $10', 
+			    array(
+				  $ownerid,
+				  $fit['metadata']['name'],
+				  $fit['metadata']['description'],
+				  $fit['metadata']['view_permission'],
+				  $fit['metadata']['edit_permission'],
+				  $fit['metadata']['visibility'],
+				  $fit['hull']['typeid'],
+				  isset($fit['metadata']['password']) ? $fit['metadata']['password'] : '',
+				  time(),
+				  $fittingid,
+				  ));
+  }
+
+  \Osmium\Db\query_params('DELETE FROM osmium.fittingdrones WHERE fittingid = $1', array($fittingid));
+  \Osmium\Db\query_params('DELETE FROM osmium.fittingcharges WHERE fittingid = $1', array($fittingid));
+  \Osmium\Db\query_params('DELETE FROM osmium.fittingmodules WHERE fittingid = $1', array($fittingid));
+  \Osmium\Db\query_params('DELETE FROM osmium.fittingtags WHERE fittingid = $1', array($fittingid));
+
+  foreach($fit['metadata']['tags'] as $tag) {
+    \Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittingid, tagname) VALUES ($1, $2)', 
+			    array($fittingid, $tag));
+  }
+
+  foreach($fit['modules'] as $type => $data) {
+    foreach($data as $index => $module) {
+      \Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittingid, slottype, index, typeid) VALUES ($1, $2, $3, $4)', 
+			      array($fittingid, $type, $index, $module['typeid']));
+    }
+  }
+
+  foreach($fit['charges'] as $preset) {
+    $name = $preset['name'];
+    foreach(get_slottypes() as $type) {
+      if(!isset($preset[$type])) continue;
+      
+      foreach($preset[$type] as $index => $chargeid) {
+	\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittingid, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
+				array($fittingid, $name, $type, $index, $chargeid));
+      }
+    }
+  }
+
+  foreach($fit['drones'] as $drone) {
+    \Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittingid, typeid, quantity) VALUES ($1, $2, $3)',
+			    array($fittingid, $drone['typeid'], $drone['count']));
+  }
+
+  \Osmium\Db\query('COMMIT;');
+
+  $fit['metadata']['id'] = $fittingid;
+}

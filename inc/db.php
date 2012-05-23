@@ -40,6 +40,10 @@ function query_params($query, array $params) {
   return pg_query_params($__osmium_pg_link, $query, $params);
 }
 
+function query($query) {
+  return query_params($query, array());
+}
+
 function fetch_row($resource) {
   return pg_fetch_row($resource);
 }
