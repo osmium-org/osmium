@@ -14,7 +14,7 @@ the rules in the .htaccess file.
 Dependencies
 ============
 
-* PHP >= 5.3 with:
+* PHP >= 5.4 with:
     PostgreSQL extension,
     cURL extension,
     SimpleXML support.

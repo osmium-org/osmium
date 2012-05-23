@@ -360,4 +360,5 @@ function commit(&$fit, $ownerid) {
   \Osmium\Db\query('COMMIT;');
 
   $fit['metadata']['id'] = $fittingid;
+  $fit['metadata']['ownerid'] = $ownerid;
 }
