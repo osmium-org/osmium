@@ -285,80 +285,137 @@ function sanitize(&$fit) {
   }
 }
 
-function commit(&$fit, $ownerid) {
-  $fittingid = null;
+/* BE VERY CAREFUL WHEN CHANGING THIS FUNCTION.
+ * ALL THE FITTINGHASHS DEPEND ON ITS RESULT. */
+function get_unique($fit) {
+  $unique = array(
+		  'metadata' => array(
+				      'name' => $fit['metadata']['name'],
+				      'description' => $fit['metadata']['description'],
+				      'tags' => array($fit['metadata']['tags']),
+				      ),
+		  'hull' => array(
+				  'typeid' => $fit['hull']['typeid'],
+				  ),
+		  );
 
-  \Osmium\Db\query('BEGIN;');
+  sort($unique['metadata']['tags']);
 
-  if(!isset($fit['metadata']['id'])) {
-    /* Initial insert */
-    $r = \Osmium\Db\query_params('INSERT INTO osmium.fittings (ownerid, name, description, viewpermission, editpermission, visibility, hullid, creationdate, passwordhash, lastupdated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULL) RETURNING fittingid', 
-			    array(
-				  $ownerid,
-				  $fit['metadata']['name'],
-				  $fit['metadata']['description'],
-				  $fit['metadata']['view_permission'],
-				  $fit['metadata']['edit_permission'],
-				  $fit['metadata']['visibility'],
-				  $fit['hull']['typeid'],
-				  time(),
-				  isset($fit['metadata']['password']) ? $fit['metadata']['password'] : '',
-				  ));
-    list($fittingid) = \Osmium\Db\fetch_row($r);
-  } else {
-    /* Update */
-    $fittingid = $fit['metadata']['id'];
-    \Osmium\Db\query_params('UPDATE osmium.fittings SET ownerid = $1, name = $2, description = $3, viewpermission = $4, editpermission = $5, visibility = $6, hullid = $7, passwordhash = $8, lastupdated = $9 WHERE fittingid = $10', 
-			    array(
-				  $ownerid,
-				  $fit['metadata']['name'],
-				  $fit['metadata']['description'],
-				  $fit['metadata']['view_permission'],
-				  $fit['metadata']['edit_permission'],
-				  $fit['metadata']['visibility'],
-				  $fit['hull']['typeid'],
-				  isset($fit['metadata']['password']) ? $fit['metadata']['password'] : '',
-				  time(),
-				  $fittingid,
-				  ));
-  }
-
-  \Osmium\Db\query_params('DELETE FROM osmium.fittingdrones WHERE fittingid = $1', array($fittingid));
-  \Osmium\Db\query_params('DELETE FROM osmium.fittingcharges WHERE fittingid = $1', array($fittingid));
-  \Osmium\Db\query_params('DELETE FROM osmium.fittingmodules WHERE fittingid = $1', array($fittingid));
-  \Osmium\Db\query_params('DELETE FROM osmium.fittingtags WHERE fittingid = $1', array($fittingid));
-
-  foreach($fit['metadata']['tags'] as $tag) {
-    \Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittingid, tagname) VALUES ($1, $2)', 
-			    array($fittingid, $tag));
-  }
-
-  foreach($fit['modules'] as $type => $data) {
-    foreach($data as $index => $module) {
-      \Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittingid, slottype, index, typeid) VALUES ($1, $2, $3, $4)', 
-			      array($fittingid, $type, $index, $module['typeid']));
+  foreach($fit['modules'] as $type => $d) {
+    foreach($d as $index => $module) {
+      $unique['modules'][$type][$index] = $module['typeid'];
     }
   }
 
   foreach($fit['charges'] as $preset) {
     $name = $preset['name'];
-    foreach(get_slottypes() as $type) {
-      if(!isset($preset[$type])) continue;
-      
-      foreach($preset[$type] as $index => $chargeid) {
-	\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittingid, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
-				array($fittingid, $name, $type, $index, $chargeid));
+    unset($preset['name']);
+    foreach($preset as $type => $typeids) {
+      foreach($typeids as $index => $typeid) {
+	$unique['charges'][$name][$type][$index] = $typeid;
       }
     }
   }
 
   foreach($fit['drones'] as $drone) {
-    \Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittingid, typeid, quantity) VALUES ($1, $2, $3)',
-			    array($fittingid, $drone['typeid'], $drone['count']));
+    $count = $drone['count'];
+    $typeid = $drone['typeid'];
+
+    if($count == 0) continue;
+    if(!isset($unique['drones'][$typeid])) $unique['drones'][$typeid] = 0;
+
+    $unique['drones'][$typeid] += $count;
   }
 
-  \Osmium\Db\query('COMMIT;');
+  return $unique;
+}
 
-  $fit['metadata']['id'] = $fittingid;
-  $fit['metadata']['ownerid'] = $ownerid;
+function get_hash($fit) {
+  return sha1(serialize(get_unique($fit)));
+}
+
+function commit_fitting(&$fit) {
+  $fittinghash = get_hash($fit);
+
+  $fit['metadata']['hash'] = $fittinghash;
+  
+  list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(fittinghash) FROM osmium.fittings WHERE fittinghash = $1', array($fittinghash)));
+  if($count == 1) {
+    /* Do nothing! */
+    return;
+  }
+
+  /* Insert the new fitting */
+  \Osmium\Db\query('BEGIN;');
+  \Osmium\Db\query_params('INSERT INTO osmium.fittings (fittinghash, name, description, hullid, creationdate) VALUES ($1, $2, $3, $4, $5)', 
+			  array(
+				$fittinghash,
+				$fit['metadata']['name'],
+				$fit['metadata']['description'],
+				$fit['hull']['typeid'],
+				time(),
+				));
+  
+  foreach($fit['metadata']['tags'] as $tag) {
+    \Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)', 
+			    array($fittinghash, $tag));
+  }
+  
+  foreach($fit['modules'] as $type => $data) {
+    foreach($data as $index => $module) {
+      \Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, slottype, index, typeid) VALUES ($1, $2, $3, $4)', 
+			      array($fittinghash, $type, $index, $module['typeid']));
+    }
+  }
+  
+  foreach($fit['charges'] as $preset) {
+    $name = $preset['name'];
+    unset($preset['name']);
+    
+    foreach($preset as $type => $d) {
+      foreach($d as $index => $chargeid) {
+	\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
+				array($fittinghash, $name, $type, $index, $chargeid));
+      }
+    }
+  }
+  
+  foreach($fit['drones'] as $drone) {
+    \Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, typeid, quantity) VALUES ($1, $2, $3)',
+			    array($fittinghash, $drone['typeid'], $drone['count']));
+  }
+  
+  \Osmium\Db\query('COMMIT;');
+}
+
+function commit_loadout(&$fit, $ownerid, $accountid) {
+  commit_fitting($fit);
+
+  $loadoutid = null;
+  $password = ($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) ? $fit['metadata']['password'] : '';
+
+  if(!isset($fit['metadata']['loadoutid'])) {
+    /* Insert a new loadout */
+    list($loadoutid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password)));
+
+    $fit['metadata']['loadoutid'] = $loadoutid;
+  } else {
+    /* Update a loadout */
+    $loadoutid = $fit['metadata']['loadoutid'];
+
+    \Osmium\Db\query_params('UPDATE osmium.loadouts SET accountid = $1, viewpermission = $2, editpermission = $3, visibility = $4, passwordhash = $5 WHERE loadoutid = $6', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password, $loadoutid));
+  }
+
+  /* If necessary, insert the appropriate history entry */
+  $row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT fittinghash, loadoutslatestrevision.latestrevision 
+  FROM osmium.loadoutslatestrevision 
+  JOIN osmium.loadouthistory ON (loadoutslatestrevision.loadoutid = loadouthistory.loadoutid 
+                             AND loadoutslatestrevision.latestrevision = loadouthistory.revision) 
+  WHERE loadoutslatestrevision.loadoutid = $1', array($loadoutid)));
+  if($row === false || $row[0] != $fit['metadata']['hash']) {
+    $nextrev = ($row === false) ? 1 : ($row[1] + 1);
+    \Osmium\Db\query_params('INSERT INTO osmium.loadouthistory 
+    (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) 
+    VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $nextrev, $fit['metadata']['hash'], $accountid, time()));
+  }
 }

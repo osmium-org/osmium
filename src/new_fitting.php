@@ -543,14 +543,16 @@ function finalize() {
   $fit = \Osmium\State\get_state('new_fit', array());
   \Osmium\Fit\sanitize($fit);
 
-  if(isset($fit['metadata']['ownerid'])) {
-    $ownerid = $fit['metadata']['ownerid'];
+  if(isset($fit['metadata']['accountid'])) {
+    $accountid = $fit['metadata']['accountid'];
   } else {
-    $ownerid = \Osmium\State\get_state('a')['accountid'];
+    $accountid = \Osmium\State\get_state('a')['accountid'];
   }
 
-  \Osmium\Fit\commit($fit, $ownerid);
+  \Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
   \Osmium\State\put_state('new_fit', $fit);
+
+  echo "<pre>".print_r($fit, true)."</pre>";
 
   /* TODO: redirect to the "view fitting" page here. */
 }
