@@ -35,6 +35,8 @@ function do_post_login($account_name, $use_cookie = false) {
   $q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.accounts WHERE accountname = $1', array($account_name));
   $__osmium_state['a'] = \Osmium\Db\fetch_assoc($q);
 
+  check_api_key();
+
   if($use_cookie) {
     $token = uniqid('Osmium_', true);
     $account_id = $__osmium_state['a']['accountid'];
@@ -49,8 +51,6 @@ function do_post_login($account_name, $use_cookie = false) {
   $__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
 
   \Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
-
-  check_api_key();
 }
 
 function logoff($global = false) {
@@ -172,11 +172,10 @@ function try_recover() {
 }
 
 function check_api_key() {
-  if(!is_logged_in()) return;
-  global $__osmium_state;
+  $a = \Osmium\State\get_state('a');
 
-  $key_id = $__osmium_state['a']['keyid'];
-  $v_code = $__osmium_state['a']['verificationcode'];
+  $key_id = $a['keyid'];
+  $v_code = $a['verificationcode'];
   $info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
 
   if(!($info instanceof \SimpleXMLElement)) {
@@ -202,6 +201,40 @@ function check_api_key() {
       return;  
     }
   }
+
+  list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name) = \Osmium\State\get_character_info($a['characterid']);
+  if($character_name != $a['charactername']
+     || $corporation_id != $a['corporationid']
+     || $corporation_name != $a['corporationname']
+     || $alliance_id != $a['allianceid']
+     || $alliance_name != $a['alliancename']) {
+    /* Update values in the DB. */
+    \Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationid = $2, corporationname = $3, allianceid = $4, alliancename = $5 WHERE accountid = $6', array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $a['accountid']));
+
+    /* Put the correct values in state */
+    $a['charactername'] = $character_name;
+    $a['corporationid'] = $corporation_id;
+    $a['corporation_name'] = $corporation_name;
+    $a['allianceid'] = $alliance_id;
+    $a['alliancename'] = $alliance_name;
+
+    \Osmium\State\put_state('a', $a);
+  }
+}
+
+function get_character_info($character_id) {
+  $char_info = \Osmium\EveApi\fetch('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
+  
+  $character_name = (string)$char_info->result->characterName;
+  $corporation_id = (int)$char_info->result->corporationID;
+  $corporation_name = (string)$char_info->result->corporation;
+  $alliance_id = (int)$char_info->result->allianceID;
+  $alliance_name = (string)$char_info->result->alliance;
+  
+  if($alliance_id == 0) $alliance_id = null;
+  if($alliance_name == '') $alliance_name = null;
+  
+  return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name);
 }
 
 function api_maybe_redirect($relative) {

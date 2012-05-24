@@ -50,17 +50,7 @@ if(isset($_POST['account_name'])) {
       \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
     } else {
       $character_id = (int)$api->result->key->rowset->row["characterID"];
-      
-      $char_info = \Osmium\EveApi\fetch('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
-
-      $character_name = (string)$char_info->result->characterName;
-      $corporation_id = (int)$char_info->result->corporationID;
-      $corporation_name = (string)$char_info->result->corporation;
-      $alliance_id = (int)$char_info->result->allianceID;
-      $alliance_name = (string)$char_info->result->alliance;
-
-      if($alliance_id == 0) $alliance_id = null;
-      if($alliance_name == '') $alliance_name = null;
+      list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name) = \Osmium\State\get_character_info($character_id);
 
       $hash = \Osmium\State\hash_password($pw);
 
