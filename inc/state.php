@@ -22,6 +22,7 @@ $__osmium_state =& $_SESSION['__osmium_state'];
 $__osmium_login_state = array();
 
 const COOKIE_AUTH_DURATION = 604800; /* 7 days */
+const REQUIRED_ACCESS_MASK = 8; /* Just for CharacterSheet */
 
 function is_logged_in() {
   global $__osmium_state;
@@ -190,8 +191,9 @@ function check_api_key() {
     $err_code = (int)$info->error['code'];
     /* Error code details: http://wiki.eve-id.net/APIv2_Eve_ErrorList_XML */
     if(200 <= $err_code && $err_code < 300) {
-      /* Most likely user error */
+      /* Most likely user error (deleted API key or modified vcode) */
       \Osmium\State\put_state('must_renew_api', true);
+      return;
     } else {
       /* Most likely internal error */
       global $__osmium_login_state;
@@ -202,14 +204,22 @@ function check_api_key() {
     }
   }
 
-  list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name) = \Osmium\State\get_character_info($a['characterid']);
+  if((string)$info->result->key["type"] !== 'Character'
+     || (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK
+     || (int)$info->result->key->rowset->row['characterID'] != $a['characterid']) {
+    /* Key settings got modified since last login, and they are invalid now. */
+    \Osmium\State\put_state('must_renew_api', true);
+    return;
+  }
+
+  list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($a['characterid']);
   if($character_name != $a['charactername']
      || $corporation_id != $a['corporationid']
      || $corporation_name != $a['corporationname']
      || $alliance_id != $a['allianceid']
      || $alliance_name != $a['alliancename']) {
     /* Update values in the DB. */
-    \Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationid = $2, corporationname = $3, allianceid = $4, alliancename = $5 WHERE accountid = $6', array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $a['accountid']));
+    \Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationid = $2, corporationname = $3, allianceid = $4, alliancename = $5, isfittingmanager = $6 WHERE accountid = $7', array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager, $a['accountid']));
 
     /* Put the correct values in state */
     $a['charactername'] = $character_name;
@@ -233,8 +243,32 @@ function get_character_info($character_id) {
   
   if($alliance_id == 0) $alliance_id = null;
   if($alliance_name == '') $alliance_name = null;
+
+  $a = \Osmium\State\get_state('a');
+  $char_sheet = \Osmium\EveApi\fetch('/char/CharacterSheet.xml.aspx', 
+				     array(
+					   'characterID' => $character_id, 
+					   'keyID' => $a['keyid'],
+					   'vCode' => $a['verificationcode'],
+					   ));
+
+  $is_fitting_manager = false;
+  foreach($char_sheet->result->rowset as $rowset) {
+    if((string)$rowset['name'] != 'corporationRoles') continue;
+
+    foreach($rowset->children() as $row) {
+      $name = (string)$row['roleName'];
+      if($name == 'roleFittingManager' || $name == 'roleDirector') {
+	/* FIXME: roleFittingManager may be implicitly granted by other roles. */
+	$is_fitting_manager = true;
+	break;
+      }
+    }
+
+    break;
+  }
   
-  return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name);
+  return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager);
 }
 
 function api_maybe_redirect($relative) {

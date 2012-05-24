@@ -46,15 +46,15 @@ if(isset($_POST['account_name'])) {
       \Osmium\Forms\add_field_error('key_id', (string)$api->error);
     } else if((string)$api->result->key["type"] !== 'Character') {
       \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select one character (instead of "All").');
-    } else if((int)$api->result->key["accessMask"] !== 0) {
-      \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to zero (untick any boxes on the right on the API page).');
+    } else if((int)$api->result->key["accessMask"] !== \Osmium\State\REQUIRED_ACCESS_MASK) {
+      \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK.' (or just use the provided link above!).');
     } else {
       $character_id = (int)$api->result->key->rowset->row["characterID"];
-      list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name) = \Osmium\State\get_character_info($character_id);
+      list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($character_id);
 
       $hash = \Osmium\State\hash_password($pw);
 
-      \Osmium\Db\query_params('INSERT INTO osmium.accounts (accountname, passwordhash, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name));
+      \Osmium\Db\query_params('INSERT INTO osmium.accounts (accountname, passwordhash, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, isfittingmanager) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager));
 
       \Osmium\State\do_post_login($_POST['account_name'], false);
       $_POST = array();
@@ -79,9 +79,11 @@ echo "<h1>Account creation</h1>\n";
 \Osmium\Forms\print_separator();
 
 \Osmium\Forms\print_text("<p>You can create an API key here:<br />
-<strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/0'>https://support.eveonline.com/api/Key/CreatePredefined/0</a></strong><br />
+<strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."'>https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."</a></strong><br />
 <strong>Make sure you only select one character.</strong><br />
-(Be sure not to tick any boxes on the right.)</p>");
+(Be sure not to touch the boxes on the right.)</p>");
+
+\Osmium\Forms\print_text("<p>If you are still having errors despite having updated your API key,<br />you will have to wait for the cache to expire.<br />Or just create a whole new API key altogether (no waiting involved!).</p>");
 
 \Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
 				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
