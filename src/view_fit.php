@@ -39,6 +39,12 @@ $fit = \Osmium\Fit\get_fit($loadoutid);
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
 $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
+$can_edit = false;
+if(\Osmium\State\is_logged_in()) {
+  list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+  $can_edit = ($c == 1);
+}
+
 if($fit === false) {
   \Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
 }
@@ -112,6 +118,10 @@ if(count($fit['charges']) > 1) {
 
   echo "</ul>\n</li>\n</ul>\n";
 }
+
+echo "<ul>\n";
+if($can_edit) echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'>Edit this loadout</a></li>\n";
+echo "</ul>\n";
 
 echo "<h2>Fitting description</h2>\n";
 echo "<p id='fitdesc'>\n".nl2br(htmlspecialchars($fit['metadata']['description']))."</p>\n";

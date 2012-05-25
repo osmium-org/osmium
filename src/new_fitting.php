@@ -56,7 +56,15 @@ if(isset($_POST['prev_step'])) {
 if($step < 1) $step = 1;
 if($step > FINAL_STEP) $step = FINAL_STEP;
 
-\Osmium\Chrome\print_header('Create a new fitting', '.');;
+$fit = \Osmium\State\get_state('new_fit', array());
+if(isset($fit['metadata']['revision'])) {
+  \Osmium\Chrome\print_header('Edit loadout #'.$fit['metadata']['loadoutid'], '.');
+  $g_title = 'Edit loadout <a href="./loadout/'.$fit['metadata']['loadoutid'].'">#'.$fit['metadata']['loadoutid'].'</a>';
+} else {
+  \Osmium\Chrome\print_header('Create a new fitting', '.');
+  $g_title = 'New fitting';
+}
+
 echo "<script>\nvar osmium_tok = '".\Osmium\State\get_token()."';\n";
 echo "var osmium_slottypes = ".json_encode(\Osmium\Fit\get_slottypes()).";\n</script>\n";
 
@@ -98,7 +106,8 @@ function print_form_prevnext() {
 
 function print_h1($name) {
   global $step;
-  echo "<h1>New fitting, step $step of ".FINAL_STEP.": $name</h1>\n";
+  global $g_title;
+  echo "<h1>$g_title, step $step of ".FINAL_STEP.": $name</h1>\n";
 }
 
 /* ----------------------------------------------------- */
