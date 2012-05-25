@@ -36,8 +36,8 @@ if($count == 0) {
 }
 
 $fit = \Osmium\Fit\get_fit($loadoutid);
-$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
-$lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
+$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
+$lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
 $can_edit = false;
 if(\Osmium\State\is_logged_in()) {
@@ -89,7 +89,7 @@ echo "<div id='metadatabox'>\n";
 echo "<h2>Fitting metadata</h2>\n";
 
 echo "<ul>\n";
-echo "<li>Originally created by: <strong>".$author['charactername']."</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")<br />";
+echo "<li>Originally created by: <strong>".\Osmium\Flag\format_moderator_name($author)."</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")<br />";
 echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_64.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
 echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_64.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
 if($author['allianceid'] > 0) {
@@ -97,7 +97,7 @@ if($author['allianceid'] > 0) {
 }
 echo "<br /> </li>\n";
 if($fit['metadata']['revision'] > 1) {
-  echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".$lastrev['charactername']."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
+  echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Flag\format_moderator_name($lastrev)."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
 echo "</ul>\n";
 

@@ -54,7 +54,7 @@ if(isset($_POST['account_name'])) {
 
       $hash = \Osmium\State\hash_password($pw);
 
-      \Osmium\Db\query_params('INSERT INTO osmium.accounts (accountname, passwordhash, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, isfittingmanager) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager));
+      \Osmium\Db\query_params('INSERT INTO osmium.accounts (accountname, passwordhash, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, isfittingmanager, ismoderator, flagweight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)', array($_POST['account_name'], $hash, $key_id, $v_code, $t = time(), $t, $character_id, $character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager, false, \Osmium\Flag\DEFAULT_FLAG_WEIGHT));
 
       \Osmium\State\do_post_login($_POST['account_name'], false);
       $_POST = array();

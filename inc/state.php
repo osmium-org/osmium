@@ -33,7 +33,7 @@ function do_post_login($account_name, $use_cookie = false) {
   global $__osmium_state;
   $__osmium_state = array();
 
-  $q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename FROM osmium.accounts WHERE accountname = $1', array($account_name));
+  $q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
   $__osmium_state['a'] = \Osmium\Db\fetch_assoc($q);
 
   check_api_key();
@@ -106,11 +106,10 @@ function print_login_box($relative) {
 
 function print_logoff_box($relative) {
   global $__osmium_state;
-  $name = $__osmium_state['a']['charactername'];
   $id = $__osmium_state['a']['characterid'];
   $tok = urlencode(get_token());
 
-  echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>$name</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+  echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>".\Osmium\Flag\format_moderator_name($__osmium_state['a'])."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 function hash_password($pw) {

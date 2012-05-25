@@ -689,3 +689,7 @@ div#vloadoutbox > div#vdronebay > ul > li {
     display: inline-block;
     padding: 0.125em;
 }
+
+span.mod {
+    border-bottom: 1px dotted #AAA;
+}
