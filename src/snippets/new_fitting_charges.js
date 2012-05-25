@@ -17,7 +17,7 @@ osmium_switch_preset = function() {
 	if(osmium_slottypes[i] in charge_presets[selected_preset]) {
 	    for(j in charge_presets[selected_preset][osmium_slottypes[i]]) {
 		$("li#" + osmium_slottypes[i] + "_" + j + " > select")
-		    .val(charge_presets[selected_preset][osmium_slottypes[i]][j])
+		    .val(charge_presets[selected_preset][osmium_slottypes[i]][j]['typeid'])
 		    .trigger('refresh_picture');
 	    }
 	} else charge_presets[selected_preset][osmium_slottypes[i]] = {};
@@ -50,7 +50,7 @@ osmium_commit_preset = function(index) {
     for(var i = 0; i < osmium_slottypes.length; ++i) {
 	for(var j in charge_presets[index][osmium_slottypes[i]]) {
 	    serialized_current_preset[osmium_slottypes[i] + j] 
-		= charge_presets[index][osmium_slottypes[i]][j];
+		= charge_presets[index][osmium_slottypes[i]][j]['typeid'];
 	}
     }
 
@@ -67,7 +67,11 @@ osmium_set_charge = function(slottype, index, new_val) {
 	    charge_presets[selected_preset][slottype] = {};
 	}
 
-	charge_presets[selected_preset][slottype]["" + index] = new_val;
+	if(!(("" + index) in charge_presets[selected_preset][slottype])) {
+	    charge_presets[selected_preset][slottype]["" + index] = {};
+	}
+
+	charge_presets[selected_preset][slottype]["" + index]['typeid'] = new_val;
     }
 };
 

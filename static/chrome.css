@@ -8,7 +8,8 @@ html, body, input[type='submit'], button {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
-textarea, input[type='text'], input[type='password'], select, optgroup, option {
+textarea, input[type='text'], input[type='password'], select, optgroup, option,
+div#fittags > ul > li {
     font-family: monospace;
 }
 
@@ -60,6 +61,11 @@ img.spinner {
 img.slot_icon {
     height: 2em;
     width: 2em;
+}
+
+h1#fitname > img {
+    width: 1em;
+    height: 1em;
 }
 
 p.error_box, tr.error_message p,
@@ -161,7 +167,7 @@ select#hullid {
 }
 
 div#searchbox, div#presetsbox,
-div#dronelistbox {
+div#dronelistbox, div#metadatabox {
     padding-left: 0.5em;
     width: 20em;
     float: left;
@@ -173,7 +179,8 @@ div#shortlistbox {
     padding-right: 0.5em;
 }
 
-div#loadoutbox, div#chargegroupsbox {
+div#loadoutbox, div#chargegroupsbox,
+div#vloadoutbox {
     margin-left: 21em;
     margin-right: 21em;
     border-left: 1px dotted #CCC;
@@ -235,13 +242,18 @@ li.empty_slot, li.mod_placeholder, li.drone_placeholder {
     background-color: white;
     height: 32px;
     line-height: 32px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     position: relative;
     padding-left: 2.25em;
     display: inline-block !important;
     width: 17em;
+}
+
+li.module, li.shortlist_dummy, li.drone,
+li.empty_slot, li.mod_placeholder, li.drone_placeholder,
+div#vloadoutbox > div.slots > ul > li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 li.drone, li.drone_placeholder {
@@ -330,7 +342,7 @@ ul#modules_shortlist > li.module:hover > a.delete {
     display: inline-block;
 }
 
-div#chargegroupsbox {
+div#chargegroupsbox, div#vloadoutbox {
     margin-right: 1em;
     border-right: 0;
 }
@@ -421,7 +433,7 @@ ul#presets > li:first-child {
     border-top: none;
 }
 
-p#nojs_warning {
+p#nojs_warning, p#pwfit_warning {
     text-align: center;
     width: 100%;
     border-bottom: 1px dotted red;
@@ -430,6 +442,11 @@ p#nojs_warning {
     margin: 0;
     padding: 0;
     background-color: #FFD8D8;
+}
+
+p#pwfit_warning {
+    background-color: #FFFFE0;
+    border-color: #CCC;
 }
 
 div#dronelistbox > form {
@@ -533,4 +550,142 @@ input[disabled='disabled'], textarea[disabled='disabled'], select[disabled='disa
     color: #444;
     border-color: black;
     background-color: #F0F0F0;
+}
+
+div#pwfit table {
+    position: absolute;
+    width: 30em;
+    left: 50%;
+    top: 50%;
+    margin-left: -15em;
+    margin-top: -10em;
+    border: 1em solid #FFE8E8;
+    background-color: #FFE8E8;
+}
+
+div#pwfit table p.m {
+    margin: 0;
+}
+
+div#metadatabox {
+    width: 30em;
+}
+
+div#vloadoutbox {
+    margin-left: 31em;
+}
+
+div#metadatabox > h2 {
+    text-align: center;
+}
+
+div#vloadoutbox > header > h1 {
+    margin: 0;
+    letter-spacing: 0.05em;
+    text-decoration: underline;
+}
+
+div#vloadoutbox > header > h2 {
+    margin-bottom: 0;
+}
+
+div#metadatabox > ul {
+    padding-left: 2em;
+    list-style-type: square;
+}
+
+div#fittags {
+    margin-top: 0.25em;
+}
+
+div#fittags > h2 {
+    margin-top: 0;
+    font-size: 1.0em;
+}
+
+div#fittags > h2, div#fittags > ul, 
+div#fittags > ul > li {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
+div#fittags > ul > li {
+    margin: 0.125em;
+    padding: 0.125em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border: 1px solid #CCC;
+    border-radius: 0.5em;
+    background-color: #F8F8F8;
+}
+
+div#vloadoutbox > header {
+    position: relative;
+    padding-left: 6.5em;
+}
+
+div#vloadoutbox > header > img#fittypepic {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+}
+
+div#vloadoutbox > div.slots > ul,
+div#vloadoutbox > div#vdronebay > ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 0.125em;
+}
+
+div#vloadoutbox > div.slots > ul > li > img,
+div#vloadoutbox > div#vdronebay > ul > li > img {
+    height: 2em;
+    margin-right: 0.125em;
+}
+
+div#vloadoutbox > div.slots > h3,
+div#vloadoutbox > div#vdronebay > h3 {
+    border-bottom: 1px solid #888;
+    padding-left: 0.25em;
+    margin-bottom: 0;
+}
+
+div#vloadoutbox > div.slots > ul > li {
+    border-top: 1px dashed #888;
+    padding-top: 0.125em;
+    padding-bottom: 0.125em;
+}
+
+div#vloadoutbox > div.slots > ul > li:first-child {
+    border-top: none;
+}
+
+div#vloadoutbox > div.slots {
+    width: 19em;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 2em;
+    margin-bottom: 2em;
+}
+
+div#vloadoutbox > div.slots > ul > li.unused {
+    color: #888;
+}
+
+div#metadatabox > ul > li > ul > li > a:focus {
+    outline: 0; /* A bit meh for accessibility, but it looks much better */
+}
+
+div#metadatabox > ul > li > ul > li > a.active {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+
+div#vloadoutbox > div#vdronebay > ul > li {
+    width: 15em;
+    display: inline-block;
+    padding: 0.125em;
 }

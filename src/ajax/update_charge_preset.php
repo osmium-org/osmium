@@ -39,7 +39,7 @@ if($_GET['action'] == 'update') {
     $fit['charges'][$idx][$type] = array();
     for($i = 0; $i < 16; ++$i) {
       if(!isset($_GET[$type.$i])) continue;
-      $fit['charges'][$idx][$type][$i] = intval($_GET[$type.$i]);
+      $fit['charges'][$idx][$type][$i]['typeid'] = intval($_GET[$type.$i]);
     }
   }
 } else if($_GET['action'] == 'delete') {

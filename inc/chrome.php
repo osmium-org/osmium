@@ -18,7 +18,7 @@
 
 namespace Osmium\Chrome;
 
-function print_header($title = '', $relative = '.') {
+function print_header($title = '', $relative = '.', $add_head = '') {
   global $__osmium_chrome_relative;
   $__osmium_chrome_relative = $relative;
 
@@ -37,7 +37,7 @@ function print_header($title = '', $relative = '.') {
   echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
   echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
   echo "<title>$title</title>\n";
-  echo "</head>\n<body>\n<div id='wrapper'>\n";
+  echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 
   echo "<nav>\n<ul>\n";
   echo get_navigation_link($relative.'/', "Main page");
@@ -51,7 +51,7 @@ function print_header($title = '', $relative = '.') {
   echo "</ul>\n";
   \Osmium\State\print_login_or_logout_box($relative);
   echo "</nav>\n";
-  echo "<noscript>\n<p id='nojs_warning'>To get the full Osmium experience, please enable Javascript for host <strong>".$_SERVER['HTTP_HOST']."</strong>.</p></noscript>\n";
+  echo "<noscript>\n<p id='nojs_warning'>To get the full Osmium experience, please enable Javascript for host <strong>".$_SERVER['HTTP_HOST']."</strong>.</p>\n</noscript>\n";
 }
 
 function print_footer() {

@@ -29,10 +29,6 @@ if(!\Osmium\State\is_logged_in()) {
   \Osmium\fatal(403, 'Sorry, anonymous users cannot create fittings. Please login first and retry.');
 }
 
-\Osmium\Chrome\print_header('Create a new fitting', '.');;
-echo "<script>\nvar osmium_tok = '".\Osmium\State\get_token()."';\n";
-echo "var osmium_slottypes = ".json_encode(\Osmium\Fit\get_slottypes()).";\n</script>\n";
-
 $step = \Osmium\State\get_state('create_fit_step', 1);
 
 $steps = array(
@@ -59,6 +55,10 @@ if(isset($_POST['prev_step'])) {
 
 if($step < 1) $step = 1;
 if($step > FINAL_STEP) $step = FINAL_STEP;
+
+\Osmium\Chrome\print_header('Create a new fitting', '.');;
+echo "<script>\nvar osmium_tok = '".\Osmium\State\get_token()."';\n";
+echo "var osmium_slottypes = ".json_encode(\Osmium\Fit\get_slottypes()).";\n</script>\n";
 
 call_local($steps[$step]);
 
@@ -550,9 +550,11 @@ function finalize() {
   }
 
   \Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
+  $loadoutid = $fit['metadata']['loadoutid'];
+  \Osmium\Fit\reset($fit);
   \Osmium\State\put_state('new_fit', $fit);
+  \Osmium\State\put_state('create_fit_step', 1);
 
-  echo "<pre>".print_r($fit, true)."</pre>";
-
-  /* TODO: redirect to the "view fitting" page here. */
+  header('Location: ./loadout/'.$loadoutid);
+  die();
 }

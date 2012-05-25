@@ -276,7 +276,7 @@ function sanitize(&$fit) {
     foreach(get_slottypes() as $name) {
       if(!isset($fit['charges'][$i][$name])) continue;
 
-      foreach($fit['charges'][$i][$name] as $j => $chargeid) {
+      foreach($fit['charges'][$i][$name] as $j => $charge) {
 	if(!isset($fit['modules'][$name][$j])) {
 	  unset($fit['charges'][$i][$name][$j]);
 	}
@@ -292,14 +292,12 @@ function get_unique($fit) {
 		  'metadata' => array(
 				      'name' => $fit['metadata']['name'],
 				      'description' => $fit['metadata']['description'],
-				      'tags' => array($fit['metadata']['tags']),
+				      'tags' => $fit['metadata']['tags'],
 				      ),
 		  'hull' => array(
 				  'typeid' => $fit['hull']['typeid'],
 				  ),
 		  );
-
-  sort($unique['metadata']['tags']);
 
   foreach($fit['modules'] as $type => $d) {
     foreach($d as $index => $module) {
@@ -310,9 +308,9 @@ function get_unique($fit) {
   foreach($fit['charges'] as $preset) {
     $name = $preset['name'];
     unset($preset['name']);
-    foreach($preset as $type => $typeids) {
-      foreach($typeids as $index => $typeid) {
-	$unique['charges'][$name][$type][$index] = $typeid;
+    foreach($preset as $type => $charges) {
+      foreach($charges as $index => $charge) {
+	$unique['charges'][$name][$type][$index] = $charge['typeid'];
       }
     }
   }
@@ -330,8 +328,21 @@ function get_unique($fit) {
   return $unique;
 }
 
+function ksort_rec(array &$array) {
+  ksort($array);
+  foreach($array as &$v) {
+    if(is_array($v)) ksort_rec($v);
+  }
+}
+
 function get_hash($fit) {
-  return sha1(serialize(get_unique($fit)));
+  $unique = get_unique($fit);
+
+  /* Ensure equality if key ordering is different */
+  ksort_rec($unique);
+  sort($unique['metadata']['tags']); /* tags should be ordered by value */
+
+  return sha1(serialize($unique));
 }
 
 function commit_fitting(&$fit) {
@@ -373,9 +384,9 @@ function commit_fitting(&$fit) {
     unset($preset['name']);
     
     foreach($preset as $type => $d) {
-      foreach($d as $index => $chargeid) {
+      foreach($d as $index => $charge) {
 	\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
-				array($fittinghash, $name, $type, $index, $chargeid));
+				array($fittinghash, $name, $type, $index, $charge['typeid']));
       }
     }
   }
@@ -418,4 +429,78 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
     (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) 
     VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $nextrev, $fit['metadata']['hash'], $accountid, time()));
   }
+
+  $fit['metadata']['accountid'] = $ownerid;
+}
+
+function get_fit($loadoutid, $revision = null) {
+  if($revision === null) {
+    /* Use latest revision */
+    $row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT latestrevision FROM osmium.loadoutslatestrevision WHERE loadoutid = $1', array($loadoutid)));
+    if($row === false) return false;
+    $revision = $row[0];
+  }
+
+  $loadout = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, viewpermission, editpermission, visibility, passwordhash FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
+
+  if($loadout === false) return false;
+
+  $fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT fittings.fittinghash AS hash, name, description, hullid, creationdate, revision FROM osmium.loadouthistory JOIN osmium.fittings ON loadouthistory.fittinghash = fittings.fittinghash WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $revision)));
+
+  if($fitting === false) return false;
+
+  $fit = array();
+  init_fit($fit, $fitting['hullid']);
+
+  $fit['metadata']['loadoutid'] = $loadoutid;
+  $fit['metadata']['hash'] = $fitting['hash'];
+  $fit['metadata']['name'] = $fitting['name'];
+  $fit['metadata']['description'] = $fitting['description'];
+  $fit['metadata']['view_permission'] = $loadout['viewpermission'];
+  $fit['metadata']['edit_permission'] = $loadout['editpermission'];
+  $fit['metadata']['visibility'] = $loadout['visibility'];
+  $fit['metadata']['password'] = $loadout['passwordhash'];
+  $fit['metadata']['revision'] = $fitting['revision'];
+  $fit['metadata']['creation_date'] = $fitting['creationdate'];
+  $fit['metadata']['accountid'] = $loadout['accountid'];
+
+  $fit['metadata']['tags'] = array();
+  $tagq = \Osmium\Db\query_params('SELECT tagname FROM osmium.fittingtags WHERE fittinghash = $1', array($fit['metadata']['hash']));
+  while($r = \Osmium\Db\fetch_row($tagq)) {
+    $fit['metadata']['tags'][] = $r[0];
+  }
+
+  $m_typeids = array();
+  $modules = array();
+  $mq = \Osmium\Db\query_params('SELECT slottype, index, typeid FROM osmium.fittingmodules WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
+  while($row = \Osmium\Db\fetch_row($mq)) {
+    $m_typeids[$row[2]] = true;
+    $modules[$row[0]][$row[1]] = $row[2];
+  }
+
+  update_modules($fit, array_keys($m_typeids), $modules);
+
+  $cq = \Osmium\Db\query_params('SELECT presetname, slottype, index, fittingcharges.typeid, typename FROM osmium.fittingcharges JOIN eve.invtypes ON fittingcharges.typeid = invtypes.typeid WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
+  $presets = array();
+  $fit['charges'] = array();
+  while($row = \Osmium\Db\fetch_row($cq)) {
+    $presets[$row[0]][$row[1]][$row[2]]['typeid'] = $row[3];
+    $presets[$row[0]][$row[1]][$row[2]]['typename'] = $row[4];
+  }
+  foreach($presets as $name => $preset) {
+    $preset['name'] = $name;
+    $fit['charges'][] = $preset;
+  }
+
+  $dq = \Osmium\Db\query_params('SELECT typeid, quantity FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
+  $drones = array();
+  while($row = \Osmium\Db\fetch_row($dq)) {
+    if(!isset($drones[$row[0]])) $drones[$row[0]] = 0;
+
+    $drones[$row[0]] += $row[1];
+  }
+
+  update_drones($fit, $drones);
+
+  return $fit;
 }
