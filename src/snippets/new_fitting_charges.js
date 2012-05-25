@@ -83,7 +83,7 @@ $(function() {
     $(document).on('change', 'ul#chargegroups > li > ul.chargegroup > li.ui-selected > select', function(obj) {
 	var new_val = $(this).val();
 	$(this).parent().parent().find('li.ui-selected > select').each(function() {
-	    osmium_set_charge($(this).data('slottype'), $(this).parent().index(), new_val);
+	    osmium_set_charge($(this).data('slottype'), $(this).data('index'), new_val);
 	    $(this).val(new_val);
 	});
 	$(this).parent().parent().find('select').trigger('refresh_picture');
@@ -100,7 +100,7 @@ $(function() {
 	$(this).parent().children('img.charge_icon').attr('src', new_src);
     });
     $(document).on('change', 'ul#chargegroups > li > ul.chargegroup > li:not(.ui-selected) > select', function(obj) {
-	osmium_set_charge($(this).data('slottype'), $(this).parent().index(), $(this).val());
+	osmium_set_charge($(this).data('slottype'), $(this).data('index'), $(this).val());
 	$(this).trigger('refresh_picture');
 	osmium_commit_preset(selected_preset);
     });

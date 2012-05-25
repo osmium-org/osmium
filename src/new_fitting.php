@@ -323,7 +323,7 @@ function print_chargegroup($groupid, $typeids, $charges) {
       $name = $module['typename'];
       echo "<li id='{$type}_$i'><img src='http://image.eveonline.com/Type/{$id}_32.png' alt='$name' title='$name' class='module_icon' />";
       echo "<img src='./static/icons/no_charge.png' alt='(No charge)' title='(No charge)' class='charge_icon' />\n";
-      echo "<select name='charge_{$groupid}_$i' data-slottype='$type'>\n";
+      echo "<select name='charge_{$groupid}_$i' data-slottype='$type' data-index='$i'>\n";
       echo "<option value='-1'>(No charge)</option>\n";
       foreach($charges as $charge) {
 	echo "<option value='".$charge['typeid']."'>".$charge['typename']."</option>\n";
@@ -345,6 +345,8 @@ function charges_select() {
   echo "<script>\nvar charge_presets = ".json_encode($fit['charges']).";\nvar selected_preset = 0;\n</script>\n";
 
   \Osmium\Chrome\print_js_snippet('new_fitting_charges');
+
+  echo "<pre>".print_r($fit['charges'], true)."</pre>";
 }
 
 function charges_select_pre() { return true; }
