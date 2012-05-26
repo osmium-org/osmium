@@ -17,18 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\CLI\BackupOsmium;
+
 require __DIR__.'/../inc/root.php';
 
-date_timezone_set('UTC');
+date_default_timezone_set('UTC');
 
-$host = $__osmium_config['host'];
-$port = $__osmium_config['port'];
-$user = $__osmium_config['user'];
-$password = $__osmium_config['password'];
-$dbname = $__osmium_config['dbname'];
+$host = \Osmium\get_ini_setting('host');
+$port = \Osmium\get_ini_setting('port');
+$user = \Osmium\get_ini_setting('user');
+$password = \Osmium\get_ini_setting('password');
+$dbname = \Osmium\get_ini_setting('dbname');
 
 putenv('PGPASSWORD='.$password);
 
-$out_file = __DIR__.'/../osmium-full-'.date('YmdHis').fmod(microtime(true), 1).'.sql';
+$out_file = __DIR__.'/../osmium-full-'.date('YmdHis').fmod(microtime(true), 1).'.pgsql';
 
-passthru('pg_dump --host '.escapeshellarg($host).' --port '.escapeshellarg($port).' --username '.escapeshellarg($user).' --format custom --no-owner --no-privileges --no-tablespaces --verbose --no-unlogged-table-data --file '.escapeshellarg($out_file).' --schema osmium '.escapeshellarg($dbname));
+passthru('pg_dump --host '.escapeshellarg($host)
+	 .' --port '.escapeshellarg($port)
+	 .' --username '.escapeshellarg($user)
+	 .' -F c --verbose --file '.escapeshellarg($out_file)
+	 .' --schema osmium '.escapeshellarg($dbname));
