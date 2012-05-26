@@ -17,12 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Osmium\CLI\UpdateCharacterInfo;
+
 require __DIR__.'/../inc/root.php';
 
-list($max) = pg_fetch_row(osmium_pg_query_params('SELECT COUNT(DISTINCT character_id) FROM osmium.accounts', array()));
-$q = osmium_pg_query_params('SELECT DISTINCT character_id FROM osmium.accounts', array());
+list($max) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(DISTINCT characterid) FROM osmium.accounts', array()));
+$q = \Osmium\Db\query_params('SELECT DISTINCT characterid FROM osmium.accounts', array());
 $i = 0;
-while($r = pg_fetch_row($q)) {
+while($r = \Osmium\Db\fetch_row($q)) {
   $c_id = $r[0];
   echo "\r".str_pad(++$i, strlen((string)$max), "0", STR_PAD_LEFT).'/'.$max;
 
@@ -32,16 +34,7 @@ while($r = pg_fetch_row($q)) {
 echo "\n";
 
 function update($c_id) {
-  $char_info = osmium_api('/eve/CharacterInfo.xml.aspx', array('characterID' => $c_id));
+  list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($c_id);
 
-  $character_name = (string)$char_info->result->characterName;
-  $corporation_id = (int)$char_info->result->corporationID;
-  $corporation_name = (string)$char_info->result->corporation;
-  $alliance_id = (int)$char_info->result->allianceID;
-  $alliance_name = (string)$char_info->result->alliance;
-  
-  if($alliance_id == 0) $alliance_id = null;
-  if($alliance_name == '') $alliance_name = null;
-
-  osmium_pg_query_params('UPDATE osmium.accounts SET character_name = $1, corporation_name = $3, corporation_id = $4, alliance_name = $5, alliance_id = $6 WHERE character_id = $2', array($character_name, $c_id, $corporation_name, $corporation_id, $alliance_name, $alliance_id));
+  \Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationname = $3, corporationid = $4, alliancename = $5, allianceid = $6, isfittingmanager = $7 WHERE characterid = $2', array($character_name, $c_id, $corporation_name, $corporation_id, $alliance_name, $alliance_id, $is_fitting_manager));
 }

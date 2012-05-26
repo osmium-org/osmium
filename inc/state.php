@@ -252,7 +252,7 @@ function get_character_info($character_id) {
 					   ));
 
   $is_fitting_manager = false;
-  foreach($char_sheet->result->rowset as $rowset) {
+  foreach(($char_sheet->result->rowset ?: array()) as $rowset) {
     if((string)$rowset['name'] != 'corporationRoles') continue;
 
     foreach($rowset->children() as $row) {
@@ -267,7 +267,7 @@ function get_character_info($character_id) {
     break;
   }
   
-  return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager);
+  return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, (int)$is_fitting_manager);
 }
 
 function api_maybe_redirect($relative) {
