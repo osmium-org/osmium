@@ -120,7 +120,9 @@ if(count($fit['charges']) > 1) {
 }
 
 echo "<ul>\n";
-if($can_edit) echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'>Edit this loadout</a></li>\n";
+if($can_edit) echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
+echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['hull']['typename'].'"')."'>Browse all ".$fit['hull']['typename']." loadouts</a></li>\n";
+echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 echo "</ul>\n";
 
 echo "<h2>Fitting description</h2>\n";
@@ -132,26 +134,16 @@ echo "</div>\n";
 
 echo "<div id='vloadoutbox'>\n";
 
-$pic = '';
-if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-  $pic = "<img src='../static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
-} else if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
-  $pic = "<img src='../static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
-} else if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
-  if(!$author['allianceid']) $author['alliancename'] = '*no alliance*';
-  $pic = "<img src='../static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
-} else if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_OWNER_ONLY) {
-  $pic = "<img src='../static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
-}
-
 echo "<header>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['hull']['typeid']."_256.png' alt='".$fit['hull']['typename']."' id='fittypepic' />\n";
 echo "<h2>".$fit['hull']['typename']." loadout</h2>\n";
-echo "<h1 id='fitname'>".htmlentities($fit['metadata']['name']).$pic."</h1>\n";
+echo "<h1 id='fitname'>";
+echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author);
+echo "</h1>\n";
 if(count($fit['metadata']['tags']) > 0) {
   echo "<div id='fittags'>\n<h2>Tags:</h2>\n<ul>\n";
   foreach($fit['metadata']['tags'] as $tag) {
-    echo "<li>$tag</li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
+    echo "<li><a href='../search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
   }
   echo "</ul>\n</div>\n";
 }

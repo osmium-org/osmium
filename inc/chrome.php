@@ -41,8 +41,9 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 
   echo "<nav>\n<ul>\n";
   echo get_navigation_link($relative.'/', "Main page");
+  echo get_navigation_link($relative.'/search', "Search loadouts");
   if(\Osmium\State\is_logged_in()) {
-    echo get_navigation_link($relative.'/new', "New fitting");
+    echo get_navigation_link($relative.'/new', "New loadout");
     echo get_navigation_link($relative.'/renew_api', "API settings");
   } else {
 
@@ -82,4 +83,33 @@ function print_js_snippet($js_file) {
 function return_json($data, $flags = 0) {
   header('Content-Type: application/json');
   die(json_encode($data, $flags));
+}
+
+function print_loadout_title($name, $viewpermission, $author) {
+  $pic = '';
+  if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
+    $pic = "<img src='../static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
+  } else if($viewpermission == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
+    $pic = "<img src='../static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
+  } else if($viewpermission == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
+    if(!$author['allianceid']) $author['alliancename'] = '*no alliance*';
+    $pic = "<img src='../static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
+  } else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
+    $pic = "<img src='../static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
+  }
+  
+  echo "<span class='fitname'>".htmlentities($name).$pic."</span>";
+}
+
+function print_search_form() {
+  global $query;
+
+  $val = '';
+  if($query !== false) {
+    $val = "value='".htmlspecialchars($query, ENT_QUOTES)."' ";
+  }
+
+  echo "<form method='get' action='./search'>\n";
+  echo "<h1><img src='./static/icons/search.png' alt='' />Search loadouts</h1>\n<p>\n<input type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
+  echo "</form>\n";
 }

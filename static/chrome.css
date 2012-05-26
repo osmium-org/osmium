@@ -9,7 +9,7 @@ html, body, input[type='submit'], button {
 }
 
 textarea, input[type='text'], input[type='password'], select, optgroup, option,
-div#fittags > ul > li {
+div#fittags > ul > li, ol.loadout_sr > li > ul.tags > li {
     font-family: monospace;
 }
 
@@ -39,11 +39,7 @@ footer, footer a {
 }
 
 a, a:visited {
-    color: blue;
-}
-
-a:hover {
-    color: #000088;
+    color: #1122CC;
 }
 
 a:active, a:focus {
@@ -63,7 +59,7 @@ img.slot_icon {
     width: 2em;
 }
 
-h1#fitname > img {
+span.fitname > img {
     width: 1em;
     height: 1em;
 }
@@ -250,7 +246,8 @@ li.empty_slot, li.mod_placeholder, li.drone_placeholder {
 
 li.module, li.shortlist_dummy, li.drone,
 li.empty_slot, li.mod_placeholder, li.drone_placeholder,
-div#vloadoutbox > div.slots > ul > li {
+div#vloadoutbox > div.slots > ul > li,
+div#recent_loadouts > ol.loadout_sr > li {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -581,8 +578,12 @@ div#metadatabox > h2 {
 
 div#vloadoutbox > header > h1 {
     margin: 0;
-    letter-spacing: 0.05em;
+}
+
+span.fitname {
     text-decoration: underline;
+    font-weight: bold;
+    letter-spacing: 0.05em;
 }
 
 div#vloadoutbox > header > h2 {
@@ -604,13 +605,16 @@ div#fittags > h2 {
 }
 
 div#fittags > h2, div#fittags > ul, 
-div#fittags > ul > li {
+div#fittags > ul > li,
+ol.loadout_sr > li > ul.tags > li,
+ol.loadout_sr > li > ul.tags {
     display: inline-block;
     margin: 0;
     padding: 0;
 }
 
-div#fittags > ul > li {
+div#fittags > ul > li,
+ol.loadout_sr > li > ul.tags > li {
     margin: 0.125em;
     padding: 0.125em;
     padding-left: 0.5em;
@@ -692,4 +696,112 @@ div#vloadoutbox > div#vdronebay > ul > li {
 
 span.mod {
     border-bottom: 1px dotted #AAA;
+}
+
+div#search_full {
+    position: absolute;
+    width: 60em;
+    height: 10em;
+    top: 50%;
+    left: 50%;
+    margin-top: -10em;
+    margin-left: -30em;
+    text-align: center;
+}
+
+div#search_full > form > h1 {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 0.5em;
+}
+
+div#search_full > form > h1 > img {
+    height: 1.5em;
+}
+
+div#search_full > form > p > input[type='search'],
+div#search_mini > form > p > input[type='search'] {
+    width: 30em;
+}
+
+div#search_full > form > p > input {
+    font-size: 1.5em;
+}
+
+ol.loadout_sr {
+    margin: 0;
+    padding: 0;
+    padding-left: 3em;
+}
+
+ol.loadout_sr > li > img:first-child {
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    bottom: 1em;
+}
+
+ol.loadout_sr > li {
+    position: relative;
+    border-bottom: 1px dotted #CCC;
+    padding-bottom: 1em;
+    padding-top: 1em;
+    padding-left: 5.5em;
+}
+
+ol.loadout_sr > li > small,
+ol.loadout_sr > li > small > a {
+    color: #009933;
+}
+
+div#search_mini {
+    border-bottom: 1px dotted #CCC;
+}
+
+div#search_mini > form > h1,
+div#search_mini > form > p {
+    display: inline-block;
+    font-size: 1.2em;
+}
+
+div#search_mini > form > h1 > img {
+    height: 2em;
+}
+
+div#search_mini > form > h1 {
+    margin-left: 2em;
+    margin-right: 2em;
+}
+
+div#search_mini.quick {
+    text-align: center;
+    border: none;
+}
+
+div#search_mini.quick > form {
+    display: inline-block;
+    border-bottom: 1px solid #CCC;
+    border-top: 1px solid #CCC;
+    padding-left: 2em;
+    padding-right: 2em;
+}
+
+h1#mainp,
+div#recent_loadouts {
+    text-align: center;
+}
+
+div#recent_loadouts > ol.loadout_sr {
+    display: inline-block;
+    width: 45em;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+
+p.no_search_result {
+    margin: 1em;
+    color: #888;
+    border-color: #888;
 }

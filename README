@@ -6,7 +6,11 @@ Osmium is a user-friendly fitting tool for the EVE Online game.
 Caveats
 =======
 
-Make sure the "cache" directory is writeable by your http user.
+Make sure the "cache" directory is writeable by your http user. You
+can do it by using (assuming your http user is in group http):
+
+    chgrp -c http cache
+    chmod -c g+rwx cache
 
 If you are NOT using the Apache HTTP Server, you will have to adapt
 the rules in the .htaccess file.
@@ -16,10 +20,14 @@ Dependencies
 
 * PHP >= 5.4 with:
     PostgreSQL extension,
+    MySQLi extension (not mysqld itself),
     cURL extension,
     SimpleXML support.
 
 * PostgreSQL >= 9.0
+
+* Sphinx search server >= 2.0.4 
+  (using the sphinx.conf from the sphinx/ directory)
 
 Initial database setup
 ======================
@@ -54,6 +62,7 @@ steps:
 1. Backup your Osmium schema.
 
    pg_dump -n osmium -U osmium_user osmium -F c > OSMIUM_DUMP.backup
+   # or use the bin/backup_osmium script
 
 2. Delete the "osmium" and "eve" schemas.
 

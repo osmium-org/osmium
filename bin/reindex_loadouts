@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 /* Osmium
  * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
@@ -16,18 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Page\Main;
-
 require __DIR__.'/../inc/root.php';
 
-\Osmium\Chrome\print_header('', '.');
+const BATCHSIZE = 100;
 
-echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
+$i = 0;
+$r = \Osmium\Search\query_select_searchdata('ORDER BY loadoutid ASC');
 
-echo "<div class='quick' id='search_mini'>\n";
-\Osmium\Chrome\print_search_form();
-echo "</div>\n<div id='recent_loadouts'>\n";
-echo "<h2>Recently updated</h2>\n";
-\Osmium\Search\print_pretty_results('.', '', 'ORDER BY updatedate DESC', 0, 10);
-echo "</div>\n";
-\Osmium\Chrome\print_footer();
+\Osmium\Search\query('BEGIN;');
+
+while($row = \Osmium\Db\fetch_assoc($r)) {
+  \Osmium\Search\index($row);
+
+  if(((++$i) % BATCHSIZE) == 0) {
+    \Osmium\Search\query('COMMIT;');
+    echo ".";
+    \Osmium\Search\query('BEGIN;');
+  }
+}
+
+\Osmium\Search\query('COMMIT;');
+echo ".\n";

@@ -58,6 +58,7 @@ require ROOT.'/inc/eveapi.php';
 require ROOT.'/inc/state.php';
 require ROOT.'/inc/fit.php';
 require ROOT.'/inc/flag.php';
+require ROOT.'/inc/search.php';
 
 \Osmium\Forms\post_redirect_get();
 

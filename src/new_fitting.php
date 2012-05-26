@@ -345,8 +345,6 @@ function charges_select() {
   echo "<script>\nvar charge_presets = ".json_encode($fit['charges']).";\nvar selected_preset = 0;\n</script>\n";
 
   \Osmium\Chrome\print_js_snippet('new_fitting_charges');
-
-  echo "<pre>".print_r($fit['charges'], true)."</pre>";
 }
 
 function charges_select_pre() { return true; }
@@ -565,6 +563,8 @@ function finalize() {
   \Osmium\Fit\reset($fit);
   \Osmium\State\put_state('new_fit', $fit);
   \Osmium\State\put_state('create_fit_step', 1);
+
+  \Osmium\Search\index(\Osmium\Db\fetch_assoc(\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', array($loadoutid))));
 
   header('Location: ./loadout/'.$loadoutid);
   die();

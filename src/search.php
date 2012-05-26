@@ -16,18 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Page\Main;
+namespace Osmium\Page\Search;
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\Chrome\print_header('', '.');
+if(isset($_GET['q']) && !empty($_GET['q'])) {
+  $query = $_GET['q'];
+} else {
+  $query = false;
+}
 
-echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
+if($query === false) {
+  \Osmium\Chrome\print_header('Search loadouts', '.');
+  echo "<div id='search_full'>\n";
+  \Osmium\Chrome\print_search_form();
+  echo "</div>\n";
+  \Osmium\Chrome\print_footer();
+  die();
+} else {
+  \Osmium\Chrome\print_header('Search results', '.');
+  echo "<div id='search_mini'>\n";
+  \Osmium\Chrome\print_search_form();
+  echo "</div>\n";
 
-echo "<div class='quick' id='search_mini'>\n";
-\Osmium\Chrome\print_search_form();
-echo "</div>\n<div id='recent_loadouts'>\n";
-echo "<h2>Recently updated</h2>\n";
-\Osmium\Search\print_pretty_results('.', '', 'ORDER BY updatedate DESC', 0, 10);
-echo "</div>\n";
-\Osmium\Chrome\print_footer();
+  \Osmium\Search\print_pretty_results('.', $query, '', 0, 20);
+  \Osmium\Chrome\print_footer();
+}

@@ -8,3 +8,6 @@ RewriteRule ^/?renew_api$ src/renew_api.php [L,QSA]
 RewriteRule ^/?new$ src/new_fitting.php [L,QSA]
 RewriteRule ^/?loadout/([1-9][0-9]*)$ src/view_fit.php?loadoutid=$1 [L,QSA]
 RewriteRule ^/?edit/([1-9][0-9]*)$ src/edit_fit.php?loadoutid=$1 [L,QSA]
+RewriteRule ^/?search$ src/search.php [L,QSA]
+
+RewriteRule !^/?(src|static) - [L,R=404]
