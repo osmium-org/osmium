@@ -85,26 +85,32 @@ osmium_populate_slots = function(json, slot_type) {
     }
 };
 
+osmium_setstrong = function(json, name, strong, display_percent) {
+	var text = json['hull']['used' + name] + ' / ' + json['hull'][name];
+	if(display_percent) {
+		text = text + '<br />';
+		if(json['hull'][name] > 0) {
+			text = text + (100 * json['hull']['used' + name] / json['hull'][name]).toFixed(2) + ' %';
+		}
+	}
+
+	strong.html(text);
+	if(json['hull']['used' + name] > json['hull'][name]) {
+		strong.addClass('overflow');
+	} else {
+		strong.removeClass('overflow');
+	}
+};
+
 osmium_loadout_load = function(json) {
     for(var i = 0; i < osmium_slottypes.length; ++i) {
 		$("div#" + osmium_slottypes[i] + "_slots > ul").empty();
 		osmium_populate_slots(json, osmium_slottypes[i]);
     }
 
-	$("strong#turret_count").text(json['hull']['usedturrethardpoints'] + ' / ' + json['hull']['turrethardpoints']);
-	if(json['hull']['usedturrethardpoints'] > json['hull']['turrethardpoints']) {
-		$('strong#turret_count').addClass('overflow');
-	} else {
-		$('strong#turret_count').removeClass('overflow');
-	}
-
-	$("strong#launcher_count").text(json['hull']['usedlauncherhardpoints'] + ' / ' + json['hull']['launcherhardpoints']);
-	if(json['hull']['usedlauncherhardpoints'] > json['hull']['launcherhardpoints']) {
-		$('strong#launcher_count').addClass('overflow');
-	} else {
-		$('strong#launcher_count').removeClass('overflow');
-	}
-
+	osmium_setstrong(json, 'turrethardpoints', $("strong#turret_count"), false);
+	osmium_setstrong(json, 'launcherhardpoints', $("strong#launcher_count"), false);
+	osmium_setstrong(json, 'upgradecapacity', $("strong#upgradecapacity"), true);
 };
 
 osmium_loadout_commit = function() {

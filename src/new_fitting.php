@@ -187,12 +187,14 @@ function print_modulelist() {
 		$categories[$type] = ucfirst($type);
 	}
 
-	echo "<table id='slot_count'>\n<tr>\n";
+	echo "<table class='slot_count'>\n<tr>\n";
 	foreach($categories as $type => $fname) {
 		echo "<th><img src='./static/icons/slot_$type.png' alt='$fname slots' title='$fname slots' /><strong id='{$type}_count'></strong></th>\n";
 	}
 	echo "<th><img src='./static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><strong id='turret_count'></strong></th>\n";
 	echo "<th><img src='./static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><strong id='launcher_count'></strong></th>\n";
+	echo "</tr>\n</table>\n<table class='slot_count'>\n<tr>\n";
+	echo "<th><img src='./static/icons/calibration.png' alt='Calibration' title='Calibration' /><strong id='upgradecapacity'></strong></th>\n";
 	echo "</tr>\n</table>\n";
 
 	foreach($categories as $type => $fname) {

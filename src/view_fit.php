@@ -129,7 +129,9 @@ echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].
 echo "</ul>\n";
 
 echo "<ul class='computed_attributes'>\n";
-echo "<li><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedturrethardpoints'], $fit['hull']['turrethardpoints'])." — <img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedlauncherhardpoints'], $fit['hull']['launcherhardpoints'])."</li>\n";
+echo "<li>\n<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedturrethardpoints'], $fit['hull']['turrethardpoints'])."</p>\n";
+echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedlauncherhardpoints'], $fit['hull']['launcherhardpoints'])."</p>\n</li>\n";
+echo "<li>\n<p><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' />".\Osmium\Chrome\format_used($fit['hull']['usedupgradecapacity'], $fit['hull']['upgradecapacity'], 2, true)."</p>\n</li>\n";
 echo "</ul>\n";
 
 echo "<h2>Fitting description</h2>\n";

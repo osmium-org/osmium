@@ -165,7 +165,7 @@ function get_attributes_and_effects($typeids, &$out) {
 			'hiSlots', 
 			'medSlots', 
 			'lowSlots', 
-			'rigSlots', 
+			'upgradeSlotsLeft', 
 			'maxSubSystems',
 			'launcherSlotsLeft',
 			'turretSlotsLeft',
@@ -175,6 +175,8 @@ function get_attributes_and_effects($typeids, &$out) {
 			'turretHardPointModifier',
 			'launcherHardPointModifier',
 			'droneCapacity',
+			'upgradeCapacity',
+			'upgradeCost',
 			'eliteBonusGunship2',
 			'eliteBonusHeavyGunship2',
 			'shipBonusGF',
@@ -218,7 +220,7 @@ function reset_process_hull_attributes(&$fit) {
 	$effects = $fit['cache']['hull']['effects'];
 
 	foreach(array_combine(get_slottypes(), 
-	                      array('hiSlots', 'medSlots', 'lowSlots', 'rigSlots', 'maxSubSystems')) 
+	                      array('hiSlots', 'medSlots', 'lowSlots', 'upgradeSlotsLeft', 'maxSubSystems')) 
 	        as $type => $attributename) {
 		$fit['hull']['slotcount'][$type] = isset($attributes[$attributename]) ?
 			$attributes[$attributename]['value'] : 0;
@@ -243,8 +245,12 @@ function reset_process_hull_attributes(&$fit) {
 		$fit['hull']['dronecapacity'] += 5 * $attributes['shipBonusGF']['value'];
 	}
 
+	$fit['hull']['upgradecapacity'] = isset($attributes['upgradeCapacity']) ?
+		$attributes['upgradeCapacity']['value'] : 0;
+
 	$fit['hull']['usedturrethardpoints'] = 0;
 	$fit['hull']['usedlauncherhardpoints'] = 0;
+	$fit['hull']['usedupgradecapacity'] = 0;
 }
 
 function process_module_attributes(&$fit, $module, $attributes, $effects) {
@@ -269,6 +275,10 @@ function process_module_attributes(&$fit, $module, $attributes, $effects) {
 
 	if(isset($attributes['droneCapacity'])) {
 		$fit['hull']['dronecapacity'] += $attributes['droneCapacity']['value'];
+	}
+
+	if(isset($attributes['upgradeCost'])) {
+		$fit['hull']['usedupgradecapacity'] += $attributes['upgradeCost']['value'];
 	}
 }
 

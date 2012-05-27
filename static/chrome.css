@@ -293,12 +293,12 @@ em.help {
     font-size: 0.8em;
 }
 
-table#slot_count {
+table.slot_count {
     text-align: center;
     width: 100%;
 }
 
-table#slot_count img {
+table.slot_count img {
     width: 3em;
 }
 
@@ -306,13 +306,13 @@ div#loadoutbox > div.loadout_slot_cat {
     display: none;
 }
 
-table#slot_count strong,
+table.slot_count strong,
 p#dronecapacity > strong.overflow {
     display: inline-block;
     padding: 0.25em;
 }
 
-table#slot_count strong.overflow,
+table.slot_count strong.overflow,
 p#dronecapacity > strong.overflow,
 li.module.overflow {
     background-color: #FCC;
@@ -857,6 +857,26 @@ div#vdronebay > h3 > small.capacity {
 	color: #888;
 }
 
-ul.computed_attributes > li > img {
+ul.computed_attributes > li > p > img {
+	float: left;
 	height: 2em;
+}
+
+ul.computed_attributes > li > p {
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0;
+	margin-right: 2em;
+	padding: 0;
+	line-height: 1em;
+	margin-top: 0.25em;
+}
+
+ul.computed_attributes > li > p.oneline {
+	line-height: 2em;
+}
+
+table.slot_count th > strong {
+	display: inline-block;
+	vertical-align: middle;
 }

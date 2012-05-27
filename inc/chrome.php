@@ -122,7 +122,7 @@ function format_used($used, $total, $digits = 0, $show_percent = false) {
 
 	$ret = $used.' / '.$total;
 	if($show_percent) {
-		$ret .= ' ('.round(100 * $used / $total, $digits).' %)';
+		$ret .= '<br />'.round(100 * $used / $total, $digits).' %';
 	}
 
 	return $ret;
