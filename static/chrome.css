@@ -8,7 +8,7 @@ html, body, input[type='submit'], button {
     font-family: "Linux Biolinum", Arial, Helvetica, sans-serif;
 }
 
-textarea, input[type='text'], input[type='password'], select, optgroup, option,
+textarea, input[type='text'], input[type='password'], input[type='url'], select, optgroup, option,
 div#fittags > ul > li, ol.loadout_sr > li > ul.tags > li {
     font-family: monospace;
 }
@@ -64,7 +64,8 @@ span.fitname > img {
     height: 1em;
 }
 
-p.error_box, tr.error_message p,
+p.error_box,
+tr.error_message p,
 p.warning_box {
     border: 1px solid #CC3300;
     color: #CC3300;
@@ -473,6 +474,7 @@ div#dronebay > p#dronecapacity > img {
 
 form > table > tbody > tr > td > input[type='text'],
 form > table > tbody > tr > td > input[type='password'],
+form > table > tbody > tr > td > input[type='url'],
 form > table > tbody > tr > td > textarea {
     width: 100%;
     height: 1.5em;
@@ -532,6 +534,7 @@ tr.separator > td > hr {
 
 form > table > tbody > tr > td > textarea {
     height: 15em;
+    min-width: 50em;
 }
 
 input, textarea, select {
@@ -804,4 +807,35 @@ p.no_search_result {
     margin: 1em;
     color: #888;
     border-color: #888;
+}
+
+p.notice_box {
+    text-align: center;	
+}
+
+p.notice_box > em {
+    text-decoration: underline;
+}
+
+div#import_errors {
+	border: 1px solid #CC3300;
+	color: #CC3300;
+	margin: 1em;
+	padding: 1em;
+}
+
+div#import_errors > p {
+	margin-top: 0;
+}
+
+div#import_errors > ol {
+	margin-bottom: 0;
+}
+
+div#wrapper > h1 {
+	padding-left: 0.5em;
+}
+
+div#wrapper > p {
+	padding-left: 1em;
 }

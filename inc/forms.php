@@ -130,13 +130,16 @@ function print_file($label, $name, $maxsize, $id = null) {
 	print_generic_row($name, "<label for='$id'>$label</label>", $hidden."<input type='file' name='$name' id='$id' />");
 }
 
-function print_submit($value = '') {
+function print_submit($value = '', $name = '') {
 	if($value !== '') {
 		$value = "value='".htmlspecialchars($value, ENT_QUOTES)."' ";
 	}
+	if($name !== '') {
+		$name = "name='$name' ";
+	}
 
 	echo "<tr>\n<td></td>\n";
-	echo "<td><input type='submit' $value/></td>\n</tr>\n";
+	echo "<td><input type='submit' $name$value/></td>\n</tr>\n";
 }
 
 function print_separator() {
@@ -188,4 +191,13 @@ function format_optgroup($name, $options, $flags) {
 	}
   
 	return $f;
+}
+
+function print_checkbox($label, $name, $id = null, $checked = null) {
+	if($id === null) $id = $name;
+	if($checked === true) {
+		$checked = 'checked="checked" ';
+	} else $checked = '';
+
+	print_generic_row($name, "", "<input type='checkbox' name='$name' id='$id' $checked/> <label for='$id'>$label</label>");
 }

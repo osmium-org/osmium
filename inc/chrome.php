@@ -44,6 +44,7 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo get_navigation_link($relative.'/search', "Search loadouts");
 	if(\Osmium\State\is_logged_in()) {
 		echo get_navigation_link($relative.'/new', "New loadout");
+		echo get_navigation_link($relative.'/import', "Import loadouts");
 		echo get_navigation_link($relative.'/renew_api', "API settings");
 	} else {
 

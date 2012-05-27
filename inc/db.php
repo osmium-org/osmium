@@ -51,3 +51,7 @@ function fetch_row($resource) {
 function fetch_assoc($resource) {
 	return pg_fetch_assoc($resource);
 }
+
+function escape_string($str) {
+	return pg_escape_string($str);
+}

@@ -564,8 +564,6 @@ function finalize() {
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\State\put_state('create_fit_step', 1);
 
-	\Osmium\Search\index(\Osmium\Db\fetch_assoc(\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', array($loadoutid))));
-
 	header('Location: ./loadout/'.$loadoutid);
 	die();
 }

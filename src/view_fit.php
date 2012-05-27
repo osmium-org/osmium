@@ -140,12 +140,15 @@ echo "<h2>".$fit['hull']['typename']." loadout</h2>\n";
 echo "<h1 id='fitname'>";
 echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author);
 echo "</h1>\n";
+echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {
-	echo "<div id='fittags'>\n<h2>Tags:</h2>\n<ul>\n";
+	echo "<ul>\n";
 	foreach($fit['metadata']['tags'] as $tag) {
 		echo "<li><a href='../search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
 	}
 	echo "</ul>\n</div>\n";
+} else {
+	echo "<em>(no tags)</em>";
 }
 echo "</header>\n";
 

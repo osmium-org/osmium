@@ -90,8 +90,9 @@ function update_modules(&$fit, $typeids, $modules) {
 
 	foreach($modules as $type => $a) {
 		foreach($a as $i => $typeid) {
+			if(!isset($fit['cache']['modules'][$typeid]['effects'])) continue; /* Not a real typeID */
 			$trueslottype = get_module_slottype($fit['cache']['modules'][$typeid]['effects']);
-			if($trueslottype === false) continue;
+			if($trueslottype === false) continue; /* Not a real module */
 			$fit['modules'][$trueslottype][] = ($m = array('typeid' => $typeid, 
 			                                               'typename' => $names[$typeid]));
 			process_module_attributes($fit, 
@@ -431,6 +432,11 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 	}
 
 	$fit['metadata']['accountid'] = $ownerid;
+
+	\Osmium\Search\index(
+		\Osmium\Db\fetch_assoc(
+			\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', 
+			                                       array($loadoutid))));
 }
 
 function get_fit($loadoutid, $revision = null) {
@@ -491,6 +497,9 @@ function get_fit($loadoutid, $revision = null) {
 		$preset['name'] = $name;
 		$fit['charges'][] = $preset;
 	}
+	if(count($fit['charges']) == 0) {
+		$fit['charges'][] = array('name' => 'Default');
+	}
 
 	$dq = \Osmium\Db\query_params('SELECT typeid, quantity FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
 	$drones = array();
@@ -505,7 +514,155 @@ function get_fit($loadoutid, $revision = null) {
 	return $fit;
 }
 
-function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$success, &$errors) {
-  
-	return array();
+function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
+	$fit = array();
+
+	if(!isset($e['name'])) {
+		$errors[] = 'Expected a name attribute in <fitting> tag, none found. Stopping.';
+		return false;
+	} else {
+		$name = (string)$e['name'];
+	}
+
+	if(!isset($e->description) || !isset($e->description['value'])) {
+		$errors[] = 'Expected <description> tag with value attribute, none found. Using empty description.';
+		$description = '';
+	} else {
+		$description = (string)$e->description['value'];
+	}
+	$description = '(Imported from EVE XML format.)'."\n\n".$description;
+
+	if(!isset($e->shipType) || !isset($e->shipType['value'])) {
+		$errors[] = 'Expected <shipType> tag with value attribute, none found. Stopping.';
+		return false;
+	} else {
+		$shipname = (string)$e->shipType['value'];
+	}
+
+	$row = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT typeid FROM osmium.invships WHERE typename = $1',
+			array($shipname)));
+	if($row === false) {
+		$errors[] = 'Could not fetch typeID of "'.$shipname.'". Obsolete/unpublished ship? Stopping.';
+		return false;
+	}
+	init_fit($fit, $row[0]);
+
+	if(!isset($e->hardware)) {
+		$errors[] = 'No <hardware> element found. Expected at least 1. Stopping.';
+		return false;
+	}
+
+	$typenames = array();
+	$drones = array();
+	$modules = array();
+	$recover_modules = array();
+
+	static $modtypes = array(
+		'low' => 'low',
+		'med' => 'medium',
+		'hi' => 'high',
+		'rig' => 'rig',
+		'subsystem' => 'subsystem',
+		);
+
+	foreach($e->hardware as $hardware) {
+		if(!isset($hardware['type'])) {
+			$errors[] = 'Tag <hardware> has no type attribute. Discarded.';
+			continue;
+		}
+		$type = (string)$hardware['type'];
+		$typenames[$type] = true;
+
+		if(!isset($hardware['slot'])) {
+			$errors[] = 'Tag <hardware> has no slot attribute. (Recoverable error.)';
+			$slot = '';
+		} else {
+			$slot = (string)$hardware['slot'];
+		}
+
+		if($slot === "drone bay") {
+			if(!isset($hardware['qty'])) $qty = 1;
+			else $qty = (int)$hardware['qty'];
+			if($qty <= 0) continue;
+
+			$drones[] = array('count' => $qty, 'typename' => $type);
+		} else {
+			$p_slot = $slot;
+			$slot = explode(' ', $slot);
+			if(count($slot) != 3
+			   || $slot[1] != 'slot'
+			   || !in_array($slot[0], array_keys($modtypes))
+			   || !is_numeric($slot[2])
+			   || (int)$slot[2] < 0
+			   || (int)$slot[2] > 7) {
+
+				$errors[] = 'Could not parse slot attribute "'.$p_slot.'". (Recoverable error.)';
+				$recover_modules[] = $type;
+			} else {
+				$slottype = $modtypes[$slot[0]];
+				$index = $slot[2];
+				$modules[$slottype][$index] = $type;
+			}
+		}
+	}
+
+	$typenames['OsmiumSentinel'] = true; /* Just in case $typenames were to be empty */
+	$typename_to_id = array();
+	/* That's a pretty dick move from CCP to NOT include
+	 * typeIDs. Whoever had that idea should be kicked in the nuts. */
+	$req = \Osmium\Db\query('SELECT typeid, typename FROM eve.invtypes WHERE typename IN ('
+	                        .implode(',', array_map(function($name) {
+				                        return "'".\Osmium\Db\escape_string($name)."'";
+			                        }, array_keys($typenames))).')');
+	while($row = \Osmium\Db\fetch_row($req)) {
+		$typename_to_id[$row[1]] = $row[0];
+	}
+
+	$realmodules = array();
+	$realtypeids = array();
+	foreach($modules as $type => $m) {
+		foreach($m as $i => $typename) {
+			if(!isset($typename_to_id[$typename])) {
+				$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
+				continue;
+			}
+			$realmodules[$type][$i] = $typename_to_id[$typename];
+			$realtypeids[$typename_to_id[$typename]] = true;
+		}
+	}
+	foreach($recover_modules as $typename) {
+		if(!isset($typename_to_id[$typename])) {
+			$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
+			continue;
+		}
+		/* "low" does not matter here, it will be corrected in update_modules later. */
+		$realmodules['low'][] = $typename_to_id[$typename];
+		$realtypeids[$typename_to_id[$typename]] = true;
+	}
+
+	$realdrones = array();
+	foreach($drones as $drone) {
+		if(!isset($typename_to_id[$drone['typename']])) {
+			$errors[] = 'Could not find typeID of "'.$drone['typename'].'". Skipped.';
+			continue;
+		}
+		
+		$typeid = $typename_to_id[$drone['typename']];
+		if(!isset($realdrones[$typeid])) $realdrones[$typeid] = 0;
+		$realdrones[$typeid] += $drone['count'];
+	}
+
+	update_modules($fit, array_keys($realtypeids), $realmodules);
+	update_drones($fit, $drones);
+
+	$fit['metadata']['name'] = $name;
+	$fit['metadata']['description'] = $description;
+	$fit['metadata']['tags'] = array();
+	$fit['metadata']['view_permission'] = VIEW_OWNER_ONLY;
+	$fit['metadata']['edit_permission'] = EDIT_OWNER_ONLY;
+	$fit['metadata']['visibility'] = VISIBILITY_PUBLIC;
+
+	return $fit;
 }

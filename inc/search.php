@@ -142,12 +142,13 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			echo " — revision #".$loadout['latestrevision'];
 			echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
       
-			$tags = explode(' ', $loadout['taglist']);
+			$tags = array_filter(explode(' ', $loadout['taglist']), function($tag) { return trim($tag) != ''; });
 			if(count($tags) == 0) {
 				echo "<em>(no tags)</em>";
 			} else {
 				echo "<ul class='tags'>\n".implode('', array_map(function($tag) use($relative) {
-							return "<li><a href='$relative/search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n";
+							$tag = trim($tag);
+							return "<li><a href='$relative/search?q=".urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
 						}, $tags))."</ul>\n";
 			}
 			echo "</li>\n";
