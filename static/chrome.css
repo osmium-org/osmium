@@ -839,3 +839,7 @@ div#wrapper > h1 {
 div#wrapper > p {
 	padding-left: 1em;
 }
+
+a.dangerous {
+	color: #FF3300;
+}

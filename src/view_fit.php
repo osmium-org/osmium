@@ -120,7 +120,10 @@ if(count($fit['charges']) > 1) {
 }
 
 echo "<ul>\n";
-if($can_edit) echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
+if($can_edit) {
+	echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
+	echo "<li><a href='../delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
+}
 echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['hull']['typename'].'"')."'>Browse all ".$fit['hull']['typename']." loadouts</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 echo "</ul>\n";
