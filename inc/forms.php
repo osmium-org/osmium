@@ -28,7 +28,18 @@ function post_redirect_get() {
   $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
   if(isset($_POST) && count($_POST) > 0) {
-    \Osmium\State\put_state('prg_data', array($uri, $_POST));
+    if(!isset($_FILES)) $_FILES = array();
+    else {
+      foreach($_FILES as &$file) {
+	if($file['error'] != UPLOAD_ERR_OK) continue;
+
+	$temp = tempnam(\Osmium\ROOT.'/cache', 'upload');
+	move_uploaded_file($file['tmp_name'], $temp);
+	$file['tmp_name'] = $temp;
+      }
+    }
+
+    \Osmium\State\put_state('prg_data', array($uri, $_POST, $_FILES));
     session_commit();
     header('HTTP/1.1 303 See Other', true, 303);
     header('Location: '.$uri, true, 303);
@@ -37,18 +48,27 @@ function post_redirect_get() {
 
   $prg = \Osmium\State\get_state('prg_data', null);
   if($prg !== null) {
-    list($from_uri, $prg_data) = $prg;
-    if($from_uri === $uri) $_POST = $prg_data;
+    list($from_uri, $prg_post, $prg_files) = $prg;
+    if($from_uri === $uri) {
+      $_POST = $prg_post;
+      $_FILES = $prg_files;
+      foreach($_FILES as $file) {
+	if($file['error'] != UPLOAD_ERR_OK) continue;
+	register_shutdown_function(function() use($file) {
+	    @unlink($file['tmp_name']);
+	  });
+      }
+    }
 
     \Osmium\State\put_state('prg_data', null);
   }
 }
 
-function print_form_begin($action = null, $id = '') {
+function print_form_begin($action = null, $id = '', $enctype = 'application/x-www-form-urlencoded') {
   if($action === null) $action = $_SERVER['REQUEST_URI'];
   if($id !== '') $id = " id='$id'";
 
-  echo "<form method='post' action='$action'$id>\n<table>\n<tbody>\n";
+  echo "<form method='post' accept-charset='utf-8' enctype='$enctype' action='$action'$id>\n<table>\n<tbody>\n";
 }
 
 function print_form_end() {
@@ -90,13 +110,24 @@ function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
   print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' $value/>");
 }
 
-function print_textarea($label, $name, $id = null, $flags = 0) {
+function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = '') {
   if($id === null) $id = $name;
   if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
     $value = htmlspecialchars($_POST[$name]);
   } else $value = '';
 
-  print_generic_row($name, "<label for='$id'>$label</label>", "<textarea name='$name' id='$id'>$value</textarea>");
+  print_generic_row($name, "<label for='$id'>$label</label>", "<textarea placeholder='".htmlspecialchars($placeholder, ENT_QUOTES)."' name='$name' id='$id'>$value</textarea>");
+}
+
+function print_file($label, $name, $maxsize, $id = null) {
+  static $hasMAX_FILE_SIZE = false;
+  if(!$hasMAX_FILE_SIZE) {
+    $hasMAX_FILE_SIZE = true;
+    $hidden = "<input type='hidden' name='MAX_FILE_SIZE' value='$maxsize' />";
+  } else $hidden = '';
+
+  if($id === null) $id = $name;
+  print_generic_row($name, "<label for='$id'>$label</label>", $hidden."<input type='file' name='$name' id='$id' />");
 }
 
 function print_submit($value = '') {
