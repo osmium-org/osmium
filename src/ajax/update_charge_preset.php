@@ -22,30 +22,30 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  die();
+	die();
 }
 
 if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
-  die();
+	die();
 }
 
 $fit = \Osmium\State\get_state('new_fit', array());
 
 if($_GET['action'] == 'update') {
-  $idx = intval($_GET['index']);
-  $fit['charges'][$idx]['name'] = $_GET['name'];
-  foreach(\Osmium\Fit\get_slottypes() as $type) {
-    $i = 0;
-    $fit['charges'][$idx][$type] = array();
-    for($i = 0; $i < 16; ++$i) {
-      if(!isset($_GET[$type.$i])) continue;
-      $fit['charges'][$idx][$type][$i]['typeid'] = intval($_GET[$type.$i]);
-    }
-  }
+	$idx = intval($_GET['index']);
+	$fit['charges'][$idx]['name'] = $_GET['name'];
+	foreach(\Osmium\Fit\get_slottypes() as $type) {
+		$i = 0;
+		$fit['charges'][$idx][$type] = array();
+		for($i = 0; $i < 16; ++$i) {
+			if(!isset($_GET[$type.$i])) continue;
+			$fit['charges'][$idx][$type][$i]['typeid'] = intval($_GET[$type.$i]);
+		}
+	}
 } else if($_GET['action'] == 'delete') {
-  $idx = intval($_GET['index']);
-  unset($fit['charges'][$idx]);
-  $fit['charges'] = array_values($fit['charges']); /* Reorder the numeric keys */
+	$idx = intval($_GET['index']);
+	unset($fit['charges'][$idx]);
+	$fit['charges'] = array_values($fit['charges']); /* Reorder the numeric keys */
 }
 
 \Osmium\State\put_state('new_fit', $fit);

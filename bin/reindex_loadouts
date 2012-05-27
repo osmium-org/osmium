@@ -27,13 +27,13 @@ $r = \Osmium\Search\query_select_searchdata('ORDER BY loadoutid ASC');
 \Osmium\Search\query('BEGIN;');
 
 while($row = \Osmium\Db\fetch_assoc($r)) {
-  \Osmium\Search\index($row);
+	\Osmium\Search\index($row);
 
-  if(((++$i) % BATCHSIZE) == 0) {
-    \Osmium\Search\query('COMMIT;');
-    echo ".";
-    \Osmium\Search\query('BEGIN;');
-  }
+	if(((++$i) % BATCHSIZE) == 0) {
+		\Osmium\Search\query('COMMIT;');
+		echo ".";
+		\Osmium\Search\query('BEGIN;');
+	}
 }
 
 \Osmium\Search\query('COMMIT;');

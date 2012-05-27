@@ -21,7 +21,7 @@ namespace Osmium\Json\SearchModules;
 require __DIR__.'/../../inc/root.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  \Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json(array());
 }
 
 const MAX_MODULES = 10;
@@ -32,7 +32,7 @@ unset($_GET['q']);
 $filters = array();
 
 foreach($_GET as $i => $val) {
-  if($val == 0) $filters[] = $i;
+	if($val == 0) $filters[] = $i;
 }
 
 $query = \Osmium\Db\query_params('SELECT invmodules.typeid, typename
@@ -46,24 +46,24 @@ $out = array();
 $typeids = array();
 $i = 0;
 while($row = \Osmium\Db\fetch_row($query)) {
-  $out[] = array('typeid' => $row[0], 'typename' => $row[1]);
-  $typeids[] = $row[0];
-  ++$i;
+	$out[] = array('typeid' => $row[0], 'typename' => $row[1]);
+	$typeids[] = $row[0];
+	++$i;
 }
 
 $modattr = array();
 \Osmium\Fit\get_attributes_and_effects($typeids, $modattr);
 foreach($out as &$row) {
-  $row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
+	$row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
 }
 
 if($i == MAX_MODULES + 1) {
-  array_pop($out);
-  $warning = 'More modules matched the search.<br />Only showing the first '.MAX_MODULES.'.';
+	array_pop($out);
+	$warning = 'More modules matched the search.<br />Only showing the first '.MAX_MODULES.'.';
 } else if($i == 0) {
-  $warning = 'No match.';
+	$warning = 'No match.';
 } else {
-  $warning = false;
+	$warning = false;
 }
 
 \Osmium\State\put_setting('module_search_filter', serialize($filters));

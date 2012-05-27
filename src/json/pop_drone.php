@@ -22,16 +22,16 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  \Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json(array());
 }
 
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-  $fit = \Osmium\State\get_state('new_fit', array());
-  $typeid = intval($_GET['typeid']);
-  \Osmium\Fit\pop_drone($fit, $typeid);
-  \Osmium\State\put_state('new_fit', $fit);
-  \Osmium\Chrome\return_json($fit);
+	$fit = \Osmium\State\get_state('new_fit', array());
+	$typeid = intval($_GET['typeid']);
+	\Osmium\Fit\pop_drone($fit, $typeid);
+	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\Chrome\return_json($fit);
 } else {
-  \Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json(array());
 }

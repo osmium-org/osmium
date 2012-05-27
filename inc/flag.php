@@ -25,12 +25,12 @@ const HELPFUL_FLAG_BONUS = 10;
 const ABUSIVE_FLAG_PENALTY = -5;
 
 function is_fit_flaggable($fit) {
-  return $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
-    && $fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_EVERYONE;
+	return $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
+		&& $fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_EVERYONE;
 }
 
 function format_moderator_name($a) {
-  if(!$a['ismoderator']) return $a['charactername'];
+	if(!$a['ismoderator']) return $a['charactername'];
   
-  return "<span title='Moderator' class='mod'>♦".$a['charactername']."</span>";
+	return "<span title='Moderator' class='mod'>♦".$a['charactername']."</span>";
 }

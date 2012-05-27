@@ -25,167 +25,167 @@ const HAS_OPTGROUPS = 4;
 $__osmium_form_errors = array();
 
 function post_redirect_get() {
-  $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
+	$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
-  if(isset($_POST) && count($_POST) > 0) {
-    if(!isset($_FILES)) $_FILES = array();
-    else {
-      foreach($_FILES as &$file) {
-	if($file['error'] != UPLOAD_ERR_OK) continue;
+	if(isset($_POST) && count($_POST) > 0) {
+		if(!isset($_FILES)) $_FILES = array();
+		else {
+			foreach($_FILES as &$file) {
+				if($file['error'] != UPLOAD_ERR_OK) continue;
 
-	$temp = tempnam(\Osmium\ROOT.'/cache', 'upload');
-	move_uploaded_file($file['tmp_name'], $temp);
-	$file['tmp_name'] = $temp;
-      }
-    }
+				$temp = tempnam(\Osmium\ROOT.'/cache', 'upload');
+				move_uploaded_file($file['tmp_name'], $temp);
+				$file['tmp_name'] = $temp;
+			}
+		}
 
-    \Osmium\State\put_state('prg_data', array($uri, $_POST, $_FILES));
-    session_commit();
-    header('HTTP/1.1 303 See Other', true, 303);
-    header('Location: '.$uri, true, 303);
-    die();
-  }
+		\Osmium\State\put_state('prg_data', array($uri, $_POST, $_FILES));
+		session_commit();
+		header('HTTP/1.1 303 See Other', true, 303);
+		header('Location: '.$uri, true, 303);
+		die();
+	}
 
-  $prg = \Osmium\State\get_state('prg_data', null);
-  if($prg !== null) {
-    list($from_uri, $prg_post, $prg_files) = $prg;
-    if($from_uri === $uri) {
-      $_POST = $prg_post;
-      $_FILES = $prg_files;
-      foreach($_FILES as $file) {
-	if($file['error'] != UPLOAD_ERR_OK) continue;
-	register_shutdown_function(function() use($file) {
-	    @unlink($file['tmp_name']);
-	  });
-      }
-    }
+	$prg = \Osmium\State\get_state('prg_data', null);
+	if($prg !== null) {
+		list($from_uri, $prg_post, $prg_files) = $prg;
+		if($from_uri === $uri) {
+			$_POST = $prg_post;
+			$_FILES = $prg_files;
+			foreach($_FILES as $file) {
+				if($file['error'] != UPLOAD_ERR_OK) continue;
+				register_shutdown_function(function() use($file) {
+						@unlink($file['tmp_name']);
+					});
+			}
+		}
 
-    \Osmium\State\put_state('prg_data', null);
-  }
+		\Osmium\State\put_state('prg_data', null);
+	}
 }
 
 function print_form_begin($action = null, $id = '', $enctype = 'application/x-www-form-urlencoded') {
-  if($action === null) $action = $_SERVER['REQUEST_URI'];
-  if($id !== '') $id = " id='$id'";
+	if($action === null) $action = $_SERVER['REQUEST_URI'];
+	if($id !== '') $id = " id='$id'";
 
-  echo "<form method='post' accept-charset='utf-8' enctype='$enctype' action='$action'$id>\n<table>\n<tbody>\n";
+	echo "<form method='post' accept-charset='utf-8' enctype='$enctype' action='$action'$id>\n<table>\n<tbody>\n";
 }
 
 function print_form_end() {
-  echo "</tbody>\n</table>\n</form>\n";
+	echo "</tbody>\n</table>\n</form>\n";
 }
 
 function add_field_error($name, $error) {
-  global $__osmium_form_errors;
-  $__osmium_form_errors[$name][] = $error;
+	global $__osmium_form_errors;
+	$__osmium_form_errors[$name][] = $error;
 }
 
 function print_generic_row($name, $td1, $td2) {
-  $class = '';
+	$class = '';
 
-  global $__osmium_form_errors;
-  if(isset($__osmium_form_errors[$name]) && count($__osmium_form_errors[$name]) > 0) {
-    $class = 'error';
-    foreach($__osmium_form_errors[$name] as $msg) {
-      echo "<tr class='error_message'>\n<td colspan='2'><p>".htmlspecialchars($msg, ENT_QUOTES)."</p></td>\n</tr>\n";
-    }
-  }
+	global $__osmium_form_errors;
+	if(isset($__osmium_form_errors[$name]) && count($__osmium_form_errors[$name]) > 0) {
+		$class = 'error';
+		foreach($__osmium_form_errors[$name] as $msg) {
+			echo "<tr class='error_message'>\n<td colspan='2'><p>".$msg."</p></td>\n</tr>\n";
+		}
+	}
 
-  if($class !== '') {
-    $class = " class='$class' ";
-  }
+	if($class !== '') {
+		$class = " class='$class' ";
+	}
 
-  echo "<tr$class>\n";
-  echo "<th>$td1</th>\n";
-  echo "<td>$td2</td>\n";
-  echo "</tr>\n";
+	echo "<tr$class>\n";
+	echo "<th>$td1</th>\n";
+	echo "<td>$td2</td>\n";
+	echo "</tr>\n";
 }
 
 function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
-  if($id === null) $id = $name;
-  if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
-    $value = "value='".htmlspecialchars($_POST[$name], ENT_QUOTES)."' ";
-  } else $value = '';
+	if($id === null) $id = $name;
+	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
+		$value = "value='".htmlspecialchars($_POST[$name], ENT_QUOTES)."' ";
+	} else $value = '';
 
-  print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' $value/>");
+	print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' $value/>");
 }
 
 function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = '') {
-  if($id === null) $id = $name;
-  if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
-    $value = htmlspecialchars($_POST[$name]);
-  } else $value = '';
+	if($id === null) $id = $name;
+	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
+		$value = htmlspecialchars($_POST[$name]);
+	} else $value = '';
 
-  print_generic_row($name, "<label for='$id'>$label</label>", "<textarea placeholder='".htmlspecialchars($placeholder, ENT_QUOTES)."' name='$name' id='$id'>$value</textarea>");
+	print_generic_row($name, "<label for='$id'>$label</label>", "<textarea placeholder='".htmlspecialchars($placeholder, ENT_QUOTES)."' name='$name' id='$id'>$value</textarea>");
 }
 
 function print_file($label, $name, $maxsize, $id = null) {
-  static $hasMAX_FILE_SIZE = false;
-  if(!$hasMAX_FILE_SIZE) {
-    $hasMAX_FILE_SIZE = true;
-    $hidden = "<input type='hidden' name='MAX_FILE_SIZE' value='$maxsize' />";
-  } else $hidden = '';
+	static $hasMAX_FILE_SIZE = false;
+	if(!$hasMAX_FILE_SIZE) {
+		$hasMAX_FILE_SIZE = true;
+		$hidden = "<input type='hidden' name='MAX_FILE_SIZE' value='$maxsize' />";
+	} else $hidden = '';
 
-  if($id === null) $id = $name;
-  print_generic_row($name, "<label for='$id'>$label</label>", $hidden."<input type='file' name='$name' id='$id' />");
+	if($id === null) $id = $name;
+	print_generic_row($name, "<label for='$id'>$label</label>", $hidden."<input type='file' name='$name' id='$id' />");
 }
 
 function print_submit($value = '') {
-  if($value !== '') {
-    $value = "value='".htmlspecialchars($value, ENT_QUOTES)."' ";
-  }
+	if($value !== '') {
+		$value = "value='".htmlspecialchars($value, ENT_QUOTES)."' ";
+	}
 
-  echo "<tr>\n<td></td>\n";
-  echo "<td><input type='submit' $value/></td>\n</tr>\n";
+	echo "<tr>\n<td></td>\n";
+	echo "<td><input type='submit' $value/></td>\n</tr>\n";
 }
 
 function print_separator() {
-  echo "<tr class='separator'>\n<td colspan='2'><hr /></td>\n</tr>\n";
+	echo "<tr class='separator'>\n<td colspan='2'><hr /></td>\n</tr>\n";
 }
 
 function print_text($text) {
-  echo "<tr>\n<td colspan='2'>".$text."</td>\n</tr>\n";
+	echo "<tr>\n<td colspan='2'>".$text."</td>\n</tr>\n";
 }
 
 function print_select($label, $name, $options, $size = null, $id = null, $flags = 0) {
-  if($id === null) $id = $name;
+	if($id === null) $id = $name;
 
-  if($flags & ALLOW_MULTISELECT) $multiselect = ' multiple="multiple"';
-  else $multiselect = '';
+	if($flags & ALLOW_MULTISELECT) $multiselect = ' multiple="multiple"';
+	else $multiselect = '';
 
-  if($size === null) $size = '';
-  else $size = " size='$size'";
+	if($size === null) $size = '';
+	else $size = " size='$size'";
 
-  $fOptions = '';
-  if($flags & HAS_OPTGROUPS) {
-    foreach($options as $category => $group) {
-      $fOptions .= "<optgroup label='$category'>\n";
-      $fOptions .= format_optgroup($name, $group, $flags);
-      $fOptions .= "</optgroup>\n";
-    }
-  } else $fOptions = format_optgroup($name, $options, $flags);
+	$fOptions = '';
+	if($flags & HAS_OPTGROUPS) {
+		foreach($options as $category => $group) {
+			$fOptions .= "<optgroup label='$category'>\n";
+			$fOptions .= format_optgroup($name, $group, $flags);
+			$fOptions .= "</optgroup>\n";
+		}
+	} else $fOptions = format_optgroup($name, $options, $flags);
 
-  if($flags & ALLOW_MULTISELECT) {
-    $name = $name.'[]';
-  }
+	if($flags & ALLOW_MULTISELECT) {
+		$name = $name.'[]';
+	}
 
-  print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'$size$multiselect>\n$fOptions\n</select>\n");
+	print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'$size$multiselect>\n$fOptions\n</select>\n");
 }
 
 function format_optgroup($name, $options, $flags) {
-  $f = '';
-  foreach($options as $value => $label) {
-    $selected = '';
-    if($flags & FIELD_REMEMBER_VALUE) {
-      if(isset($_POST[$name]) 
-	 && (
-	     (($flags & ALLOW_MULTISELECT) && in_array($value, $_POST[$name]))
-	     || (!($flags & ALLOW_MULTISELECT) && $_POST[$name] == $value))) {
-	$selected = ' selected="selected"';
-      }
-    }
-    $f .= "<option value='$value'$selected>$label</option>\n";
-  }
+	$f = '';
+	foreach($options as $value => $label) {
+		$selected = '';
+		if($flags & FIELD_REMEMBER_VALUE) {
+			if(isset($_POST[$name]) 
+			   && (
+				   (($flags & ALLOW_MULTISELECT) && in_array($value, $_POST[$name]))
+				   || (!($flags & ALLOW_MULTISELECT) && $_POST[$name] == $value))) {
+				$selected = ' selected="selected"';
+			}
+		}
+		$f .= "<option value='$value'$selected>$label</option>\n";
+	}
   
-  return $f;
+	return $f;
 }

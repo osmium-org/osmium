@@ -34,7 +34,7 @@ putenv('PGPASSWORD='.$password);
 $out_file = __DIR__.'/../osmium-full-'.date('YmdHis').fmod(microtime(true), 1).'.pgsql';
 
 passthru('pg_dump --host '.escapeshellarg($host)
-	 .' --port '.escapeshellarg($port)
-	 .' --username '.escapeshellarg($user)
-	 .' -F c --verbose --file '.escapeshellarg($out_file)
-	 .' --schema osmium '.escapeshellarg($dbname));
+         .' --port '.escapeshellarg($port)
+         .' --username '.escapeshellarg($user)
+         .' -F c --verbose --file '.escapeshellarg($out_file)
+         .' --schema osmium '.escapeshellarg($dbname));

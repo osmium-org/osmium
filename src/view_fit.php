@@ -25,14 +25,14 @@ require __DIR__.'/../inc/root.php';
 $loadoutid = intval($_GET['loadoutid']);
 
 if(\Osmium\State\is_logged_in()) {
-  $a = \Osmium\State\get_state('a');
-  list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+	$a = \Osmium\State\get_state('a');
+	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
 } else {
-  list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
+	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
 }
 
 if($count == 0) {
-  \Osmium\fatal(404, 'Loadout not found.');
+	\Osmium\fatal(404, 'Loadout not found.');
 }
 
 $fit = \Osmium\Fit\get_fit($loadoutid);
@@ -41,43 +41,43 @@ $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, ch
 
 $can_edit = false;
 if(\Osmium\State\is_logged_in()) {
-  list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
-  $can_edit = ($c == 1);
+	list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+	$can_edit = ($c == 1);
 }
 
 if($fit === false) {
-  \Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
+	\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
 }
 
 if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-  $pw = \Osmium\State\get_state('pw_fits', array());
-  if((!isset($a) || $a['accountid'] != $fit['metadata']['accountid']) 
-     && ((!isset($pw[$loadoutid]) || $pw[$loadoutid] < time()))) {
-    unset($pw[$loadoutid]);
+	$pw = \Osmium\State\get_state('pw_fits', array());
+	if((!isset($a) || $a['accountid'] != $fit['metadata']['accountid']) 
+	   && ((!isset($pw[$loadoutid]) || $pw[$loadoutid] < time()))) {
+		unset($pw[$loadoutid]);
     
-    if(!isset($_POST['pw']) || !\Osmium\State\check_password($_POST['pw'], $fit['metadata']['password'])) {
-      if(isset($_POST['pw'])) {
-	\Osmium\Forms\add_field_error('pw', 'Incorrect password.');
-      }
+		if(!isset($_POST['pw']) || !\Osmium\State\check_password($_POST['pw'], $fit['metadata']['password'])) {
+			if(isset($_POST['pw'])) {
+				\Osmium\Forms\add_field_error('pw', 'Incorrect password.');
+			}
       
-      /* Show the password form */
-      \Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', "<meta name='robots' content='noindex' />\n");
+			/* Show the password form */
+			\Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', "<meta name='robots' content='noindex' />\n");
       
-      echo "<div id='pwfit'>\n";
-      \Osmium\Forms\print_form_begin();
-      \Osmium\Forms\print_text('<p class="m">This fit is password-protected. Please input password to continue.</p>');
-      \Osmium\Forms\print_generic_field('Password', 'password', 'pw');
-      \Osmium\Forms\print_submit();
-      \Osmium\Forms\print_form_end();
-      echo "</div>\n";
+			echo "<div id='pwfit'>\n";
+			\Osmium\Forms\print_form_begin();
+			\Osmium\Forms\print_text('<p class="m">This fit is password-protected. Please input password to continue.</p>');
+			\Osmium\Forms\print_generic_field('Password', 'password', 'pw');
+			\Osmium\Forms\print_submit();
+			\Osmium\Forms\print_form_end();
+			echo "</div>\n";
       
-      \Osmium\Chrome\print_footer();
-      die();
-    } else {
-      $pw[$loadoutid] = time() + PASSWORD_AUTHENTICATION_DURATION;
-      \Osmium\State\put_state('pw_fits', $pw);
-    }
-  }
+			\Osmium\Chrome\print_footer();
+			die();
+		} else {
+			$pw[$loadoutid] = time() + PASSWORD_AUTHENTICATION_DURATION;
+			\Osmium\State\put_state('pw_fits', $pw);
+		}
+	}
 }
 
 $title = $fit['hull']['typename'].' / '.$fit['metadata']['name'];
@@ -93,30 +93,30 @@ echo "<li>Originally created by: <strong>".\Osmium\Flag\format_moderator_name($a
 echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_64.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
 echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_64.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
 if($author['allianceid'] > 0) {
-  echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_64.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
+	echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_64.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
 }
 echo "<br /> </li>\n";
 if($fit['metadata']['revision'] > 1) {
-  echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Flag\format_moderator_name($lastrev)."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
+	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Flag\format_moderator_name($lastrev)."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
 echo "</ul>\n";
 
 if(count($fit['charges']) > 1) {
-  echo "<script>osmium_presets = ".json_encode($fit['charges']).";</script>\n";
-  echo "<ul>\n<li>Charge presets:\n<ul id='vpresets'>\n";
+	echo "<script>osmium_presets = ".json_encode($fit['charges']).";</script>\n";
+	echo "<ul>\n<li>Charge presets:\n<ul id='vpresets'>\n";
 
-  $active = true;
-  foreach($fit['charges'] as $index => $preset) {
-    if($active) {
-      $active = false;
-      $class = " class='active'";
-    } else {
-      $class = '';
-    }
-    echo "<li id='preset_$index' data-index='$index'><a href='javascript:void(0);'$class>".htmlspecialchars($preset['name'])."</a></li>\n";
-  }
+	$active = true;
+	foreach($fit['charges'] as $index => $preset) {
+		if($active) {
+			$active = false;
+			$class = " class='active'";
+		} else {
+			$class = '';
+		}
+		echo "<li id='preset_$index' data-index='$index'><a href='javascript:void(0);'$class>".htmlspecialchars($preset['name'])."</a></li>\n";
+	}
 
-  echo "</ul>\n</li>\n</ul>\n";
+	echo "</ul>\n</li>\n</ul>\n";
 }
 
 echo "<ul>\n";
@@ -141,11 +141,11 @@ echo "<h1 id='fitname'>";
 echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author);
 echo "</h1>\n";
 if(count($fit['metadata']['tags']) > 0) {
-  echo "<div id='fittags'>\n<h2>Tags:</h2>\n<ul>\n";
-  foreach($fit['metadata']['tags'] as $tag) {
-    echo "<li><a href='../search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
-  }
-  echo "</ul>\n</div>\n";
+	echo "<div id='fittags'>\n<h2>Tags:</h2>\n<ul>\n";
+	foreach($fit['metadata']['tags'] as $tag) {
+		echo "<li><a href='../search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
+	}
+	echo "</ul>\n</div>\n";
 }
 echo "</header>\n";
 
@@ -153,40 +153,40 @@ $preset = null;
 if(count($fit['charges']) > 0) $preset = $fit['charges'][0];
 
 foreach($fit['modules'] as $type => $modules) {
-  if(count($modules) == 0 && $fit['hull']['slotcount'][$type] == 0) continue;
+	if(count($modules) == 0 && $fit['hull']['slotcount'][$type] == 0) continue;
 
-  echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots</h3>\n<ul>\n";
+	echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots</h3>\n<ul>\n";
 
-  foreach($modules as $index => $mod) {
-    $charge = '';
-    if(isset($preset[$type][$index])) {
-      $charge = ",<br /><img src='http://image.eveonline.com/Type/".$preset[$type][$index]['typeid']."_32.png' alt='' />".$preset[$type][$index]['typename'];
-    }
+	foreach($modules as $index => $mod) {
+		$charge = '';
+		if(isset($preset[$type][$index])) {
+			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$preset[$type][$index]['typeid']."_32.png' alt='' />".$preset[$type][$index]['typename'];
+		}
 
-    echo "<li class='index_$index'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span></li>\n";
-  }
+		echo "<li class='index_$index'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span></li>\n";
+	}
 
-  for($i = count($modules); $i < $fit['hull']['slotcount'][$type]; ++$i) {
-    echo "<li class='unused'><img src='../static/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
-  }
+	for($i = count($modules); $i < $fit['hull']['slotcount'][$type]; ++$i) {
+		echo "<li class='unused'><img src='../static/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
+	}
 
-  echo "</ul>\n</div>\n";
+	echo "</ul>\n</div>\n";
 }
 
 if(isset($fit['drones']) && count($fit['drones']) > 0) {
-  echo "<div id='vdronebay'>\n<h3>Drone bay</h3>\n<ul>\n";
+	echo "<div id='vdronebay'>\n<h3>Drone bay</h3>\n<ul>\n";
 
-  foreach($fit['drones'] as $drone) {
-    $qty = '';
-    if($drone['count'] == 0) continue; /* Duh */
-    if($drone['count'] > 1) {
-      $qty = " <strong>×".$drone['count']."</strong>";
-    }
+	foreach($fit['drones'] as $drone) {
+		$qty = '';
+		if($drone['count'] == 0) continue; /* Duh */
+		if($drone['count'] > 1) {
+			$qty = " <strong>×".$drone['count']."</strong>";
+		}
 
-    echo "<li><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
-  }
+		echo "<li><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
+	}
 
-  echo "</ul>\n</div>\n";
+	echo "</ul>\n</div>\n";
 }
 
 echo "</div>\n";

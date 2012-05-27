@@ -22,74 +22,76 @@ const API_ROOT = 'https://api.eveonline.com';
 const LOCK_FILE_TIMEOUT = 10; /* Number of seconds until a lock file is considered stale */
 
 function fetch($name, array $params) {
-  /* We sort the $params array to always have the same hash even when
-     the paramaters are not given in the same order. It makes
-     sense. */
-  ksort($params);
-  $hash = 'API_'.hash('sha256', serialize($name).serialize($params));
-  $cacheDir = \Osmium\CACHE_DIRECTORY;
-  $c_file = $cacheDir.'/'.$hash;
-  $lock_file = $cacheDir.'/LOCK_'.$hash;
+	libxml_use_internal_errors(true);
 
-  if(file_exists($c_file) && filemtime($c_file) >= time()) {
-    $xml = new \SimpleXMLElement(file_get_contents($c_file));
-    return $xml;
-  }
+	/* We sort the $params array to always have the same hash even when
+	   the paramaters are not given in the same order. It makes
+	   sense. */
+	ksort($params);
+	$hash = 'API_'.hash('sha256', serialize($name).serialize($params));
+	$cacheDir = \Osmium\CACHE_DIRECTORY;
+	$c_file = $cacheDir.'/'.$hash;
+	$lock_file = $cacheDir.'/LOCK_'.$hash;
 
-  if(file_exists($lock_file)) {
-    if(filemtime($lock_file) < time() - LOCK_FILE_TIMEOUT) {
-      /* Stale lock file, ignore */
-    } else {
-      /* Try to return outdated cache */
-      if(file_exists($c_file)) {
-	try {
-	  $xml = new \SimpleXMLElement(file_get_contents($c_file));
-	  return $xml;
-	} catch(Exception $e) {
-	  /* Invalid XML file cached, let's try again */
-	  @unlink($c_file);
-	  return fetch($name, $params);
+	if(file_exists($c_file) && filemtime($c_file) >= time()) {
+		$xml = new \SimpleXMLElement(file_get_contents($c_file));
+		return $xml;
 	}
-      } else {
-	/* Wait for the lock file to disappear */
-	do {
-	  clearstatcache();
-	  usleep(100000);
-	} while(file_exists($lock_file) && filemtime($lock_file) >= time() - LOCK_FILE_TIMEOUT);
-	/* Try again */
-	return fetch($name, $params);
-      }
-    }
-  }
 
-  touch($lock_file);
+	if(file_exists($lock_file)) {
+		if(filemtime($lock_file) < time() - LOCK_FILE_TIMEOUT) {
+			/* Stale lock file, ignore */
+		} else {
+			/* Try to return outdated cache */
+			if(file_exists($c_file)) {
+				try {
+					$xml = new \SimpleXMLElement(file_get_contents($c_file));
+					return $xml;
+				} catch(\Exception $e) {
+					/* Invalid XML file cached, let's try again */
+					@unlink($c_file);
+					return fetch($name, $params);
+				}
+			} else {
+				/* Wait for the lock file to disappear */
+				do {
+					clearstatcache();
+					usleep(100000);
+				} while(file_exists($lock_file) && filemtime($lock_file) >= time() - LOCK_FILE_TIMEOUT);
+				/* Try again */
+				return fetch($name, $params);
+			}
+		}
+	}
 
-  $c = curl_init(API_ROOT.$name);
-  curl_setopt($c, CURLOPT_POST, true);
-  curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($params, '', '&'));
-  $raw_xml = curl_exec($c);
-  curl_close($c);
+	touch($lock_file);
+
+	$c = curl_init(API_ROOT.$name);
+	curl_setopt($c, CURLOPT_POST, true);
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($params, '', '&'));
+	$raw_xml = curl_exec($c);
+	curl_close($c);
   
-  $xml = false;
-  $ex = null;
-  try {
-    $xml = new \SimpleXMLElement($raw_xml);
-  } catch(Exception $e) {
-    $ex = $e;
-  }
+	$xml = false;
+	$ex = null;
+	try {
+		$xml = new \SimpleXMLElement($raw_xml);
+	} catch(\Exception $e) {
+		$ex = $e;
+	}
 
-  if($xml === false || $raw_xml === false) {
-    unlink($lock_file);
-    return false;
-  }
+	if($xml === false || $raw_xml === false) {
+		unlink($lock_file);
+		return false;
+	}
 
-  $f = fopen($c_file, 'wb');
-  fwrite($f, $raw_xml);
-  fflush($f);
-  fclose($f);
-  unlink($lock_file);
+	$f = fopen($c_file, 'wb');
+	fwrite($f, $raw_xml);
+	fflush($f);
+	fclose($f);
+	unlink($lock_file);
 
-  touch($c_file, $expires = strtotime((string)$xml->cachedUntil), $expires);
-  return $xml;
+	touch($c_file, $expires = strtotime((string)$xml->cachedUntil), $expires);
+	return $xml;
 }

@@ -20,29 +20,29 @@ namespace Osmium\AjaxCommon;
 
 
 function get_module_shortlist($shortlist = null) {
-  if(!\Osmium\State\is_logged_in()) return array();
+	if(!\Osmium\State\is_logged_in()) return array();
 
-  if($shortlist === null) {
-    $shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
-  }
+	if($shortlist === null) {
+		$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
+	}
  
-  $out = array();
-  $rows = array();
-  $req = \Osmium\Db\query_params('SELECT typename, invmodules.typeid FROM osmium.invmodules WHERE invmodules.typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')', array());
-  while($row = \Osmium\Db\fetch_row($req)) {
-    $rows[$row[1]] = array('typename' => $row[0], 'typeid' => $row[1]);
-  }
+	$out = array();
+	$rows = array();
+	$req = \Osmium\Db\query_params('SELECT typename, invmodules.typeid FROM osmium.invmodules WHERE invmodules.typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')', array());
+	while($row = \Osmium\Db\fetch_row($req)) {
+		$rows[$row[1]] = array('typename' => $row[0], 'typeid' => $row[1]);
+	}
 
-  $modattr = array();
-  \Osmium\Fit\get_attributes_and_effects($typeids, $modattr);
-  foreach($rows as &$row) {
-    $row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
-  }
+	$modattr = array();
+	\Osmium\Fit\get_attributes_and_effects($typeids, $modattr);
+	foreach($rows as &$row) {
+		$row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
+	}
 
-  foreach($shortlist as $typeid) {
-    if(!isset($rows[$typeid])) continue;
-    $out[] = $rows[$typeid];
-  }
+	foreach($shortlist as $typeid) {
+		if(!isset($rows[$typeid])) continue;
+		$out[] = $rows[$typeid];
+	}
 
-  return $out;
+	return $out;
 }

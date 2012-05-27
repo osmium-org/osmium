@@ -22,27 +22,27 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  \Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json(array());
 }
 
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-  $fit = \Osmium\State\get_state('new_fit', array());
-  $modules = array();
-  $typeids = array();
+	$fit = \Osmium\State\get_state('new_fit', array());
+	$modules = array();
+	$typeids = array();
 
-  foreach(\Osmium\Fit\get_slottypes() as $type) {
-    $i = 0;
-    while(isset($_GET[$type.$i])) {
-      $modules[$type][] = ($typeid = $_GET[$type.$i]);
-      $typeids[$typeid] = true;
-      ++$i;
-    }
-  }
+	foreach(\Osmium\Fit\get_slottypes() as $type) {
+		$i = 0;
+		while(isset($_GET[$type.$i])) {
+			$modules[$type][] = ($typeid = $_GET[$type.$i]);
+			$typeids[$typeid] = true;
+			++$i;
+		}
+	}
 
-  \Osmium\Fit\update_modules($fit, array_keys($typeids), $modules);
-  \Osmium\State\put_state('new_fit', $fit);
-  \Osmium\Chrome\return_json($fit);
+	\Osmium\Fit\update_modules($fit, array_keys($typeids), $modules);
+	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\Chrome\return_json($fit);
 } else {
-  \Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json(array());
 }

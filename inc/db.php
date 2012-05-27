@@ -21,33 +21,33 @@ namespace Osmium\Db;
 $__osmium_pg_link = null;
 
 function connect() {
-  global $__osmium_pg_link;
-  $host = \Osmium\get_ini_setting('host');
-  $port = \Osmium\get_ini_setting('port');
-  $user = \Osmium\get_ini_setting('user');
-  $password = \Osmium\get_ini_setting('password');
-  $dbname = \Osmium\get_ini_setting('dbname');
+	global $__osmium_pg_link;
+	$host = \Osmium\get_ini_setting('host');
+	$port = \Osmium\get_ini_setting('port');
+	$user = \Osmium\get_ini_setting('user');
+	$password = \Osmium\get_ini_setting('password');
+	$dbname = \Osmium\get_ini_setting('dbname');
 
-  return $__osmium_pg_link = pg_connect("host=$host port=$port user=$user password=$password dbname=$dbname");
+	return $__osmium_pg_link = pg_connect("host=$host port=$port user=$user password=$password dbname=$dbname");
 }
 
 function query_params($query, array $params) {
-  global $__osmium_pg_link;
-  if($__osmium_pg_link === null && !connect()) {
-    \Osmium\fatal(500, 'Could not connect to the database.');
-  }
+	global $__osmium_pg_link;
+	if($__osmium_pg_link === null && !connect()) {
+		\Osmium\fatal(500, 'Could not connect to the database.');
+	}
 
-  return pg_query_params($__osmium_pg_link, $query, $params);
+	return pg_query_params($__osmium_pg_link, $query, $params);
 }
 
 function query($query) {
-  return query_params($query, array());
+	return query_params($query, array());
 }
 
 function fetch_row($resource) {
-  return pg_fetch_row($resource);
+	return pg_fetch_row($resource);
 }
 
 function fetch_assoc($resource) {
-  return pg_fetch_assoc($resource);
+	return pg_fetch_assoc($resource);
 }

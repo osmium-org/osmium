@@ -19,22 +19,22 @@
 namespace Osmium;
 
 function fatal($code, $message) {
-  if(!headers_sent()) {
-    header('Content-Type: text/plain', true, $code);
-  }
-  die((string)$message);
+	if(!headers_sent()) {
+		header('Content-Type: text/plain', true, $code);
+	}
+	die((string)$message);
 }
 
 function get_ini_setting($key) {
-  static $cnf = null;
-  if($cnf === null) {
-    if(!file_exists(INI_CONFIGURATION_FILE) || !is_readable(INI_CONFIGURATION_FILE)) {
-      fatal(500, "Configuration file '".INI_CONFIGURATION_FILE."' not found or not readable.");
-    }
-    $cnf = parse_ini_file(INI_CONFIGURATION_FILE);
-  }
+	static $cnf = null;
+	if($cnf === null) {
+		if(!file_exists(INI_CONFIGURATION_FILE) || !is_readable(INI_CONFIGURATION_FILE)) {
+			fatal(500, "Configuration file '".INI_CONFIGURATION_FILE."' not found or not readable.");
+		}
+		$cnf = parse_ini_file(INI_CONFIGURATION_FILE);
+	}
 
-  return isset($cnf[$key]) ? $cnf[$key] : null;
+	return isset($cnf[$key]) ? $cnf[$key] : null;
 }
 
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
@@ -45,7 +45,7 @@ define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
-  osmium_fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
+	osmium_fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
 
 session_save_path(CACHE_DIRECTORY);
@@ -63,9 +63,9 @@ require ROOT.'/inc/search.php';
 \Osmium\Forms\post_redirect_get();
 
 if(isset($_POST['__osmium_login'])) {
-  \Osmium\State\try_login();
+	\Osmium\State\try_login();
 }
 
 if(!\Osmium\State\is_logged_in()) {
-  \Osmium\State\try_recover();
+	\Osmium\State\try_recover();
 }

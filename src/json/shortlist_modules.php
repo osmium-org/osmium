@@ -22,27 +22,27 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  \Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json(array());
 }
 
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-  $shortlist = array();
-  $keys = array();
+	$shortlist = array();
+	$keys = array();
 
-  $i = 0;
-  while(isset($_GET["$i"])) {
-    $typeid = $_GET["$i"];
-    if(!isset($keys[$typeid])) {
-      $keys[$typeid] = true;
-      $shortlist[] = intval($typeid);
-    }
-    ++$i;
-  }
+	$i = 0;
+	while(isset($_GET["$i"])) {
+		$typeid = $_GET["$i"];
+		if(!isset($keys[$typeid])) {
+			$keys[$typeid] = true;
+			$shortlist[] = intval($typeid);
+		}
+		++$i;
+	}
 
-  \Osmium\State\put_setting('shortlist_modules', serialize($shortlist));
+	\Osmium\State\put_setting('shortlist_modules', serialize($shortlist));
 } else {
-  $shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
+	$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
 }
 
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_module_shortlist($shortlist));

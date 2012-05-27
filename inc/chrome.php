@@ -19,97 +19,97 @@
 namespace Osmium\Chrome;
 
 function print_header($title = '', $relative = '.', $add_head = '') {
-  global $__osmium_chrome_relative;
-  $__osmium_chrome_relative = $relative;
+	global $__osmium_chrome_relative;
+	$__osmium_chrome_relative = $relative;
 
-  \Osmium\State\api_maybe_redirect($relative);
+	\Osmium\State\api_maybe_redirect($relative);
 
-  if($title == '') {
-    $title = 'Osmium / '.\Osmium\SHORT_DESCRIPTION;
-  } else {
-    $title .= ' / Osmium';
-  }
+	if($title == '') {
+		$title = 'Osmium / '.\Osmium\SHORT_DESCRIPTION;
+	} else {
+		$title .= ' / Osmium';
+	}
 
-  echo "<!DOCTYPE html>\n<html>\n<head>\n";
-  echo "<meta charset='UTF-8' />\n";
-  echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
-  echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
-  echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
-  echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
-  echo "<title>$title</title>\n";
-  echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
+	echo "<!DOCTYPE html>\n<html>\n<head>\n";
+	echo "<meta charset='UTF-8' />\n";
+	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
+	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
+	echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
+	echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
+	echo "<title>$title</title>\n";
+	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 
-  echo "<nav>\n<ul>\n";
-  echo get_navigation_link($relative.'/', "Main page");
-  echo get_navigation_link($relative.'/search', "Search loadouts");
-  if(\Osmium\State\is_logged_in()) {
-    echo get_navigation_link($relative.'/new', "New loadout");
-    echo get_navigation_link($relative.'/renew_api', "API settings");
-  } else {
+	echo "<nav>\n<ul>\n";
+	echo get_navigation_link($relative.'/', "Main page");
+	echo get_navigation_link($relative.'/search', "Search loadouts");
+	if(\Osmium\State\is_logged_in()) {
+		echo get_navigation_link($relative.'/new', "New loadout");
+		echo get_navigation_link($relative.'/renew_api', "API settings");
+	} else {
 
-  }
+	}
 
-  echo "</ul>\n";
-  \Osmium\State\print_login_or_logout_box($relative);
-  echo "</nav>\n";
-  echo "<noscript>\n<p id='nojs_warning'>To get the full Osmium experience, please enable Javascript for host <strong>".$_SERVER['HTTP_HOST']."</strong>.</p>\n</noscript>\n";
+	echo "</ul>\n";
+	\Osmium\State\print_login_or_logout_box($relative);
+	echo "</nav>\n";
+	echo "<noscript>\n<p id='nojs_warning'>To get the full Osmium experience, please enable Javascript for host <strong>".$_SERVER['HTTP_HOST']."</strong>.</p>\n</noscript>\n";
 }
 
 function print_footer() {
-  global $__osmium_chrome_relative;
-  echo "<div id='push'></div>\n</div>\n<footer>\n";
-  echo "<p><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong> — (Artefact2/Indalecia) — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
-  echo "</footer>\n</body>\n</html>\n";
+	global $__osmium_chrome_relative;
+	echo "<div id='push'></div>\n</div>\n<footer>\n";
+	echo "<p><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong> — (Artefact2/Indalecia) — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
+	echo "</footer>\n</body>\n</html>\n";
 }
 
 function get_navigation_link($dest, $label) {
-  if(get_significant_uri($dest) == get_significant_uri($_SERVER['REQUEST_URI'])) {
-    return "<li><strong><a href='$dest'>$label</a></strong></li>\n";
-  }
+	if(get_significant_uri($dest) == get_significant_uri($_SERVER['REQUEST_URI'])) {
+		return "<li><strong><a href='$dest'>$label</a></strong></li>\n";
+	}
 
-  return "<li><a href='$dest'>$label</a></li>\n";
+	return "<li><a href='$dest'>$label</a></li>\n";
 }
 
 function get_significant_uri($uri) {
-  $uri = explode('?', $uri, 2)[0];
-  $uri = explode('/', $uri);
-  return array_pop($uri);
+	$uri = explode('?', $uri, 2)[0];
+	$uri = explode('/', $uri);
+	return array_pop($uri);
 }
 
 function print_js_snippet($js_file) {
-  echo "<script>\n".file_get_contents(\Osmium\ROOT.'/src/snippets/'.$js_file.'.js')."</script>\n";
+	echo "<script>\n".file_get_contents(\Osmium\ROOT.'/src/snippets/'.$js_file.'.js')."</script>\n";
 }
 
 function return_json($data, $flags = 0) {
-  header('Content-Type: application/json');
-  die(json_encode($data, $flags));
+	header('Content-Type: application/json');
+	die(json_encode($data, $flags));
 }
 
 function print_loadout_title($name, $viewpermission, $author) {
-  $pic = '';
-  if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-    $pic = "<img src='../static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
-  } else if($viewpermission == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
-    $pic = "<img src='../static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
-  } else if($viewpermission == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
-    if(!$author['allianceid']) $author['alliancename'] = '*no alliance*';
-    $pic = "<img src='../static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
-  } else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
-    $pic = "<img src='../static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
-  }
+	$pic = '';
+	if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
+		$pic = "<img src='../static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
+	} else if($viewpermission == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
+		$pic = "<img src='../static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
+	} else if($viewpermission == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
+		if(!$author['allianceid']) $author['alliancename'] = '*no alliance*';
+		$pic = "<img src='../static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
+	} else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
+		$pic = "<img src='../static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
+	}
   
-  echo "<span class='fitname'>".htmlentities($name).$pic."</span>";
+	echo "<span class='fitname'>".htmlentities($name).$pic."</span>";
 }
 
 function print_search_form() {
-  global $query;
+	global $query;
 
-  $val = '';
-  if($query !== false) {
-    $val = "value='".htmlspecialchars($query, ENT_QUOTES)."' ";
-  }
+	$val = '';
+	if($query !== false) {
+		$val = "value='".htmlspecialchars($query, ENT_QUOTES)."' ";
+	}
 
-  echo "<form method='get' action='./search'>\n";
-  echo "<h1><img src='./static/icons/search.png' alt='' />Search loadouts</h1>\n<p>\n<input type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
-  echo "</form>\n";
+	echo "<form method='get' action='./search'>\n";
+	echo "<h1><img src='./static/icons/search.png' alt='' />Search loadouts</h1>\n<p>\n<input type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
+	echo "</form>\n";
 }

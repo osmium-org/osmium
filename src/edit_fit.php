@@ -21,14 +21,14 @@ namespace Osmium\Page\EditFit;
 require __DIR__.'/../inc/root.php';
 
 if(!\Osmium\State\is_logged_in() || $_GET['tok'] != \Osmium\State\get_token()) {
-  \Osmium\fatal(403, "Forbidden.");
+	\Osmium\fatal(403, "Forbidden.");
 }
 
 $a = \Osmium\State\get_state('a');
 
 list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($_GET['loadoutid'], $a['accountid'])));
 if($c != 1) {
-  \Osmium\fatal(403, "Forbidden.");
+	\Osmium\fatal(403, "Forbidden.");
 }
 
 $fit = \Osmium\Fit\get_fit(intval($_GET['loadoutid']));

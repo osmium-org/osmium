@@ -21,32 +21,32 @@ namespace Osmium\Page\RenewApi;
 require __DIR__.'/../inc/root.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  osmium_fatal(403, "You are not logged in.");
+	osmium_fatal(403, "You are not logged in.");
 }
 
 $a = \Osmium\State\get_state('a');
 
 if(isset($_POST['key_id'])) {
-  $key_id = $_POST['key_id'];
-  $v_code = $_POST['v_code'];
+	$key_id = $_POST['key_id'];
+	$v_code = $_POST['v_code'];
 
-  $api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
+	$api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
 
-  if(isset($api->error) && !empty($api->error)) {
-    \Osmium\Forms\add_field_error('key_id', (string)$api->error);
-  } else if((string)$api->result->key["type"] !== 'Character') {
-    \Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$a['charactername'].'.');
-  } else if((int)$api->result->key["accessMask"] !== \Osmium\State\REQUIRED_ACCESS_MASK) {
-    \Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK.' (or use the link above).');
-  } else if((int)$api->result->key->rowset->row['characterID'] != $a['characterid']) {
-    \Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$a['charactername'].'.');
-  } else {
-    \Osmium\Db\query_params('UPDATE osmium.accounts SET keyid = $1, verificationcode = $2 WHERE accountid = $3', array($key_id, $v_code, $a['accountid']));
-    \Osmium\State\put_state('must_renew_api', false);
-    session_commit();
-    header('Location: ./', true, 303);
-    die();
-  }
+	if(isset($api->error) && !empty($api->error)) {
+		\Osmium\Forms\add_field_error('key_id', (string)$api->error);
+	} else if((string)$api->result->key["type"] !== 'Character') {
+		\Osmium\Forms\add_field_error('key_id', 'Invalid key type. Make sure you only select the character '.$a['charactername'].'.');
+	} else if((int)$api->result->key["accessMask"] !== \Osmium\State\REQUIRED_ACCESS_MASK) {
+		\Osmium\Forms\add_field_error('key_id', 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK.' (or use the link above).');
+	} else if((int)$api->result->key->rowset->row['characterID'] != $a['characterid']) {
+		\Osmium\Forms\add_field_error('key_id', 'Wrong character. Please select the character '.$a['charactername'].'.');
+	} else {
+		\Osmium\Db\query_params('UPDATE osmium.accounts SET keyid = $1, verificationcode = $2 WHERE accountid = $3', array($key_id, $v_code, $a['accountid']));
+		\Osmium\State\put_state('must_renew_api', false);
+		session_commit();
+		header('Location: ./', true, 303);
+		die();
+	}
 }
 
 \Osmium\Chrome\print_header('Update API credentials', '.');
@@ -54,7 +54,7 @@ if(isset($_POST['key_id'])) {
 echo "<h1>Update API credentials</h1>\n";
 
 if(isset($_GET['non_consensual']) && $_GET['non_consensual'] === '1') {
-  echo "<p class='warning_box expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$a['charactername']."</strong>), please enter a new API key in the form below.</p>\n";
+	echo "<p class='warning_box expired_api_message'>\nYou are seeing this page because the API key you entered at registration time has become invalid. It may have expired, or may have been deleted. To be able to log in again with this character (<strong>".$a['charactername']."</strong>), please enter a new API key in the form below.</p>\n";
 }
 
 \Osmium\Forms\print_form_begin();
@@ -67,9 +67,9 @@ if(isset($_GET['non_consensual']) && $_GET['non_consensual'] === '1') {
 \Osmium\Forms\print_text("<p>If you are still having errors despite having updated your API key,<br />you will have to wait for the cache to expire.<br />Or just create a whole new API key altogether (no waiting involved!).</p>");
 
 \Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
-				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 \Osmium\Forms\print_generic_field('Verification Code', 'text', 'v_code', null, 
-				  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
 \Osmium\Forms\print_submit();
 \Osmium\Forms\print_form_end();

@@ -21,16 +21,16 @@ namespace Osmium\Page\Logout;
 require __DIR__.'/../inc/root.php';
 
 if(!\Osmium\State\is_logged_in()) {
-  \Osmium\fatal(403, "Not logged in.");
+	\Osmium\fatal(403, "Not logged in.");
 }
 
 if(!isset($_GET['tok'])) {
-  \Osmium\fatal(403, "No token.");
+	\Osmium\fatal(403, "No token.");
 }
 
 $tok = urldecode($_GET['tok']);
 if($tok != \Osmium\State\get_token()) {
-  \Osmium\fatal(403, "Invalid token.");
+	\Osmium\fatal(403, "Invalid token.");
 }
 
 $global = isset($_GET['global']) && $_GET['global'];

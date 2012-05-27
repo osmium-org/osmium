@@ -25,16 +25,16 @@ list($max) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(DISTINCT
 $q = \Osmium\Db\query_params('SELECT DISTINCT characterid FROM osmium.accounts', array());
 $i = 0;
 while($r = \Osmium\Db\fetch_row($q)) {
-  $c_id = $r[0];
-  echo "\r".str_pad(++$i, strlen((string)$max), "0", STR_PAD_LEFT).'/'.$max;
+	$c_id = $r[0];
+	echo "\r".str_pad(++$i, strlen((string)$max), "0", STR_PAD_LEFT).'/'.$max;
 
-  update($c_id);
+	update($c_id);
 }
 
 echo "\n";
 
 function update($c_id) {
-  list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($c_id);
+	list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($c_id);
 
-  \Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationname = $3, corporationid = $4, alliancename = $5, allianceid = $6, isfittingmanager = $7 WHERE characterid = $2', array($character_name, $c_id, $corporation_name, $corporation_id, $alliance_name, $alliance_id, $is_fitting_manager));
+	\Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationname = $3, corporationid = $4, alliancename = $5, allianceid = $6, isfittingmanager = $7 WHERE characterid = $2', array($character_name, $c_id, $corporation_name, $corporation_id, $alliance_name, $alliance_id, $is_fitting_manager));
 }
