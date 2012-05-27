@@ -114,3 +114,16 @@ function print_search_form() {
 	echo "<h1><img src='./static/icons/search.png' alt='' />Search loadouts</h1>\n<p>\n<input type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
 	echo "</form>\n";
 }
+
+function format_used($used, $total, $digits = 0, $show_percent = false) {
+	if($total == 0 && $used == 0) {
+		return '0';
+	}
+
+	$ret = $used.' / '.$total;
+	if($show_percent) {
+		$ret .= ' ('.round(100 * $used / $total, $digits).' %)';
+	}
+
+	return $ret;
+}

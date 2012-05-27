@@ -77,7 +77,7 @@ osmium_populate_slots = function(json, slot_type) {
 		$("div#" + slot_type + "_slots").show();
     }
 
-    $("strong#" + slot_type + "_count").html(used_slots + " / " + max_slots);
+    $("strong#" + slot_type + "_count").text(used_slots + " / " + max_slots);
     if(used_slots > max_slots) {
 		$("strong#" + slot_type + "_count").addClass('overflow');
     } else {
@@ -90,6 +90,21 @@ osmium_loadout_load = function(json) {
 		$("div#" + osmium_slottypes[i] + "_slots > ul").empty();
 		osmium_populate_slots(json, osmium_slottypes[i]);
     }
+
+	$("strong#turret_count").text(json['hull']['usedturrethardpoints'] + ' / ' + json['hull']['turrethardpoints']);
+	if(json['hull']['usedturrethardpoints'] > json['hull']['turrethardpoints']) {
+		$('strong#turret_count').addClass('overflow');
+	} else {
+		$('strong#turret_count').removeClass('overflow');
+	}
+
+	$("strong#launcher_count").text(json['hull']['usedlauncherhardpoints'] + ' / ' + json['hull']['launcherhardpoints']);
+	if(json['hull']['usedlauncherhardpoints'] > json['hull']['launcherhardpoints']) {
+		$('strong#launcher_count').addClass('overflow');
+	} else {
+		$('strong#launcher_count').removeClass('overflow');
+	}
+
 };
 
 osmium_loadout_commit = function() {

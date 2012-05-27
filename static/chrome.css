@@ -843,3 +843,16 @@ div#wrapper > p {
 a.dangerous {
 	color: #FF3300;
 }
+
+div.slots > h3,
+div#vdronebay > h3 {
+	position: relative;
+}
+
+div.slots > h3 > small.capacity,
+div#vdronebay > h3 > small.capacity {
+	position: absolute;
+	right: 0.125em;
+	bottom: 0;
+	color: #888;
+}

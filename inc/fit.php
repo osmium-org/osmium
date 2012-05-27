@@ -154,6 +154,8 @@ function get_attributes_and_effects($typeids, &$out) {
 			'hiPower',
 			'rigSlot',
 			'subSystem',
+			'turretFitted',
+			'launcherFitted',
 			'eliteBonusGunshipDroneCapacity2',
 			'eliteBonusHeavyGunshipDroneCapacity2',
 			'shipBonusDroneCapacityGF',
@@ -165,9 +167,13 @@ function get_attributes_and_effects($typeids, &$out) {
 			'lowSlots', 
 			'rigSlots', 
 			'maxSubSystems',
+			'launcherSlotsLeft',
+			'turretSlotsLeft',
 			'hiSlotModifier',
 			'medSlotModifier',
 			'lowSlotModifier',
+			'turretHardPointModifier',
+			'launcherHardPointModifier',
 			'droneCapacity',
 			'eliteBonusGunship2',
 			'eliteBonusHeavyGunship2',
@@ -218,6 +224,12 @@ function reset_process_hull_attributes(&$fit) {
 			$attributes[$attributename]['value'] : 0;
 	}
 
+	$fit['hull']['turrethardpoints'] = isset($attributes['turretSlotsLeft']) ?
+		$attributes['turretSlotsLeft']['value'] : 0;
+
+	$fit['hull']['launcherhardpoints'] = isset($attributes['launcherSlotsLeft']) ?
+		$attributes['launcherSlotsLeft']['value'] : 0;
+
 	$fit['hull']['dronecapacity'] = isset($attributes['droneCapacity']) ?
 		$attributes['droneCapacity']['value'] : 0;
 
@@ -230,6 +242,9 @@ function reset_process_hull_attributes(&$fit) {
 	if(isset($effects['shipBonusDroneCapacityGF'])) {
 		$fit['hull']['dronecapacity'] += 5 * $attributes['shipBonusGF']['value'];
 	}
+
+	$fit['hull']['usedturrethardpoints'] = 0;
+	$fit['hull']['usedlauncherhardpoints'] = 0;
 }
 
 function process_module_attributes(&$fit, $module, $attributes, $effects) {
@@ -240,6 +255,17 @@ function process_module_attributes(&$fit, $module, $attributes, $effects) {
 			$fit['hull']['slotcount'][$mtype] += $attributes[$mattribute]['value'];
 		}
 	}
+
+	if(isset($attributes['turretHardPointModifier'])) {
+		$fit['hull']['turrethardpoints'] += $attributes['turretHardPointModifier'];
+	}
+
+	if(isset($attributes['launcherHardPointModifier'])) {
+		$fit['hull']['launcherhardpoints'] += $attributes['launcherHardPointModifier'];
+	}
+
+	if(isset($effects['turretFitted'])) ++$fit['hull']['usedturrethardpoints'];
+	if(isset($effects['launcherFitted'])) ++$fit['hull']['usedlauncherhardpoints'];
 
 	if(isset($attributes['droneCapacity'])) {
 		$fit['hull']['dronecapacity'] += $attributes['droneCapacity']['value'];

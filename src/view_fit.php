@@ -128,6 +128,10 @@ echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['hull']['typename'].'"
 echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 echo "</ul>\n";
 
+echo "<ul>\n";
+echo "<li><img src='http://image.eveonline.com/Type/486_32.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedturrethardpoints'], $fit['hull']['turrethardpoints'])." — <img src='http://image.eveonline.com/Type/499_32.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedlauncherhardpoints'], $fit['hull']['launcherhardpoints'])."</li>\n";
+echo "</ul>\n";
+
 echo "<h2>Fitting description</h2>\n";
 echo "<p id='fitdesc'>\n".nl2br(htmlspecialchars($fit['metadata']['description']))."</p>\n";
 
@@ -160,8 +164,11 @@ if(count($fit['charges']) > 0) $preset = $fit['charges'][0];
 
 foreach($fit['modules'] as $type => $modules) {
 	if(count($modules) == 0 && $fit['hull']['slotcount'][$type] == 0) continue;
+	
+	$used = count($modules);
+	$total = $fit['hull']['slotcount'][$type];
 
-	echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots</h3>\n<ul>\n";
+	echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots <small class='capacity'>$used / $total</small></h3>\n<ul>\n";
 
 	foreach($modules as $index => $mod) {
 		$charge = '';
@@ -179,8 +186,14 @@ foreach($fit['modules'] as $type => $modules) {
 	echo "</ul>\n</div>\n";
 }
 
-if(isset($fit['drones']) && count($fit['drones']) > 0) {
-	echo "<div id='vdronebay'>\n<h3>Drone bay</h3>\n<ul>\n";
+if($fit['hull']['dronecapacity'] > 0) {
+	if(!isset($fit['drones'])) $fit['drones'] = array();
+
+	$total = $fit['hull']['dronecapacity'];
+	$used = 0;
+	foreach($fit['drones'] as $drone) $used += $drone['count'] * $drone['volume'];
+
+	echo "<div id='vdronebay'>\n<h3>Drone bay <small class='capacity'>$used / $total m<sup>3</sup></small></h3>\n<ul>\n";
 
 	foreach($fit['drones'] as $drone) {
 		$qty = '';
@@ -190,6 +203,10 @@ if(isset($fit['drones']) && count($fit['drones']) > 0) {
 		}
 
 		echo "<li><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
+	}
+
+	if(count($fit['drones']) == 0) {
+		echo "<li><em>(empty drone bay)</em></li>\n";
 	}
 
 	echo "</ul>\n</div>\n";
