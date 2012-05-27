@@ -856,3 +856,7 @@ div#vdronebay > h3 > small.capacity {
 	bottom: 0;
 	color: #888;
 }
+
+ul.computed_attributes > li > img {
+	height: 2em;
+}

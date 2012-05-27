@@ -128,8 +128,8 @@ echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['hull']['typename'].'"
 echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 echo "</ul>\n";
 
-echo "<ul>\n";
-echo "<li><img src='http://image.eveonline.com/Type/486_32.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedturrethardpoints'], $fit['hull']['turrethardpoints'])." — <img src='http://image.eveonline.com/Type/499_32.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedlauncherhardpoints'], $fit['hull']['launcherhardpoints'])."</li>\n";
+echo "<ul class='computed_attributes'>\n";
+echo "<li><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedturrethardpoints'], $fit['hull']['turrethardpoints'])." — <img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedlauncherhardpoints'], $fit['hull']['launcherhardpoints'])."</li>\n";
 echo "</ul>\n";
 
 echo "<h2>Fitting description</h2>\n";

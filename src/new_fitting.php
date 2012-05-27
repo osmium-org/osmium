@@ -191,8 +191,8 @@ function print_modulelist() {
 	foreach($categories as $type => $fname) {
 		echo "<th><img src='./static/icons/slot_$type.png' alt='$fname slots' title='$fname slots' /><strong id='{$type}_count'></strong></th>\n";
 	}
-	echo "<th><img src='http://image.eveonline.com/Type/486_64.png' alt='Turret hardpoints' title='Turret hardpoints' /><strong id='turret_count'></strong></th>\n";
-	echo "<th><img src='http://image.eveonline.com/Type/499_64.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><strong id='launcher_count'></strong></th>\n";
+	echo "<th><img src='./static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><strong id='turret_count'></strong></th>\n";
+	echo "<th><img src='./static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><strong id='launcher_count'></strong></th>\n";
 	echo "</tr>\n</table>\n";
 
 	foreach($categories as $type => $fname) {
