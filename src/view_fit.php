@@ -80,7 +80,7 @@ if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 	}
 }
 
-$title = $fit['hull']['typename'].' / '.$fit['metadata']['name'];
+$title = $fit['ship']['typename'].' / '.$fit['metadata']['name'];
 \Osmium\Chrome\print_header(strip_tags($title), '..');
 
 /* ----------------------------------------------------- */
@@ -124,14 +124,34 @@ if($can_edit) {
 	echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
 	echo "<li><a href='../delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
 }
-echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['hull']['typename'].'"')."'>Browse all ".$fit['hull']['typename']." loadouts</a></li>\n";
+echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 echo "</ul>\n";
 
 echo "<ul class='computed_attributes'>\n";
-echo "<li>\n<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedturrethardpoints'], $fit['hull']['turrethardpoints'])."</p>\n";
-echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($fit['hull']['usedlauncherhardpoints'], $fit['hull']['launcherhardpoints'])."</p>\n</li>\n";
-echo "<li>\n<p><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' />".\Osmium\Chrome\format_used($fit['hull']['usedupgradecapacity'], $fit['hull']['upgradecapacity'], 2, true)."</p>\n</li>\n";
+
+$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
+$slotsTotal = $fit['dogma']['ship']['turretSlotsLeft'];
+echo "<li>\n<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal)."</p>\n";
+
+$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
+$slotsTotal = $fit['dogma']['ship']['launcherSlotsLeft'];
+echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal)."</p>\n</li>\n";
+
+echo "<li>\n";
+$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
+$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
+echo "<p><img src='../static/icons/cpu.png' alt='CPU' title='CPU' />".\Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true)."</p>\n";
+$powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
+$powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
+echo "<p><img src='../static/icons/powergrid.png' alt='Powergrid' title='Powergrid' />".\Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true)."</p>\n";
+$upgradeCapacityUsed = array_sum(array_map(function($rig) {
+			return $rig['upgradeCost'];
+		}, $fit['dogma']['modules']['rig']));
+$upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
+echo "<p><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' />".\Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true)."</p>\n";
+echo "</li>\n";
+
 echo "</ul>\n";
 
 echo "<h2>Fitting description</h2>\n";
@@ -144,8 +164,8 @@ echo "</div>\n";
 echo "<div id='vloadoutbox'>\n";
 
 echo "<header>\n";
-echo "<img src='http://image.eveonline.com/Render/".$fit['hull']['typeid']."_256.png' alt='".$fit['hull']['typename']."' id='fittypepic' />\n";
-echo "<h2>".$fit['hull']['typename']." loadout</h2>\n";
+echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
+echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<h1 id='fitname'>";
 echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author);
 echo "</h1>\n";
@@ -164,13 +184,16 @@ echo "</header>\n";
 $preset = null;
 if(count($fit['charges']) > 0) $preset = $fit['charges'][0];
 
+$aslots = \Osmium\Fit\get_attr_slottypes();
 foreach($fit['modules'] as $type => $modules) {
-	if(count($modules) == 0 && $fit['hull']['slotcount'][$type] == 0) continue;
+	$slotcount = isset($fit['cache'][$fit['ship']['typeid']]['attributes'][$aslots[$type]]) ?
+		\Osmium\Dogma\get_ship_attribute($fit, $aslots[$type]) : 0;
+
+	if(count($modules) == 0 && $slotcount == 0) continue;
 	
 	$used = count($modules);
-	$total = $fit['hull']['slotcount'][$type];
 
-	echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots <small class='capacity'>$used / $total</small></h3>\n<ul>\n";
+	echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots <small class='capacity'>$used / $slotcount</small></h3>\n<ul>\n";
 
 	foreach($modules as $index => $mod) {
 		$charge = '';
@@ -181,17 +204,16 @@ foreach($fit['modules'] as $type => $modules) {
 		echo "<li class='index_$index'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span></li>\n";
 	}
 
-	for($i = count($modules); $i < $fit['hull']['slotcount'][$type]; ++$i) {
+	for($i = count($modules); $i < $slotcount; ++$i) {
 		echo "<li class='unused'><img src='../static/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
 	}
 
 	echo "</ul>\n</div>\n";
 }
 
-if($fit['hull']['dronecapacity'] > 0) {
+if(($total = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 0) {
 	if(!isset($fit['drones'])) $fit['drones'] = array();
 
-	$total = $fit['hull']['dronecapacity'];
 	$used = 0;
 	foreach($fit['drones'] as $drone) $used += $drone['count'] * $drone['volume'];
 

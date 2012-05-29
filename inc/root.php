@@ -25,6 +25,12 @@ function fatal($code, $message) {
 	die((string)$message);
 }
 
+function printr($stuff) {
+	echo "<pre>\n";
+	print_r($stuff);
+	echo "</pre>\n";
+}
+
 function get_ini_setting($key) {
 	static $cnf = null;
 	if($cnf === null) {
@@ -57,6 +63,7 @@ require ROOT.'/inc/db.php';
 require ROOT.'/inc/eveapi.php';
 require ROOT.'/inc/state.php';
 require ROOT.'/inc/fit.php';
+require ROOT.'/inc/dogma.php';
 require ROOT.'/inc/flag.php';
 require ROOT.'/inc/search.php';
 

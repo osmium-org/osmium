@@ -1,0 +1,53 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+\Osmium\Db\query('BEGIN;');
+
+\Osmium\Db\query('TRUNCATE TABLE osmium.cacheexpressions;');
+
+$q = \Osmium\Db\query('SELECT DISTINCT preexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invships ON invships.typeid = dgmtypeeffects.typeid
+UNION
+SELECT DISTINCT preexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invmodules ON invmodules.typeid = dgmtypeeffects.typeid
+UNION
+SELECT DISTINCT postexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invmodules ON invmodules.typeid = dgmtypeeffects.typeid
+UNION
+SELECT DISTINCT preexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invskills ON invskills.typeid = dgmtypeeffects.typeid 
+AND invskills.groupid IN '.\Osmium\Dogma\USEFUL_SKILLGROUPS);
+while($row = \Osmium\Db\fetch_row($q)) {
+	echo $row[0]."\n";
+
+	$exp = \Osmium\Dogma\get_expression_uncached($row[0]);
+	\Osmium\Db\query_params('INSERT INTO osmium.cacheexpressions (expressionid, exp) VALUES ($1, $2)', array($row[0], serialize($exp)));
+}
+
+\Osmium\Db\query('COMMIT;');

@@ -50,6 +50,10 @@ the "osmium_user" user, follow these steps:
 
    pg_restore -O osmium_pgsql.backup | psql osmium osmium_user
 
+5. Import the contents of the cacheexpressions table in the osmium
+   schema (see the section below for how to get this file):
+
+   (echo "SET search_path TO osmium;" && cat cacheexpressions.sql) | psql osmium osmium_user
 
 Updating the EVE DB dump
 ========================
@@ -78,3 +82,58 @@ steps:
 
    If you run into integrity issues, you may have to delete some
    fittings that use removed modules/ships.
+
+5. Truncate the cacheexpressions table and restore the new one:
+
+   TRUNCATE TABLE osmium.cacheexpressions;
+
+   (echo "SET search_path TO osmium;" && cat cacheexpressions.sql) | psql osmium osmium_user
+
+Getting the cacheexpression.sql file
+====================================
+
+The quick way
+-------------
+
+Get it from here: <http://artefact2.com/files/osmium-data/>
+
+Use unxz to decompress.
+
+(Please be kind and use this with moderation, I don't have a lot of
+bandwidth! If you can mirror this, please do so.)
+
+The long way
+------------
+
+This file is generated from the dgmexpressions and dgmoperands tables
+of the EVE database. These tables are not included in the static data
+dump, so to get them you will have to dump the database from your EVE
+client yourself.
+
+Use the "eve2sql.py" script of the Eos repository
+<https://github.com/DarkFenX/Eos> to dump a SQLite database, then dump
+it in a text file :
+
+   PYTHONPATH=/path/to/reverence/library python2.7 scripts/eve2sql.py -e /path/to/eve -c /path/to/cache -l ~/dump.sqlite
+
+   sqlite3 ~/dump.sqlite .dump > ~/dump.txt
+
+Then use the sqlite_to_postgres script (included in this repository)
+to convert it in PostgreSQL tables:
+
+   bin/sqlite_to_postgres ~/dump.txt
+   
+This will create one SQL file per table in the dump. Import the
+dgmexpressions and dgmoperands tables in the eve schema:
+
+   (echo "SET search_path TO eve;" && cat dgmoperands.sql dgmexpressions.sql) | psql osmium osmium_user
+
+Now, use the cache_expressions script to populate the cacheexpressions
+table:
+
+   bin/cache_expressions
+
+That's it! You can now dump the contents of this table in the
+cacheexpressions.sql file for convinience:
+
+   pg_dump -t cacheexpressions -U osmium_user osmium -F p -a > cacheexpressions.sql
