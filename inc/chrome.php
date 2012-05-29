@@ -115,13 +115,15 @@ function print_search_form() {
 	echo "</form>\n";
 }
 
-function format_used($used, $total, $digits = 0, $show_percent = false) {
+function format_used($used, $total, $digits, $show_percent, &$overflow) {
 	if($total == 0 && $used == 0) {
 		return '0';
 	}
 
 	$ret = format_number($used).' / '.format_number($total);
 	if($show_percent) {
+		$percent = 100 * $used / $total;
+		$overflow = max(min(6, ceil($percent) - 100), 0);
 		$ret .= '<br />'.round(100 * $used / $total, $digits).' %';
 	}
 
@@ -129,6 +131,7 @@ function format_used($used, $total, $digits = 0, $show_percent = false) {
 }
 
 function format_number($num) {
+	$num = floatval($num);
 	if($num < 0) {
 		$sign = '-';
 		$num = -$num;

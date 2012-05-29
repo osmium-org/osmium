@@ -867,7 +867,7 @@ ul.computed_attributes > li > p {
 	vertical-align: middle;
 	margin: 0;
 	margin-right: 2em;
-	padding: 0;
+	padding: 0.125em;
 	line-height: 1em;
 	margin-top: 0.25em;
 }
@@ -880,3 +880,10 @@ table.slot_count th > strong {
 	display: inline-block;
 	vertical-align: middle;
 }
+
+p.overflow6 { background-color: rgba(255, 51, 0, 0.6); }
+p.overflow5 { background-color: rgba(255, 51, 0, 0.5); }
+p.overflow4 { background-color: rgba(255, 51, 0, 0.4); }
+p.overflow3 { background-color: rgba(255, 51, 0, 0.3); }
+p.overflow2 { background-color: rgba(255, 51, 0, 0.2); }
+p.overflow1 { background-color: rgba(255, 51, 0, 0.1); }
