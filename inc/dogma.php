@@ -325,6 +325,8 @@ function eval_defenvidx(&$fit, $exp) {
 function eval_defgroup(&$fit, $exp) {
 	static $hardcoded = array(
 		'EnergyWeapon' => 53,
+		'HybridWeapon' => 74,
+		'ProjectileWeapon' => 55,
 		);
 
 	if(!isset($exp['groupid'])) {
