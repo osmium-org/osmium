@@ -314,7 +314,8 @@ function eval_defassociation(&$fit, $exp) {
 }
 
 function eval_defattribute(&$fit, $exp) {
-	return array('name' => $exp['name'], 'source' => $fit['dogma']['source']);
+	$name = lcfirst($exp['name']);
+	return array('name' => $name, 'source' => $fit['dogma']['source']);
 }
 
 function eval_defenvidx(&$fit, $exp) {
