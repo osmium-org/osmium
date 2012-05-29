@@ -120,10 +120,26 @@ function format_used($used, $total, $digits = 0, $show_percent = false) {
 		return '0';
 	}
 
-	$ret = round($used, 1).' / '.round($total, 1);
+	$ret = format_number($used).' / '.format_number($total);
 	if($show_percent) {
 		$ret .= '<br />'.round(100 * $used / $total, $digits).' %';
 	}
 
 	return $ret;
+}
+
+function format_number($num) {
+	if($num < 0) {
+		$sign = '-';
+		$num = -$num;
+	} else {
+		$sign = '';
+	}
+
+	if($num < 10000) return $sign.round($num, 1);
+	else if($num < 10000000) {
+		return $sign.round($num / 1000, 2).'k';
+	} else {
+		return $sign.round($num / 1000000, 2).'m';
+	}
 }
