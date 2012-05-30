@@ -88,6 +88,10 @@ function eval_skill_preexpressions(&$fit) {
 function eval_module_preexpressions(&$fit, $moduletype, $index) {
 	$fit['dogma']['source'] = array('module', $moduletype, $index);
 	$fit['dogma']['self'] =& $fit['dogma']['modules'][$moduletype][$index];
+	$fit['dogma']['other'] =& $fit['dogma']['self'];
+	/* ^ Doesn't seem logical, but it is needed by
+	 * scriptWarpDisruptionFieldGeneratorSetScriptCapacitorNeedHidden
+	 * for typeid 4248 */
 
 	foreach($fit['cache'][$fit['modules'][$moduletype][$index]['typeid']]['effects'] as $effect) {
 		if(!isset($effect['preexp'])) {
@@ -99,11 +103,13 @@ function eval_module_preexpressions(&$fit, $moduletype, $index) {
 
 	unset($fit['dogma']['source']);
 	unset($fit['dogma']['self']);
+	unset($fit['dogma']['other']);
 }
 
 function eval_module_postexpressions(&$fit, $moduletype, $index) {
 	$fit['dogma']['source'] = array('module', $moduletype, $index);
 	$fit['dogma']['self'] =& $fit['dogma']['modules'][$moduletype][$index];
+	$fit['dogma']['other'] =& $fit['dogma']['self'];
 
 	foreach($fit['cache'][$fit['modules'][$moduletype][$index]['typeid']]['effects'] as $effect) {
 		if(!isset($effect['postexp'])) {
@@ -115,6 +121,43 @@ function eval_module_postexpressions(&$fit, $moduletype, $index) {
 
 	unset($fit['dogma']['source']);
 	unset($fit['dogma']['self']);
+	unset($fit['dogma']['other']);
+}
+
+function eval_charge_preexpressions(&$fit, $presetname, $type, $index) {
+	$fit['dogma']['source'] = array('charge', $presetname, $type, $index);
+	$fit['dogma']['self'] =& $fit['dogma']['charges'][$presetname][$type][$index];
+	$fit['dogma']['other'] =& $fit['dogma']['modules'][$type][$index];
+
+	foreach($fit['cache'][$fit['charges'][$presetname][$type][$index]['typeid']]['effects'] as $effect) {
+		if(!isset($effect['preexp'])) {
+			trigger_error('eval_charge_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
+			continue;
+		}
+		eval_expression($fit, unserialize($effect['preexp']));
+	}
+
+	unset($fit['dogma']['source']);
+	unset($fit['dogma']['self']);
+	unset($fit['dogma']['other']);
+}
+
+function eval_charge_postexpressions(&$fit, $presetname, $type, $index) {
+	$fit['dogma']['source'] = array('charge', $presetname, $type, $index);
+	$fit['dogma']['self'] =& $fit['dogma']['charges'][$presetname][$type][$index];
+	$fit['dogma']['other'] =& $fit['dogma']['modules'][$type][$index];
+
+	foreach($fit['cache'][$fit['charges'][$presetname][$type][$index]['typeid']]['effects'] as $effect) {
+		if(!isset($effect['postexp'])) {
+			trigger_error('eval_charge_postexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
+			continue;
+		}
+		eval_expression($fit, unserialize($effect['postexp']));
+	}
+
+	unset($fit['dogma']['source']);
+	unset($fit['dogma']['self']);
+	unset($fit['dogma']['other']);
 }
 
 function get_ship_attribute(&$fit, $name, $failonerror = true) {
@@ -552,10 +595,15 @@ function eval_inc(&$fit, $exp) {
 		$val =& traverse_nested($fit, $arg1);
 		$val += $fit['dogma']['self'][$attribute['name']];
 	} else {
-		$k = print_r($arg1, true);
 		trigger_error('eval_inc(): unhandled arg1 ('.$k.')', E_USER_ERROR);
 	}
 }
+
+function eval_launch(&$fit, $exp) {}
+
+function eval_launchdefendermissile(&$fit, $exp) {}
+
+function eval_launchfofmissile(&$fit, $exp) {}
 
 function eval_lg(&$fit, $exp) {
 	return array_merge((array)eval_expression($fit, $exp['arg1']), 
@@ -575,12 +623,20 @@ function eval_or(&$fit, $exp) {
 
 function eval_powerboost(&$fit, $exp) {}
 
+function eval_rgim(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'gang_ship');
+}
+
 function eval_rim(&$fit, $exp) {
 	remove_modifier($fit, $exp, 'item');
 }
 
 function eval_rlgm(&$fit, $exp) {
 	remove_modifier($fit, $exp, 'location_group');
+}
+
+function eval_rlm(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'location');
 }
 
 function eval_rlrsm(&$fit, $exp) {
