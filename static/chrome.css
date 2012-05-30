@@ -310,6 +310,7 @@ table.slot_count strong,
 p#dronecapacity > strong.overflow {
     display: inline-block;
     padding: 0.25em;
+	text-align: left;
 }
 
 table.slot_count strong.overflow,

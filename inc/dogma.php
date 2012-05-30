@@ -117,13 +117,59 @@ function eval_module_postexpressions(&$fit, $moduletype, $index) {
 	unset($fit['dogma']['self']);
 }
 
-function get_ship_attribute(&$fit, $name) {
+function get_ship_attribute(&$fit, $name, $failonerror = true) {
+	if($name === 'upgradeLoad') {
+		/* Just to make things easy and consistent */
+		if(!isset($fit['dogma']['modules']['rig'])) return 0;
+
+		return array_sum(array_map(function($rig) {
+					return $rig['upgradeCost'];
+				}, $fit['dogma']['modules']['rig'])) ?: 0;
+	} else if(in_array($name, array('hiSlots', 'medSlots', 'lowSlots'))) {
+		if(isset($fit['dogma']['ship'][$name])) {
+			$base = $fit['dogma']['ship'][$name];
+		} else {
+			$base = 0;
+		}
+
+		$name = substr($name, 0, -1);
+
+		if(isset($fit['dogma']['modules']['subsystem'])) {
+			foreach($fit['dogma']['modules']['subsystem'] as $subsystem) {
+				if(isset($subsystem[$name.'Modifier'])) {
+					$base += $subsystem[$name.'Modifier'];
+				}
+			}
+		}
+
+		return $base;
+	} else if(in_array($name, array('turretSlots', 'launcherSlots'))) {
+		if(isset($fit['dogma']['ship'][$name.'Left'])) {
+			$base = $fit['dogma']['ship'][$name.'Left'];
+		} else {
+			$base = 0;
+		}
+
+		$name = substr($name, 0, -5);
+
+		if(isset($fit['dogma']['modules']['subsystem'])) {
+			foreach($fit['dogma']['modules']['subsystem'] as $subsystem) {
+				if(isset($subsystem[$name.'HardPointModifier'])) {
+					$base += $subsystem[$name.'HardPointModifier'];
+				}
+			}
+		}
+
+		return $base;
+	}
+
 	return get_final_attribute_value($fit,
 	                                 array('name' => $name,
-	                                       'source' => array('ship')));
+	                                       'source' => array('ship')),
+	                                 $failonerror);
 }
 
-function get_final_attribute_value(&$fit, $attribute) {
+function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	static $hardcoded = array(
 		'cpu OutputBonus' => 'cpuOutputBonus2',
 		);
@@ -182,7 +228,7 @@ function get_final_attribute_value(&$fit, $attribute) {
 	if(!isset($src[$name])) {
 		if(!isset($hardcoded[$name])) {
 			$val = 0;
-			if($val != 'cpu' && $val != 'power') {
+			if($val != 'cpu' && $val != 'power' && $failonerror) {
 				trigger_error('get_final_attribute_value(): '.$name.' not defined', E_USER_WARNING);
 			}
 		} else {
@@ -302,7 +348,7 @@ function insert_nested(&$fit, $subarrays, $element, $key = null) {
 function remove_nested(&$fit, $subarrays, $element) {
 	$res =& traverse_nested($fit, $subarrays);
 	foreach($res as $i => $val) {
-		if($val['name'] === $element['name']) {
+		if($val['name'] === $element['name'] && $val['source'] == $element['source']) {
 			unset($res[$i]);
 			return;
 		}
@@ -393,6 +439,10 @@ function eval_defassociation(&$fit, $exp) {
 function eval_defattribute(&$fit, $exp) {
 	$name = lcfirst($exp['name']);
 	return array('name' => $name, 'source' => $fit['dogma']['source']);
+}
+
+function eval_defbool(&$fit, $exp) {
+	return (bool)$exp['value'];
 }
 
 function eval_defenvidx(&$fit, $exp) {
@@ -497,6 +547,10 @@ function eval_inc(&$fit, $exp) {
 	$arg1 = eval_expression($fit, $exp['arg1']);
 	if($arg1[0] == 'target') {
 		/* We don't care about that */
+	} else if($arg1[0] == 'ship') {
+		$attribute = eval_expression($fit, $exp['arg2']);
+		$val =& traverse_nested($fit, $arg1);
+		$val += $fit['dogma']['self'][$attribute['name']];
 	} else {
 		$k = print_r($arg1, true);
 		trigger_error('eval_inc(): unhandled arg1 ('.$k.')', E_USER_ERROR);

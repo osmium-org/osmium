@@ -133,11 +133,11 @@ echo "</ul>\n";
 echo "<ul class='computed_attributes'>\n";
 
 $slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
-$slotsTotal = $fit['dogma']['ship']['turretSlotsLeft'];
+$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
 echo "<li>\n<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n";
 
 $slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
-$slotsTotal = $fit['dogma']['ship']['launcherSlotsLeft'];
+$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
 echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n</li>\n";
 
 echo "<li>\n";
@@ -149,9 +149,7 @@ $powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 $powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
 $formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $over);
 echo "<p class='overflow$over'><img src='../static/icons/powergrid.png' alt='Powergrid' title='Powergrid' />".$formatted."</p>\n";
-$upgradeCapacityUsed = array_sum(array_map(function($rig) {
-			return $rig['upgradeCost'];
-		}, $fit['dogma']['modules']['rig']));
+$upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 $upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
 $formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $over);
 echo "<p class='overflow$over'><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' />".$formatted."</p>\n";
@@ -198,8 +196,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 	if(!isset($fit['modules'][$type])) continue;
 	$modules = $fit['modules'][$type];
 
-	$slotcount = isset($fit['cache'][$fit['ship']['typeid']]['attributes'][$aslots[$type]]) ?
-		\Osmium\Dogma\get_ship_attribute($fit, $aslots[$type]) : 0;
+	$slotcount = \Osmium\Dogma\get_ship_attribute($fit, $aslots[$type], false);
 
 	if(count($modules) == 0 && $slotcount == 0) continue;
 	

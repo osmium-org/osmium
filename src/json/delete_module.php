@@ -28,26 +28,11 @@ if(!\Osmium\State\is_logged_in()) {
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$fit = \Osmium\State\get_state('new_fit', array());
-	$modules = array();
-	$order = array();
+	
+	$index = intval($_GET['index']);
+	$typeid = intval($_GET['typeid']);
 
-	$slots = implode('|', \Osmium\Fit\get_slottypes());
-	$j = 0;
-	foreach($_GET as $k => $v) {
-		if(!preg_match('%('.$slots.')([0-9]+)%', $k, $matches)) continue;
-		list(, $type, $index) = $matches;
-		$modules[$type][$index] = $v;
-		$order[$type][$index] = (++$j);
-	}
-
-	\Osmium\Fit\add_modules_batch($fit, $modules);
-
-	foreach($fit['modules'] as $type => &$modules) {
-		uksort($modules, function($a, $b) use($type, $order) {
-				return $order[$type][$a] - $order[$type][$b];
-			});
-	}
-
+	\Osmium\Fit\remove_module($fit, $index, $typeid);
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\Chrome\return_json(array(
 		                           'ship' => $fit['ship'],

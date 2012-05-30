@@ -51,17 +51,19 @@ osmium_shortlist_commit = function() {
 };
 
 osmium_populate_slots = function(json, slot_type) {
-    var used_slots = json['modules'][slot_type].length;
-    var max_slots = json['hull']['slotcount'][slot_type];
+    var used_slots = json['attributes']['ship']['usedslots'][slot_type];
+    var max_slots = json['attributes']['ship']['slotcount'][slot_type];
 
-    for(var i = 0; i < used_slots && i < 16; ++i) {
+	var j = 0;
+    for(var i in json['modules'][slot_type]) {
 		var c = '';
-		if(i >= max_slots) c = ' overflow';
+		if((j++) >= max_slots) c = ' overflow';
 		$("div#" + slot_type + "_slots > ul").append(
 			"<li class='module" 
 				+ c + "' data-slottype='" 
-				+ json['modules'][slot_type][i]['slottype'] 
+				+ slot_type
 				+ "' data-typeid='" + json['modules'][slot_type][i]['typeid'] 
+				+ "' data-index='" + i
 				+ "'><img src='http://image.eveonline.com/Type/" 
 				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
 				+ json['modules'][slot_type][i]['typename'] + "</li>\n"
@@ -71,7 +73,7 @@ osmium_populate_slots = function(json, slot_type) {
 		$("div#" + slot_type + "_slots > ul").append("<li class='" + slot_type + "_slot empty_slot'><img src='./static/icons/slot_" + slot_type + ".png' alt='' /> Empty " + slot_type + " slot</li>\n");
     }
 
-    if(max_slots == 0) {
+    if(max_slots == 0 && used_slots == 0) {
 		$("div#" + slot_type + "_slots").hide();
     } else {
 		$("div#" + slot_type + "_slots").show();
@@ -86,16 +88,16 @@ osmium_populate_slots = function(json, slot_type) {
 };
 
 osmium_setstrong = function(json, name, strong, display_percent) {
-	var text = json['hull']['used' + name] + ' / ' + json['hull'][name];
+	var text = json['used' + name] + ' / ' + json[name];
 	if(display_percent) {
 		text = text + '<br />';
-		if(json['hull'][name] > 0) {
-			text = text + (100 * json['hull']['used' + name] / json['hull'][name]).toFixed(2) + ' %';
+		if(json[name] > 0) {
+			text = text + (100 * json['used' + name] / json[name]).toFixed(2) + ' %';
 		}
 	}
 
 	strong.html(text);
-	if(json['hull']['used' + name] > json['hull'][name]) {
+	if(json['used' + name] > json[name]) {
 		strong.addClass('overflow');
 	} else {
 		strong.removeClass('overflow');
@@ -108,9 +110,11 @@ osmium_loadout_load = function(json) {
 		osmium_populate_slots(json, osmium_slottypes[i]);
     }
 
-	osmium_setstrong(json, 'turrethardpoints', $("strong#turret_count"), false);
-	osmium_setstrong(json, 'launcherhardpoints', $("strong#launcher_count"), false);
-	osmium_setstrong(json, 'upgradecapacity', $("strong#upgradecapacity"), true);
+	osmium_setstrong(json['attributes']['ship'], 'turretslots', $("strong#turret_count"), false);
+	osmium_setstrong(json['attributes']['ship'], 'launcherslots', $("strong#launcher_count"), false);
+	osmium_setstrong(json['attributes']['ship'], 'cpu', $("strong#cpu"), true);
+	osmium_setstrong(json['attributes']['ship'], 'power', $("strong#power"), true);
+	osmium_setstrong(json['attributes']['ship'], 'upgradecapacity', $("strong#upgradecapacity"), true);
 };
 
 osmium_loadout_commit = function() {
@@ -118,16 +122,28 @@ osmium_loadout_commit = function() {
     var params = {};
     params['token'] = osmium_tok;
     for(var i = 0; i < osmium_slottypes.length; ++i) {
-		var elts = $("div#" + osmium_slottypes[i] + "_slots > ul > li.module");
-		for(var j = 0; j < elts.length; ++j) {
-			params[osmium_slottypes[i] + j] = elts.eq(j).data('typeid');
-		}
+		$("div#" + osmium_slottypes[i] + "_slots > ul > li.module").each(function() {
+			params[osmium_slottypes[i] + $(this).data('index')] = $(this).data('typeid');
+		});
     }
     $.getJSON('./src/json/update_modules.php', params, function(json) {
 		osmium_loadout_load(json);
 		$("img#loadoutbox_spinner").css('visibility', 'hidden');
     });
 };
+
+osmium_loadout_commit_delete = function(index, typeid) {
+    $("img#loadoutbox_spinner").css("visibility", "visible");
+    var params = {
+		token: osmium_tok,
+		index: index,
+		typeid: typeid
+	};
+    $.getJSON('./src/json/delete_module.php', params, function(json) {
+		osmium_loadout_load(json);
+		$("img#loadoutbox_spinner").css('visibility', 'hidden');
+    });
+}
 
 $(function() {
     $("ul#modules_shortlist").sortable({
@@ -191,18 +207,27 @@ $(function() {
 
     $(document).on('dblclick', "ul#search_results > li.module, ul#modules_shortlist > li.module", function(obj) {
 		var phony = $("div#" + $(this).data('slottype') + "_slots > ul > li.empty_slot");
+		var clone = $(this).clone();
+		var type = $(this).data('slottype');
+		var i = 0;
+		while($('div.loadout_slot_cat#' + type + '_slots > ul > li.module[data-index="' + i + '"]').length) {
+			++i;
+		}
+
+		clone.data('index', i);
+
 		if(phony.length == 0) {
-			$("div#" + $(this).data('slottype') + "_slots > ul").append($(this).clone());
+			$("div#" + type + "_slots > ul").append(clone);
 		} else {
-			phony.first().before($(this).clone());
+			phony.first().before(clone);
 			phony.first().remove();
 		}
 		osmium_loadout_commit();
     });
 
     $(document).on('dblclick', "div.loadout_slot_cat > ul > li.module", function(obj) {
+		osmium_loadout_commit_delete($(this).data('index'), $(this).data('typeid'));
 		$(this).remove();
-		osmium_loadout_commit();
     });
 
     $(document).on('click', "ul#modules_shortlist > li.module > a.delete", function(obj) {

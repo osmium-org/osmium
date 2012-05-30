@@ -46,7 +46,7 @@ function get_attr_slottypes() {
 		'medium' => 'medSlots',
 		'low' => 'lowSlots',
 		'rig' => 'upgradeSlotsLeft',
-		'subsystem' => 'subsystemSlots'
+		'subsystem' => 'maxSubSystems'
 		);
 }
 
@@ -112,6 +112,8 @@ function select_ship(&$fit, $new_typeid) {
 	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
 	
 	\Osmium\Dogma\eval_ship_preexpressions($fit);
+
+	return true;
 }
 
 function add_modules_batch(&$fit, $modules) {
@@ -228,12 +230,12 @@ function get_attributes_and_effects($typeids, &$out) {
 	$typeids[] = -1;
 	$typeidIN = implode(',', $typeids);
   
-	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp
+	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp, durationattributeid
   FROM eve.dgmeffects 
   JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
   LEFT JOIN osmium.cacheexpressions AS preexpr ON preexpr.expressionid = preexpression
   LEFT JOIN osmium.cacheexpressions AS postexpr ON postexpr.expressionid = postexpression
-  WHERE typeid IN ('.$typeidIN.')', array());
+  WHERE typeid IN ('.$typeidIN.') AND durationattributeid IS NULL', array());
 	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
 		$tid = $row['typeid'];
 		unset($row['typeid']);
@@ -394,18 +396,24 @@ function commit_fitting(&$fit) {
 		                        array($fittinghash, $tag));
 	}
   
+	$module_order = array();
 	foreach($fit['modules'] as $type => $data) {
+		$z = 0;
 		foreach($data as $index => $module) {
+			$module_order[$type][$index] = ($z++);
 			\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, slottype, index, typeid) VALUES ($1, $2, $3, $4)', 
-			                        array($fittinghash, $type, $index, $module['typeid']));
+			                        array($fittinghash, $type, $z, $module['typeid']));
 		}
 	}
   
 	foreach($fit['charges'] as $name => $preset) {
 		foreach($preset as $type => $d) {
 			foreach($d as $index => $charge) {
+				if(!isset($module_order[$type][$index])) continue;
+				$z = $module_order[$type][$index];
+
 				\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
-				                        array($fittinghash, $name, $type, $index, $charge['typeid']));
+				                        array($fittinghash, $name, $type, $z, $charge['typeid']));
 			}
 		}
 	}

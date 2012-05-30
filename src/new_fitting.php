@@ -49,7 +49,7 @@ if(isset($_POST['prev_step'])) {
 	$step = 1;
 
 	$fit = \Osmium\State\get_state('new_fit');
-	\Osmium\Fit\reset($fit);
+	\Osmium\Fit\destroy($fit);
 	\Osmium\State\put_state('new_fit', $fit);
 }
 
@@ -135,7 +135,10 @@ function ship_select() {
 function ship_select_pre() { /* Unreachable code for the 1st step */ }
 function ship_select_post() {
 	$fit = \Osmium\State\get_state('new_fit', array());
-	if(!isset($_POST['hullid']) || !\Osmium\Fit\init_fit($fit, $_POST['hullid'])) {
+	if($fit === array()) {
+		\Osmium\Fit\create($fit);
+	}
+	if(!isset($_POST['hullid']) || !\Osmium\Fit\select_ship($fit, $_POST['hullid'])) {
 		\Osmium\Forms\add_field_error('hullid', "Please select a ship first. (You can still change your mind later!)");
 		return false;
 	}
@@ -194,6 +197,8 @@ function print_modulelist() {
 	echo "<th><img src='./static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><strong id='turret_count'></strong></th>\n";
 	echo "<th><img src='./static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><strong id='launcher_count'></strong></th>\n";
 	echo "</tr>\n</table>\n<table class='slot_count'>\n<tr>\n";
+	echo "<th><img src='./static/icons/cpu.png' alt='CPU' title='CPU' /><strong id='cpu'></strong></th>\n";
+	echo "<th><img src='./static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><strong id='power'></strong></th>\n";
 	echo "<th><img src='./static/icons/calibration.png' alt='Calibration' title='Calibration' /><strong id='upgradecapacity'></strong></th>\n";
 	echo "</tr>\n</table>\n";
 
@@ -228,8 +233,9 @@ function modules_select() {
 	echo "<script>\n$(function() {\n";
 	echo "osmium_shortlist_load(".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n";
 	echo "osmium_loadout_load(".json_encode(array(
-		                                        'hull' => $fit['hull'], 
+		                                        'ship' => $fit['ship'], 
 		                                        'modules' => $fit['modules'],
+		                                        'attributes' => \Osmium\AjaxCommon\get_attributes_step_modules_select($fit),
 		                                        )).");\n";
 	echo "});\n</script>\n";
 }
