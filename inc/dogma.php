@@ -20,7 +20,41 @@ namespace Osmium\Dogma;
 
 const USEFUL_SKILLGROUPS = '(273, 272, 271, 255, 269, 256, 275, 257, 989)';
 
-function eval_skills(&$fit) {
+/* ----------------------------------------------------- */
+
+function eval_ship_preexpressions(&$fit) {
+	$fit['dogma']['source'] = array('ship');
+	$fit['dogma']['self'] =& $fit['dogma']['ship'];
+
+	foreach($fit['cache'][$fit['ship']['typeid']]['effects'] as $effect) {
+		if(!isset($effect['preexp'])) {
+			trigger_error('eval_ship_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_ERROR);
+			continue;
+		}
+		eval_expression($fit, unserialize($effect['preexp']));
+	}
+
+	unset($fit['dogma']['source']);
+	unset($fit['dogma']['self']);
+}
+
+function eval_ship_postexpressions(&$fit) {
+	$fit['dogma']['source'] = array('ship');
+	$fit['dogma']['self'] =& $fit['dogma']['ship'];
+
+	foreach($fit['cache'][$fit['ship']['typeid']]['effects'] as $effect) {
+		if(!isset($effect['postexp'])) {
+			trigger_error('eval_ship_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
+			continue;
+		}
+		eval_expression($fit, unserialize($effect['postexp']));
+	}
+
+	unset($fit['dogma']['source']);
+	unset($fit['dogma']['self']);
+}
+
+function eval_skill_preexpressions(&$fit) {
 	$typeids = array();
 	$q = \Osmium\Db\query('SELECT invskills.typeid FROM osmium.invskills WHERE groupid IN '.USEFUL_SKILLGROUPS);
 	while($row = \Osmium\Db\fetch_row($q)) {
@@ -43,40 +77,44 @@ function eval_skills(&$fit) {
 		foreach($fit['cache'][$typeid]['effects'] as $effect) {
 			eval_expression($fit, unserialize($effect['preexp']));
 		}
+
+		\Osmium\Fit\maybe_remove_cache($fit, $typeid);
 	}
 
 	unset($fit['dogma']['source']);
 	unset($fit['dogma']['self']);
 }
 
-function get_expression_uncached($expressionid) {
-	if($expressionid === null) return null;
+function eval_module_preexpressions(&$fit, $moduletype, $index) {
+	$fit['dogma']['source'] = array('module', $moduletype, $index);
+	$fit['dogma']['self'] =& $fit['dogma']['modules'][$moduletype][$index];
 
-	/* Assume we have dgmexpressions and dgmoperands. */
-	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT operandkey, arg1, arg2, expressionvalue, expressionname, expressiontypeid, expressiongroupid, expressionattributeid FROM eve.dgmexpressions JOIN eve.dgmoperands ON dgmoperands.operandid = dgmexpressions.operandid WHERE expressionid = $1', array($expressionid)));
-	if($row === false) return 'NOEXPRESSION';
+	foreach($fit['cache'][$fit['modules'][$moduletype][$index]['typeid']]['effects'] as $effect) {
+		if(!isset($effect['preexp'])) {
+			trigger_error('eval_module_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
+			continue;
+		}
+		eval_expression($fit, unserialize($effect['preexp']));
+	}
 
-	list($operandkey, $arg1, $arg2, $value, $name, $typeid, $groupid, $attributeid) = $row;
-	$r = array(
-		'op' => $operandkey, 
-		'value' => $value,
-		'name' => $name,
-		'typeid' => $typeid,
-		'groupid' => $groupid,
-		'attributeid' => $attributeid,
-		'arg1' => get_expression_uncached($arg1),
-		'arg2' => get_expression_uncached($arg2),
-		);
+	unset($fit['dogma']['source']);
+	unset($fit['dogma']['self']);
+}
 
-	if($r['arg1'] === null) unset($r['arg1']);
-	if($r['arg2'] === null) unset($r['arg2']);
-	if($r['value'] === null) unset($r['value']);
-	if($r['name'] === null) unset($r['name']);
-	if($r['typeid'] === null) unset($r['typeid']);
-	if($r['groupid'] === null) unset($r['groupid']);
-	if($r['attributeid'] === null) unset($r['attributeid']);
+function eval_module_postexpressions(&$fit, $moduletype, $index) {
+	$fit['dogma']['source'] = array('module', $moduletype, $index);
+	$fit['dogma']['self'] =& $fit['dogma']['modules'][$moduletype][$index];
 
-	return $r;
+	foreach($fit['cache'][$fit['modules'][$moduletype][$index]['typeid']]['effects'] as $effect) {
+		if(!isset($effect['postexp'])) {
+			trigger_error('eval_module_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
+			continue;
+		}
+		eval_expression($fit, unserialize($effect['postexp']));
+	}
+
+	unset($fit['dogma']['source']);
+	unset($fit['dogma']['self']);
 }
 
 function get_ship_attribute(&$fit, $name) {
@@ -161,6 +199,8 @@ function apply_modifiers(&$fit, $modifiers, $base_value) {
 	/* Evaluation order generously "stolen" from:
 	 * https://github.com/DarkFenX/Eos/blob/master/fit/attributeCalculator/map.py#L42 */
 
+	/* TODO: stacking penalties! */
+
 	if(isset($modifiers['preassignment']) && count($modifiers['preassignment']) > 0) {
 		/* Only assign last value */
 		$attr = $modifiers['preassignment']; /* Make a copy */
@@ -235,15 +275,40 @@ function apply_modifiers(&$fit, $modifiers, $base_value) {
 	return $base_value;
 }
 
-function insert_nested(&$fit, $subarrays, $element, $key = null) {
+function &traverse_nested(&$fit, $subarrays) {
 	$res =& $fit['dogma'];
 	foreach($subarrays as $k => $v) {
 		if($k === 'source') continue;
+
 		$res =& $res[$v];
 	}
+	return $res;
+}
+
+function insert_nested(&$fit, $subarrays, $element, $key = null) {
+	//$res =& traverse_nested($fit, $subarrays);
+	$res =& $fit['dogma'];
+	foreach($subarrays as $k => $v) {
+		if($k === 'source') continue;
+
+		$res =& $res[$v];
+	}
+
 	if($key === null) $res[] = $element;
 	else if($key === false) $res = $element;
 	else $res[$key] = $element;
+}
+
+function remove_nested(&$fit, $subarrays, $element) {
+	$res =& traverse_nested($fit, $subarrays);
+	foreach($res as $i => $val) {
+		if($val['name'] === $element['name']) {
+			unset($res[$i]);
+			return;
+		}
+	}
+
+	trigger_error('remove_nested(): element '.$element['name'].' not found', E_USER_WARNING);
 }
 
 function insert_modifier(&$fit, $exp, $name) {
@@ -256,6 +321,18 @@ function insert_modifier(&$fit, $exp, $name) {
 	              eval_expression($fit, $exp['arg2']));
 	
 }
+
+function remove_modifier(&$fit, $exp, $name) {
+	$path = (array)eval_expression($fit, $exp['arg1']);
+	
+	remove_nested($fit,
+	              array_merge(array(array_shift($path), '__modifiers'),
+	                          $path,
+	                          array($name)),
+	              eval_expression($fit, $exp['arg2']));
+}
+
+/* ----------------------------------------------------- */
 
 function eval_expression(&$fit, $expression) {
 	$funcname = __NAMESPACE__.'\\eval_'.strtolower($expression['op']);
@@ -295,7 +372,7 @@ function eval_and(&$fit, $exp) {
 }
 
 function eval_aorsm(&$fit, $exp) {
-	return eval_alrsm($fit, $exp);
+	insert_modifier($fit, $exp, 'owner_required_skill');
 }
 
 function eval_att(&$fit, $exp) {
@@ -397,13 +474,11 @@ function eval_gettype(&$fit, $exp) {
 }
 
 function eval_gt(&$fit, $exp) {
-	/* Only needed for CPU/PG checks, we allow overflowing stats */
-	return true || eval_expression($fit, $exp['arg1']) > eval_expression($fit, $exp['arg2']);
+	return eval_expression($fit, $exp['arg1']) > eval_expression($fit, $exp['arg2']);
 }
 
 function eval_gte(&$fit, $exp) {
-	/* See GT */
-	return true || eval_expression($fit, $exp['arg1']) >= eval_expression($fit, $exp['arg2']);
+	return eval_expression($fit, $exp['arg1']) >= eval_expression($fit, $exp['arg2']);
 }
 
 function eval_ia(&$fit, $exp) {
@@ -411,9 +486,10 @@ function eval_ia(&$fit, $exp) {
 }
 
 function eval_if(&$fit, $exp) {
-	if($cond = eval_expression($fit, $exp['arg1'])) {
-		eval_expression($fit, $exp['arg2']);
-	}
+	$cond = eval_expression($fit, $exp['arg1']);
+	/* Always assume $cond is true, even when it's not, because we want to
+	 * allow overflowing stuff */
+	eval_expression($fit, $exp['arg2']);
 	return $cond;
 }
 
@@ -445,6 +521,22 @@ function eval_or(&$fit, $exp) {
 
 function eval_powerboost(&$fit, $exp) {}
 
+function eval_rim(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'item');
+}
+
+function eval_rlgm(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'location_group');
+}
+
+function eval_rlrsm(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'location_required_skill');
+}
+
+function eval_rorsm(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'owner_required_skill');
+}
+
 function eval_rsa(&$fit, $exp) {
 	return array_merge((array)eval_expression($fit, $exp['arg1']), 
 	                   array('__requires_skill'),
@@ -467,4 +559,36 @@ function eval_skillcheck(&$fit, $exp) {
 
 function eval_ue(&$fit, $exp) {
 	$fit['dogma']['__errors'][] = eval_expression($fit, $exp['arg1']);
+}
+
+/* ----------------------------------------------------- */
+
+function get_expression_uncached($expressionid) {
+	if($expressionid === null) return null;
+
+	/* Assume we have dgmexpressions and dgmoperands. */
+	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT operandkey, arg1, arg2, expressionvalue, expressionname, expressiontypeid, expressiongroupid, expressionattributeid FROM eve.dgmexpressions JOIN eve.dgmoperands ON dgmoperands.operandid = dgmexpressions.operandid WHERE expressionid = $1', array($expressionid)));
+	if($row === false) return 'NOEXPRESSION';
+
+	list($operandkey, $arg1, $arg2, $value, $name, $typeid, $groupid, $attributeid) = $row;
+	$r = array(
+		'op' => $operandkey, 
+		'value' => $value,
+		'name' => $name,
+		'typeid' => $typeid,
+		'groupid' => $groupid,
+		'attributeid' => $attributeid,
+		'arg1' => get_expression_uncached($arg1),
+		'arg2' => get_expression_uncached($arg2),
+		);
+
+	if($r['arg1'] === null) unset($r['arg1']);
+	if($r['arg2'] === null) unset($r['arg2']);
+	if($r['value'] === null) unset($r['value']);
+	if($r['name'] === null) unset($r['name']);
+	if($r['typeid'] === null) unset($r['typeid']);
+	if($r['groupid'] === null) unset($r['groupid']);
+	if($r['attributeid'] === null) unset($r['attributeid']);
+
+	return $r;
 }

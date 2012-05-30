@@ -28,6 +28,11 @@ FROM eve.dgmeffects
 JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
 JOIN osmium.invships ON invships.typeid = dgmtypeeffects.typeid
 UNION
+SELECT DISTINCT postexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invships ON invships.typeid = dgmtypeeffects.typeid
+UNION
 SELECT DISTINCT preexpression AS expressionid
 FROM eve.dgmeffects
 JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid

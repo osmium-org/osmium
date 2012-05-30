@@ -34,6 +34,8 @@ const EDIT_ALLIANCE_ONLY = 3;
 const VISIBILITY_PUBLIC = 0;
 const VISIBILITY_PRIVATE = 1;
 
+/* ----------------------------------------------------- */
+
 function get_slottypes() {
 	return array('high', 'medium', 'low', 'rig', 'subsystem');
 }
@@ -48,70 +50,213 @@ function get_attr_slottypes() {
 		);
 }
 
-function init_fit(&$fit, $typeid) {
-	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT typename FROM osmium.invships WHERE typeid = $1', array($typeid)));
+function create(&$fit) {
+	$fit = array(
+		'ship' => array(), /* Ship typeid, typename etc. */
+		'modules' => array(), /* Module typeids, typenames etc. */
+		'charges' => array( /* Charge presets */
+			'Default' => array(),
+			),
+		'drones' => array(), /* Drone typeids, typenames, volume & count */
+		'dogma' => array(), /* Dogma stuff, see dogma.php */
+		'cache' => array(), /* All effect and attribute rows of fitted items */
+		);
 
+	/* Apply the default skill modifiers */
+	\Osmium\Dogma\eval_skill_preexpressions($fit);
+}
+
+function destroy(&$fit) {
+	$fit = array();
+}
+
+function reset(&$fit) {
+	destroy($fit);
+	create($fit);
+}
+
+function select_ship(&$fit, $new_typeid) {
+	if(isset($fit['ship']['typeid'])) {
+		/* Switching hull */
+		\Osmium\Dogma\eval_ship_postexpressions($fit);
+		$old_typeid = $fit['ship']['typeid'];
+		$fit['ship'] = array();
+		if($old_typeid != $new_typeid) {
+			maybe_remove_cache($fit, $old_typeid);
+		}
+	}
+
+	foreach($fit['dogma']['ship'] as $key => $value) {
+		if($key === '__modifiers') continue;
+		unset($fit['dogma']['ship'][$key]);
+	}
+
+	$row = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT typename FROM osmium.invships WHERE typeid = $1', 
+			array($new_typeid)));
 	if($row === false) return false;
 
-	$fit['cache'] = array();
-
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-
-	$fit['ship'] = 
-		array(
-			'typeid' => $typeid,
-			'typename' => $row[0]
-			);
-
-	reset_process_ship_attributes($fit);
-  
-	if(!isset($fit['modules'])) {
-		foreach(get_slottypes() as $type) {
-			$fit['modules'][$type] = array();
-		}
-	}
-  
-	if(!isset($fit['charges'])) {
-		$fit['charges'] = array(array('name' => 'Default'));
+	$fit['ship'] = array(
+		'typeid' => $new_typeid,
+		'typename' => $row[0],
+		);
+	
+	if(!isset($fit['cache'][$new_typeid])) {
+		get_attributes_and_effects(array($new_typeid), $fit['cache']);
 	}
 
-	if(!isset($fit['drones'])) {
-		$fit['drones'] = array();
+	foreach($fit['cache'][$fit['ship']['typeid']]['attributes'] as $attr) {
+		$fit['dogma']['ship'][$attr['attributename']] = $attr['value'];
 	}
-  
-	return true;
+	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
+	
+	\Osmium\Dogma\eval_ship_preexpressions($fit);
 }
 
-function update_modules(&$fit, $typeids, $modules) {
-	get_modules_attributes_and_effects($typeids, $fit['cache'], $fit['cache']);
-	reset_process_ship_attributes($fit);
-
-	$typeids[] = -1;
-	$names = array();
-	$r = \Osmium\Db\query_params('SELECT typeid, typename FROM osmium.invmodules WHERE typeid IN ('.implode(',', $typeids).')', array());
-	while($row = \Osmium\Db\fetch_row($r)) {
-		$names[$row[0]] = $row[1];
+function add_modules_batch(&$fit, $modules) {
+	$typeids = array();
+	foreach($modules as $type => $a) {
+		foreach($a as $index => $typeid) {
+			$typeids[$typeid] = true;
+		}
 	}
 
-	foreach(get_slottypes() as $type) {
-		$fit['modules'][$type] = array();
-	}
+	get_attributes_and_effects(array_keys($typeids), $fit['cache']);
 
 	foreach($modules as $type => $a) {
-		foreach($a as $i => $typeid) {
-			if(!isset($fit['cache'][$typeid]['effects'])) continue; /* Not a real typeID */
-			$trueslottype = get_module_slottype($fit['cache'][$typeid]['effects']);
-			if($trueslottype === false) continue; /* Not a real module */
-			$fit['modules'][$trueslottype][] = ($m = array('typeid' => $typeid, 
-			                                               'typename' => $names[$typeid]));
-			process_module_attributes($fit, 
-			                          $type,
-			                          $i,
-			                          $fit['cache'][$typeid]['attributes'], 
-			                          $fit['cache'][$typeid]['effects']);      
+		foreach($a as $index => $typeid) {
+			add_module($fit, $index, $typeid);
 		}
 	}
 }
+
+function add_module(&$fit, $index, $typeid) {
+	if(!isset($fit['cache'][$typeid])) {
+		get_attributes_and_effects(array($typeid), $fit['cache']);
+	}
+	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+
+	if(isset($fit['modules'][$type][$index])) {
+		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
+			return; /* Job already done */
+		}
+
+		remove_module($fit, $index, $typeid);
+	}
+
+	$fit['modules'][$type][$index] = array(
+		'typeid' => $typeid,
+		'typename' => $fit['cache'][$typeid]['typename'],
+		);
+
+	$fit['dogma']['modules'][$type][$index] = array();
+	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
+		$fit['dogma']['modules'][$type][$index][$attr['attributename']]
+			= $attr['value'];
+	}
+	$fit['dogma']['modules'][$type][$index]['typeid']
+		=& $fit['modules'][$type][$index]['typeid'];
+
+	\Osmium\Dogma\eval_module_preexpressions($fit, $type, $index);
+}
+
+function remove_module(&$fit, $index, $typeid) {
+	if(!isset($fit['cache'][$typeid])) {
+		get_attributes_and_effects(array($typeid), $fit['cache']);
+	}
+	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+
+	if(!isset($fit['modules'][$type][$index]) || !isset($fit['modules'][$type][$index]['typeid'])) {
+		trigger_error('remove_module(): trying to remove a nonexistent module!', E_USER_WARNING);
+		maybe_remove_cache($fit, $typeid);
+		return;
+	}
+
+	\Osmium\Dogma\eval_module_postexpressions($fit, $type, $index);
+	unset($fit['dogma']['modules'][$type][$index]);
+	unset($fit['modules'][$type][$index]);
+
+	maybe_remove_cache($fit, $typeid);
+}
+
+/* ----------------------------------------------------- */
+
+function prune_cache(&$fit) {
+	foreach($fit['cache'] as $typeid => $bla) {
+		maybe_remove_cache($fit, $typeid);
+	}
+}
+
+function maybe_remove_cache(&$fit, $deleted_typeid) {
+	if(!isset($fit['cache'][$deleted_typeid])) return;
+	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] == $deleted_typeid) return;
+	foreach($fit['modules'] as $submods) {
+		foreach($submods as $mod) {
+			if($mod['typeid'] == $deleted_typeid) return;
+		}
+	}
+	foreach($fit['charges'] as $preset) {
+		foreach($preset as $subcharges) {
+			foreach($subcharges as $charge) {
+				if($charge['typeid'] == $deleted_typeid) return;
+			}
+		}
+	}
+	foreach($fit['drones'] as $drone) {
+		if($drone['typeid'] == $deleted_typeid) return;
+	}
+
+	unset($fit['cache'][$deleted_typeid]);
+}
+
+function get_module_slottype($effects) {
+	if(isset($effects['loPower'])) return 'low';
+	if(isset($effects['medPower'])) return 'medium';
+	if(isset($effects['hiPower'])) return 'high';
+	if(isset($effects['rigSlot'])) return 'rig';
+	if(isset($effects['subSystem'])) return 'subsystem';
+	return false;
+}
+
+function get_attributes_and_effects($typeids, &$out) {
+	foreach($typeids as $tid) {
+		$out[$tid]['effects'] = array();
+		$out[$tid]['attributes'] = array();
+	}
+
+	$typeids[] = -1;
+	$typeidIN = implode(',', $typeids);
+  
+	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp
+  FROM eve.dgmeffects 
+  JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
+  LEFT JOIN osmium.cacheexpressions AS preexpr ON preexpr.expressionid = preexpression
+  LEFT JOIN osmium.cacheexpressions AS postexpr ON postexpr.expressionid = postexpression
+  WHERE typeid IN ('.$typeidIN.')', array());
+	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
+		$tid = $row['typeid'];
+		unset($row['typeid']);
+		$out[$tid]['effects'][$row['effectname']] = $row;
+	}
+
+	$attribsq = \Osmium\Db\query_params('SELECT dgmtypeattributes.typeid, groupid, typename, attributename, dgmattributetypes.attributeid, highisgood, stackable, COALESCE(valuefloat, valueint) AS value
+  FROM eve.dgmattributetypes 
+  JOIN eve.dgmtypeattributes ON dgmattributetypes.attributeid = dgmtypeattributes.attributeid
+  JOIN eve.invtypes ON invtypes.typeid = dgmtypeattributes.typeid
+  WHERE dgmtypeattributes.typeid IN ('.$typeidIN.')', array());
+	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
+		$tid = $row['typeid'];
+		$out[$tid]['groupid'] = $row['groupid'];
+		$out[$tid]['typename'] = $row['typename'];
+		unset($row['typeid']);
+		unset($row['groupid']);
+		unset($row['typename']);
+		$out[$tid]['attributes'][$row['attributename']] = $row;
+	}
+}
+
+/* ----------------------------------------------------- */
 
 function update_drones(&$fit, $drones) {
 	$keys = array_keys($drones);
@@ -152,103 +297,7 @@ function pop_drone(&$fit, $typeid) {
 	}
 }
 
-function get_attributes_and_effects($typeids, &$out) {
-	foreach($typeids as $tid) {
-		$out[$tid]['effects'] = array();
-		$out[$tid]['attributes'] = array();
-	}
-
-	$typeids[] = -1;
-	$typeidIN = implode(',', $typeids);
-  
-	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp
-  FROM eve.dgmeffects 
-  JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
-  LEFT JOIN osmium.cacheexpressions AS preexpr ON preexpr.expressionid = preexpression
-  LEFT JOIN osmium.cacheexpressions AS postexpr ON postexpr.expressionid = postexpression
-  WHERE typeid IN ('.$typeidIN.')', array());
-	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
-		$tid = $row['typeid'];
-		unset($row['typeid']);
-		$out[$tid]['effects'][$row['effectname']] = $row;
-	}
-
-	$attribsq = \Osmium\Db\query_params('SELECT dgmtypeattributes.typeid, groupid, attributename, dgmattributetypes.attributeid, highisgood, stackable, COALESCE(valuefloat, valueint) AS value
-  FROM eve.dgmattributetypes 
-  JOIN eve.dgmtypeattributes ON dgmattributetypes.attributeid = dgmtypeattributes.attributeid
-  JOIN eve.invtypes ON invtypes.typeid = dgmtypeattributes.typeid
-  WHERE dgmtypeattributes.typeid IN ('.$typeidIN.')', array());
-	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
-		$tid = $row['typeid'];
-		$out[$tid]['groupid'] = $row['groupid'];
-		unset($row['typeid']);
-		unset($row['groupid']);
-		$out[$tid]['attributes'][$row['attributename']] = $row;
-	}
-}
-
-function reset_process_ship_attributes(&$fit) {
-	$fit['dogma'] = array();
-
-	\Osmium\Dogma\eval_skills($fit);
-	
-	foreach($fit['cache'][$fit['ship']['typeid']]['attributes'] as $attr) {
-		$fit['dogma']['ship'][$attr['attributename']] = $attr['value'];
-	}
-	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
-
-	$fit['dogma']['self'] =& $fit['dogma']['ship'];
-	$fit['dogma']['source'] = array('ship');
-	foreach($fit['cache'][$fit['ship']['typeid']]['effects'] as $effect) {
-		\Osmium\Dogma\eval_expression($fit, unserialize($effect['preexp']));
-	}
-	unset($fit['dogma']['self']);
-	unset($fit['dogma']['source']);
-}
-
-function process_module_attributes(&$fit, $type, $index, $attributes, $effects) {
-	foreach($attributes as $attr) {
-		$fit['dogma']['modules'][$type][$index][$attr['attributename']] = $attr['value'];
-	}
-	$fit['dogma']['modules'][$type][$index]['typeid'] =& $fit['modules'][$type][$index]['typeid'];
-
-	$fit['dogma']['self'] =& $fit['dogma']['modules'][$type][$index];
-	$fit['dogma']['source'] = array('module', $type, $index);
-	foreach($effects as $effect) {
-		if(strpos($effect['effectname'], 'overload') === 0) {
-			/* TODO: do it properly */
-			continue;
-		}
-		\Osmium\Dogma\eval_expression($fit, unserialize($effect['preexp']));
-	}
-	unset($fit['dogma']['self']);
-	unset($fit['dogma']['source']);
-}
-
-function get_modules_attributes_and_effects($typeids, &$out, $cache) {
-	if(!is_array($out)) $out = array();
-	foreach($typeids as &$typeid) {
-		if(isset($cache[$typeid])) {
-			$out[$typeid] = $cache[$typeid];
-			$typeid = -1;
-		}
-	}
-
-	get_attributes_and_effects($typeids, $out);
-}
-
-function get_module_slottype($effects) {
-	if(isset($effects['loPower'])) return 'low';
-	if(isset($effects['medPower'])) return 'medium';
-	if(isset($effects['hiPower'])) return 'high';
-	if(isset($effects['rigSlot'])) return 'rig';
-	if(isset($effects['subSystem'])) return 'subsystem';
-	return false;
-}
-
-function reset(&$fit) {
-	$fit = array();
-}
+/* ----------------------------------------------------- */
 
 function sanitize(&$fit) {
 	/* Unset any extra charges of nonexistent modules. */
@@ -285,9 +334,7 @@ function get_unique($fit) {
 		}
 	}
 
-	foreach($fit['charges'] as $preset) {
-		$name = $preset['name'];
-		unset($preset['name']);
+	foreach($fit['charges'] as $name => $preset) {
 		foreach($preset as $type => $charges) {
 			foreach($charges as $index => $charge) {
 				$unique['charges'][$name][$type][$index] = $charge['typeid'];
@@ -295,14 +342,9 @@ function get_unique($fit) {
 		}
 	}
 
-	foreach($fit['drones'] as $drone) {
+	foreach($fit['drones'] as $typeid => $drone) {
 		$count = $drone['count'];
-		$typeid = $drone['typeid'];
-
-		if($count == 0) continue;
-		if(!isset($unique['drones'][$typeid])) $unique['drones'][$typeid] = 0;
-
-		$unique['drones'][$typeid] += $count;
+		$unique['drones'][$typeid] = $count;
 	}
 
 	return $unique;
@@ -359,10 +401,7 @@ function commit_fitting(&$fit) {
 		}
 	}
   
-	foreach($fit['charges'] as $preset) {
-		$name = $preset['name'];
-		unset($preset['name']);
-    
+	foreach($fit['charges'] as $name => $preset) {
 		foreach($preset as $type => $d) {
 			foreach($d as $index => $charge) {
 				\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
@@ -434,8 +473,8 @@ function get_fit($loadoutid, $revision = null) {
 
 	if($fitting === false) return false;
 
-	$fit = array();
-	init_fit($fit, $fitting['hullid']);
+	create($fit);
+	select_ship($fit, $fitting['hullid']);
 
 	$fit['metadata']['loadoutid'] = $loadoutid;
 	$fit['metadata']['hash'] = $fitting['hash'];
@@ -455,15 +494,13 @@ function get_fit($loadoutid, $revision = null) {
 		$fit['metadata']['tags'][] = $r[0];
 	}
 
-	$m_typeids = array();
 	$modules = array();
 	$mq = \Osmium\Db\query_params('SELECT slottype, index, typeid FROM osmium.fittingmodules WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
 	while($row = \Osmium\Db\fetch_row($mq)) {
-		$m_typeids[$row[2]] = true;
 		$modules[$row[0]][$row[1]] = $row[2];
 	}
 
-	update_modules($fit, array_keys($m_typeids), $modules);
+	add_modules_batch($fit, $modules);
 
 	$cq = \Osmium\Db\query_params('SELECT presetname, slottype, index, fittingcharges.typeid, typename FROM osmium.fittingcharges JOIN eve.invtypes ON fittingcharges.typeid = invtypes.typeid WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
 	$presets = array();
@@ -472,20 +509,15 @@ function get_fit($loadoutid, $revision = null) {
 		$presets[$row[0]][$row[1]][$row[2]]['typeid'] = $row[3];
 		$presets[$row[0]][$row[1]][$row[2]]['typename'] = $row[4];
 	}
-	foreach($presets as $name => $preset) {
-		$preset['name'] = $name;
-		$fit['charges'][] = $preset;
-	}
+	$fit['charges'] = $presets;
 	if(count($fit['charges']) == 0) {
-		$fit['charges'][] = array('name' => 'Default');
+		$fit['charges']['Default'] = array();
 	}
 
 	$dq = \Osmium\Db\query_params('SELECT typeid, quantity FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
 	$drones = array();
 	while($row = \Osmium\Db\fetch_row($dq)) {
-		if(!isset($drones[$row[0]])) $drones[$row[0]] = 0;
-
-		$drones[$row[0]] += $row[1];
+		$drones[$row[0]] = $row[1];
 	}
   
 	update_drones($fit, $drones);
@@ -494,7 +526,7 @@ function get_fit($loadoutid, $revision = null) {
 }
 
 function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
-	$fit = array();
+	create($fit);
 
 	if(!isset($e['name'])) {
 		$errors[] = 'Expected a name attribute in <fitting> tag, none found. Stopping.';
@@ -526,7 +558,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		$errors[] = 'Could not fetch typeID of "'.$shipname.'". Obsolete/unpublished ship? Stopping.';
 		return false;
 	}
-	init_fit($fit, $row[0]);
+	select_ship($fit, $row[0]);
 
 	if(!isset($e->hardware)) {
 		$errors[] = 'No <hardware> element found. Expected at least 1. Stopping.';
@@ -600,7 +632,6 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 	}
 
 	$realmodules = array();
-	$realtypeids = array();
 	foreach($modules as $type => $m) {
 		foreach($m as $i => $typename) {
 			if(!isset($typename_to_id[$typename])) {
@@ -608,7 +639,6 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 				continue;
 			}
 			$realmodules[$type][$i] = $typename_to_id[$typename];
-			$realtypeids[$typename_to_id[$typename]] = true;
 		}
 	}
 	foreach($recover_modules as $typename) {
@@ -618,7 +648,6 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		}
 		/* "low" does not matter here, it will be corrected in update_modules later. */
 		$realmodules['low'][] = $typename_to_id[$typename];
-		$realtypeids[$typename_to_id[$typename]] = true;
 	}
 
 	$realdrones = array();
@@ -633,7 +662,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		$realdrones[$typeid] += $drone['count'];
 	}
 
-	update_modules($fit, array_keys($realtypeids), $realmodules);
+	add_modules_batch($fit, $realmodules);
 	update_drones($fit, $drones);
 
 	$fit['metadata']['name'] = $name;

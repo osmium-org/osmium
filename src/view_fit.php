@@ -106,14 +106,16 @@ if(count($fit['charges']) > 1) {
 	echo "<ul>\n<li>Charge presets:\n<ul id='vpresets'>\n";
 
 	$active = true;
-	foreach($fit['charges'] as $index => $preset) {
+	foreach($fit['charges'] as $name => $preset) {
 		if($active) {
 			$active = false;
 			$class = " class='active'";
 		} else {
 			$class = '';
 		}
-		echo "<li id='preset_$index' data-index='$index'><a href='javascript:void(0);'$class>".htmlspecialchars($preset['name'])."</a></li>\n";
+		$name = htmlspecialchars($name, ENT_QUOTES);
+
+		echo "<li data-index='$name'><a href='javascript:void(0);'$class>".$name."</a></li>\n";
 	}
 
 	echo "</ul>\n</li>\n</ul>\n";
@@ -185,10 +187,17 @@ if(count($fit['metadata']['tags']) > 0) {
 echo "</header>\n";
 
 $preset = null;
-if(count($fit['charges']) > 0) $preset = $fit['charges'][0];
+if(count($fit['charges']) > 0) {
+	reset($fit['charges']);
+	$presetname = key($fit['charges']);
+	$preset = $fit['charges'][$presetname];
+}
 
 $aslots = \Osmium\Fit\get_attr_slottypes();
-foreach($fit['modules'] as $type => $modules) {
+foreach(\Osmium\Fit\get_slottypes() as $type) {
+	if(!isset($fit['modules'][$type])) continue;
+	$modules = $fit['modules'][$type];
+
 	$slotcount = isset($fit['cache'][$fit['ship']['typeid']]['attributes'][$aslots[$type]]) ?
 		\Osmium\Dogma\get_ship_attribute($fit, $aslots[$type]) : 0;
 
