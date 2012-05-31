@@ -304,6 +304,44 @@ function use_preset(&$fit, $presetname) {
 	}
 }
 
+function add_drones_batch(&$fit, $drones) {
+	get_attributes_and_effects(array_keys($drones), $fit['cache']);
+
+	foreach($drones as $typeid => $count) {
+		add_drone($fit, $typeid, $count);
+	}
+}
+
+function add_drone(&$fit, $typeid, $quantity = 1) {
+	get_attributes_and_effects(array($typeid), $fit['cache']);
+
+	if(!isset($fit['drones'][$typeid])) {
+		$fit['drones'][$typeid] = array(
+			'typeid' => $typeid,
+			'typename' => $fit['cache'][$typeid]['typename'],
+			'volume' => $fit['cache'][$typeid]['volume'],
+			'count' => 0,
+			);
+	}
+
+	$fit['drones'][$typeid]['count'] += $quantity;
+}
+
+function remove_drone(&$fit, $typeid, $quantity = 1) {
+	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['count'] < $quantity) {
+		trigger_error('remove_drone(): not enough drones to remove', E_USER_ERROR);
+		unset($fit['drones'][$typeid]);
+		maybe_remove_cache($fit, $typeid);
+		return;
+	}
+
+	$fit['drones'][$typeid]['count'] -= $quantity;
+	if($fit['drones'][$typeid]['count'] == 0) {
+		unset($fit['drones'][$typeid]);
+		maybe_remove_cache($fit, $typeid);
+	}
+}
+
 /* ----------------------------------------------------- */
 
 function prune_cache(&$fit) {
@@ -358,11 +396,12 @@ function get_attributes_and_effects($typeids, &$out) {
 
 	$typeidIN = implode(',', $typeids);
   
-	$metaq = \Osmium\Db\query_params('SELECT typeid, typename, groupid
+	$metaq = \Osmium\Db\query_params('SELECT typeid, typename, groupid, volume
   FROM eve.invtypes WHERE typeid IN ('.$typeidIN.')', array());
 	while($row = \Osmium\Db\fetch_row($metaq)) {
 		$out[$row[0]]['typename'] = $row[1];
 		$out[$row[0]]['groupid'] = $row[2];
+		$out[$row[0]]['volume'] = $row[3];
 	}
 
 	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp, durationattributeid
@@ -385,47 +424,6 @@ function get_attributes_and_effects($typeids, &$out) {
 		$tid = $row['typeid'];
 		unset($row['typeid']);
 		$out[$tid]['attributes'][$row['attributename']] = $row;
-	}
-}
-
-/* ----------------------------------------------------- */
-
-function update_drones(&$fit, $drones) {
-	$keys = array_keys($drones);
-	$keys[] = -1;
-  
-	$rows = array();
-	$out = array();
-	$r = \Osmium\Db\query_params('SELECT typeid, typename, volume FROM osmium.invdrones WHERE typeid IN ('.implode(',', $keys).')', array());
-	while($row = \Osmium\Db\fetch_row($r)) {
-		$rows[$row[0]] = $row;
-	}
-
-	foreach($drones as $typeid => $count) {
-		$out[] = 
-			array(
-				'typeid' => $typeid,
-				'typename' => $rows[$typeid][1],
-				'volume' => $rows[$typeid][2],
-				'count' => $count,
-				);
-	}
-
-	$fit['drones'] = $out;
-}
-
-function pop_drone(&$fit, $typeid) {
-	foreach($fit['drones'] as $i => $drone) {
-		if($drone['typeid'] != $typeid) continue;
-
-		if($drone['count'] >= 2) {
-			$fit['drones'][$i]['count']--;
-		} else if($drone['count'] == 1) {
-			unset($fit['drones'][$i]);
-			$fit['drones'] = array_values($fit['drones']);
-		}
-
-		break;
 	}
 }
 
@@ -655,7 +653,7 @@ function get_fit($loadoutid, $revision = null) {
 		$drones[$row[0]] = $row[1];
 	}
   
-	update_drones($fit, $drones);
+	add_drones_batch($fit, $drones);
   
 	return $fit;
 }
@@ -798,7 +796,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 	}
 
 	add_modules_batch($fit, $realmodules);
-	update_drones($fit, $drones);
+	add_drones_batch($fit, $drones);
 
 	$fit['metadata']['name'] = $name;
 	$fit['metadata']['description'] = $description;

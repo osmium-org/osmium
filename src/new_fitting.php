@@ -392,10 +392,7 @@ function drones_select() {
 	print_drone_searchbox();
 	print_dronebay();
 	\Osmium\Chrome\print_js_snippet('new_fitting_drones');
-	echo "<script>osmium_load_drones(".json_encode(array(
-		                                               'hull' => $fit['hull'],
-		                                               'drones' => $fit['drones'],
-		                                               )).");</script>\n";
+	echo "<script>osmium_load_drones(".json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit)).");</script>\n";
 }
 
 function drones_select_pre() { return true; }

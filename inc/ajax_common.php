@@ -75,3 +75,12 @@ function get_attributes_step_modules_select($fit) {
 
 	return $attributes;
 }
+
+function get_data_step_drone_select($fit) {
+	return array(
+		'drones' => array_values($fit['drones']),
+		'attributes' => array(
+			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')
+			),
+		);
+}

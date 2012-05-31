@@ -1,6 +1,6 @@
 osmium_load_drones = function(json) {
     $('div#dronebay > ul').empty();
-    var capacity = json['hull']['dronecapacity'];
+    var capacity = json['attributes']['dronecapacity'];
     var used_capacity = 0;
     for(var i = 0; i < json['drones'].length; ++i) {
 		$('div#dronebay > ul').append("<li class='drone' data-typeid='" + json['drones'][i]['typeid'] + "' data-count='" + json['drones'][i]['count'] + "'><img src='http://image.eveonline.com/Type/" + json['drones'][i]['typeid'] + "_32.png' alt='' title='' />" + json['drones'][i]['typename'] + " <strong>×" + json['drones'][i]['count'] + "</strong></li>");
