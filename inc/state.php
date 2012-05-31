@@ -329,3 +329,21 @@ function put_state($key, $value) {
 
 	return $_SESSION['__osmium_state'][$key] = $value;
 }
+
+function get_cache($key, $default = null) {
+	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+
+	if(file_exists($f)) return unserialize(file_get_contents($f));
+
+	return $default;
+}
+
+function put_cache($key, $value, $expires = null) {
+	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	return file_put_contents($f, serialize($value));
+}
+
+function invalidate_cache($key) {
+	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	if(file_exists($f)) unlink($f);
+}

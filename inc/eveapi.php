@@ -28,7 +28,7 @@ function fetch($name, array $params) {
 	   the paramaters are not given in the same order. It makes
 	   sense. */
 	ksort($params);
-	$hash = 'API_'.hash('sha256', serialize($name).serialize($params));
+	$hash = 'API_'.hash('sha512', serialize($name).serialize($params));
 	$cacheDir = \Osmium\CACHE_DIRECTORY;
 	$c_file = $cacheDir.'/'.$hash;
 	$lock_file = $cacheDir.'/LOCK_'.$hash;

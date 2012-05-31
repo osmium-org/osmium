@@ -55,6 +55,13 @@ function eval_ship_postexpressions(&$fit) {
 }
 
 function eval_skill_preexpressions(&$fit) {
+	/* Check if a cached version exists; looping through all skills is expensive */
+	if($fit['dogma'] === array() && ($cache = \Osmium\State\get_cache('dogma_all_skills', null)) !== null) {
+		$fit['dogma'] = $cache;
+		return;
+	}
+
+
 	$typeids = array();
 	$q = \Osmium\Db\query('SELECT invskills.typeid FROM osmium.invskills WHERE groupid IN '.USEFUL_SKILLGROUPS);
 	while($row = \Osmium\Db\fetch_row($q)) {
@@ -83,6 +90,8 @@ function eval_skill_preexpressions(&$fit) {
 
 	unset($fit['dogma']['source']);
 	unset($fit['dogma']['self']);
+
+	\Osmium\State\put_cache('dogma_all_skills', $fit['dogma']);
 }
 
 function eval_module_preexpressions(&$fit, $moduletype, $index) {

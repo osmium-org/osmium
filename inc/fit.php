@@ -596,6 +596,10 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 }
 
 function get_fit($loadoutid, $revision = null) {
+	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null)) !== null) {
+		return $cache;
+	}
+
 	if($revision === null) {
 		/* Use latest revision */
 		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT latestrevision FROM osmium.loadoutslatestrevision WHERE loadoutid = $1', array($loadoutid)));
@@ -659,6 +663,7 @@ function get_fit($loadoutid, $revision = null) {
   
 	add_drones_batch($fit, $drones);
   
+	\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
 	return $fit;
 }
 
