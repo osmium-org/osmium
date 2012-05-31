@@ -404,12 +404,12 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out[$row[0]]['volume'] = $row[3];
 	}
 
-	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp, durationattributeid
+	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp
   FROM eve.dgmeffects 
   JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
   LEFT JOIN osmium.cacheexpressions AS preexpr ON preexpr.expressionid = preexpression
   LEFT JOIN osmium.cacheexpressions AS postexpr ON postexpr.expressionid = postexpression
-  WHERE typeid IN ('.$typeidIN.') AND effectname !~ $1 AND durationattributeid IS NULL', array('^overload'));
+  WHERE typeid IN ('.$typeidIN.') AND effectname !~ $1', array('^overload'));
 	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
 		$tid = $row['typeid'];
 		unset($row['typeid']);
@@ -422,7 +422,11 @@ function get_attributes_and_effects($typeids, &$out) {
   WHERE dgmtypeattributes.typeid IN ('.$typeidIN.')', array());
 	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
 		$tid = $row['typeid'];
+		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'];
+		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'];
 		unset($row['typeid']);
+		unset($row['stackable']);
+		unset($row['highisgood']);
 		$out[$tid]['attributes'][$row['attributename']] = $row;
 	}
 }

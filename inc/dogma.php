@@ -212,6 +212,20 @@ function get_ship_attribute(&$fit, $name, $failonerror = true) {
 	                                 $failonerror);
 }
 
+function get_module_attribute(&$fit, $slottype, $index, $name, $failonerror = true) {
+	return get_final_attribute_value($fit,
+	                                 array('name' => $name,
+	                                       'source' => array('module', $slottype, $index)),
+	                                 $failonerror);
+}
+
+function get_charge_attribute(&$fit, $preset, $slottype, $index, $name, $failonerror = true) {
+	return get_final_attribute_value($fit,
+	                                 array('name' => $name,
+	                                       'source' => array('charge', $preset, $slottype, $index)),
+	                                 $failonerror);
+}
+
 function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	static $hardcoded = array(
 		'cpu OutputBonus' => 'cpuOutputBonus2',
@@ -225,9 +239,14 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 		$src = $fit['dogma']['ship'];
 	} else if($stype == 'self') {
 		$src = $fit['dogma']['self'];
-	} else if($stype == 'module') {
-		list(, $type, $index) = $attribute['source'];
-		$src = $fit['dogma']['modules'][$type][$index];
+	} else if($stype == 'module' || $stype == 'charge') {
+		if($stype == 'module') {
+			list(, $type, $index) = $attribute['source'];
+			$src = $fit['dogma']['modules'][$type][$index];
+		} else if($stype == 'charge') {
+			list(, $preset, $type, $index) = $attribute['source'];
+			$src = $fit['dogma']['charges'][$preset][$type][$index];
+		}
 
 		$typeid = $src['typeid'];
 		for($i = 1; $i <= 6; ++$i) {
@@ -275,93 +294,122 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 				trigger_error('get_final_attribute_value(): '.$name.' not defined', E_USER_WARNING);
 			}
 		} else {
-			$val = $src[$hardcoded[$name]];
+			$name = $hardcoded[$name];
+			$val = $src[$name];
 		}
 	} else {
 		$val = $src[$name];
 	}
 
-	return apply_modifiers($fit, $modifiers, $val);
+	$stackable = isset($fit['cache']['__attributes'][$name]['stackable']) ?
+		$fit['cache']['__attributes'][$name]['stackable'] : 1;
+	$highisgood = isset($fit['cache']['__attributes'][$name]['highisgood']) ?
+		$fit['cache']['__attributes'][$name]['highisgood'] : 1;
+
+	return apply_modifiers($fit, $modifiers, $val, $stackable, $highisgood);
 }
 
-function apply_modifiers(&$fit, $modifiers, $base_value) {
+function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood) {
 	/* Evaluation order generously "stolen" from:
 	 * https://github.com/DarkFenX/Eos/blob/master/fit/attributeCalculator/map.py#L42 */
+	static $actions = null;
+	/* Ugly hack due to a PHP parser limitation… */
+	if($actions === null) $actions = array(
+		'preassignment'  => function(&$v, $m) { $v = $m; },
+		'premul'         => function(&$v, $m) { $v *= $m; },
+		'prediv'         => function(&$v, $m) { $v /= $m; },
+		'modadd'         => function(&$v, $m) { $v += $m; },
+		'modsub'         => function(&$v, $m) { $v -= $m; },
+		'postmul'        => function(&$v, $m) { $v *= $m; },
+		'postdiv'        => function(&$v, $m) { $v /= $m; },
+		'postpercent'    => function(&$v, $m) { $v *= (1.00 + 0.01 * $m); },
+		'postassignment' => function(&$v, $m) { $v = $m; },
+		);
 
-	/* TODO: stacking penalties! */
+	static $penaltygroups = array(
+		'premul' => true,
+		'postmul' => true,
+		'postpercent' => true,
+		'prediv' => true,
+		'postdiv' => true
+		);
 
-	if(isset($modifiers['preassignment']) && count($modifiers['preassignment']) > 0) {
-		/* Only assign last value */
-		$attr = $modifiers['preassignment']; /* Make a copy */
-		$attr = array_pop($attr);
-		$attr = array_pop($attr);
-		$base_value = get_final_attribute_value($fit, $attr);
-	}
+	static $immunetopenalty = null;
+	if($immunetopenalty === null) $immunetopenalty = function($attr) {
+		return $attr['source'][0] != 'module' || $attr['source'][1] == 'subsystem';
+	};
 
-	if(isset($modifiers['premul'])) {
-		foreach($modifiers['premul'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value *= get_final_attribute_value($fit, $attr);
+	foreach($actions as $name => $func) {
+		if(isset($modifiers[$name])) {
+			foreach($modifiers[$name] as $type => $a) {
+				$penalize = array();
+
+				foreach($a as $attr) {
+					if($stackable || $immunetopenalty($attr)) {
+						$func($base_value, get_final_attribute_value($fit, $attr));
+					} else {
+						$penalize[] = get_final_attribute_value($fit, $attr);
+					}
+				}
+
+				$penalized = penalize($penalize, $highisgood);
+				foreach($penalized as $v) {
+					$func($base_value, $v);
+				}
 			}
 		}
-	}
-
-	if(isset($modifiers['prediv'])) {
-		foreach($modifiers['prediv'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value /= get_final_attribute_value($fit, $attr);
-			}
-		}
-	}
-
-	if(isset($modifiers['modadd'])) {
-		foreach($modifiers['modadd'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value += get_final_attribute_value($fit, $attr);
-			}
-		}
-	}
-
-	if(isset($modifiers['modsub'])) {
-		foreach($modifiers['modsub'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value -= get_final_attribute_value($fit, $attr);
-			}
-		}
-	}
-
-	if(isset($modifiers['postmul'])) {
-		foreach($modifiers['postmul'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value *= get_final_attribute_value($fit, $attr);
-			}
-		}
-	}
-
-	if(isset($modifiers['postdiv'])) {
-		foreach($modifiers['postdiv'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value /= get_final_attribute_value($fit, $attr);
-			}
-		}
-	}
-
-	if(isset($modifiers['postpercent'])) {
-		foreach($modifiers['postpercent'] as $type => $a) {
-			foreach($a as $attr) {
-				$base_value *= (1.00 + 0.01 * get_final_attribute_value($fit, $attr));
-			}
-		}
-	}
-
-	if(isset($modifiers['postassignment']) && count($modifiers['postassignment']) > 0) {
-		$attr = $modifiers['postassignment'];
-		$attr = array_pop($attr);
-		$attr = array_pop($attr);
-		$base_value = get_final_attribute_value($fit, $attr);
 	}
 
 	return $base_value;
+}
+
+function penalize($values, $highisgood) {
+	if($values === array()) return array();
+
+	/* Taken from Aenigma's guide: http://eve.battleclinic.com/guide/9196-Aenigma-s-Stacking-Penalty-Guide.html */
+	static $penaltymultiplier = array(
+		1.000000000000,
+		0.869119980800,
+		0.570583143511,
+		0.282955154023,
+		0.105992649743,
+		0.029991166533,
+		0.006410183118,
+		0.001034920483,
+		0.000126212683,
+		0.000011626754,
+		0.000000809046,
+		);
+
+	$positive = array();
+	$negative = array();
+
+	foreach($values as &$v) {
+		$v -= 1;
+
+		if($v >= 0) $positive[] = $v;
+		else $negative[] = $v;
+	}
+
+	if($highisgood) {
+		rsort($positive);
+		sort($negative);
+	} else {
+		sort($positive);
+		rsort($negative);
+	}
+
+	$out = array();
+	foreach($positive as $i => $v) {
+		if(!isset($penaltymultiplier[$i])) continue;
+		$out[] = (1 + $v * $penaltymultiplier[$i]);
+	}
+	foreach($negative as $i => $v) {
+		if(!isset($penaltymultiplier[$i])) continue;
+		$out[] = (1 + $v * $penaltymultiplier[$i]);
+	}
+
+	return $out;
 }
 
 function &traverse_nested(&$fit, $subarrays) {
@@ -421,6 +469,19 @@ function remove_modifier(&$fit, $exp, $name) {
 	              eval_expression($fit, $exp['arg2']));
 }
 
+function operate_on_attribute(&$fit, $exp, $func) {
+	$arg1 = eval_expression($fit, $exp['arg1']);
+	if($arg1[0] == 'target') {
+		/* We don't care about that */
+	} else if($arg1[0] == 'ship') {
+		$attribute = eval_expression($fit, $exp['arg2']);
+		$val =& traverse_nested($fit, $arg1);
+		$func($val, $fit['dogma']['self'][$attribute['name']]);
+	} else {
+		trigger_error('eval_inc(): unhandled arg1 ('.$k.')', E_USER_ERROR);
+	}
+}
+
 /* ----------------------------------------------------- */
 
 function eval_expression(&$fit, $expression) {
@@ -470,9 +531,15 @@ function eval_att(&$fit, $exp) {
 
 function eval_attack(&$fit, $exp) {}
 
+function eval_cargoscan(&$fit, $exp) {}
+
 function eval_combine(&$fit, $exp) {
 	eval_expression($fit, $exp['arg1']);
 	return eval_expression($fit, $exp['arg2']);
+}
+
+function eval_dec(&$fit, $exp) {
+	operate_on_attribute($fit, $exp, function(&$v, $m) { $v -= $m; });
 }
 
 function eval_defassociation(&$fit, $exp) {
@@ -497,6 +564,7 @@ function eval_defgroup(&$fit, $exp) {
 		'EnergyWeapon' => 53,
 		'HybridWeapon' => 74,
 		'ProjectileWeapon' => 55,
+		'    None' => 0,
 		);
 
 	if(!isset($exp['groupid'])) {
@@ -535,9 +603,13 @@ function eval_deftypeid(&$fit, $exp) {
 	return intval($exp['typeid']);
 }
 
+function eval_ecmburst(&$fit, $exp) {}
+
 function eval_eff(&$fit, $exp) {
 	return array_merge((array)eval_expression($fit, $exp['arg2']), (array)eval_expression($fit, $exp['arg1']));
 }
+
+function eval_empwave(&$fit, $exp) {}
 
 function eval_get(&$fit, $exp) {
 	$context = eval_expression($fit, $exp['arg1']);
@@ -587,16 +659,7 @@ function eval_if(&$fit, $exp) {
 }
 
 function eval_inc(&$fit, $exp) {
-	$arg1 = eval_expression($fit, $exp['arg1']);
-	if($arg1[0] == 'target') {
-		/* We don't care about that */
-	} else if($arg1[0] == 'ship') {
-		$attribute = eval_expression($fit, $exp['arg2']);
-		$val =& traverse_nested($fit, $arg1);
-		$val += $fit['dogma']['self'][$attribute['name']];
-	} else {
-		trigger_error('eval_inc(): unhandled arg1 ('.$k.')', E_USER_ERROR);
-	}
+	operate_on_attribute($fit, $exp, function(&$v, $m) { $v += $m; });
 }
 
 function eval_launch(&$fit, $exp) {}
@@ -617,6 +680,8 @@ function eval_ls(&$fit, $exp) {
 	                   (array)eval_expression($fit, $exp['arg2']));
 }
 
+function eval_mine(&$fit, $exp) {}
+
 function eval_or(&$fit, $exp) {
 	return eval_expression($fit, $exp['arg1']) || eval_expression($fit, $exp['arg2']);
 }
@@ -625,6 +690,10 @@ function eval_powerboost(&$fit, $exp) {}
 
 function eval_rgim(&$fit, $exp) {
 	remove_modifier($fit, $exp, 'gang_ship');
+}
+
+function eval_rgrsm(&$fit, $exp) {
+	remove_modifier($fit, $exp, 'gang_required_skill');
 }
 
 function eval_rim(&$fit, $exp) {
@@ -663,13 +732,25 @@ function eval_set(&$fit, $exp) {
 	insert_nested($fit, $context, $value, false);
 }
 
+function eval_shipscan(&$fit, $exp) {}
+
 function eval_skillcheck(&$fit, $exp) {
 	return true;
 }
 
+function eval_surveyscan(&$fit, $exp) {}
+
+function eval_targethostiles(&$fit, $exp) {}
+
+function eval_targetsilently(&$fit, $exp) {}
+
+function eval_tooltargetskills(&$fit, $exp) {}
+
 function eval_ue(&$fit, $exp) {
 	$fit['dogma']['__errors'][] = eval_expression($fit, $exp['arg1']);
 }
+
+function eval_verifytargetgroup(&$fit, $exp) {}
 
 /* ----------------------------------------------------- */
 
