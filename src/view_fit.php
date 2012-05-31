@@ -80,6 +80,16 @@ if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 	}
 }
 
+$preset = (isset($_GET['preset']) && isset($fit['charges'][$_GET['preset']])) ? $_GET['preset'] : null;
+if(count($fit['charges']) > 0) {
+	if($preset === null) {
+		/* Use 1st preset */
+		reset($fit['charges']);
+		$preset = key($fit['charges']);
+	}
+	\Osmium\Fit\use_preset($fit, $preset);
+}
+
 $title = $fit['ship']['typename'].' / '.$fit['metadata']['name'];
 \Osmium\Chrome\print_header(strip_tags($title), '..');
 
@@ -102,20 +112,17 @@ if($fit['metadata']['revision'] > 1) {
 echo "</ul>\n";
 
 if(count($fit['charges']) > 1) {
-	echo "<script>osmium_presets = ".json_encode($fit['charges']).";</script>\n";
 	echo "<ul>\n<li>Charge presets:\n<ul id='vpresets'>\n";
 
-	$active = true;
-	foreach($fit['charges'] as $name => $preset) {
-		if($active) {
-			$active = false;
+	foreach($fit['charges'] as $name => $_) {
+		if($name === $preset) {
 			$class = " class='active'";
 		} else {
 			$class = '';
 		}
-		$name = htmlspecialchars($name, ENT_QUOTES);
+		$f_name = htmlspecialchars($name, ENT_QUOTES);
 
-		echo "<li data-index='$name'><a href='javascript:void(0);'$class>".$name."</a></li>\n";
+		echo "<li data-index='$name'><a href='?".http_build_query(array('preset' => $name))."'$class>".$f_name."</a></li>\n";
 	}
 
 	echo "</ul>\n</li>\n</ul>\n";
@@ -184,13 +191,6 @@ if(count($fit['metadata']['tags']) > 0) {
 }
 echo "</header>\n";
 
-$preset = null;
-if(count($fit['charges']) > 0) {
-	reset($fit['charges']);
-	$presetname = key($fit['charges']);
-	$preset = $fit['charges'][$presetname];
-}
-
 $aslots = \Osmium\Fit\get_attr_slottypes();
 foreach(\Osmium\Fit\get_slottypes() as $type) {
 	if(!isset($fit['modules'][$type])) continue;
@@ -206,8 +206,8 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 
 	foreach($modules as $index => $mod) {
 		$charge = '';
-		if(isset($preset[$type][$index])) {
-			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$preset[$type][$index]['typeid']."_32.png' alt='' />".$preset[$type][$index]['typename'];
+		if(isset($fit['charges'][$preset][$type][$index])) {
+			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$fit['charges'][$preset][$type][$index]['typeid']."_32.png' alt='' />".$fit['charges'][$preset][$type][$index]['typename'];
 		}
 
 		echo "<li class='index_$index'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span></li>\n";
@@ -247,5 +247,4 @@ if(($total = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 0) {
 
 echo "</div>\n";
 
-\Osmium\Chrome\print_js_snippet('view_fitting');
 \Osmium\Chrome\print_footer();

@@ -54,10 +54,9 @@ function create(&$fit) {
 	$fit = array(
 		'ship' => array(), /* Ship typeid, typename etc. */
 		'modules' => array(), /* Module typeids, typenames etc. */
-		'charges' => array( /* Charge presets */
-			'Default' => array(),
-			),
+		'charges' => array(), /* Charge presets */
 		'drones' => array(), /* Drone typeids, typenames, volume & count */
+		'selectedpreset' => null, /* Default selected preset */
 		'dogma' => array(), /* Dogma stuff, see dogma.php */
 		'cache' => array(), /* All effect and attribute rows of fitted items */
 		);
@@ -221,6 +220,13 @@ function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
 		'typename' => $fit['cache'][$typeid]['typename'],
 		);
 
+	if($fit['selectedpreset'] === $presetname) {
+		online_charge($fit, $presetname, $slottype, $index);
+	}
+}
+
+function online_charge(&$fit, $presetname, $slottype, $index) {
+	$typeid = $fit['charges'][$presetname][$slottype][$index]['typeid'];
 	$fit['dogma']['charges'][$presetname][$slottype][$index] = array();
 	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
 		$fit['dogma']['charges'][$presetname][$slottype][$index][$attr['attributename']]
@@ -228,7 +234,7 @@ function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
 	}
 	$fit['dogma']['charges'][$presetname][$slottype][$index]['typeid']
 		=& $fit['charges'][$presetname][$slottype][$index]['typeid'];
-
+	
 	\Osmium\Dogma\eval_charge_preexpressions($fit, $presetname, $slottype, $index);
 }
 
@@ -240,11 +246,18 @@ function remove_charge(&$fit, $presetname, $slottype, $index) {
 
 	$typeid = $fit['charges'][$presetname][$slottype][$index]['typeid'];
 
-	\Osmium\Dogma\eval_charge_postexpressions($fit, $presetname, $slottype, $index);
-	unset($fit['dogma']['charges'][$presetname][$slottype][$index]);
+	if($fit['selectedpreset'] === $presetname) {
+		offline_charge($fit, $presetname, $slottype, $index);
+	}
+
 	unset($fit['charges'][$presetname][$slottype][$index]);
 
 	maybe_remove_cache($fit, $typeid);
+}
+
+function offline_charge(&$fit, $presetname, $slottype, $index) {
+		\Osmium\Dogma\eval_charge_postexpressions($fit, $presetname, $slottype, $index);
+		unset($fit['dogma']['charges'][$presetname][$slottype][$index]);
 }
 
 function remove_charge_preset(&$fit, $presetname) {
@@ -258,6 +271,33 @@ function remove_charge_preset(&$fit, $presetname) {
 
 	unset($fit['charges'][$presetname]);
 	unset($fit['dogma']['charges'][$presetname]);
+}
+
+function use_preset(&$fit, $presetname) {
+	if(!isset($fit['charges'][$presetname])) {
+		trigger_error('use_preset(): no such preset', E_USER_WARNING);
+		return;
+	}
+
+	if($fit['selectedpreset'] === $presetname) return;
+
+	if($fit['selectedpreset'] !== null) {
+		foreach($fit['charges'][$fit['selectedpreset']] as $type => $a) {
+			foreach($a as $index => $charge) {
+				offline_charge($fit, $fit['selectedpreset'], $type, $index);
+			}
+		}
+	}
+
+	$fit['selectedpreset'] = $presetname;
+
+	if($presetname !== null) {
+		foreach($fit['charges'][$fit['selectedpreset']] as $type => $a) {
+			foreach($a as $index => $charge) {
+				online_charge($fit, $presetname, $type, $index);
+			}
+		}
+	}
 }
 
 /* ----------------------------------------------------- */
@@ -594,17 +634,16 @@ function get_fit($loadoutid, $revision = null) {
 
 	add_modules_batch($fit, $modules);
 
-	$cq = \Osmium\Db\query_params('SELECT presetname, slottype, index, fittingcharges.typeid, typename FROM osmium.fittingcharges JOIN eve.invtypes ON fittingcharges.typeid = invtypes.typeid WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
-	$presets = array();
-	$fit['charges'] = array();
+	$charges = array();
+	$cq = \Osmium\Db\query_params('SELECT presetname, slottype, index, fittingcharges.typeid FROM osmium.fittingcharges JOIN eve.invtypes ON fittingcharges.typeid = invtypes.typeid WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
 	while($row = \Osmium\Db\fetch_row($cq)) {
-		$presets[$row[0]][$row[1]][$row[2]]['typeid'] = $row[3];
-		$presets[$row[0]][$row[1]][$row[2]]['typename'] = $row[4];
+		$charges[$row[0]][$row[1]][$row[2]] = $row[3];
 	}
-	$fit['charges'] = $presets;
-	if(count($fit['charges']) == 0) {
-		$fit['charges']['Default'] = array();
+
+	foreach($charges as $presetname => $preset) {
+		add_charges_batch($fit, $presetname, $preset);
 	}
+	
 
 	$dq = \Osmium\Db\query_params('SELECT typeid, quantity FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
 	$drones = array();
