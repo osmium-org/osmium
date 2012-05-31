@@ -1,18 +1,31 @@
 osmium_refresh_presets = function() {
     $('ul#presets').empty();
-    for(var i = 0; i < charge_presets.length; ++i) {
+	var i = 0;
+    for(var name in charge_presets) {
 		var delete_link = '';
-		if(i > 0) delete_link = " | <a class='delete_preset' href='javascript:void(0);'>delete</a>";
+		if((i++) > 0) delete_link = " | <a class='delete_preset' href='javascript:void(0);'>delete</a>";
 		$("ul#presets").append("<li><span><a class='update_name' href='javascript:void(0);'>update name</a>" + delete_link + "</span><strong></strong></li>");
-		$("ul#presets > li").last().find('strong').text(charge_presets[i]['name']);
+		$("ul#presets > li").last().find('strong').text(name);
     }
 };
 
 osmium_switch_preset = function() {
     $('ul#presets > li.selected').removeClass('selected');
-    $('ul#presets > li').eq(selected_preset).addClass('selected');
-    
     $("ul.chargegroup > li > select").val(-1).trigger('refresh_picture');
+
+	if(selected_preset === null) {
+		$('ul#presets > li.selected').removeClass('selected');
+		$('ul.chargegroup > li > select').attr('disabled', 'disabled');
+		return;
+	}
+
+	if(!(selected_preset in charge_presets)) return;
+	$('ul.chargegroup > li > select').removeAttr('disabled');
+
+    $('ul#presets > li > strong').filter(function() {
+		return $(this).text() === selected_preset;
+	}).parent().addClass('selected');
+
     for(var i = 0; i < osmium_slottypes.length; ++i) {
 		if(osmium_slottypes[i] in charge_presets[selected_preset]) {
 			for(j in charge_presets[selected_preset][osmium_slottypes[i]]) {
@@ -24,13 +37,13 @@ osmium_switch_preset = function() {
     }
 };
 
-osmium_commit_deleted_preset = function(index) {
+osmium_commit_deleted_preset = function(name) {
     $("img#presetsbox_spinner").css('visibility', 'visible');
 
     var opts = {
 		token: osmium_tok,
 		action: 'delete',
-		index: index
+		name: name
     };
 
     $.get('./src/ajax/update_charge_preset.php', opts, function(result) {
@@ -38,20 +51,23 @@ osmium_commit_deleted_preset = function(index) {
     });
 };
 
-osmium_commit_preset = function(index) {
+osmium_commit_preset = function(name, oldname) {
     $("img#chargegroupsbox_spinner").css('visibility', 'visible');
 
     var serialized_current_preset = {
 		token: osmium_tok,
 		action: 'update',
-		index: index
+		name: name,
+		old_name: oldname
     };
-    serialized_current_preset['name'] = charge_presets[index]['name'];
+
     for(var i = 0; i < osmium_slottypes.length; ++i) {
-		for(var j in charge_presets[index][osmium_slottypes[i]]) {
-			serialized_current_preset[osmium_slottypes[i] + j] 
-				= charge_presets[index][osmium_slottypes[i]][j]['typeid'];
-		}
+		if(osmium_slottypes[i] in charge_presets[name]) {
+			for(var j in charge_presets[name][osmium_slottypes[i]]) {
+				serialized_current_preset[osmium_slottypes[i] + j] 
+					= charge_presets[name][osmium_slottypes[i]][j]['typeid'];
+			}
+		} else charge_presets[name][osmium_slottypes[i]] = {};
     }
 
     $.get('./src/ajax/update_charge_preset.php', serialized_current_preset, function(result) {
@@ -87,7 +103,7 @@ $(function() {
 			$(this).val(new_val);
 		});
 		$(this).parent().parent().find('select').trigger('refresh_picture');
-		osmium_commit_preset(selected_preset);
+		osmium_commit_preset(selected_preset, selected_preset);
     });
     $('ul#chargegroups > li > ul.chargegroup > li > select').bind('refresh_picture', function(obj) {
 		var new_src = '';
@@ -105,19 +121,21 @@ $(function() {
 		osmium_commit_preset(selected_preset);
     });
     $('a#new_preset').click(function() {
-		charge_presets.push({ name: 'New preset' });
+		charge_presets['New preset #' + (osmium_preset_num++)] = {};
 		osmium_refresh_presets();
 		$("ul#presets > li").last().trigger('update_name');
     });
     $(document).on('click', 'ul#presets > li:hover > span > a.delete_preset', function(obj) {
-		var idx_to_delete = $(this).parent().parent().index();
-		charge_presets.splice(idx_to_delete, 1);
-		if(idx_to_delete == selected_preset) {
-			selected_preset = 0;
+		var to_delete = $(this).parent().parent().find('strong').text();
+		delete charge_presets[to_delete];
+		if(to_delete == selected_preset) {
+			var key;
+			for(key in charge_presets) break;
+			selected_preset = key;
 			osmium_switch_preset();
 		}
 		$(this).parent().parent().remove();
-		osmium_commit_deleted_preset(idx_to_delete);
+		osmium_commit_deleted_preset(to_delete);
 		obj.stopPropagation();
     });
     $(document).on('click', 'ul#presets > li:hover > span > a.update_name', function(obj) {
@@ -126,27 +144,39 @@ $(function() {
     });
     $(document).on('update_name', 'ul#presets > li', function(obj) {
 		var name = $(this).find('strong').text();
-		$(this).find('span').hide();
+		$(this).click();
+		$("ul#presets").find('span').hide();
 		$(this).find('strong').remove();
 		$(this).append("<form action='./new' method='get'><input type='text' class='new_name' /><input type='submit' value='OK' /></form>");
-		$(this).find('input.new_name').val(name).focus().select();
+		$(this).find('input.new_name').data('oldname', name)
+			.val(name).focus().select();
     });
     $(document).on('submit', 'ul#presets > li > form', function(obj) {
-		var new_name = $(this).find('input.new_name').val();
-		charge_presets[selected_preset]['name'] = new_name;
+		var input = $(this).find('input.new_name');
 		var li = $(this).parent();
+		var new_name;
+		var old_name;
+		old_name = $(input).data('oldname');
 		$(this).remove();
 		li.append('<strong></strong>');
-		li.find('strong').text(new_name);
-		li.find('span').show();
-		osmium_commit_preset(li.index());
+		li.find('strong').text($(input).val());
+		new_name = li.find('strong').text();
+		$("ul#presets").find('span').show();
+		if(new_name !== old_name) {
+			charge_presets[new_name] = charge_presets[old_name];
+			delete charge_presets[old_name];
+		}
+		osmium_commit_preset(new_name, old_name);
+		li.click();
+		selected_preset = new_name;
 		return false;
     });
     $(document).on('click', 'ul#presets > li', function(obj) {
-		selected_preset = $(this).index();
+		selected_preset = $(this).find('strong').text();
 		osmium_switch_preset();
     });
 
     osmium_refresh_presets();
     osmium_switch_preset();
+	$('ul#presets > li').first().click();
 });

@@ -263,6 +263,10 @@ function offline_charge(&$fit, $presetname, $slottype, $index) {
 function remove_charge_preset(&$fit, $presetname) {
 	if(!isset($fit['charges'][$presetname])) return;
 
+	if($fit['selectedpreset'] === $presetname) {
+		use_preset($fit, null); /* Don't use any preset at all */
+	}
+
 	foreach($fit['charges'][$presetname] as $type => $a) {
 		foreach($a as $index => $charge) {
 			remove_charge($fit, $presetname, $type, $index);
@@ -274,7 +278,7 @@ function remove_charge_preset(&$fit, $presetname) {
 }
 
 function use_preset(&$fit, $presetname) {
-	if(!isset($fit['charges'][$presetname])) {
+	if($presetname !== null && !isset($fit['charges'][$presetname])) {
 		trigger_error('use_preset(): no such preset', E_USER_WARNING);
 		return;
 	}

@@ -258,7 +258,7 @@ function print_charge_presetsbox() {
 function print_charge_groups() {
 	echo "<div id='chargegroupsbox'>\n<h2 class='has_spinner'>Charge groups";
 	echo "<img src='./static/icons/spinner.gif' id='chargegroupsbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Select multiple items by dragging or using Ctrl)</em>\n</h2>\n";
+	echo "<em class='help'>(Select multiple items by dragging or using <kbd>Ctrl</kbd>)</em>\n</h2>\n";
   
 	\Osmium\Forms\print_form_begin();
 	echo "<tr><td colspan='2'>\n<ul id='chargegroups'>\n";
@@ -280,9 +280,7 @@ function get_charges() {
 	$typeids = array();
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $k) {
-			if(is_array($k)) {
-				$typeids[$k['typeid']] = true;
-			}
+			$typeids[$k['typeid']] = true;
 		}
 	}
 
@@ -352,7 +350,9 @@ function charges_select() {
 	print_charge_groups();
 
 	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<script>\nvar charge_presets = ".json_encode($fit['charges']).";\nvar selected_preset = 0;\n</script>\n";
+	echo "<script>\nvar charge_presets = ".json_encode($fit['charges'], JSON_FORCE_OBJECT)
+		.";\nvar selected_preset = ".json_encode($fit['selectedpreset'])
+		.";\n var osmium_preset_num = ".(count($fit['charges']) + 1).";\n</script>\n";
 
 	\Osmium\Chrome\print_js_snippet('new_fitting_charges');
 }

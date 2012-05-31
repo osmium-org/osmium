@@ -32,20 +32,24 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 $fit = \Osmium\State\get_state('new_fit', array());
 
 if($_GET['action'] == 'update') {
-	$idx = intval($_GET['index']);
-	$fit['charges'][$idx]['name'] = $_GET['name'];
-	foreach(\Osmium\Fit\get_slottypes() as $type) {
-		$i = 0;
-		$fit['charges'][$idx][$type] = array();
-		for($i = 0; $i < 16; ++$i) {
-			if(!isset($_GET[$type.$i])) continue;
-			$fit['charges'][$idx][$type][$i]['typeid'] = intval($_GET[$type.$i]);
-		}
+	$name = $_GET['name'];
+	$oldname = isset($_GET['old_name']) ? $_GET['old_name'] : $name;
+
+	\Osmium\Fit\remove_charge_preset($fit, $oldname);
+
+	$slots = implode('|', \Osmium\Fit\get_slottypes());
+	$charges = array();
+
+	foreach($_GET as $k => $v) {
+		if(!preg_match('%('.$slots.')([0-9]+)%', $k, $matches)) continue;
+		list(, $type, $index) = $matches;
+		$charges[$type][$index] = intval($v);
 	}
+
+	\Osmium\Fit\add_charges_batch($fit, $name, $charges);
 } else if($_GET['action'] == 'delete') {
-	$idx = intval($_GET['index']);
-	unset($fit['charges'][$idx]);
-	$fit['charges'] = array_values($fit['charges']); /* Reorder the numeric keys */
+	$name = $_GET['name'];
+	unset($fit['charges'][$name]);
 }
 
 \Osmium\State\put_state('new_fit', $fit);
