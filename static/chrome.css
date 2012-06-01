@@ -898,7 +898,7 @@ div#vloadoutbox > div.slots > ul > li > a.toggle {
 
 div#loadoutbox > div.loadout_slot_cat.stateful > ul > li > a.toggle,
 div#vloadoutbox > div.slots.stateful > ul > li > a.toggle {
-	display: block;
+	display: inline;
 }
 
 div#loadoutbox > div.loadout_slot_cat.stateful > ul > li > a.toggle > img,
