@@ -69,6 +69,16 @@ function get_state_names() {
 		);
 }
 
+function get_state_categories() {
+	return array(
+		null => array(),
+		STATE_OFFLINE => array(0),
+		STATE_ONLINE => array(0, 4),
+		STATE_ACTIVE => array(0, 4, 1, 2, 3),
+		STATE_OVERLOADED => array(0, 4, 1, 2, 3, 5),
+		);
+}
+
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(), /* Ship typeid, typename etc. */
@@ -218,13 +228,7 @@ function remove_module(&$fit, $index, $typeid) {
 }
 
 function change_module_state(&$fit, $index, $typeid, $state) {
-	static $categories = array(
-		null => array(),
-		STATE_OFFLINE => array(0),
-		STATE_ONLINE => array(0, 4),
-		STATE_ACTIVE => array(0, 4, 1, 2, 3),
-		STATE_OVERLOADED => array(0, 4, 1, 2, 3, 5),
-		);
+	$categories = get_state_categories();
 
 	get_attributes_and_effects(array($typeid), $fit['cache']);
 	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
@@ -472,6 +476,58 @@ function remove_drone(&$fit, $typeid, $quantity = 1) {
 
 /* ----------------------------------------------------- */
 
+function get_capacitor_stability(&$fit) {
+	$categories = get_state_categories();
+
+	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
+	$capacity = \Osmium\Dogma\get_ship_attribute($fit, 'capacitorCapacity');
+	$tau = \Osmium\Dogma\get_ship_attribute($fit, 'rechargeRate') / 5.0;
+
+	$usage_rate = 0;
+	foreach($fit['modules'] as $type => $a) {
+		foreach($a as $index => $module) {
+			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
+				$effectdata = $fit['cache']['__effects'][$effect['effectname']];
+
+				if(!isset($effectdata['durationattributeid']) 
+				   || !isset($effectdata['dischargeattributeid'])) continue;
+
+				if(!in_array($effectdata['effectcategory'], $categories[$module['state']])) continue;
+
+				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
+					$fit['cache']['__attributes'][$effectdata['durationattributeid']]['attributename']);
+
+				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
+					$fit['cache']['__attributes'][$effectdata['dischargeattributeid']]['attributename']);
+
+				$usage_rate += $discharge / $duration;
+			}
+		}
+	}
+
+	$X = $usage_rate;
+	/* I got the solution for cap stability by solving the quadratic equation:
+	   dC   /       C        C   \   2Cmax
+	   -- = |sqrt(-----) - ----- | x -----
+	   dt   \     Cmax     Cmax  /    Tau
+
+	           Cmax - X*Tau + sqrt(Cmax^2 - 2X*Tau*Cmax)          dC
+	   ==> C = ----------------------------------------- with X = --
+	                             2                                dt
+	   
+	   A simple check is that, for dC/dt = 0, the two solutions should be 0 and Cmax. */
+	$delta = $capacity * $capacity - 2 * $tau * $X * $capacity;
+	if($delta < 0) {
+		/* TODO figure a way to estimate time it takes to deplete cap */
+		return array(false, 0);
+	} else {
+		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
+		return array(true, 100 * $C / $capacity);
+	}
+}
+
+/* ----------------------------------------------------- */
+
 function prune_cache(&$fit) {
 	foreach($fit['cache'] as $typeid => $bla) {
 		maybe_remove_cache($fit, $typeid);
@@ -586,6 +642,7 @@ function get_attributes_and_effects($typeids, &$out) {
 	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
 		$tid = $row['typeid'];
 
+		$out['__attributes'][$row['attributename']]['attributename'] = $row['attributename'];
 		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'];
 		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'];
 		$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];

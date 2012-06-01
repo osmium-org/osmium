@@ -1,0 +1,85 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+/* Test the cap stability algorithm. */
+
+\Osmium\Fit\create($fit);
+\Osmium\Fit\select_ship($fit, 11978); /* Scimitar */
+\Osmium\Fit\add_module($fit, 0, 8641, \Osmium\Fit\STATE_ACTIVE); /* Large S95a Partial Shield Transporter */
+\Osmium\Fit\add_module($fit, 1, 8641, \Osmium\Fit\STATE_ACTIVE);
+\Osmium\Fit\add_module($fit, 2, 8641, \Osmium\Fit\STATE_ACTIVE);
+\Osmium\Fit\add_module($fit, 3, 8641, \Osmium\Fit\STATE_ACTIVE);
+
+function print_capstability($fit) {
+	list($is_cap_stable, $number) = \Osmium\Fit\get_capacitor_stability($fit);
+	if($is_cap_stable) {
+		echo "Stable at ".round($number, 1)."%\n";
+	} else {
+		echo "Depletes in ".$number."s\n";
+	}
+}
+
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 0, 31372); /* Medium CCC */
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 1, 31372);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 0, 2032); /* Cap Recharger II */
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 1, 2032);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 2, 2032);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 3, 2032);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 4, 2032);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 0, 1447); /* Capacitor Power Relay II */
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 1, 1447);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 2, 1447);
+print_capstability($fit);
+
+\Osmium\Fit\add_module($fit, 3, 1447);
+print_capstability($fit);
+
+\Osmium\Fit\change_module_state($fit, 0, 8641, \Osmium\Fit\STATE_ONLINE);
+print_capstability($fit);
+
+\Osmium\Fit\change_module_state($fit, 1, 8641, \Osmium\Fit\STATE_ONLINE);
+print_capstability($fit);
+
+\Osmium\Fit\change_module_state($fit, 2, 8641, \Osmium\Fit\STATE_ONLINE);
+print_capstability($fit);
+
+\Osmium\Fit\change_module_state($fit, 3, 8641, \Osmium\Fit\STATE_ONLINE);
+print_capstability($fit);
