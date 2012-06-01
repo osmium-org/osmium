@@ -19,22 +19,10 @@
 
 require __DIR__.'/../inc/root.php';
 
-const BATCHSIZE = 100;
-
 $i = 0;
 $r = \Osmium\Search\query_select_searchdata('ORDER BY loadoutid ASC');
 
-\Osmium\Search\query('BEGIN;');
-
 while($row = \Osmium\Db\fetch_assoc($r)) {
 	\Osmium\Search\index($row);
-
-	if(((++$i) % BATCHSIZE) == 0) {
-		\Osmium\Search\query('COMMIT;');
-		echo ".";
-		\Osmium\Search\query('BEGIN;');
-	}
+	echo $row['loadoutid']."\n";
 }
-
-\Osmium\Search\query('COMMIT;');
-echo ".\n";

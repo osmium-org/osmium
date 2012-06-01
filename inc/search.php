@@ -41,10 +41,10 @@ function query($q) {
 }
 
 function escape($string) {
-	/* Can't use mysqli_real_escape_string, see: http://sphinxsearch.com/bugs/view.php?id=616 */
-	/* FIXME ASAP! I can't believe I'm committing such a hack. */
-	return pg_escape_string($string);
-	/*return mysqli_real_escape_string(get_link(), $string);*/
+	/* Taken from the GPL PHP API of Sphinx */
+	$from = array ('\\', '(',')','|','-','!','@','~',"'",'&', '/', '^', '$', '=');
+	$to   = array ('\\\\', '\(','\)','\|','\-','\!','\@','\~','\\\'', '\&', '\/', '\^', '\$', '\=');
+	return str_replace ($from, $to, $string);
 }
 
 function index($loadout) {
