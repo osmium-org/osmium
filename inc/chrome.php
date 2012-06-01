@@ -166,10 +166,14 @@ function format_duration($seconds) {
 
 function format_capacitor($array) {
 	/* $array is returned by get_capacitor_stability */
-	list($capacity, $is_stable, $data) = $array;
+	list($rate, $is_stable, $data) = $array;
+
+	$rate = round(-$rate * 1000, 1).' GJ/s';
+	if($rate > 0) $rate = '+'.((string)$rate);
+
 	if($is_stable) {
-		return "Stable at ".round($data, 1)."%";
+		return "Stable at ".round($data, 1)."% ($rate)";
 	} else {
-		return "Lasts ".format_duration($data);
+		return "Lasts ".format_duration($data)." ($rate)";
 	}
 }

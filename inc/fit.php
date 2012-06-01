@@ -490,13 +490,26 @@ function get_capacitor_stability(&$fit) {
 			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
 				$effectdata = $fit['cache']['__effects'][$effect['effectname']];
 
-				if(!isset($effectdata['durationattributeid']) 
-				   || !isset($effectdata['dischargeattributeid'])) continue;
-
 				if(!in_array($effectdata['effectcategory'], $categories[$module['state']])) continue;
+				if(!isset($effectdata['durationattributeid'])) continue;
 
 				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
 					$fit['cache']['__attributes'][$effectdata['durationattributeid']]['attributename']);
+
+				if($effect['effectname'] == 'powerBooster') {
+					/* Special case must be hardcoded (eg. cap boosters) */
+					if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
+						continue;
+					}
+
+					$restored = \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'],
+					                                               $type, $index, 'capacitorBonus', false);
+
+					$usage_rate -= $restored / $duration;
+					continue;
+				}
+
+				if(!isset($effectdata['dischargeattributeid'])) continue;
 
 				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
 					$fit['cache']['__attributes'][$effectdata['dischargeattributeid']]['attributename']);
@@ -506,7 +519,7 @@ function get_capacitor_stability(&$fit) {
 		}
 	}
 
-	$X = $usage_rate;
+	$X = max(0, $usage_rate);
 	/* I got the solution for cap stability by solving the quadratic equation:
 	   dC   /       C        C   \   2Cmax
 	   -- = |sqrt(-----) - ----- | x -----
@@ -536,10 +549,10 @@ function get_capacitor_stability(&$fit) {
 			$t += $step;
 		}
 
-		return array($capacity, false, $t / 1000);
+		return array($usage_rate, false, $t / 1000);
 	} else {
 		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
-		return array($capacity, true, 100 * $C / $capacity);
+		return array($usage_rate, true, 100 * $C / $capacity);
 	}
 }
 
