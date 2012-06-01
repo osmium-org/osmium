@@ -10,7 +10,8 @@ html, body, input[type='submit'], button {
 
 textarea, input[type='text'], input[type='password'], input[type='url'], select, optgroup, option,
 div#fittags > ul > li, ol.loadout_sr > li > ul.tags > li {
-    font-family: monospace;
+    font-family: "Inconsolata", monospace;
+	font-size: 90%;
 }
 
 div#wrapper {
