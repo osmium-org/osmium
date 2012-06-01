@@ -20,6 +20,9 @@ namespace Osmium\Page\ImportLoadouts;
 
 const MAX_FILESIZE_PRETTY = '1 MiB';
 const MAX_FILESIZE = 1048576;
+const MAX_FITS = 25;
+
+ini_set('memory_limit', '256M');
 
 require __DIR__.'/../inc/root.php';
 
@@ -78,6 +81,10 @@ if(isset($_FILES['eve_xml_file']) || isset($_POST['eve_xml_url'])
 
 			if(isset($xml->fitting)) {
 				foreach($xml->fitting as $fitting) {
+					if(count($fits) >= MAX_FITS) {
+						$errors[] = 'Input contained more than '.MAX_FITS.' fits; only showing the first '.MAX_FITS.'.';
+						break;
+					}
 					if($fit = \Osmium\Fit\try_parse_fit_from_eve_xml($fitting, $errors)) {
 						$fits[] = $fit;
 					}
@@ -109,8 +116,15 @@ if(isset($_POST['finalize_import'])) {
 	foreach($fits as $i => $fit) {
 		if(isset($_POST['selectfit'][$i]) && $_POST['selectfit'][$i] == 'on') {
 			\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
-			$imported[] = $fit;
+			$imported[] = array(
+				$fit['metadata']['loadoutid'],
+				$fit['metadata']['name'], 
+				$fit['metadata']['view_permission'],
+				);
 		}
+		/* Try to free some memory */
+		unset($fits[$i]);
+		unset($fit);
 	}
 
 	\Osmium\State\put_state('import_fits', array());
@@ -121,9 +135,9 @@ if(isset($_POST['finalize_import'])) {
 		
 		echo "<h1>Import complete!</h1>\n<p>The following loadouts were imported:</p>\n<ol>\n";
 		
-		foreach($imported as $fit) {
-			echo "<li><a href='./loadout/".$fit['metadata']['loadoutid']."'>";
-			\Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $a);
+		foreach($imported as $data) {
+			echo "<li><a href='./loadout/".$data[0]."'>";
+			\Osmium\Chrome\print_loadout_title($data[1], $data[2], $a);
 			echo "</a></li>\n";
 		}
 
@@ -155,7 +169,7 @@ if(count($errors) > 0 || count($fits) > 0) {
 		\Osmium\Forms\print_form_begin();
 		
 		foreach($fits as $i => $fit) {
-			\Osmium\Forms\print_checkbox("<span class='fitname'>".htmlspecialchars($fit['metadata']['name'])."</span> (".$fit['hull']['typename'].")", 'selectfit['.$i.']', null, true);
+			\Osmium\Forms\print_checkbox("<span class='fitname'>".htmlspecialchars($fit['metadata']['name'])."</span> (".$fit['ship']['typename'].")", 'selectfit['.$i.']', null, true);
 		}
 
 		\Osmium\Forms\print_submit('Import selected loadout(s)', 'finalize_import');
