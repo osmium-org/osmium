@@ -477,6 +477,7 @@ function remove_drone(&$fit, $typeid, $quantity = 1) {
 /* ----------------------------------------------------- */
 
 function get_capacitor_stability(&$fit) {
+	static $step = 250;
 	$categories = get_state_categories();
 
 	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
@@ -518,8 +519,24 @@ function get_capacitor_stability(&$fit) {
 	   A simple check is that, for dC/dt = 0, the two solutions should be 0 and Cmax. */
 	$delta = $capacity * $capacity - 2 * $tau * $X * $capacity;
 	if($delta < 0) {
-		/* TODO figure a way to estimate time it takes to deplete cap */
-		return array(false, 0);
+		$t = 0;
+		$capacitor = $capacity; /* Start with full capacitor */
+
+		/* Simulate what happens with the Runge-Kutta method (RK4) */
+		$f = function($t, $c) use($capacity, $tau, $X) {
+			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau - $X;
+		};
+
+		while($capacitor > 0) {
+			$k1 = $f($t, $capacitor);
+			$k2 = $f($t + 0.5 * $step, $capacitor + 0.5 * $step * $k1);
+			$k3 = $f($t + 0.5 * $step, $capacitor + 0.5 * $step * $k2);
+			$k4 = $f($t + $step, $capacitor + $step * $k3);
+			$capacitor += $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6;
+			$t += $step;
+		}
+
+		return array(false, $t / 1000);
 	} else {
 		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
 		return array(true, 100 * $C / $capacity);
