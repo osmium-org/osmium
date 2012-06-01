@@ -536,10 +536,10 @@ function get_capacitor_stability(&$fit) {
 			$t += $step;
 		}
 
-		return array(false, $t / 1000);
+		return array($capacity, false, $t / 1000);
 	} else {
 		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
-		return array(true, 100 * $C / $capacity);
+		return array($capacity, true, 100 * $C / $capacity);
 	}
 }
 

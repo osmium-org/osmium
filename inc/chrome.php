@@ -146,3 +146,28 @@ function format_number($num) {
 		return $sign.round($num / 1000000, 2).'m';
 	}
 }
+
+function format_duration($seconds) {
+	$s = fmod($seconds, 60);
+	$m = round($seconds - $s) / 60;
+
+	$s = floor($s);
+
+	if($s == 0 && $m == 0) return '0s';
+	else {
+		$k = '';
+		if($m != 0) { $k .= $m.'m'; }
+		if($s != 0) { $k .= $s.'s'; }
+		return $k;
+	}
+}
+
+function format_capacitor($array) {
+	/* $array is returned by get_capacitor_stability */
+	list($capacity, $is_stable, $data) = $array;
+	if($is_stable) {
+		return "Stable at ".round($data, 1)."%";
+	} else {
+		return "Lasts ".format_duration($data);
+	}
+}

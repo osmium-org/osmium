@@ -200,6 +200,7 @@ function print_modulelist() {
 	echo "<th><img src='./static/icons/cpu.png' alt='CPU' title='CPU' /><strong id='cpu'></strong></th>\n";
 	echo "<th><img src='./static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><strong id='power'></strong></th>\n";
 	echo "<th><img src='./static/icons/calibration.png' alt='Calibration' title='Calibration' /><strong id='upgradecapacity'></strong></th>\n";
+	echo "<th><img src='./static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><strong id='capacitorstability'></strong></th>\n";
 	echo "</tr>\n</table>\n";
 
 	foreach($categories as $type => $fname) {

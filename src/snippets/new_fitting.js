@@ -136,6 +136,7 @@ osmium_loadout_load = function(json) {
 	osmium_setstrong(json['attributes']['ship'], 'cpu', $("strong#cpu"), true);
 	osmium_setstrong(json['attributes']['ship'], 'power', $("strong#power"), true);
 	osmium_setstrong(json['attributes']['ship'], 'upgradecapacity', $("strong#upgradecapacity"), true);
+	$("strong#capacitorstability").text(json['attributes']['ship']['capacitorstability']);
 };
 
 osmium_loadout_commit = function() {

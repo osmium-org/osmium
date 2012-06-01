@@ -139,13 +139,15 @@ echo "</ul>\n";
 
 echo "<ul class='computed_attributes'>\n";
 
+echo "<li>\n";
 $slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 $slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
-echo "<li>\n<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n";
-
+echo "<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n";
 $slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 $slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
-echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n</li>\n";
+echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n";
+echo "<p class='oneline'><img src='../static/icons/capacitor.png' alt='Capacitor' title='Capacitor' />".\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit))."</p>\n";
+echo "</li>\n";
 
 echo "<li>\n";
 $cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');

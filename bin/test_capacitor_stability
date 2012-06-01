@@ -29,11 +29,12 @@ require __DIR__.'/../inc/root.php';
 \Osmium\Fit\add_module($fit, 3, 8641, \Osmium\Fit\STATE_ACTIVE);
 
 function print_capstability($fit) {
-	list($is_cap_stable, $number) = \Osmium\Fit\get_capacitor_stability($fit);
+	list($capacity, $is_cap_stable, $number) = \Osmium\Fit\get_capacitor_stability($fit);
+	$capacity = \Osmium\Chrome\format_number($capacity);
 	if($is_cap_stable) {
-		echo "Stable at ".round($number, 1)."%\n";
+		echo "$capacity GJ\tStable at ".round($number, 1)."%\n";
 	} else {
-		echo "Depletes in ".$number."s\n";
+		echo "$capacity GJ\tDepletes in ".$number."s\n";
 	}
 }
 

@@ -73,6 +73,9 @@ function get_attributes_step_modules_select($fit) {
 	$attributes['ship']['upgradecapacity'] = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
 	$attributes['ship']['usedupgradecapacity'] = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 
+	$attributes['ship']['capacitorstability'] = 
+		\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit));
+
 	return $attributes;
 }
 
