@@ -57,16 +57,37 @@ osmium_populate_slots = function(json, slot_type) {
 	var j = 0;
     for(var i in json['modules'][slot_type]) {
 		var c = '';
+		var stname;
+		var stpicture;
 		if((j++) >= max_slots) c = ' overflow';
+
+		if(json['modules'][slot_type][i]['state'] == 0) {
+			stname = 'Offline';
+			stpicture = 'offline.png';
+		} else if(json['modules'][slot_type][i]['state'] == 1) {
+			stname = 'Online';
+			stpicture = 'online.png';
+		} else if(json['modules'][slot_type][i]['state'] == 2) {
+			stname = 'Active';
+			stpicture = 'active.png';
+		} else if(json['modules'][slot_type][i]['state'] == 3) {
+			stname = 'Overloaded';
+			stpicture = 'overloaded.png';
+		}
+
 		$("div#" + slot_type + "_slots > ul").append(
 			"<li class='module" 
 				+ c + "' data-slottype='" 
 				+ slot_type
 				+ "' data-typeid='" + json['modules'][slot_type][i]['typeid'] 
+				+ "' data-state='" + json['modules'][slot_type][i]['state'] 
 				+ "' data-index='" + i
 				+ "'><img src='http://image.eveonline.com/Type/" 
 				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
-				+ json['modules'][slot_type][i]['typename'] + "</li>\n"
+				+ json['modules'][slot_type][i]['typename'] 
+				+ "<a class='toggle' href='javascript:void(0);' title='" + stname 
+				+ "; click to toggle'><img src='./static/icons/" 
+				+ stpicture + "' alt='" + stname + "' /></a></li>\n"
 		);
     }
     for(var i = used_slots; i < max_slots; ++i) {
@@ -124,6 +145,7 @@ osmium_loadout_commit = function() {
     for(var i = 0; i < osmium_slottypes.length; ++i) {
 		$("div#" + osmium_slottypes[i] + "_slots > ul > li.module").each(function() {
 			params[osmium_slottypes[i] + $(this).data('index')] = $(this).data('typeid');
+			params[osmium_slottypes[i] + $(this).data('index') + '_state'] = $(this).data('state');
 		});
     }
     $.getJSON('./src/json/update_modules.php', params, function(json) {
@@ -140,6 +162,19 @@ osmium_loadout_commit_delete = function(index, typeid) {
 		typeid: typeid
 	};
     $.getJSON('./src/json/delete_module.php', params, function(json) {
+		osmium_loadout_load(json);
+		$("img#loadoutbox_spinner").css('visibility', 'hidden');
+    });
+}
+
+osmium_loadout_commit_toggle = function(index, typeid) {
+   $("img#loadoutbox_spinner").css("visibility", "visible");
+    var params = {
+		token: osmium_tok,
+		index: index,
+		typeid: typeid
+	};
+    $.getJSON('./src/json/toggle_module_state.php', params, function(json) {
 		osmium_loadout_load(json);
 		$("img#loadoutbox_spinner").css('visibility', 'hidden');
     });
@@ -223,6 +258,11 @@ $(function() {
 			phony.first().remove();
 		}
 		osmium_loadout_commit();
+    });
+
+    $(document).on('click', "div.loadout_slot_cat.stateful > ul > li.module > a.toggle", function(obj) {
+		osmium_loadout_commit_toggle($(this).parent().data('index'), $(this).parent().data('typeid'));
+		obj.stopPropagation();
     });
 
     $(document).on('dblclick', "div.loadout_slot_cat > ul > li.module", function(obj) {

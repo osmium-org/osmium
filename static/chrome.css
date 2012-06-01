@@ -664,6 +664,7 @@ div#vloadoutbox > div.slots > ul > li {
     border-top: 1px dashed #888;
     padding-top: 0.125em;
     padding-bottom: 0.125em;
+	position: relative;
 }
 
 div#vloadoutbox > div.slots > ul > li:first-child {
@@ -693,7 +694,7 @@ div#metadatabox > ul > li > ul > li > a.active {
 }
 
 div#vloadoutbox > div#vdronebay > ul > li {
-    width: 15em;
+    width: 20em;
     display: inline-block;
     padding: 0.125em;
 }
@@ -888,3 +889,26 @@ p.overflow4 { background-color: rgba(255, 51, 0, 0.4); }
 p.overflow3 { background-color: rgba(255, 51, 0, 0.3); }
 p.overflow2 { background-color: rgba(255, 51, 0, 0.2); }
 p.overflow1 { background-color: rgba(255, 51, 0, 0.1); }
+
+div#loadoutbox > div.loadout_slot_cat > ul > li > a.toggle,
+div#vloadoutbox > div.slots > ul > li > a.toggle {
+	display: none;
+}
+
+div#loadoutbox > div.loadout_slot_cat.stateful > ul > li > a.toggle,
+div#vloadoutbox > div.slots.stateful > ul > li > a.toggle {
+	display: block;
+}
+
+div#loadoutbox > div.loadout_slot_cat.stateful > ul > li > a.toggle > img,
+div#vloadoutbox > div.slots.stateful > ul > li > a.toggle > img {
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 16px;
+}
+
+div#loadoutbox > div.loadout_slot_cat > ul > li,
+div#vloadoutbox > div.slots.stateful > ul > li {
+	padding-right: 16px;
+}

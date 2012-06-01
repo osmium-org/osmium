@@ -192,6 +192,7 @@ if(count($fit['metadata']['tags']) > 0) {
 echo "</header>\n";
 
 $aslots = \Osmium\Fit\get_attr_slottypes();
+$astates = \Osmium\Fit\get_state_names();
 foreach(\Osmium\Fit\get_slottypes() as $type) {
 	if(!isset($fit['modules'][$type])) continue;
 	$modules = $fit['modules'][$type];
@@ -201,8 +202,9 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 	if(count($modules) == 0 && $slotcount == 0) continue;
 	
 	$used = count($modules);
+	$class = in_array($type, \Osmium\Fit\get_stateful_slottypes()) ? ' stateful' : '';
 
-	echo "<div id='{$type}_slots' class='slots'>\n<h3>".ucfirst($type)." slots <small class='capacity'>$used / $slotcount</small></h3>\n<ul>\n";
+	echo "<div id='{$type}_slots' class='slots$class'>\n<h3>".ucfirst($type)." slots <small class='capacity'>$used / $slotcount</small></h3>\n<ul>\n";
 
 	foreach($modules as $index => $mod) {
 		$charge = '';
@@ -210,7 +212,9 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$fit['charges'][$preset][$type][$index]['typeid']."_32.png' alt='' />".$fit['charges'][$preset][$type][$index]['typename'];
 		}
 
-		echo "<li class='index_$index'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span></li>\n";
+		list($stname, $stpicture) = $astates[$mod['state']];
+
+		echo "<li class='index_$index'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span><a class='toggle' href='javascript:void(0);' title='$stname'><img src='../static/icons/$stpicture' alt='$stname' /></a></li>\n";
 	}
 
 	for($i = count($modules); $i < $slotcount; ++$i) {

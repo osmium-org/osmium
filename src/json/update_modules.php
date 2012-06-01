@@ -34,9 +34,12 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$slots = implode('|', \Osmium\Fit\get_slottypes());
 	$j = 0;
 	foreach($_GET as $k => $v) {
-		if(!preg_match('%('.$slots.')([0-9]+)%', $k, $matches)) continue;
+		if(!preg_match('%^('.$slots.')([0-9]+)$%', $k, $matches)) continue;
 		list(, $type, $index) = $matches;
-		$modules[$type][$index] = $v;
+		
+		$m = isset($_GET[$k.'_state']) ? array($v, intval($_GET[$k.'_state'])) : $v;
+
+		$modules[$type][$index] = $m;
 		$order[$type][$index] = (++$j);
 	}
 

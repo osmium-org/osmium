@@ -31,6 +31,12 @@ function printr($stuff) {
 	echo "</pre>\n";
 }
 
+function fprintr($stuff) {
+	static $f = null;
+	if($f === null) $f = fopen('/tmp/osmium', 'wb');
+	fwrite($f, print_r($stuff, true));
+}
+
 function get_ini_setting($key) {
 	static $cnf = null;
 	if($cnf === null) {

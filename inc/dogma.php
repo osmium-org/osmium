@@ -94,7 +94,7 @@ function eval_skill_preexpressions(&$fit) {
 	\Osmium\State\put_cache('dogma_all_skills', $fit['dogma']);
 }
 
-function eval_module_preexpressions(&$fit, $moduletype, $index) {
+function eval_module_preexpressions(&$fit, $moduletype, $index, array $categories) {
 	$fit['dogma']['source'] = array('module', $moduletype, $index);
 	$fit['dogma']['self'] =& $fit['dogma']['modules'][$moduletype][$index];
 	$fit['dogma']['other'] =& $fit['dogma']['self'];
@@ -103,6 +103,10 @@ function eval_module_preexpressions(&$fit, $moduletype, $index) {
 	 * for typeid 4248 */
 
 	foreach($fit['cache'][$fit['modules'][$moduletype][$index]['typeid']]['effects'] as $effect) {
+		if(!in_array($fit['cache']['__effects'][$effect['effectname']]['effectcategory'], $categories)) {
+			continue;
+		}
+
 		if(!isset($effect['preexp'])) {
 			trigger_error('eval_module_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
@@ -115,12 +119,16 @@ function eval_module_preexpressions(&$fit, $moduletype, $index) {
 	unset($fit['dogma']['other']);
 }
 
-function eval_module_postexpressions(&$fit, $moduletype, $index) {
+function eval_module_postexpressions(&$fit, $moduletype, $index, array $categories) {
 	$fit['dogma']['source'] = array('module', $moduletype, $index);
 	$fit['dogma']['self'] =& $fit['dogma']['modules'][$moduletype][$index];
 	$fit['dogma']['other'] =& $fit['dogma']['self'];
 
 	foreach($fit['cache'][$fit['modules'][$moduletype][$index]['typeid']]['effects'] as $effect) {
+		if(!in_array($fit['cache']['__effects'][$effect['effectname']]['effectcategory'], $categories)) {
+			continue;
+		}
+
 		if(!isset($effect['postexp'])) {
 			trigger_error('eval_module_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
 			continue;

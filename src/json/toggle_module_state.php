@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Json\DeleteModule;
+namespace Osmium\Json\ToggleModuleState;
 
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
@@ -32,7 +32,7 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$index = intval($_GET['index']);
 	$typeid = intval($_GET['typeid']);
 
-	\Osmium\Fit\remove_module($fit, $index, $typeid);
+	\Osmium\Fit\toggle_module_state($fit, $index, $typeid);
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\Chrome\return_json(array(
 		                           'ship' => $fit['ship'],

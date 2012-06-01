@@ -34,10 +34,20 @@ const EDIT_ALLIANCE_ONLY = 3;
 const VISIBILITY_PUBLIC = 0;
 const VISIBILITY_PRIVATE = 1;
 
+const STATE_OFFLINE = 0;
+const STATE_ONLINE = 1;
+const STATE_ACTIVE = 2;
+const STATE_OVERLOADED = 3;
+
 /* ----------------------------------------------------- */
 
 function get_slottypes() {
 	return array('high', 'medium', 'low', 'rig', 'subsystem');
+}
+
+function get_stateful_slottypes() {
+	/* Rigs and subsystems cannot be offlined/activated/overloaded */
+	return array('high', 'medium', 'low');
 }
 
 function get_attr_slottypes() {
@@ -47,6 +57,15 @@ function get_attr_slottypes() {
 		'low' => 'lowSlots',
 		'rig' => 'upgradeSlotsLeft',
 		'subsystem' => 'maxSubSystems'
+		);
+}
+
+function get_state_names() {
+	return array(
+		STATE_OFFLINE => array('Offline', 'offline.png'),
+		STATE_ONLINE => array('Online', 'online.png'),
+		STATE_ACTIVE => array('Active', 'active.png'),
+		STATE_OVERLOADED => array('Overloaded', 'overloaded.png'),
 		);
 }
 
@@ -116,7 +135,10 @@ function select_ship(&$fit, $new_typeid) {
 function add_modules_batch(&$fit, $modules) {
 	$typeids = array();
 	foreach($modules as $type => $a) {
-		foreach($a as $index => $typeid) {
+		foreach($a as $index => $magic) {
+			if(is_array($magic)) $typeid = $magic[0];
+			else $typeid = $magic;
+
 			$typeids[$typeid] = true;
 		}
 	}
@@ -124,13 +146,20 @@ function add_modules_batch(&$fit, $modules) {
 	get_attributes_and_effects(array_keys($typeids), $fit['cache']);
 
 	foreach($modules as $type => $a) {
-		foreach($a as $index => $typeid) {
-			add_module($fit, $index, $typeid);
+		foreach($a as $index => $magic) {
+			if(is_array($magic)) {
+				/* Got a typeid + state */
+				list($typeid, $state) = $magic;
+				add_module($fit, $index, $typeid, $state);
+			} else {
+				/* Got a typeid */
+				add_module($fit, $index, $magic);
+			}
 		}
 	}
 }
 
-function add_module(&$fit, $index, $typeid) {
+function add_module(&$fit, $index, $typeid, $state = null) {
 	get_attributes_and_effects(array($typeid), $fit['cache']);
 	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
 
@@ -145,6 +174,7 @@ function add_module(&$fit, $index, $typeid) {
 	$fit['modules'][$type][$index] = array(
 		'typeid' => $typeid,
 		'typename' => $fit['cache'][$typeid]['typename'],
+		'state' => null
 		);
 
 	$fit['dogma']['modules'][$type][$index] = array();
@@ -155,7 +185,12 @@ function add_module(&$fit, $index, $typeid) {
 	$fit['dogma']['modules'][$type][$index]['typeid']
 		=& $fit['modules'][$type][$index]['typeid'];
 
-	\Osmium\Dogma\eval_module_preexpressions($fit, $type, $index);
+	list($isactivable, ) = get_module_states($fit, $index, $typeid);
+	if($state === null) {
+		$state = ($isactivable && in_array($type, get_stateful_slottypes())) ? STATE_ACTIVE : STATE_ONLINE;
+	}
+
+	change_module_state($fit, $index, $typeid, $state);
 }
 
 function remove_module(&$fit, $index, $typeid) {
@@ -175,11 +210,104 @@ function remove_module(&$fit, $index, $typeid) {
 		}
 	}
 
-	\Osmium\Dogma\eval_module_postexpressions($fit, $type, $index);
+	change_module_state($fit, $index, $typeid, null);
 	unset($fit['dogma']['modules'][$type][$index]);
 	unset($fit['modules'][$type][$index]);
 
 	maybe_remove_cache($fit, $typeid);
+}
+
+function change_module_state(&$fit, $index, $typeid, $state) {
+	static $categories = array(
+		null => array(),
+		STATE_OFFLINE => array(0),
+		STATE_ONLINE => array(0, 4),
+		STATE_ACTIVE => array(0, 4, 1, 2, 3),
+		STATE_OVERLOADED => array(0, 4, 1, 2, 3, 5),
+		);
+
+	get_attributes_and_effects(array($typeid), $fit['cache']);
+	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+
+	$previous_state = $fit['modules'][$type][$index]['state'];
+
+	$added_groups = array_diff($categories[$state], $categories[$previous_state]);
+	$removed_groups = array_diff($categories[$previous_state], $categories[$state]);
+
+	\Osmium\Dogma\eval_module_postexpressions($fit, $type, $index, $removed_groups);
+	\Osmium\Dogma\eval_module_preexpressions($fit, $type, $index, $added_groups);
+
+	$fit['modules'][$type][$index]['state'] = $state;
+}
+
+function toggle_module_state(&$fit, $index, $typeid) {
+	get_attributes_and_effects(array($typeid), $fit['cache']);
+	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+	$state = $fit['modules'][$type][$index]['state'];
+
+	if($state === null) {
+		/* Should theoratically not happen, but handle it anyway */
+		change_module_state($fit, $index, $typeid, STATE_OFFLINE);
+		return;
+	} else if($state === STATE_OFFLINE) {
+		change_module_state($fit, $index, $typeid, STATE_ONLINE);
+		return;
+	}
+
+	list($isactivable, $isoverloadable) = get_module_states($fit, $index, $typeid);
+
+	if($state === STATE_ONLINE) {
+		if($isactivable) {
+			change_module_state($fit, $index, $typeid, STATE_ACTIVE);
+			return;
+		} else {
+			/* Don't check for $isoverladable, it dosen't make sense
+			 * for a non-activable module to be overloadable */
+			change_module_state($fit, $index, $typeid, STATE_OFFLINE);
+			return;
+		}
+	} else if($state === STATE_ACTIVE) {
+		if($isoverloadable) {
+			change_module_state($fit, $index, $typeid, STATE_OVERLOADED);
+			return;
+		} else {
+			change_module_state($fit, $index, $typeid, STATE_OFFLINE);
+			return;
+		}
+	} else if($state === STATE_OVERLOADED) {
+		change_module_state($fit, $index, $typeid, STATE_OFFLINE);
+		return;
+	}
+
+	/* This is serious. We're fucked up. */
+	trigger_error('toggle_module_state(): unknown module state ('.$state.')', E_USER_ERROR);
+}
+
+function get_module_states(&$fit, $index, $typeid) {
+	get_attributes_and_effects(array($typeid), $fit['cache']);
+	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+
+	$isactivable = false;
+	$isoverloadable = false;
+
+	foreach($fit['cache'][$typeid]['effects'] as $effect) {
+		$name = $effect['effectname'];
+
+		if($fit['cache']['__effects'][$name]['effectcategory'] == 1
+		   || $fit['cache']['__effects'][$name]['effectcategory'] == 2
+		   || $fit['cache']['__effects'][$name]['effectcategory'] == 3) {
+			$isactivable = true;
+			continue;
+		}
+
+		if($fit['cache']['__effects'][$name]['effectcategory'] == 5) {
+			$isoverloadable = true;
+			$isactivable = true;
+			break;
+		}
+	}
+
+	return array($isactivable, $isoverloadable);
 }
 
 function add_charges_batch(&$fit, $presetname, $charges) {
@@ -382,6 +510,10 @@ function get_module_slottype($effects) {
 }
 
 function get_attributes_and_effects($typeids, &$out) {
+	static $hardcoded_effectcategories = array(
+		'online' => 4,
+		);
+
 	foreach($typeids as $i => $tid) {
 		if(isset($out[$tid])) {
 			unset($typeids[$i]);
@@ -404,29 +536,64 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out[$row[0]]['volume'] = $row[3];
 	}
 
-	$effectsq = \Osmium\Db\query_params('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp
+	/* Effect categories (maybe):
+	   0 -> passive
+	   1 -> activation
+	   2 -> target
+	   3 -> area
+	   4 -> online
+	   5 -> overload
+	   6 -> dungeon
+	   7 -> system
+	   http://pastie.org/pastes/2768807/text */
+	$effectsq = \Osmium\Db\query('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp, effectcategory,
+  durationattributeid, trackingspeedattributeid, dischargeattributeid, rangeattributeid, falloffattributeid
   FROM eve.dgmeffects 
   JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
   LEFT JOIN osmium.cacheexpressions AS preexpr ON preexpr.expressionid = preexpression
   LEFT JOIN osmium.cacheexpressions AS postexpr ON postexpr.expressionid = postexpression
-  WHERE typeid IN ('.$typeidIN.') AND effectname !~ $1', array('^overload'));
+  WHERE typeid IN ('.$typeidIN.')');
 	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
 		$tid = $row['typeid'];
+
+		if(isset($hardcoded_effectcategories[$row['effectname']])) {
+			$row['effectcategory'] = $hardcoded_effectcategories[$row['effectname']];
+		}
+
+		$out['__effects'][$row['effectname']]['durationattributeid'] = $row['durationattributeid'];
+		$out['__effects'][$row['effectname']]['trackingspeedattributeid'] = $row['trackingspeedattributeid'];
+		$out['__effects'][$row['effectname']]['dischargeattributeid'] = $row['dischargeattributeid'];
+		$out['__effects'][$row['effectname']]['rangeattributeid'] = $row['rangeattributeid'];
+		$out['__effects'][$row['effectname']]['falloffattributeid'] = $row['falloffattributeid'];
+		$out['__effects'][$row['effectname']]['effectcategory'] = $row['effectcategory'];
+		$out['__effects'][$row['effectid']] =& $out['__effects'][$row['effectname']];
+
 		unset($row['typeid']);
+		unset($row['durationattributeid']);
+		unset($row['trackingspeedattributeid']);
+		unset($row['dischargeattributeid']);
+		unset($row['rangeattributeid']);
+		unset($row['falloffattributeid']);
+		unset($row['effectcategory']);
+
 		$out[$tid]['effects'][$row['effectname']] = $row;
 	}
 
-	$attribsq = \Osmium\Db\query_params('SELECT dgmtypeattributes.typeid, attributename, dgmattributetypes.attributeid, highisgood, stackable, COALESCE(valuefloat, valueint) AS value
+	$attribsq = \Osmium\Db\query('SELECT dgmtypeattributes.typeid, attributename, dgmattributetypes.attributeid, highisgood, stackable, COALESCE(valuefloat, valueint) AS value
   FROM eve.dgmattributetypes 
   JOIN eve.dgmtypeattributes ON dgmattributetypes.attributeid = dgmtypeattributes.attributeid
-  WHERE dgmtypeattributes.typeid IN ('.$typeidIN.')', array());
+  WHERE dgmtypeattributes.typeid IN ('.$typeidIN.')');
 	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
 		$tid = $row['typeid'];
+
 		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'];
 		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'];
+		$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];
+
 		unset($row['typeid']);
 		unset($row['stackable']);
 		unset($row['highisgood']);
+
 		$out[$tid]['attributes'][$row['attributename']] = $row;
 	}
 }
@@ -462,7 +629,7 @@ function get_unique($fit) {
 
 	foreach($fit['modules'] as $type => $d) {
 		foreach($d as $index => $module) {
-			$unique['modules'][$type][$index] = $module['typeid'];
+			$unique['modules'][$type][$index] = array($module['typeid'], $module['state']);
 		}
 	}
 
@@ -530,9 +697,10 @@ function commit_fitting(&$fit) {
 	foreach($fit['modules'] as $type => $data) {
 		$z = 0;
 		foreach($data as $index => $module) {
-			$module_order[$type][$index] = ($z++);
-			\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, slottype, index, typeid) VALUES ($1, $2, $3, $4)', 
-			                        array($fittinghash, $type, $z, $module['typeid']));
+			$module_order[$type][$index] = $z;
+			\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5)', 
+			                        array($fittinghash, $type, $z, $module['typeid'], $module['state']));
+			++$z;
 		}
 	}
   
@@ -637,9 +805,9 @@ function get_fit($loadoutid, $revision = null) {
 	}
 
 	$modules = array();
-	$mq = \Osmium\Db\query_params('SELECT slottype, index, typeid FROM osmium.fittingmodules WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
+	$mq = \Osmium\Db\query_params('SELECT slottype, index, typeid, state FROM osmium.fittingmodules WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
 	while($row = \Osmium\Db\fetch_row($mq)) {
-		$modules[$row[0]][$row[1]] = $row[2];
+		$modules[$row[0]][$row[1]] = array($row[2], (int)$row[3]);
 	}
 
 	add_modules_batch($fit, $modules);
@@ -654,7 +822,6 @@ function get_fit($loadoutid, $revision = null) {
 		add_charges_batch($fit, $presetname, $preset);
 	}
 	
-
 	$dq = \Osmium\Db\query_params('SELECT typeid, quantity FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
 	$drones = array();
 	while($row = \Osmium\Db\fetch_row($dq)) {
@@ -805,7 +972,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 	}
 
 	add_modules_batch($fit, $realmodules);
-	add_drones_batch($fit, $drones);
+	add_drones_batch($fit, $realdrones);
 
 	$fit['metadata']['name'] = $name;
 	$fit['metadata']['description'] = $description;

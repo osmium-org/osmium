@@ -183,7 +183,7 @@ function print_modules_searchbox() {
 function print_modulelist() {
 	echo "<div id='loadoutbox'>\n<h2 class='has_spinner'>Loadout";
 	echo "<img src='./static/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
+	echo "<em class='help'>(Click to toggle state, double-click to remove)</em>\n</h2>\n";
   
 	$categories = array();
 	foreach(\Osmium\Fit\get_slottypes() as $type) {
@@ -203,7 +203,10 @@ function print_modulelist() {
 	echo "</tr>\n</table>\n";
 
 	foreach($categories as $type => $fname) {
-		echo "<div id='{$type}_slots' class='loadout_slot_cat'>\n<h3>$fname slots</h3>";
+		if(in_array($type, \Osmium\Fit\get_stateful_slottypes())) $class = ' stateful';
+		else $class = '';
+
+		echo "<div id='{$type}_slots' class='loadout_slot_cat$class'>\n<h3>$fname slots</h3>";
 		echo "<ul></ul>\n";
 		echo "</div>\n";
 	}
@@ -570,7 +573,7 @@ function finalize() {
 	\Osmium\Fit\reset($fit);
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\State\put_state('create_fit_step', 1);
-	\Osmium\State_invalidate_cache('loadout-'.$loadoutid);
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
 
 	header('Location: ./loadout/'.$loadoutid);
 	die();
