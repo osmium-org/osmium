@@ -927,9 +927,11 @@ table#resists > tbody > tr > td {
 }
 
 table#resists > thead > tr > td,
-table#resists > tbody > tr > td {
+table#resists > tbody > tr > td,
+table#resists > thead > tr > th#ehp {
 	text-align: right;
 }
+
 
 table#resists > tbody > tr > th > img,
 table#resists > thead > tr > td > img {
@@ -964,4 +966,13 @@ table#resists > tbody > tr > td.kineticresist > div > span.bar {
 
 table#resists > tbody > tr > td.explosiveresist > div > span.bar {
 	background-color: #C68526;
+}
+
+table#resists > thead > tr > th#ehp {
+	font-weight: normal;
+	font-size: 0.666em;
+}
+
+table#resists > thead > tr > th#ehp > strong {
+	font-size: 1.5em;
 }

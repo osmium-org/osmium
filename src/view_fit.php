@@ -188,8 +188,18 @@ $ehp += 4 * $armorCapacity /
 	($armorEmResist + $armorThermalResist + $armorKineticResist + $armorExplosiveResist);
 $ehp += 4 * $hullCapacity / 
 	($hullEmResist + $hullThermalResist + $hullKineticResist + $hullExplosiveResist);
+$mehp = $shieldCapacity / max($shieldEmResist, $shieldThermalResist, $shieldKineticResist, $shieldExplosiveResist);
+$mehp += $armorCapacity / max($armorEmResist, $armorThermalResist, $armorKineticResist, $armorExplosiveResist);
+$mehp += $hullCapacity / max($hullEmResist, $hullThermalResist, $hullKineticResist, $hullExplosiveResist);
+$Mehp = $shieldCapacity / min($shieldEmResist, $shieldThermalResist, $shieldKineticResist, $shieldExplosiveResist);
+$Mehp += $armorCapacity / min($armorEmResist, $armorThermalResist, $armorKineticResist, $armorExplosiveResist);
+$Mehp += $hullCapacity / min($hullEmResist, $hullThermalResist, $hullKineticResist, $hullExplosiveResist);
 echo "<li>\n<table id='resists'>\n<thead>\n<tr>\n";
-echo "<th colspan='2' id='ehp'><abbr title='Effective Hitpoints'>EHP</abbr>: ".\Osmium\Chrome\format_number($ehp)."</th>\n";
+echo "<th><abbr title='Effective Hitpoints'>EHP</abbr></th>\n";
+echo "<th id='ehp'>\n";
+echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".\Osmium\Chrome\format_number($mehp)."</span><br />\n";
+echo "<strong title='EHP in the average case (uniform damage repartition)'>".\Osmium\Chrome\format_number($ehp)."</strong><br />\n";
+echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".\Osmium\Chrome\format_number($Mehp)."</th>\n";
 echo "<td><img src='../static/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
 echo "<td><img src='../static/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
 echo "<td><img src='../static/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
