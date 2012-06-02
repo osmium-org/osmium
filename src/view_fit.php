@@ -142,27 +142,80 @@ echo "<ul class='computed_attributes'>\n";
 echo "<li>\n";
 $slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 $slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
-echo "<p class='oneline'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n";
+$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over);
+echo "<p class='overflow$over'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><span id='turrethardpoints'>".$formatted."</span></p>\n";
 $slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 $slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
-echo "<p class='oneline'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' />".\Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over)."</p>\n";
-echo "<p class='oneline'><img src='../static/icons/capacitor.png' alt='Capacitor' title='Capacitor' />".\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit))."</p>\n";
+$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over);
+echo "<p class='overflow$over'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
+echo "<p><img src='../static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'>".\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit))."</span></p>\n";
 echo "</li>\n";
 
 echo "<li>\n";
 $cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 $cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
 $formatted = \Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true, $over);
-echo "<p class='overflow$over'><img src='../static/icons/cpu.png' alt='CPU' title='CPU' />".$formatted."</p>\n";
+echo "<p class='overflow$over'><img src='../static/icons/cpu.png' alt='CPU' title='CPU' /><span id='cpu'>".$formatted."</span></p>\n";
 $powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 $powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
 $formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $over);
-echo "<p class='overflow$over'><img src='../static/icons/powergrid.png' alt='Powergrid' title='Powergrid' />".$formatted."</p>\n";
+echo "<p class='overflow$over'><img src='../static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><span id='power'>".$formatted."</span></p>\n";
 $upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 $upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
 $formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $over);
-echo "<p class='overflow$over'><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' />".$formatted."</p>\n";
+echo "<p class='overflow$over'><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
 echo "</li>\n";
+
+$shieldCapacity = \Osmium\Dogma\get_ship_attribute($fit, 'shieldCapacity');
+$shieldEmResist = \Osmium\Dogma\get_ship_attribute($fit, 'shieldEmDamageResonance');
+$shieldThermalResist = \Osmium\Dogma\get_ship_attribute($fit, 'shieldThermalDamageResonance');
+$shieldKineticResist = \Osmium\Dogma\get_ship_attribute($fit, 'shieldKineticDamageResonance');
+$shieldExplosiveResist = \Osmium\Dogma\get_ship_attribute($fit, 'shieldExplosiveDamageResonance');
+$armorCapacity = \Osmium\Dogma\get_ship_attribute($fit, 'armorHP');
+$armorEmResist = \Osmium\Dogma\get_ship_attribute($fit, 'armorEmDamageResonance');
+$armorThermalResist = \Osmium\Dogma\get_ship_attribute($fit, 'armorThermalDamageResonance');
+$armorKineticResist = \Osmium\Dogma\get_ship_attribute($fit, 'armorKineticDamageResonance');
+$armorExplosiveResist = \Osmium\Dogma\get_ship_attribute($fit, 'armorExplosiveDamageResonance');
+$hullCapacity = \Osmium\Dogma\get_ship_attribute($fit, 'hp');
+$hullEmResist = \Osmium\Dogma\get_ship_attribute($fit, 'emDamageResonance');
+$hullThermalResist = \Osmium\Dogma\get_ship_attribute($fit, 'thermalDamageResonance');
+$hullKineticResist = \Osmium\Dogma\get_ship_attribute($fit, 'kineticDamageResonance');
+$hullExplosiveResist = \Osmium\Dogma\get_ship_attribute($fit, 'explosiveDamageResonance');
+/* Assume uniform damage distribution (TODO make it user-configurable) */
+$ehp = 4 * $shieldCapacity / 
+	($shieldEmResist + $shieldThermalResist + $shieldKineticResist + $shieldExplosiveResist);
+$ehp += 4 * $armorCapacity / 
+	($armorEmResist + $armorThermalResist + $armorKineticResist + $armorExplosiveResist);
+$ehp += 4 * $hullCapacity / 
+	($hullEmResist + $hullThermalResist + $hullKineticResist + $hullExplosiveResist);
+echo "<li>\n<table id='resists'>\n<thead>\n<tr>\n";
+echo "<th colspan='2' id='ehp'><abbr title='Effective Hitpoints'>EHP</abbr>: ".\Osmium\Chrome\format_number($ehp)."</th>\n";
+echo "<td><img src='../static/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
+echo "<td><img src='../static/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
+echo "<td><img src='../static/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
+echo "<td><img src='../static/icons/r_explosive.png' alt='Explosive Resistance' title='Explosive Resistance' /></td>\n";
+echo "</tr>\n</thead>\n<tfoot></tfoot>\n<tbody>\n<tr id='shield'>\n";
+echo "<th><img src='../static/icons/shield.png' alt='Shield' title='Shield' /></th>\n";
+echo "<td class='capacity'>".\Osmium\Chrome\format_number($shieldCapacity)."</td>\n";
+echo "<td class='emresist'>".\Osmium\Chrome\format_resonance($shieldEmResist)."</td>\n";
+echo "<td class='thermalresist'>".\Osmium\Chrome\format_resonance($shieldThermalResist)."</td>\n";
+echo "<td class='kineticresist'>".\Osmium\Chrome\format_resonance($shieldKineticResist)."</td>\n";
+echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($shieldExplosiveResist)."</td>\n";
+echo"</tr>\n<tr id='armor'>\n";
+echo "<th><img src='../static/icons/armor.png' alt='Armor' title='Armor' /></th>\n";
+echo "<td class='capacity'>".\Osmium\Chrome\format_number($armorCapacity)."</td>\n";
+echo "<td class='emresist'>".\Osmium\Chrome\format_resonance($armorEmResist)."</td>\n";
+echo "<td class='thermalresist'>".\Osmium\Chrome\format_resonance($armorThermalResist)."</td>\n";
+echo "<td class='kineticresist'>".\Osmium\Chrome\format_resonance($armorKineticResist)."</td>\n";
+echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($armorExplosiveResist)."</td>\n";
+echo"</tr>\n<tr id='hull'>\n";
+echo "<th><img src='../static/icons/hull.png' alt='Hull' title='Hull' /></th>\n";
+echo "<td class='capacity'>".\Osmium\Chrome\format_number($hullCapacity)."</td>\n";
+echo "<td class='emresist'>".\Osmium\Chrome\format_resonance($hullEmResist)."</td>\n";
+echo "<td class='thermalresist'>".\Osmium\Chrome\format_resonance($hullThermalResist)."</td>\n";
+echo "<td class='kineticresist'>".\Osmium\Chrome\format_resonance($hullKineticResist)."</td>\n";
+echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($hullExplosiveResist)."</td>\n";
+echo "</tr>\n</tbody>\n</table>\n</li>\n";
 
 echo "</ul>\n";
 
@@ -178,9 +231,9 @@ echo "<div id='vloadoutbox'>\n";
 echo "<header>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
-echo "<h1 id='fitname'>";
+echo "<h1 id='fitname' class='has_spinner'>";
 echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author);
-echo "</h1>\n";
+echo "<img src='../static/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
 echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {
 	echo "<ul>\n";

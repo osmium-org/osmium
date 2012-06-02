@@ -861,8 +861,12 @@ div#vdronebay > h3 > small.capacity {
 }
 
 ul.computed_attributes > li > p > img {
-	float: left;
 	height: 2em;
+}
+
+ul.computed_attributes > li > p > img + span {
+	display: inline-block;
+	vertical-align: middle;
 }
 
 ul.computed_attributes > li > p {
@@ -873,10 +877,6 @@ ul.computed_attributes > li > p {
 	padding: 0.125em;
 	line-height: 1em;
 	margin-top: 0.25em;
-}
-
-ul.computed_attributes > li > p.oneline {
-	line-height: 2em;
 }
 
 table.slot_count th > strong {
@@ -912,4 +912,26 @@ div#vloadoutbox > div.slots.stateful > ul > li > a.toggle > img {
 div#loadoutbox > div.loadout_slot_cat > ul > li,
 div#vloadoutbox > div.slots.stateful > ul > li {
 	padding-right: 16px;
+}
+
+table#resists {
+	display: inline-block;
+	vertical-align: middle;
+	border-collapse: collapse;
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+table#resists > tbody > tr > td {
+	width: 4em;
+}
+
+table#resists > thead > tr > td,
+table#resists > tbody > tr > td {
+	text-align: right;
+}
+
+table#resists > tbody > tr > th > img,
+table#resists > thead > tr > td > img {
+	height: 2em;
 }
