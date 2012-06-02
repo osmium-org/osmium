@@ -307,7 +307,7 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	if(!isset($src[$name])) {
 		if(!isset($hardcoded[$name])) {
 			$val = 0;
-			if($val != 'cpu' && $val != 'power' && $failonerror) {
+			if($name != 'cpu' && $name != 'power' && $failonerror) {
 				trigger_error('get_final_attribute_value(): '.$name.' not defined', E_USER_WARNING);
 			}
 		} else {
