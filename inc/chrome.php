@@ -182,5 +182,7 @@ function format_resonance($resonance) {
 	if($resonance < 0) return '100%';
 	if($resonance > 1) return '0%';
 
-	return number_format((1 - $resonance) * 100, 1).'%';
+	$percent = (1 - $resonance) * 100;
+
+	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
 }
