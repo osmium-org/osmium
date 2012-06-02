@@ -306,8 +306,25 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 
 	if(!isset($src[$name])) {
 		if(!isset($hardcoded[$name])) {
-			$val = 0;
-			if($name != 'cpu' && $name != 'power' && $failonerror) {
+			/* Try to fetch the defaultvalue from the DB */
+			$val = \Osmium\State\get_cache('default_value_'.$name, 'undefined');
+			if($val === 'undefined') {
+				$row = \Osmium\Db\fetch_row(
+					\Osmium\Db\query_params(
+						'SELECT defaultvalue FROM eve.dgmattributetypes WHERE attributename = $1', 
+						array($name)));
+
+				if($row !== false) {
+					$val = $row[0];
+				} else {
+					$val = null;
+				}
+
+				\Osmium\State\put_cache('default_value_'.$name, $val);
+			}
+
+			if($val === null) $val = 0;
+			if($val === null && $failonerror) {
 				trigger_error('get_final_attribute_value(): '.$name.' not defined', E_USER_WARNING);
 			}
 		} else {
@@ -355,6 +372,8 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 	if($immunetopenalty === null) $immunetopenalty = function($attr) {
 		return $attr['source'][0] != 'module' || $attr['source'][1] == 'subsystem';
 	};
+
+	/* TODO: optimize stuff if we have a postassignment (skip everything before) */
 
 	foreach($actions as $name => $func) {
 		if(isset($modifiers[$name])) {
@@ -410,10 +429,10 @@ function penalize($values, $highisgood) {
 
 	if($highisgood) {
 		rsort($positive);
-		sort($negative);
+		rsort($negative);
 	} else {
 		sort($positive);
-		rsort($negative);
+		sort($negative);
 	}
 
 	$out = array();
