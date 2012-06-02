@@ -47,38 +47,6 @@ function get_module_shortlist($shortlist = null) {
 	return $out;
 }
 
-function get_attributes_step_modules_select($fit) {
-	$attributes = array();
-	$aslots = \Osmium\Fit\get_attr_slottypes();
-	foreach(\Osmium\Fit\get_slottypes() as $type) {
-		$attributes['ship']['slotcount'][$type] = \Osmium\Dogma\get_ship_attribute($fit, $aslots[$type], false);
-		$attributes['ship']['usedslots'][$type] = isset($fit['modules'][$type]) ?
-			count($fit['modules'][$type]) : 0;
-	}
-
-	$attributes['ship']['turretslots'] = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
-	$attributes['ship']['usedturretslots'] = $attributes['ship']['turretslots'] 
-		- \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
-
-	$attributes['ship']['launcherslots'] = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
-	$attributes['ship']['usedlauncherslots'] = $attributes['ship']['launcherslots']
-		- \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
-	
-	$attributes['ship']['power'] = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
-	$attributes['ship']['usedpower'] = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
-	
-	$attributes['ship']['cpu'] = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
-	$attributes['ship']['usedcpu'] = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
-	
-	$attributes['ship']['upgradecapacity'] = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
-	$attributes['ship']['usedupgradecapacity'] = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
-
-	$attributes['ship']['capacitorstability'] = 
-		\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit));
-
-	return $attributes;
-}
-
 function get_data_step_drone_select($fit) {
 	return array(
 		'drones' => array_values($fit['drones']),
@@ -86,4 +54,43 @@ function get_data_step_drone_select($fit) {
 			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')
 			),
 		);
+}
+
+function get_slot_usage(&$fit) {
+	$usage = array();
+
+	$aslots = \Osmium\Fit\get_attr_slottypes();
+	foreach(\Osmium\Fit\get_slottypes() as $type) {
+		$usage[$type]['total'] = \Osmium\Dogma\get_ship_attribute($fit, $aslots[$type], false);
+		$usage[$type]['used'] = isset($fit['modules'][$type]) ?
+			count($fit['modules'][$type]) : 0;
+	}
+
+	return $usage;
+}
+
+function get_loadable_fit(&$fit) {
+	return array(
+		'ship' => $fit['ship'], 
+		'modules' => $fit['modules'],
+		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
+		'slots' => get_slot_usage($fit),
+		'states' => get_module_states($fit),
+		);
+}
+
+function get_module_states(&$fit) {
+	$astates = \Osmium\Fit\get_state_names();
+	$states = array();
+
+	foreach(\Osmium\Fit\get_stateful_slottypes() as $type) {
+		if(!isset($fit['modules'][$type])) continue;
+		
+		foreach($fit['modules'][$type] as $index => $m) {
+			list($name, $image) = $astates[$m['state']];
+			$states[$type][$index] = array('state' => $m['state'], 'name' => $name, 'image' => $image);
+		}
+	}
+
+	return $states;
 }

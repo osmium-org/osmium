@@ -51,29 +51,24 @@ osmium_shortlist_commit = function() {
 };
 
 osmium_populate_slots = function(json, slot_type) {
-    var used_slots = json['attributes']['ship']['usedslots'][slot_type];
-    var max_slots = json['attributes']['ship']['slotcount'][slot_type];
+    var used_slots = json['slots'][slot_type]['used'];
+    var max_slots = json['slots'][slot_type]['total'];
 
 	var j = 0;
     for(var i in json['modules'][slot_type]) {
 		var c = '';
-		var stname;
-		var stpicture;
-		if((j++) >= max_slots) c = ' overflow';
+		var sttoggle = '';
 
-		if(json['modules'][slot_type][i]['state'] == 0) {
-			stname = 'Offline';
-			stpicture = 'offline.png';
-		} else if(json['modules'][slot_type][i]['state'] == 1) {
-			stname = 'Online';
-			stpicture = 'online.png';
-		} else if(json['modules'][slot_type][i]['state'] == 2) {
-			stname = 'Active';
-			stpicture = 'active.png';
-		} else if(json['modules'][slot_type][i]['state'] == 3) {
-			stname = 'Overloaded';
-			stpicture = 'overloaded.png';
+		if(slot_type in json['states']) {
+			var stname = json['states'][slot_type][i]['name'];
+			var stpicture = json['states'][slot_type][i]['image'];
+
+			sttoggle = "<a class='toggle' href='javascript:void(0);' title='" + stname 
+				+ "; click to toggle'><img src='./static/icons/" 
+				+ stpicture + "' alt='" + stname + "' /></a>";
+			
 		}
+		if((j++) >= max_slots) c = ' overflow';
 
 		$("div#" + slot_type + "_slots > ul").append(
 			"<li class='module" 
@@ -84,10 +79,8 @@ osmium_populate_slots = function(json, slot_type) {
 				+ "' data-index='" + i
 				+ "'><img src='http://image.eveonline.com/Type/" 
 				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
-				+ json['modules'][slot_type][i]['typename'] 
-				+ "<a class='toggle' href='javascript:void(0);' title='" + stname 
-				+ "; click to toggle'><img src='./static/icons/" 
-				+ stpicture + "' alt='" + stname + "' /></a></li>\n"
+				+ json['modules'][slot_type][i]['typename'] + sttoggle
+				+ "</li>\n"
 		);
     }
     for(var i = used_slots; i < max_slots; ++i) {
@@ -108,35 +101,12 @@ osmium_populate_slots = function(json, slot_type) {
     }
 };
 
-osmium_setstrong = function(json, name, strong, display_percent) {
-	var text = json['used' + name] + ' / ' + json[name];
-	if(display_percent) {
-		text = text + '<br />';
-		if(json[name] > 0) {
-			text = text + (100 * json['used' + name] / json[name]).toFixed(2) + ' %';
-		}
-	}
-
-	strong.html(text);
-	if(json['used' + name] > json[name]) {
-		strong.addClass('overflow');
-	} else {
-		strong.removeClass('overflow');
-	}
-};
-
 osmium_loadout_load = function(json) {
     for(var i = 0; i < osmium_slottypes.length; ++i) {
 		$("div#" + osmium_slottypes[i] + "_slots > ul").empty();
 		osmium_populate_slots(json, osmium_slottypes[i]);
     }
-
-	osmium_setstrong(json['attributes']['ship'], 'turretslots', $("strong#turret_count"), false);
-	osmium_setstrong(json['attributes']['ship'], 'launcherslots', $("strong#launcher_count"), false);
-	osmium_setstrong(json['attributes']['ship'], 'cpu', $("strong#cpu"), true);
-	osmium_setstrong(json['attributes']['ship'], 'power', $("strong#power"), true);
-	osmium_setstrong(json['attributes']['ship'], 'upgradecapacity', $("strong#upgradecapacity"), true);
-	$("strong#capacitorstability").text(json['attributes']['ship']['capacitorstability']);
+	$('ul.computed_attributes').html(json['attributes']);
 };
 
 osmium_loadout_commit = function() {

@@ -53,25 +53,9 @@ if(isset($_GET['toggletype']) && isset($_GET['toggleindex'])
 	\Osmium\Fit\toggle_module_state($fit, $index, $fit['modules'][$type][$index]['typeid']);
 }
 
-ob_start();
-\Osmium\Chrome\print_formatted_loadout_attributes($fit);
-$attributes = ob_get_clean();
-
-$astates = \Osmium\Fit\get_state_names();
-$states = array();
-
-foreach(\Osmium\Fit\get_stateful_slottypes() as $type) {
-	if(!isset($fit['modules'][$type])) continue;
-
-	foreach($fit['modules'][$type] as $index => $m) {
-		list($name, $image) = $astates[$m['state']];
-		$states[$type][$index] = array('state' => $m['state'], 'name' => $name, 'image' => $image);
-	}
-}
-
 \Osmium\Chrome\return_json(
 	array(
 		'preset' => isset($fit['charges'][$fit['selectedpreset']]) ? $fit['charges'][$fit['selectedpreset']] : null,
-		'attributes' => $attributes,
-		'states' => $states,
+		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
+		'states' => \Osmium\AjaxCommon\get_module_states($fit),
 		));

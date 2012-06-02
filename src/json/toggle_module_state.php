@@ -34,11 +34,7 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 
 	\Osmium\Fit\toggle_module_state($fit, $index, $typeid);
 	\Osmium\State\put_state('new_fit', $fit);
-	\Osmium\Chrome\return_json(array(
-		                           'ship' => $fit['ship'],
-		                           'modules' => $fit['modules'],
-		                           'attributes' => \Osmium\AjaxCommon\get_attributes_step_modules_select($fit),
-		                           ));
+	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
 } else {
 	\Osmium\Chrome\return_json(array());
 }

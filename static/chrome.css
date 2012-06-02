@@ -164,7 +164,7 @@ select#hullid {
     font-size: 1.4em;
 }
 
-div#searchbox, div#presetsbox,
+div#presetsbox,
 div#dronelistbox, div#metadatabox {
     padding-left: 0.5em;
     width: 20em;
@@ -187,18 +187,26 @@ div#vloadoutbox {
     padding-right: 1em;
 }
 
+div#loadoutbox {
+	margin-left: 31em;
+}
+
 div#loadoutbox > form > table {
     width: 100%;
     margin-top: 1em;
 }
 
+div#searchbox {
+	text-align: center;
+}
+
 div#searchbox input[type="text"] {
-    width: 16em;
+    width: 22em;
 }
 
 div#loadoutbox > h2, div#shortlistbox > h2, 
 div#searchbox > h2, div#presetsbox > h2,
-div#dronelistbox > h2 {
+div#dronelistbox > h2, div#metadatabox > h2:first-child {
     text-align: center;
     margin-top: 0;
 }
@@ -218,7 +226,6 @@ img.meta_filter.ds {
 }
 
 ul#search_results, ul#modules_shortlist,
-div.loadout_slot_cat > ul,
 div#dronebay > ul {
     list-style-type: none;
     margin: 0;
@@ -642,23 +649,27 @@ div#vloadoutbox > header > img#fittypepic {
 }
 
 div#vloadoutbox > div.slots > ul,
-div#vloadoutbox > div#vdronebay > ul {
+div#vloadoutbox > div#vdronebay > ul,
+div#loadoutbox > div.loadout_slot_cat > ul {
     list-style-type: none;
     padding: 0;
     margin-top: 0.125em;
 }
 
 div#vloadoutbox > div.slots > ul > li > img,
-div#vloadoutbox > div#vdronebay > ul > li > img {
+div#vloadoutbox > div#vdronebay > ul > li > img,
+div#loadoutbox > div.loadout_slot_cat > ul > li > img {
     height: 2em;
     margin-right: 0.125em;
 }
 
 div#vloadoutbox > div.slots > h3,
-div#vloadoutbox > div#vdronebay > h3 {
+div#vloadoutbox > div#vdronebay > h3,
+div#loadoutbox > div.loadout_slot_cat > h3 {
     border-bottom: 1px solid #888;
     padding-left: 0.25em;
     margin-bottom: 0;
+	position: relative;
 }
 
 div#vloadoutbox > div.slots > ul > li {
@@ -672,12 +683,18 @@ div#vloadoutbox > div.slots > ul > li:first-child {
     border-top: none;
 }
 
-div#vloadoutbox > div.slots {
+div#vloadoutbox > div.slots,
+div#loadoutbox > div.loadout_slot_cat {
     width: 19em;
     display: inline-block;
     vertical-align: top;
     margin-right: 2em;
     margin-bottom: 2em;
+}
+
+div#loadoutbox > div.loadout_slot_cat {
+	width: 20.5em;
+	margin-right: 0.5em;
 }
 
 div#vloadoutbox > div.slots > ul > li.unused {
@@ -847,17 +864,17 @@ a.dangerous {
 	color: #FF3300;
 }
 
-div.slots > h3,
-div#vdronebay > h3 {
-	position: relative;
-}
-
 div.slots > h3 > small.capacity,
-div#vdronebay > h3 > small.capacity {
+div#vdronebay > h3 > small.capacity,
+div.loadout_slot_cat > h3 > strong {
 	position: absolute;
 	right: 0.125em;
 	bottom: 0;
 	color: #888;
+}
+
+div.loadout_slot_cat > h3 > strong {
+	font-size: 0.9em;
 }
 
 ul.computed_attributes > li > p > img {
@@ -877,6 +894,11 @@ ul.computed_attributes > li > p {
 	padding: 0.125em;
 	line-height: 1em;
 	margin-top: 0.25em;
+}
+
+ul.computed_attributes.compact {
+	margin-top: 0;
+	margin-bottom: 0;
 }
 
 table.slot_count th > strong {
@@ -975,4 +997,18 @@ table#resists > thead > tr > th#ehp {
 
 table#resists > thead > tr > th#ehp > strong {
 	font-size: 1.5em;
+}
+
+div#metadatabox > div#searchbox > ul#search_results > li.module {
+	text-align: left;
+}
+
+div#metadatabox > ul.slot_count > li {
+	display: inline-block;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
+
+div#metadatabox > ul.slot_count > li > img {
+	height: 2em;
 }

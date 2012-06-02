@@ -276,3 +276,9 @@ function print_formatted_loadout_attributes(&$fit) {
 	echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($hullExplosiveResist)."</td>\n";
 	echo "</tr>\n</tbody>\n</table>\n</li>\n";
 }
+
+function get_formatted_loadout_attributes(&$fit) {
+	ob_start();
+	print_formatted_loadout_attributes($fit);
+	return ob_get_clean();
+}

@@ -149,12 +149,28 @@ function ship_select_post() {
 
 /* ----------------------------------------------------- */
 
+function get_slot_fnames() {
+	static $categories = null;
+	if($categories === null) {
+		$categories = array();
+		foreach(\Osmium\Fit\get_slottypes() as $type) {
+			$categories[$type] = ucfirst($type);
+		}
+	}
+	return $categories;
+}
+
+function print_attributes($before = '', $after = '') {
+	echo "<div id='metadatabox'>\n$before<h2>Attributes</h2>\n<ul class='compact computed_attributes'>\n";
+	echo "</ul>\n$after</div>\n";
+}
+
 function print_modules_searchbox() {
 	echo "<div id='searchbox'>\n<h2 class='has_spinner'>Search modules";
 	echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
 	echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
-	echo "<input type='text' placeholder='Search by name or category...' />\n";
+	echo "<input type='text' placeholder='Search by name or category...' autofocus='autofocus' />\n";
 	echo "<input type='submit' value='Search' />\n<br />\n";
 	$filters = unserialize(\Osmium\State\get_setting('module_search_filter', serialize(array())));
 	$filters = array_combine($v = array_values($filters), $v);
@@ -183,31 +199,13 @@ function print_modules_searchbox() {
 function print_modulelist() {
 	echo "<div id='loadoutbox'>\n<h2 class='has_spinner'>Loadout";
 	echo "<img src='./static/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Click to toggle state, double-click to remove)</em>\n</h2>\n";
+	echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
   
-	$categories = array();
-	foreach(\Osmium\Fit\get_slottypes() as $type) {
-		$categories[$type] = ucfirst($type);
-	}
-
-	echo "<table class='slot_count'>\n<tr>\n";
-	foreach($categories as $type => $fname) {
-		echo "<th><img src='./static/icons/slot_$type.png' alt='$fname slots' title='$fname slots' /><strong id='{$type}_count'></strong></th>\n";
-	}
-	echo "<th><img src='./static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><strong id='turret_count'></strong></th>\n";
-	echo "<th><img src='./static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><strong id='launcher_count'></strong></th>\n";
-	echo "</tr>\n</table>\n<table class='slot_count'>\n<tr>\n";
-	echo "<th><img src='./static/icons/cpu.png' alt='CPU' title='CPU' /><strong id='cpu'></strong></th>\n";
-	echo "<th><img src='./static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><strong id='power'></strong></th>\n";
-	echo "<th><img src='./static/icons/calibration.png' alt='Calibration' title='Calibration' /><strong id='upgradecapacity'></strong></th>\n";
-	echo "<th><img src='./static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><strong id='capacitorstability'></strong></th>\n";
-	echo "</tr>\n</table>\n";
-
-	foreach($categories as $type => $fname) {
+	foreach(get_slot_fnames() as $type => $fname) {
 		if(in_array($type, \Osmium\Fit\get_stateful_slottypes())) $class = ' stateful';
 		else $class = '';
 
-		echo "<div id='{$type}_slots' class='loadout_slot_cat$class'>\n<h3>$fname slots</h3>";
+		echo "<div id='{$type}_slots' class='loadout_slot_cat$class'>\n<h3>$fname slots <strong id='{$type}_count'></strong></h3>";
 		echo "<ul></ul>\n";
 		echo "</div>\n";
 	}
@@ -228,7 +226,11 @@ function print_modules_shortlist() {
 function modules_select() {
 	print_h1('select modules');
 
+	ob_start();
 	print_modules_searchbox();
+	$search = ob_get_clean();
+
+	print_attributes('', $search);
 	print_modules_shortlist();
 	print_modulelist();
 	\Osmium\Chrome\print_js_snippet('new_fitting');
@@ -236,11 +238,7 @@ function modules_select() {
 	$fit = \Osmium\State\get_state('new_fit', array());
 	echo "<script>\n$(function() {\n";
 	echo "osmium_shortlist_load(".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n";
-	echo "osmium_loadout_load(".json_encode(array(
-		                                        'ship' => $fit['ship'], 
-		                                        'modules' => $fit['modules'],
-		                                        'attributes' => \Osmium\AjaxCommon\get_attributes_step_modules_select($fit),
-		                                        )).");\n";
+	echo "osmium_loadout_load(".json_encode(\Osmium\AjaxCommon\get_loadable_fit($fit)).");\n";
 	echo "});\n</script>\n";
 }
 
