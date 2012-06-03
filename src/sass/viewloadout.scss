@@ -42,3 +42,19 @@ div#vloadoutbox {
 		@include drone-list;
 	}
 }
+
+div#pwfit {
+	display: inline-block;
+	width: 30em;
+	height: 10em;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-top: -10em;
+	margin-left: -15em;
+	text-align: center;
+
+	padding: 1em;
+	border: 2px solid #FFC0C0;
+	background-color: #FFF8F8;
+}
