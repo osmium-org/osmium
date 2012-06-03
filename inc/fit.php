@@ -121,7 +121,7 @@ function select_ship(&$fit, $new_typeid) {
 
 	$row = \Osmium\Db\fetch_row(
 		\Osmium\Db\query_params(
-			'SELECT typename FROM osmium.invships WHERE typeid = $1', 
+			'SELECT invships.typename, mass FROM osmium.invships JOIN eve.invtypes ON invtypes.typeid = invships.typeid WHERE invships.typeid = $1', 
 			array($new_typeid)));
 	if($row === false) return false;
 
@@ -135,7 +135,16 @@ function select_ship(&$fit, $new_typeid) {
 	foreach($fit['cache'][$fit['ship']['typeid']]['attributes'] as $attr) {
 		$fit['dogma']['ship'][$attr['attributename']] = $attr['value'];
 	}
+	$fit['dogma']['ship']['mass'] = $row[1];
 	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
+
+	/* Mass is in invtypes, not dgmtypeattributes, so it has to be hardcoded here */
+	$fit['cache']['__attributes']['mass'] = array(
+		'attributename' => 'mass',
+		'stackable' => 0,
+		'highisgood' => 1,
+		);
+	$fit['cache']['__attributes']['4'] =& $fit['cache']['__attributes']['mass'];
 	
 	\Osmium\Dogma\eval_ship_preexpressions($fit);
 
