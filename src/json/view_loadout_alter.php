@@ -21,10 +21,6 @@ namespace Osmium\Json\ViewLoadoutAlter;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\Chrome\return_json(array());
-}
-
 $green = \Osmium\State\get_state('green_fits', array());
 if(!isset($green[$_GET['loadoutid']]) || $green[$_GET['loadoutid']] !== true) {
 	\Osmium\Chrome\return_json(array());
