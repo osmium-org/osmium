@@ -301,7 +301,7 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	}
 
 	if(isset($src['__modifiers'][$name])) {
-		$modifiers = array_merge_recursive($src['__modifiers'][$name]);
+		$modifiers = array_merge_recursive($modifiers, $src['__modifiers'][$name]);
 	}
 
 	if(!isset($src[$name])) {
