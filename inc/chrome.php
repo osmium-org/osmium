@@ -119,13 +119,14 @@ function print_search_form() {
 
 function format_used($used, $total, $digits, $show_percent, &$overflow) {
 	if($total == 0 && $used == 0) {
+		$overflow = 0;
 		return '0';
 	}
 
 	$ret = format_number($used).' / '.format_number($total);
+	$percent = $total > 0 ? (100 * $used / $total) : 100;
+	$overflow = max(min(6, ceil($percent) - 100), 0);
 	if($show_percent) {
-		$percent = 100 * $used / $total;
-		$overflow = max(min(6, ceil($percent) - 100), 0);
 		$ret .= '<br />'.round(100 * $used / $total, $digits).' %';
 	}
 
