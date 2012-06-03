@@ -116,9 +116,6 @@ h1#newloadout {
 div#presetsbox {
 	@include column;
 
-	float: left;
-	width: 30em;
-
 	&> ul#presets {
 		list-style-type: 0;
 		padding-left: 0;
@@ -200,11 +197,6 @@ div#chargegroupsbox {
 	}
 }
 
-div#dronelistbox {
-	float: left;
-	width: 30em;
-}
-
 div#dronebay {
 	@include column;
 
@@ -226,6 +218,7 @@ div#dronebay {
 
 	&> ul > li {
 		@include module;
+		cursor: pointer;
 
 		&.drone_placeholder {
 			text-align: center;

@@ -19,6 +19,8 @@ osmium_load_drones = function(json) {
     $('div#dronebay > ul > li.drone').filter(function() { return $(this).data('count') == 1; })
 		.children('strong').hide();
     $('div#dronebay > ul').append("<li class='drone_placeholder'>Drag drones here…</li>\n");
+
+	$('ul.computed_attributes').html(json['computed_attributes']);
 };
 
 osmium_drones_commit = function() {

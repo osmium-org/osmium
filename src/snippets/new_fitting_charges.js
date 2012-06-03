@@ -9,7 +9,7 @@ osmium_refresh_presets = function() {
     }
 };
 
-osmium_switch_preset = function() {
+osmium_switch_preset = function(refetch) {
     $('ul#presets > li.selected').removeClass('selected');
     $("ul.chargegroup > li > select").val(-1).trigger('refresh_picture');
 
@@ -35,6 +35,17 @@ osmium_switch_preset = function() {
 			}
 		} else charge_presets[selected_preset][osmium_slottypes[i]] = {};
     }
+
+	if(refetch) {
+		$("img#presetsbox_spinner").css('visibility', 'visible');
+		$.getJSON('./src/json/new_fit_switch_preset.php', {
+			token: osmium_tok,
+			name: selected_preset
+		}, function(data) {
+			$("ul.computed_attributes").html(data);
+			$("img#presetsbox_spinner").css('visibility', 'hidden');
+		});
+	}
 };
 
 osmium_commit_deleted_preset = function(name) {
@@ -46,7 +57,8 @@ osmium_commit_deleted_preset = function(name) {
 		name: name
     };
 
-    $.get('./src/ajax/update_charge_preset.php', opts, function(result) {
+    $.getJSON('./src/json/update_charge_preset.php', opts, function(data) {
+		$("ul.computed_attributes").html(data);
 		$("img#presetsbox_spinner").css('visibility', 'hidden');
     });
 };
@@ -70,7 +82,8 @@ osmium_commit_preset = function(name, oldname) {
 		} else charge_presets[name][osmium_slottypes[i]] = {};
     }
 
-    $.get('./src/ajax/update_charge_preset.php', serialized_current_preset, function(result) {
+    $.getJSON('./src/json/update_charge_preset.php', serialized_current_preset, function(data) {
+		$("ul.computed_attributes").html(data);
 		$("img#chargegroupsbox_spinner").css('visibility', 'hidden');
     });
 };
@@ -132,7 +145,7 @@ $(function() {
 			var key;
 			for(key in charge_presets) break;
 			selected_preset = key;
-			osmium_switch_preset();
+			osmium_switch_preset(true);
 		}
 		$(this).parent().parent().remove();
 		osmium_commit_deleted_preset(to_delete);
@@ -173,10 +186,10 @@ $(function() {
     });
     $(document).on('click', 'ul#presets > li', function(obj) {
 		selected_preset = $(this).find('strong').text();
-		osmium_switch_preset();
+		osmium_switch_preset(true);
     });
 
     osmium_refresh_presets();
-    osmium_switch_preset();
+    osmium_switch_preset(false);
 	$('ul#presets > li').first().click();
 });

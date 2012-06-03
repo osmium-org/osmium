@@ -348,11 +348,14 @@ function print_chargegroup($groupid, $typeids, $charges) {
 function charges_select() {
 	print_h1('select charges');
   
+	ob_start();
 	print_charge_presetsbox();
+	print_attributes('', ob_get_clean());
 	print_charge_groups();
 
 	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<script>\nvar charge_presets = ".json_encode($fit['charges'], JSON_FORCE_OBJECT)
+	echo "<script>\n$(function() { $('ul.computed_attributes').html(".json_encode(\Osmium\Chrome\get_formatted_loadout_attributes($fit))."); });\n"
+		."var charge_presets = ".json_encode($fit['charges'], JSON_FORCE_OBJECT)
 		.";\nvar selected_preset = ".json_encode($fit['selectedpreset'])
 		.";\n var osmium_preset_num = ".(count($fit['charges']) + 1).";\n</script>\n";
 
@@ -391,7 +394,9 @@ function drones_select() {
 	print_h1('select drones');
 	$fit = \Osmium\State\get_state('new_fit', array());
 
+	ob_start();
 	print_drone_searchbox();
+	print_attributes('', ob_get_clean());
 	print_dronebay();
 	\Osmium\Chrome\print_js_snippet('new_fitting_drones');
 	echo "<script>osmium_load_drones(".json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit)).");</script>\n";
