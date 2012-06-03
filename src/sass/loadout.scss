@@ -1,0 +1,237 @@
+$module-width: 19em;
+
+@mixin column {
+	&> h2 {
+		text-align: center;
+
+		&> em.help {
+			font-size: 0.7em;
+			color: #AAA;
+		}
+	}
+
+	&> ul {
+		padding-left: 2em;
+		list-style-type: square;
+	}
+}
+
+@mixin error-background-opacity($opacity) {
+	background-color: rgba(255, 51, 0, $opacity);
+}
+
+@mixin module {
+	@include ellipsis;
+	padding: 0.125em 0;
+	border-top: 1px dashed #888;
+	line-height: 2em;
+	
+	&:first-child {
+		border-top: none;
+	}
+	
+	&> img:first-child {
+		height: 2em;
+		margin-right: 0.125em;
+	}
+}
+
+@mixin module-top-corner-link {
+	display: inline;
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 1em;
+	line-height: 1em;
+	
+	&:active, &:focus {
+		outline: 0;
+	}
+	
+	&> img {
+		height: 1em;
+	}
+}
+
+@mixin module-list-togglable {
+	width: $module-width;
+	display: inline-block;
+	vertical-align: top;
+	margin: 0 2em 2em 0;
+
+	&> ul {
+		list-style-type: none;
+		padding: 0;
+		margin-top: 0.125em;
+
+		&> li {
+			@include module;
+
+			&.unused {
+				color: #888;
+			}
+
+			&> a.toggle {
+				display: none;
+			}
+		}
+	}
+
+	&.stateful > ul > li {
+		padding-right: 1em;
+		position: relative;
+
+		&> a.toggle {
+			@include module-top-corner-link;
+		}
+	}
+
+	&> h3 {
+		border-bottom: 1px solid #888;
+		padding-left: 0.25em;
+		margin-bottom: 0;
+		position: relative;
+
+		&> small.capacity, &> strong {
+			position: absolute;
+			right: 0.125em;
+			bottom: 0;
+			color: #888;
+		}
+	}
+}
+
+@mixin drone-list {
+	width: auto;
+	display: block;
+	clear: both;
+	
+	&> ul > li {
+		display: inline-block;
+		border: none;
+		width: auto;
+		margin-right: 2em;
+	}
+}
+
+div#fittags > ul, ul.tags {
+    margin: 0;
+	padding: 0;
+	margin-top: 0.15em;
+	list-style-type: none;
+
+	&> li {
+		display: inline-block;
+		border: 1px solid #CCC;
+		border-radius: 1em;
+		font-size: 0.8em;
+		font-family: $mono-font;
+		padding: 0.1em 0.5em;
+		background-color: #F8F8F8;
+	}
+}
+
+span.fitname {
+	text-decoration: underline;
+	font-weight: bold;
+
+	&> img {
+		height: 1em;
+	}
+}
+
+div#metadatabox {
+	@include column;
+
+	float: left;
+	width: 30em;
+
+	&> p#fitdesc {
+		margin-left: 1em;
+	}
+
+	&> ul > li > ul > li > a {
+		&.active {
+			text-decoration: none;
+			color: black;
+			font-weight: bold;
+		}
+
+		&:focus {
+			outline: 0;
+		}
+	}
+}
+
+ul.computed_attributes > li > p {
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0.25em 2em 0 0;
+	padding: 0.125em;
+	line-height: 1em;
+
+	&> img {
+		height: 2em;
+
+		&+ span {
+			display: inline-block;
+			vertical-align: middle;
+		}
+	}
+}
+
+ul.computed_attributes > li > table#resists {
+	display: inline-block;
+	vertical-align: middle;
+	border-collapse: collapse;
+	margin: 1em 0;
+
+	&> tbody > tr > td, &> thead > tr > td, &> thead > tr > th#ehp {
+		text-align: right;
+	}
+
+	&> tbody > tr > th > img, &> thead > tr > td > img {
+		height: 2em;
+	}
+
+	&> tbody > tr > td {
+		width: 4em;
+
+		&> div {
+			position: relative;
+			width: 100%;
+			padding-bottom: 1px;
+
+			&> span.bar {
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				height: 2px;
+				background-color: black;
+			}
+		}
+	}
+
+	&> tbody > tr {
+		&> td.emresist > div > span.bar { background-color: #2685C6; }
+		&> td.thermalresist > div > span.bar { background-color: #C62626; }
+		&> td.kineticresist > div > span.bar { background-color: #A3A3A3; }
+		&> td.explosiveresist > div > span.bar { background-color: #C68526; }
+	}
+
+	&> thead > tr > th#ehp {
+		font-weight: normal;
+		font-size: 0.666em;
+
+		&> strong {
+			font-size: 1.5em;
+		}
+	}
+}
+
+p.overflow6 { @include error-background-opacity(0.6); }
+p.overflow5 { @include error-background-opacity(0.5); }
+p.overflow4 { @include error-background-opacity(0.4); }
+p.overflow3 { @include error-background-opacity(0.3); }
+p.overflow2 { @include error-background-opacity(0.2); }
+p.overflow1 { @include error-background-opacity(0.1); }

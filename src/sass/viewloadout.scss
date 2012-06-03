@@ -1,0 +1,44 @@
+div#vloadoutbox {
+    margin-left: 31em;
+	border-left: 1px dotted #CCC;
+	padding: 0 1em;
+
+	&> header {
+		position: relative;
+		padding-left: 6.5em;
+
+		&> img#fittypepic {
+			position: absolute;
+			top: 0;
+			left: 0;
+			height: 100%;
+		}
+
+		&> h1 {
+			margin: 0;
+		}
+
+		&> h2 {
+			margin-bottom: 0;
+		}
+
+		&> div#fittags {
+			&> h2, &> ul {
+				display: inline-block;
+			}
+
+			&> h2 {
+				margin: 0;
+				font-size: 1em;
+			}
+		}
+	}
+
+	&> div.slots, &> div#vdronebay {
+		@include module-list-togglable;
+	}
+
+	&> div#vdronebay {
+		@include drone-list;
+	}
+}

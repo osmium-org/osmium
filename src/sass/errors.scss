@@ -1,0 +1,31 @@
+@mixin error {
+	border: 1px solid #C30;
+	color: #C30;
+	padding: 0.5em;
+	text-align: center;
+}
+
+@mixin warning {
+	@include error;
+	border-color: #880;
+	color: #880;
+}
+
+@mixin notice {
+	@include error;
+	border: none;
+	color: black;
+	text-decoration: underline;
+}
+
+p.error_box {
+	@include error;
+}
+
+p.warning_box {
+	@include warning;
+}
+
+p.notice_box {
+	@include notice;
+}

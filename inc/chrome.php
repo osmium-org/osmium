@@ -36,7 +36,6 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>\n";
 	echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
-	echo "<link rel='stylesheet' href='$relative/static/fonts/stylesheet.css' type='text/css' />\n";
 	echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";

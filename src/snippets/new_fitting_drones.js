@@ -56,7 +56,7 @@ $(function() {
 		$("img#dronelistbox_spinner").css('visibility', 'visible');
 
 		$.getJSON('./src/json/search_drones.php', {
-			q: $("div#dronelistbox input[type='text']").val(),
+			q: $("div#dronelistbox input[type='search']").val(),
 			token: osmium_tok
 		}, function(json) {
 			$("ul#search_results").empty();

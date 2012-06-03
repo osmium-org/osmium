@@ -107,7 +107,7 @@ function print_form_prevnext() {
 function print_h1($name) {
 	global $step;
 	global $g_title;
-	echo "<h1>$g_title, step $step of ".FINAL_STEP.": $name</h1>\n";
+	echo "<h1 id='newloadout'>$g_title, step $step of ".FINAL_STEP.": $name</h1>\n";
 }
 
 /* ----------------------------------------------------- */
@@ -170,7 +170,7 @@ function print_modules_searchbox() {
 	echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
 	echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
-	echo "<input type='text' placeholder='Search by name or category...' autofocus='autofocus' />\n";
+	echo "<input type='search' placeholder='Search by name or category...' autofocus='autofocus' />\n";
 	echo "<input type='submit' value='Search' />\n<br />\n";
 	$filters = unserialize(\Osmium\State\get_setting('module_search_filter', serialize(array())));
 	$filters = array_combine($v = array_values($filters), $v);
@@ -369,7 +369,7 @@ function print_drone_searchbox() {
 	echo "<img src='./static/icons/spinner.gif' id='dronelistbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Double-click to add to bay)</em>\n</h2>\n";
 	echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
-	echo "<input type='text' placeholder='Search by name or category...' />\n";
+	echo "<input type='search' placeholder='Search by name or category...' />\n";
 	echo "<input type='submit' value='Search' />\n";
 	echo "</form>\n<ul id='search_results'></ul>\n</div>\n";
 }

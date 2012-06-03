@@ -2,7 +2,7 @@ $(function() {
     $("div#searchbox > form").submit(function() {
 		$("img#searchbox_spinner").css("visibility", "visible");
 		
-		search_params.q = $("div#searchbox input[type='text']").val();
+		search_params.q = $("div#searchbox input[type='search']").val();
 		$.getJSON('./src/json/search_modules.php', search_params, function(json) {
 			$("ul#search_results").empty();
 			$("p#search_warning").remove();

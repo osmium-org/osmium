@@ -1,0 +1,235 @@
+div#loadoutbox {
+	@include column;
+
+	margin-left: 31em;
+	margin-right: 21em;
+	border-left: 1px dotted #CCC;
+	border-right: 1px dotted #CCC;
+	padding-left: 1em;
+
+	&> form > table {
+		width: 100%;
+		margin-top: 1em;
+	}
+
+	&> div.loadout_slot_cat {
+		@include module-list-togglable;
+
+		&> ul > li.module {
+			cursor: move;
+		}
+	}
+}
+
+div#shortlistbox {
+	@include column;
+
+	float: right;
+	width: 20em;
+	padding-right: 0.5em;
+}
+
+div#searchbox, div#dronelistbox {
+	@include column;
+
+	text-align: center;
+	padding-left: 1em;
+
+	&> form > input[type='search'] {
+		width: 22em;
+	}
+
+	&> form > p#search_filters {
+		margin: 0.125em 0;
+
+		&> img.meta_filter {
+			cursor: pointer;
+
+			&.ds {
+				opacity: 0.2;
+			}
+		}
+	}
+}
+
+div#searchbox > ul#search_results,
+div#dronelistbox > ul#search_results,
+div#shortlistbox > ul#modules_shortlist {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	width: $module-width;
+	display: inline-block;
+	text-align: left;
+
+	&> li {
+		@include module;
+
+		&.module, &.drone {
+			cursor: move;
+		}
+
+		&.shortlist_dummy {
+			text-align: center;
+		}
+	}
+}
+
+div#shortlistbox > ul#modules_shortlist > li.module {
+	position: relative;
+
+	&> a.delete {
+		@include module-top-corner-link;
+
+		display: none;
+	}
+
+	&:hover {
+		padding-right: 1em;
+	}
+
+	&:hover > a.delete {
+		display: inline;
+	}
+}
+
+div#metadatabox > ul.compact.computed_attributes {
+	margin: 0;
+}
+
+input[type='submit'] {
+	&.next_step, &.final_step, &.prev_step {
+		font-size: 1em;
+		border-color: darkgreen;
+		background-color: #F0FFF0;
+	}
+}
+
+select#hullid {
+	font-size: 1.4em;
+}
+
+h1#newloadout {
+	margin-bottom: 0;
+}
+
+div#presetsbox {
+	@include column;
+
+	float: left;
+	width: 30em;
+
+	&> ul#presets {
+		list-style-type: 0;
+		padding-left: 0;
+	}
+
+	&> ul#presets > li {
+		@include ellipsis;
+
+		line-height: 2em;
+		border-top: 1px dotted #CCC;
+		padding-left: 0.5em;
+
+		&:first-child {
+			border-top: none;
+		}
+
+		&.selected {
+			background-color: #E8FFE8;
+		}
+
+		&> span {
+			float: right;
+			visibility: hidden;
+			font-size: 0.9em;
+			padding-right: 0.25em;
+		}
+
+		&:hover > span {
+			visibility: visible;
+		}
+	}
+}
+
+div#chargegroupsbox {
+	@include column;
+
+	margin-left: 31em;
+	border-left: 1px dotted #CCC;
+	padding-left: 1em;
+
+	&> h2 {
+		text-align: left;
+		margin-bottom: 0;
+	}
+
+	&> form > table > tbody > tr > td > ul#chargegroups {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+		margin-bottom: 2em;
+
+		&> li {
+			border-top: 1px dotted #CCC;
+			padding: 1em 0;
+
+			&:first-child {
+				border-top: none;
+			}
+
+			&> ul {
+				list-style-type: none;
+				padding: 0;
+			}
+
+			&> ul > li {
+				&.ui-selecting {
+					background-color: #FFFFCC;
+				}
+
+				&.ui-selected {
+					background-color: #E8FFE8;
+				}
+			}
+			
+			&> ul > li > select {
+				width: auto;
+			}
+		}
+	}
+}
+
+div#dronelistbox {
+	float: left;
+	width: 30em;
+}
+
+div#dronebay {
+	@include column;
+
+	margin-left: 31em;
+	padding-left: 1em;
+	border-left: 1px dotted #CCC;
+
+	&> h2 {
+		text-align: left;
+		margin-bottom: 0;
+	}
+
+	&> ul {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+		width: $module-width;
+	}
+
+	&> ul > li {
+		@include module;
+
+		&.drone_placeholder {
+			text-align: center;
+			font-style: italic;
+		}
+	}
+}

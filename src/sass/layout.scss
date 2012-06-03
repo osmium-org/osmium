@@ -1,0 +1,156 @@
+$footer-height: 1.7em;
+$nav-height: 2.5em;
+
+@mixin ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+div#wrapper {
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	margin: 0 auto (-$footer-height);
+
+	&> h1 {
+		padding-left: 0.5em;
+		padding-right: 0.5em;
+
+		&#mainp {
+			text-align: center;
+		}
+	}
+
+	&> p {
+		padding-left: 1em;
+	}
+}
+
+footer, div#push {
+	height: $footer-height;
+	clear: both;
+}
+
+nav {
+	height: $nav-height;
+	width: 100%;
+	position: relative;
+	border-bottom: 1px dotted #CCC;
+
+	&> ul {
+		margin: 0;
+		padding: 0;
+		list-style-type: none;
+		position: absolute;
+		left: 0;
+		top: 0;
+
+		&> li {
+			display: inline-block;
+			line-height: $nav-height;
+			padding-left: 1em;
+
+			&> strong > a {
+				color: black !important;
+				text-decoration: none !important;
+			}
+		}
+	}
+
+	&> div#state_box {
+		position: absolute;
+		top: 0;
+		right: 0;
+
+		&> p, &> form > p {
+			margin: 0;
+			line-height: $nav-height;
+			padding-right: 1em;
+			display: inline-block;
+			vertical-align: middle;
+		}
+
+		&> p > img {
+			height: 2em;
+		}
+
+		&> form > p.error_box {
+			padding: 0.125em;
+			font-size: 0.9em;
+			line-height: 0.9em;
+		}
+	}
+}
+
+footer > p {
+	margin: 0;
+	height: $footer-height;
+	line-height: $footer-height;
+	text-align: right;
+	padding-right: 0.5em;
+	
+	&, &> a {
+		color: #777;
+	}
+}
+
+img {
+	vertical-align: middle;
+
+	&.spinner {
+		visibility: hidden;
+	}
+}
+
+a {
+	&, &:visited {
+		color: #1122CC;
+	}
+
+	&:active, &:focus {
+		color: red;
+	}
+
+	&.dangerous {
+		color: #F30;
+	}
+
+	&> img {
+		border: none;
+	}
+}
+
+.has_spinner {
+	position: relative;
+
+	&> img.spinner {
+		position: absolute;
+		right: 0;
+	}
+}
+
+.overflow {
+	background-color: #FCC !important;
+}
+
+abbr, .mod {
+	border-bottom: 1px dotted #AAA;
+}
+
+p#nojs_warning {
+	width: 100%;
+	border-bottom: 1px dotted red;
+	height: 2em;
+	line-height: 2em;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	background-color: #FFD8D8;
+}

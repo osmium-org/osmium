@@ -1,0 +1,103 @@
+$field-height: 1.5em;
+
+textarea, input, select, optgroup, option {
+	font-family: $mono-font;
+}
+
+input, select, textarea {
+	border: 1px solid #777;
+	background-color: white;
+
+	&:active {
+		border-color: red;
+	}
+
+	&:focus {
+		border-color: orange;
+	}
+
+	&:disabled {
+		color: #444;
+		border-color: black;
+		background-color: #F0F0F0;
+	}
+}
+
+input[type='submit'], button {
+	font-family: $main-font;
+	background-color: #F0F0F0;
+
+	&.dangerous {
+		border-color: red !important;
+		background-color: #FFF0F0 !important;
+	}
+}
+
+form > table {
+	border-collapse: collapse;
+
+	&> tbody > tr {
+		&> td, &> th {
+			vertical-align: top;
+			padding: 0.5em;
+			border-top: 1px dotted #CCC;
+		}
+	}
+
+	&> tbody {
+		&> tr:first-child, &> tr.separator, &> tr.error_message {
+			&> th, &> td, &+ tr > th, &+ tr > td {
+				border-top: none;
+			}
+		}
+
+		&> tr.error_message > td > p {
+			@include error;
+			margin: 0;
+		}
+
+		&> tr.error > td > input {
+			border-color: #C30 !important;
+		}
+
+		&> tr.separator > td > hr {
+			height: 1px;
+			color: #AAA;
+			background-color: #AAA;
+			border: none;
+		}
+	}
+
+	&> tbody > tr > th > label {
+		display: block;
+		text-align: right;
+		line-height: $field-height;
+	}
+
+	&> tbody > tr > td {
+		textarea, input, select {
+			width: 100%;
+			line-height: $field-height;
+			height: $field-height;
+			min-width: 30em;
+		}
+
+		input[type='submit'] {
+			min-width: 0;
+			width: auto;
+		}
+
+		textarea {
+			height: 15em;
+		}
+
+		select {
+			height: 1.7em;
+			line-height: 1.7em;
+		}
+
+		select[size] {
+			height: auto;
+		}
+	}
+}

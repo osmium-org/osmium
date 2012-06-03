@@ -3,3 +3,5 @@ cache/*
 config.ini
 sphinx/*
 !sphinx/sphinx.conf
+static/chrome.css
+.sass-cache

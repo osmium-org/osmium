@@ -1,0 +1,16 @@
+div#recent_loadouts {
+    text-align: center;
+
+	&> ol.loadout_sr {
+		display: inline-block;
+		width: 45em;
+		list-style-type: none;
+		padding: 0;
+		margin: 0;
+		text-align: left;
+
+		&> li {
+			@include ellipsis;
+		}
+	}
+}
