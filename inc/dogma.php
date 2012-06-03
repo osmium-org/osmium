@@ -459,14 +459,7 @@ function &traverse_nested(&$fit, $subarrays) {
 }
 
 function insert_nested(&$fit, $subarrays, $element, $key = null) {
-	//$res =& traverse_nested($fit, $subarrays);
-	$res =& $fit['dogma'];
-	foreach($subarrays as $k => $v) {
-		if($k === 'source') continue;
-
-		$res =& $res[$v];
-	}
-
+	$res =& traverse_nested($fit, $subarrays);
 	if($key === null) $res[] = $element;
 	else if($key === false) $res = $element;
 	else $res[$key] = $element;
