@@ -275,6 +275,13 @@ function print_formatted_loadout_attributes(&$fit) {
 	echo "<td class='kineticresist'>".\Osmium\Chrome\format_resonance($hullKineticResist)."</td>\n";
 	echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($hullExplosiveResist)."</td>\n";
 	echo "</tr>\n</tbody>\n</table>\n</li>\n";
+
+	echo "<li>\n";
+	$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
+	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass')
+		* \Osmium\Dogma\get_ship_attribute($fit, 'agility') / 1000000;
+	echo "<p><img src='../static/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span id='propulsion'><span title='Maximum velocity'>".\Osmium\Chrome\format_number($maxvelocity)." m/s</span><br /><span title='Align time'>".round($aligntime, 1)." s</span></span></p>\n";
+	echo "</li>\n";
 }
 
 function get_formatted_loadout_attributes(&$fit) {
