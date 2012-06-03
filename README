@@ -29,6 +29,8 @@ Dependencies
 * Sphinx search server >= 2.0.4 
   (using the sphinx.conf from the sphinx/ directory)
 
+* (Optional) memcached + PECL/memcached, for obvious reasons
+
 Initial database setup
 ======================
 

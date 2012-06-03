@@ -55,12 +55,15 @@ const VERSION = '0.1.0';
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
+define(__NAMESPACE__.'\USE_MEMCACHED', get_ini_setting('use_memcached'));
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 	osmium_fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
 
-session_save_path(CACHE_DIRECTORY);
+if(!get_ini_setting('use_memcached_for_sessions')) {
+	session_save_path(CACHE_DIRECTORY);
+}
 session_start();
 
 require ROOT.'/inc/chrome.php';

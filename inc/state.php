@@ -20,6 +20,7 @@ namespace Osmium\State;
 
 $__osmium_state =& $_SESSION['__osmium_state'];
 $__osmium_login_state = array();
+$__osmium_memcached = null;
 
 const COOKIE_AUTH_DURATION = 604800; /* 7 days */
 const REQUIRED_ACCESS_MASK = 8; /* Just for CharacterSheet */
@@ -330,20 +331,56 @@ function put_state($key, $value) {
 	return $_SESSION['__osmium_state'][$key] = $value;
 }
 
-function get_cache($key, $default = null) {
-	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+function init_memcached() {
+	global $__osmium_memcached;
 
-	if(file_exists($f)) return unserialize(file_get_contents($f));
-
-	return $default;
+	if($__osmium_memcached === null) {
+		$__osmium_memcached = new \Memcached();
+		$servers = \Osmium\get_ini_setting('servers');
+		foreach($servers as &$s) $s = explode(':', $s);
+		$__osmium_memcached->addServers($servers);
+	}
 }
 
-function put_cache($key, $value, $expires = null) {
-	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
-	return file_put_contents($f, serialize($value));
+function get_cache($key, $default = null) {
+	global $__osmium_memcached;
+
+	if(\Osmium\USE_MEMCACHED) {
+		init_memcached();
+		if(($v = $__osmium_memcached->get($key)) === false) {
+			if($__osmium_memcached->getResultCode() === \Memcached::RES_NOTFOUND) {
+				$v = $default;
+			}
+		}
+		
+		return $v;
+	} else {
+		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+		if(file_exists($f)) return unserialize(file_get_contents($f));
+		return $default;
+	}
+}
+
+function put_cache($key, $value, $expires = 0) {
+	global $__osmium_memcached;
+
+	if(\Osmium\USE_MEMCACHED) {
+		init_memcached();
+		return $__osmium_memcached->set($key, $value, $expires);
+	} else {
+		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+		return file_put_contents($f, serialize($value));
+	}
 }
 
 function invalidate_cache($key) {
-	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
-	if(file_exists($f)) unlink($f);
+	global $__osmium_memcached;
+
+	if(\Osmium\USE_MEMCACHED) {
+		init_memcached();
+		$__osmium_memcached->delete($key);
+	} else {
+		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+		if(file_exists($f)) unlink($f);
+	}
 }
