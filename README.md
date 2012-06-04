@@ -60,11 +60,11 @@ the `osmium_user` user, follow these steps:
 
 2. Import the Osmium static dump:
 
-    psql osmium osmium_user < osmium-sde-*.sql
+    <pre>psql osmium osmium_user < osmium-sde-*.sql</pre>
 
 3. Create the `osmium` schema and import the tables/views:
 
-    pg_restore -O osmium_pgsql.backup | psql osmium osmium_user
+    <pre>pg_restore -O osmium_pgsql.backup | psql osmium osmium_user</pre>
 
 Updating the Osmium static data dump
 ====================================
@@ -76,20 +76,20 @@ steps:
 
 1. Backup your Osmium schema.
 
-    pg_dump -n osmium -U osmium_user osmium -F c > OSMIUM_DUMP.backup
-    # or use the bin/backup_osmium script
+    <pre>pg_dump -n osmium -U osmium_user osmium -F c > OSMIUM_DUMP.backup
+    # or use the bin/backup_osmium script</pre>
 
 2. Delete the `osmium` and `eve` schemas.
 
-    DROP SCHEMA osmium CASCADE;
-    DROP SCHEMA eve CASCADE;
+    <pre>DROP SCHEMA osmium CASCADE;
+    DROP SCHEMA eve CASCADE;</pre>
 
 3. Follow steps 1 and 2 of the previous section ("Initial database
    setup").
 
 4. Restore your Osmium schema.
 
-    pg_restore -O OSMIUM_DUMP.backup | psql osmium osmium_user
+    <pre>pg_restore -O OSMIUM_DUMP.backup | psql osmium osmium_user</pre>
 
    If you run into integrity issues, you may have to delete some
    fittings that use removed modules/ships.
@@ -102,7 +102,7 @@ The quick way
 
 Get it from here: <http://artefact2.com/files/osmium-data/>
 
-Use unxz to decompress.
+Use `unxz` to decompress.
 
 (Please be kind and use this with moderation, I don't have a lot of
 bandwidth! If you can mirror this, please do so.)
@@ -116,7 +116,7 @@ are in the official Static Data Dump, so you'll have to dump the
 database from the client yourself then do some minor transformations
 to make it PostgreSQL-friendly.
 
-Use the "eve2sql.py" script of the Eos repository
+Use the `eve2sql.py` script of the Eos repository
 <https://github.com/DarkFenX/Eos> to dump a SQLite database, then dump
 it in a text file :
 
