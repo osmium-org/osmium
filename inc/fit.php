@@ -531,7 +531,9 @@ function get_capacitor_stability(&$fit) {
 		}
 	}
 
+	$peak_rate = (sqrt(0.25) - 0.25) * 2 * $capacity / $tau; /* Recharge rate at 25% capacitor */
 	$X = max(0, $usage_rate);
+
 	/* I got the solution for cap stability by solving the quadratic equation:
 	   dC   /       C        C   \   2Cmax
 	   -- = |sqrt(-----) - ----- | x -----
@@ -544,6 +546,7 @@ function get_capacitor_stability(&$fit) {
 	   A simple check is that, for dC/dt = 0, the two solutions should be 0 and Cmax. */
 	$delta = $capacity * $capacity - 2 * $tau * $X * $capacity;
 	if($delta < 0) {
+		/* $delta negative, not cap stable */
 		$t = 0;
 		$capacitor = $capacity; /* Start with full capacitor */
 
@@ -561,10 +564,12 @@ function get_capacitor_stability(&$fit) {
 			$t += $step;
 		}
 
-		return array($usage_rate, false, $t / 1000);
+		return array($usage_rate - $peak_rate, false, $t / 1000);
 	} else {
+		/* $delta positive, cap-stable */
+		/* Use the highest root of our equation (but there is also another solution below the 25% peak) */
 		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
-		return array($usage_rate, true, 100 * $C / $capacity);
+		return array($usage_rate - $peak_rate, true, 100 * $C / $capacity);
 	}
 }
 
