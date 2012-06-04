@@ -46,7 +46,8 @@ if(isset($_GET['toggletype']) && isset($_GET['toggleindex'])
    && in_array($_GET['toggletype'], \Osmium\Fit\get_stateful_slottypes())) {
 	$index = intval($_GET['toggleindex']);
 	$type = $_GET['toggletype'];
-	\Osmium\Fit\toggle_module_state($fit, $index, $fit['modules'][$type][$index]['typeid']);
+	$direction = isset($_GET['toggledirection']) && $_GET['toggledirection'] === 'true';
+	\Osmium\Fit\toggle_module_state($fit, $index, $fit['modules'][$type][$index]['typeid'], $direction);
 }
 
 \Osmium\Chrome\return_json(

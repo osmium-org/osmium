@@ -253,47 +253,50 @@ function change_module_state(&$fit, $index, $typeid, $state) {
 	$fit['modules'][$type][$index]['state'] = $state;
 }
 
-function toggle_module_state(&$fit, $index, $typeid) {
+function toggle_module_state(&$fit, $index, $typeid, $next = true) {
 	get_attributes_and_effects(array($typeid), $fit['cache']);
 	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
 	$state = $fit['modules'][$type][$index]['state'];
 
+	list($isactivable, $isoverloadable) = get_module_states($fit, $index, $typeid);
+	$new_state = $next ? get_next_state($state, $isactivable, $isoverloadable) :
+		get_previous_state($state, $isactivable, $isoverloadable);
+
+	change_module_state($fit, $index, $typeid, $new_state);
+}
+
+function get_next_state($state, $isactivable, $isoverloadable) {
 	if($state === null) {
 		/* Should theoratically not happen, but handle it anyway */
-		change_module_state($fit, $index, $typeid, STATE_OFFLINE);
-		return;
+		return STATE_OFFLINE;
 	} else if($state === STATE_OFFLINE) {
-		change_module_state($fit, $index, $typeid, STATE_ONLINE);
-		return;
-	}
-
-	list($isactivable, $isoverloadable) = get_module_states($fit, $index, $typeid);
-
-	if($state === STATE_ONLINE) {
-		if($isactivable) {
-			change_module_state($fit, $index, $typeid, STATE_ACTIVE);
-			return;
-		} else {
-			/* Don't check for $isoverladable, it dosen't make sense
-			 * for a non-activable module to be overloadable */
-			change_module_state($fit, $index, $typeid, STATE_OFFLINE);
-			return;
-		}
+		return STATE_ONLINE;
+	} if($state === STATE_ONLINE) {
+		return $isactivable ? STATE_ACTIVE : STATE_OFFLINE;
 	} else if($state === STATE_ACTIVE) {
-		if($isoverloadable) {
-			change_module_state($fit, $index, $typeid, STATE_OVERLOADED);
-			return;
-		} else {
-			change_module_state($fit, $index, $typeid, STATE_OFFLINE);
-			return;
-		}
+		return $isoverloadable ? STATE_OVERLOADED : STATE_OFFLINE;
 	} else if($state === STATE_OVERLOADED) {
-		change_module_state($fit, $index, $typeid, STATE_OFFLINE);
-		return;
+		return STATE_OFFLINE;
 	}
 
 	/* This is serious. We're fucked up. */
-	trigger_error('toggle_module_state(): unknown module state ('.$state.')', E_USER_ERROR);
+	trigger_error('get_next_state(): unknown module state ('.$state.')', E_USER_ERROR);
+}
+
+function get_previous_state($state, $isactivable, $isoverloadable) {
+	if($state === STATE_OVERLOADED) {
+		return STATE_ACTIVE;
+	} else if($state === STATE_ACTIVE) {
+		return STATE_ONLINE;
+	} if($state === STATE_ONLINE) {
+		return STATE_OFFLINE;
+	} else if($state === STATE_OFFLINE || $state === null) {
+		if($isoverloadable) return STATE_OVERLOADED;
+		if($isactivable) return STATE_ACTIVE;
+		return STATE_ONLINE;
+	}
+
+	trigger_error('get_previous_state(): unknown module state ('.$state.')', E_USER_ERROR);
 }
 
 function get_module_states(&$fit, $index, $typeid) {

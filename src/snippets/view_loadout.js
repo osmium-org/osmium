@@ -1,11 +1,12 @@
-osmium_commit_load = function(toggletype, toggleindex) {
+osmium_commit_load = function(toggletype, toggleindex, toggledirection) {
 	$("img#vloadoutbox_spinner").css('visibility', 'visible');
 
 	var opts = {
 		loadoutid: $('div#vloadoutbox').data('loadoutid'),
 		preset: $('ul#vpresets > li > a.active').parent().data('index'),
 		toggletype: toggletype,
-		toggleindex: toggleindex
+		toggleindex: toggleindex,
+		toggledirection: toggledirection
 	};
 
 	$('div#vloadoutbox > div.slots.stateful > ul > li[data-state]').each(function() {
@@ -60,8 +61,15 @@ $(function() {
 		return false;
 	});
 
-	$('div#vloadoutbox > div.slots.stateful > ul > li > a.toggle').click(function() {
-		osmium_commit_load($(this).parent().data('slottype'), $(this).parent().data('index'));
+	$('div#vloadoutbox > div.slots.stateful > ul > li > a.toggle').click(function(obj) {
+		osmium_commit_load($(this).parent().data('slottype'), $(this).parent().data('index'), true);
+		obj.stopPropagation();
+		obj.preventDefault();
+		return false;
+	}).bind('contextmenu', function(obj) {
+		osmium_commit_load($(this).parent().data('slottype'), $(this).parent().data('index'), false);
+		obj.stopPropagation();
+		obj.preventDefault();
 		return false;
 	});
 });

@@ -138,12 +138,13 @@ osmium_loadout_commit_delete = function(index, typeid) {
     });
 };
 
-osmium_loadout_commit_toggle = function(index, typeid) {
+osmium_loadout_commit_toggle = function(index, typeid, direction) {
    $("img#loadoutbox_spinner").css("visibility", "visible");
     var params = {
 		token: osmium_tok,
 		index: index,
-		typeid: typeid
+		typeid: typeid,
+		direction: direction
 	};
     $.getJSON('./src/json/toggle_module_state.php', params, function(json) {
 		osmium_loadout_load(json);
@@ -239,9 +240,16 @@ $(function() {
     });
 
     $(document).on('click', "div.loadout_slot_cat.stateful > ul > li.module > a.toggle", function(obj) {
-		osmium_loadout_commit_toggle($(this).parent().data('index'), $(this).parent().data('typeid'));
+		osmium_loadout_commit_toggle($(this).parent().data('index'), $(this).parent().data('typeid'), true);
 		obj.stopPropagation();
-    });
+		obj.preventDefault();
+		return false;
+    }).on('contextmenu', "div.loadout_slot_cat.stateful > ul > li.module > a.toggle", function(obj) {
+		osmium_loadout_commit_toggle($(this).parent().data('index'), $(this).parent().data('typeid'), false);
+		obj.stopPropagation();
+		obj.preventDefault();
+		return false;
+	});
 
     $(document).on('dblclick', "div.loadout_slot_cat > ul > li.module", function(obj) {
 		osmium_loadout_commit_delete($(this).data('index'), $(this).data('typeid'));
