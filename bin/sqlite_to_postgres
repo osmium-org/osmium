@@ -63,11 +63,15 @@ foreach($tables as $t) {
 		$schema = str_replace(array('xMin', 'xMax'), array('xmin2', 'xmax2'), $schema);
 	}
 	
-	$f = fopen($tblname.'.sql', 'wb');
-	fwrite($f, "BEGIN;\n");
+	$f = fopen($tblname.'-schema.sql', 'wb');
 	fwrite($f, $schema);
+	fclose($f);
+	echo "{$tblname}-schema.sql\n";
+	
+	$f = fopen($tblname.'-data.sql', 'wb');
+	fwrite($f, "BEGIN;\n");
 	fwrite($f, $data);
 	fwrite($f, "\nCOMMIT;\n");
 	fclose($f);
-	echo "$tblname.sql\n";
+	echo "{$tblname}-data.sql\n";
 }
