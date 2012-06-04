@@ -45,12 +45,17 @@ if($_GET['action'] == 'update') {
 		\Osmium\Fit\add_charge($fit, $name, $type, $index, intval($v));
 	}
 
-	foreach($fit['charges'][$name] as $type => $a) {
-		foreach($a as $index => $charge) {
-			if(!isset($charges[$type][$index])) {
-				\Osmium\Fit\remove_charge($fit, $name, $type, $index);
+	/* Not always defined (ie if we just committed a blank preset) */
+	if(isset($fit['charges'][$name])) {
+		foreach($fit['charges'][$name] as $type => $a) {
+			foreach($a as $index => $charge) {
+				if(!isset($charges[$type][$index])) {
+					\Osmium\Fit\remove_charge($fit, $name, $type, $index);
+				}
 			}
 		}
+	} else {
+		$fit['charges'][$name] = array();
 	}
 
 	\Osmium\Fit\use_preset($fit, $name);
