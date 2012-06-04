@@ -551,15 +551,15 @@ function get_capacitor_stability(&$fit) {
 		$capacitor = $capacity; /* Start with full capacitor */
 
 		/* Simulate what happens with the Runge-Kutta method (RK4) */
-		$f = function($t, $c) use($capacity, $tau, $X) {
+		$f = function($c) use($capacity, $tau, $X) {
 			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau - $X;
 		};
 
 		while($capacitor > 0) {
-			$k1 = $f($t, $capacitor);
-			$k2 = $f($t + 0.5 * $step, $capacitor + 0.5 * $step * $k1);
-			$k3 = $f($t + 0.5 * $step, $capacitor + 0.5 * $step * $k2);
-			$k4 = $f($t + $step, $capacitor + $step * $k3);
+			$k1 = $f($capacitor);
+			$k2 = $f($capacitor + 0.5 * $step * $k1);
+			$k3 = $f($capacitor + 0.5 * $step * $k2);
+			$k4 = $f($capacitor + $step * $k3);
 			$capacitor += $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6;
 			$t += $step;
 		}
