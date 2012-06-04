@@ -30,7 +30,7 @@ function is_fit_flaggable($fit) {
 }
 
 function format_moderator_name($a) {
-	if(!$a['ismoderator']) return $a['charactername'];
+	if($a['ismoderator'] !== 't' && $a['ismoderator'] !== true) return $a['charactername'];
   
 	return "<span title='Moderator' class='mod'>♦".$a['charactername']."</span>";
 }
