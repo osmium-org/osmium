@@ -805,7 +805,8 @@ function get_expression_uncached($expressionid) {
 	if($r['arg1'] === null) unset($r['arg1']);
 	if($r['arg2'] === null) unset($r['arg2']);
 	if($r['value'] === null) unset($r['value']);
-	if($r['name'] === null) unset($r['name']);
+	if($r['name'] === null
+	   || $r['op'] !== 'DEFATTRIBUTE') unset($r['name']);
 	if($r['typeid'] === null) unset($r['typeid']);
 	if($r['groupid'] === null) unset($r['groupid']);
 	if($r['attributeid'] === null) unset($r['attributeid']);
