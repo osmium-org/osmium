@@ -311,7 +311,7 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 			if($val === 'undefined') {
 				$row = \Osmium\Db\fetch_row(
 					\Osmium\Db\query_params(
-						'SELECT defaultvalue FROM eve.dgmattributetypes WHERE attributename = $1', 
+						'SELECT defaultvalue FROM eve.dgmattribs WHERE attributename = $1', 
 						array($name)));
 
 				if($row !== false) {

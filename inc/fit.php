@@ -138,7 +138,7 @@ function select_ship(&$fit, $new_typeid) {
 	$fit['dogma']['ship']['mass'] = $row[1];
 	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
 
-	/* Mass is in invtypes, not dgmtypeattributes, so it has to be hardcoded here */
+	/* Mass is in invtypes, not dgmtypeattribs, so it has to be hardcoded here */
 	$fit['cache']['__attributes']['mass'] = array(
 		'attributename' => 'mass',
 		'stackable' => 0,
@@ -645,8 +645,8 @@ function get_attributes_and_effects($typeids, &$out) {
   durationattributeid, trackingspeedattributeid, dischargeattributeid, rangeattributeid, falloffattributeid
   FROM eve.dgmeffects 
   JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
-  LEFT JOIN osmium.cacheexpressions AS preexpr ON preexpr.expressionid = preexpression
-  LEFT JOIN osmium.cacheexpressions AS postexpr ON postexpr.expressionid = postexpression
+  LEFT JOIN eve.dgmcacheexpressions AS preexpr ON preexpr.expressionid = preexpression
+  LEFT JOIN eve.dgmcacheexpressions AS postexpr ON postexpr.expressionid = postexpression
   WHERE typeid IN ('.$typeidIN.')');
 	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
 		$tid = $row['typeid'];
@@ -674,10 +674,10 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out[$tid]['effects'][$row['effectname']] = $row;
 	}
 
-	$attribsq = \Osmium\Db\query('SELECT dgmtypeattributes.typeid, attributename, dgmattributetypes.attributeid, highisgood, stackable, COALESCE(valuefloat, valueint) AS value
-  FROM eve.dgmattributetypes 
-  JOIN eve.dgmtypeattributes ON dgmattributetypes.attributeid = dgmtypeattributes.attributeid
-  WHERE dgmtypeattributes.typeid IN ('.$typeidIN.')');
+	$attribsq = \Osmium\Db\query('SELECT dgmtypeattribs.typeid, attributename, dgmattribs.attributeid, highisgood, stackable, value
+  FROM eve.dgmattribs 
+  JOIN eve.dgmtypeattribs ON dgmattribs.attributeid = dgmtypeattribs.attributeid
+  WHERE dgmtypeattribs.typeid IN ('.$typeidIN.')');
 	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
 		$tid = $row['typeid'];
 
