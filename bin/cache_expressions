@@ -21,7 +21,7 @@ require __DIR__.'/../inc/root.php';
 
 \Osmium\Db\query('BEGIN;');
 
-\Osmium\Db\query('TRUNCATE TABLE osmium.cacheexpressions;');
+\Osmium\Db\query('TRUNCATE TABLE eve.dgmcacheexpressions;');
 
 $q = \Osmium\Db\query('SELECT DISTINCT preexpression AS expressionid
 FROM eve.dgmeffects
@@ -32,6 +32,16 @@ SELECT DISTINCT postexpression AS expressionid
 FROM eve.dgmeffects
 JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
 JOIN osmium.invships ON invships.typeid = dgmtypeeffects.typeid
+UNION
+SELECT DISTINCT preexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invdrones ON invdrones.typeid = dgmtypeeffects.typeid
+UNION
+SELECT DISTINCT postexpression AS expressionid
+FROM eve.dgmeffects
+JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
+JOIN osmium.invdrones ON invdrones.typeid = dgmtypeeffects.typeid
 UNION
 SELECT DISTINCT preexpression AS expressionid
 FROM eve.dgmeffects
@@ -62,7 +72,7 @@ while($row = \Osmium\Db\fetch_row($q)) {
 	echo $row[0]."\n";
 
 	$exp = \Osmium\Dogma\get_expression_uncached($row[0]);
-	\Osmium\Db\query_params('INSERT INTO osmium.cacheexpressions (expressionid, exp) VALUES ($1, $2)', array($row[0], serialize($exp)));
+	\Osmium\Db\query_params('INSERT INTO eve.dgmcacheexpressions (expressionid, exp) VALUES ($1, $2)', array($row[0], serialize($exp)));
 }
 
 \Osmium\Db\query('COMMIT;');

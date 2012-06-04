@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+$host = \Osmium\get_ini_setting('host');
+$port = \Osmium\get_ini_setting('port');
+$user = \Osmium\get_ini_setting('user');
+$password = \Osmium\get_ini_setting('password');
+$dbname = \Osmium\get_ini_setting('dbname');
+
+putenv('PGPASSWORD='.$password);
+
+passthru('pg_dump --host '.escapeshellarg($host)
+         .' --port '.escapeshellarg($port)
+         .' --username '.escapeshellarg($user)
+         .' -F c --schema-only --verbose --file '.escapeshellarg(__DIR__.'/../osmium_pgsql.backup')
+         .' --schema osmium '.escapeshellarg($dbname));

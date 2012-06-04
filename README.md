@@ -60,9 +60,10 @@ the `osmium_user` user, follow these steps:
 
 2. Import the Osmium static dump:
 
-    <pre>psql osmium osmium_user < osmium-sde-*.sql</pre>
+    <pre>unxz osmium-sde-*.sql.xz
+    cat osmium-sde-*.sql | psql osmium osmium_user</pre>
 
-3. Create the `osmium` schema and import the tables/views:
+3. Import the Osmium tables/views:
 
     <pre>pg_restore -O osmium_pgsql.backup | psql osmium osmium_user</pre>
 
@@ -132,26 +133,31 @@ to convert it in PostgreSQL tables:
 This will create two (one for the schema, one for the data) SQL files
 per table in the dump. Then, import the following (in this order):
 
+     # you can find eve_pgsql.backup in the root directory of the Osmium repo
+     # it is more or less the raw schema with indexes, foreign keys and proper types
+     pg_restore -O eve_pgsql.backup | psql osmium osmium_user
+
      psql osmium osmium_user
      SET search_path TO eve;
-     \i eve_pgsql.sql
      \i dgmoperands-schema.sql
      \i dgmoperands-data.sql
      \i dgmexpressions-schema.sql
      \i dgmexpressions-data.sql
+     \i invcategories-data.sql
+     \i invgroups-data.sql
+     \i invtypes-data.sql
+     \i invmetagroups-data.sql
+     \i invmetatypes-data.sql
      \i dgmattribs-data.sql
      \i dgmeffects-data.sql
      \i dgmtypeattribs-data.sql
      \i dgmtypeeffects-data.sql
-     \i invcategories-data.sql
-     \i invgroups-data.sql
-     \i invmetagroups-data.sql
-     \i invmetatypes-data.sql
-     \i invtypes-data.sql
 
 Now, use the cache_expressions script to populate the `cacheexpressions`
 table:
 
     bin/cache_expressions
 
-That's it! You can now dump the relevant tables and save them for later use.
+That's it! You can now delete the `dgmoperands` and `dgmexpressions`
+tables, and dump the relevant tables and save them for later use (for
+example by using the `backup_eve` script).
