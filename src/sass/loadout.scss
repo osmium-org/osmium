@@ -97,6 +97,17 @@ $module-width: 19em;
 			right: 0.125em;
 			bottom: 0;
 			color: #888;
+
+			&> span {
+				display: inline-block;
+				margin-left: 2em;
+
+				&> img:first-child {
+					vertical-align: bottom;
+					height: 1.5em;
+					margin-right: 0.25em;
+				}
+			}
 		}
 	}
 }

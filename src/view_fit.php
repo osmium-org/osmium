@@ -205,13 +205,19 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 	echo "</ul>\n</div>\n";
 }
 
-if(($total = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 0) {
+if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 0) {
 	if(!isset($fit['drones'])) $fit['drones'] = array();
 
-	$used = 0;
-	foreach($fit['drones'] as $drone) $used += ($drone['quantityinbay'] + $drone['quantityinspace']) * $drone['volume'];
+	$totalbandwidth = \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth');
 
-	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'>$used / $total m<sup>3</sup></small></h3>\n";
+	$usedcapacity = 0;
+	$usedbandwidth = 0;
+	foreach($fit['drones'] as $drone) {
+		$usedcapacity += ($drone['quantityinbay'] + $drone['quantityinspace']) * $drone['volume'];
+		$usedbandwidth += $drone['quantityinspace'] * $drone['bandwidth'];
+	}
+
+	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'><span><img src='../static/icons/bandwidth_ds.png' alt='Drone bandwidth' title='Drone bandwidth' /><span id='dronebandwidth'>$usedbandwidth / $totalbandwidth</span> Mbit/s</span><span><img src='../static/icons/dronecapacity_ds.png' alt='Drone capacity' title='Drone capacity' />$usedcapacity / $totalcapacity m<sup>3</sup></span></small></h3>\n";
 
 	foreach(array('bay', 'space') as $v) {
 		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul>\n";

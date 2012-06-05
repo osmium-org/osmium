@@ -1,7 +1,9 @@
 osmium_load_drones = function(json) {
     $('div#dronebay > div > ul').empty();
-    var capacity = json['attributes']['dronecapacity'];
+	var capacity = json['attributes']['dronecapacity'];
+	var bandwidth = json['attributes']['dronebandwidth'];
     var used_capacity = 0;
+	var used_bandwidth = 0;
     for(var i = 0; i < json['drones'].length; ++i) {
 		if(json['drones'][i]['quantityinbay'] > 0) {
 			osmium_add_drone(json['drones'][i]['typeid'],
@@ -14,6 +16,7 @@ osmium_load_drones = function(json) {
 							 json['drones'][i]['typename'],
 							 json['drones'][i]['quantityinspace'],
 							 "div#dronebay > div#inspace > ul");
+			used_bandwidth += json['drones'][i]['quantityinspace'] * json['drones'][i]['bandwidth'];
 		}
 		
 		used_capacity += (json['drones'][i]['quantityinbay'] 
@@ -25,6 +28,13 @@ osmium_load_drones = function(json) {
 		$('p#dronecapacity > strong').addClass('overflow');
     } else {
 		$('p#dronecapacity > strong').removeClass('overflow');
+    }
+
+    $('p#dronebandwidth > strong').text(used_bandwidth + ' / ' + bandwidth);;
+    if(used_bandwidth > bandwidth) {
+		$('p#dronebandwidth > strong').addClass('overflow');
+    } else {
+		$('p#dronebandwidth > strong').removeClass('overflow');
     }
 
     $('div#dronebay > div > ul > li.drone').filter(function() { return $(this).data('count') == 1; })

@@ -209,6 +209,13 @@ div#dronebay {
 		margin-bottom: 0;
 	}
 
+	&> p#dronecapacity, &> p#dronebandwidth {
+		&> img:first-child {
+			height: 2em;
+			margin-right: 0.5em;
+		}
+	}
+
 	&> div > h4 {
 		border-bottom: 1px solid #CCC;
 		margin-bottom: 0.5em;

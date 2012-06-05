@@ -51,7 +51,8 @@ function get_data_step_drone_select($fit) {
 	return array(
 		'drones' => array_values($fit['drones']),
 		'attributes' => array(
-			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')
+			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity'),
+			'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
 			),
 		'computed_attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
 		);
