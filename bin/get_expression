@@ -21,4 +21,4 @@ require __DIR__.'/../inc/root.php';
 
 list($exp) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT exp FROM eve.dgmcacheexpressions WHERE expressionid = $1', array($argv[1])));
 
-print_r(unserialize($exp));
+var_export(unserialize($exp));

@@ -22,6 +22,17 @@ const USEFUL_SKILLGROUPS = '(273, 272, 271, 255, 269, 256, 275, 257, 989)';
 
 /* ----------------------------------------------------- */
 
+function get_expression_maybe_overriden($effectname, $type) {
+	return file_exists($f =__DIR__.'/effectoverrides/'.$effectname.'-'.$type.'.php') ?
+		(require $f) : false;
+}
+
+function eval_effect_expression_maybe_overriden(&$fit, $effect, $type) {
+	eval_expression($fit, 
+	                get_expression_maybe_overriden($effect['effectname'], $type) ?: 
+	                unserialize($effect[$type.'exp']));
+}
+
 function eval_ship_preexpressions(&$fit) {
 	$fit['dogma']['source'] = array('ship');
 	$fit['dogma']['self'] =& $fit['dogma']['ship'];
@@ -31,7 +42,7 @@ function eval_ship_preexpressions(&$fit) {
 			trigger_error('eval_ship_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_ERROR);
 			continue;
 		}
-		eval_expression($fit, unserialize($effect['preexp']));
+		eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 	}
 
 	unset($fit['dogma']['source']);
@@ -47,7 +58,7 @@ function eval_ship_postexpressions(&$fit) {
 			trigger_error('eval_ship_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
 			continue;
 		}
-		eval_expression($fit, unserialize($effect['postexp']));
+		eval_effect_expression_maybe_overriden($fit, $effect, 'post');
 	}
 
 	unset($fit['dogma']['source']);
@@ -82,7 +93,7 @@ function eval_skill_preexpressions(&$fit) {
 		$fit['dogma']['self'] =& $fit['dogma']['skills'][$typeid];
 
 		foreach($fit['cache'][$typeid]['effects'] as $effect) {
-			eval_expression($fit, unserialize($effect['preexp']));
+			eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 		}
 
 		\Osmium\Fit\maybe_remove_cache($fit, $typeid);
@@ -111,7 +122,7 @@ function eval_module_preexpressions(&$fit, $moduletype, $index, array $categorie
 			trigger_error('eval_module_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
 		}
-		eval_expression($fit, unserialize($effect['preexp']));
+		eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 	}
 
 	unset($fit['dogma']['source']);
@@ -133,7 +144,7 @@ function eval_module_postexpressions(&$fit, $moduletype, $index, array $categori
 			trigger_error('eval_module_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
 			continue;
 		}
-		eval_expression($fit, unserialize($effect['postexp']));
+		eval_effect_expression_maybe_overriden($fit, $effect, 'post');
 	}
 
 	unset($fit['dogma']['source']);
@@ -151,7 +162,7 @@ function eval_charge_preexpressions(&$fit, $presetname, $type, $index) {
 			trigger_error('eval_charge_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
 		}
-		eval_expression($fit, unserialize($effect['preexp']));
+		eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 	}
 
 	unset($fit['dogma']['source']);
@@ -169,7 +180,7 @@ function eval_charge_postexpressions(&$fit, $presetname, $type, $index) {
 			trigger_error('eval_charge_postexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
 		}
-		eval_expression($fit, unserialize($effect['postexp']));
+		eval_effect_expression_maybe_overriden($fit, $effect, 'post');
 	}
 
 	unset($fit['dogma']['source']);
