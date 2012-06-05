@@ -26,48 +26,12 @@ require __DIR__.'/../inc/root.php';
 $q = \Osmium\Db\query('SELECT DISTINCT preexpression AS expressionid
 FROM eve.dgmeffects
 JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invships ON invships.typeid = dgmtypeeffects.typeid
+JOIN osmium.invusedtypes ON invusedtypes.typeid = dgmtypeeffects.typeid
 UNION
 SELECT DISTINCT postexpression AS expressionid
 FROM eve.dgmeffects
 JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invships ON invships.typeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT preexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invdrones ON invdrones.typeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT postexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invdrones ON invdrones.typeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT preexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invmodules ON invmodules.typeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT postexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invmodules ON invmodules.typeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT preexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invcharges ON invcharges.chargeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT postexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invcharges ON invcharges.chargeid = dgmtypeeffects.typeid
-UNION
-SELECT DISTINCT preexpression AS expressionid
-FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invskills ON invskills.typeid = dgmtypeeffects.typeid 
-AND invskills.groupid IN '.\Osmium\Dogma\USEFUL_SKILLGROUPS);
+JOIN osmium.invusedtypes ON invusedtypes.typeid = dgmtypeeffects.typeid');
 while($row = \Osmium\Db\fetch_row($q)) {
 	echo $row[0]."\n";
 
