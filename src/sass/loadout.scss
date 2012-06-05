@@ -105,12 +105,45 @@ $module-width: 19em;
 	width: auto;
 	display: block;
 	clear: both;
+	overflow: hidden;
 	
-	&> ul > li {
-		display: inline-block;
-		border: none;
-		width: auto;
-		margin-right: 2em;
+	&> div#inspace, &> div#inbay {
+		width: 50%;
+
+		&#inbay {
+			float: left;
+			padding-right: 1em;
+		}
+
+		&#inspace {
+			margin-left: 50%;
+			padding-left: 1em;
+		}
+
+		&> h4 {
+			margin: 0.5em 0 0.25em 0;
+			padding-left: 0.25em;
+			border-bottom: 1px solid #CCC;
+		}
+
+		&> ul {
+			margin: 0;
+			padding: 0;
+			list-style-type: none;
+		}
+
+		&> ul > li {
+			@include module;
+
+			display: inline-block;
+			border: none;
+			width: auto;
+			margin-right: 2em;
+
+			&> img:first-child {
+				margin-right: 0.5em;
+			}
+		}
 	}
 }
 

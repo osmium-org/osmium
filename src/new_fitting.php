@@ -378,11 +378,14 @@ function print_drone_searchbox() {
 }
 
 function print_dronebay() {
-	echo "<div id='dronebay'>\n<h2 class='has_spinner'>Drone bay";
+	echo "<div id='dronebay'>\n<h2 class='has_spinner'>Drones";
 	echo "<img src='./static/icons/spinner.gif' id='dronebay_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
 	echo "<p id='dronecapacity'><img src='./static/icons/dronecapacity.png' alt='Drone capacity' title='Drone capacity' /> <strong></strong> m<sup>3</sup></p>";
-	echo "<ul></ul>\n";
+
+	foreach(array('bay', 'space') as $v) {
+		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul></ul>\n</div>\n";
+	}
 
 	\Osmium\Forms\print_form_begin();
 	print_form_prevnext();

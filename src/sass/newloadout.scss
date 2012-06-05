@@ -209,16 +209,23 @@ div#dronebay {
 		margin-bottom: 0;
 	}
 
-	&> ul {
+	&> div > h4 {
+		border-bottom: 1px solid #CCC;
+		margin-bottom: 0.5em;
+		width: $module-width;
+		padding-left: 0.5em;
+	}
+
+	&> div > ul {
 		list-style-type: none;
 		margin: 0;
 		padding: 0;
 		width: $module-width;
 	}
 
-	&> ul > li {
+	&> div > ul > li {
 		@include module;
-		cursor: pointer;
+		cursor: move;
 
 		&.drone_placeholder {
 			text-align: center;

@@ -451,12 +451,17 @@ function use_preset(&$fit, $presetname) {
 function add_drones_batch(&$fit, $drones) {
 	get_attributes_and_effects(array_keys($drones), $fit['cache']);
 
-	foreach($drones as $typeid => $count) {
-		add_drone($fit, $typeid, $count);
+	foreach($drones as $typeid => $quantities) {
+		$quantityinbay = isset($quantities['quantityinbay']) ? $quantities['quantityinbay'] : 0;
+		$quantityinspace = isset($quantities['quantityinspace']) ? $quantities['quantityinspace'] : 0;
+
+		if($quantityinbay > 0 || $quantityinspace > 0) {
+			add_drone($fit, $typeid, $quantityinbay, $quantityinspace);
+		}
 	}
 }
 
-function add_drone(&$fit, $typeid, $quantity = 1) {
+function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 	get_attributes_and_effects(array($typeid), $fit['cache']);
 
 	if(!isset($fit['drones'][$typeid])) {
@@ -464,26 +469,50 @@ function add_drone(&$fit, $typeid, $quantity = 1) {
 			'typeid' => $typeid,
 			'typename' => $fit['cache'][$typeid]['typename'],
 			'volume' => $fit['cache'][$typeid]['volume'],
-			'count' => 0,
+			'quantityinbay' => 0,
+			'quantityinspace' => 0,
 			);
 	}
 
-	$fit['drones'][$typeid]['count'] += $quantity;
+	$fit['drones'][$typeid]['quantityinbay'] += $quantityinbay;
+	$fit['drones'][$typeid]['quantityinspace'] += $quantityinspace;
 }
 
-function remove_drone(&$fit, $typeid, $quantity = 1) {
-	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['count'] < $quantity) {
-		trigger_error('remove_drone(): not enough drones to remove', E_USER_ERROR);
-		unset($fit['drones'][$typeid]);
-		maybe_remove_cache($fit, $typeid);
+function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
+	if($from !== 'bay' && $from !== 'space') {
+		trigger_error('remove_drone(): unknown origin '.$from, E_USER_WARNING);
 		return;
 	}
 
-	$fit['drones'][$typeid]['count'] -= $quantity;
-	if($fit['drones'][$typeid]['count'] == 0) {
+	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['quantityin'.$from] < $quantity) {
+		trigger_error('remove_drone(): not enough drones to remove', E_USER_WARNING);
+		$fit['drones'][$typeid]['quantityin'.$from] = 0;
+	} else {
+		$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
+	}
+
+	if($fit['drones'][$typeid]['quantityinbay'] == 0
+		&& $fit['drones'][$typeid]['quantityinspace'] == 0) {
 		unset($fit['drones'][$typeid]);
 		maybe_remove_cache($fit, $typeid);
 	}
+}
+
+function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
+	if($from !== 'bay' && $from !== 'space') {
+		trigger_error('transfer_drone(): unknown origin '.$from, E_USER_WARNING);
+		return;
+	}
+	
+	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['quantityin'.$from] < $quantity) {
+		trigger_error('transfer_drone(): not enough drones to move', E_USER_ERROR);
+		return;
+	}
+
+	$to = ($from === 'bay') ? 'space' : 'bay';
+
+	$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
+	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
 }
 
 /* ----------------------------------------------------- */
@@ -746,8 +775,7 @@ function get_unique($fit) {
 	}
 
 	foreach($fit['drones'] as $typeid => $drone) {
-		$count = $drone['count'];
-		$unique['drones'][$typeid] = $count;
+		$unique['drones'][$typeid] = array($drone['quantityinbay'], $drone['quantityinspace']);
 	}
 
 	return $unique;
@@ -821,8 +849,8 @@ function commit_fitting(&$fit) {
 	}
   
 	foreach($fit['drones'] as $drone) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, typeid, quantity) VALUES ($1, $2, $3)',
-		                        array($fittinghash, $drone['typeid'], $drone['count']));
+		\Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, typeid, quantityinbay, quantityinspace) VALUES ($1, $2, $3, $4)',
+		                        array($fittinghash, $drone['typeid'], $drone['quantityinbay'], $drone['quantityinspace']));
 	}
   
 	\Osmium\Db\query('COMMIT;');
@@ -930,10 +958,11 @@ function get_fit($loadoutid, $revision = null) {
 		add_charges_batch($fit, $presetname, $preset);
 	}
 	
-	$dq = \Osmium\Db\query_params('SELECT typeid, quantity FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
+	$dq = \Osmium\Db\query_params('SELECT typeid, quantityinbay, quantityinspace FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
 	$drones = array();
 	while($row = \Osmium\Db\fetch_row($dq)) {
-		$drones[$row[0]] = $row[1];
+		$drones[$row[0]]['quantityinbay'] = $row[1];
+		$drones[$row[0]]['quantityinspace'] = $row[2];
 	}
   
 	add_drones_batch($fit, $drones);
@@ -1075,8 +1104,8 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		}
 		
 		$typeid = $typename_to_id[$drone['typename']];
-		if(!isset($realdrones[$typeid])) $realdrones[$typeid] = 0;
-		$realdrones[$typeid] += $drone['count'];
+		if(!isset($realdrones[$typeid])) $realdrones[$typeid]['quantityinbay'] = 0;
+		$realdrones[$typeid]['quantityinbay'] += $drone['count'];
 	}
 
 	add_modules_batch($fit, $realmodules);

@@ -29,22 +29,25 @@ if(!\Osmium\State\is_logged_in()) {
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$fit = \Osmium\State\get_state('new_fit', array());
 	$drones = array();
-	$i = 0;
-  
-	while(isset($_GET['drone'.$i])) {
-		$typeid = intval($_GET['drone'.$i]);
-		$count = intval($_GET['count'.$i]);
 
-		if(!isset($drones[$typeid])) $drones[$typeid] = 0;
-		$drones[$typeid] += $count;
-		++$i;
+	foreach($_GET as $k => $v) {
+		if(!preg_match('%^in(bay|space)([0-9]+)$%', $k, $matches)) continue;
+		list(, $type, $typeid) = $matches;
+		$typeid = intval($typeid);
+		
+		if(!isset($drones[$typeid]['quantityin'.$type])) {
+			$drones[$typeid]['quantityin'.$type] = 0;
+		}
+
+		$drones[$typeid]['quantityin'.$type] += intval($v);
 	}
 
 	$old_drones = $fit['drones'];
 	\Osmium\Fit\add_drones_batch($fit, $drones);
 
 	foreach($old_drones as $typeid => $drone) {
-		\Osmium\Fit\remove_drone($fit, $typeid, $drone['count']);
+		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $drone['quantityinbay']);
+		\Osmium\Fit\remove_drone($fit, $typeid, 'space', $drone['quantityinspace']);
 	}
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));

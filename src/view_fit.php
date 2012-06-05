@@ -209,25 +209,32 @@ if(($total = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 0) {
 	if(!isset($fit['drones'])) $fit['drones'] = array();
 
 	$used = 0;
-	foreach($fit['drones'] as $drone) $used += $drone['count'] * $drone['volume'];
+	foreach($fit['drones'] as $drone) $used += ($drone['quantityinbay'] + $drone['quantityinspace']) * $drone['volume'];
 
-	echo "<div id='vdronebay'>\n<h3>Drone bay <small class='capacity'>$used / $total m<sup>3</sup></small></h3>\n<ul>\n";
+	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'>$used / $total m<sup>3</sup></small></h3>\n";
 
-	foreach($fit['drones'] as $drone) {
-		$qty = '';
-		if($drone['count'] == 0) continue; /* Duh */
-		if($drone['count'] > 1) {
-			$qty = " <strong>×".$drone['count']."</strong>";
+	foreach(array('bay', 'space') as $v) {
+		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul>\n";
+		$z = 0;
+		foreach($fit['drones'] as $drone) {
+			$qty = '';
+			if($drone['quantityin'.$v] == 0) continue; /* Duh */
+			if($drone['quantityin'.$v] > 1) {
+				$qty = " <strong>×".$drone['quantityin'.$v]."</strong>";
+			}
+			
+			echo "<li><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
+			++$z;
 		}
 
-		echo "<li><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
+		if($z === 0) {
+			echo "<li><em>(no drones in $v)</em></li>\n";
+		}
+
+		echo "</ul>\n</div>\n";
 	}
 
-	if(count($fit['drones']) == 0) {
-		echo "<li><em>(empty drone bay)</em></li>\n";
-	}
-
-	echo "</ul>\n</div>\n";
+	echo "</div>\n";
 }
 
 echo "</div>\n";
