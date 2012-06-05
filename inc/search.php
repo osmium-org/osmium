@@ -135,7 +135,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			echo "<li>\n";
 			echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_64.png' alt='".$loadout['typename']."' />\n";
 			echo "<a href='$relative/loadout/".$loadout['loadoutid']."'>";
-			\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout);
+			\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout, $relative);
 			echo "</a>\n<br />\n";
 			echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
 			echo " — <a href='$relative/search?q=".urlencode('@author "'.$loadout['charactername'].'"')."'>".$loadout['charactername']."</a>";

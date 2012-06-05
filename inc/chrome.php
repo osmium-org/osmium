@@ -87,17 +87,17 @@ function return_json($data, $flags = 0) {
 	die(json_encode($data, $flags));
 }
 
-function print_loadout_title($name, $viewpermission, $author) {
+function print_loadout_title($name, $viewpermission, $author, $relative = '.') {
 	$pic = '';
 	if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-		$pic = "<img src='../static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
+		$pic = "<img src='$relative/static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
-		$pic = "<img src='../static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
+		$pic = "<img src='$relative/static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
 		if(!$author['allianceid']) $author['alliancename'] = '*no alliance*';
-		$pic = "<img src='../static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
+		$pic = "<img src='$relative/static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
-		$pic = "<img src='../static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
+		$pic = "<img src='$relative/static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
 	}
   
 	echo "<span class='fitname'>".htmlentities($name).$pic."</span>";
@@ -187,34 +187,35 @@ function format_resonance($resonance) {
 	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
 }
 
-function print_formatted_loadout_attributes(&$fit) {	
+function print_formatted_loadout_attributes(&$fit, $relative = '.') {	
 	echo "<li>\n";
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
 	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over);
-	echo "<p class='overflow$over'><img src='../static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><span id='turrethardpoints'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$over'><img src='$relative/static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><span id='turrethardpoints'>".$formatted."</span></p>\n";
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
 	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over);
-	echo "<p class='overflow$over'><img src='../static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
-	echo "<p><img src='../static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'>".\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit))."</span></p>\n";
+	echo "<p class='overflow$over'><img src='$relative/static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
+	echo "<p><img src='$relative/static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'>".\Osmium\Chrome\format_capacitor(\Osmium\Fit\get_capacitor_stability($fit))."</span></p>\n";
 	echo "</li>\n";
 	
 	echo "<li>\n";
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
 	$formatted = \Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true, $over);
-	echo "<p class='overflow$over'><img src='../static/icons/cpu.png' alt='CPU' title='CPU' /><span id='cpu'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$over'><img src='$relative/static/icons/cpu.png' alt='CPU' title='CPU' /><span id='cpu'>".$formatted."</span></p>\n";
 	$powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 	$powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
 	$formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $over);
-	echo "<p class='overflow$over'><img src='../static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><span id='power'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$over'><img src='$relative/static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><span id='power'>".$formatted."</span></p>\n";
 	$upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 	$upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
 	$formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $over);
-	echo "<p class='overflow$over'><img src='../static/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$over'><img src='$relative/static/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
 	echo "</li>\n";
 	
+	/* TODO refactor this mess (maybe, not a big deal) */
 	$shieldCapacity = \Osmium\Dogma\get_ship_attribute($fit, 'shieldCapacity');
 	$shieldEmResist = \Osmium\Dogma\get_ship_attribute($fit, 'shieldEmDamageResonance');
 	$shieldThermalResist = \Osmium\Dogma\get_ship_attribute($fit, 'shieldThermalDamageResonance');
@@ -249,26 +250,26 @@ function print_formatted_loadout_attributes(&$fit) {
 	echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".\Osmium\Chrome\format_number($mehp)."</span><br />\n";
 	echo "<strong title='EHP in the average case (uniform damage repartition)'>".\Osmium\Chrome\format_number($ehp)."</strong><br />\n";
 	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".\Osmium\Chrome\format_number($Mehp)."</th>\n";
-	echo "<td><img src='../static/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
-	echo "<td><img src='../static/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
-	echo "<td><img src='../static/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
-	echo "<td><img src='../static/icons/r_explosive.png' alt='Explosive Resistance' title='Explosive Resistance' /></td>\n";
+	echo "<td><img src='$relative/static/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
+	echo "<td><img src='$relative/static/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
+	echo "<td><img src='$relative/static/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
+	echo "<td><img src='$relative/static/icons/r_explosive.png' alt='Explosive Resistance' title='Explosive Resistance' /></td>\n";
 	echo "</tr>\n</thead>\n<tfoot></tfoot>\n<tbody>\n<tr id='shield'>\n";
-	echo "<th><img src='../static/icons/shield.png' alt='Shield' title='Shield' /></th>\n";
+	echo "<th><img src='$relative/static/icons/shield.png' alt='Shield' title='Shield' /></th>\n";
 	echo "<td class='capacity'>".\Osmium\Chrome\format_number($shieldCapacity)."</td>\n";
 	echo "<td class='emresist'>".\Osmium\Chrome\format_resonance($shieldEmResist)."</td>\n";
 	echo "<td class='thermalresist'>".\Osmium\Chrome\format_resonance($shieldThermalResist)."</td>\n";
 	echo "<td class='kineticresist'>".\Osmium\Chrome\format_resonance($shieldKineticResist)."</td>\n";
 	echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($shieldExplosiveResist)."</td>\n";
 	echo"</tr>\n<tr id='armor'>\n";
-	echo "<th><img src='../static/icons/armor.png' alt='Armor' title='Armor' /></th>\n";
+	echo "<th><img src='$relative/static/icons/armor.png' alt='Armor' title='Armor' /></th>\n";
 	echo "<td class='capacity'>".\Osmium\Chrome\format_number($armorCapacity)."</td>\n";
 	echo "<td class='emresist'>".\Osmium\Chrome\format_resonance($armorEmResist)."</td>\n";
 	echo "<td class='thermalresist'>".\Osmium\Chrome\format_resonance($armorThermalResist)."</td>\n";
 	echo "<td class='kineticresist'>".\Osmium\Chrome\format_resonance($armorKineticResist)."</td>\n";
 	echo "<td class='explosiveresist'>".\Osmium\Chrome\format_resonance($armorExplosiveResist)."</td>\n";
 	echo"</tr>\n<tr id='hull'>\n";
-	echo "<th><img src='../static/icons/hull.png' alt='Hull' title='Hull' /></th>\n";
+	echo "<th><img src='$relative/static/icons/hull.png' alt='Hull' title='Hull' /></th>\n";
 	echo "<td class='capacity'>".\Osmium\Chrome\format_number($hullCapacity)."</td>\n";
 	echo "<td class='emresist'>".\Osmium\Chrome\format_resonance($hullEmResist)."</td>\n";
 	echo "<td class='thermalresist'>".\Osmium\Chrome\format_resonance($hullThermalResist)."</td>\n";
@@ -280,12 +281,12 @@ function print_formatted_loadout_attributes(&$fit) {
 	$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
 	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass')
 		* \Osmium\Dogma\get_ship_attribute($fit, 'agility') / 1000000;
-	echo "<p><img src='../static/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span id='propulsion'><span title='Maximum velocity'>".\Osmium\Chrome\format_number($maxvelocity)." m/s</span><br /><span title='Align time'>".round($aligntime, 1)." s</span></span></p>\n";
+	echo "<p><img src='$relative/static/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span id='propulsion'><span title='Maximum velocity'>".\Osmium\Chrome\format_number($maxvelocity)." m/s</span><br /><span title='Align time'>".round($aligntime, 1)." s</span></span></p>\n";
 	echo "</li>\n";
 }
 
-function get_formatted_loadout_attributes(&$fit) {
+function get_formatted_loadout_attributes(&$fit, $relative = '.') {
 	ob_start();
-	print_formatted_loadout_attributes($fit);
+	print_formatted_loadout_attributes($fit, $relative);
 	return ob_get_clean();
 }

@@ -53,6 +53,6 @@ if(isset($_GET['toggletype']) && isset($_GET['toggleindex'])
 \Osmium\Chrome\return_json(
 	array(
 		'preset' => isset($fit['charges'][$fit['selectedpreset']]) ? $fit['charges'][$fit['selectedpreset']] : null,
-		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
+		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit, '..'),
 		'states' => \Osmium\AjaxCommon\get_module_states($fit),
 		));

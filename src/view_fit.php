@@ -142,7 +142,7 @@ echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].
 echo "</ul>\n";
 
 echo "<ul class='computed_attributes'>\n";
-\Osmium\Chrome\print_formatted_loadout_attributes($fit);
+\Osmium\Chrome\print_formatted_loadout_attributes($fit, '..');
 echo "</ul>\n";
 
 echo "<h2>Fitting description</h2>\n";
@@ -158,7 +158,7 @@ echo "<header>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<h1 id='fitname' class='has_spinner'>";
-echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author);
+echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author, '..');
 echo "<img src='../static/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
 echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {
