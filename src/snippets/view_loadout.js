@@ -23,7 +23,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection) {
 						return $(this).data('slottype') == type && $(this).data('index') == index;
 					}).find('span.charge');
 
-					charge.append('<br />');
+					charge.append(',<br />');
 					charge.append("<img src='http://image.eveonline.com/Type/" 
 								  + json['preset'][type][index]['typeid'] + "_32.png' alt='' />");
 					charge.append(json['preset'][type][index]['typename']);
