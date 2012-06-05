@@ -38,5 +38,8 @@ $loadoutid = $_GET['loadoutid'];
 \Osmium\Db\query_params('DELETE FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query('COMMIT;');
 
+/* FIXME check that transaction was successful before unindexing this */
+\Osmium\Search\unindex($loadoutid);
+
 header('Location: ../');
 die();

@@ -5,7 +5,7 @@ $(function() {
 			$("input#pw").removeAttr('disabled');
 			$("input#pw").parent().parent().css('opacity', 1.0);
 		} else {
-			$("select#visibility").val(0).removeAttr('disabled');
+			$("select#visibility").removeAttr('disabled');
 			$("input#pw").val('').attr('disabled', 'disabled');
 			$("input#pw").parent().parent().css('opacity', 0.2);
 		}

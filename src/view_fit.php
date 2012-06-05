@@ -91,7 +91,7 @@ if(count($fit['charges']) > 0) {
 }
 
 $title = $fit['ship']['typename'].' / '.$fit['metadata']['name'];
-\Osmium\Chrome\print_header(strip_tags($title), '..');
+\Osmium\Chrome\print_header(strip_tags($title), '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
 
 $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;
@@ -158,7 +158,7 @@ echo "<header>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<h1 id='fitname' class='has_spinner'>";
-echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $author, '..');
+echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $fit['metadata']['visibility'], $author, '..');
 echo "<img src='../static/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
 echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {

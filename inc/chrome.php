@@ -87,7 +87,7 @@ function return_json($data, $flags = 0) {
 	die(json_encode($data, $flags));
 }
 
-function print_loadout_title($name, $viewpermission, $author, $relative = '.') {
+function print_loadout_title($name, $viewpermission, $visibility, $author, $relative = '.') {
 	$pic = '';
 	if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 		$pic = "<img src='$relative/static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
@@ -98,6 +98,10 @@ function print_loadout_title($name, $viewpermission, $author, $relative = '.') {
 		$pic = "<img src='$relative/static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
 		$pic = "<img src='$relative/static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
+	}
+
+	if($visibility == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$pic .= "<img src='$relative/static/icons/hidden.png' alt='(hidden)' title='This loadout will never appear on search results, and will never be indexed by search engines.' />";
 	}
   
 	echo "<span class='fitname'>".htmlentities($name).$pic."</span>";

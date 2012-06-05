@@ -861,10 +861,14 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 
 	$fit['metadata']['accountid'] = $ownerid;
 
-	\Osmium\Search\index(
-		\Osmium\Db\fetch_assoc(
-			\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', 
-			                                       array($loadoutid))));
+	if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE) {
+		\Osmium\Search\unindex($loadoutid);
+	} else {
+		\Osmium\Search\index(
+			\Osmium\Db\fetch_assoc(
+				\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', 
+				                                       array($loadoutid))));
+	}
 }
 
 function get_fit($loadoutid, $revision = null) {

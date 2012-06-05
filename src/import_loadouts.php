@@ -137,7 +137,7 @@ if(isset($_POST['finalize_import'])) {
 		
 		foreach($imported as $data) {
 			echo "<li><a href='./loadout/".$data[0]."'>";
-			\Osmium\Chrome\print_loadout_title($data[1], $data[2], $a);
+			\Osmium\Chrome\print_loadout_title($data[1], $data[2], \Osmium\Fit\VISIBILITY_PUBLIC, $a);
 			echo "</a></li>\n";
 		}
 
