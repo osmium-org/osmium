@@ -282,6 +282,26 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	echo "</tr>\n</tbody>\n</table>\n</li>\n";
 
 	echo "<li>\n";
+	$passiverechargerate = 4 * 2500 * $shieldCapacity / \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate')
+		/ ($shieldEmResist + $shieldThermalResist + $shieldKineticResist + $shieldExplosiveResist);
+	echo "<p><img src='$relative/static/icons/shieldrecharge.png' alt='Passive shield recharge' title='Passive shield recharge' /><span title='Shield peak passive recharge rate' id='passiveshieldrecharge'>".\Osmium\Chrome\format_number($passiverechargerate)."</span></p>\n";
+	$hullrep = 4 * 1000 * \Osmium\Fit\get_repaired_amount_per_second(
+		$fit, 'structureRepair', 'structureDamageAmount')
+		/ ($hullEmResist + $hullThermalResist + $hullKineticResist + $hullExplosiveResist);
+	if($hullrep > 0) {
+		echo "<p><img src='$relative/static/icons/hullrepair.png' alt='Hull repairs' title='Hull repairs' /><span title='Hull EHP repaired per second' id='hullrep'>".\Osmium\Chrome\format_number($hullrep)."</span></p>\n";
+	}
+	$armorrep = 4 * 1000 * \Osmium\Fit\get_repaired_amount_per_second(
+		$fit, 'armorRepair', 'armorDamageAmount')
+		/ ($armorEmResist + $armorThermalResist + $armorKineticResist + $armorExplosiveResist);
+	echo "<p><img src='$relative/static/icons/armorrepair.png' alt='Armor repairs' title='Armor repairs' /><span title='Armor EHP repaired per second' id='armorrep'>".\Osmium\Chrome\format_number($armorrep)."</span></p>\n";
+	$shieldrep = 4 * 1000 * \Osmium\Fit\get_repaired_amount_per_second(
+		$fit, 'shieldBoosting', 'shieldBonus')
+		/ ($shieldEmResist + $shieldThermalResist + $shieldKineticResist + $shieldExplosiveResist);
+	echo "<p><img src='$relative/static/icons/shieldboost.png' alt='Shield boost' title='Shield boost' /><span title='Shield EHP boost per second' id='shieldrep'>".\Osmium\Chrome\format_number($shieldrep)."</span></p>\n";
+	echo "</li>\n";
+
+	echo "<li>\n";
 	$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
 	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass')
 		* \Osmium\Dogma\get_ship_attribute($fit, 'agility') / 1000000;

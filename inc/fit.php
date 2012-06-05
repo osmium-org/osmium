@@ -603,6 +603,28 @@ function get_capacitor_stability(&$fit) {
 	}
 }
 
+function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $durationattributename = 'duration') {
+	$total = 0;
+
+	foreach($fit['modules'] as $type => $a) {
+		foreach($a as $index => $module) {
+			if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
+				continue;
+			}
+			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
+				continue;
+			}
+
+			$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $boostattributename);
+			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'duration');
+			
+			$total += $amount / $duration;
+		}
+	}
+
+	return $total;
+}
+
 /* ----------------------------------------------------- */
 
 function prune_cache(&$fit) {
