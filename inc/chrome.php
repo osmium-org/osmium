@@ -253,7 +253,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	echo "<th id='ehp'>\n";
 	echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".\Osmium\Chrome\format_number($mehp)."</span><br />\n";
 	echo "<strong title='EHP in the average case (uniform damage repartition)'>".\Osmium\Chrome\format_number($ehp)."</strong><br />\n";
-	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".\Osmium\Chrome\format_number($Mehp)."</th>\n";
+	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".\Osmium\Chrome\format_number($Mehp)."</span></th>\n";
 	echo "<td><img src='$relative/static/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
 	echo "<td><img src='$relative/static/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
 	echo "<td><img src='$relative/static/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
