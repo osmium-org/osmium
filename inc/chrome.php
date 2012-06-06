@@ -146,10 +146,10 @@ function format_number($num) {
 	}
 
 	if($num < 10000) return $sign.round($num, 1);
-	else if($num < 10000000) {
+	else if($num < 1000000) {
 		return $sign.round($num / 1000, 2).'k';
 	} else {
-		return $sign.round($num / 1000000, 2).'m';
+		return $sign.round($num / 1000000, 3).'m';
 	}
 }
 
