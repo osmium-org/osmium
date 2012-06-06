@@ -115,7 +115,6 @@ $module-width: 19em;
 @mixin drone-list {
 	width: auto;
 	display: block;
-	clear: both;
 	overflow: hidden;
 	
 	&> div#inspace, &> div#inbay {
@@ -207,56 +206,97 @@ div#metadatabox {
 	}
 }
 
-ul.computed_attributes > li > p {
-	display: inline-block;
-	vertical-align: middle;
-	margin: 0.25em 2em 0 0;
-	padding: 0.125em;
-	line-height: 1em;
+div#computed_attributes > section {
+	padding-left: 1em;
 
-	&> img {
-		height: 2em;
+	&> h4 {
+		padding-left: 0.5em;
+		border-bottom: 1px solid #CCC;
+		margin: 1em 0 0 0;
+		position: relative;
+		cursor: pointer;
 
-		&+ span {
-			display: inline-block;
-			vertical-align: middle;
-
-			&> img {
-				height: 1em;
-			}
+		&:before {
+			content: '▾';
+			padding-right: 0.25em;
 		}
+
+		&> small {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			font-size: 0.9em;
+			color: #888;
+		}
+	}
+
+	&.hidden > h4:before {
+		content: '▸';
+	}
+
+	&:first-child > h4 {
+		margin-top: 0;
+	}
+
+	&> div {
+		background-color: #F4F4F8;
+		padding: 0.125em 0.25em;
+	}
+
+	&> div > p {
+		display: inline-block;
+		vertical-align: middle;
+		margin: 0.25em 2em 0 0;
+		padding: 0.125em;
+		line-height: 1em;
+
+		&> img {
+			height: 2em;
+
+			&+ span {
+				display: inline-block;
+				vertical-align: middle;
+
+				&> img {
+					height: 1em;
+				}
+			}
+		}	
 	}
 }
 
-ul.computed_attributes > li > table#resists {
-	display: inline-block;
-	vertical-align: middle;
+div#computed_attributes > section > div > table#resists {
 	border-collapse: collapse;
-	margin: 1em 0;
+	margin: 0;
+	width: 100%;
 
 	&> tbody > tr > td, &> thead > tr > td, &> thead > tr > th#ehp {
 		text-align: right;
+	}
+
+	&> thead > tr > th:first-child {
+		width: 3em;
+	}
+
+	&> thead > tr > th#ehp {
+		width: 4em;
 	}
 
 	&> tbody > tr > th > img, &> thead > tr > td > img {
 		height: 2em;
 	}
 
-	&> tbody > tr > td {
-		width: 4em;
+	&> tbody > tr > td > div {
+		position: relative;
+		width: 100%;
+		padding-bottom: 1px;
 
-		&> div {
-			position: relative;
-			width: 100%;
-			padding-bottom: 1px;
-
-			&> span.bar {
-				position: absolute;
-				bottom: 0;
-				right: 0;
-				height: 2px;
-				background-color: black;
-			}
+		&> span.bar {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			height: 2px;
+			background-color: black;
 		}
 	}
 
@@ -277,9 +317,9 @@ ul.computed_attributes > li > table#resists {
 	}
 }
 
-p.overflow6 { @include error-background-opacity(0.6); }
-p.overflow5 { @include error-background-opacity(0.5); }
-p.overflow4 { @include error-background-opacity(0.4); }
-p.overflow3 { @include error-background-opacity(0.3); }
-p.overflow2 { @include error-background-opacity(0.2); }
-p.overflow1 { @include error-background-opacity(0.1); }
+.overflow6 { @include error-background-opacity(0.6); }
+.overflow5 { @include error-background-opacity(0.5); }
+.overflow4 { @include error-background-opacity(0.4); }
+.overflow3 { @include error-background-opacity(0.3); }
+.overflow2 { @include error-background-opacity(0.2); }
+.overflow1 { @include error-background-opacity(0.1); }

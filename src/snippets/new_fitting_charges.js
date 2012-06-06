@@ -42,7 +42,8 @@ osmium_switch_preset = function(refetch) {
 			token: osmium_tok,
 			name: selected_preset
 		}, function(data) {
-			$("ul.computed_attributes").html(data);
+			$("div#computed_attributes").html(data);
+			osmium_fattribs_load();
 			$("img#presetsbox_spinner").css('visibility', 'hidden');
 		});
 	}
@@ -58,7 +59,8 @@ osmium_commit_deleted_preset = function(name) {
     };
 
     $.getJSON('./src/json/update_charge_preset.php', opts, function(data) {
-		$("ul.computed_attributes").html(data);
+		$("div#computed_attributes").html(data);
+		osmium_fattribs_load();
 		$("img#presetsbox_spinner").css('visibility', 'hidden');
     });
 };
@@ -83,7 +85,8 @@ osmium_commit_preset = function(name, oldname) {
     }
 
     $.getJSON('./src/json/update_charge_preset.php', serialized_current_preset, function(data) {
-		$("ul.computed_attributes").html(data);
+		$("div#computed_attributes").html(data);
+		osmium_fattribs_load();
 		$("img#chargegroupsbox_spinner").css('visibility', 'hidden');
     });
 };

@@ -141,9 +141,9 @@ echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"
 echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 echo "</ul>\n";
 
-echo "<ul class='computed_attributes'>\n";
+echo "<div id='computed_attributes'>\n";
 \Osmium\Chrome\print_formatted_loadout_attributes($fit, '..');
-echo "</ul>\n";
+echo "</div>\n";
 
 echo "<h2>Fitting description</h2>\n";
 echo "<p id='fitdesc'>\n".nl2br(htmlspecialchars($fit['metadata']['description']))."</p>\n";
@@ -245,5 +245,6 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 
 echo "</div>\n";
 
+\Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_js_snippet('view_loadout');
 \Osmium\Chrome\print_footer();

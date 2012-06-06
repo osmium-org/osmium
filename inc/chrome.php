@@ -136,7 +136,7 @@ function format_used($used, $total, $digits, $show_percent, &$overflow) {
 	return $ret;
 }
 
-function format_number($num) {
+function format_number($num, $precisionoffset = 0) {
 	$num = floatval($num);
 	if($num < 0) {
 		$sign = '-';
@@ -145,11 +145,11 @@ function format_number($num) {
 		$sign = '';
 	}
 
-	if($num < 10000) return $sign.round($num, 1);
+	if($num < 10000) return $sign.round($num, max(0, 1 + $precisionoffset));
 	else if($num < 1000000) {
-		return $sign.round($num / 1000, 2).'k';
+		return $sign.round($num / 1000, max(0, 2 + $precisionoffset)).'k';
 	} else {
-		return $sign.round($num / 1000000, 3).'m';
+		return $sign.round($num / 1000000, max(0, 3 + $precisionoffset)).'m';
 	}
 }
 
@@ -191,35 +191,51 @@ function format_resonance($resonance) {
 	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
 }
 
-function print_formatted_loadout_attributes(&$fit, $relative = '.') {	
-	echo "<li>\n";
+function print_formatted_attribute_category($identifier, $title, $titledata, $titleclass, $contents) {
+	if($titleclass) $titleclass = " class='$titleclass'";
+	echo "<section id='$identifier'>\n";
+	echo "<h4$titleclass>$title <small>$titledata</small></h4>\n";
+	echo "<div>\n$contents</div>\n";
+	echo "</section>\n";
+}
+
+function print_formatted_engineering(&$fit, $relative, $capacitor) {
+	ob_start();
+
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
-	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over);
-	echo "<p class='overflow$over'><img src='$relative/static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><span id='turrethardpoints'>".$formatted."</span></p>\n";
+	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overturrets);
+	echo "<p class='overflow$overturrets'><img src='$relative/static/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><span id='turrethardpoints'>".$formatted."</span></p>\n";
+
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
-	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $over);
-	echo "<p class='overflow$over'><img src='$relative/static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
-	echo "<p><img src='$relative/static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'>".\Osmium\Chrome\format_capacitor($cap = \Osmium\Fit\get_capacitor_stability($fit))."</span></p>\n";
-	echo "</li>\n";
-	
-	echo "<li>\n";
+	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overlaunchers);
+	echo "<p class='overflow$overlaunchers'><img src='$relative/static/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
+
+	$formattedCapacitor = \Osmium\Chrome\format_capacitor($capacitor);
+	echo "<p><img src='$relative/static/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'>".$formattedCapacitor."</span></p>\n";
+
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
-	$formatted = \Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true, $over);
-	echo "<p class='overflow$over'><img src='$relative/static/icons/cpu.png' alt='CPU' title='CPU' /><span id='cpu'>".$formatted."</span></p>\n";
+	$formatted = \Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true, $overcpu);
+	echo "<p class='overflow$overcpu'><img src='$relative/static/icons/cpu.png' alt='CPU' title='CPU' /><span id='cpu'>".$formatted."</span></p>\n";
+
 	$powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 	$powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
-	$formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $over);
-	echo "<p class='overflow$over'><img src='$relative/static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><span id='power'>".$formatted."</span></p>\n";
+	$formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $overpower);
+	echo "<p class='overflow$overpower'><img src='$relative/static/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><span id='power'>".$formatted."</span></p>\n";
+
 	$upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 	$upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
-	$formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $over);
-	echo "<p class='overflow$over'><img src='$relative/static/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
-	echo "</li>\n";
-	
-	$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+	$formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $overupgrade);
+	echo "<p class='overflow$overupgrade'><img src='$relative/static/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
+
+	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".lcfirst($formattedCapacitor).'</span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
+}
+
+function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
+	ob_start();
+
 	$resists = array();
 	foreach($ehp as $k => $a) {
 		if($k === 'ehp') continue;
@@ -233,12 +249,17 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 		$resists[$k][] = "<td class='explosiveresist'>"
 			.\Osmium\Chrome\format_resonance($a['resonance']['explosive'])."</td>\n";
 	}
-	echo "<li>\n<table id='resists'>\n<thead>\n<tr>\n";
+
+	$mehp = format_number($ehp['ehp']['min']);
+	$aehp = format_number($ehp['ehp']['avg']);
+	$Mehp = format_number($ehp['ehp']['max']);
+
+	echo "<table id='resists'>\n<thead>\n<tr>\n";
 	echo "<th><abbr title='Effective Hitpoints'>EHP</abbr></th>\n";
 	echo "<th id='ehp'>\n";
-	echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".\Osmium\Chrome\format_number($ehp['ehp']['min'])."</span><br />\n";
-	echo "<strong title='EHP in the average case (uniform damage repartition)'>".\Osmium\Chrome\format_number($ehp['ehp']['avg'])."</strong><br />\n";
-	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".\Osmium\Chrome\format_number($ehp['ehp']['max'])."</span></th>\n";
+	echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".$mehp."</span><br />\n";
+	echo "<strong title='EHP in the average case (uniform damage repartition)'>".$aehp."</strong><br />\n";
+	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".$Mehp."</span></th>\n";
 	echo "<td><img src='$relative/static/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
 	echo "<td><img src='$relative/static/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
 	echo "<td><img src='$relative/static/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
@@ -252,27 +273,47 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	echo"</tr>\n<tr id='hull'>\n";
 	echo "<th><img src='$relative/static/icons/hull.png' alt='Hull' title='Hull' /></th>\n";
 	echo implode('', $resists['hull']);
-	echo "</tr>\n</tbody>\n</table>\n</li>\n";
+	echo "</tr>\n</tbody>\n</table>\n";
 
-	echo "<li>\n";
 	$passiverechargerate = 4 * 2500 * $ehp['shield']['capacity'] 
 		/ \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate') 
 		/ array_sum($ehp['shield']['resonance']);
 	echo "<p><img src='$relative/static/icons/shieldrecharge.png' alt='Passive shield recharge' title='Passive shield recharge' /><span title='Shield peak passive recharge rate' id='passiveshieldrecharge'>".\Osmium\Chrome\format_number($passiverechargerate)."</span></p>\n";
-	print_tank_layer($fit, 'structureRepair', 'structureDamageAmount', $ehp['hull']['resonance'], $cap,
-	                 $relative, 'hullrepair.png', 'Hull repairs', 'Hull EHP repaired per second', false);
-	print_tank_layer($fit, 'armorRepair', 'armorDamageAmount', $ehp['armor']['resonance'], $cap,
-	                 $relative, 'armorrepair.png', 'Armor repairs', 'Armor EHP repaired per second');
-	print_tank_layer($fit, 'shieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
-	                 $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second');
-	echo "</li>\n";
 
-	echo "<li>\n";
+	$h = print_tank_layer($fit, 'structureRepair', 'structureDamageAmount', $ehp['hull']['resonance'], $cap,
+	                      $relative, 'hullrepair.png', 'Hull repairs', 'Hull EHP repaired per second', false);
+	$a = print_tank_layer($fit, 'armorRepair', 'armorDamageAmount', $ehp['armor']['resonance'], $cap,
+	                      $relative, 'armorrepair.png', 'Armor repairs', 'Armor EHP repaired per second');
+	$s = print_tank_layer($fit, 'shieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
+	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second');
+
+	$total = format_number($passiverechargerate + $h[0] + $a[0] + $s[0], -1);
+	$tehp = format_number($ehp['ehp']['avg'], -2);
+	
+	print_formatted_attribute_category('defense', 'Defense', '<span title="Average EHP">'.$tehp.' ehp</span> | <span title="Combined reinforced tank">'.$total.' dps</span>', '', ob_get_clean());
+}
+
+function print_formatted_navigation(&$fit, $relative) {
+	ob_start();
+
 	$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
-	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass')
-		* \Osmium\Dogma\get_ship_attribute($fit, 'agility') / 1000000;
-	echo "<p><img src='$relative/static/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span id='propulsion'><span title='Maximum velocity'>".\Osmium\Chrome\format_number($maxvelocity)." m/s</span><br /><span title='Align time'>".round($aligntime, 1)." s</span></span></p>\n";
-	echo "</li>\n";
+	$agility = \Osmium\Dogma\get_ship_attribute($fit, 'agility');
+	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass') * $agility / 1000000;
+
+	echo "<p><img src='$relative/static/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span title='Maximum velocity'>".format_number($maxvelocity)." m/s</span></p>\n";
+
+	echo "<p><img src='$relative/static/icons/agility.png' alt='Agility' title='Agility' /><span><span title='Agility modifier'>".format_number($agility, 3)."x</span><br /><span title='Time to align'>".format_number($aligntime)." s</span></span></p>\n";
+
+	print_formatted_attribute_category('navigation', 'Navigation', '<span title="Maximum velocity">'.format_number($maxvelocity, -1).' m/s</span>', '', ob_get_clean());
+}
+
+function print_formatted_loadout_attributes(&$fit, $relative = '.') {
+	$cap = \Osmium\Fit\get_capacitor_stability($fit);
+	$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+
+	print_formatted_engineering($fit, $relative, $cap);
+	print_formatted_defense($fit, $relative, $ehp, $cap);
+	print_formatted_navigation($fit, $relative);
 }
 
 function print_tank_layer($fit, $effectname, $shipattributename, $resonances, $cap, 
@@ -289,6 +330,8 @@ function print_tank_layer($fit, $effectname, $shipattributename, $resonances, $c
 	echo $reinforcedimg."<span title='$title'>".format_number(1000 * $reinforced)."</span><br />";
 	echo $sustainedimg."<span title='$title'>".format_number(1000 * $sustained)."</span>";
 	echo "</span></p>\n";
+
+	return array($reinforced, $sustained);
 }
 
 function get_formatted_loadout_attributes(&$fit, $relative = '.') {

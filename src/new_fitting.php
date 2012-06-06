@@ -161,8 +161,9 @@ function get_slot_fnames() {
 }
 
 function print_attributes($before = '', $after = '') {
-	echo "<div id='metadatabox'>\n$before<h2>Attributes</h2>\n<ul class='compact computed_attributes'>\n";
-	echo "</ul>\n$after</div>\n";
+	echo "<div id='metadatabox'>\n$before<h2>Attributes</h2>\n<div class='compact' id='computed_attributes'>\n";
+	echo "</div>\n$after</div>\n";
+	\Osmium\Chrome\print_js_snippet('formatted_attributes');
 }
 
 function print_modules_searchbox() {
@@ -354,7 +355,7 @@ function charges_select() {
 	print_charge_groups();
 
 	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<script>\n$(function() { $('ul.computed_attributes').html(".json_encode(\Osmium\Chrome\get_formatted_loadout_attributes($fit))."); });\n"
+	echo "<script>\n$(function() { $('div#computed_attributes').html(".json_encode(\Osmium\Chrome\get_formatted_loadout_attributes($fit))."); });\n"
 		."var charge_presets = ".json_encode($fit['charges'], JSON_FORCE_OBJECT)
 		.";\nvar selected_preset = ".json_encode($fit['selectedpreset'])
 		.";\n var osmium_preset_num = ".(count($fit['charges']) + 1).";\n</script>\n";

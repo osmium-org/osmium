@@ -47,7 +47,8 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection) {
 			}
 		}
 
-		$("ul.computed_attributes").html(json['attributes']);
+		$("div#computed_attributes").html(json['attributes']);
+		osmium_fattribs_load();
 
 		$("img#vloadoutbox_spinner").css('visibility', 'hidden');
 	});

@@ -106,7 +106,8 @@ osmium_loadout_load = function(json) {
 		$("div#" + osmium_slottypes[i] + "_slots > ul").empty();
 		osmium_populate_slots(json, osmium_slottypes[i]);
     }
-	$('ul.computed_attributes').html(json['attributes']);
+	$('div#computed_attributes').html(json['attributes']);
+	osmium_fattribs_load();
 };
 
 osmium_loadout_commit = function() {
