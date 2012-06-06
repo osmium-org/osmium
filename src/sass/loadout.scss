@@ -220,6 +220,10 @@ ul.computed_attributes > li > p {
 		&+ span {
 			display: inline-block;
 			vertical-align: middle;
+
+			&> img {
+				height: 1em;
+			}
 		}
 	}
 }

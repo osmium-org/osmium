@@ -603,8 +603,49 @@ function get_capacitor_stability(&$fit) {
 	}
 }
 
-function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $durationattributename = 'duration') {
+function get_ehp_and_resists(&$fit) {
+	static $layers = array(
+		array('shield', 'shieldCapacity', 'shield'),
+		array('armor', 'armorHP', 'armor'),
+		array('hull', 'hp', ''),
+		);
+
+	$out = array(
+		'ehp' => array(
+			'min' => 0,
+			'avg' => 0,
+			'max' => 0,
+			),
+		);
+
+	foreach($layers as $a) {
+		list($name, $attributename, $resistprefix) = $a;
+
+		$out[$name]['capacity'] = \Osmium\Dogma\get_ship_attribute($fit, $attributename);
+		$out[$name]['resonance']['em'] = \Osmium\Dogma\get_ship_attribute(
+			$fit, lcfirst($resistprefix.'EmDamageResonance'));
+		$out[$name]['resonance']['thermal'] = \Osmium\Dogma\get_ship_attribute(
+			$fit, lcfirst($resistprefix.'ThermalDamageResonance'));
+		$out[$name]['resonance']['kinetic'] = \Osmium\Dogma\get_ship_attribute(
+			$fit, lcfirst($resistprefix.'KineticDamageResonance'));
+		$out[$name]['resonance']['explosive'] = \Osmium\Dogma\get_ship_attribute(
+			$fit, lcfirst($resistprefix.'ExplosiveDamageResonance'));
+
+		$out['ehp']['min'] += $out[$name]['capacity'] / max($out[$name]['resonance']);
+		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
+		/* TODO user-defined profiles */
+		$out['ehp']['avg'] += 4 * $out[$name]['capacity'] / array_sum($out[$name]['resonance']);
+	}
+
+	return $out;
+}
+
+function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor, $durationattributename = 'duration', $dischargeattributename = 'capacitorNeed') {
 	$total = 0;
+	$sustained = 0;
+	$capusage = $capacitor[0];
+
+	$modules = array();
 
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $index => $module) {
@@ -616,13 +657,33 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 			}
 
 			$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $boostattributename);
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'duration');
+			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
+			$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
 			
 			$total += $amount / $duration;
+
+			$modules[] = array($amount, $duration, $discharge);
+			$capusage -= $discharge / $duration;
 		}
 	}
 
-	return $total;
+	/* Sort modules by best HP repaired per capacitor unit */
+	usort($modules, function($b, $a) {
+			$k =  $a[0] / $a[2] - $b[0] / $b[2];
+			return $k > 0 ? 1 : ($k < 0 ? -1 : 0);
+		});
+
+	/* Enable repairers until cap stability is lost */
+	while($capusage < 0 && ($m = array_shift($modules)) !== null) {
+		$module_capusage = $m[2] / $m[1];
+
+		$fraction = max(min(1, -$capusage / $module_capusage), 0);
+		$capusage += $fraction * $module_capusage;
+		$sustained += $fraction * ($m[0] / $m[1]);
+	}
+
+	$factor = 4 / array_sum($resonances);
+	return array($total * $factor, $sustained * $factor);
 }
 
 /* ----------------------------------------------------- */
