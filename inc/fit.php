@@ -701,9 +701,61 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 	return array($total * $factor, $sustained * $factor);
 }
 
+function get_damage_from_missiles(&$fit) {
+	if(!isset($fit['cache']['__effects']['useMissiles'])) {
+		return array(0, 0);
+	}
+
+	$dps = 0;
+	$alpha = 0;
+
+	get_attribute_in_cache($fit['cache']['__effects']['useMissiles']['durationattributeid'], $fit['cache']);
+
+	$durationattributename = $fit['cache']['__attributes'][
+		$fit['cache']['__effects']['useMissiles']['durationattributeid']
+		]['attributename'];
+
+	foreach($fit['modules'] as $type => $a) {
+		foreach($a as $index => $module) {
+			if(!isset($fit['cache'][$module['typeid']]['effects']['useMissiles'])) {
+				continue;
+			}
+			if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
+				continue;
+			}
+			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
+				continue;
+			}
+			if(!isset($fit['cache'][
+				          $fit['charges'][$fit['selectedpreset']][$type][$index]['typeid']
+				          ]['effects']['missileLaunching'])) {
+				continue;
+			}
+
+			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
+			$damage = 
+				\Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'emDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'thermalDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'kineticDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'explosiveDamage');
+			
+			$dps += $damage / $duration;
+			$alpha += $damage;
+		}
+	}
+
+	$multiplier = \Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier');
+	
+	return array(1000 * $dps * $multiplier, $alpha * $multiplier);
+}
+
 /* ----------------------------------------------------- */
 
 function prune_cache(&$fit) {
+	/* TODO: also prune __effects and __attributes (hard). Maybe use a
+	 * counter for every effect/attribute represting the number of
+	 * entities using it? */
+
 	foreach($fit['cache'] as $typeid => $bla) {
 		maybe_remove_cache($fit, $typeid);
 	}

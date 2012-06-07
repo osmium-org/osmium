@@ -233,6 +233,16 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".lcfirst($formattedCapacitor).'</span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
 }
 
+function print_formatted_offense(&$fit, $relative) {
+	ob_start();
+
+	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit);
+	echo "<p><img src='$relative/static/icons/missilelauncher.png' alt='Missile damage' title='Missile damage' /><span><span title='Missile volley (alpha)'>".format_number($missilealpha)."</span><br /><span title='Missile DPS'>".format_number($missiledps)."</span></span></p>\n";
+
+	$dps = format_number($missiledps, -1);
+	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
+}
+
 function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
 	ob_start();
 
@@ -312,6 +322,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
 
 	print_formatted_engineering($fit, $relative, $cap);
+	print_formatted_offense($fit, $relative);
 	print_formatted_defense($fit, $relative, $ehp, $cap);
 	print_formatted_navigation($fit, $relative);
 }
