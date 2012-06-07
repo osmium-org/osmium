@@ -701,34 +701,29 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 	return array($total * $factor, $sustained * $factor);
 }
 
-function get_damage_from_missiles(&$fit) {
-	if(!isset($fit['cache']['__effects']['useMissiles'])) {
+function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultiplierattributename = null, $globalmultiplier = 1) {
+	if(!isset($fit['cache']['__effects'][$attackeffectname])) {
 		return array(0, 0);
 	}
 
 	$dps = 0;
 	$alpha = 0;
 
-	get_attribute_in_cache($fit['cache']['__effects']['useMissiles']['durationattributeid'], $fit['cache']);
+	get_attribute_in_cache($fit['cache']['__effects'][$attackeffectname]['durationattributeid'], $fit['cache']);
 
 	$durationattributename = $fit['cache']['__attributes'][
-		$fit['cache']['__effects']['useMissiles']['durationattributeid']
+		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']
 		]['attributename'];
 
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $index => $module) {
-			if(!isset($fit['cache'][$module['typeid']]['effects']['useMissiles'])) {
+			if(!isset($fit['cache'][$module['typeid']]['effects'][$attackeffectname])) {
 				continue;
 			}
 			if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
 				continue;
 			}
 			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
-				continue;
-			}
-			if(!isset($fit['cache'][
-				          $fit['charges'][$fit['selectedpreset']][$type][$index]['typeid']
-				          ]['effects']['missileLaunching'])) {
 				continue;
 			}
 
@@ -738,15 +733,38 @@ function get_damage_from_missiles(&$fit) {
 				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'thermalDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'kineticDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'explosiveDamage');
-			
-			$dps += $damage / $duration;
-			$alpha += $damage;
+
+			$multiplier = $modulemultiplierattributename === null ? 1 :
+				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattributename);
+
+			$dps += $multiplier * $damage / $duration;
+			$alpha += $multiplier * $damage;
 		}
 	}
 
-	$multiplier = \Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier');
-	
-	return array(1000 * $dps * $multiplier, $alpha * $multiplier);
+	return array(1000 * $dps * $globalmultiplier, $alpha * $globalmultiplier);
+}
+
+function get_damage_from_missiles(&$fit) {
+	return get_damage_from_attack_effect(
+		$fit, 'useMissiles', null,
+		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier')
+		);
+}
+
+function get_damage_from_turrets(&$fit) {
+	$projectiles = get_damage_from_attack_effect(
+		$fit, 'projectileFired', 'damageMultiplier'
+		);
+
+	$lasers = get_damage_from_attack_effect(
+		$fit, 'targetAttack', 'damageMultiplier'
+		);
+
+	return array(
+		$projectiles[0] + $lasers[0],
+		$projectiles[1] + $lasers[1],
+		);
 }
 
 /* ----------------------------------------------------- */
