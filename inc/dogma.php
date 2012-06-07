@@ -188,6 +188,13 @@ function eval_charge_postexpressions(&$fit, $presetname, $type, $index) {
 	unset($fit['dogma']['other']);
 }
 
+function get_char_attribute(&$fit, $name, $failonerror = true) {
+	return get_final_attribute_value($fit,
+	                                 array('name' => $name,
+	                                       'source' => array('char')),
+	                                 $failonerror);
+}
+
 function get_ship_attribute(&$fit, $name, $failonerror = true) {
 	if($name === 'upgradeLoad') {
 		/* Just to make things easy and consistent */
@@ -257,13 +264,16 @@ function get_charge_attribute(&$fit, $preset, $slottype, $index, $name, $failone
 function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	static $hardcoded = array(
 		'cpu OutputBonus' => 'cpuOutputBonus2',
+		'passivethermicDamageResistanceBonus' => 'passiveThermicDamageResistanceBonus',
 		);
 
 	$name = $attribute['name'];
 	$stype = $attribute['source'][0];
 	$modifiers = array();
 
-	if($stype == 'ship') {
+	if($stype == 'char') {
+		$src = $fit['dogma']['char'];
+	} else if($stype == 'ship') {
 		$src = $fit['dogma']['ship'];
 	} else if($stype == 'self') {
 		$src = $fit['dogma']['self'];
