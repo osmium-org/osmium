@@ -1070,9 +1070,12 @@ function get_fit($loadoutid, $revision = null) {
 		$charges[$row[0]][$row[1]][$row[2]] = $row[3];
 	}
 
+	$firstpreset = null;
 	foreach($charges as $presetname => $preset) {
+		if($firstpreset === null) $firstpreset = $presetname;
 		add_charges_batch($fit, $presetname, $preset);
 	}
+	if($firstpreset !== null) use_preset($fit, $firstpreset);
 	
 	$dq = \Osmium\Db\query_params('SELECT typeid, quantityinbay, quantityinspace FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
 	$drones = array();
