@@ -552,6 +552,7 @@ function get_capacitor_stability(&$fit) {
 				}
 
 				if(!isset($effectdata['dischargeattributeid'])) continue;
+				get_attribute_in_cache($effectdata['dischargeattributeid'], $fit['cache']);
 
 				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
 					$fit['cache']['__attributes'][$effectdata['dischargeattributeid']]['attributename']);
@@ -640,10 +641,24 @@ function get_ehp_and_resists(&$fit) {
 	return $out;
 }
 
-function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor, $durationattributename = 'duration', $dischargeattributename = 'capacitorNeed') {
+function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor) {
+	if(!isset($fit['cache']['__effects'][$effectname])) {
+		/* The interesting effect is not cached, so no module has
+		 * it. It is useless to continue further. */
+		return array(0, 0);
+	}
+
 	$total = 0;
 	$sustained = 0;
 	$capusage = $capacitor[0];
+
+	$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
+	$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
+	get_attribute_in_cache($durationattributeid, $fit['cache']);
+	get_attribute_in_cache($dischargeattributeid, $fit['cache']);
+
+	$durationattributename = $fit['cache']['__attributes'][$durationattributeid]['attributename'];
+	$dischargeattributename = $fit['cache']['__attributes'][$dischargeattributeid]['attributename'];
 
 	$modules = array();
 
@@ -725,6 +740,21 @@ function get_module_slottype($effects) {
 	return false;
 }
 
+function get_attribute_in_cache($attributenameorid, &$out) {
+	if(isset($out['__attributes'][$attributenameorid])) return;
+
+	$column = is_numeric($attributenameorid) ? 'attributeid' : 'attributename';
+
+	$attribsq = \Osmium\Db\query_params('SELECT attributename, attributeid, highisgood, stackable, defaultvalue
+  FROM eve.dgmattribs 
+  WHERE dgmattribs.'.$column.' = $1', array($attributenameorid));
+
+	$row = \Osmium\Db\fetch_assoc($attribsq);
+		
+	$out['__attributes'][$row['attributename']] = $row;
+	$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];
+}
+
 function get_attributes_and_effects($typeids, &$out) {
 	static $hardcoded_effectcategories = array(
 		'online' => 4,
@@ -795,7 +825,7 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out[$tid]['effects'][$row['effectname']] = $row;
 	}
 
-	$attribsq = \Osmium\Db\query('SELECT dgmtypeattribs.typeid, attributename, dgmattribs.attributeid, highisgood, stackable, value
+	$attribsq = \Osmium\Db\query('SELECT dgmtypeattribs.typeid, attributename, dgmattribs.attributeid, highisgood, stackable, value, defaultvalue
   FROM eve.dgmattribs 
   JOIN eve.dgmtypeattribs ON dgmattribs.attributeid = dgmtypeattribs.attributeid
   WHERE dgmtypeattribs.typeid IN ('.$typeidIN.')');
@@ -805,11 +835,13 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out['__attributes'][$row['attributename']]['attributename'] = $row['attributename'];
 		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'];
 		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'];
+		$out['__attributes'][$row['attributename']]['defaultvalue'] = $row['defaultvalue'];
 		$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];
 
 		unset($row['typeid']);
 		unset($row['stackable']);
 		unset($row['highisgood']);
+		unset($row['defaultvalue']);
 
 		$out[$tid]['attributes'][$row['attributename']] = $row;
 	}

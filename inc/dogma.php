@@ -315,43 +315,39 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 		$modifiers = array_merge_recursive($modifiers, $src['__modifiers'][$name]);
 	}
 
+	if(isset($hardcoded[$name])) {
+		$name = $hardcoded[$name];
+	}
+
+	\Osmium\Fit\get_attribute_in_cache($name, $fit['cache']);
+
 	if(!isset($src[$name])) {
-		if(!isset($hardcoded[$name])) {
-			/* Try to fetch the defaultvalue from the DB */
-			$val = \Osmium\State\get_cache('default_value_'.$name, 'undefined');
-			if($val === 'undefined') {
-				$row = \Osmium\Db\fetch_row(
-					\Osmium\Db\query_params(
-						'SELECT defaultvalue FROM eve.dgmattribs WHERE attributename = $1', 
-						array($name)));
-
-				if($row !== false) {
-					$val = $row[0];
-				} else {
-					$val = null;
-				}
-
-				\Osmium\State\put_cache('default_value_'.$name, $val);
-			}
-
-			if($val === null) $val = 0;
-			if($val === null && $failonerror) {
+		/* Try to get the default value */
+		if(isset($fit['cache']['__attributes'][$name]['defaultvalue'])) {
+			$val = $fit['cache']['__attributes'][$name]['defaultvalue'];
+		} else {
+			$val = 0;
+			if($failonerror) {
 				trigger_error('get_final_attribute_value(): '.$name.' not defined', E_USER_WARNING);
 			}
-		} else {
-			$name = $hardcoded[$name];
-			$val = $src[$name];
 		}
 	} else {
 		$val = $src[$name];
 	}
 
-	$stackable = isset($fit['cache']['__attributes'][$name]['stackable']) ?
-		$fit['cache']['__attributes'][$name]['stackable'] : 1;
-	$highisgood = isset($fit['cache']['__attributes'][$name]['highisgood']) ?
-		$fit['cache']['__attributes'][$name]['highisgood'] : 1;
+	$stackable = $fit['cache']['__attributes'][$name]['stackable'];
+	$highisgood = $fit['cache']['__attributes'][$name]['highisgood'];
 
 	return apply_modifiers($fit, $modifiers, $val, $stackable, $highisgood);
+}
+
+function is_modifier_penalizable($name, $attr) {
+	if($attr['source'][0] == 'module') {
+		/* Do not penalize subsystems */
+		return $attr['source'][1] != 'subsystem';
+	}
+
+	return false;
 }
 
 function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood) {
@@ -378,12 +374,7 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 		'prediv' => true,
 		'postdiv' => true
 		);
-
-	static $immunetopenalty = null;
-	if($immunetopenalty === null) $immunetopenalty = function($attr) {
-		return $attr['source'][0] != 'module' || $attr['source'][1] == 'subsystem';
-	};
-
+	
 	/* TODO: optimize stuff if we have a postassignment (skip everything before) */
 
 	foreach($actions as $name => $func) {
@@ -392,7 +383,7 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 				$penalize = array();
 
 				foreach($a as $attr) {
-					if($stackable || $immunetopenalty($attr)) {
+					if($stackable || !is_modifier_penalizable($name, $attr)) {
 						$func($base_value, get_final_attribute_value($fit, $attr));
 					} else {
 						$penalize[] = get_final_attribute_value($fit, $attr);
