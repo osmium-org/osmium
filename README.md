@@ -35,6 +35,9 @@ Running Osmium
 Dependencies
 ============
 
+For users
+---------
+
 * PHP >= 5.4 with:
     PostgreSQL extension,
     MySQLi extension (not mysqld itself),
@@ -46,9 +49,18 @@ Dependencies
 * Sphinx search server >= 2.0.4 
   (using the `sphinx.conf` from the `sphinx/` directory)
 
+* (Optional) memcached + PECL/memcached, for obvious reasons
+
+For developers
+--------------
+
+These are only needed if you want to contribute and/or hack the codebase.
+
 * Sass (http://sass-lang.com/)
 
-* (Optional) memcached + PECL/memcached, for obvious reasons
+* (Optional) PHPUnit
+
+* (Optional) Xdebug, for debugging and code coverage reports
 
 Initial database setup
 ======================

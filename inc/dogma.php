@@ -39,8 +39,10 @@ function eval_ship_preexpressions(&$fit) {
 
 	foreach($fit['cache'][$fit['ship']['typeid']]['effects'] as $effect) {
 		if(!isset($effect['preexp'])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_ship_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_ERROR);
 			continue;
+			// @codeCoverageIgnoreEnd
 		}
 		eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 	}
@@ -55,8 +57,10 @@ function eval_ship_postexpressions(&$fit) {
 
 	foreach($fit['cache'][$fit['ship']['typeid']]['effects'] as $effect) {
 		if(!isset($effect['postexp'])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_ship_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
 			continue;
+			// @codeCoverageIgnoreEnd
 		}
 		eval_effect_expression_maybe_overriden($fit, $effect, 'post');
 	}
@@ -68,8 +72,10 @@ function eval_ship_postexpressions(&$fit) {
 function eval_skill_preexpressions(&$fit) {
 	/* Check if a cached version exists; looping through all skills is expensive */
 	if($fit['dogma'] === array() && ($cache = \Osmium\State\get_cache('dogma_all_skills', null)) !== null) {
+		// @codeCoverageIgnoreStart
 		$fit['dogma'] = $cache;
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 
@@ -119,8 +125,10 @@ function eval_module_preexpressions(&$fit, $moduletype, $index, array $categorie
 		}
 
 		if(!isset($effect['preexp'])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_module_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
+			// @codeCoverageIgnoreEnd
 		}
 		eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 	}
@@ -141,8 +149,10 @@ function eval_module_postexpressions(&$fit, $moduletype, $index, array $categori
 		}
 
 		if(!isset($effect['postexp'])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_module_postexpressions(): effect '.$effect['effectid'].' has no postexpression!', E_USER_WARNING);
 			continue;
+			// @codeCoverageIgnoreEnd
 		}
 		eval_effect_expression_maybe_overriden($fit, $effect, 'post');
 	}
@@ -159,8 +169,10 @@ function eval_charge_preexpressions(&$fit, $presetname, $type, $index) {
 
 	foreach($fit['cache'][$fit['charges'][$presetname][$type][$index]['typeid']]['effects'] as $effect) {
 		if(!isset($effect['preexp'])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_charge_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
+			// @codeCoverageIgnoreEnd
 		}
 		eval_effect_expression_maybe_overriden($fit, $effect, 'pre');
 	}
@@ -177,8 +189,10 @@ function eval_charge_postexpressions(&$fit, $presetname, $type, $index) {
 
 	foreach($fit['cache'][$fit['charges'][$presetname][$type][$index]['typeid']]['effects'] as $effect) {
 		if(!isset($effect['postexp'])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_charge_postexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
 			continue;
+			// @codeCoverageIgnoreEnd
 		}
 		eval_effect_expression_maybe_overriden($fit, $effect, 'post');
 	}
@@ -318,7 +332,9 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 		list(, $typeid) = $attribute['source'];
 		$src = $fit['dogma']['skills'][$typeid];
 	} else {
+		// @codeCoverageIgnoreStart
 		trigger_error('get_final_attribute_value(): unknown source type ("'.$stype.'")', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
 	}
 
 	if(isset($src['__modifiers'][$name])) {
@@ -336,10 +352,12 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 		if(isset($fit['cache']['__attributes'][$name]['defaultvalue'])) {
 			$val = $fit['cache']['__attributes'][$name]['defaultvalue'];
 		} else {
+			// @codeCoverageIgnoreStart
 			$val = 0;
 			if($failonerror) {
 				trigger_error('get_final_attribute_value(): '.$name.' not defined', E_USER_WARNING);
 			}
+			// @codeCoverageIgnoreEnd
 		}
 	} else {
 		$val = $src[$name];
@@ -352,6 +370,18 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 }
 
 function is_modifier_penalizable($name, $attr) {
+	static $penaltygroups = array(
+		'premul' => true,
+		'postmul' => true,
+		'postpercent' => true,
+		'prediv' => true,
+		'postdiv' => true
+		);
+
+	if(!isset($penaltygroups[$name]) || $penaltygroups[$name] === false) {
+		return false;
+	}
+
 	if($attr['source'][0] == 'module') {
 		/* Do not penalize subsystems */
 		return $attr['source'][1] != 'subsystem';
@@ -376,14 +406,6 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 		'postpercent'    => function(&$v, $m) { $v *= (1.00 + 0.01 * $m); },
 		'postassignment' => function(&$v, $m) { $v = $m; },
 		);
-
-	static $penaltygroups = array(
-		'premul' => true,
-		'postmul' => true,
-		'postpercent' => true,
-		'prediv' => true,
-		'postdiv' => true
-		);
 	
 	/* TODO: optimize stuff if we have a postassignment (skip everything before) */
 
@@ -396,14 +418,15 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 					if($stackable || !is_modifier_penalizable($name, $attr)) {
 						$func($base_value, get_final_attribute_value($fit, $attr));
 					} else {
-						$penalize[] = get_final_attribute_value($fit, $attr);
+						$v = 1;
+						$func($v, get_final_attribute_value($fit, $attr));
+						/* Only penalize the final multiplier (and not
+						 * the percentage in case of postpercent */
+						$penalize[] = $v;
 					}
 				}
 
-				$penalized = penalize($penalize, $highisgood);
-				foreach($penalized as $v) {
-					$func($base_value, $v);
-				}
+				$base_value *= penalize($penalize, $highisgood);
 			}
 		}
 	}
@@ -412,22 +435,7 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 }
 
 function penalize($values, $highisgood) {
-	if($values === array()) return array();
-
-	/* Taken from Aenigma's guide: http://eve.battleclinic.com/guide/9196-Aenigma-s-Stacking-Penalty-Guide.html */
-	static $penaltymultiplier = array(
-		1.000000000000,
-		0.869119980800,
-		0.570583143511,
-		0.282955154023,
-		0.105992649743,
-		0.029991166533,
-		0.006410183118,
-		0.001034920483,
-		0.000126212683,
-		0.000011626754,
-		0.000000809046,
-		);
+	if($values === array()) return 1;
 
 	$positive = array();
 	$negative = array();
@@ -447,14 +455,15 @@ function penalize($values, $highisgood) {
 		sort($negative);
 	}
 
-	$out = array();
+	/* Formula taken from Aenigma's guide:
+	 * http://eve.battleclinic.com/guide/9196-Aenigma-s-Stacking-Penalty-Guide.html */
+
+	$out = 1;
 	foreach($positive as $i => $v) {
-		if(!isset($penaltymultiplier[$i])) continue;
-		$out[] = (1 + $v * $penaltymultiplier[$i]);
+		$out *= (1 + $v * exp(- $i * $i / 7.1289));
 	}
 	foreach($negative as $i => $v) {
-		if(!isset($penaltymultiplier[$i])) continue;
-		$out[] = (1 + $v * $penaltymultiplier[$i]);
+		$out *= (1 + $v * exp(- $i * $i / 7.1289));
 	}
 
 	return $out;
@@ -485,8 +494,9 @@ function remove_nested(&$fit, $subarrays, $element) {
 			return;
 		}
 	}
-
+	// @codeCoverageIgnoreStart
 	trigger_error('remove_nested(): element '.$element['name'].' not found', E_USER_WARNING);
+	// @codeCoverageIgnoreEnd
 }
 
 function insert_modifier(&$fit, $exp, $name) {
@@ -519,7 +529,9 @@ function operate_on_attribute(&$fit, $exp, $func) {
 		$val =& traverse_nested($fit, $arg1);
 		$func($val, $fit['dogma']['self'][$attribute['name']]);
 	} else {
-		trigger_error('eval_inc(): unhandled arg1 ('.$k.')', E_USER_ERROR);
+		// @codeCoverageIgnoreStart
+		trigger_error('operate_on_attribute(): unhandled arg1 ('.$k.')', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
 	}
 }
 
@@ -610,7 +622,9 @@ function eval_defgroup(&$fit, $exp) {
 
 	if(!isset($exp['groupid'])) {
 		if(!isset($hardcoded[$exp['value']])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval defgroup(): no groupID given for "'.$exp['value'].'"', E_USER_ERROR);
+			// @codeCoverageIgnoreEnd
 		}
 
 		return $hardcoded[$exp['value']];
@@ -635,7 +649,9 @@ function eval_deftypeid(&$fit, $exp) {
 
 	if(!isset($exp['typeid'])) {
 		if(!isset($hardcoded[$exp['value']])) {
+			// @codeCoverageIgnoreStart
 			trigger_error('eval_deftypeid(): no typeID given for "'.$exp['value'].'"', E_USER_ERROR);
+			// @codeCoverageIgnoreEnd
 		}
 
 		return $hardcoded[$exp['value']];
@@ -663,7 +679,9 @@ function eval_get(&$fit, $exp) {
 	} else if($context == 'self') {
 		return get_final_attribute_value($fit, array('name' => $name, 'source' => $fit['dogma']['source']));
 	} else {
+		// @codeCoverageIgnoreStart
 		trigger_error('eval_get(): does not know what to do! ($context = '.$context.')', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
 	}
 }
 
@@ -675,7 +693,9 @@ function eval_gettype(&$fit, $exp) {
 	} else if($context == 'self') {
 		return $fit['dogma']['self']['typeid'];
 	} else {
+		// @codeCoverageIgnoreStart
 		trigger_error('eval_gettype(): does not know what to do! ($context = '.$context.')', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
 	}
 }
 
@@ -768,7 +788,9 @@ function eval_set(&$fit, $exp) {
 	$value = eval_expression($fit, $exp['arg2']);
 
 	if($context[0] != 'self' && $context[0] != 'ship') {
+		// @codeCoverageIgnoreStart
 		trigger_error('eval_set(): unknown context ('.$context[0].')', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
 	}
 	insert_nested($fit, $context, $value, false);
 }

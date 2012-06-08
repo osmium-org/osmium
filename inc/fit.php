@@ -217,9 +217,11 @@ function remove_module(&$fit, $index, $typeid) {
 	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
 
 	if(!isset($fit['modules'][$type][$index]['typeid'])) {
+		// @codeCoverageIgnoreStart
 		trigger_error('remove_module(): trying to remove a nonexistent module!', E_USER_WARNING);
 		maybe_remove_cache($fit, $typeid);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 	foreach($fit['charges'] as $name => $preset) {
@@ -267,8 +269,10 @@ function toggle_module_state(&$fit, $index, $typeid, $next = true) {
 
 function get_next_state($state, $isactivable, $isoverloadable) {
 	if($state === null) {
+		// @codeCoverageIgnoreStart
 		/* Should theoratically not happen, but handle it anyway */
 		return STATE_OFFLINE;
+		// @codeCoverageIgnoreEnd
 	} else if($state === STATE_OFFLINE) {
 		return STATE_ONLINE;
 	} if($state === STATE_ONLINE) {
@@ -279,8 +283,10 @@ function get_next_state($state, $isactivable, $isoverloadable) {
 		return STATE_OFFLINE;
 	}
 
+	// @codeCoverageIgnoreStart
 	/* This is serious. We're fucked up. */
 	trigger_error('get_next_state(): unknown module state ('.$state.')', E_USER_ERROR);
+	// @codeCoverageIgnoreEnd
 }
 
 function get_previous_state($state, $isactivable, $isoverloadable) {
@@ -296,7 +302,9 @@ function get_previous_state($state, $isactivable, $isoverloadable) {
 		return STATE_ONLINE;
 	}
 
+	// @codeCoverageIgnoreStart
 	trigger_error('get_previous_state(): unknown module state ('.$state.')', E_USER_ERROR);
+	// @codeCoverageIgnoreEnd
 }
 
 function get_module_states(&$fit, $index, $typeid) {
@@ -345,8 +353,10 @@ function add_charges_batch(&$fit, $presetname, $charges) {
 
 function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
 	if(!isset($fit['modules'][$slottype][$index])) {
+		// @codeCoverageIgnoreStart
 		trigger_error('add_charge(): cannot add charge to an empty module!', E_USER_WARNING);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 	get_attributes_and_effects(array($typeid), $fit['cache']);
@@ -384,8 +394,10 @@ function online_charge(&$fit, $presetname, $slottype, $index) {
 
 function remove_charge(&$fit, $presetname, $slottype, $index) {
 	if(!isset($fit['charges'][$presetname][$slottype][$index]['typeid'])) {
+		// @codeCoverageIgnoreStart
 		trigger_error('remove_charge(): cannot remove a nonexistent charge.', E_USER_WARNING);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 	$typeid = $fit['charges'][$presetname][$slottype][$index]['typeid'];
@@ -423,8 +435,10 @@ function remove_charge_preset(&$fit, $presetname) {
 
 function use_preset(&$fit, $presetname) {
 	if($presetname !== null && !isset($fit['charges'][$presetname])) {
+		// @codeCoverageIgnoreStart
 		trigger_error('use_preset(): no such preset', E_USER_WARNING);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 	if($fit['selectedpreset'] === $presetname) return;
@@ -481,13 +495,17 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 
 function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 	if($from !== 'bay' && $from !== 'space') {
+		// @codeCoverageIgnoreStart
 		trigger_error('remove_drone(): unknown origin '.$from, E_USER_WARNING);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['quantityin'.$from] < $quantity) {
+		// @codeCoverageIgnoreStart
 		trigger_error('remove_drone(): not enough drones to remove', E_USER_WARNING);
 		$fit['drones'][$typeid]['quantityin'.$from] = 0;
+		// @codeCoverageIgnoreEnd
 	} else {
 		$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
 	}
@@ -501,13 +519,17 @@ function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 
 function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 	if($from !== 'bay' && $from !== 'space') {
+		// @codeCoverageIgnoreStart
 		trigger_error('transfer_drone(): unknown origin '.$from, E_USER_WARNING);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 	
 	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['quantityin'.$from] < $quantity) {
+		// @codeCoverageIgnoreStart
 		trigger_error('transfer_drone(): not enough drones to move', E_USER_ERROR);
 		return;
+		// @codeCoverageIgnoreEnd
 	}
 
 	$to = ($from === 'bay') ? 'space' : 'bay';

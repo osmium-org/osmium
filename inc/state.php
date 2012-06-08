@@ -21,6 +21,8 @@ namespace Osmium\State;
 $__osmium_state =& $_SESSION['__osmium_state'];
 $__osmium_login_state = array();
 $__osmium_memcached = null;
+$__osmium_cache_stack = array();
+$__osmium_cache_enabled = true;
 
 const COOKIE_AUTH_DURATION = 604800; /* 7 days */
 const REQUIRED_ACCESS_MASK = 8; /* Just for CharacterSheet */
@@ -331,6 +333,21 @@ function put_state($key, $value) {
 	return $_SESSION['__osmium_state'][$key] = $value;
 }
 
+function set_cache_enabled($enable = true) {
+	global $__osmium_cache_stack;
+	global $__osmium_cache_enabled;
+
+	$__osmium_cache_stack[] = $__osmium_cache_enabled;
+	$__osmium_cache_enabled = $enable;
+}
+
+function pop_cache_enabled() {
+	global $__osmium_cache_stack;
+	global $__osmium_cache_enabled;
+
+	$__osmium_cache_enabled = array_pop($__osmium_cache_stack);
+}
+
 function init_memcached() {
 	global $__osmium_memcached;
 
@@ -343,6 +360,9 @@ function init_memcached() {
 }
 
 function get_cache($key, $default = null) {
+	global $__osmium_cache_enabled;
+	if(!$__osmium_cache_enabled) return $default;
+
 	global $__osmium_memcached;
 
 	if(\Osmium\USE_MEMCACHED) {
@@ -362,6 +382,9 @@ function get_cache($key, $default = null) {
 }
 
 function put_cache($key, $value, $expires = 0) {
+	global $__osmium_cache_enabled;
+	if(!$__osmium_cache_enabled) return;
+
 	global $__osmium_memcached;
 
 	if(\Osmium\USE_MEMCACHED) {
@@ -374,6 +397,9 @@ function put_cache($key, $value, $expires = 0) {
 }
 
 function invalidate_cache($key) {
+	global $__osmium_cache_enabled;
+	if(!$__osmium_cache_enabled) return;
+
 	global $__osmium_memcached;
 
 	if(\Osmium\USE_MEMCACHED) {

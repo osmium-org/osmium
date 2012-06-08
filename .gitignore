@@ -5,3 +5,4 @@ sphinx/*
 !sphinx/sphinx.conf
 static/chrome.css
 .sass-cache
+tests/coverage
