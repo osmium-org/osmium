@@ -58,6 +58,37 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			);		
 	}
 
+	private function assertGunDamagePerSecond($ship, $numguns, $gunid, $chargeid, 
+	                                        $expectedvolley, $expecteddps,
+	                                        $numdamagemods, $damagemodid,
+	                                        $expectedvolley2, $expecteddps2) {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, $ship);
+
+		for($i = 0; $i < $numguns; ++$i) {
+			\Osmium\Fit\add_module($fit, $i, $gunid);
+			\Osmium\Fit\add_charge($fit, 'foo', 'high', $i, $chargeid);
+		}
+
+		\Osmium\Fit\use_preset($fit, 'foo');
+		list($dps, $volley) = \Osmium\Fit\get_damage_from_turrets($fit);
+		$this->assertEquals($expecteddps, $dps, '', 1);
+		$this->assertEquals($expectedvolley, $volley, '', 1);
+
+		for($i = 0; $i < $numdamagemods; ++$i) {
+			\Osmium\Fit\add_module($fit, $i, $damagemodid);
+		}
+
+		list($dps, $volley) = \Osmium\Fit\get_damage_from_turrets($fit);
+		$this->assertEquals($expecteddps2, $dps, '', 1);
+		$this->assertEquals($expectedvolley2, $volley, '', 1);
+
+		\Osmium\Fit\use_preset($fit, null); /* Select the null preset (no charges) */
+		list($dps, $volley) = \Osmium\Fit\get_damage_from_turrets($fit);
+		$this->assertSame(0, $dps);
+		$this->assertSame(0, $volley);
+	}
+
 	/**
 	 * @group fit
 	 * @group engine
@@ -280,5 +311,76 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* Test the active bonus when overloaded */
 		\Osmium\Fit\change_module_state($fit, 0, 4347, \Osmium\Fit\STATE_OVERLOADED);
 		$this->assertShieldResistances($fit, 0.5625, 0.7375, 0.7703, 0.7812);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testProjectileDPS() {
+		/* Tempest with 1400mm artilleries and Quake */
+		/* Pyfa 1.1.7-git */
+		$this->assertGunDamagePerSecond(639, 6, 2961, 12761, 
+		                                8505, 392, 
+		                                3, 519,
+		                                10749, 648);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testHybridDPS() {
+		/* Brutix with Heavy Ion Blasters and Antimatter */
+		/* Pyfa 1.1.7-git */
+		$this->assertGunDamagePerSecond(16229, 7, 3138, 230, 
+		                                1177, 363, 
+		                                3, 10190,
+		                                1487, 600);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testLaserDPS() {
+		/* Punisher with Medium Pulse Lasers and faction Multifrequency */
+		/* Pyfa 1.1.7-git */
+		$this->assertGunDamagePerSecond(597, 3, 3041, 23071, 
+		                                295, 117, 
+		                                3, 2364,
+		                                372, 193);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testDroneAndSentryDPS() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 12005); /* Ishtar */
+		\Osmium\Fit\add_module($fit, 0, 32083); /* Sentry Damage Augmentor */
+		\Osmium\Fit\add_module($fit, 1, 32083);
+		\Osmium\Fit\add_module($fit, 0, 4405); /* Drone Damage Amplifier II */
+		\Osmium\Fit\add_module($fit, 1, 4405);
+		\Osmium\Fit\add_module($fit, 2, 4405);
+
+		/* Pyfa 1.1.7-git */
+
+		$dps = \Osmium\Fit\get_damage_from_drones($fit);
+		$this->assertSame(0, $dps);
+
+		\Osmium\Fit\add_drone($fit, 28211, 0, 5); /* 5x Garde IIs in space */
+		\Osmium\Fit\add_drone($fit, 2488, 5, 0); /* 5x Warrior IIs in bay */
+
+		$dps = \Osmium\Fit\get_damage_from_drones($fit);
+		$this->assertEquals(719, $dps, '', 1);
+
+		/* Swap the drones */
+		\Osmium\Fit\transfer_drone($fit, 28211, 'space', 5);
+		\Osmium\Fit\transfer_drone($fit, 2488, 'bay', 5);
+
+		$dps = \Osmium\Fit\get_damage_from_drones($fit);
+		$this->assertEquals(185, $dps, '', 1);
 	}
 }
