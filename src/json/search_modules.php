@@ -52,9 +52,9 @@ while($row = \Osmium\Db\fetch_row($query)) {
 }
 
 $modattr = array();
-\Osmium\Fit\get_attributes_and_effects($typeids, $modattr);
+\Osmium\Fit\get_attributes_and_effects($typeids, $modattr['cache']);
 foreach($out as &$row) {
-	$row['slottype'] = \Osmium\Fit\get_module_slottype($modattr[$row['typeid']]['effects']);
+	$row['slottype'] = \Osmium\Fit\get_module_slottype($modattr, $row['typeid']);
 }
 
 if($i == MAX_MODULES + 1) {

@@ -18,38 +18,97 @@
 
 namespace Osmium\Fit;
 
-/* KEEP THIS NAMESPACE PURE. */
+/*
+ * KEEP THIS NAMESPACE PURE.
+ * 
+ * Functions in \Osmium\Fit must not affect or rely on the global
+ * state at all. This makes it easier to test and debug.
+ */
 
+require __DIR__.'/fit-attributes.php';
+require __DIR__.'/fit-db.php';
+require __DIR__.'/fit-importexport.php';
+
+
+/** The loadout can be viewed by everyone. */
 const VIEW_EVERYONE = 0;
+
+/** The loadout can be viewed by everyone, provided they have the
+ * password. This mode implies VISIBILITY_PRIVATE.*/
 const VIEW_PASSWORD_PROTECTED = 1;
+
+/** The loadout can only be viewed by characters in the same alliance
+ * than the author. */
 const VIEW_ALLIANCE_ONLY = 2;
+
+/** The loadout can only be viewed by characters in the same
+ * corporation than the author. */
 const VIEW_CORPORATION_ONLY = 3;
+
+/** The loadout can only be viewed by its author. */
 const VIEW_OWNER_ONLY = 4;
 
+
+/** The loadout can only be edited by its author. */
 const EDIT_OWNER_ONLY = 0;
+
+/** The loadout can only be edited by its author and people in the
+ * same corporation with the "Fitting Manager" role (or directors). */
 const EDIT_OWNER_AND_FITTING_MANAGER_ONLY = 1;
+
+/** The loadout can be edited by its author and anyone in the same
+ * corporation. */
 const EDIT_CORPORATION_ONLY = 2;
+
+/** The loadout can be edited by its author and everyone in the same
+ * alliance. */
 const EDIT_ALLIANCE_ONLY = 3;
 
+
+/** The loadout can be indexed by the Osmium search engine and other
+ * search engines, and will appear on search results when appropriate
+ * (conforming with the view permission). */
 const VISIBILITY_PUBLIC = 0;
+
+/** The loadout can never appear on any search results and will never
+ * be indexed. It is still accessible to anyone (conforming with the
+ * view permission) provided they have manually been given the URI. */
 const VISIBILITY_PRIVATE = 1;
 
+
+/** Offline module. (Such modules do not use CPU/Power.) */
 const STATE_OFFLINE = 0;
+
+/** Online module. */
 const STATE_ONLINE = 1;
+
+/** Active module (assumes online). */
 const STATE_ACTIVE = 2;
+
+/** Overloaded module (assumes active). */
 const STATE_OVERLOADED = 3;
+
 
 /* ----------------------------------------------------- */
 
+/** Get the different module slot categories. */
 function get_slottypes() {
 	return array('high', 'medium', 'low', 'rig', 'subsystem');
 }
 
+/**
+ * Get all the module slot categories which contain stateful modules,
+ * ie modules that can be activated, overloaded, offlined etc.
+ */
 function get_stateful_slottypes() {
 	/* Rigs and subsystems cannot be offlined/activated/overloaded */
 	return array('high', 'medium', 'low');
 }
 
+/**
+ * Get an array of all the attribute names defining the number of
+ * slots available on a ship.
+ */
 function get_attr_slottypes() {
 	return array(
 		'high' => 'hiSlots',
@@ -60,6 +119,10 @@ function get_attr_slottypes() {
 		);
 }
 
+/**
+ * Get an array of formatted state names, with the name of the picture
+ * represting the state.
+ */
 function get_state_names() {
 	return array(
 		STATE_OFFLINE => array('Offline', 'offline.png'),
@@ -69,6 +132,10 @@ function get_state_names() {
 		);
 }
 
+/**
+ * Get an array of categories of effects that should be activated on a
+ * per-state basis.
+ */
 function get_state_categories() {
 	return array(
 		null => array(),
@@ -79,6 +146,9 @@ function get_state_categories() {
 		);
 }
 
+/**
+ * Initialize a new fitting in variable $fit.
+ */
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(), /* Ship typeid, typename etc. */
@@ -94,15 +164,27 @@ function create(&$fit) {
 	\Osmium\Dogma\eval_skill_preexpressions($fit);
 }
 
+/**
+ * Delete a fitting so that memory can be claimed back by the garbage
+ * collector.
+ */
 function destroy(&$fit) {
 	$fit = array();
 }
 
+/**
+ * Reset a fitting. This is the same as calling destroy() then
+ * create() immediately after.
+ */
 function reset(&$fit) {
 	destroy($fit);
 	create($fit);
 }
 
+/**
+ * Change the ship of a fitting. This can be done anytime, even when
+ * there are fitted modules and whatnot.
+ */
 function select_ship(&$fit, $new_typeid) {
 	if(isset($fit['ship']['typeid'])) {
 		/* Switching hull */
@@ -151,6 +233,14 @@ function select_ship(&$fit, $new_typeid) {
 	return true;
 }
 
+/**
+ * Add several modules to the fit. This is more efficient than calling
+ * add_module() multiple times.
+ *
+ * @param $modules array of modules to add, should be of the form
+ * array(slot_type => array(index => typeid)), or array(slot_type =>
+ * array(index => array(typeid, modulestate))).
+ */
 function add_modules_batch(&$fit, $modules) {
 	$typeids = array();
 	foreach($modules as $type => $a) {
@@ -178,9 +268,17 @@ function add_modules_batch(&$fit, $modules) {
 	}
 }
 
+/**
+ * Add a module to the fit at a specific index. This will gracefully
+ * overwrite any existing module of the same type at the same index if
+ * there is one.
+ *
+ * @param $state state of the module (on of the STATE_* constants). If
+ * unspecified, the default is STATE_ACTIVE or STATE_ONLINE for
+ * modules which cannot be activated.
+ */
 function add_module(&$fit, $index, $typeid, $state = null) {
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+	$type = get_module_slottype($fit, $typeid);
 
 	if(isset($fit['modules'][$type][$index])) {
 		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
@@ -204,7 +302,7 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 	$fit['dogma']['modules'][$type][$index]['typeid']
 		=& $fit['modules'][$type][$index]['typeid'];
 
-	list($isactivable, ) = get_module_states($fit, $index, $typeid);
+	list($isactivable, ) = get_module_states($fit, $typeid);
 	if($state === null) {
 		$state = ($isactivable && in_array($type, get_stateful_slottypes())) ? STATE_ACTIVE : STATE_ONLINE;
 	}
@@ -212,9 +310,11 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 	change_module_state($fit, $index, $typeid, $state);
 }
 
+/**
+ * Remove a certain module located at a specific index.
+ */
 function remove_module(&$fit, $index, $typeid) {
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+	$type = get_module_slottype($fit, $typeid);
 
 	if(!isset($fit['modules'][$type][$index]['typeid'])) {
 		// @codeCoverageIgnoreStart
@@ -238,11 +338,16 @@ function remove_module(&$fit, $index, $typeid) {
 	maybe_remove_cache($fit, $typeid);
 }
 
+/**
+ * Change the state of a module located at a specific index. Be
+ * careful, the new state is not checked, so if you pass a nonsensical
+ * value (like STATE_ACTIVE for a passive-only module), weird things
+ * may happen (but probably not!).
+ */
 function change_module_state(&$fit, $index, $typeid, $state) {
 	$categories = get_state_categories();
 
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+	$type = get_module_slottype($fit, $typeid);
 
 	$previous_state = $fit['modules'][$type][$index]['state'];
 
@@ -255,12 +360,23 @@ function change_module_state(&$fit, $index, $typeid, $state) {
 	$fit['modules'][$type][$index]['state'] = $state;
 }
 
+/**
+ * Toggle the state of a module located at a specific index. The order
+ * of toggling is as follows:
+ *
+ * offline -> online -> active -> overloaded -> offline
+ *
+ * If it is not possible to go to the next state (for example if a
+ * module cannot be activated or overloaded), it will be toggled back
+ * to the offline state.
+ *
+ * @param $next If set to false, toggle state in the opposite order.
+ */
 function toggle_module_state(&$fit, $index, $typeid, $next = true) {
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+	$type = get_module_slottype($fit, $typeid);
 	$state = $fit['modules'][$type][$index]['state'];
 
-	list($isactivable, $isoverloadable) = get_module_states($fit, $index, $typeid);
+	list($isactivable, $isoverloadable) = get_module_states($fit, $typeid);
 	$new_state = $next ? get_next_state($state, $isactivable, $isoverloadable) :
 		get_previous_state($state, $isactivable, $isoverloadable);
 
@@ -307,9 +423,16 @@ function get_previous_state($state, $isactivable, $isoverloadable) {
 	// @codeCoverageIgnoreEnd
 }
 
-function get_module_states(&$fit, $index, $typeid) {
+/**
+ * Get possible states of a module.
+ *
+ * Returns an array of two booleans, the first one is true iff the
+ * module is activable, and the second one is true iff the module is
+ * overloadable.
+ */
+function get_module_states(&$fit, $typeid) {
 	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$type = get_module_slottype($fit['cache'][$typeid]['effects']);
+	$type = get_module_slottype($fit, $typeid);
 
 	$isactivable = false;
 	$isoverloadable = false;
@@ -582,292 +705,30 @@ function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
 	}
 }
 
-/* ----------------------------------------------------- */
+/**
+ * Get the type of slot a module occupies.
+ */
+function get_module_slottype(&$fit, $typeid) {
+	get_attributes_and_effects(array($typeid), $fit['cache']);
+	$effects = $fit['cache'][$typeid]['effects'];
 
-function get_capacitor_stability(&$fit) {
-	static $step = 250;
-	$categories = get_state_categories();
-
-	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
-	$capacity = \Osmium\Dogma\get_ship_attribute($fit, 'capacitorCapacity');
-	$tau = \Osmium\Dogma\get_ship_attribute($fit, 'rechargeRate') / 5.0;
-
-	$usage_rate = 0;
-	foreach($fit['modules'] as $type => $a) {
-		foreach($a as $index => $module) {
-			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
-				$effectdata = $fit['cache']['__effects'][$effect['effectname']];
-
-				if(!in_array($effectdata['effectcategory'], $categories[$module['state']])) continue;
-				if(!isset($effectdata['durationattributeid'])) continue;
-
-				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
-					$fit['cache']['__attributes'][$effectdata['durationattributeid']]['attributename']);
-
-				if($effect['effectname'] == 'powerBooster') {
-					/* Special case must be hardcoded (eg. cap boosters) */
-					if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
-						continue;
-					}
-
-					$restored = \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'],
-					                                               $type, $index, 'capacitorBonus', false);
-
-					$usage_rate -= $restored / $duration;
-					continue;
-				}
-
-				if(!isset($effectdata['dischargeattributeid'])) continue;
-				get_attribute_in_cache($effectdata['dischargeattributeid'], $fit['cache']);
-
-				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
-					$fit['cache']['__attributes'][$effectdata['dischargeattributeid']]['attributename']);
-
-				$usage_rate += $discharge / $duration;
-			}
-		}
-	}
-
-	$peak_rate = (sqrt(0.25) - 0.25) * 2 * $capacity / $tau; /* Recharge rate at 25% capacitor */
-	$X = max(0, $usage_rate);
-
-	/* I got the solution for cap stability by solving the quadratic equation:
-	   dC   /       C        C   \   2Cmax
-	   -- = |sqrt(-----) - ----- | x -----
-	   dt   \     Cmax     Cmax  /    Tau
-
-	           Cmax - X*Tau + sqrt(Cmax^2 - 2X*Tau*Cmax)          dC
-	   ==> C = ----------------------------------------- with X = --
-	                             2                                dt
-	   
-	   A simple check is that, for dC/dt = 0, the two solutions should be 0 and Cmax. */
-	$delta = $capacity * $capacity - 2 * $tau * $X * $capacity;
-	if($delta < 0) {
-		/* $delta negative, not cap stable */
-		$t = 0;
-		$capacitor = $capacity; /* Start with full capacitor */
-
-		/* Simulate what happens with the Runge-Kutta method (RK4) */
-		$f = function($c) use($capacity, $tau, $X) {
-			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau - $X;
-		};
-
-		while($capacitor > 0) {
-			$k1 = $f($capacitor);
-			$k2 = $f($capacitor + 0.5 * $step * $k1);
-			$k3 = $f($capacitor + 0.5 * $step * $k2);
-			$k4 = $f($capacitor + $step * $k3);
-			$capacitor += $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6;
-			$t += $step;
-		}
-
-		return array($usage_rate - $peak_rate, false, $t / 1000);
-	} else {
-		/* $delta positive, cap-stable */
-		/* Use the highest root of our equation (but there is also another solution below the 25% peak) */
-		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
-		return array($usage_rate - $peak_rate, true, 100 * $C / $capacity);
-	}
-}
-
-function get_ehp_and_resists(&$fit) {
-	static $layers = array(
-		array('shield', 'shieldCapacity', 'shield'),
-		array('armor', 'armorHP', 'armor'),
-		array('hull', 'hp', ''),
-		);
-
-	$out = array(
-		'ehp' => array(
-			'min' => 0,
-			'avg' => 0,
-			'max' => 0,
-			),
-		);
-
-	foreach($layers as $a) {
-		list($name, $attributename, $resistprefix) = $a;
-
-		$out[$name]['capacity'] = \Osmium\Dogma\get_ship_attribute($fit, $attributename);
-		$out[$name]['resonance']['em'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'EmDamageResonance'));
-		$out[$name]['resonance']['thermal'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'ThermalDamageResonance'));
-		$out[$name]['resonance']['kinetic'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'KineticDamageResonance'));
-		$out[$name]['resonance']['explosive'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'ExplosiveDamageResonance'));
-
-		$out['ehp']['min'] += $out[$name]['capacity'] / max($out[$name]['resonance']);
-		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
-		/* TODO user-defined profiles */
-		$out['ehp']['avg'] += 4 * $out[$name]['capacity'] / array_sum($out[$name]['resonance']);
-	}
-
-	return $out;
-}
-
-function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor) {
-	if(!isset($fit['cache']['__effects'][$effectname])) {
-		/* The interesting effect is not cached, so no module has
-		 * it. It is useless to continue further. */
-		return array(0, 0);
-	}
-
-	$total = 0;
-	$sustained = 0;
-	$capusage = $capacitor[0];
-
-	$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
-	$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
-	get_attribute_in_cache($durationattributeid, $fit['cache']);
-	get_attribute_in_cache($dischargeattributeid, $fit['cache']);
-
-	$durationattributename = $fit['cache']['__attributes'][$durationattributeid]['attributename'];
-	$dischargeattributename = $fit['cache']['__attributes'][$dischargeattributeid]['attributename'];
-
-	$modules = array();
-
-	foreach($fit['modules'] as $type => $a) {
-		foreach($a as $index => $module) {
-			if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
-				continue;
-			}
-			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
-				continue;
-			}
-
-			$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $boostattributename);
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-			$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
-			
-			$total += $amount / $duration;
-
-			$modules[] = array($amount, $duration, $discharge);
-			$capusage -= $discharge / $duration;
-		}
-	}
-
-	/* Sort modules by best HP repaired per capacitor unit */
-	usort($modules, function($b, $a) {
-			$k =  $a[0] / $a[2] - $b[0] / $b[2];
-			return $k > 0 ? 1 : ($k < 0 ? -1 : 0);
-		});
-
-	/* Enable repairers until cap stability is lost */
-	while($capusage < 0 && ($m = array_shift($modules)) !== null) {
-		$module_capusage = $m[2] / $m[1];
-
-		$fraction = max(min(1, -$capusage / $module_capusage), 0);
-		$capusage += $fraction * $module_capusage;
-		$sustained += $fraction * ($m[0] / $m[1]);
-	}
-
-	$factor = 4 / array_sum($resonances);
-	return array($total * $factor, $sustained * $factor);
-}
-
-function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultiplierattributename = null, $globalmultiplier = 1) {
-	if(!isset($fit['cache']['__effects'][$attackeffectname])) {
-		return array(0, 0);
-	}
-
-	$dps = 0;
-	$alpha = 0;
-
-	get_attribute_in_cache($fit['cache']['__effects'][$attackeffectname]['durationattributeid'], $fit['cache']);
-
-	$durationattributename = $fit['cache']['__attributes'][
-		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']
-		]['attributename'];
-
-	foreach($fit['modules'] as $type => $a) {
-		foreach($a as $index => $module) {
-			if(!isset($fit['cache'][$module['typeid']]['effects'][$attackeffectname])) {
-				continue;
-			}
-			if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
-				continue;
-			}
-			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
-				continue;
-			}
-
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-			$damage = 
-				\Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'emDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'thermalDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'kineticDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'explosiveDamage');
-
-			$multiplier = $modulemultiplierattributename === null ? 1 :
-				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattributename);
-
-			$dps += $multiplier * $damage / $duration;
-			$alpha += $multiplier * $damage;
-		}
-	}
-
-	return array(1000 * $dps * $globalmultiplier, $alpha * $globalmultiplier);
-}
-
-function get_damage_from_missiles(&$fit) {
-	return get_damage_from_attack_effect(
-		$fit, 'useMissiles', null,
-		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier')
-		);
-}
-
-function get_damage_from_turrets(&$fit) {
-	$projectiles = get_damage_from_attack_effect(
-		$fit, 'projectileFired', 'damageMultiplier'
-		);
-
-	$lasers = get_damage_from_attack_effect(
-		$fit, 'targetAttack', 'damageMultiplier'
-		);
-
-	return array(
-		$projectiles[0] + $lasers[0],
-		$projectiles[1] + $lasers[1],
-		);
-}
-
-function get_damage_from_drones(&$fit) {
-	$dps = 0;
-
-	if(!isset($fit['cache']['__effects']['targetAttack'])) return 0;
-
-	get_attribute_in_cache($fit['cache']['__effects']['targetAttack']['durationattributeid'], $fit['cache']);
-
-	$durationattributename = $fit['cache']['__attributes'][
-		$fit['cache']['__effects']['targetAttack']['durationattributeid']
-		]['attributename'];
-
-	foreach($fit['drones'] as $drone) {
-		if($drone['quantityinspace'] == 0) continue;
-
-		if(!isset($fit['cache'][$drone['typeid']]['effects']['targetAttack'])) {
-			continue;
-		}
-
-		$duration = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], $durationattributename);
-		$damage = 
-			\Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'emDamage')
-			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'thermalDamage')
-			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'kineticDamage')
-			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'explosiveDamage');
-
-		$multiplier = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'damageMultiplier');
-
-		$dps += $drone['quantityinspace'] * $multiplier * $damage / $duration;
-	}
-
-	return 1000 * $dps;
+	if(isset($effects['loPower'])) return 'low';
+	if(isset($effects['medPower'])) return 'medium';
+	if(isset($effects['hiPower'])) return 'high';
+	if(isset($effects['rigSlot'])) return 'rig';
+	if(isset($effects['subSystem'])) return 'subsystem';
+	return false;
 }
 
 /* ----------------------------------------------------- */
 
+/**
+ * Try to remove any leftover cached attributes/effects no longer used
+ * by any fitted entity.
+ *
+ * Usually not needed, as some housekeeping is already done internally
+ * when removing entities (such as modules, drones, etc.).
+ */
 function prune_cache(&$fit) {
 	/* TODO: also prune __effects and __attributes (hard). Maybe use a
 	 * counter for every effect/attribute represting the number of
@@ -878,6 +739,7 @@ function prune_cache(&$fit) {
 	}
 }
 
+/** @internal */
 function maybe_remove_cache(&$fit, $deleted_typeid) {
 	if(!isset($fit['cache'][$deleted_typeid])) return;
 	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] == $deleted_typeid) return;
@@ -900,15 +762,7 @@ function maybe_remove_cache(&$fit, $deleted_typeid) {
 	unset($fit['cache'][$deleted_typeid]);
 }
 
-function get_module_slottype($effects) {
-	if(isset($effects['loPower'])) return 'low';
-	if(isset($effects['medPower'])) return 'medium';
-	if(isset($effects['hiPower'])) return 'high';
-	if(isset($effects['rigSlot'])) return 'rig';
-	if(isset($effects['subSystem'])) return 'subsystem';
-	return false;
-}
-
+/** @internal */
 function get_attribute_in_cache($attributenameorid, &$out) {
 	if(isset($out['__attributes'][$attributenameorid])) return;
 
@@ -924,6 +778,7 @@ function get_attribute_in_cache($attributenameorid, &$out) {
 	$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];
 }
 
+/** @internal */
 function get_attributes_and_effects($typeids, &$out) {
 	static $hardcoded_effectcategories = array(
 		'online' => 4,
@@ -1016,8 +871,11 @@ function get_attributes_and_effects($typeids, &$out) {
 	}
 }
 
-/* ----------------------------------------------------- */
-
+/**
+ * Try to auto-magically fix issues of a loadout.
+ *
+ * Potentially destructive operation! Use with caution.
+ */
 function sanitize(&$fit) {
 	/* Unset any extra charges of nonexistent modules. */
 	foreach($fit['charges'] as $name => $preset) {
@@ -1029,382 +887,4 @@ function sanitize(&$fit) {
 			}
 		}
 	}
-}
-
-/* BE VERY CAREFUL WHEN CHANGING THIS FUNCTION.
- * ALL THE FITTINGHASHS DEPEND ON ITS RESULT. */
-function get_unique($fit) {
-	$unique = array(
-		'metadata' => array(
-			'name' => $fit['metadata']['name'],
-			'description' => $fit['metadata']['description'],
-			'tags' => $fit['metadata']['tags'],
-			),
-		'ship' => array(
-			'typeid' => $fit['ship']['typeid'],
-			),
-		);
-
-	foreach($fit['modules'] as $type => $d) {
-		foreach($d as $index => $module) {
-			$unique['modules'][$type][$index] = array($module['typeid'], $module['state']);
-		}
-	}
-
-	foreach($fit['charges'] as $name => $preset) {
-		foreach($preset as $type => $charges) {
-			foreach($charges as $index => $charge) {
-				$unique['charges'][$name][$type][$index] = $charge['typeid'];
-			}
-		}
-	}
-
-	foreach($fit['drones'] as $typeid => $drone) {
-		$unique['drones'][$typeid] = array($drone['quantityinbay'], $drone['quantityinspace']);
-	}
-
-	return $unique;
-}
-
-function ksort_rec(array &$array) {
-	ksort($array);
-	foreach($array as &$v) {
-		if(is_array($v)) ksort_rec($v);
-	}
-}
-
-function get_hash($fit) {
-	$unique = get_unique($fit);
-
-	/* Ensure equality if key ordering is different */
-	ksort_rec($unique);
-	sort($unique['metadata']['tags']); /* tags should be ordered by value */
-
-	return sha1(serialize($unique));
-}
-
-function commit_fitting(&$fit) {
-	$fittinghash = get_hash($fit);
-
-	$fit['metadata']['hash'] = $fittinghash;
-  
-	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(fittinghash) FROM osmium.fittings WHERE fittinghash = $1', array($fittinghash)));
-	if($count == 1) {
-		/* Do nothing! */
-		return;
-	}
-
-	/* Insert the new fitting */
-	\Osmium\Db\query('BEGIN;');
-	\Osmium\Db\query_params('INSERT INTO osmium.fittings (fittinghash, name, description, hullid, creationdate) VALUES ($1, $2, $3, $4, $5)', 
-	                        array(
-		                        $fittinghash,
-		                        $fit['metadata']['name'],
-		                        $fit['metadata']['description'],
-		                        $fit['ship']['typeid'],
-		                        time(),
-		                        ));
-  
-	foreach($fit['metadata']['tags'] as $tag) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)', 
-		                        array($fittinghash, $tag));
-	}
-  
-	$module_order = array();
-	foreach($fit['modules'] as $type => $data) {
-		$z = 0;
-		foreach($data as $index => $module) {
-			$module_order[$type][$index] = $z;
-			\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5)', 
-			                        array($fittinghash, $type, $z, $module['typeid'], $module['state']));
-			++$z;
-		}
-	}
-  
-	foreach($fit['charges'] as $name => $preset) {
-		foreach($preset as $type => $d) {
-			foreach($d as $index => $charge) {
-				if(!isset($module_order[$type][$index])) continue;
-				$z = $module_order[$type][$index];
-
-				\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
-				                        array($fittinghash, $name, $type, $z, $charge['typeid']));
-			}
-		}
-	}
-  
-	foreach($fit['drones'] as $drone) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, typeid, quantityinbay, quantityinspace) VALUES ($1, $2, $3, $4)',
-		                        array($fittinghash, $drone['typeid'], $drone['quantityinbay'], $drone['quantityinspace']));
-	}
-  
-	\Osmium\Db\query('COMMIT;');
-}
-
-function commit_loadout(&$fit, $ownerid, $accountid) {
-	commit_fitting($fit);
-
-	$loadoutid = null;
-	$password = ($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) ? $fit['metadata']['password'] : '';
-
-	if(!isset($fit['metadata']['loadoutid'])) {
-		/* Insert a new loadout */
-		list($loadoutid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password)));
-
-		$fit['metadata']['loadoutid'] = $loadoutid;
-	} else {
-		/* Update a loadout */
-		$loadoutid = $fit['metadata']['loadoutid'];
-
-		\Osmium\Db\query_params('UPDATE osmium.loadouts SET accountid = $1, viewpermission = $2, editpermission = $3, visibility = $4, passwordhash = $5 WHERE loadoutid = $6', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password, $loadoutid));
-	}
-
-	/* If necessary, insert the appropriate history entry */
-	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT fittinghash, loadoutslatestrevision.latestrevision 
-  FROM osmium.loadoutslatestrevision 
-  JOIN osmium.loadouthistory ON (loadoutslatestrevision.loadoutid = loadouthistory.loadoutid 
-                             AND loadoutslatestrevision.latestrevision = loadouthistory.revision) 
-  WHERE loadoutslatestrevision.loadoutid = $1', array($loadoutid)));
-	if($row === false || $row[0] != $fit['metadata']['hash']) {
-		$nextrev = ($row === false) ? 1 : ($row[1] + 1);
-		\Osmium\Db\query_params('INSERT INTO osmium.loadouthistory 
-    (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) 
-    VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $nextrev, $fit['metadata']['hash'], $accountid, time()));
-	}
-
-	$fit['metadata']['accountid'] = $ownerid;
-
-	if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE) {
-		\Osmium\Search\unindex($loadoutid);
-	} else {
-		\Osmium\Search\index(
-			\Osmium\Db\fetch_assoc(
-				\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', 
-				                                       array($loadoutid))));
-	}
-}
-
-function get_fit($loadoutid, $revision = null) {
-	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null)) !== null) {
-		return $cache;
-	}
-
-	if($revision === null) {
-		/* Use latest revision */
-		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT latestrevision FROM osmium.loadoutslatestrevision WHERE loadoutid = $1', array($loadoutid)));
-		if($row === false) return false;
-		$revision = $row[0];
-	}
-
-	$loadout = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, viewpermission, editpermission, visibility, passwordhash FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
-
-	if($loadout === false) return false;
-
-	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT fittings.fittinghash AS hash, name, description, hullid, creationdate, revision FROM osmium.loadouthistory JOIN osmium.fittings ON loadouthistory.fittinghash = fittings.fittinghash WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $revision)));
-
-	if($fitting === false) return false;
-
-	create($fit);
-	select_ship($fit, $fitting['hullid']);
-
-	$fit['metadata']['loadoutid'] = $loadoutid;
-	$fit['metadata']['hash'] = $fitting['hash'];
-	$fit['metadata']['name'] = $fitting['name'];
-	$fit['metadata']['description'] = $fitting['description'];
-	$fit['metadata']['view_permission'] = $loadout['viewpermission'];
-	$fit['metadata']['edit_permission'] = $loadout['editpermission'];
-	$fit['metadata']['visibility'] = $loadout['visibility'];
-	$fit['metadata']['password'] = $loadout['passwordhash'];
-	$fit['metadata']['revision'] = $fitting['revision'];
-	$fit['metadata']['creation_date'] = $fitting['creationdate'];
-	$fit['metadata']['accountid'] = $loadout['accountid'];
-
-	$fit['metadata']['tags'] = array();
-	$tagq = \Osmium\Db\query_params('SELECT tagname FROM osmium.fittingtags WHERE fittinghash = $1', array($fit['metadata']['hash']));
-	while($r = \Osmium\Db\fetch_row($tagq)) {
-		$fit['metadata']['tags'][] = $r[0];
-	}
-
-	$modules = array();
-	$mq = \Osmium\Db\query_params('SELECT slottype, index, typeid, state FROM osmium.fittingmodules WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
-	while($row = \Osmium\Db\fetch_row($mq)) {
-		$modules[$row[0]][$row[1]] = array($row[2], (int)$row[3]);
-	}
-
-	add_modules_batch($fit, $modules);
-
-	$charges = array();
-	$cq = \Osmium\Db\query_params('SELECT presetname, slottype, index, fittingcharges.typeid FROM osmium.fittingcharges JOIN eve.invtypes ON fittingcharges.typeid = invtypes.typeid WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
-	while($row = \Osmium\Db\fetch_row($cq)) {
-		$charges[$row[0]][$row[1]][$row[2]] = $row[3];
-	}
-
-	$firstpreset = null;
-	foreach($charges as $presetname => $preset) {
-		if($firstpreset === null) $firstpreset = $presetname;
-		add_charges_batch($fit, $presetname, $preset);
-	}
-	if($firstpreset !== null) use_preset($fit, $firstpreset);
-	
-	$dq = \Osmium\Db\query_params('SELECT typeid, quantityinbay, quantityinspace FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
-	$drones = array();
-	while($row = \Osmium\Db\fetch_row($dq)) {
-		$drones[$row[0]]['quantityinbay'] = $row[1];
-		$drones[$row[0]]['quantityinspace'] = $row[2];
-	}
-  
-	add_drones_batch($fit, $drones);
-  
-	\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
-	return $fit;
-}
-
-function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
-	create($fit);
-
-	if(!isset($e['name'])) {
-		$errors[] = 'Expected a name attribute in <fitting> tag, none found. Stopping.';
-		return false;
-	} else {
-		$name = (string)$e['name'];
-	}
-
-	if(!isset($e->description) || !isset($e->description['value'])) {
-		$errors[] = 'Expected <description> tag with value attribute, none found. Using empty description.';
-		$description = '';
-	} else {
-		$description = (string)$e->description['value'];
-	}
-	$description = '(Imported from EVE XML format.)'."\n\n".$description;
-
-	if(!isset($e->shipType) || !isset($e->shipType['value'])) {
-		$errors[] = 'Expected <shipType> tag with value attribute, none found. Stopping.';
-		return false;
-	} else {
-		$shipname = (string)$e->shipType['value'];
-	}
-
-	$row = \Osmium\Db\fetch_row(
-		\Osmium\Db\query_params(
-			'SELECT typeid FROM osmium.invships WHERE typename = $1',
-			array($shipname)));
-	if($row === false) {
-		$errors[] = 'Could not fetch typeID of "'.$shipname.'". Obsolete/unpublished ship? Stopping.';
-		return false;
-	}
-	select_ship($fit, $row[0]);
-
-	if(!isset($e->hardware)) {
-		$errors[] = 'No <hardware> element found. Expected at least 1. Stopping.';
-		return false;
-	}
-
-	$typenames = array();
-	$drones = array();
-	$modules = array();
-	$recover_modules = array();
-
-	static $modtypes = array(
-		'low' => 'low',
-		'med' => 'medium',
-		'hi' => 'high',
-		'rig' => 'rig',
-		'subsystem' => 'subsystem',
-		);
-
-	foreach($e->hardware as $hardware) {
-		if(!isset($hardware['type'])) {
-			$errors[] = 'Tag <hardware> has no type attribute. Discarded.';
-			continue;
-		}
-		$type = (string)$hardware['type'];
-		$typenames[$type] = true;
-
-		if(!isset($hardware['slot'])) {
-			$errors[] = 'Tag <hardware> has no slot attribute. (Recoverable error.)';
-			$slot = '';
-		} else {
-			$slot = (string)$hardware['slot'];
-		}
-
-		if($slot === "drone bay") {
-			if(!isset($hardware['qty'])) $qty = 1;
-			else $qty = (int)$hardware['qty'];
-			if($qty <= 0) continue;
-
-			$drones[] = array('count' => $qty, 'typename' => $type);
-		} else {
-			$p_slot = $slot;
-			$slot = explode(' ', $slot);
-			if(count($slot) != 3
-			   || $slot[1] != 'slot'
-			   || !in_array($slot[0], array_keys($modtypes))
-			   || !is_numeric($slot[2])
-			   || (int)$slot[2] < 0
-			   || (int)$slot[2] > 7) {
-
-				$errors[] = 'Could not parse slot attribute "'.$p_slot.'". (Recoverable error.)';
-				$recover_modules[] = $type;
-			} else {
-				$slottype = $modtypes[$slot[0]];
-				$index = $slot[2];
-				$modules[$slottype][$index] = $type;
-			}
-		}
-	}
-
-	$typenames['OsmiumSentinel'] = true; /* Just in case $typenames were to be empty */
-	$typename_to_id = array();
-	/* That's a pretty dick move from CCP to NOT include
-	 * typeIDs. Whoever had that idea should be kicked in the nuts. */
-	$req = \Osmium\Db\query('SELECT typeid, typename FROM eve.invtypes WHERE typename IN ('
-	                        .implode(',', array_map(function($name) {
-				                        return "'".\Osmium\Db\escape_string($name)."'";
-			                        }, array_keys($typenames))).')');
-	while($row = \Osmium\Db\fetch_row($req)) {
-		$typename_to_id[$row[1]] = $row[0];
-	}
-
-	$realmodules = array();
-	foreach($modules as $type => $m) {
-		foreach($m as $i => $typename) {
-			if(!isset($typename_to_id[$typename])) {
-				$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
-				continue;
-			}
-			$realmodules[$type][$i] = $typename_to_id[$typename];
-		}
-	}
-	foreach($recover_modules as $typename) {
-		if(!isset($typename_to_id[$typename])) {
-			$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
-			continue;
-		}
-		/* "low" does not matter here, it will be corrected in update_modules later. */
-		$realmodules['low'][] = $typename_to_id[$typename];
-	}
-
-	$realdrones = array();
-	foreach($drones as $drone) {
-		if(!isset($typename_to_id[$drone['typename']])) {
-			$errors[] = 'Could not find typeID of "'.$drone['typename'].'". Skipped.';
-			continue;
-		}
-		
-		$typeid = $typename_to_id[$drone['typename']];
-		if(!isset($realdrones[$typeid])) $realdrones[$typeid]['quantityinbay'] = 0;
-		$realdrones[$typeid]['quantityinbay'] += $drone['count'];
-	}
-
-	add_modules_batch($fit, $realmodules);
-	add_drones_batch($fit, $realdrones);
-
-	$fit['metadata']['name'] = $name;
-	$fit['metadata']['description'] = $description;
-	$fit['metadata']['tags'] = array();
-	$fit['metadata']['view_permission'] = VIEW_OWNER_ONLY;
-	$fit['metadata']['edit_permission'] = EDIT_OWNER_ONLY;
-	$fit['metadata']['visibility'] = VISIBILITY_PUBLIC;
-
-	return $fit;
 }
