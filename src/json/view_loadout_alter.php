@@ -50,9 +50,24 @@ if(isset($_GET['toggletype']) && isset($_GET['toggleindex'])
 	\Osmium\Fit\toggle_module_state($fit, $index, $fit['modules'][$type][$index]['typeid'], $direction);
 }
 
+foreach($fit['drones'] as $typeid => $d) {
+	$quantityinspace = isset($_GET['droneinspace'.$typeid]) ?
+		intval($_GET['droneinspace'.$typeid]) : 0;
+	\Osmium\Fit\dispatch_drones($fit, $typeid, 'space', $quantityinspace);
+}
+
+if(isset($_GET['transferdrone']) && $_GET['transferdrone'] > 0) {
+	$typeid = intval($_GET['transferdrone']);
+	$quantity = intval($_GET['transferquantity']);
+	$from = $_GET['transferfrom'];
+
+	\Osmium\Fit\transfer_drone($fit, $typeid, $from, $quantity);
+}
+
 \Osmium\Chrome\return_json(
 	array(
 		'preset' => isset($fit['charges'][$fit['selectedpreset']]) ? $fit['charges'][$fit['selectedpreset']] : null,
+		'drones' => array_values($fit['drones']),
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit, '..'),
 		'states' => \Osmium\AjaxCommon\get_module_states($fit),
 		));

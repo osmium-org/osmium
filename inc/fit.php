@@ -533,6 +533,16 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 		return;
 		// @codeCoverageIgnoreEnd
 	}
+
+	$to = ($from === 'bay') ? 'space' : 'bay';
+	if($quantity < 0) {
+		/* "Reverse" transfer: swap $from and $to */
+		$quantity = -$quantity;
+
+		$old_to = $to;
+		$to = $from;
+		$from = $old_to;
+	}
 	
 	if(!isset($fit['drones'][$typeid]) || $fit['drones'][$typeid]['quantityin'.$from] < $quantity) {
 		// @codeCoverageIgnoreStart
@@ -541,10 +551,35 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	$to = ($from === 'bay') ? 'space' : 'bay';
-
 	$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
 	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
+}
+
+function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
+	if($location !== 'bay' && $location !== 'space') {
+		// @codeCoverageIgnoreStart
+		trigger_error('dispatch_drones(): unknown location '.$location, E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
+	if(!isset($fit['drones'][$typeid]) 
+	   || $fit['drones'][$typeid]['quantityinspace'] 
+	   + $fit['drones'][$typeid]['quantityinbay'] < $knownquantity) {
+		// @codeCoverageIgnoreStart
+		trigger_error('dispatch_drones(): not enough drones to dispatch', E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
+	$currentquantity = $fit['drones'][$typeid]['quantityin'.$location];
+	if($currentquantity == $knownquantity) {
+		/* Just perfect! */
+		return;
+	} else {
+		/* Let transfer_drone figure out the direction of the transfer */
+		transfer_drone($fit, $typeid, $location, $currentquantity - $knownquantity);
+	}
 }
 
 /* ----------------------------------------------------- */

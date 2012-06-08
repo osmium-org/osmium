@@ -153,6 +153,10 @@ $module-width: 19em;
 			&> img:first-child {
 				margin-right: 0.5em;
 			}
+
+			&[data-count] {
+				cursor: move;
+			}
 		}
 	}
 }

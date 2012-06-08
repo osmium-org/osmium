@@ -223,13 +223,15 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul>\n";
 		$z = 0;
 		foreach($fit['drones'] as $drone) {
+			$quantity = $drone['quantityin'.$v];
+			$typeid = $drone['typeid'];
 			$qty = '';
 			if($drone['quantityin'.$v] == 0) continue; /* Duh */
 			if($drone['quantityin'.$v] > 1) {
-				$qty = " <strong>×".$drone['quantityin'.$v]."</strong>";
+				$qty = " <strong>×".$quantity."</strong>";
 			}
 			
-			echo "<li><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
+			echo "<li data-typeid='$typeid' data-count='$quantity'><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
 			++$z;
 		}
 
