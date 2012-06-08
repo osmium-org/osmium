@@ -455,15 +455,30 @@ function penalize($values, $highisgood) {
 		sort($negative);
 	}
 
-	/* Formula taken from Aenigma's guide:
+	/* Values taken from Aenigma's guide:
 	 * http://eve.battleclinic.com/guide/9196-Aenigma-s-Stacking-Penalty-Guide.html */
+	static $penaltymultiplier = array(
+		1.000000000000,
+		0.869119980800,
+		0.570583143511,
+		0.282955154023,
+		0.105992649743,
+		0.029991166533,
+		0.006410183118,
+		0.001034920483,
+		0.000126212683,
+		0.000011626754,
+		0.000000809046,
+		);
 
 	$out = 1;
 	foreach($positive as $i => $v) {
-		$out *= (1 + $v * exp(- $i * $i / 7.1289));
+		if($i > 10) break;
+		$out *= (1 + $v * $penaltymultiplier[$i]);
 	}
 	foreach($negative as $i => $v) {
-		$out *= (1 + $v * exp(- $i * $i / 7.1289));
+		if($i > 10) break;
+		$out *= (1 + $v * $penaltymultiplier[$i]);
 	}
 
 	return $out;
