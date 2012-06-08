@@ -148,16 +148,56 @@ function get_state_categories() {
 
 /**
  * Initialize a new fitting in variable $fit.
+ *
+ * FIXME: do not rely on this structure anywhere outside this
+ * namespace (use proper accessors/mutators, especially in src/)
+ * 
+ * Structure of the created array:
+ * 
+ * ship => array(typeid, typename)
+ * 
+ * modules => array(<slot_type> => array(<index> => array(typeid, typename, state)))
+ * 
+ * charges => array(<preset_name> => array(<slot_type> => array(index => array(typeid, typename))))
+ * 
+ * selectedpreset => (string)
+ * 
+ * drones => array(<typeid> => array(typeid, typename, volume, bandwidth, quantityin{bay, space}))
+ *
+ * dogma => array({char,
+ *                 ship,
+ *                 modules => <slot_type> => <index>,
+ *                 charges => <preset_name> => <slot_type> => <index>,
+ *                 drones => <typeid>,
+ *                 skills => <typeid>}
+ *                 => array(<attributename> => (base value),
+ *                          __modifiers => array(
+ *                              <attributename> =>
+ *                                  array(<action> =>
+ *                                      array(<group> =>
+ *                                          array(array(name, source => [modifier source])))))))
+ *
+ * cache => array(__attributes => array({<attributename>, <attributeid>} =>
+ *                                          array(attributename, defaultvalue, stackable, highisgood))
+ *                __effects => array({<effectname>, <effectid>} =>
+ *                                       array(effectcategory,
+ *                                             {duration, trackingspeed, discharge, range, falloff}attributeid))
+ *                <typeid> => array(attributes =>
+ *                                      array(<attributename> =>
+ *                                          array(attributename, attributeid, value)),
+ *                                  effects =>
+ *                                      array(<effectname> =>
+ *                                          array(effectid, effectname, preexp, postexp)))
  */
 function create(&$fit) {
 	$fit = array(
-		'ship' => array(), /* Ship typeid, typename etc. */
-		'modules' => array(), /* Module typeids, typenames etc. */
-		'charges' => array(), /* Charge presets */
-		'drones' => array(), /* Drone typeids, typenames, volume & count */
-		'selectedpreset' => null, /* Default selected preset */
-		'dogma' => array(), /* Dogma stuff, see dogma.php */
-		'cache' => array(), /* All effect and attribute rows of fitted items */
+		'ship' => array(),
+		'modules' => array(),
+		'charges' => array(),
+		'drones' => array(),
+		'selectedpreset' => null,
+		'dogma' => array(),
+		'cache' => array(),
 		);
 
 	/* Apply the default skill modifiers */
