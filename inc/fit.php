@@ -476,6 +476,8 @@ function add_drones_batch(&$fit, $drones) {
 }
 
 function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
+	if($quantityinbay == 0 && $quantityinspace == 0) return;
+
 	get_attributes_and_effects(array($typeid), $fit['cache']);
 
 	if(!isset($fit['drones'][$typeid])) {
@@ -487,6 +489,12 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 			'quantityinbay' => 0,
 			'quantityinspace' => 0,
 			);
+
+		$fit['dogma']['drones'][$typeid] = array();
+		foreach($fit['cache'][$typeid]['attributes'] as $attr) {
+			$fit['dogma']['drones'][$typeid][$attr['attributename']] = $attr['value'];
+		}
+		$fit['dogma']['drones'][$typeid]['typeid'] =& $fit['drones'][$typeid]['typeid'];
 	}
 
 	$fit['drones'][$typeid]['quantityinbay'] += $quantityinbay;
@@ -513,6 +521,7 @@ function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 	if($fit['drones'][$typeid]['quantityinbay'] == 0
 		&& $fit['drones'][$typeid]['quantityinspace'] == 0) {
 		unset($fit['drones'][$typeid]);
+		unset($fit['dogma']['drones'][$typeid]);
 		maybe_remove_cache($fit, $typeid);
 	}
 }
@@ -787,6 +796,39 @@ function get_damage_from_turrets(&$fit) {
 		$projectiles[0] + $lasers[0],
 		$projectiles[1] + $lasers[1],
 		);
+}
+
+function get_damage_from_drones(&$fit) {
+	$dps = 0;
+
+	if(!isset($fit['cache']['__effects']['targetAttack'])) return 0;
+
+	get_attribute_in_cache($fit['cache']['__effects']['targetAttack']['durationattributeid'], $fit['cache']);
+
+	$durationattributename = $fit['cache']['__attributes'][
+		$fit['cache']['__effects']['targetAttack']['durationattributeid']
+		]['attributename'];
+
+	foreach($fit['drones'] as $drone) {
+		if($drone['quantityinspace'] == 0) continue;
+
+		if(!isset($fit['cache'][$drone['typeid']]['effects']['targetAttack'])) {
+			continue;
+		}
+
+		$duration = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], $durationattributename);
+		$damage = 
+			\Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'emDamage')
+			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'thermalDamage')
+			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'kineticDamage')
+			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'explosiveDamage');
+
+		$multiplier = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'damageMultiplier');
+
+		$dps += $drone['quantityinspace'] * $multiplier * $damage / $duration;
+	}
+
+	return 1000 * $dps;
 }
 
 /* ----------------------------------------------------- */

@@ -242,7 +242,10 @@ function print_formatted_offense(&$fit, $relative) {
 	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit);
 	echo "<p><img src='$relative/static/icons/turret.png' alt='Turret damage' title='Turret damage' /><span><span title='Turret volley (alpha)'>".format_number($turretalpha)."</span><br /><span title='Turret DPS'>".format_number($turretdps)."</span></span></p>\n";
 
-	$dps = format_number($missiledps + $turretdps, -1);
+	$dronedps = \Osmium\Fit\get_damage_from_drones($fit);
+	echo "<p><img src='$relative/static/icons/drones.png' alt='Drone damage' title='Drone damage' /><span title='Drone DPS'>".format_number($dronedps)."</span></p>\n";	
+
+	$dps = format_number($missiledps + $turretdps + $dronedps, -1);
 	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
 }
 

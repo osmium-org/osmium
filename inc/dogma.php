@@ -275,6 +275,13 @@ function get_charge_attribute(&$fit, $preset, $slottype, $index, $name, $failone
 	                                 $failonerror);
 }
 
+function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
+	return get_final_attribute_value($fit,
+	                                 array('name' => $name,
+	                                       'source' => array('drone', $typeid)),
+	                                 $failonerror);
+}
+
 function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	static $hardcoded = array(
 		'cpu OutputBonus' => 'cpuOutputBonus2',
@@ -287,37 +294,46 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 
 	if($stype == 'char') {
 		$src = $fit['dogma']['char'];
-	} else if($stype == 'ship') {
+	} else if($stype === 'ship') {
 		$src = $fit['dogma']['ship'];
-	} else if($stype == 'self') {
+	} else if($stype === 'self') {
 		$src = $fit['dogma']['self'];
-	} else if($stype == 'module' || $stype == 'charge') {
-		if($stype == 'module') {
-			list(, $type, $index) = $attribute['source'];
-			$src = $fit['dogma']['modules'][$type][$index];
-		} else if($stype == 'charge') {
-			list(, $preset, $type, $index) = $attribute['source'];
-			$src = $fit['dogma']['charges'][$preset][$type][$index];
+	} else if($stype === 'module') {
+		list(, $type, $index) = $attribute['source'];
+		$src = $fit['dogma']['modules'][$type][$index];
+	} else if($stype === 'charge') {
+		list(, $preset, $type, $index) = $attribute['source'];
+		$src = $fit['dogma']['charges'][$preset][$type][$index];
+	} else if($stype == 'drone') {
+		list(, $typeid) = $attribute['source'];
+		$src = $fit['dogma']['drones'][$typeid];
+	} else if($stype == 'skill') {
+		list(, $typeid) = $attribute['source'];
+		$src = $fit['dogma']['skills'][$typeid];
+	} else {
+		// @codeCoverageIgnoreStart
+		trigger_error('get_final_attribute_value(): unknown source type ("'.$stype.'")', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
+	}
+
+	for($i = 1; $i <= 6; ++$i) {
+		if(!isset($src['requiredSkill'.$i])) continue;
+		$requiresskillid = $src['requiredSkill'.$i];
+
+		if(isset($fit['dogma']['ship']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
+			$modifiers = array_merge_recursive($modifiers,
+			                                   $fit['dogma']['ship']['__modifiers']
+			                                   ['__requires_skill'][$requiresskillid][$name]);
 		}
-
-		$typeid = $src['typeid'];
-		for($i = 1; $i <= 6; ++$i) {
-			if(!isset($src['requiredSkill'.$i])) continue;
-			$requiresskillid = $src['requiredSkill'.$i];
-
-			if(isset($fit['dogma']['ship']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
-				$modifiers = array_merge_recursive($modifiers,
-				                                   $fit['dogma']['ship']['__modifiers']
-				                                   ['__requires_skill'][$requiresskillid][$name]);
-			}
-			if(isset($fit['dogma']['char']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
-				$modifiers = array_merge_recursive($modifiers,
-				                                   $fit['dogma']['char']['__modifiers']
-				                                   ['__requires_skill'][$requiresskillid][$name]);
-			}
+		if(isset($fit['dogma']['char']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
+			$modifiers = array_merge_recursive($modifiers,
+			                                   $fit['dogma']['char']['__modifiers']
+			                                   ['__requires_skill'][$requiresskillid][$name]);
 		}
+	}
 
-		$groupid = $fit['cache'][$typeid]['groupid'];
+	if(isset($src['typeid']) && isset($fit['cache'][$src['typeid']]['groupid'])) {
+		$groupid = $fit['cache'][$src['typeid']]['groupid'];
 		if(isset($fit['dogma']['ship']['__modifiers']['__group'][$groupid][$name])) {
 			$modifiers = array_merge_recursive($modifiers,
 			                                   $fit['dogma']['ship']['__modifiers']
@@ -328,13 +344,6 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 			                                   $fit['dogma']['char']['__modifiers']
 			                                   ['__group'][$groupid][$name]);
 		}
-	} else if($stype == 'skill') {
-		list(, $typeid) = $attribute['source'];
-		$src = $fit['dogma']['skills'][$typeid];
-	} else {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_final_attribute_value(): unknown source type ("'.$stype.'")', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
 	}
 
 	if(isset($src['__modifiers'][$name])) {
