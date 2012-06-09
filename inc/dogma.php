@@ -202,6 +202,9 @@ function eval_charge_postexpressions(&$fit, $presetname, $type, $index) {
 	unset($fit['dogma']['other']);
 }
 
+/**
+ * Get the final value of a chararacter attribute.
+ */
 function get_char_attribute(&$fit, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
 	                                 array('name' => $name,
@@ -209,6 +212,9 @@ function get_char_attribute(&$fit, $name, $failonerror = true) {
 	                                 $failonerror);
 }
 
+/**
+ * Get the final value of a ship attribute.
+ */
 function get_ship_attribute(&$fit, $name, $failonerror = true) {
 	if($name === 'upgradeLoad') {
 		/* Just to make things easy and consistent */
@@ -261,6 +267,9 @@ function get_ship_attribute(&$fit, $name, $failonerror = true) {
 	                                 $failonerror);
 }
 
+/**
+ * Get the final value of a module attribute.
+ */
 function get_module_attribute(&$fit, $slottype, $index, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
 	                                 array('name' => $name,
@@ -268,6 +277,9 @@ function get_module_attribute(&$fit, $slottype, $index, $name, $failonerror = tr
 	                                 $failonerror);
 }
 
+/**
+ * Get the final value of a charge attribute.
+ */
 function get_charge_attribute(&$fit, $preset, $slottype, $index, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
 	                                 array('name' => $name,
@@ -275,6 +287,9 @@ function get_charge_attribute(&$fit, $preset, $slottype, $index, $name, $failone
 	                                 $failonerror);
 }
 
+/**
+ * Get the final value of a drone attribute.
+ */
 function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
 	                                 array('name' => $name,
@@ -282,6 +297,7 @@ function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
 	                                 $failonerror);
 }
 
+/** @internal */
 function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 	static $hardcoded = array(
 		'cpu OutputBonus' => 'cpuOutputBonus2',

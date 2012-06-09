@@ -504,6 +504,13 @@ function get_module_states(&$fit, $typeid) {
 	return array($isactivable, $isoverloadable);
 }
 
+/**
+ * Add several charges at once. This is more efficient than calling
+ * add_charge() multiple times.
+ *
+ * @param $charges an array of the form array(<slot_type> =>
+ * array(<index> => <typeid>))
+ */
 function add_charges_batch(&$fit, $presetname, $charges) {
 	$typeids = array();
 	foreach($charges as $slot => $a) {
@@ -521,6 +528,9 @@ function add_charges_batch(&$fit, $presetname, $charges) {
 	}
 }
 
+/**
+ * Add a charge to a given preset.
+ */
 function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
 	if(!isset($fit['modules'][$slottype][$index])) {
 		// @codeCoverageIgnoreStart
@@ -549,6 +559,7 @@ function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
 	}
 }
 
+/** @internal */
 function online_charge(&$fit, $presetname, $slottype, $index) {
 	$typeid = $fit['charges'][$presetname][$slottype][$index]['typeid'];
 	$fit['dogma']['charges'][$presetname][$slottype][$index] = array();
@@ -562,6 +573,9 @@ function online_charge(&$fit, $presetname, $slottype, $index) {
 	\Osmium\Dogma\eval_charge_preexpressions($fit, $presetname, $slottype, $index);
 }
 
+/**
+ * Remove a charge from a given preset.
+ */
 function remove_charge(&$fit, $presetname, $slottype, $index) {
 	if(!isset($fit['charges'][$presetname][$slottype][$index]['typeid'])) {
 		// @codeCoverageIgnoreStart
@@ -581,11 +595,17 @@ function remove_charge(&$fit, $presetname, $slottype, $index) {
 	maybe_remove_cache($fit, $typeid);
 }
 
+/** @internal */
 function offline_charge(&$fit, $presetname, $slottype, $index) {
 		\Osmium\Dogma\eval_charge_postexpressions($fit, $presetname, $slottype, $index);
 		unset($fit['dogma']['charges'][$presetname][$slottype][$index]);
 }
 
+/**
+ * Completely remove a charge preset. If the preset being removed is
+ * the currently selected preset, this function will switch to the
+ * null preset.
+ */
 function remove_charge_preset(&$fit, $presetname) {
 	if(!isset($fit['charges'][$presetname])) return;
 
@@ -603,6 +623,12 @@ function remove_charge_preset(&$fit, $presetname) {
 	unset($fit['dogma']['charges'][$presetname]);
 }
 
+/**
+ * Switch to a given preset.
+ *
+ * @param $presetname preset name to switch to; if null, switch to the
+ * null preset. The null preset is a special state with no charges.
+ */
 function use_preset(&$fit, $presetname) {
 	if($presetname !== null && !isset($fit['charges'][$presetname])) {
 		// @codeCoverageIgnoreStart
@@ -632,6 +658,15 @@ function use_preset(&$fit, $presetname) {
 	}
 }
 
+/**
+ * Add several different drones to a fitting. This is more efficient
+ * than multiple calls to add_drone(). If drones with the same typeid
+ * are already present on the fitting, this will add them to the
+ * existing drones instead of replacing them.
+ *
+ * @param $drones array of structure array(<typeid> =>
+ * array(quantityinbay, quantityinspace))
+ */
 function add_drones_batch(&$fit, $drones) {
 	get_attributes_and_effects(array_keys($drones), $fit['cache']);
 
@@ -645,6 +680,11 @@ function add_drones_batch(&$fit, $drones) {
 	}
 }
 
+/**
+ * Add a drone type to a fitting. If drones of the same typeid already
+ * are in the fitting, increase the quantities with the supplied
+ * values instead.
+ */
 function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 	if($quantityinbay == 0 && $quantityinspace == 0) return;
 
@@ -671,6 +711,13 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 	$fit['drones'][$typeid]['quantityinspace'] += $quantityinspace;
 }
 
+/**
+ * Remove drones from a fitting.
+ *
+ * @param $typeid the typeid of the drones to remove
+ * @param $from either "space" or "bay", where to remove the drones from
+ * @param $quantity number of drones to remove; defaults to 1
+ */
 function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 	if($from !== 'bay' && $from !== 'space') {
 		// @codeCoverageIgnoreStart
