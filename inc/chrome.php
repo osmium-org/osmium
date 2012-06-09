@@ -87,7 +87,7 @@ function return_json($data, $flags = 0) {
 	die(json_encode($data, $flags));
 }
 
-function print_loadout_title($name, $viewpermission, $visibility, $author, $relative = '.') {
+function print_loadout_title($name, $viewpermission, $visibility, $author, $relative = '.', $loadoutid = null) {
 	$pic = '';
 	if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 		$pic = "<img src='$relative/static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
@@ -102,6 +102,22 @@ function print_loadout_title($name, $viewpermission, $visibility, $author, $rela
 
 	if($visibility == \Osmium\Fit\VISIBILITY_PRIVATE) {
 		$pic .= "<img src='$relative/static/icons/hidden.png' alt='(hidden)' title='This loadout will never appear on search results, and will never be indexed by search engines.' />";
+	}
+
+	if($loadoutid !== null && ($a = \Osmium\State\get_state('a', null)) !== null) {
+		$fav = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.accountfavorites WHERE accountid = $1 AND loadoutid = $2', array($a['accountid'], $loadoutid)));
+		$fav = ($fav !== false);
+
+		if($fav) {
+			$title = 'On of your favorite loadouts; click to un-favorite';
+			$favimg = '';
+		} else {
+			$title = 'Add to your favorite loadouts';
+			$favimg = '_ds';
+		}
+
+		$tok = \Osmium\State\get_token();
+		$pic .= "<a href='$relative/favorite/$loadoutid?tok=$tok' title='$title'><img src='$relative/static/icons/favorited$favimg.png' alt='Favorite status' /></a>";
 	}
   
 	echo "<span class='fitname'>".htmlentities($name).$pic."</span>";

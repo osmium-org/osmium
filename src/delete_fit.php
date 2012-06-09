@@ -34,6 +34,7 @@ if($c != 1) {
 $loadoutid = $_GET['loadoutid'];
 
 \Osmium\Db\query('BEGIN;');
+\Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouthistory WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query('COMMIT;');
