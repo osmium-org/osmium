@@ -78,9 +78,7 @@ class DogmaExpressions extends PHPUnit_Framework_TestCase {
 				$fitted_module = $moduleid;
 
 				/* The module type is need for add_charge() */
-				foreach($fit['modules'] as $type => $a) {
-					if(count($a) === 1) break;
-				}
+				$type = \Osmium\Fit\get_module_slottype($fit, $moduleid);
 			}
 
 			/* Same here, old charge will automatically be removed */

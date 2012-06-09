@@ -58,10 +58,11 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			);		
 	}
 
-	private function assertGunDamagePerSecond($ship, $numguns, $gunid, $chargeid, 
-	                                        $expectedvolley, $expecteddps,
-	                                        $numdamagemods, $damagemodid,
-	                                        $expectedvolley2, $expecteddps2) {
+	private function assertDamagePerSecond($funcname, 
+	                                       $ship, $numguns, $gunid, $chargeid, 
+	                                       $expectedvolley, $expecteddps,
+	                                       $numdamagemods, $damagemodid,
+	                                       $expectedvolley2, $expecteddps2) {
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, $ship);
 
@@ -71,7 +72,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		}
 
 		\Osmium\Fit\use_preset($fit, 'foo');
-		list($dps, $volley) = \Osmium\Fit\get_damage_from_turrets($fit);
+		list($dps, $volley) = $funcname($fit);
 		$this->assertEquals($expecteddps, $dps, '', 1);
 		$this->assertEquals($expectedvolley, $volley, '', 1);
 
@@ -79,14 +80,28 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			\Osmium\Fit\add_module($fit, $i, $damagemodid);
 		}
 
-		list($dps, $volley) = \Osmium\Fit\get_damage_from_turrets($fit);
+		list($dps, $volley) = $funcname($fit);
 		$this->assertEquals($expecteddps2, $dps, '', 1);
 		$this->assertEquals($expectedvolley2, $volley, '', 1);
 
 		\Osmium\Fit\use_preset($fit, null); /* Select the null preset (no charges) */
-		list($dps, $volley) = \Osmium\Fit\get_damage_from_turrets($fit);
-		$this->assertSame(0, $dps);
-		$this->assertSame(0, $volley);
+		list($dps, $volley) = $funcname($fit);
+		$this->assertEquals(0.0, $dps);
+		$this->assertEquals(0.0, $volley);
+	}
+
+	private function assertGunDamagePerSecond() {
+		$args = func_get_args();
+		array_unshift($args, 'Osmium\Fit\get_damage_from_turrets');
+
+		call_user_func_array(array($this, 'assertDamagePerSecond'), $args);
+	}
+
+	private function assertMissileDamagePerSecond() {
+		$args = func_get_args();
+		array_unshift($args, 'Osmium\Fit\get_damage_from_missiles');
+
+		call_user_func_array(array($this, 'assertDamagePerSecond'), $args);
 	}
 
 	/**
@@ -350,6 +365,19 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		                                295, 117, 
 		                                3, 2364,
 		                                372, 193);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testMissileDPS() {
+		/* Raven with Cruise missiles */
+		/* Pyfa 1.1.7-git */
+		$this->assertMissileDamagePerSecond(638, 6, 19739, 204, 
+		                                    2475, 272, 
+		                                    4, 22291,
+		                                    3216, 477);
 	}
 
 	/**
