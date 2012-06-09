@@ -347,7 +347,7 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 		$state = ($isactivable && in_array($type, get_stateful_slottypes())) ? STATE_ACTIVE : STATE_ONLINE;
 	}
 
-	change_module_state($fit, $index, $typeid, $state);
+	change_module_state_by_location($fit, $type, $index, $state);
 }
 
 /**
@@ -371,7 +371,7 @@ function remove_module(&$fit, $index, $typeid) {
 		}
 	}
 
-	change_module_state($fit, $index, $typeid, null);
+	change_module_state_by_location($fit, $type, $index, null);
 	unset($fit['dogma']['modules'][$type][$index]);
 	unset($fit['modules'][$type][$index]);
 
@@ -379,17 +379,17 @@ function remove_module(&$fit, $index, $typeid) {
 }
 
 /**
- * Change the state of a module located at a specific index. Be
+ * Change the state of a module located by its position. Be
  * careful, the new state is not checked, so if you pass a nonsensical
  * value (like STATE_ACTIVE for a passive-only module), weird things
  * may happen (but probably not!).
+ *
+ * @param $state one of the STATE_* constants.
  */
-function change_module_state(&$fit, $index, $typeid, $state) {
+function change_module_state_by_location(&$fit, $type, $index, $state) {
 	$categories = get_state_categories();
 
-	$type = get_module_slottype($fit, $typeid);
-
-	$previous_state = $fit['modules'][$type][$index]['state'];
+	$previous_state = get_module_state_by_location($fit, $type, $index);
 
 	$added_groups = array_diff($categories[$state], $categories[$previous_state]);
 	$removed_groups = array_diff($categories[$previous_state], $categories[$state]);
@@ -398,6 +398,14 @@ function change_module_state(&$fit, $index, $typeid, $state) {
 	\Osmium\Dogma\eval_module_preexpressions($fit, $type, $index, $added_groups);
 
 	$fit['modules'][$type][$index]['state'] = $state;
+}
+
+/**
+ * Change the state of a module located by its typeid. See
+ * change_module_state_by_location() for the full caveat.
+ */
+function change_module_state_by_typeid(&$fit, $index, $typeid, $state) {
+	return change_module_state_by_location($fit, get_module_slottype($fit, $typeid), $index, $state);
 }
 
 /**
@@ -413,14 +421,13 @@ function change_module_state(&$fit, $index, $typeid, $state) {
  * @param $next If set to false, toggle state in the opposite order.
  */
 function toggle_module_state(&$fit, $index, $typeid, $next = true) {
-	$type = get_module_slottype($fit, $typeid);
-	$state = $fit['modules'][$type][$index]['state'];
+	$state = get_module_state_by_typeid($fit, $index, $typeid);
 
 	list($isactivable, $isoverloadable) = get_module_states($fit, $typeid);
 	$new_state = $next ? get_next_state($state, $isactivable, $isoverloadable) :
 		get_previous_state($state, $isactivable, $isoverloadable);
 
-	change_module_state($fit, $index, $typeid, $new_state);
+	change_module_state_by_typeid($fit, $index, $typeid, $new_state);
 }
 
 function get_next_state($state, $isactivable, $isoverloadable) {
@@ -689,6 +696,17 @@ function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 	}
 }
 
+/**
+ * Toggle state of drones.
+ *
+ * @param $typeid typeid of the drone to transfer
+ *
+ * @param $from either "space" or "bay"
+ *
+ * @param $quantity the amount of drone to move from $from (to the
+ * other state). If negative, the transfer occurs in the opposite
+ * direction (drones are moved to $from).
+ */
 function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 	if($from !== 'bay' && $from !== 'space') {
 		// @codeCoverageIgnoreStart
@@ -718,6 +736,17 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
 }
 
+/**
+ * Balance drones in space and in bay according to their total number,
+ * and the number of drones in either state.
+ *
+ * @param $typeid typeid of the drone to balance
+ * 
+ * @param $location either "space" or "bay"
+ *
+ * @param $knownquantity the number of drones that must be in
+ * $location after this call
+ */
 function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
 	if($location !== 'bay' && $location !== 'space') {
 		// @codeCoverageIgnoreStart
@@ -743,6 +772,23 @@ function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
 		/* Let transfer_drone figure out the direction of the transfer */
 		transfer_drone($fit, $typeid, $location, $currentquantity - $knownquantity);
 	}
+}
+
+
+/**
+ * Get the state of a module located by its slot type and
+ * index. Returns one of the STATE_* constants.
+ */
+function get_module_state_by_location($fit, $type, $index) {
+	return $fit['modules'][$type][$index]['state'];
+}
+
+/**
+ * Get the state of a module located by its typeid and index. Returns
+ * one of the STATE_* constants.
+ */
+function get_module_state_by_typeid(&$fit, $index, $typeid) {
+	return get_module_state_by_location($fit, get_module_slottype($fit, $typeid), $index);
 }
 
 /**

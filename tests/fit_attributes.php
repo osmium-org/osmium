@@ -155,7 +155,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 4, 2048); /* DC II */
 		$this->assertExplosiveResistance($fit, 0.846);
 
-		\Osmium\Fit\change_module_state($fit, 4, 2048, \Osmium\Fit\STATE_ONLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 4, 2048, \Osmium\Fit\STATE_ONLINE);
 		\Osmium\Fit\add_module($fit, 5, 4403); /* Reactive Armor Hardener */
 		$this->assertExplosiveResistance($fit, 0.846);
 
@@ -163,7 +163,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\remove_module($fit, 0, 11646);
 		\Osmium\Fit\remove_module($fit, 2, 11269);
 		\Osmium\Fit\remove_module($fit, 3, 11269);
-		\Osmium\Fit\change_module_state($fit, 4, 2048, \Osmium\Fit\STATE_ACTIVE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 4, 2048, \Osmium\Fit\STATE_ACTIVE);
 		$this->assertExplosiveResistance($fit, 0.5565);
 		
 		\Osmium\Fit\destroy($fit);
@@ -222,16 +222,16 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 3, 1447);
 		$this->assertCapacitorStatus($fit, 42 - 236.6, true, 90.8);
 
-		\Osmium\Fit\change_module_state($fit, 0, 8641, \Osmium\Fit\STATE_ONLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 8641, \Osmium\Fit\STATE_ONLINE);
 		$this->assertCapacitorStatus($fit, 31.5 - 236.6, true, 93.1);
 
-		\Osmium\Fit\change_module_state($fit, 1, 8641, \Osmium\Fit\STATE_ONLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 1, 8641, \Osmium\Fit\STATE_ONLINE);
 		$this->assertCapacitorStatus($fit, 21 - 236.6, true, 95.3);
 
-		\Osmium\Fit\change_module_state($fit, 2, 8641, \Osmium\Fit\STATE_ONLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 2, 8641, \Osmium\Fit\STATE_ONLINE);
 		$this->assertCapacitorStatus($fit, 10.5 - 236.6, true, 97.4);
 
-		\Osmium\Fit\change_module_state($fit, 3, 8641, \Osmium\Fit\STATE_ONLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 3, 8641, \Osmium\Fit\STATE_ONLINE);
 		$this->assertCapacitorStatus($fit, -236.6, true, 100);
 	}
 
@@ -297,19 +297,19 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		/* Pyfa 1.1.7-git */
 
-		\Osmium\Fit\change_module_state($fit, 0, 4347, \Osmium\Fit\STATE_OFFLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_OFFLINE);
 		$this->assertShieldResistances($fit, 0.000, 0.400, 0.475, 0.500);
 
 		/* Test the passive bonus */
-		\Osmium\Fit\change_module_state($fit, 0, 4347, \Osmium\Fit\STATE_ONLINE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_ONLINE);
 		$this->assertShieldResistances($fit, 0.150, 0.490, 0.5538, 0.575);
 
 		/* Test the active bonus */
-		\Osmium\Fit\change_module_state($fit, 0, 4347, \Osmium\Fit\STATE_ACTIVE);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_ACTIVE);
 		$this->assertShieldResistances($fit, 0.4688, 0.6812, 0.7211, 0.7344);
 
 		/* Test the active bonus when overloaded */
-		\Osmium\Fit\change_module_state($fit, 0, 4347, \Osmium\Fit\STATE_OVERLOADED);
+		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_OVERLOADED);
 		$this->assertShieldResistances($fit, 0.5625, 0.7375, 0.7703, 0.7812);
 	}
 

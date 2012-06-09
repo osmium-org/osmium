@@ -39,7 +39,7 @@ foreach($_GET as $k => $v) {
 	list(, $type, $index) = $matches;
 	$index = intval($index);
 
-	\Osmium\Fit\change_module_state($fit, $index, $fit['modules'][$type][$index]['typeid'], (int)$v);
+	\Osmium\Fit\change_module_state_by_location($fit, $type, $index, (int)$v);
 }
 
 if(isset($_GET['toggletype']) && isset($_GET['toggleindex']) 
