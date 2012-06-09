@@ -83,13 +83,8 @@ class FitModuleStates extends PHPUnit_Framework_TestCase {
 	 */
 	public function testStateToggling() {
 		static $overloadable = 10842; /* X-Large Shield Booster II */
-		static $oslot = 'medium';
-
 		static $activable = 2048; /* Damage Control II */
-		static $aslot = 'low';
-
 		static $passive = 2553; /* EM Ward Amplifier II */
-		static $pslot = 'medium';
 
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 24694); /* Maelstrom */
@@ -98,58 +93,82 @@ class FitModuleStates extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 2, $passive);
 
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, true);
-		$this->assertSame(\Osmium\Fit\STATE_OVERLOADED, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OVERLOADED,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, true);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, true);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, true);
-		$this->assertSame(\Osmium\Fit\STATE_ACTIVE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ACTIVE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, true);
-		$this->assertSame(\Osmium\Fit\STATE_OVERLOADED, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OVERLOADED,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, false);
-		$this->assertSame(\Osmium\Fit\STATE_ACTIVE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ACTIVE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, false);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, false);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, false);
-		$this->assertSame(\Osmium\Fit\STATE_OVERLOADED, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OVERLOADED,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 		\Osmium\Fit\toggle_module_state($fit, 0, $overloadable, false);
-		$this->assertSame(\Osmium\Fit\STATE_ACTIVE, $fit['modules'][$oslot][0]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ACTIVE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 0, $overloadable));
 
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, true);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, true);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, true);
-		$this->assertSame(\Osmium\Fit\STATE_ACTIVE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ACTIVE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, true);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, false);
-		$this->assertSame(\Osmium\Fit\STATE_ACTIVE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ACTIVE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, false);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, false);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 		\Osmium\Fit\toggle_module_state($fit, 1, $activable, false);
-		$this->assertSame(\Osmium\Fit\STATE_ACTIVE, $fit['modules'][$aslot][1]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ACTIVE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 1, $activable));
 
 		\Osmium\Fit\toggle_module_state($fit, 2, $passive, true);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$pslot][2]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 2, $passive));
 		\Osmium\Fit\toggle_module_state($fit, 2, $passive, true);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$pslot][2]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 2, $passive));
 		\Osmium\Fit\toggle_module_state($fit, 2, $passive, true);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$pslot][2]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 2, $passive));
 
 		\Osmium\Fit\toggle_module_state($fit, 2, $passive, false);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$pslot][2]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 2, $passive));
 		\Osmium\Fit\toggle_module_state($fit, 2, $passive, false);
-		$this->assertSame(\Osmium\Fit\STATE_OFFLINE, $fit['modules'][$pslot][2]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_OFFLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 2, $passive));
 		\Osmium\Fit\toggle_module_state($fit, 2, $passive, false);
-		$this->assertSame(\Osmium\Fit\STATE_ONLINE, $fit['modules'][$pslot][2]['state']);
+		$this->assertSame(\Osmium\Fit\STATE_ONLINE,
+		                  \Osmium\Fit\get_module_state_by_typeid($fit, 2, $passive));
 
 		\Osmium\Fit\destroy($fit);
 	}

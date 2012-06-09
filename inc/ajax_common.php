@@ -89,8 +89,10 @@ function get_module_states(&$fit) {
 		if(!isset($fit['modules'][$type])) continue;
 		
 		foreach($fit['modules'][$type] as $index => $m) {
-			list($name, $image) = $astates[$m['state']];
-			$states[$type][$index] = array('state' => $m['state'], 'name' => $name, 'image' => $image);
+			$state = \Osmium\Fit\get_module_state_by_location($fit, $type, $index);
+
+			list($name, $image) = $astates[$state];
+			$states[$type][$index] = array('state' => $state, 'name' => $name, 'image' => $image);
 		}
 	}
 
