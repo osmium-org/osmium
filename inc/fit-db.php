@@ -34,7 +34,7 @@ function get_unique($fit) {
 			),
 		);
 
-	foreach($fit['modules'] as $type => $d) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $d) {
 		foreach($d as $index => $module) {
 			$unique['modules'][$type][$index] = array($module['typeid'], $module['state']);
 		}
@@ -114,7 +114,7 @@ function commit_fitting(&$fit) {
 	}
   
 	$module_order = array();
-	foreach($fit['modules'] as $type => $data) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $data) {
 		$z = 0;
 		foreach($data as $index => $module) {
 			$module_order[$type][$index] = $z;

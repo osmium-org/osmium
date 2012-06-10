@@ -379,6 +379,23 @@ function remove_module(&$fit, $index, $typeid) {
 }
 
 /**
+ * Sort fitted modules with a given order. Modules of each type will
+ * be sorted by ascending order_position.
+ *
+ * FIXME: this will NOT sort accociated charges.
+ *
+ * @param $order array of type array(<slot_type> => array(<index> =>
+ * <order_position>)).
+ */
+function sort_modules(&$fit, $order) {
+	foreach($fit['modules'] as $type => &$modules) {
+		uksort($modules, function($a, $b) use($type, $order) {
+				return $order[$type][$a] - $order[$type][$b];
+			});
+	}
+}
+
+/**
  * Change the state of a module located by its position. Be
  * careful, the new state is not checked, so if you pass a nonsensical
  * value (like STATE_ACTIVE for a passive-only module), weird things
@@ -821,6 +838,18 @@ function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
 	}
 }
 
+/* ----------------------------------------------------- */
+
+/**
+ * Get all the fitted modules of a fitting.
+ *
+ * The returned array is guaranteed to have this structure:
+ * array(<slot_type> => array(<index> => array(typeid, typename,
+ * state))).
+ */
+function get_modules($fit) {
+	return $fit['modules'];
+}
 
 /**
  * Get the state of a module located by its slot type and

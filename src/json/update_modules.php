@@ -44,12 +44,7 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	}
 
 	\Osmium\Fit\add_modules_batch($fit, $modules);
-
-	foreach($fit['modules'] as $type => &$modules) {
-		uksort($modules, function($a, $b) use($type, $order) {
-				return $order[$type][$a] - $order[$type][$b];
-			});
-	}
+	\Osmium\Fit\sort_modules($fit, $order);
 
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));

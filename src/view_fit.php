@@ -174,9 +174,10 @@ echo "</header>\n";
 
 $aslots = \Osmium\Fit\get_attr_slottypes();
 $astates = \Osmium\Fit\get_state_names();
+$allmodules = \Osmium\Fit\get_modules($fit);
 foreach(\Osmium\Fit\get_slottypes() as $type) {
-	if(!isset($fit['modules'][$type])) continue;
-	$modules = $fit['modules'][$type];
+	if(!isset($allmodules[$type])) continue;
+	$modules = $allmodules[$type];
 
 	$slotcount = \Osmium\Dogma\get_ship_attribute($fit, $aslots[$type], false);
 

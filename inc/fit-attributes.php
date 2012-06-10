@@ -36,7 +36,7 @@ function get_capacitor_stability(&$fit) {
 	$tau = \Osmium\Dogma\get_ship_attribute($fit, 'rechargeRate') / 5.0;
 
 	$usage_rate = 0;
-	foreach($fit['modules'] as $type => $a) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
 			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
 				$effectdata = $fit['cache']['__effects'][$effect['effectname']];
@@ -194,7 +194,7 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 
 	$modules = array();
 
-	foreach($fit['modules'] as $type => $a) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
 			if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
 				continue;
@@ -266,7 +266,7 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
 		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']
 		]['attributename'];
 
-	foreach($fit['modules'] as $type => $a) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
 			if(!isset($fit['cache'][$module['typeid']]['effects'][$attackeffectname])) {
 				continue;

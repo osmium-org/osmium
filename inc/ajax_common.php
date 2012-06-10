@@ -61,11 +61,11 @@ function get_data_step_drone_select($fit) {
 function get_slot_usage(&$fit) {
 	$usage = array();
 
+	$modules = \Osmium\Fit\get_modules($fit);
 	$aslots = \Osmium\Fit\get_attr_slottypes();
 	foreach(\Osmium\Fit\get_slottypes() as $type) {
 		$usage[$type]['total'] = \Osmium\Dogma\get_ship_attribute($fit, $aslots[$type], false);
-		$usage[$type]['used'] = isset($fit['modules'][$type]) ?
-			count($fit['modules'][$type]) : 0;
+		$usage[$type]['used'] = isset($modules[$type]) ? count($modules[$type]) : 0;
 	}
 
 	return $usage;
@@ -73,8 +73,8 @@ function get_slot_usage(&$fit) {
 
 function get_loadable_fit(&$fit) {
 	return array(
-		'ship' => $fit['ship'], 
-		'modules' => $fit['modules'],
+		'ship' => $fit['ship'],
+		'modules' => \Osmium\Fit\get_modules($fit),
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
 		'slots' => get_slot_usage($fit),
 		'states' => get_module_states($fit),
@@ -85,14 +85,10 @@ function get_module_states(&$fit) {
 	$astates = \Osmium\Fit\get_state_names();
 	$states = array();
 
-	foreach(\Osmium\Fit\get_stateful_slottypes() as $type) {
-		if(!isset($fit['modules'][$type])) continue;
-		
-		foreach($fit['modules'][$type] as $index => $m) {
-			$state = \Osmium\Fit\get_module_state_by_location($fit, $type, $index);
-
-			list($name, $image) = $astates[$state];
-			$states[$type][$index] = array('state' => $state, 'name' => $name, 'image' => $image);
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
+		foreach($a as $index => $m) {
+			list($name, $image) = $astates[$m['state']];
+			$states[$type][$index] = array('state' => $m['state'], 'name' => $name, 'image' => $image);
 		}
 	}
 

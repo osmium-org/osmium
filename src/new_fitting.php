@@ -281,7 +281,7 @@ function print_charge_groups() {
 function get_charges() {
 	$fit = \Osmium\State\get_state('new_fit', array());
 	$typeids = array();
-	foreach($fit['modules'] as $type => $a) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $k) {
 			$typeids[$k['typeid']] = true;
 		}
@@ -326,7 +326,7 @@ function get_charges() {
 function print_chargegroup($groupid, $typeids, $charges) {
 	$fit = \Osmium\State\get_state('new_fit', array());
 	echo "<ul class='chargegroup'>\n";
-	foreach($fit['modules'] as $type => $a) {
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $i => $module) {
 			$id = $module['typeid'];
 			if(!in_array($id, $typeids)) continue;
