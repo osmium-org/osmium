@@ -18,20 +18,48 @@
 
 namespace Osmium\State;
 
+/** Global variable that stores all Osmium-related session state.
+ *
+ * FIXME: get rid of this */
 $__osmium_state =& $_SESSION['__osmium_state'];
+
+/** Global variable that stores all login-related errors.
+ *
+ * FIXME: get rid of this */
 $__osmium_login_state = array();
+
+/** @internal */
 $__osmium_memcached = null;
+
+/** @internal */
 $__osmium_cache_stack = array();
+
+/** @internal */
 $__osmium_cache_enabled = true;
 
-const COOKIE_AUTH_DURATION = 604800; /* 7 days */
+/** Default expire duration for the token cookie. 7 days. */
+const COOKIE_AUTH_DURATION = 604800;
+
+/** Access mask required for API keys. */
 const REQUIRED_ACCESS_MASK = 8; /* Just for CharacterSheet */
 
+/**
+ * Checks whether the current user is logged in.
+ */
 function is_logged_in() {
 	global $__osmium_state;
 	return isset($__osmium_state['a']['characterid']) && $__osmium_state['a']['characterid'] > 0;
 }
 
+/**
+ * Hook that gets called when the user successfully logged in (either
+ * directly from the login form, or from a cookie token).
+ *
+ * @param $account_name the name of the account the user logged into.
+ *
+ * @param $use_tookie if true, a cookie must be set to mimic a
+ * "remember me" feature.
+ */
 function do_post_login($account_name, $use_cookie = false) {
 	global $__osmium_state;
 	$__osmium_state = array();
@@ -49,7 +77,7 @@ function do_post_login($account_name, $use_cookie = false) {
 
 		\Osmium\Db\query_params('INSERT INTO osmium.cookietokens (token, accountid, clientattributes, expirationdate) VALUES ($1, $2, $3, $4)', array($token, $account_id, $attributes, $expiration_date));
 
-		setcookie('Osmium', $token, $expiration_date, '/', $_SERVER['HTTP_HOST'], false, true);
+		setcookie('Osmium', $token, $expiration_date, '/');
 	}
 
 	$__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
@@ -57,6 +85,12 @@ function do_post_login($account_name, $use_cookie = false) {
 	\Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
 }
 
+/**
+ * Logs off the current user.
+ *
+ * @param $gloal if set to true, also delete all the cookie tokens
+ * associated with the current account.
+ */
 function logoff($global = false) {
 	global $__osmium_state;
 	if($global && !is_logged_in()) return;
@@ -70,6 +104,11 @@ function logoff($global = false) {
 	$_SESSION = array();
 }
 
+/**
+ * Get a string that identifies a visitor. Cookie token-based
+ * authentication will only succeed if the client attributes of the
+ * visitor match the ones generated when the cookie was set.
+ */
 function get_client_attributes() {
 	return hash('sha256', serialize(array($_SERVER['REMOTE_ADDR'],
 	                                      $_SERVER['HTTP_USER_AGENT'],
@@ -78,10 +117,18 @@ function get_client_attributes() {
 		                                )));
 }
 
+/**
+ * Check whether the client attributes of the current visitor match
+ * with given attributes.
+ */
 function check_client_attributes($attributes) {
 	return $attributes === get_client_attributes();
 }
 
+/**
+ * Prints the login box if the current user is not logged in, or print
+ * the logout box if the user is logged in.
+ */
 function print_login_or_logout_box($relative) {
 	if(is_logged_in()) {
 		print_logoff_box($relative);
@@ -90,6 +137,7 @@ function print_login_or_logout_box($relative) {
 	}
 }
 
+/** @internal */
 function print_login_box($relative) {
 	$value = isset($_POST['account_name']) ? "value='".htmlspecialchars($_POST['account_name'], ENT_QUOTES)."' " : '';
 	$remember = (isset($_POST['account_name']) && (!isset($_POST['remember']) || $_POST['remember'] !== 'on')) ? '' : "checked='checked' ";
@@ -107,6 +155,7 @@ function print_login_box($relative) {
 	echo "</p>\n</form>\n</div>\n";
 }
 
+/** @internal */
 function print_logoff_box($relative) {
 	global $__osmium_state;
 	$id = $__osmium_state['a']['characterid'];
@@ -115,18 +164,36 @@ function print_logoff_box($relative) {
 	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>".\Osmium\Flag\format_moderator_name($__osmium_state['a'])."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
+/**
+ * Returns a password hash string derived from $pw. Already does
+ * salting internally.
+ */
 function hash_password($pw) {
 	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
 	$pwHash = new \PasswordHash(10, true);
 	return $pwHash->HashPassword($pw);
 }
 
+/**
+ * Checks whether a password matches against a hash returned by
+ * hash_password().
+ *
+ * @param $pw the password to test.
+ *
+ * @param $hash the hash previously returned by hash_password().
+ *
+ * @returns true if $pw matches against $hash.
+ */
 function check_password($pw, $hash) {
 	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
 	$pwHash = new \PasswordHash(10, true);
 	return $pwHash->CheckPassword($pw, $hash);
 }
 
+/**
+ * Try to login the current visitor, taking credentials directly from
+ * $_POST.
+ */
 function try_login() {
 	if(is_logged_in()) return;
 
@@ -144,6 +211,10 @@ function try_login() {
 	}
 }
 
+/**
+ * Try to re-log a user from a cookie token. If the token happens to
+ * be invalid, the cookie is deleted.
+ */
 function try_recover() {
 	if(is_logged_in()) return;
 
@@ -174,6 +245,14 @@ function try_recover() {
 	}
 }
 
+/**
+ * Check the API key associated with the current account.
+ *
+ * If the API is unavailable, logs off the user. If the API key is
+ * outdated/incorrect, set the must_renew_api state to true. If the
+ * API key is correct, update character/corp/alliance information in
+ * the database.
+ */
 function check_api_key() {
 	$a = \Osmium\State\get_state('a');
 
@@ -273,6 +352,13 @@ function get_character_info($character_id) {
 	return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, (int)$is_fitting_manager);
 }
 
+/**
+ * Checks the must_renew_api state variable, and redirects the user to
+ * the renew API page if it is set to true.
+ *
+ * This function will not redirect the user if the current page is
+ * already the renew API page.
+ */
 function api_maybe_redirect($relative) {
 	global $__osmium_state;
 
@@ -288,6 +374,11 @@ function api_maybe_redirect($relative) {
 	}
 }
 
+/**
+ * Get a setting previously stored with put_setting().
+ *
+ * @param $default the value to return if $key is not found.
+ */
 function get_setting($key, $default = null) {
 	if(!is_logged_in()) return $default;
 
@@ -303,6 +394,10 @@ function get_setting($key, $default = null) {
 	return $ret;
 }
 
+/**
+ * Store a setting. Settings are account-bound, database-stored and
+ * persistent between sessions.
+ */
 function put_setting($key, $value) {
 	if(!is_logged_in()) return;
 
@@ -314,17 +409,31 @@ function put_setting($key, $value) {
 	return $value;
 }
 
+/**
+ * Get the session token of the current session. This is randomly
+ * generated data, different than $PHPSESSID. (Mainly used for CSRF
+ * tokens.)
+ */
 function get_token() {
 	global $__osmium_state;
 	return $__osmium_state['logouttoken'];
 }
 
+/**
+ * Get a state variable previously set via put_state().
+ *
+ * @param $default the value to return if $key is not found.
+ */
 function get_state($key, $default = null) {
 	if(isset($_SESSION['__osmium_state'][$key])) {
 		return $_SESSION['__osmium_state'][$key];
 	} else return $default;
 }
 
+/**
+ * Store a state variable. State variables are account-bound but do
+ * not persist between sessions.
+ */
 function put_state($key, $value) {
 	if(!isset($_SESSION['__osmium_state']) || !is_array($_SESSION['__osmium_state'])) {
 		$_SESSION['__osmium_state'] = array();
@@ -333,6 +442,12 @@ function put_state($key, $value) {
 	return $_SESSION['__osmium_state'][$key] = $value;
 }
 
+/**
+ * Override current cache setting. Nested calls behave correctly as
+ * expected.
+ *
+ * @param $enable whether to enable or disable cache.
+ */
 function set_cache_enabled($enable = true) {
 	global $__osmium_cache_stack;
 	global $__osmium_cache_enabled;
@@ -341,6 +456,10 @@ function set_cache_enabled($enable = true) {
 	$__osmium_cache_enabled = $enable;
 }
 
+/**
+ * Undo the last override made by set_cache_enabled() and restore the
+ * old setting. Supports nested calls.
+ */
 function pop_cache_enabled() {
 	global $__osmium_cache_stack;
 	global $__osmium_cache_enabled;
@@ -348,6 +467,7 @@ function pop_cache_enabled() {
 	$__osmium_cache_enabled = array_pop($__osmium_cache_stack);
 }
 
+/** @internal */
 function init_memcached() {
 	global $__osmium_memcached;
 
@@ -359,6 +479,12 @@ function init_memcached() {
 	}
 }
 
+/**
+ * Get a cache variable previously set by put_cache().
+ *
+ * @param $default the value to return if $key is not found in the
+ * cache.
+ */
 function get_cache($key, $default = null) {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return $default;
@@ -381,6 +507,13 @@ function get_cache($key, $default = null) {
 	}
 }
 
+/**
+ * Store a cache variable. Cache variables are not account-bound.
+ *
+ * @param $expires if set to zero, the cache value must never expire
+ * unless explicitely invalidated. If not, *try* to keep the value in
+ * cache for $expires seconds.
+ */
 function put_cache($key, $value, $expires = 0) {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
@@ -396,6 +529,9 @@ function put_cache($key, $value, $expires = 0) {
 	}
 }
 
+/**
+ * Delete a cached variable.
+ */
 function invalidate_cache($key) {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
