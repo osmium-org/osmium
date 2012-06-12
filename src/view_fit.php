@@ -87,7 +87,7 @@ if(count($fit['charges']) > 0) {
 		reset($fit['charges']);
 		$preset = key($fit['charges']);
 	}
-	\Osmium\Fit\use_preset($fit, $preset);
+	\Osmium\Fit\use_charge_preset($fit, $preset);
 }
 
 $title = $fit['ship']['typename'].' / '.$fit['metadata']['name'];

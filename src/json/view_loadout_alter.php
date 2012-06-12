@@ -29,7 +29,7 @@ if(!isset($green[$_GET['loadoutid']]) || $green[$_GET['loadoutid']] !== true) {
 $fit = \Osmium\Fit\get_fit($_GET['loadoutid']);
 
 if(isset($_GET['preset'])) {
-	\Osmium\Fit\use_preset($fit, $_GET['preset']);
+	\Osmium\Fit\use_charge_preset($fit, $_GET['preset']);
 }
 
 foreach($_GET as $k => $v) {

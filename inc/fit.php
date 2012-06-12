@@ -25,6 +25,7 @@ namespace Osmium\Fit;
  * state at all. This makes it easier to test and debug.
  */
 
+require __DIR__.'/fit-presets.php';
 require __DIR__.'/fit-attributes.php';
 require __DIR__.'/fit-db.php';
 require __DIR__.'/fit-importexport.php';
@@ -155,19 +156,32 @@ function get_state_categories() {
  * Structure of the created array:
  * 
  * ship => array(typeid, typename)
- * 
+ *
+ * modulepresetid => (integer) 
+ * modulepresetname => (string)
+ * modulepresetdesc => (string)
  * modules => array(<slot_type> => array(<index> => array(typeid, typename, state)))
- * 
- * charges => array(<preset_name> => array(<slot_type> => array(index => array(typeid, typename))))
- * 
- * selectedpreset => (string)
- * 
- * drones => array(<typeid> => array(typeid, typename, volume, bandwidth, quantityin{bay, space}))
+ *
+ * chargepresetid => (integer) 
+ * chargepresetname => (string)
+ * chargepresetdesc => (string)
+ * charges => array(<slot_type> => array(<index> => array(typeid, typename)))
+ *
+ * dronepresetid => (integer)
+ * dronepresetname => (string)
+ * dronepresetdesc => (string)
+ * drones => array(<typeid> => array(typeid, typename, volume, bandwidth, quantityin{bay, space})))
+ *
+ * presets => array(<presetid> => array(name, description, modules, chargepresets))
+ *
+ * chargepresets => array(<presetid> => array(name, description, charges))
+ *
+ * dronepresets => array(<presetid> => array(name, description, drones))
  *
  * dogma => array({char,
  *                 ship,
  *                 modules => <slot_type> => <index>,
- *                 charges => <preset_name> => <slot_type> => <index>,
+ *                 charges => <slot_type> => <index>,
  *                 drones => <typeid>,
  *                 skills => <typeid>}
  *                 => array(<attributename> => (base value),
@@ -192,13 +206,34 @@ function get_state_categories() {
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(),
-		'modules' => array(),
-		'charges' => array(),
-		'drones' => array(),
-		'selectedpreset' => null,
 		'dogma' => array(),
 		'cache' => array(),
+		'presets' => array(
+			0 => array(
+				'name' => '',
+				'description' => '',
+				'modules' => array(),
+				'chargepresets' => array(
+					0 => array(
+						'name' => '',
+						'description' => '',
+						'charges' => array()
+						)
+					)
+				)
+			),
+		'dronepresets' => array(
+			0 => array(
+				'name' => '',
+				'description' => '',
+				'drones' => array()
+				)
+			)
 		);
+
+	use_preset($fit, 0);
+	use_charge_preset($fit, 0);
+	use_drone_preset($fit, 0);
 
 	/* Apply the default skill modifiers */
 	\Osmium\Dogma\eval_skill_preexpressions($fit);
@@ -350,8 +385,20 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 	change_module_state_by_location($fit, $type, $index, $state);
 }
 
+/** @internal */
+function online_module(&$fit, $slottype, $index) {
+	$state = get_module_state_by_location($fit, $slottype, $index);
+	change_module_state_by_location($fit, $slottype, $index, $state);
+
+	if(isset($fit['charges'][$slottype][$index])) {
+		online_charge($fit, $slottype, $index);
+	}
+}
+
 /**
- * Remove a certain module located at a specific index.
+ * Remove a certain module located at a specific index from the
+ * current preset. This will also remove charges of this module in all
+ * charge presets.
  */
 function remove_module(&$fit, $index, $typeid) {
 	$type = get_module_slottype($fit, $typeid);
@@ -364,10 +411,15 @@ function remove_module(&$fit, $index, $typeid) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	foreach($fit['charges'] as $name => $preset) {
-		if(isset($preset[$type][$index])) {
-			/* Remove charge */
-			remove_charge($fit, $name, $type, $index);
+	if(isset($fit['charges'][$type][$index])) {
+		/* Remove charge */
+		remove_charge($fit, $type, $index);
+	}
+
+	foreach($fit['chargepresets'] as $cpid => &$chargepreset) {
+		if(isset($chargepreset['charges'][$type][$index])) {
+			/* Remove charge in other presets */
+			unset($chargepreset['charges'][$type][$index]);
 		}
 	}
 
@@ -376,6 +428,17 @@ function remove_module(&$fit, $index, $typeid) {
 	unset($fit['modules'][$type][$index]);
 
 	maybe_remove_cache($fit, $typeid);
+}
+
+/** @internal */
+function offline_module(&$fit, $slottype, $index) {
+	if(isset($fit['charges'][$slottype][$index])) {
+		offline_charge($fit, $slottype, $index);
+	}
+
+	$state = get_module_state_by_location($fit, $slottype, $index);
+	change_module_state_by_location($fit, $slottype, $index, null);
+	$fit['modules'][$slottype][$index]['state'] = $state;
 }
 
 /**
@@ -522,13 +585,13 @@ function get_module_states(&$fit, $typeid) {
 }
 
 /**
- * Add several charges at once. This is more efficient than calling
- * add_charge() multiple times.
+ * Add several charges at once to the current charge preset. This is
+ * more efficient than calling add_charge() multiple times.
  *
  * @param $charges an array of the form array(<slot_type> =>
  * array(<index> => <typeid>))
  */
-function add_charges_batch(&$fit, $presetname, $charges) {
+function add_charges_batch(&$fit, $charges) {
 	$typeids = array();
 	foreach($charges as $slot => $a) {
 		foreach($a as $index => $typeid) {
@@ -540,15 +603,15 @@ function add_charges_batch(&$fit, $presetname, $charges) {
 
 	foreach($charges as $slottype => $a) {
 		foreach($a as $index => $typeid) {
-			add_charge($fit, $presetname, $slottype, $index, $typeid);
+			add_charge($fit, $slottype, $index, $typeid);
 		}
 	}
 }
 
 /**
- * Add a charge to a given preset.
+ * Add a charge to the currently selected charge preset.
  */
-function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
+function add_charge(&$fit, $slottype, $index, $typeid) {
 	if(!isset($fit['modules'][$slottype][$index])) {
 		// @codeCoverageIgnoreStart
 		trigger_error('add_charge(): cannot add charge to an empty module!', E_USER_WARNING);
@@ -558,121 +621,58 @@ function add_charge(&$fit, $presetname, $slottype, $index, $typeid) {
 
 	get_attributes_and_effects(array($typeid), $fit['cache']);
 
-	if(isset($fit['charges'][$presetname][$slottype][$index])) {
-		if($fit['charges'][$presetname][$slottype][$index]['typeid'] == $typeid) {
+	if(isset($fit['charges'][$slottype][$index])) {
+		if($fit['charges'][$slottype][$index]['typeid'] == $typeid) {
 			return;
 		}
 
-		remove_charge($fit, $presetname, $slottype, $index);
+		remove_charge($fit, $slottype, $index);
 	}
 
-	$fit['charges'][$presetname][$slottype][$index] = array(
+	$fit['charges'][$slottype][$index] = array(
 		'typeid' => $typeid,
 		'typename' => $fit['cache'][$typeid]['typename'],
 		);
 
-	if($fit['selectedpreset'] === $presetname) {
-		online_charge($fit, $presetname, $slottype, $index);
-	}
+	online_charge($fit, $slottype, $index);
 }
 
 /** @internal */
-function online_charge(&$fit, $presetname, $slottype, $index) {
-	$typeid = $fit['charges'][$presetname][$slottype][$index]['typeid'];
-	$fit['dogma']['charges'][$presetname][$slottype][$index] = array();
+function online_charge(&$fit, $slottype, $index) {
+	$typeid = $fit['charges'][$slottype][$index]['typeid'];
+	$fit['dogma']['charges'][$slottype][$index] = array();
 	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
-		$fit['dogma']['charges'][$presetname][$slottype][$index][$attr['attributename']]
+		$fit['dogma']['charges'][$slottype][$index][$attr['attributename']]
 			= $attr['value'];
 	}
-	$fit['dogma']['charges'][$presetname][$slottype][$index]['typeid']
-		=& $fit['charges'][$presetname][$slottype][$index]['typeid'];
+	$fit['dogma']['charges'][$slottype][$index]['typeid']
+		=& $fit['charges'][$slottype][$index]['typeid'];
 	
-	\Osmium\Dogma\eval_charge_preexpressions($fit, $presetname, $slottype, $index);
+	\Osmium\Dogma\eval_charge_preexpressions($fit, $slottype, $index);
 }
 
 /**
- * Remove a charge from a given preset.
+ * Remove a charge from the currently selected charge preset.
  */
-function remove_charge(&$fit, $presetname, $slottype, $index) {
-	if(!isset($fit['charges'][$presetname][$slottype][$index]['typeid'])) {
+function remove_charge(&$fit, $slottype, $index) {
+	if(!isset($fit['charges'][$slottype][$index]['typeid'])) {
 		// @codeCoverageIgnoreStart
 		trigger_error('remove_charge(): cannot remove a nonexistent charge.', E_USER_WARNING);
 		return;
 		// @codeCoverageIgnoreEnd
 	}
 
-	$typeid = $fit['charges'][$presetname][$slottype][$index]['typeid'];
+	offline_charge($fit, $slottype, $index);
 
-	if($fit['selectedpreset'] === $presetname) {
-		offline_charge($fit, $presetname, $slottype, $index);
-	}
-
-	unset($fit['charges'][$presetname][$slottype][$index]);
-
+	$typeid = $fit['charges'][$slottype][$index]['typeid'];
+	unset($fit['charges'][$slottype][$index]);
 	maybe_remove_cache($fit, $typeid);
 }
 
 /** @internal */
-function offline_charge(&$fit, $presetname, $slottype, $index) {
-		\Osmium\Dogma\eval_charge_postexpressions($fit, $presetname, $slottype, $index);
-		unset($fit['dogma']['charges'][$presetname][$slottype][$index]);
-}
-
-/**
- * Completely remove a charge preset. If the preset being removed is
- * the currently selected preset, this function will switch to the
- * null preset.
- */
-function remove_charge_preset(&$fit, $presetname) {
-	if(!isset($fit['charges'][$presetname])) return;
-
-	if($fit['selectedpreset'] === $presetname) {
-		use_preset($fit, null); /* Don't use any preset at all */
-	}
-
-	foreach($fit['charges'][$presetname] as $type => $a) {
-		foreach($a as $index => $charge) {
-			remove_charge($fit, $presetname, $type, $index);
-		}
-	}
-
-	unset($fit['charges'][$presetname]);
-	unset($fit['dogma']['charges'][$presetname]);
-}
-
-/**
- * Switch to a given preset.
- *
- * @param $presetname preset name to switch to; if null, switch to the
- * null preset. The null preset is a special state with no charges.
- */
-function use_preset(&$fit, $presetname) {
-	if($presetname !== null && !isset($fit['charges'][$presetname])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('use_preset(): no such preset', E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	if($fit['selectedpreset'] === $presetname) return;
-
-	if($fit['selectedpreset'] !== null) {
-		foreach($fit['charges'][$fit['selectedpreset']] as $type => $a) {
-			foreach($a as $index => $charge) {
-				offline_charge($fit, $fit['selectedpreset'], $type, $index);
-			}
-		}
-	}
-
-	$fit['selectedpreset'] = $presetname;
-
-	if($presetname !== null) {
-		foreach($fit['charges'][$fit['selectedpreset']] as $type => $a) {
-			foreach($a as $index => $charge) {
-				online_charge($fit, $presetname, $type, $index);
-			}
-		}
-	}
+function offline_charge(&$fit, $slottype, $index) {
+		\Osmium\Dogma\eval_charge_postexpressions($fit, $slottype, $index);
+		unset($fit['dogma']['charges'][$slottype][$index]);
 }
 
 /**
@@ -904,21 +904,29 @@ function prune_cache(&$fit) {
 /** @internal */
 function maybe_remove_cache(&$fit, $deleted_typeid) {
 	if(!isset($fit['cache'][$deleted_typeid])) return;
+
 	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] == $deleted_typeid) return;
-	foreach($fit['modules'] as $submods) {
-		foreach($submods as $mod) {
-			if($mod['typeid'] == $deleted_typeid) return;
+
+	foreach($fit['presets'] as $presetid => $preset) {
+		foreach($preset['modules'] as $submods) {
+			foreach($submods as $mod) {
+				if($mod['typeid'] == $deleted_typeid) return;
+			}
 		}
-	}
-	foreach($fit['charges'] as $preset) {
-		foreach($preset as $subcharges) {
-			foreach($subcharges as $charge) {
-				if($charge['typeid'] == $deleted_typeid) return;
+
+		foreach($preset['chargepresets'] as $chargepreset) {
+			foreach($chargepreset['charges'] as $subcharges) {
+				foreach($subcharges as $charge) {
+					if($charge['typeid'] == $deleted_typeid) return;
+				}
 			}
 		}
 	}
-	foreach($fit['drones'] as $drone) {
-		if($drone['typeid'] == $deleted_typeid) return;
+	
+	foreach($fit['dronepresets'] as $dronepreset) {
+		foreach($dronepreset['drones'] as $drone) {
+			if($drone['typeid'] == $deleted_typeid) return;
+		}
 	}
 
 	unset($fit['cache'][$deleted_typeid]);

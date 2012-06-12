@@ -162,12 +162,12 @@ function eval_module_postexpressions(&$fit, $moduletype, $index, array $categori
 	unset($fit['dogma']['other']);
 }
 
-function eval_charge_preexpressions(&$fit, $presetname, $type, $index) {
-	$fit['dogma']['source'] = array('charge', $presetname, $type, $index);
-	$fit['dogma']['self'] =& $fit['dogma']['charges'][$presetname][$type][$index];
+function eval_charge_preexpressions(&$fit, $type, $index) {
+	$fit['dogma']['source'] = array('charge', $type, $index);
+	$fit['dogma']['self'] =& $fit['dogma']['charges'][$type][$index];
 	$fit['dogma']['other'] =& $fit['dogma']['modules'][$type][$index];
 
-	foreach($fit['cache'][$fit['charges'][$presetname][$type][$index]['typeid']]['effects'] as $effect) {
+	foreach($fit['cache'][$fit['charges'][$type][$index]['typeid']]['effects'] as $effect) {
 		if(!isset($effect['preexp'])) {
 			// @codeCoverageIgnoreStart
 			trigger_error('eval_charge_preexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
@@ -182,12 +182,12 @@ function eval_charge_preexpressions(&$fit, $presetname, $type, $index) {
 	unset($fit['dogma']['other']);
 }
 
-function eval_charge_postexpressions(&$fit, $presetname, $type, $index) {
-	$fit['dogma']['source'] = array('charge', $presetname, $type, $index);
-	$fit['dogma']['self'] =& $fit['dogma']['charges'][$presetname][$type][$index];
+function eval_charge_postexpressions(&$fit, $type, $index) {
+	$fit['dogma']['source'] = array('charge', $type, $index);
+	$fit['dogma']['self'] =& $fit['dogma']['charges'][$type][$index];
 	$fit['dogma']['other'] =& $fit['dogma']['modules'][$type][$index];
 
-	foreach($fit['cache'][$fit['charges'][$presetname][$type][$index]['typeid']]['effects'] as $effect) {
+	foreach($fit['cache'][$fit['charges'][$type][$index]['typeid']]['effects'] as $effect) {
 		if(!isset($effect['postexp'])) {
 			// @codeCoverageIgnoreStart
 			trigger_error('eval_charge_postexpressions(): effect '.$effect['effectid'].' has no preexpression!', E_USER_WARNING);
@@ -268,7 +268,7 @@ function get_ship_attribute(&$fit, $name, $failonerror = true) {
 }
 
 /**
- * Get the final value of a module attribute.
+ * Get the final value of a module attribute (of the current preset).
  */
 function get_module_attribute(&$fit, $slottype, $index, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
@@ -278,17 +278,17 @@ function get_module_attribute(&$fit, $slottype, $index, $name, $failonerror = tr
 }
 
 /**
- * Get the final value of a charge attribute.
+ * Get the final value of a charge attribute (of the current charge preset).
  */
-function get_charge_attribute(&$fit, $preset, $slottype, $index, $name, $failonerror = true) {
+function get_charge_attribute(&$fit, $slottype, $index, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
 	                                 array('name' => $name,
-	                                       'source' => array('charge', $preset, $slottype, $index)),
+	                                       'source' => array('charge', $slottype, $index)),
 	                                 $failonerror);
 }
 
 /**
- * Get the final value of a drone attribute.
+ * Get the final value of a drone attribute (of the current drone preset).
  */
 function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
 	return get_final_attribute_value($fit,
@@ -318,8 +318,8 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 		list(, $type, $index) = $attribute['source'];
 		$src = $fit['dogma']['modules'][$type][$index];
 	} else if($stype === 'charge') {
-		list(, $preset, $type, $index) = $attribute['source'];
-		$src = $fit['dogma']['charges'][$preset][$type][$index];
+		list(, $type, $index) = $attribute['source'];
+		$src = $fit['dogma']['charges'][$type][$index];
 	} else if($stype == 'drone') {
 		list(, $typeid) = $attribute['source'];
 		$src = $fit['dogma']['drones'][$typeid];
@@ -528,6 +528,7 @@ function insert_nested(&$fit, $subarrays, $element, $key = null) {
 
 function remove_nested(&$fit, $subarrays, $element) {
 	$res =& traverse_nested($fit, $subarrays);
+
 	foreach($res as $i => $val) {
 		if($val['name'] === $element['name'] && $val['source'] == $element['source']) {
 			unset($res[$i]);

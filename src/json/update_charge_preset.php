@@ -58,7 +58,7 @@ if($_GET['action'] == 'update') {
 		$fit['charges'][$name] = array();
 	}
 
-	\Osmium\Fit\use_preset($fit, $name);
+	\Osmium\Fit\use_charge_preset($fit, $name);
 } else if($_GET['action'] == 'delete') {
 	$name = $_GET['name'];
 	\Osmium\Fit\remove_charge_preset($fit, $name);

@@ -32,7 +32,7 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 $fit = \Osmium\State\get_state('new_fit', array());
 $name = $_GET['name'];
 $name = (isset($fit['charges'][$name])) ? $name : null;
-\Osmium\Fit\use_preset($fit, $name);
+\Osmium\Fit\use_charge_preset($fit, $name);
 \Osmium\State\put_state('new_fit', $fit);
 
 \Osmium\Chrome\return_json(\Osmium\Chrome\get_formatted_loadout_attributes($fit));

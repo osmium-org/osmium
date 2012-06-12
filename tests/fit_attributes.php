@@ -68,10 +68,9 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		for($i = 0; $i < $numguns; ++$i) {
 			\Osmium\Fit\add_module($fit, $i, $gunid);
-			\Osmium\Fit\add_charge($fit, 'foo', 'high', $i, $chargeid);
+			\Osmium\Fit\add_charge($fit, 'high', $i, $chargeid);
 		}
 
-		\Osmium\Fit\use_preset($fit, 'foo');
 		list($dps, $volley) = $funcname($fit);
 		$this->assertEquals($expecteddps, $dps, '', 1);
 		$this->assertEquals($expectedvolley, $volley, '', 1);
@@ -83,11 +82,6 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		list($dps, $volley) = $funcname($fit);
 		$this->assertEquals($expecteddps2, $dps, '', 1);
 		$this->assertEquals($expectedvolley2, $volley, '', 1);
-
-		\Osmium\Fit\use_preset($fit, null); /* Select the null preset (no charges) */
-		list($dps, $volley) = $funcname($fit);
-		$this->assertEquals(0.0, $dps);
-		$this->assertEquals(0.0, $volley);
 	}
 
 	private function assertGunDamagePerSecond() {
@@ -274,7 +268,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 				)
 			);
 		\Osmium\Fit\add_charges_batch(
-			$fit, 'foo',
+			$fit,
 			array(
 				/* Multifrequency L */
 				'high' => array(
@@ -294,9 +288,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		/* Heavy Capacitor Booster II, with 800 charges */
 		\Osmium\Fit\add_module($fit, 0, 3578);
-		\Osmium\Fit\add_charge($fit, 'foo', 'medium', 0, 11289);
+		\Osmium\Fit\add_charge($fit, 'medium', 0, 11289);
 
-		\Osmium\Fit\use_preset($fit, 'foo');
 		/* Only "really" test for cap stability */
 		$this->assertCapacitorStatus($fit, -45.6, true, 100.0);
 	}

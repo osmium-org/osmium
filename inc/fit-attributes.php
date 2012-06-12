@@ -28,7 +28,7 @@ namespace Osmium\Fit;
  * the stable percentage level (between 0 and 100).
  */
 function get_capacitor_stability(&$fit) {
-	static $step = 250;
+	static $step = 250; /* Number of milliseconds between each integration step */
 	$categories = get_state_categories();
 
 	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
@@ -49,12 +49,11 @@ function get_capacitor_stability(&$fit) {
 
 				if($effect['effectname'] == 'powerBooster') {
 					/* Special case must be hardcoded (eg. cap boosters) */
-					if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
+					if(!isset($fit['charges'][$type][$index])) {
 						continue;
 					}
 
-					$restored = \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'],
-					                                               $type, $index, 'capacitorBonus', false);
+					$restored = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'capacitorBonus', false);
 
 					$usage_rate -= $restored / $duration;
 					continue;
@@ -271,7 +270,7 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
 			if(!isset($fit['cache'][$module['typeid']]['effects'][$attackeffectname])) {
 				continue;
 			}
-			if(!isset($fit['charges'][$fit['selectedpreset']][$type][$index])) {
+			if(!isset($fit['charges'][$type][$index])) {
 				continue;
 			}
 			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
@@ -280,10 +279,10 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
 
 			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
 			$damage = 
-				\Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'emDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'thermalDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'kineticDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $fit['selectedpreset'], $type, $index, 'explosiveDamage');
+				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage');
 
 			$multiplier = $modulemultiplierattributename === null ? 1 :
 				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattributename);
