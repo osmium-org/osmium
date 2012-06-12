@@ -18,19 +18,40 @@
 
 namespace Osmium\Flag;
 
+/** Prefix used to identify moderators. */
+const MODERATOR_SYMBOL = '♦';
+
+/** The flag weight new accounts are given. */
 const DEFAULT_FLAG_WEIGHT = 100;
+
+/** The minimum flag weight that can be attained. */
 const MIN_FLAG_WEIGHT = 0;
+
+/** The maximum flag weight that can be attained. */
 const MAX_FLAG_WEIGHT = 500;
+
+/** Add this quantity to the flag weight of a user when he made a
+ * helpful flag. */
 const HELPFUL_FLAG_BONUS = 10;
+
+/** Add this quantity to the flag weight of a user when he made an
+ * abusive flag. */
 const ABUSIVE_FLAG_PENALTY = -5;
 
+/**
+ * Checks whether a fit can be flagged by the current user.
+ */
 function is_fit_flaggable($fit) {
-	return $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
+	return \Osmium\State\is_logged_in()
+		&& $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 		&& $fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_EVERYONE;
 }
 
+/**
+ * Format (if needed) the name of a moderator.
+ */
 function format_moderator_name($a) {
-	if($a['ismoderator'] !== 't' && $a['ismoderator'] !== true) return $a['charactername'];
+	if($a['ismoderator'] !== 't') return $a['charactername'];
   
-	return "<span title='Moderator' class='mod'>♦".$a['charactername']."</span>";
+	return "<span title='Moderator' class='mod'>".MODERATOR_SYMBOL.$a['charactername']."</span>";
 }

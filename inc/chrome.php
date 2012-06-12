@@ -234,6 +234,38 @@ function format_duration($seconds) {
 	}
 }
 
+function format_long_duration($seconds, $lessthanoneday = '1 day') {
+	list($y, $m, $d) = explode('-', date('Y-m-d', time() - $seconds));
+	list($Y, $M, $D) = explode('-', date('Y-m-d', time()));
+
+	$years = $Y - $y;
+	$months = $M - $m;
+	$days = $D - $d;
+
+	while($days < 0) {
+		--$months;
+		$days += 30;
+	}
+	while($months < 0) {
+		--$years;
+		$months += 12;
+	}
+
+	if($years == 0 && $months == 0 && $days == 0) {
+		return $lessthanoneday;
+	}
+
+	$out = array();
+	foreach(array('year' => $years, 'month' => $months, 'day' => $days) as $n => $q) {
+		if($q == 0) continue;
+		if($q == 1) $out[] = '1 '.$n;
+		if($q > 1) $out[] = $q.' '.$n.'s';
+	}
+
+	$out = array_slice($out, 0, 2);
+	return implode(', ', $out);
+}
+
 function format_capacitor($array) {
 	/* $array is returned by get_capacitor_stability */
 	list($rate, $is_stable, $data) = $array;

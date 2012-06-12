@@ -1,0 +1,57 @@
+$portrait-width: 10em;
+
+div#vprofile {
+	max-width: 60em;
+	margin: auto;
+
+	&> header, &> section {
+		&> h2 {
+			margin: 1em 0 0.5em 0;
+			border-bottom: 1px solid black;
+		}
+	}
+
+	&> header {
+		&> p, &> table {
+			display: inline-block;
+			vertical-align: top;
+			margin: 0;
+			padding: 0;
+		}
+
+		&> p > img {
+			width: $portrait-width / 2;
+
+			&:first-child {
+				width: $portrait-width;
+			}
+		}
+
+		&> table > tbody {
+			&> tr.sep > td {
+				height: 1em;
+			}
+			
+			&> tr > th, &> tr > td {
+				vertical-align: top;
+				text-align: left;
+				padding: 0 2em 0 1em;
+				line-height: 1.5em;
+			}
+
+			&> tr > th {
+				color: #888;
+				font-weight: normal;
+				font-style: italic;
+			}
+
+			&> tr > td {
+				color: #333;
+
+				&:last-child {
+					color: black;
+				}
+			}
+		}
+	}
+}
