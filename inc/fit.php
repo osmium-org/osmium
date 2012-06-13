@@ -202,38 +202,23 @@ function get_state_categories() {
  *                                  effects =>
  *                                      array(<effectname> =>
  *                                          array(effectid, effectname, preexp, postexp)))
+ *
+ * metadata => array(...)                                          
  */
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(),
 		'dogma' => array(),
 		'cache' => array(),
-		'presets' => array(
-			0 => array(
-				'name' => '',
-				'description' => '',
-				'modules' => array(),
-				'chargepresets' => array(
-					0 => array(
-						'name' => '',
-						'description' => '',
-						'charges' => array()
-						)
-					)
-				)
-			),
-		'dronepresets' => array(
-			0 => array(
-				'name' => '',
-				'description' => '',
-				'drones' => array()
-				)
-			)
+		'presets' => array(),
+		'dronepresets' => array()
 		);
 
-	use_preset($fit, 0);
-	use_charge_preset($fit, 0);
-	use_drone_preset($fit, 0);
+	$presetid = create_preset($fit, 'Default preset', '');
+	use_preset($fit, $presetid);
+
+	$dpid = create_drone_preset($fit, 'Default drone preset', '');
+	use_drone_preset($fit, $dpid);
 
 	/* Apply the default skill modifiers */
 	\Osmium\Dogma\eval_skill_preexpressions($fit);
@@ -841,7 +826,7 @@ function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
 /* ----------------------------------------------------- */
 
 /**
- * Get all the fitted modules of a fitting.
+ * Get all the fitted modules of the current preset.
  *
  * The returned array is guaranteed to have this structure:
  * array(<slot_type> => array(<index> => array(typeid, typename,
@@ -1048,13 +1033,5 @@ function get_attributes_and_effects($typeids, &$out) {
  */
 function sanitize(&$fit) {
 	/* Unset any extra charges of nonexistent modules. */
-	foreach($fit['charges'] as $name => $preset) {
-		foreach($preset as $type => $a) {
-			foreach($a as $index => $charge) {
-				if(!isset($fit['modules'][$type][$index])) {
-					unset($fit['charges'][$name][$type][$index]);
-				}
-			}
-		}
-	}
+	/* TODO */
 }

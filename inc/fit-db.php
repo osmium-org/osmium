@@ -23,34 +23,67 @@ namespace Osmium\Fit;
  * to compare fits.
  */
 function get_unique($fit) {
-	$unique = array(
-		'metadata' => array(
+	$unique = array();
+
+	$unique['ship'] = (int)$fit['ship']['typeid'];
+
+	if(isset($fit['metadata'])) {
+		$unique['metadata'] = array(
 			'name' => $fit['metadata']['name'],
 			'description' => $fit['metadata']['description'],
 			'tags' => $fit['metadata']['tags'],
-			),
-		'ship' => array(
-			'typeid' => $fit['ship']['typeid'],
-			),
-		);
-
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $d) {
-		foreach($d as $index => $module) {
-			$unique['modules'][$type][$index] = array($module['typeid'], $module['state']);
-		}
+			);
 	}
 
-	foreach($fit['charges'] as $name => $preset) {
-		foreach($preset as $type => $charges) {
-			foreach($charges as $index => $charge) {
-				$unique['charges'][$name][$type][$index] = $charge['typeid'];
+	foreach($fit['presets'] as $presetid => $preset) {
+		$uniquep = array(
+			'name' => $preset['name'],
+			'description' => $preset['description']
+			);
+
+		foreach($preset['modules'] as $type => $d) {
+			foreach($d as $index => $module) {
+				/* Use the actual order of the array, discard indexes */
+				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$module['state']);
 			}
 		}
+
+		foreach($preset['chargepresets'] as $chargepreset) {
+			$uniquecp = array(
+				'name' => $chargepreset['name'],
+				'description' => $chargepreset['description']
+				);
+
+			foreach($chargepreset['charges'] as $type => $a) {
+				foreach($a as $index => $charge) {
+					$uniquecp['charges'][$type][] = (int)$charge['typeid'];
+				}
+			}
+
+			$uniquep['chargepresets'][] = $uniquecp;
+		}
+
+		$unique['presets'][] = $uniquep;
 	}
 
-	foreach($fit['drones'] as $typeid => $drone) {
-		$unique['drones'][$typeid] = array($drone['quantityinbay'], $drone['quantityinspace']);
+	foreach($fit['dronepresets'] as $dronepreset) {
+		$uniquedp = array(
+			'name' => $dronepreset['name'],
+			'description' => $dronepreset['description']
+			);
+
+		foreach($dronepreset['drones'] as $drone) {
+			$uniquedp['drones'][] = array((int)$drone['typeid'],
+			                              (int)$drone['quantityinbay'],
+			                              (int)$drone['quantityinspace']);
+		}
+
+		$unique['dronepresets'][] = $uniquedp;
 	}
+
+	/* Ensure equality if key ordering is different */
+	ksort_rec($unique);
+	sort($unique['metadata']['tags']); /* tags should be ordered by value */
 
 	return $unique;
 }
@@ -68,13 +101,7 @@ function ksort_rec(array &$array) {
  * example order of tags, order of module indexes etc.
  */
 function get_hash($fit) {
-	$unique = get_unique($fit);
-
-	/* Ensure equality if key ordering is different */
-	ksort_rec($unique);
-	sort($unique['metadata']['tags']); /* tags should be ordered by value */
-
-	return sha1(serialize($unique));
+	return sha1(serialize(get_unique($fit)));
 }
 
 /**
@@ -99,46 +126,54 @@ function commit_fitting(&$fit) {
 
 	/* Insert the new fitting */
 	\Osmium\Db\query('BEGIN;');
-	\Osmium\Db\query_params('INSERT INTO osmium.fittings (fittinghash, name, description, hullid, creationdate) VALUES ($1, $2, $3, $4, $5)', 
-	                        array(
-		                        $fittinghash,
-		                        $fit['metadata']['name'],
-		                        $fit['metadata']['description'],
-		                        $fit['ship']['typeid'],
-		                        time(),
-		                        ));
+	\Osmium\Db\query_params('INSERT INTO osmium.fittings (fittinghash, name, description, hullid, creationdate) VALUES ($1, $2, $3, $4, $5)', array($fittinghash, $fit['metadata']['name'], $fit['metadata']['description'], $fit['ship']['typeid'], time()));
   
 	foreach($fit['metadata']['tags'] as $tag) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)', 
-		                        array($fittinghash, $tag));
+		\Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)', array($fittinghash, $tag));
 	}
   
-	$module_order = array();
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $data) {
-		$z = 0;
-		foreach($data as $index => $module) {
-			$module_order[$type][$index] = $z;
-			\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5)', 
-			                        array($fittinghash, $type, $z, $module['typeid'], $module['state']));
-			++$z;
-		}
-	}
-  
-	foreach($fit['charges'] as $name => $preset) {
-		foreach($preset as $type => $d) {
-			foreach($d as $index => $charge) {
-				if(!isset($module_order[$type][$index])) continue;
-				$z = $module_order[$type][$index];
+	$presetid = 0;
+	foreach($fit['presets'] as $preset) {
+		\Osmium\Db\query_params('INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)', array($fittinghash, $presetid, $preset['name'], $preset['description']));
 
-				\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetname, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5)', 
-				                        array($fittinghash, $name, $type, $z, $charge['typeid']));
+		$module_order = array();
+		foreach($preset['modules'] as $type => $data) {
+			$z = 0;
+			foreach($data as $index => $module) {
+				$module_order[$type][$index] = $z;
+				\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $type, $z, $module['typeid'], $module['state']));
+				++$z;
 			}
 		}
+  
+		$cpid = 0;
+		foreach($preset['chargepresets'] as $chargepreset) {
+			\Osmium\Db\query_params('INSERT INTO osmium.fittingchargepresets (fittinghash, presetid, chargepresetid, name, description) VALUES ($1, $2, $3, $4, $5)', array($fittinghash, $presetid, $cpid, $chargepreset['name'], $chargepreset['description']));
+
+			foreach($chargepreset['charges'] as $type => $d) {
+				foreach($d as $index => $charge) {
+					if(!isset($module_order[$type][$index])) continue;
+					$z = $module_order[$type][$index];
+
+					\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetid, chargepresetid, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $cpid, $type, $z, $charge['typeid']));
+				}
+			}
+
+			++$cpid;
+		}
+
+		++$presetid;
 	}
   
-	foreach($fit['drones'] as $drone) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, typeid, quantityinbay, quantityinspace) VALUES ($1, $2, $3, $4)',
-		                        array($fittinghash, $drone['typeid'], $drone['quantityinbay'], $drone['quantityinspace']));
+	$dpid = 0;
+	foreach($fit['dronepresets'] as $dronepreset) {
+		\Osmium\Db\query_params('INSERT INTO osmium.fittingdronepresets (fittinghash, dronepresetid, name, description) VALUES ($1, $2, $3, $4)', array($fittinghash, $dpid, $dronepreset['name'], $dronepreset['description']));
+
+		foreach($dronepreset['drones'] as $drone) {
+			\Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, dronepresetid, typeid, quantityinbay, quantityinspace) VALUES ($1, $2, $3, $4, $5)', array($fittinghash, $dpid, $drone['typeid'], $drone['quantityinbay'], $drone['quantityinspace']));
+		}
+
+		++$dpid;
 	}
   
 	\Osmium\Db\query('COMMIT;');
@@ -184,6 +219,8 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 		\Osmium\Db\query_params('INSERT INTO osmium.loadouthistory 
     (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) 
     VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $nextrev, $fit['metadata']['hash'], $accountid, time()));
+
+		$fit['metadata']['revision'] = $nextrev;
 	}
 
 	$fit['metadata']['accountid'] = $ownerid;
@@ -200,8 +237,7 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 
 /**
  * Get a loadout from the database, given its loadoutid. Returns an
- * array that can be used with all functions using $fit. Returns false
- * on errors.
+ * array that can be used with all functions using $fit.
  *
  * This is pretty expensive, so the result is cached, unless a
  * revision number is specified.
@@ -210,6 +246,9 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
  *
  * @param $revision Revision number to get, if null the latest
  * revision is used
+ *
+ * @returns a $fit-compatible variable, or false if unrecoverable
+ * errors happened.
  */
 function get_fit($loadoutid, $revision = null) {
 	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null)) !== null) {
@@ -252,35 +291,75 @@ function get_fit($loadoutid, $revision = null) {
 		$fit['metadata']['tags'][] = $r[0];
 	}
 
-	$modules = array();
-	$mq = \Osmium\Db\query_params('SELECT slottype, index, typeid, state FROM osmium.fittingmodules WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
-	while($row = \Osmium\Db\fetch_row($mq)) {
-		$modules[$row[0]][$row[1]] = array($row[2], (int)$row[3]);
-	}
+	/* It can be done with only one query, but the code would be
+	 * monstrously complex. The result is cached anyway, so
+	 * performance isn't an absolute requirement as long as it's fast
+	 * enough. */
 
-	add_modules_batch($fit, $modules);
+	$firstpreset = true;
+	$presetsq = \Osmium\Db\query_params('SELECT presetid, name, description FROM osmium.fittingpresets WHERE fittinghash = $1 ORDER BY presetid ASC', array($fit['metadata']['hash']));
+	while($preset = \Osmium\Db\fetch_assoc($presetsq)) {
+		if($firstpreset === true) {
+			/* Edit the default preset instead of creating a new preset */
+			$fit['modulepresetname'] = $preset['name'];
+			$fit['modulepresetdesc'] = $preset['description'];
 
-	$charges = array();
-	$cq = \Osmium\Db\query_params('SELECT presetname, slottype, index, fittingcharges.typeid FROM osmium.fittingcharges JOIN eve.invtypes ON fittingcharges.typeid = invtypes.typeid WHERE fittinghash = $1 ORDER BY index ASC', array($fit['metadata']['hash']));
-	while($row = \Osmium\Db\fetch_row($cq)) {
-		$charges[$row[0]][$row[1]][$row[2]] = $row[3];
-	}
+			$firstpreset = false;
+		} else {
+			$presetid = create_preset($fit, $preset['name'], $preset['description']);
+			use_preset($fit, $presetid);
+		}
 
-	$firstpreset = null;
-	foreach($charges as $presetname => $preset) {
-		if($firstpreset === null) $firstpreset = $presetname;
-		add_charges_batch($fit, $presetname, $preset);
+		$modules = array();
+		$modulesq = \Osmium\Db\query_params('SELECT slottype, typeid, state FROM osmium.fittingmodules WHERE fittinghash = $1 AND presetid = $2 ORDER BY index ASC', array($fit['metadata']['hash'], $preset['presetid']));
+		while($row = \Osmium\Db\fetch_row($modulesq)) {
+			$modules[$row[0]][] = array($row[1], (int)$row[2]);
+		}
+		add_modules_batch($fit, $modules);
+
+		$firstchargepreset = true;
+		$chargepresetsq = \Osmium\Db\query_params('SELECT chargepresetid, name, description FROM osmium.fittingchargepresets WHERE fittinghash = $1 AND presetid = $2 ORDER BY chargepresetid ASC', array($fit['metadata']['hash'], $preset['presetid']));
+		while($chargepreset = \Osmium\Db\fetch_assoc($chargepresetsq)) {
+			if($firstchargepreset === true) {
+				$fit['chargepresetname'] = $chargepreset['name'];
+				$fit['chargepresetdesc'] = $chargepreset['description'];
+
+				$firstchargepreset = false;
+			} else {
+				$chargepresetid = create_charge_preset($fit, $chargepreset['name'], $chargepreset['description']);
+				use_charge_preset($fit, $chargepresetid);
+			}
+
+			$charges = array();
+			$chargesq = \Osmium\Db\query_params('SELECT slottype, typeid FROM osmium.fittingcharges WHERE fittinghash = $1 AND presetid = $2 AND chargepresetid = $3 ORDER BY index ASC', array($fit['metadata']['hash'], $preset['presetid'], $chargepreset['chargepresetid']));
+			while($row = \Osmium\Db\fetch_row($chargesq)) {
+				$charges[$row[0]][] = $row[1];
+			}
+			add_charges_batch($fit, $charges);
+		}
 	}
-	if($firstpreset !== null) use_charge_preset($fit, $firstpreset);
 	
-	$dq = \Osmium\Db\query_params('SELECT typeid, quantityinbay, quantityinspace FROM osmium.fittingdrones WHERE fittinghash = $1', array($fit['metadata']['hash']));
-	$drones = array();
-	while($row = \Osmium\Db\fetch_row($dq)) {
-		$drones[$row[0]]['quantityinbay'] = $row[1];
-		$drones[$row[0]]['quantityinspace'] = $row[2];
+	$firstdronepreset = true;
+	$dronepresetsq = \Osmium\Db\query_params('SELECT dronepresetid, name, description FROM osmium.fittingdronepresets WHERE fittinghash = $1 ORDER BY dronepresetid ASC', array($fit['metadata']['hash']));
+	while($dronepreset = \Osmium\Db\fetch_assoc($dronepresetsq)) {
+		if($firstdronepreset === true) {
+			/* Edit the default preset instead of creating a new preset */
+			$fit['dronepresetname'] = $dronepreset['name'];
+			$fit['dronepresetdesc'] = $dronepreset['description'];
+
+			$firstdronepreset = false;
+		} else {
+			$dronepresetid = create_drone_preset($fit, $dronepreset['name'], $dronepreset['description']);
+			use_drone_preset($fit, $dronepresetid);
+		}
+
+		$drones = array();
+		$dronesq = \Osmium\Db\query_params('SELECT typeid, quantityinbay, quantityinspace FROM osmium.fittingdrones WHERE fittinghash = $1 AND dronepresetid = $2', array($fit['metadata']['hash'], $dronepreset['dronepresetid']));
+		while($row = \Osmium\Db\fetch_row($dronesq)) {
+			$drones[$row[0]] = array('quantityinbay' => $row[1], 'quantityinspace' => $row[2]);
+		}
+		add_drones_batch($fit, $drones);
 	}
-  
-	add_drones_batch($fit, $drones);
   
 	\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
 	return $fit;

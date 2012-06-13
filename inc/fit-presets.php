@@ -52,13 +52,11 @@ function use_preset(&$fit, $presetid) {
 
 	if(count($fit['chargepresets']) == 0) {
 		/* Add an empty preset */
-		$fit['chargepresets'][0] = array(
-			'name' => '',
-			'description' => '',
-			'charges' => array()
-			);
+		create_charge_preset($fit, 'Default charge preset', '');
 	}
 
+	/* The backslash here is important, because \Osmium\Fit\reset() is
+	 * a totally different function! */
 	\reset($fit['chargepresets']);
 	use_charge_preset($fit, key($fit['chargepresets']));
 }
@@ -98,6 +96,9 @@ function use_charge_preset(&$fit, $cpid) {
 	}
 }
 
+/**
+ * Switch to a specific drone preset.
+ */
 function use_drone_preset(&$fit, $dpid) {
 	if(!isset($fit['dronepresets'][$dpid])) {
 		// @codeCoverageIgnoreStart
@@ -110,6 +111,82 @@ function use_drone_preset(&$fit, $dpid) {
 	$fit['dronepresetname'] =& $fit['dronepresets'][$dpid]['name'];
 	$fit['dronepresetdesc'] =& $fit['dronepresets'][$dpid]['description'];
 	$fit['drones'] =& $fit['dronepresets'][$dpid]['drones'];
+}
+
+/**
+ * Create a new preset. The name must not coincide with another
+ * preset.
+ *
+ * @returns the preset id of the new preset.
+ */
+function create_preset(&$fit, $name, $description) {
+	foreach($fit['presets'] as $presetid => $preset) {
+		if($preset['name'] === $name) {
+			// @codeCoverageIgnoreStart
+			trigger_error('create_preset(): another preset with the same name already exists', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	$preset = array(
+		'name' => $name,
+		'description' => $description,
+		'modules' => array(),
+		'chargepresets' => array()
+		);
+
+	$fit['presets'][] = $preset;
+	end($fit['presets']);
+	return key($fit['presets']);
+}
+
+/**
+ * Create a new charge preset in the current preset. The name must not
+ * coincide with another charge preset in the same preset.
+ *
+ * @returns the charge preset id (cpid) of the new charge preset.
+ */
+function create_charge_preset(&$fit, $name, $description) {
+	foreach($fit['chargepresets'] as $cpid => $chargepreset) {
+		if($chargepreset['name'] === $name) {
+			// @codeCoverageIgnoreStart
+			trigger_error('create_charge_preset(): another charge preset with the same name already exists in the current preset', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	$chargepreset = array(
+		'name' => $name,
+		'description' => $description,
+		'charges' => array()
+		);
+
+	$fit['chargepresets'][] = $chargepreset;
+	end($fit['chargepresets']);
+	return key($fit['chargepresets']);
+}
+
+function create_drone_preset(&$fit, $name, $description) {
+	foreach($fit['dronepresets'] as $dpid => $dronepreset) {
+		if($dronepreset['name'] === $name) {
+			// @codeCoverageIgnoreStart
+			trigger_error('create_drone_preset(): another drone preset with the same name already exists', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	$dronepreset = array(
+		'name' => $name,
+		'description' => $description,
+		'drones' => array()
+		);
+
+	$fit['dronepresets'][] = $dronepreset;
+	end($fit['dronepresets']);
+	return key($fit['dronepresets']);
 }
 
 /**
@@ -197,5 +274,41 @@ function remove_charge_preset(&$fit, $cpid) {
 
 	foreach($typeids as $tid => $true) {
 		maybe_remove_cache($fit, $tid);
+	}
+}
+
+/**
+ * Removes a drone preset. If it is being used, this function will try
+ * to switch to another preset if possible, or throw an error.
+ */
+function remove_drone_preset(&$fit, $dpid) {
+	if(!isset($fit['dronepresets'][$dpid])) return;
+
+	if(count($fit['dronepresets']) == 1) {
+		// @codeCoverageIgnoreStart
+		trigger_error('remove_drone_preset(): cannot remove the last drone preset', E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
+	if(isset($fit['dronepresetid']) && $fit['dronepresetid'] === $dpid) {
+		/* Switch to another drone preset */
+		foreach($fit['dronepresets'] as $id => $dronepreset) {
+			if($id === $dpid) continue;
+
+			use_drone_preset($fit, $id);
+			break;
+		}
+	}
+
+	$typeids = array();
+	foreach($fit['dronepresets'][$dpid]['drones'] as $drone) {
+		$typeids[$drone['typeid']] = true;
+	}
+
+	unset($fit['dronepresets'][$dpid]);
+
+	foreach($typeids as $tid => $true) {
+		maybe_remove_charge($fit, $tid);
 	}
 }
