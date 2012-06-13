@@ -203,7 +203,8 @@ function get_state_categories() {
  *                                      array(<effectname> =>
  *                                          array(effectid, effectname, preexp, postexp)))
  *
- * metadata => array(...)                                          
+ * metadata => array(name, description, tags, view_permission, edit_permission, visibility, password,
+ *                   loadoutid, hash, revision)
  */
 function create(&$fit) {
 	$fit = array(
@@ -211,7 +212,15 @@ function create(&$fit) {
 		'dogma' => array(),
 		'cache' => array(),
 		'presets' => array(),
-		'dronepresets' => array()
+		'dronepresets' => array(),
+		'metadata' => array(
+			'name' => 'Unnamed loadout',
+			'description' => '',
+			'tags' => array(),
+			'view_permission' => VIEW_EVERYONE,
+			'edit_permission' => EDIT_OWNER_ONLY,
+			'visibility' => VISIBILITY_PUBLIC
+			)
 		);
 
 	$presetid = create_preset($fit, 'Default preset', '');
@@ -372,8 +381,17 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 
 /** @internal */
 function online_module(&$fit, $slottype, $index) {
-	$state = get_module_state_by_location($fit, $slottype, $index);
+	if(!isset($fit['modules'][$slottype][$index]['old_state'])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('online_charge(): no previous state found, assuming old_state is null', E_USER_NOTICE);
+		$state = null;
+		// @codeCoverageIgnoreEnd
+	} else {
+		$state = $fit['modules'][$slottype][$index]['old_state'];
+	}
+
 	change_module_state_by_location($fit, $slottype, $index, $state);
+	unset($fit['modules'][$slottype][$index]['old_state']);
 
 	if(isset($fit['charges'][$slottype][$index])) {
 		online_charge($fit, $slottype, $index);
@@ -423,7 +441,7 @@ function offline_module(&$fit, $slottype, $index) {
 
 	$state = get_module_state_by_location($fit, $slottype, $index);
 	change_module_state_by_location($fit, $slottype, $index, null);
-	$fit['modules'][$slottype][$index]['state'] = $state;
+	$fit['modules'][$slottype][$index]['old_state'] = $state;
 }
 
 /**

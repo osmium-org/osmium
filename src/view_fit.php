@@ -118,15 +118,15 @@ echo "</ul>\n";
 if(count($fit['charges']) > 1) {
 	echo "<ul>\n<li>Charge presets:\n<ul id='vpresets'>\n";
 
-	foreach($fit['charges'] as $name => $_) {
-		if($name === $preset) {
+	foreach($fit['chargepresets'] as $cpid => $chargepreset) {
+		if($cpid === $preset) {
 			$class = " class='active'";
 		} else {
 			$class = '';
 		}
-		$f_name = htmlspecialchars($name, ENT_QUOTES);
+		$f_name = htmlspecialchars($chargepreset['name'], ENT_QUOTES);
 
-		echo "<li data-index='$name'><a href='?".http_build_query(array('preset' => $name))."'$class>".$f_name."</a></li>\n";
+		echo "<li data-index='$name'><a href='?".http_build_query(array_merge($_GET), array('preset' => $cpid))."'$class>".$f_name."</a></li>\n";
 	}
 
 	echo "</ul>\n</li>\n</ul>\n";

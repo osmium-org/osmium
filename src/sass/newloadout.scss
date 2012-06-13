@@ -93,8 +93,28 @@ div#shortlistbox > ul#modules_shortlist > li.module {
 	}
 }
 
-div#metadatabox > div.compact#computed_attributes {
-	margin: 0;
+div#metadatabox {
+	&> div.compact#computed_attributes {
+		margin: 0;
+	}
+
+	&> form.presets {
+		text-align: center;
+
+		&> select, &> textarea {
+			font-size: 1em;
+			min-width: 25em;
+			margin: 0.25em 0;
+		}
+
+		&> textarea {
+			min-height: 3em;
+		}
+
+		&> button[disabled] {
+			opacity: 0.2;
+		}
+	}
 }
 
 input[type='submit'] {

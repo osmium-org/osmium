@@ -21,10 +21,7 @@ namespace Osmium\Json\ShortlistModules;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\Chrome\return_json(array());
-}
-
+$anonymous = !\Osmium\State\is_logged_in();
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$shortlist = array();
@@ -40,7 +37,13 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 		++$i;
 	}
 
-	\Osmium\State\put_setting('shortlist_modules', serialize($shortlist));
+	if($anonymous) {
+		/* Use a temporary, session-based shortlist for anonymous users */
+		\Osmium\State\put_state('shortlist_modules', $shortlist);
+	} else {
+		/* Use a persistent shortlist */
+		\Osmium\State\put_setting('shortlist_modules', serialize($shortlist));
+	}
 } else {
 	$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
 }

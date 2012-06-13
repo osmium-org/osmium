@@ -4,7 +4,7 @@ textarea, input, select, optgroup, option {
 	font-family: $mono-font;
 }
 
-input, select, textarea {
+input, select, textarea, button {
 	border: 1px solid #777;
 	background-color: white;
 
@@ -23,7 +23,7 @@ input, select, textarea {
 	}
 }
 
-input[type='submit'], button {
+input[type='submit'], input[type='button'], button {
 	font-family: $main-font;
 	background-color: #F0F0F0;
 

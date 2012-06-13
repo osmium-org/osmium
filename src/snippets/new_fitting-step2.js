@@ -101,6 +101,26 @@ osmium_populate_slots = function(json, slot_type) {
     }
 };
 
+osmium_presets_load = function(json) {
+	var select = $("select#preset");
+	select.empty();
+
+	for(var i = 0; i < json['presets'].length; ++i) {
+		select.append("<option></option>");
+		select.find('option').last().prop('value', json['presets'][i][0]).text(json['presets'][i][1]);
+	}
+
+	select.val(json['presetid']);
+
+	if(json['presets'].length === 1) {
+		$("button#delete_preset").prop('disabled', 'disabled');
+	} else {
+		$("button#delete_preset").removeProp('disabled');
+	}
+
+	$("textarea#preset_desc").val(json['presetdesc']);
+};
+
 osmium_loadout_load = function(json) {
     for(var i = 0; i < osmium_slottypes.length; ++i) {
 		$("div#" + osmium_slottypes[i] + "_slots > ul").empty();
@@ -108,6 +128,7 @@ osmium_loadout_load = function(json) {
     }
 	$('div#computed_attributes').html(json['attributes']);
 	osmium_fattribs_load();
+	osmium_presets_load(json);
 };
 
 osmium_loadout_commit = function() {
@@ -151,6 +172,31 @@ osmium_loadout_commit_toggle = function(index, typeid, direction) {
 		osmium_loadout_load(json);
 		$("img#loadoutbox_spinner").css('visibility', 'hidden');
     });
+};
+
+osmium_presets_commit = function(opts) {
+	opts['token'] = osmium_tok;
+	opts['type'] = 'module';
+
+	$("img#presets_spinner").css("visibility", "visible");
+    $.getJSON('./src/json/update_presets.php', opts, function(json) {
+		osmium_loadout_load(json);
+		$("img#presets_spinner").css('visibility', 'hidden');
+    });
+};
+
+osmium_presetdesc_commit = function() {
+	opts = {};
+	opts['token'] = osmium_tok;
+	opts['type'] = 'module';
+	opts['action'] = 'updatedesc';
+	opts['desc'] = $("textarea#preset_desc").val();
+
+	$("img#presets_spinner").css("visibility", "visible");
+    $.post('./src/json/update_presets.php', opts, function(json) {
+		osmium_loadout_load(json);
+		$("img#presets_spinner").css('visibility', 'hidden');
+    }, "json");
 };
 
 osmium_get_next_index = function(type) {
@@ -261,4 +307,43 @@ $(function() {
 		$(this).parent().remove();
 		osmium_shortlist_commit();
     });
+
+	$("button#create_preset").click(function() {
+		var new_name = prompt('Enter the name of the new preset (must not conflict with another preset name):', 'Preset #' + ($("select#preset > option").length + 1));
+		if(new_name) {
+			osmium_presets_commit({
+				action: 'create',
+				name: new_name
+			});
+		}
+	});
+
+	$("button#delete_preset").click(function() {
+		if($("select#preset > option").length > 1) {
+			osmium_presets_commit({
+				action: 'delete'
+			});
+		}
+	});
+
+	$("button#rename_preset").click(function() {
+		var new_name = prompt('Enter the new name for the current preset (must not conflict with another preset name):', $("select#preset > option[value='" + $("select#preset").val() + "']").text());
+		if(new_name) {
+			osmium_presets_commit({
+				action: 'rename',
+				name: new_name
+			});
+		}
+	});
+
+	$("button#update_desc").click(function() {
+		osmium_presetdesc_commit();
+	});
+
+	$("select#preset").change(function() {
+		osmium_presets_commit({
+			action: 'switch',
+			presetid: $(this).val()
+		});
+	});
 });

@@ -55,6 +55,12 @@ function use_preset(&$fit, $presetid) {
 		create_charge_preset($fit, 'Default charge preset', '');
 	}
 
+	foreach($fit['modules'] as $type => $a) {
+		foreach($a as $index => $module) {
+			online_module($fit, $type, $index);
+		}
+	}
+
 	/* The backslash here is important, because \Osmium\Fit\reset() is
 	 * a totally different function! */
 	\reset($fit['chargepresets']);
@@ -311,4 +317,39 @@ function remove_drone_preset(&$fit, $dpid) {
 	foreach($typeids as $tid => $true) {
 		maybe_remove_charge($fit, $tid);
 	}
+}
+
+/** @internal */
+function rename_preset_generic(&$presets_array, $id, $newname) {
+	foreach($presets_array as $presetid => &$preset) {
+		if($presetid === $id) continue;
+
+		if($preset['name'] === $newname) {
+			// @codeCoverageIgnoreStart
+			trigger_error('rename_preset_generic(): new preset name conflicts with another preset', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	$presets_array[$id]['name'] = $newname;
+	return true;
+}
+
+/**
+ * Rename the current preset. Will throw an error if the new names
+ * conflicts with another preset name.
+ */
+function rename_preset(&$fit, $newname) {
+	return rename_preset_generic($fit['presets'], $fit['modulepresetid'], $newname);
+}
+
+/** @see rename_preset() */
+function rename_charge_preset(&$fit, $newname) {
+	return rename_preset_generic($fit['chargepresets'], $fit['chargepresetid'], $newname);
+}
+
+/** @see rename_preset() */
+function rename_drone_preset(&$fit, $newname) {
+	return rename_preset_generic($fit['dronepresets'], $fit['dronepresetid'], $newname);
 }

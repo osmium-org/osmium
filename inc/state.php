@@ -80,8 +80,6 @@ function do_post_login($account_name, $use_cookie = false) {
 		setcookie('Osmium', $token, $expiration_date, '/');
 	}
 
-	$__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
-
 	\Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
 }
 
@@ -100,7 +98,7 @@ function logoff($global = false) {
 		\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE accountid = $1', array($account_id));
 	}
 
-	setcookie('Osmium', false, 42, '/', $_SERVER['HTTP_HOST'], false, true);
+	setcookie('Osmium', false, 0, '/');
 	$_SESSION = array();
 }
 
@@ -416,6 +414,11 @@ function put_setting($key, $value) {
  */
 function get_token() {
 	global $__osmium_state;
+
+	if(!isset($__osmium_state['logouttoken'])) {
+		$__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
+	}
+
 	return $__osmium_state['logouttoken'];
 }
 

@@ -20,10 +20,14 @@ namespace Osmium\AjaxCommon;
 
 
 function get_module_shortlist($shortlist = null) {
-	if(!\Osmium\State\is_logged_in()) return array();
+	$anonymous = !\Osmium\State\is_logged_in();
 
 	if($shortlist === null) {
-		$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
+		if($anonymous) {
+			$shortlist = \Osmium\State\get_state('shortlist_modules', array());
+		} else {
+			$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
+		}
 	}
  
 	$out = array();
@@ -71,6 +75,16 @@ function get_slot_usage(&$fit) {
 	return $usage;
 }
 
+function get_presets($fit) {
+	$presets = array();
+
+	foreach($fit['presets'] as $presetid => $preset) {
+		$presets[] = array($presetid, $preset['name']);
+	}
+
+	return $presets;
+}
+
 function get_loadable_fit(&$fit) {
 	return array(
 		'ship' => $fit['ship'],
@@ -78,6 +92,9 @@ function get_loadable_fit(&$fit) {
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
 		'slots' => get_slot_usage($fit),
 		'states' => get_module_states($fit),
+		'presetid' => $fit['modulepresetid'],
+		'presets' => get_presets($fit),
+		'presetdesc' => $fit['modulepresetdesc']
 		);
 }
 

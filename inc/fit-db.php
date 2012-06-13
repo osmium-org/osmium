@@ -27,13 +27,11 @@ function get_unique($fit) {
 
 	$unique['ship'] = (int)$fit['ship']['typeid'];
 
-	if(isset($fit['metadata'])) {
-		$unique['metadata'] = array(
-			'name' => $fit['metadata']['name'],
-			'description' => $fit['metadata']['description'],
-			'tags' => $fit['metadata']['tags'],
-			);
-	}
+	$unique['metadata'] = array(
+		'name' => $fit['metadata']['name'],
+		'description' => $fit['metadata']['description'],
+		'tags' => $fit['metadata']['tags'],
+		);
 
 	foreach($fit['presets'] as $presetid => $preset) {
 		$uniquep = array(
