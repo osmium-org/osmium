@@ -401,7 +401,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
 	$s = print_tank_layer($fit, 'shieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
 	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second');
 
-	$total = format_number($passiverechargerate + $h[0] + $a[0] + $s[0], -1);
+	$total = format_number($passiverechargerate + 1000 * ($h[0] + $a[0] + $s[0]), -1);
 	$tehp = format_number($ehp['ehp']['avg'], -2);
 	
 	print_formatted_attribute_category('defense', 'Defense', '<span title="Average EHP">'.$tehp.' ehp</span> | <span title="Combined reinforced tank">'.$total.' dps</span>', '', ob_get_clean());
