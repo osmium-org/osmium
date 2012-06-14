@@ -353,3 +353,53 @@ function rename_charge_preset(&$fit, $newname) {
 function rename_drone_preset(&$fit, $newname) {
 	return rename_preset_generic($fit['dronepresets'], $fit['dronepresetid'], $newname);
 }
+
+/** @internal */
+function clone_preset_generic(&$presets_array, $id, $newname) {
+	foreach($presets_array as $presetid => &$preset) {
+		if($preset['name'] === $newname) {
+			// @codeCoverageIgnoreStart
+			trigger_error('clone_preset_generic(): preset name of clone conflicts with another preset', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	/* A deep copy need to be made, because a simple copy will just reuse the same references. */
+	/* Yes, this is a hack, and it's (very slightly) faster than unserialize(serialize(...)). */
+	$clone = json_decode(json_encode($presets_array[$id]), true);
+	$clone['name'] = $newname;
+
+	/* Modules of the cloned presets should be offline */
+	foreach($clone['modules'] as &$a) {
+		foreach($a as &$module) {
+			$module['old_state'] = $module['state'];
+			$module['state'] = null;
+		}
+	}
+
+	$presets_array[] = $clone;
+
+	end($presets_array);
+	return key($presets_array);
+}
+
+/**
+ * Clone the current preset. Will throw an error if the clone name
+ * conflicts with another preset name.
+ *
+ * @returns false on error, or the presetid of the clone.
+ */
+function clone_preset(&$fit, $newname) {
+	return clone_preset_generic($fit['presets'], $fit['modulepresetid'], $newname);
+}
+
+/** @see clone_preset() */
+function clone_charge_preset(&$fit, $newname) {
+	return clone_preset_generic($fit['chargepresets'], $fit['chargepresetid'], $newname);
+}
+
+/** @see clone_preset() */
+function clone_drone_preset(&$fit, $newname) {
+	return clone_preset_generic($fit['dronepresets'], $fit['dronepresetid'], $newname);
+}

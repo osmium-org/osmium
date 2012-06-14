@@ -83,7 +83,7 @@ function modules_select() {
 	print_modules_searchbox();
 	$search = ob_get_clean();
 
-	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create preset</button> <button type='button' id='rename_preset'>Rename preset</button> <button type='button' id='delete_preset'>Delete preset</button><br /><textarea id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
+	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create new</button> <button type='button' id='clone_preset'>Clone current</button> <button type='button' id='rename_preset'>Rename current</button> <button type='button' id='delete_preset'>Delete current</button><br /><textarea placeholder='Description of this preset…' id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 
 	print_attributes($presetform, $search);
 	print_modules_shortlist();

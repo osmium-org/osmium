@@ -336,6 +336,16 @@ $(function() {
 		}
 	});
 
+	$("button#clone_preset").click(function() {
+		var new_name = prompt('Enter the name of the clone (must not conflict with another preset name):', 'Preset #' + ($("select#preset > option").length + 1) + ' (clone of ' + $("select#preset > option[value='" + $("select#preset").val() + "']").text() + ')');
+		if(new_name) {
+			osmium_presets_commit({
+				action: 'clone',
+				name: new_name
+			});
+		}
+	});
+
 	$("button#update_desc").click(function() {
 		osmium_presetdesc_commit();
 	});

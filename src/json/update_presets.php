@@ -34,6 +34,7 @@ if(isset($_GET['type']) && $_GET['type'] == 'module') {
 	$use = 'Osmium\Fit\use_preset';
 	$remove = 'Osmium\Fit\remove_preset';
 	$rename = 'Osmium\Fit\rename_preset';
+	$clone = 'Osmium\Fit\clone_preset';
 } else {
 	\Osmium\Chrome\return_json(array());
 }
@@ -53,6 +54,11 @@ if($_GET['action'] == 'create') {
 	$fit[$_GET['type'].'presetdesc'] = $_GET['desc'];
 } else if($_GET['action'] == 'switch') {
 	$use($fit, $_GET['presetid']);
+} else if($_GET['action'] == 'clone') {
+	$presetid = $clone($fit, $_GET['name']);
+	if($presetid !== false) {
+		$use($fit, $presetid);
+	}
 }
 
 \Osmium\State\put_state('new_fit', $fit);
