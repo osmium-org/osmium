@@ -42,7 +42,13 @@ function get_unique($fit) {
 		foreach($preset['modules'] as $type => $d) {
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$module['state']);
+				if($presetid === $fit['modulepresetid']) {
+					$state = $module['state'];
+				} else {
+					$state = $module['old_state'];
+				}
+
+				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$state);
 			}
 		}
 
@@ -131,7 +137,7 @@ function commit_fitting(&$fit) {
 	}
   
 	$presetid = 0;
-	foreach($fit['presets'] as $preset) {
+	foreach($fit['presets'] as $presetid => $preset) {
 		\Osmium\Db\query_params('INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)', array($fittinghash, $presetid, $preset['name'], $preset['description']));
 
 		$module_order = array();
@@ -139,7 +145,13 @@ function commit_fitting(&$fit) {
 			$z = 0;
 			foreach($data as $index => $module) {
 				$module_order[$type][$index] = $z;
-				\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $type, $z, $module['typeid'], $module['state']));
+				if($presetid === $fit['modulepresetid']) {
+					$state = $module['state'];
+				} else {
+					$state = $module['old_state'];
+				}
+
+				\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $type, $z, $module['typeid'], $state));
 				++$z;
 			}
 		}
