@@ -5,6 +5,7 @@
 	  <file>tests/fit_module_states.php</file>
 	  <file>tests/fit_attributes.php</file>
 	  <file>tests/fit_db_commit.php</file>
+	  <file>tests/fit_presets.php</file>
 	</testsuite>
   </testsuites>
 </phpunit>

@@ -363,33 +363,25 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 		'state' => null
 		);
 
-	$fit['dogma']['modules'][$type][$index] = array();
-	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
-		$fit['dogma']['modules'][$type][$index][$attr['attributename']]
-			= $attr['value'];
-	}
-	$fit['dogma']['modules'][$type][$index]['typeid']
-		=& $fit['modules'][$type][$index]['typeid'];
-
 	list($isactivable, ) = get_module_states($fit, $typeid);
 	if($state === null) {
 		$state = ($isactivable && in_array($type, get_stateful_slottypes())) ? STATE_ACTIVE : STATE_ONLINE;
 	}
+	$fit['modules'][$type][$index]['old_state'] = $state;
 
-	change_module_state_by_location($fit, $type, $index, $state);
+	online_module($fit, $type, $index);
 }
 
 /** @internal */
 function online_module(&$fit, $slottype, $index) {
-	if(!isset($fit['modules'][$slottype][$index]['old_state'])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('online_charge(): no previous state found, assuming old_state is null', E_USER_NOTICE);
-		$state = null;
-		// @codeCoverageIgnoreEnd
-	} else {
-		$state = $fit['modules'][$slottype][$index]['old_state'];
+	$typeid = $fit['modules'][$slottype][$index]['typeid'];
+	$fit['dogma']['modules'][$slottype][$index] = array();
+	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
+		$fit['dogma']['modules'][$slottype][$index][$attr['attributename']] = $attr['value'];
 	}
+	$fit['dogma']['modules'][$slottype][$index]['typeid'] =& $fit['modules'][$slottype][$index]['typeid'];
 
+	$state = $fit['modules'][$slottype][$index]['old_state'];
 	change_module_state_by_location($fit, $slottype, $index, $state);
 	unset($fit['modules'][$slottype][$index]['old_state']);
 
@@ -426,8 +418,7 @@ function remove_module(&$fit, $index, $typeid) {
 		}
 	}
 
-	change_module_state_by_location($fit, $type, $index, null);
-	unset($fit['dogma']['modules'][$type][$index]);
+	offline_module($fit, $type, $index);
 	unset($fit['modules'][$type][$index]);
 
 	maybe_remove_cache($fit, $typeid);
@@ -442,6 +433,8 @@ function offline_module(&$fit, $slottype, $index) {
 	$state = get_module_state_by_location($fit, $slottype, $index);
 	change_module_state_by_location($fit, $slottype, $index, null);
 	$fit['modules'][$slottype][$index]['old_state'] = $state;
+
+	unset($fit['dogma']['modules'][$slottype][$index]);
 }
 
 /**
