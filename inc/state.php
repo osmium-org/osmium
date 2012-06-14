@@ -62,7 +62,6 @@ function is_logged_in() {
  */
 function do_post_login($account_name, $use_cookie = false) {
 	global $__osmium_state;
-	$__osmium_state = array();
 
 	$q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
 	$__osmium_state['a'] = \Osmium\Db\fetch_assoc($q);
