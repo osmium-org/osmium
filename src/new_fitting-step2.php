@@ -25,7 +25,7 @@ function print_modules_searchbox() {
 	echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
 	echo "<input type='search' placeholder='Search by name or category...' autofocus='autofocus' />\n";
 	echo "<input type='submit' value='Search' />\n<br />\n";
-	$filters = unserialize(\Osmium\State\get_setting('module_search_filter', serialize(array())));
+	$filters = \Osmium\State\get_state_trypersist('module_search_filter', array());
 	$filters = array_combine($v = array_values($filters), $v);
 	$req = \Osmium\Db\query_params('SELECT metagroupname, metagroupid FROM osmium.invmetagroups ORDER BY metagroupname ASC', array());
 	echo "<p id='search_filters'>\nFilter modules: ";

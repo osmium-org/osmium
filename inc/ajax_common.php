@@ -20,15 +20,7 @@ namespace Osmium\AjaxCommon;
 
 
 function get_module_shortlist($shortlist = null) {
-	$anonymous = !\Osmium\State\is_logged_in();
-
-	if($shortlist === null) {
-		if($anonymous) {
-			$shortlist = \Osmium\State\get_state('shortlist_modules', array());
-		} else {
-			$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
-		}
-	}
+	$shortlist = \Osmium\State\get_state_trypersist('shortlist_modules', array());
  
 	$out = array();
 	$rows = array();

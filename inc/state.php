@@ -389,7 +389,7 @@ function get_setting($key, $default = null) {
 		$ret = $r[0];
 	}
 
-	return $ret;
+	return unserialize($ret);
 }
 
 /**
@@ -402,7 +402,7 @@ function put_setting($key, $value) {
 	global $__osmium_state;
 	$accountid = $__osmium_state['a']['accountid'];
 	\Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
-	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, $value));
+	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, serialize($value)));
 
 	return $value;
 }
@@ -547,5 +547,36 @@ function invalidate_cache($key) {
 	} else {
 		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
 		if(file_exists($f)) unlink($f);
+	}
+}
+
+/**
+ * Get a state variable previously stored by put_state_trypersist().
+ *
+ * This is just a wrapper that uses settings for logged-in users, and
+ * state vars for anonymous users.
+ */
+function get_state_trypersist($key, $default = null) {
+	if(is_logged_in()) {
+		return get_setting($key, $default);
+	} else {
+		return get_state('__setting_'.$key, $default);
+	}
+}
+
+/**
+ * Store a state variable, and try to persist changes as much as
+ * possible.
+ *
+ * This is just a wrapper that uses settings for logged-in users, and
+ * state vars for anonymous users.
+ */
+function put_state_trypersist($key, $value) {
+	if(is_logged_in()) {
+		/* For regular users, use database-stored persistent storage */
+		return put_setting($key, $value);
+	} else {
+		/* For anonymous users, use session-based storage (not really persistent, but better than nothing) */
+		return put_state('__setting_'.$key, $value);
 	}
 }

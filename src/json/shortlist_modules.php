@@ -37,15 +37,9 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 		++$i;
 	}
 
-	if($anonymous) {
-		/* Use a temporary, session-based shortlist for anonymous users */
-		\Osmium\State\put_state('shortlist_modules', $shortlist);
-	} else {
-		/* Use a persistent shortlist */
-		\Osmium\State\put_setting('shortlist_modules', serialize($shortlist));
-	}
+	\Osmium\State\put_state_trypersist('shortlist_modules', $shortlist);
 } else {
-	$shortlist = unserialize(\Osmium\State\get_setting('shortlist_modules', serialize(array())));
+	$shortlist = \Osmium\State\get_state_trypersist('shortlist_modules', array());
 }
 
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_module_shortlist($shortlist));
