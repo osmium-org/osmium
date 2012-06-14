@@ -215,7 +215,7 @@ $(function() {
 		placeholder: "mod_placeholder",
 		connectWith: "div.loadout_slot_cat > ul",
 		start: function(event, ui) {
-			$("ul#modules_shortlist li.module").eq($(ui.item).index()).after(
+			$(ui.item).after(
 				$(ui.item).clone().addClass('clone').show()
 			);
 			$("ul#search_results, div.loadout_slot_cat").css('opacity', '0.2');
@@ -236,7 +236,7 @@ $(function() {
 		helper: "clone",
 		connectWith: "div.loadout_slot_cat > ul, ul#modules_shortlist",
 		start: function(event, ui) {
-			$("ul#search_results li.module").eq($(ui.item).index()).after(
+			$(ui.item).after(
 				$(ui.item).clone().addClass('clone').show()
 			);
 			$("ul#search_results, div.loadout_slot_cat").css('opacity', '0.2');
@@ -261,11 +261,20 @@ $(function() {
 		update: osmium_loadout_commit,
 		items: ".module",
 		placeholder: "mod_placeholder",
+		connectWith: "ul#modules_shortlist",
 		start: function(event, ui) {
+			$(ui.item).after(
+				$(ui.item).clone().addClass('clone').show()
+			);
+
 			$("ul#search_results, div.loadout_slot_cat").css('opacity', '0.2');
 			$("div#" + $(ui.item).data("slottype") + "_slots").css('opacity', '1.0');
 		},
+		remove: function(event, ui) {
+			$("div.loadout_slot_cat > ul > li.clone").removeClass('clone');
+		},
 		stop: function(event, ui) {
+			$("div.loadout_slot_cat > ul > li.clone").remove();
 			$("ul#search_results, div.loadout_slot_cat").css('opacity', '1.0');
 		}
     });

@@ -21,15 +21,7 @@ div#loadoutbox {
 	}
 }
 
-div#shortlistbox {
-	@include column;
-
-	float: right;
-	width: 20em;
-	padding-right: 0.5em;
-}
-
-div#searchbox, div#dronelistbox {
+div#dronelistbox {
 	@include column;
 
 	text-align: center;
@@ -39,14 +31,36 @@ div#searchbox, div#dronelistbox {
 		width: 22em;
 	}
 
-	&> form > p#search_filters {
-		margin: 0.125em 0;
 
-		&> img.meta_filter {
-			cursor: pointer;
+}
 
-			&.ds {
-				opacity: 0.2;
+div#shortlistbox {
+	@include column;
+
+	float: right;
+	width: 20em;
+	padding-right: 0.5em;
+
+	&> div#searchbox {
+		@include column;
+
+		&> ul {
+			padding: 0;
+		}
+		
+		&> form > input[type='search'] {
+			width: 18em;
+		}
+
+		&> form > p#search_filters {
+			margin: 0.125em 0;
+
+			&> img.meta_filter {
+				cursor: pointer;
+				
+				&.ds {
+					opacity: 0.2;
+				}
 			}
 		}
 	}

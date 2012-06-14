@@ -68,12 +68,12 @@ function print_modulelist() {
 	echo "</div>\n";
 }
 
-function print_modules_shortlist() {
-	echo "<div id='shortlistbox'>\n<h2 class='has_spinner'>Shortlist";
+function print_modules_shortlist($before = '', $after = '') {
+	echo "<div id='shortlistbox'>$before\n<h2 class='has_spinner'>Shortlist";
 	echo "<img src='./static/icons/spinner.gif' id='shortlistbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
 	echo "<ul id='modules_shortlist'>\n";
-	echo "</ul>\n</div>\n";
+	echo "</ul>\n$after</div>\n";
 }
 
 function modules_select() {
@@ -85,8 +85,8 @@ function modules_select() {
 
 	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create new</button> <button type='button' id='clone_preset'>Clone current</button> <button type='button' id='rename_preset'>Rename current</button> <button type='button' id='delete_preset'>Delete current</button><br /><textarea placeholder='Description of this preset…' id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 
-	print_attributes($presetform, $search);
-	print_modules_shortlist();
+	print_attributes($presetform, '');
+	print_modules_shortlist($search, '');
 	print_modulelist();
 	\Osmium\Chrome\print_js_snippet('new_fitting-step2');
 
