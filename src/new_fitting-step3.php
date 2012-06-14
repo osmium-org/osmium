@@ -19,13 +19,7 @@
 namespace Osmium\Page\NewFitting;
 
 function print_charge_presetsbox() {
-	echo "<div id='presetsbox'>\n<h2 class='has_spinner'>Presets ";
-	echo "<a href='javascript:void(0);' id='new_preset'><img src='./static/icons/add.png' alt='Create a new preset' title='New preset' /></a>";
-	echo "<img src='./static/icons/spinner.gif' id='presetsbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Click to change active preset)</em></h2>\n";
-	echo "<ul id='presets'>\n";
-	echo "</ul>\n";
-	echo "</div>\n";
+	echo "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<select name='chargepreset' id='chargepreset'></select><br />\n<button type='button' id='create_charge_preset'>Create new</button> <button type='button' id='clone_charge_preset'>Clone current</button> <button type='button' id='rename_charge_preset'>Rename current</button> <button type='button' id='delete_charge_preset'>Delete current</button><br /><textarea placeholder='Description of this charge preset…' id='charge_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 }
 
 function print_charge_groups() {
@@ -35,85 +29,10 @@ function print_charge_groups() {
   
 	\Osmium\Forms\print_form_begin();
 	echo "<tr><td colspan='2'>\n<ul id='chargegroups'>\n";
-
-	foreach(get_charges() as $i => $charges) {
-		echo "<li id='group_$i'>\n";
-		print_chargegroup($i, $charges['typeids'], $charges['charges']);
-		echo "</li>\n";
-	}
-
 	echo "</ul>\n</td></tr>\n";
 	print_form_prevnext();
 	\Osmium\Forms\print_form_end();
 	echo "</div>\n";
-}
-
-function get_charges() {
-	$fit = \Osmium\State\get_state('new_fit', array());
-	$typeids = array();
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $k) {
-			$typeids[$k['typeid']] = true;
-		}
-	}
-
-	$groups = array();
-	$typetogroups = array();
-	$keystonumbers = array();
-	$z = 0;
-
-	foreach($typeids as $typeid => $val) {
-		$chargeids = array();
-		$req = \Osmium\Db\query_params('SELECT chargeid, chargename FROM osmium.invcharges WHERE moduleid = $1 ORDER BY chargename ASC', array($typeid));
-		while($row = \Osmium\Db\fetch_row($req)) {
-			$chargeids[$row[0]] = array('typeid' => $row[0], 'typename' => $row[1]);
-		}
-
-		if(count($chargeids) == 0) continue;
-
-		$keys = array_keys($chargeids);
-		sort($keys);
-		$key = implode(' ', $keys);
-		if(!isset($keystonumbers[$key])) {
-			$keystonumbers[$key] = $z;
-			$groups[$z] = array_values($chargeids);
-			++$z;
-		}
-		$typetogroups[$typeid] = $keystonumbers[$key];
-	}
-
-	$result = array();
-	foreach($typetogroups as $typeid => $i) {
-		$result[$i]['typeids'][] = $typeid;
-	}
-	foreach($groups as $i => $group) {
-		$result[$i]['charges'] = $group;
-	}
-
-	return $result;
-}
-
-function print_chargegroup($groupid, $typeids, $charges) {
-	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<ul class='chargegroup'>\n";
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $i => $module) {
-			$id = $module['typeid'];
-			if(!in_array($id, $typeids)) continue;
-
-			$name = $module['typename'];
-			echo "<li id='{$type}_$i'><img src='http://image.eveonline.com/Type/{$id}_32.png' alt='$name' title='$name' class='module_icon' />";
-			echo "<img src='./static/icons/no_charge.png' alt='(No charge)' title='(No charge)' class='charge_icon' />\n";
-			echo "<select name='charge_{$groupid}_$i' data-slottype='$type' data-index='$i'>\n";
-			echo "<option value='-1'>(No charge)</option>\n";
-			foreach($charges as $charge) {
-				echo "<option value='".$charge['typeid']."'>".$charge['typename']."</option>\n";
-			}
-			echo "</select>\n";
-			echo "</li>\n";
-		}
-	}
-	echo "</ul>\n";
 }
 
 function charges_select() {
@@ -121,16 +40,15 @@ function charges_select() {
   
 	ob_start();
 	print_charge_presetsbox();
-	print_attributes('', ob_get_clean());
+	print_attributes(ob_get_clean(), '');
 	print_charge_groups();
 
 	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<script>\n$(function() { $('div#computed_attributes').html(".json_encode(\Osmium\Chrome\get_formatted_loadout_attributes($fit))."); });\n"
-		."var charge_presets = ".json_encode($fit['charges'], JSON_FORCE_OBJECT)
-		.";\nvar selected_preset = ".json_encode($fit['selectedpreset'])
-		.";\n var osmium_preset_num = ".(count($fit['charges']) + 1).";\n</script>\n";
+	echo "<script>\n$(function() {\n";
+	echo "osmium_charges_load(".json_encode(\Osmium\AjaxCommon\get_loadable_charges($fit)).");\n";
+	echo "});\n</script>\n";
 
-	\Osmium\Chrome\print_js_snippet('new_fitting_charges');
+	\Osmium\Chrome\print_js_snippet('new_fitting-step3');
 }
 
 function charges_select_pre() { return true; }

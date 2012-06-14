@@ -35,6 +35,12 @@ if(isset($_GET['type']) && $_GET['type'] == 'module') {
 	$remove = 'Osmium\Fit\remove_preset';
 	$rename = 'Osmium\Fit\rename_preset';
 	$clone = 'Osmium\Fit\clone_preset';
+} else if(isset($_GET['type']) && $_GET['type'] == 'charge') {
+	$create = 'Osmium\Fit\create_charge_preset';
+	$use = 'Osmium\Fit\use_charge_preset';
+	$remove = 'Osmium\Fit\remove_charge_preset';
+	$rename = 'Osmium\Fit\rename_charge_preset';
+	$clone = 'Osmium\Fit\clone_charge_preset';
 } else {
 	\Osmium\Chrome\return_json(array());
 }
@@ -47,7 +53,7 @@ if($_GET['action'] == 'create') {
 	    $use($fit, $presetid);
 	}
 } else if($_GET['action'] == 'delete') {
-    $remove($fit, $fit['modulepresetid']);
+    $remove($fit, $fit[$_GET['type'].'presetid']);
 } else if($_GET['action'] == 'rename') {
 	$rename($fit, $_GET['name']);
 } else if($_GET['action'] == 'updatedesc') {
@@ -62,5 +68,9 @@ if($_GET['action'] == 'create') {
 }
 
 \Osmium\State\put_state('new_fit', $fit);
-\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
 
+if($_GET['type'] == 'module') {
+	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
+} else if($_GET['type'] == 'charge') {
+	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_charges($fit));
+}

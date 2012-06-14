@@ -365,11 +365,13 @@ function clone_preset_generic(&$presets_array, $id, $newname) {
 	$clone = json_decode(json_encode($presets_array[$id]), true);
 	$clone['name'] = $newname;
 
-	/* Modules of the cloned presets should be offline */
-	foreach($clone['modules'] as &$a) {
-		foreach($a as &$module) {
-			$module['old_state'] = $module['state'];
-			$module['state'] = null;
+	if(isset($clone['modules'])) {
+		/* Modules of the cloned presets should be offline */
+		foreach($clone['modules'] as &$a) {
+			foreach($a as &$module) {
+				$module['old_state'] = $module['state'];
+				$module['state'] = null;
+			}
 		}
 	}
 
@@ -397,4 +399,31 @@ function clone_charge_preset(&$fit, $newname) {
 /** @see clone_preset() */
 function clone_drone_preset(&$fit, $newname) {
 	return clone_preset_generic($fit['dronepresets'], $fit['dronepresetid'], $newname);
+}
+
+/** @internal */
+function get_presets_generic($presets_array) {
+	$ret = array();
+	foreach($presets_array as $id => $preset) {
+		$ret[] = array($id, $preset['name']);
+	}
+	return $ret;
+}
+
+/**
+ * Get an array of presets, each element being an array(<presetid>,
+ * <presetname>).
+ */
+function get_presets($fit) {
+	return get_presets_generic($fit['presets']);
+}
+
+/** @see get_presets() */
+function get_charge_presets($fit) {
+	return get_presets_generic($fit['chargepresets']);
+}
+
+/** @see get_presets() */
+function get_drone_presets($fit) {
+	return get_presets_generic($fit['dronepresets']);
 }

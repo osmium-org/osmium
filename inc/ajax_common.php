@@ -67,16 +67,6 @@ function get_slot_usage(&$fit) {
 	return $usage;
 }
 
-function get_presets($fit) {
-	$presets = array();
-
-	foreach($fit['presets'] as $presetid => $preset) {
-		$presets[] = array($presetid, $preset['name']);
-	}
-
-	return $presets;
-}
-
 function get_loadable_fit(&$fit) {
 	return array(
 		'ship' => $fit['ship'],
@@ -85,7 +75,7 @@ function get_loadable_fit(&$fit) {
 		'slots' => get_slot_usage($fit),
 		'states' => get_module_states($fit),
 		'presetid' => $fit['modulepresetid'],
-		'presets' => get_presets($fit),
+		'presets' => \Osmium\Fit\get_presets($fit),
 		'presetdesc' => $fit['modulepresetdesc']
 		);
 }
@@ -102,4 +92,65 @@ function get_module_states(&$fit) {
 	}
 
 	return $states;
+}
+
+function get_fittable_charges(&$fit) {
+	$out = array();
+	$allowed = array();
+	$typeids = array();
+
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
+		foreach($a as $index => $module) {
+			$chargeid = isset($fit['charges'][$type][$index]) ?
+				$fit['charges'][$type][$index]['typeid'] : 0;
+
+			$typeids[$module['typeid']][] = array('type' => $type,
+			                                      'index' => $index,
+			                                      'typename' => $module['typename'],
+			                                      'typeid' => $module['typeid'],
+			                                      'chargeid' => $chargeid);
+		}
+	}
+
+	$in = implode(',', array_keys($typeids));
+	if(empty($in)) $in = '-1';
+	$chargesq = \Osmium\Db\query('SELECT moduleid, chargeid, chargename FROM osmium.invcharges WHERE moduleid IN ('.$in.') ORDER BY moduleid ASC, chargename ASC');
+	while($row = \Osmium\Db\fetch_row($chargesq)) {
+		$allowed[$row[0]][] = array('typeid' => $row[1],
+		                            'typename' => $row[2]);
+	}
+
+	$groups = array();
+	$z = 0;
+	foreach($allowed as $moduleid => $a) {
+		$key = serialize($a);
+		if(!isset($groups[$key])) {
+			$groups[$key] = $z;
+			$index = $z;
+			++$z;
+
+			$out[$index]['charges'] = $a;
+		} else {
+			$index = $groups[$key];
+		}
+
+		foreach($typeids[$moduleid] as $moduleattrs) {
+			$out[$index]['modules'][] = $moduleattrs;
+			
+		}
+	}
+
+	return $out;
+}
+
+function get_loadable_charges(&$fit) {
+	return array(
+		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
+		'presetid' => $fit['modulepresetid'],
+		'presets' => \Osmium\Fit\get_presets($fit),
+		'cpid' => $fit['chargepresetid'],
+		'chargepresets' => \Osmium\Fit\get_charge_presets($fit),
+		'chargepresetdesc' => $fit['chargepresetdesc'],
+		'charges' => get_fittable_charges($fit)
+		);
 }

@@ -103,13 +103,14 @@ osmium_populate_slots = function(json, slot_type) {
 
 osmium_presets_load = function(json) {
 	var select = $("select#preset");
+	var option;
+
 	select.empty();
-
 	for(var i = 0; i < json['presets'].length; ++i) {
-		select.append("<option></option>");
-		select.find('option').last().prop('value', json['presets'][i][0]).text(json['presets'][i][1]);
+		option = $(document.createElement('option'));
+		option.prop('value', json['presets'][i][0]).text(json['presets'][i][1]);
+		select.append(option);
 	}
-
 	select.val(json['presetid']);
 
 	if(json['presets'].length === 1) {
