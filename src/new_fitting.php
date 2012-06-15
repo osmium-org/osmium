@@ -128,8 +128,20 @@ function print_attributes($before = '', $after = '') {
 }
 
 function finalize() {
+	global $anonymous;
 	$fit = \Osmium\State\get_state('new_fit', array());
 	\Osmium\Fit\sanitize($fit);
+
+	if($anonymous) {
+		$unique = \Osmium\Fit\get_unique($fit);
+		
+		header('Content-Type: text/plain');
+		var_export($unique);
+
+		/* FIXME print CLF export here */
+
+		die();
+	}
 
 	if(isset($fit['metadata']['accountid'])) {
 		$accountid = $fit['metadata']['accountid'];
