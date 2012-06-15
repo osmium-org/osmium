@@ -64,9 +64,14 @@ function do_post_login($account_name, $use_cookie = false) {
 	global $__osmium_state;
 
 	$q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
-	$__osmium_state['a'] = \Osmium\Db\fetch_assoc($q);
+	$a = \Osmium\Db\fetch_assoc($q);
 
-	check_api_key();
+	if(!check_api_key($a)) {
+		logoff();
+		return;
+	}
+
+	$__osmium_state['a'] = $a;
 
 	if($use_cookie) {
 		$token = uniqid('Osmium_', true);
@@ -98,7 +103,7 @@ function logoff($global = false) {
 	}
 
 	setcookie('Osmium', false, 0, '/');
-	$_SESSION = array();
+	unset($__osmium_state['a']);
 }
 
 /**
@@ -250,9 +255,7 @@ function try_recover() {
  * API key is correct, update character/corp/alliance information in
  * the database.
  */
-function check_api_key() {
-	$a = \Osmium\State\get_state('a');
-
+function check_api_key($a) {
 	$key_id = $a['keyid'];
 	$v_code = $a['verificationcode'];
 	$info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
@@ -262,7 +265,7 @@ function check_api_key() {
 
 		logoff(false);
 		$__osmium_login_state['error'] = 'Login failed because of API issues (osmium_api() returned a non-object). Sorry for the inconvenience.';
-		return;
+		return false;
 	}
 
 	if(isset($info->error) && !empty($info->error)) {
@@ -271,14 +274,13 @@ function check_api_key() {
 		if(200 <= $err_code && $err_code < 300) {
 			/* Most likely user error (deleted API key or modified vcode) */
 			\Osmium\State\put_state('must_renew_api', true);
-			return;
+			return true;
 		} else {
 			/* Most likely internal error */
 			global $__osmium_login_state;
 
-			logoff(false);
 			$__osmium_login_state['error'] = 'Login failed because of API issues (got error '.$err_code.': '.((string)$info->error).'). Sorry for the inconvenience.';
-			return;  
+			return false;
 		}
 	}
 
@@ -287,7 +289,7 @@ function check_api_key() {
 	   || (int)$info->result->key->rowset->row['characterID'] != $a['characterid']) {
 		/* Key settings got modified since last login, and they are invalid now. */
 		\Osmium\State\put_state('must_renew_api', true);
-		return;
+		return true;
 	}
 
 	list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($a['characterid']);
@@ -308,6 +310,8 @@ function check_api_key() {
 
 		\Osmium\State\put_state('a', $a);
 	}
+
+	return true;
 }
 
 function get_character_info($character_id) {
