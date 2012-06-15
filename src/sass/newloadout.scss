@@ -24,14 +24,13 @@ div#loadoutbox {
 div#dronelistbox {
 	@include column;
 
-	text-align: center;
-	padding-left: 1em;
+	float: right;
+	width: 20em;
+	padding-right: 0.5em;
 
 	&> form > input[type='search'] {
-		width: 22em;
+		width: 18em;
 	}
-
-
 }
 
 div#shortlistbox {
@@ -236,7 +235,10 @@ div#dronebay {
 
 	margin-left: 31em;
 	padding-left: 1em;
+	margin-right: 21em;
+	padding-right: 1em;
 	border-left: 1px dotted #CCC;
+	border-right: 1px dotted #CCC;
 
 	&> h2 {
 		text-align: left;

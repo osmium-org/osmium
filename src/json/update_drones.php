@@ -21,36 +21,31 @@ namespace Osmium\Json\UpdateDrones;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(!\Osmium\State\is_logged_in()) {
+if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 	\Osmium\Chrome\return_json(array());
 }
 
+$fit = \Osmium\State\get_state('new_fit', array());
+$drones = array();
 
-if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-	$fit = \Osmium\State\get_state('new_fit', array());
-	$drones = array();
-
-	foreach($_GET as $k => $v) {
-		if(!preg_match('%^in(bay|space)([0-9]+)$%', $k, $matches)) continue;
-		list(, $type, $typeid) = $matches;
-		$typeid = intval($typeid);
+foreach($_GET as $k => $v) {
+	if(!preg_match('%^in(bay|space)([0-9]+)$%', $k, $matches)) continue;
+	list(, $type, $typeid) = $matches;
+	$typeid = intval($typeid);
 		
-		if(!isset($drones[$typeid]['quantityin'.$type])) {
-			$drones[$typeid]['quantityin'.$type] = 0;
-		}
-
-		$drones[$typeid]['quantityin'.$type] += intval($v);
+	if(!isset($drones[$typeid]['quantityin'.$type])) {
+		$drones[$typeid]['quantityin'.$type] = 0;
 	}
 
-	$old_drones = $fit['drones'];
-	\Osmium\Fit\add_drones_batch($fit, $drones);
-
-	foreach($old_drones as $typeid => $drone) {
-		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $drone['quantityinbay']);
-		\Osmium\Fit\remove_drone($fit, $typeid, 'space', $drone['quantityinspace']);
-	}
-	\Osmium\State\put_state('new_fit', $fit);
-	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));
-} else {
-	\Osmium\Chrome\return_json(array());
+	$drones[$typeid]['quantityin'.$type] += intval($v);
 }
+
+$old_drones = $fit['drones'];
+\Osmium\Fit\add_drones_batch($fit, $drones);
+
+foreach($old_drones as $typeid => $drone) {
+	\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $drone['quantityinbay']);
+	\Osmium\Fit\remove_drone($fit, $typeid, 'space', $drone['quantityinspace']);
+}
+\Osmium\State\put_state('new_fit', $fit);
+\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));

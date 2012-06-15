@@ -19,7 +19,7 @@
 namespace Osmium\Page\NewFitting;
 
 function print_charge_presetsbox() {
-	echo "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<select name='chargepreset' id='chargepreset'></select><br />\n<button type='button' id='create_charge_preset'>Create new</button> <button type='button' id='clone_charge_preset'>Clone current</button> <button type='button' id='rename_charge_preset'>Rename current</button> <button type='button' id='delete_charge_preset'>Delete current</button><br /><textarea placeholder='Description of this charge preset…' id='charge_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
+	echo "<h2 class='has_spinner'>Charge presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<select name='chargepreset' id='chargepreset'></select><br />\n<button type='button' id='create_charge_preset'>Create new</button> <button type='button' id='clone_charge_preset'>Clone current</button> <button type='button' id='rename_charge_preset'>Rename current</button> <button type='button' id='delete_charge_preset'>Delete current</button><br /><textarea placeholder='Description of this charge preset…' id='charge_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 }
 
 function print_charge_groups() {

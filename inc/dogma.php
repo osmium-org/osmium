@@ -18,6 +18,8 @@
 
 namespace Osmium\Dogma;
 
+/* KEEP THIS NAMESPACE PRESET-AGNOSTIC. */
+
 const USEFUL_SKILLGROUPS = '(273, 272, 271, 255, 269, 256, 275, 257, 989)';
 
 /* ----------------------------------------------------- */

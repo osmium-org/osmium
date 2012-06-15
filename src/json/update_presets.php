@@ -41,6 +41,12 @@ if(isset($_GET['type']) && $_GET['type'] == 'module') {
 	$remove = 'Osmium\Fit\remove_charge_preset';
 	$rename = 'Osmium\Fit\rename_charge_preset';
 	$clone = 'Osmium\Fit\clone_charge_preset';
+} else if(isset($_GET['type']) && $_GET['type'] == 'drone') {
+	$create = 'Osmium\Fit\create_drone_preset';
+	$use = 'Osmium\Fit\use_drone_preset';
+	$remove = 'Osmium\Fit\remove_drone_preset';
+	$rename = 'Osmium\Fit\rename_drone_preset';
+	$clone = 'Osmium\Fit\clone_drone_preset';
 } else {
 	\Osmium\Chrome\return_json(array());
 }
@@ -73,4 +79,6 @@ if($_GET['type'] == 'module') {
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
 } else if($_GET['type'] == 'charge') {
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_charges($fit));
+} else if($_GET['type'] == 'drone') {
+	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));
 }

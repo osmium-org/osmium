@@ -21,18 +21,13 @@ namespace Osmium\Json\PopDrone;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(!\Osmium\State\is_logged_in()) {
+if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 	\Osmium\Chrome\return_json(array());
 }
 
-
-if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-	$fit = \Osmium\State\get_state('new_fit', array());
-	$typeid = intval($_GET['typeid']);
-	$from = $_GET['from'];
-	\Osmium\Fit\remove_drone($fit, $typeid, $from);
-	\Osmium\State\put_state('new_fit', $fit);
-	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));
-} else {
-	\Osmium\Chrome\return_json(array());
-}
+$fit = \Osmium\State\get_state('new_fit', array());
+$typeid = intval($_GET['typeid']);
+$from = $_GET['from'];
+\Osmium\Fit\remove_drone($fit, $typeid, $from);
+\Osmium\State\put_state('new_fit', $fit);
+\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));

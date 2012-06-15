@@ -48,12 +48,16 @@ function drones_select() {
 	print_h1('select drones');
 	$fit = \Osmium\State\get_state('new_fit', array());
 
-	ob_start();
+	$presetform = "<h2 class='has_spinner'>Drone presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='dronepreset' id='dronepreset'></select><br />\n<button type='button' id='create_drone_preset'>Create new</button> <button type='button' id='clone_drone_preset'>Clone current</button> <button type='button' id='rename_drone_preset'>Rename current</button> <button type='button' id='delete_drone_preset'>Delete current</button><br /><textarea placeholder='Description of this drone preset…' id='drone_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
+
 	print_drone_searchbox();
-	print_attributes('', ob_get_clean());
+	print_attributes($presetform, '');
 	print_dronebay();
-	\Osmium\Chrome\print_js_snippet('new_fitting_drones');
-	echo "<script>osmium_load_drones(".json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit)).");</script>\n";
+	\Osmium\Chrome\print_js_snippet('new_fitting-step4');
+	echo "<script>\n";
+	echo "$(function() {\n";
+	echo "osmium_load_drones(".json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit)).");\n";
+	echo "});\n</script>\n";
 }
 
 function drones_select_pre() { return true; }
