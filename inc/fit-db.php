@@ -42,9 +42,15 @@ function get_unique($fit) {
 		foreach($preset['modules'] as $type => $d) {
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				if($presetid === $fit['modulepresetid']) {
+				if($presetid == $fit['modulepresetid']) {
 					$state = $module['state'];
 				} else {
+					if(!isset($module['old_state'])) {
+						unset($fit['cache']);
+						unset($fit['dogma']);
+						\Osmium\printr($fit);
+						die();
+					}
 					$state = $module['old_state'];
 				}
 
@@ -145,7 +151,7 @@ function commit_fitting(&$fit) {
 			$z = 0;
 			foreach($data as $index => $module) {
 				$module_order[$type][$index] = $z;
-				if($presetid === $fit['modulepresetid']) {
+				if($presetid == $fit['modulepresetid']) {
 					$state = $module['state'];
 				} else {
 					$state = $module['old_state'];
