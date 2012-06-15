@@ -39,6 +39,8 @@ function use_preset(&$fit, $presetid) {
 		}
 	}
 
+	unset($fit['chargepresetid']);
+
 	$fit['modulepresetid'] = $presetid;
 	$fit['modulepresetname'] =& $fit['presets'][$presetid]['name'];
 	$fit['modulepresetdesc'] =& $fit['presets'][$presetid]['description'];
