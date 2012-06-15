@@ -310,7 +310,7 @@ function remove_drone_preset(&$fit, $dpid) {
 	unset($fit['dronepresets'][$dpid]);
 
 	foreach($typeids as $tid => $true) {
-		maybe_remove_charge($fit, $tid);
+		maybe_remove_cache($fit, $tid);
 	}
 }
 
