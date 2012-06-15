@@ -26,14 +26,18 @@ if(!isset($green[$_GET['loadoutid']]) || $green[$_GET['loadoutid']] !== true) {
 	\Osmium\Chrome\return_json(array());
 }
 
-$fit = \Osmium\Fit\get_fit($_GET['loadoutid']);
-
-if(isset($_GET['preset'])) {
-	\Osmium\Fit\use_charge_preset($fit, $_GET['preset']);
+$fit = \Osmium\State\get_state('currently_viewing_fit', null);
+if($fit === null || $fit['metadata']['loadoutid'] != $_GET['loadoutid']) {
+	$fit = \Osmium\Fit\get_fit($_GET['loadoutid']);
 }
 
+\Osmium\Fit\use_preset($fit, $_GET['pid']);
+\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
+\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
+
+$types = implode('|', \Osmium\Fit\get_stateful_slottypes());
 foreach($_GET as $k => $v) {
-	if(!preg_match('%^('.implode('|', \Osmium\Fit\get_stateful_slottypes()).')([0-9]+)$%', $k, $matches)) {
+	if(!preg_match('%^('.$types.')([0-9]+)$%', $k, $matches)) {
 		continue;
 	}
 	list(, $type, $index) = $matches;
@@ -64,10 +68,13 @@ if(isset($_GET['transferdrone']) && $_GET['transferdrone'] > 0) {
 	\Osmium\Fit\transfer_drone($fit, $typeid, $from, $quantity);
 }
 
-\Osmium\Chrome\return_json(
+\Osmium\State\put_state('currently_viewing_fit', $fit);
+
+$array = 
 	array(
-		'preset' => isset($fit['charges'][$fit['selectedpreset']]) ? $fit['charges'][$fit['selectedpreset']] : null,
 		'drones' => array_values($fit['drones']),
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit, '..'),
 		'states' => \Osmium\AjaxCommon\get_module_states($fit),
-		));
+		);
+
+\Osmium\Chrome\return_json($array);

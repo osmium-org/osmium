@@ -80,22 +80,22 @@ if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 	}
 }
 
-$preset = (isset($_GET['preset']) && isset($fit['charges'][$_GET['preset']])) ? $_GET['preset'] : null;
-if(count($fit['charges']) > 0) {
-	if($preset === null) {
-		/* Use 1st preset */
-		reset($fit['charges']);
-		$preset = key($fit['charges']);
-	}
-	\Osmium\Fit\use_charge_preset($fit, $preset);
-}
-
 $title = $fit['ship']['typename'].' / '.$fit['metadata']['name'];
 \Osmium\Chrome\print_header(strip_tags($title), '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
 
 $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;
 \Osmium\State\put_state('green_fits', $green_fits);
+
+if(isset($_GET['pid']) && isset($fit['presets'][$_GET['pid']])) {
+	\Osmium\Fit\use_preset($fit, $_GET['pid']);
+}
+if(isset($_GET['dpid']) && isset($fit['dronepresets'][$_GET['dpid']])) {
+	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
+}
+if(isset($_GET['cpid']) && isset($fit['chargepresets'][$_GET['cpid']])) {
+	\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
+}
 
 /* ----------------------------------------------------- */
 
@@ -114,23 +114,6 @@ if($fit['metadata']['revision'] > 1) {
 	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Flag\format_moderator_name($lastrev)."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
 echo "</ul>\n";
-
-if(count($fit['charges']) > 1) {
-	echo "<ul>\n<li>Charge presets:\n<ul id='vpresets'>\n";
-
-	foreach($fit['chargepresets'] as $cpid => $chargepreset) {
-		if($cpid === $preset) {
-			$class = " class='active'";
-		} else {
-			$class = '';
-		}
-		$f_name = htmlspecialchars($chargepreset['name'], ENT_QUOTES);
-
-		echo "<li data-index='$name'><a href='?".http_build_query(array_merge($_GET), array('preset' => $cpid))."'$class>".$f_name."</a></li>\n";
-	}
-
-	echo "</ul>\n</li>\n</ul>\n";
-}
 
 echo "<ul>\n";
 if($can_edit) {
@@ -152,7 +135,7 @@ echo "</div>\n";
 
 /* ----------------------------------------------------- */
 
-echo "<div id='vloadoutbox' data-loadoutid='".$fit['metadata']['loadoutid']."'>\n";
+echo "<div id='vloadoutbox' data-loadoutid='".$fit['metadata']['loadoutid']."' data-presetid='".$fit['modulepresetid']."' data-cpid='".$fit['chargepresetid']."' data-dpid='".$fit['dronepresetid']."'>\n";
 
 echo "<header>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
@@ -192,8 +175,8 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 		$state = \Osmium\Fit\get_module_state_by_location($fit, $type, $index);
 
 		$charge = '';
-		if(isset($fit['charges'][$preset][$type][$index])) {
-			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$fit['charges'][$preset][$type][$index]['typeid']."_32.png' alt='' />".$fit['charges'][$preset][$type][$index]['typename'];
+		if(isset($fit['charges'][$type][$index])) {
+			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$fit['charges'][$type][$index]['typeid']."_32.png' alt='' />".$fit['charges'][$type][$index]['typename'];
 		}
 
 		list($stname, $stpicture) = $astates[$state];
