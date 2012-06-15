@@ -75,10 +75,12 @@ if($_GET['action'] == 'create') {
 
 \Osmium\State\put_state('new_fit', $fit);
 
-if($_GET['type'] == 'module') {
+if($_GET['returntype'] == 'module') {
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
-} else if($_GET['type'] == 'charge') {
+} else if($_GET['returntype'] == 'charge') {
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_charges($fit));
-} else if($_GET['type'] == 'drone') {
+} else if($_GET['returntype'] == 'drone') {
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));
+} else {
+	\Osmium\Chrome\return_json(array());
 }

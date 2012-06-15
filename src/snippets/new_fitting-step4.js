@@ -120,6 +120,7 @@ osmium_pop_drone = function(from, typeid) {
 osmium_presets_commit = function(opts) {
 	opts['token'] = osmium_tok;
 	opts['type'] = 'drone';
+	opts['returntype'] = 'drone';
 
 	$("img#presets_spinner").css("visibility", "visible");
     $.getJSON('./src/json/update_presets.php', opts, function(json) {
@@ -132,6 +133,7 @@ osmium_presetdesc_commit = function() {
 	opts = {};
 	opts['token'] = osmium_tok;
 	opts['type'] = 'drone';
+	opts['returntype'] = 'drone';
 	opts['action'] = 'updatedesc';
 	opts['desc'] = $("textarea#drone_preset_desc").val();
 

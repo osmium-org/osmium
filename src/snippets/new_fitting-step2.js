@@ -178,6 +178,7 @@ osmium_loadout_commit_toggle = function(index, typeid, direction) {
 osmium_presets_commit = function(opts) {
 	opts['token'] = osmium_tok;
 	opts['type'] = 'module';
+	opts['returntype'] = 'module';
 
 	$("img#presets_spinner").css("visibility", "visible");
     $.getJSON('./src/json/update_presets.php', opts, function(json) {
@@ -190,6 +191,7 @@ osmium_presetdesc_commit = function() {
 	opts = {};
 	opts['token'] = osmium_tok;
 	opts['type'] = 'module';
+	opts['returntype'] = 'module';
 	opts['action'] = 'updatedesc';
 	opts['desc'] = $("textarea#preset_desc").val();
 

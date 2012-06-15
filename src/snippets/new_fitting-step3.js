@@ -92,6 +92,7 @@ osmium_presets_commit = function(opts) {
 	if(!('type' in opts)) {
 		opts['type'] = 'charge';
 	}
+	opts['returntype'] = 'charge';
 
 	$("img#presets_spinner").css("visibility", "visible");
     $.getJSON('./src/json/update_presets.php', opts, function(json) {
@@ -104,6 +105,7 @@ osmium_presetdesc_commit = function() {
 	opts = {};
 	opts['token'] = osmium_tok;
 	opts['type'] = 'charge';
+	opts['returntype'] = 'charge';
 	opts['action'] = 'updatedesc';
 	opts['desc'] = $("textarea#charge_preset_desc").val();
 
