@@ -28,7 +28,7 @@ namespace Osmium\Fit;
  * the stable percentage level (between 0 and 100).
  */
 function get_capacitor_stability(&$fit) {
-	static $step = 250; /* Number of milliseconds between each integration step */
+	static $step = 1000; /* Number of milliseconds between each integration step */
 	$categories = get_state_categories();
 
 	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
@@ -91,6 +91,7 @@ function get_capacitor_stability(&$fit) {
 
 		/* Simulate what happens with the Runge-Kutta method (RK4) */
 		$f = function($c) use($capacity, $tau, $X) {
+			$c = max($c, 0);
 			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau - $X;
 		};
 
@@ -99,9 +100,14 @@ function get_capacitor_stability(&$fit) {
 			$k2 = $f($capacitor + 0.5 * $step * $k1);
 			$k3 = $f($capacitor + 0.5 * $step * $k2);
 			$k4 = $f($capacitor + $step * $k3);
-			$capacitor += $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6;
+			$capacitor += ($increment = $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6);
 			$t += $step;
 		}
+
+		/* Use a linear interpolation to refine the result */
+		$rate = $increment / $step;
+		$zero = ($increment - $capacitor) * $rate;
+		$t -= (1 - $zero) * $step;
 
 		return array($usage_rate - $peak_rate, false, $t / 1000);
 	} else {
