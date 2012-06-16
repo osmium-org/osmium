@@ -373,7 +373,14 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 }
 
 /** @internal */
-function online_module(&$fit, $slottype, $index) {
+function online_module(&$fit, $slottype, $index, $onlinecharge = true) {
+	if(isset($fit['dogma']['modules'][$slottype][$index])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('online_module(): module already appears to be online', E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
 	$typeid = $fit['modules'][$slottype][$index]['typeid'];
 	$fit['dogma']['modules'][$slottype][$index] = array();
 	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
@@ -385,9 +392,15 @@ function online_module(&$fit, $slottype, $index) {
 	change_module_state_by_location($fit, $slottype, $index, $state);
 	unset($fit['modules'][$slottype][$index]['old_state']);
 
-	if(isset($fit['charges'][$slottype][$index])) {
-		online_charge($fit, $slottype, $index);
-	}
+	/* This may seem logical, but no. online_module() will be called
+	 * by add_module() (in which case there is nocharge anyway), or by
+	 * use_preset(), which will call use_charge_preset() immediately
+	 * after. Onlining the charge here would cause the charge to be
+	 * onlined twice while switching between (module) presets. */
+	//if(isset($fit['charges'][$slottype][$index])) {
+	//	online_charge($fit, $slottype, $index);
+	//}
+
 }
 
 /**
@@ -426,6 +439,13 @@ function remove_module(&$fit, $index, $typeid) {
 
 /** @internal */
 function offline_module(&$fit, $slottype, $index) {
+	if(!isset($fit['dogma']['modules'][$slottype][$index])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('offline_module(): module already appears to be offline', E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
 	if(isset($fit['charges'][$slottype][$index])) {
 		offline_charge($fit, $slottype, $index);
 	}
@@ -635,6 +655,13 @@ function add_charge(&$fit, $slottype, $index, $typeid) {
 
 /** @internal */
 function online_charge(&$fit, $slottype, $index) {
+	if(isset($fit['dogma']['charges'][$slottype][$index])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('online_charge(): charge already appears to be online', E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
 	$typeid = $fit['charges'][$slottype][$index]['typeid'];
 	$fit['dogma']['charges'][$slottype][$index] = array();
 	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
@@ -667,8 +694,15 @@ function remove_charge(&$fit, $slottype, $index) {
 
 /** @internal */
 function offline_charge(&$fit, $slottype, $index) {
-		\Osmium\Dogma\eval_charge_postexpressions($fit, $slottype, $index);
-		unset($fit['dogma']['charges'][$slottype][$index]);
+	if(!isset($fit['dogma']['charges'][$slottype][$index])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('offline_charge(): charge already appears to be offline', E_USER_WARNING);
+		return;
+		// @codeCoverageIgnoreEnd
+	}
+
+	\Osmium\Dogma\eval_charge_postexpressions($fit, $slottype, $index);
+	unset($fit['dogma']['charges'][$slottype][$index]);
 }
 
 /**
