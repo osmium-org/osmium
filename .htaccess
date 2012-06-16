@@ -13,5 +13,6 @@ RewriteRule ^/?favorite/([1-9][0-9]*)$ src/toggle_favorite.php?loadoutid=$1 [L,Q
 RewriteRule ^/?search$ src/search.php [L,QSA]
 RewriteRule ^/?import$ src/import_loadouts.php [L,QSA]
 RewriteRule ^/?profile/([1-9][0-9]*)$ src/view_profile.php?accountid=$1 [L,QSA]
+RewriteRule ^/?export/(.+)-clf-([1-9][0-9]*)\.json$ src/export_fit.php?type=clf&loadoutid=$2 [L,QSA]
 
 RewriteRule !^/?(src|static) - [L,R=404]

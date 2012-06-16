@@ -176,3 +176,137 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 
 	return $fit;
 }
+
+/**
+ * Export a fit to the common loadout format (CLF).
+ *
+ * @returns a string containing the JSON object.
+ *
+ * @warning EXPERIMENTAL, the CLF is still a draft! Use for testing
+ * purposes only!
+ *
+ * @todo fetch TQ version
+ */
+function export_to_common_loadout_format($fit, $minify = false, $extraprops = true) {
+	static $statenames = null;
+	if($statenames === null) $statenames = get_state_names();
+
+	$json = array('clf-version' => 1);
+	if($extraprops) {
+		$json['X-generatedby'] = 'Osmium-'.\Osmium\VERSION;
+	}
+
+	if(isset($fit['metadata']['name'])) {
+		$json['metadata']['title'] = $fit['metadata']['name'];
+	}
+
+	if(isset($fit['metadata']['description'])) {
+		$json['metadata']['description'] = $fit['metadata']['description'];
+	}
+
+	if(isset($fit['metadata']['creation_date'])) {
+		$json['metadata']['creationdate'] = gmdate('r', $fit['metadata']['creation_date']);
+	}
+
+	if($extraprops && isset($fit['metadata']['tags'])
+	   && is_array($fit['metadata']['tags']) && count($fit['metadata']['tags']) > 0) {
+		/* Always force [...] array even if tags array is associative */
+		$json['metadata']['X-tags'] = array_values($fit['metadata']['tags']);
+	}
+
+	$json['ship']['typeid'] = (int)$fit['ship']['typeid'];
+	if(!$minify) {
+		$json['ship']['typename'] = $fit['ship']['typename'];
+	}
+
+	foreach($fit['presets'] as $pid => $preset) {
+		$jsonpreset = array();
+
+		$jsonpreset['presetname'] = $preset['name'];
+		if($preset['description'] != '') $jsonpreset['presetdescription'] = $preset['description'];
+
+		foreach($fit['modules'] as $type => $a) {
+			foreach($a as $index => $module) {
+				$jsonmodule = array();
+
+				$jsonmodule['typeid'] = (int)$module['typeid'];
+				if(!$minify) {
+					$jsonmodule['typename'] = $module['typename'];
+					$jsonmodule['slottype'] = $type;
+					$jsonmodule['index'] = $index;
+				}
+
+				/* Only put state if it is not the default state */
+				list($isactivable, ) = get_module_states($fit, $module['typeid']);
+				if(($isactivable && $module['state'] != STATE_ACTIVE)
+				   || (!$isactivable && $module['state'] != STATE_ONLINE)) {
+					$jsonmodule['state'] = lcfirst($statenames[$module['state']][0]);
+				}
+
+				foreach($preset['chargepresets'] as $cpid => $chargepreset) {
+					if(!isset($chargepreset['charges'][$type][$index])) continue;
+
+					$charge = $chargepreset['charges'][$type][$index];
+					$jsoncharge = array();
+
+					$jsoncharge['typeid'] = (int)$charge['typeid'];
+					if(!$minify) {
+						$jsoncharge['typename'] = $charge['typename'];
+					}
+					$jsoncharge['cpid'] = (int)$cpid;
+
+					$jsonmodule['charges'][] = $jsoncharge;
+				}
+
+				$jsonpreset['modules'][] = $jsonmodule;
+			}
+		}
+
+		foreach($preset['chargepresets'] as $cpid => $chargepreset) {
+			$jsoncp = array();
+
+			$jsoncp['id'] = (int)$cpid;
+			$jsoncp['name'] = $chargepreset['name'];
+			if($chargepreset['description'] != '') {
+				$jsoncp['description'] = $chargepreset['description'];
+			}
+
+			$jsonpreset['chargepresets'][] = $jsoncp;
+		}
+
+		$json['presets'][] = $jsonpreset;
+	}
+
+	foreach($fit['dronepresets'] as $dronepreset) {
+		$jsondp = array();
+
+		$jsondp['presetname'] = $dronepreset['name'];
+		if($dronepreset['description'] != '') {
+			$jsondp['presetdescription'] = $dronepreset['description'];
+		}
+
+		foreach($dronepreset['drones'] as $drone) {
+			$jsondrone = array();
+
+			$jsondrone['typeid'] = (int)$drone['typeid'];
+			if(!$minify) {
+				$jsondrone['typename'] = $drone['typename'];
+			}
+
+			if($drone['quantityinbay'] > 0) {
+				$jsondrone['quantity'] = (int)$drone['quantityinbay'];
+				$jsondp['inbay'][] = $jsondrone;
+			}
+
+			if($drone['quantityinspace'] > 0) {
+				$jsondrone['quantity'] = (int)$drone['quantityinspace'];
+				$jsondp['inspace'][] = $jsondrone;
+			}
+		}
+
+		$json['drones'][] = $jsondp;
+	}
+
+	$flags = $minify ? 0 : JSON_PRETTY_PRINT;
+	return json_encode($json, $flags);
+}

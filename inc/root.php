@@ -51,7 +51,7 @@ function get_ini_setting($key) {
 
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 
-define(__NAMESPACE__.'\VERSION', shell_exec('git describe --always --dirty || echo "unknown"'));
+define(__NAMESPACE__.'\VERSION', trim(shell_exec('git describe --always --dirty || echo "unknown"')));
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
