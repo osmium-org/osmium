@@ -87,14 +87,21 @@ $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;
 \Osmium\State\put_state('green_fits', $green_fits);
 
-if(isset($_GET['pid']) && isset($fit['presets'][$_GET['pid']])) {
-	\Osmium\Fit\use_preset($fit, $_GET['pid']);
+if(isset($_GET['pid'])) {
+    $ids = explode('-', $_GET['pid'], 2);
+    $pid = intval($ids[0]);
+    if(count($ids) >= 2) $cpid = intval($ids[1]);
+
+	if(isset($fit['presets'][$pid])) {
+		\Osmium\Fit\use_preset($fit, $pid);
+	}
+
+	if(isset($cpid) && isset($fit['chargepresets'][$cpid])) {
+		\Osmium\Fit\use_charge_preset($fit, $cpid);
+	}
 }
 if(isset($_GET['dpid']) && isset($fit['dronepresets'][$_GET['dpid']])) {
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
-}
-if(isset($_GET['cpid']) && isset($fit['chargepresets'][$_GET['cpid']])) {
-	\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
 }
 
 /* ----------------------------------------------------- */
@@ -114,6 +121,49 @@ if($fit['metadata']['revision'] > 1) {
 	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Flag\format_moderator_name($lastrev)."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
 echo "</ul>\n";
+
+if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
+	echo "<form method='get' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n";
+
+	foreach(array(array('presets', 'pid', 'modulepresetid', 'preset'),
+	              array('chargepresets', 'cpid', 'chargepresetid', 'chargepreset'),
+	              array('dronepresets', 'dpid', 'dronepresetid', 'dronepreset')) as $presettype) {
+		list($key, $name, $current, $selectid) = $presettype;
+
+
+	}
+
+	if(count($fit['presets']) > 1) {
+		/* Use one big select, with optgroups for charge presets */
+		echo "<select name='pid' id='preset'>\n";
+
+		foreach($fit['presets'] as $presetid => $p) {
+			echo "<optgroup label='".htmlspecialchars($p['name'], ENT_QUOTES)."'>\n";
+
+			foreach($p['chargepresets'] as $cpid => $cp) {
+				$selected = $fit['modulepresetid'] == $presetid && $fit['chargepresetid'] == $cpid ?
+					" selected='selected'" : '';
+				echo "<option value='{$presetid}-{$cpid}'$selected>".htmlspecialchars($cp['name'])."</option>\n";
+			}
+
+			echo "</optgroup>\n";
+		}
+
+		echo "</select><br />\n";
+	}
+
+	if(count($fit['dronepresets']) > 1) {
+		echo "<select name='dpid' id='dronepreset'>\n";
+		foreach($fit['dronepresets'] as $presetid => $p) {
+			$selected = $fit['dronepresetid'] == $presetid ? ' selected="selected"' : '';
+			echo "<option value='$presetid'$selected>".htmlspecialchars($p['name'])."</option>\n";
+		}
+		echo "</select>\n";
+	}
+
+	echo "<br />\n<input type='submit' value='Switch presets' />\n";
+	echo"</form>\n";
+}
 
 echo "<ul>\n";
 if($can_edit) {

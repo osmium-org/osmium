@@ -376,6 +376,14 @@ function get_fit($loadoutid, $revision = null) {
 		}
 		add_drones_batch($fit, $drones);
 	}
+
+	/* Use the 1st presets */
+	\reset($fit['presets']);
+	\Osmium\Fit\use_preset($fit, key($fit['presets']));
+	\reset($fit['chargepresets']);
+	\Osmium\Fit\use_charge_preset($fit, key($fit['chargepresets']));
+	\reset($fit['dronepresets']);
+	\Osmium\Fit\use_drone_preset($fit, key($fit['dronepresets']));
   
 	\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
 	return $fit;
