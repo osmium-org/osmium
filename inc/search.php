@@ -88,6 +88,8 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 	$ids = array();
 	$q = query('SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtocharacterid IN ('.implode(',', $characterids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).') '.$more_cond.' LIMIT '.$offset.','.$limit);
+	if($q === false) return false; /* Invalid query */
+
 	while($row = fetch_row($q)) {
 		$ids[] = $row[0];
 	}
@@ -116,8 +118,15 @@ function get_meta() {
 
 function print_pretty_results($relative, $query, $more = '', $offset = 0, $limit = 1000) {
 	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $limit);
+	if($ids === false) {
+		echo "<p class='error_box no_search_result'>The supplied query is invalid.</p>\n";
+		return;
+	}
+
 	$meta = \Osmium\Search\get_meta();
   
+	/* Do not trust the total from meta, index may not always be perfectly up-to-date */
+	$actually_printed = 0;
 	if($meta['total'] > 0) {  
 		$orderby = implode(',', array_map(function($id) { return 'loadouts.loadoutid='.$id.' DESC'; }, $ids));
 		$in = implode(',', $ids);
@@ -154,9 +163,13 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 						}, $tags))."</ul>\n";
 			}
 			echo "</li>\n";
+
+			++$actually_printed;
 		}
 		echo "</ol>\n";
-	} else {
+	}
+
+	if($actually_printed === 0) {
 		echo "<p class='error_box no_search_result'>No loadouts matched your query.</p>\n";
 	}
 }
