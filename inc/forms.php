@@ -65,7 +65,7 @@ function post_redirect_get() {
 }
 
 function print_form_begin($action = null, $id = '', $enctype = 'application/x-www-form-urlencoded') {
-	if($action === null) $action = $_SERVER['REQUEST_URI'];
+	if($action === null) $action = htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES);
 	if($id !== '') $id = " id='$id'";
 
 	echo "<form method='post' accept-charset='utf-8' enctype='$enctype' action='$action'$id>\n<table>\n<tbody>\n";

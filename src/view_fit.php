@@ -123,7 +123,8 @@ if($fit['metadata']['revision'] > 1) {
 echo "</ul>\n";
 
 if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
-	echo "<form method='get' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n";
+	$action = explode($_SERVER['REQUEST_URI'], '?', 2)[0];
+	echo "<form method='get' action='$action' class='presets'>\n";
 
 	foreach(array(array('presets', 'pid', 'modulepresetid', 'preset'),
 	              array('chargepresets', 'cpid', 'chargepresetid', 'chargepreset'),

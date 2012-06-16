@@ -150,7 +150,7 @@ function print_login_box($relative) {
 	} else $error = '';
 
 	echo "<div id='state_box' class='login'>\n";
-	echo "<form method='post' action='".$_SERVER['REQUEST_URI']."'>\n";
+	echo "<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n";
 	echo "$error<p>\n<input type='text' name='account_name' placeholder='Account name' $value/>\n";
 	echo "<input type='password' name='password' placeholder='Password' />\n";
 	echo "<input type='submit' name='__osmium_login' value='Login' /> (<small><input type='checkbox' name='remember' id='remember' $remember/> <label for='remember'>Remember me</label></small>) or <a href='$relative/register'>create an account</a><br />\n";

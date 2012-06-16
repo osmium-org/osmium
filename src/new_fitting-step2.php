@@ -22,7 +22,7 @@ function print_modules_searchbox() {
 	echo "<div id='searchbox'>\n<h2 class='has_spinner'>Search modules";
 	echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
-	echo "<form action='".$_SERVER['REQUEST_URI']."' method='get'>\n";
+	echo "<form action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' method='get'>\n";
 	echo "<input type='search' placeholder='Search by name or category...' autofocus='autofocus' />\n";
 	echo "<input type='submit' value='Search' />\n<br />\n";
 	$filters = \Osmium\State\get_state_trypersist('module_search_filter', array());
@@ -83,7 +83,7 @@ function modules_select() {
 	print_modules_searchbox();
 	$search = ob_get_clean();
 
-	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".$_SERVER['REQUEST_URI']."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create new</button> <button type='button' id='clone_preset'>Clone current</button> <button type='button' id='rename_preset'>Rename current</button> <button type='button' id='delete_preset'>Delete current</button><br /><textarea placeholder='Description of this preset…' id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
+	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create new</button> <button type='button' id='clone_preset'>Clone current</button> <button type='button' id='rename_preset'>Rename current</button> <button type='button' id='delete_preset'>Delete current</button><br /><textarea placeholder='Description of this preset…' id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 
 	print_attributes($presetform, '');
 	print_modules_shortlist($search, '');
