@@ -162,7 +162,7 @@ if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['
 		echo "</select>\n";
 	}
 
-	echo "<br />\n<input type='submit' value='Switch presets' />\n";
+	echo "<span class='submit'>\n<br />\n<input type='submit' value='Switch presets' />\n</span>\n";
 	echo"</form>\n";
 }
 

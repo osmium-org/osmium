@@ -132,4 +132,9 @@ $(function() {
 		items: '[data-count]',
 		connectWith: 'div#inbay > ul, div#inspace > ul'
 	});
+
+	$("form.presets > span.submit").hide();
+	$("form.presets > select").change(function() {
+		$(this).parent().submit();
+	});
 });
