@@ -4,6 +4,10 @@ osmium_load_drones = function(json) {
 	var bandwidth = json['attributes']['dronebandwidth'];
     var used_capacity = 0;
 	var used_bandwidth = 0;
+
+	var select = $("select#dronepreset");
+	var option;
+
     for(var i = 0; i < json['drones'].length; ++i) {
 		if(json['drones'][i]['quantityinbay'] > 0) {
 			osmium_add_drone(json['drones'][i]['typeid'],
@@ -40,6 +44,21 @@ osmium_load_drones = function(json) {
     $('div#dronebay > div > ul > li.drone').filter(function() { return $(this).data('count') == 1; })
 		.children('strong').hide();
     $('div#dronebay > div > ul').append("<li class='drone_placeholder'>Drag drones here…</li>\n");
+
+	select.empty();
+	for(var i = 0; i < json['dronepresets'].length; ++i) {
+		option = $(document.createElement('option'));
+		option.prop('value', json['dronepresets'][i][0]).text(json['dronepresets'][i][1]);
+		select.append(option);
+	}
+	select.val(json['dpid']);
+
+	if(json['dronepresets'].length === 1) {
+		$("button#delete_drone_preset").prop('disabled', 'disabled');
+	} else {
+		$("button#delete_drone_preset").removeProp('disabled');
+	}
+	$("textarea#drone_preset_desc").val(json['dronepresetdesc']);
 
 	$('div#computed_attributes').html(json['computed_attributes']);
 	osmium_fattribs_load();
@@ -96,6 +115,33 @@ osmium_pop_drone = function(from, typeid) {
 		osmium_load_drones(json);
 		$("img#dronebay_spinner").css('visibility', 'hidden');
     });
+};
+
+osmium_presets_commit = function(opts) {
+	opts['token'] = osmium_tok;
+	opts['type'] = 'drone';
+	opts['returntype'] = 'drone';
+
+	$("img#presets_spinner").css("visibility", "visible");
+    $.getJSON('./src/json/update_presets.php', opts, function(json) {
+		osmium_load_drones(json);
+		$("img#presets_spinner").css('visibility', 'hidden');
+    });
+};
+
+osmium_presetdesc_commit = function() {
+	opts = {};
+	opts['token'] = osmium_tok;
+	opts['type'] = 'drone';
+	opts['returntype'] = 'drone';
+	opts['action'] = 'updatedesc';
+	opts['desc'] = $("textarea#drone_preset_desc").val();
+
+	$("img#presets_spinner").css("visibility", "visible");
+    $.post('./src/json/update_presets.php', opts, function(json) {
+		osmium_load_drones(json);
+		$("img#presets_spinner").css('visibility', 'hidden');
+    }, "json");
 };
 
 $(function() {
@@ -161,4 +207,53 @@ $(function() {
     $(document).on('dblclick', "div#dronebay > div#inspace > ul > li.drone", function(obj) {
 		osmium_pop_drone('space', $(this).data('typeid'));
     });
+
+	$("button#create_drone_preset").click(function() {
+		var new_name = prompt('Enter the name of the new drone preset (must not conflict with another drone preset name):', 'Drone preset #' + ($("select#dronepreset > option").length + 1));
+		if(new_name) {
+			osmium_presets_commit({
+				action: 'create',
+				name: new_name
+			});
+		}
+	});
+
+	$("button#delete_drone_preset").click(function() {
+		if($("select#dronepreset > option").length > 1) {
+			osmium_presets_commit({
+				action: 'delete'
+			});
+		}
+	});
+
+	$("button#rename_drone_preset").click(function() {
+		var new_name = prompt('Enter the new name for the current drone preset (must not conflict with another drone preset name):', $("select#dronepreset > option[value='" + $("select#dronepreset").val() + "']").text());
+		if(new_name) {
+			osmium_presets_commit({
+				action: 'rename',
+				name: new_name
+			});
+		}
+	});
+
+	$("button#clone_drone_preset").click(function() {
+		var new_name = prompt('Enter the name of the clone (must not conflict with another drone preset name):', 'Drone preset #' + ($("select#dronepreset > option").length + 1) + ' (clone of ' + $("select#dronepreset > option[value='" + $("select#dronepreset").val() + "']").text() + ')');
+		if(new_name) {
+			osmium_presets_commit({
+				action: 'clone',
+				name: new_name
+			});
+		}
+	});
+
+	$("button#update_desc").click(function() {
+		osmium_presetdesc_commit();
+	});
+
+	$("select#dronepreset").change(function() {
+		osmium_presets_commit({
+			action: 'switch',
+			presetid: $(this).val()
+		});
+	});
 });

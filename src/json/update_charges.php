@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Json\UpdateDrones;
+namespace Osmium\Json\UpdateCharges;
 
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
@@ -26,26 +26,38 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 }
 
 $fit = \Osmium\State\get_state('new_fit', array());
-$drones = array();
 
+$new_charges = array();
+$current_charges = $fit['charges'];
+
+$slots = implode('|', \Osmium\Fit\get_slottypes());
 foreach($_GET as $k => $v) {
-	if(!preg_match('%^in(bay|space)([0-9]+)$%', $k, $matches)) continue;
-	list(, $type, $typeid) = $matches;
-	$typeid = intval($typeid);
-		
-	if(!isset($drones[$typeid]['quantityin'.$type])) {
-		$drones[$typeid]['quantityin'.$type] = 0;
+	if(!preg_match('%('.$slots.')([0-9]+)%', $k, $match)) continue;
+	list(, $type, $index) = $match;
+
+	$chargeid = intval($v);
+	if($chargeid == 0) continue;
+
+	$new_charges[$type][$index] = $chargeid;
+}
+
+/* NB: the operation order (update, then remove) actually matters here
+ * somewhat, performance-wise, because of the calls to
+ * maybe_remove_cache */
+
+/* Update charges */
+\Osmium\Fit\add_charges_batch($fit, $new_charges);
+
+/* Remove stale charges */
+foreach($current_charges as $type => $a) {
+	foreach($a as $index => $charge) {
+		if(!isset($new_charges[$type][$index])) {
+			\Osmium\Fit\remove_charge($fit, $type, $index);
+		}
 	}
-
-	$drones[$typeid]['quantityin'.$type] += intval($v);
 }
 
-$old_drones = $fit['drones'];
-\Osmium\Fit\add_drones_batch($fit, $drones);
+\Osmium\fprintr($new_charges);
 
-foreach($old_drones as $typeid => $drone) {
-	\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $drone['quantityinbay']);
-	\Osmium\Fit\remove_drone($fit, $typeid, 'space', $drone['quantityinspace']);
-}
 \Osmium\State\put_state('new_fit', $fit);
-\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));
+\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_charges($fit));

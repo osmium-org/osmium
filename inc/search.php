@@ -81,9 +81,9 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 	if(\Osmium\State\is_logged_in()) {
 		$a = \Osmium\State\get_state('a');
-		$characterids[] = $a['characterid'];
-		$corporationids[] = $a['corporationid'];
-		if($a['allianceid'] > 0) $allianceids[] = $a['allianceid'];
+		$characterids[] = intval($a['characterid']);
+		$corporationids[] = intval($a['corporationid']);
+		if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
 	}
 
 	$ids = array();

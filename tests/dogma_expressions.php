@@ -82,8 +82,7 @@ class DogmaExpressions extends PHPUnit_Framework_TestCase {
 			}
 
 			/* Same here, old charge will automatically be removed */
-			\Osmium\Fit\add_charge($fit, 'PresetFoo', $type, 0, $moduleid);
-			\Osmium\Fit\use_preset($fit, 'PresetFoo');
+			\Osmium\Fit\add_charge($fit, $type, 0, $moduleid);
 		}
 
 		\Osmium\Fit\destroy($fit);

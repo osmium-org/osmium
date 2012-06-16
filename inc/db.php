@@ -55,3 +55,7 @@ function fetch_assoc($resource) {
 function escape_string($str) {
 	return pg_escape_string($str);
 }
+
+function last_error() {
+	return pg_last_error();
+}

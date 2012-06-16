@@ -21,11 +21,6 @@ namespace Osmium\Json\ToggleModuleState;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\Chrome\return_json(array());
-}
-
-
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$fit = \Osmium\State\get_state('new_fit', array());
 	

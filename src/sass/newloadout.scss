@@ -21,32 +21,45 @@ div#loadoutbox {
 	}
 }
 
+div#dronelistbox {
+	@include column;
+
+	float: right;
+	width: 20em;
+	padding-right: 0.5em;
+
+	&> form > input[type='search'] {
+		width: 18em;
+	}
+}
+
 div#shortlistbox {
 	@include column;
 
 	float: right;
 	width: 20em;
 	padding-right: 0.5em;
-}
 
-div#searchbox, div#dronelistbox {
-	@include column;
+	&> div#searchbox {
+		@include column;
 
-	text-align: center;
-	padding-left: 1em;
+		&> ul {
+			padding: 0;
+		}
+		
+		&> form > input[type='search'] {
+			width: 18em;
+		}
 
-	&> form > input[type='search'] {
-		width: 22em;
-	}
+		&> form > p#search_filters {
+			margin: 0.125em 0;
 
-	&> form > p#search_filters {
-		margin: 0.125em 0;
-
-		&> img.meta_filter {
-			cursor: pointer;
-
-			&.ds {
-				opacity: 0.2;
+			&> img.meta_filter {
+				cursor: pointer;
+				
+				&.ds {
+					opacity: 0.2;
+				}
 			}
 		}
 	}
@@ -93,8 +106,28 @@ div#shortlistbox > ul#modules_shortlist > li.module {
 	}
 }
 
-div#metadatabox > div.compact#computed_attributes {
-	margin: 0;
+div#metadatabox {
+	&> div.compact#computed_attributes {
+		margin: 0;
+	}
+
+	&> form.presets {
+		text-align: center;
+
+		&> select, &> textarea {
+			font-size: 1em;
+			min-width: 25em;
+			margin: 0.25em 0;
+		}
+
+		&> textarea {
+			min-height: 3em;
+		}
+
+		&> button[disabled] {
+			opacity: 0.2;
+		}
+	}
 }
 
 input[type='submit'] {
@@ -202,7 +235,10 @@ div#dronebay {
 
 	margin-left: 31em;
 	padding-left: 1em;
+	margin-right: 21em;
+	padding-right: 1em;
 	border-left: 1px dotted #CCC;
+	border-right: 1px dotted #CCC;
 
 	&> h2 {
 		text-align: left;

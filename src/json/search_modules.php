@@ -20,10 +20,6 @@ namespace Osmium\Json\SearchModules;
 
 require __DIR__.'/../../inc/root.php';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\Chrome\return_json(array());
-}
-
 const MAX_MODULES = 10;
 
 $q = $_GET['q'];
@@ -66,6 +62,6 @@ if($i == MAX_MODULES + 1) {
 	$warning = false;
 }
 
-\Osmium\State\put_setting('module_search_filter', serialize($filters));
+\Osmium\State\put_state_trypersist('module_search_filter', $filters);
 
 \Osmium\Chrome\return_json(array('payload' => $out, 'warning' => $warning));

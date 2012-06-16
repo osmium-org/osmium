@@ -18,8 +18,6 @@
 
 require_once __DIR__.'/../inc/root.php';
 
-
-
 class FitModuleStates extends PHPUnit_Framework_TestCase {
 	/**
 	 * @group fit

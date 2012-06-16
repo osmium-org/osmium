@@ -62,12 +62,16 @@ function is_logged_in() {
  */
 function do_post_login($account_name, $use_cookie = false) {
 	global $__osmium_state;
-	$__osmium_state = array();
 
 	$q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
-	$__osmium_state['a'] = \Osmium\Db\fetch_assoc($q);
+	$a = \Osmium\Db\fetch_assoc($q);
 
-	check_api_key();
+	if(!check_api_key($a)) {
+		logoff();
+		return;
+	}
+
+	$__osmium_state['a'] = $a;
 
 	if($use_cookie) {
 		$token = uniqid('Osmium_', true);
@@ -79,8 +83,6 @@ function do_post_login($account_name, $use_cookie = false) {
 
 		setcookie('Osmium', $token, $expiration_date, '/');
 	}
-
-	$__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
 
 	\Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
 }
@@ -100,8 +102,8 @@ function logoff($global = false) {
 		\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE accountid = $1', array($account_id));
 	}
 
-	setcookie('Osmium', false, 42, '/', $_SERVER['HTTP_HOST'], false, true);
-	$_SESSION = array();
+	setcookie('Osmium', false, 0, '/');
+	unset($__osmium_state['a']);
 }
 
 /**
@@ -253,9 +255,7 @@ function try_recover() {
  * API key is correct, update character/corp/alliance information in
  * the database.
  */
-function check_api_key() {
-	$a = \Osmium\State\get_state('a');
-
+function check_api_key($a) {
 	$key_id = $a['keyid'];
 	$v_code = $a['verificationcode'];
 	$info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
@@ -265,7 +265,7 @@ function check_api_key() {
 
 		logoff(false);
 		$__osmium_login_state['error'] = 'Login failed because of API issues (osmium_api() returned a non-object). Sorry for the inconvenience.';
-		return;
+		return false;
 	}
 
 	if(isset($info->error) && !empty($info->error)) {
@@ -274,14 +274,13 @@ function check_api_key() {
 		if(200 <= $err_code && $err_code < 300) {
 			/* Most likely user error (deleted API key or modified vcode) */
 			\Osmium\State\put_state('must_renew_api', true);
-			return;
+			return true;
 		} else {
 			/* Most likely internal error */
 			global $__osmium_login_state;
 
-			logoff(false);
 			$__osmium_login_state['error'] = 'Login failed because of API issues (got error '.$err_code.': '.((string)$info->error).'). Sorry for the inconvenience.';
-			return;  
+			return false;
 		}
 	}
 
@@ -290,7 +289,7 @@ function check_api_key() {
 	   || (int)$info->result->key->rowset->row['characterID'] != $a['characterid']) {
 		/* Key settings got modified since last login, and they are invalid now. */
 		\Osmium\State\put_state('must_renew_api', true);
-		return;
+		return true;
 	}
 
 	list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($a['characterid']);
@@ -311,6 +310,8 @@ function check_api_key() {
 
 		\Osmium\State\put_state('a', $a);
 	}
+
+	return true;
 }
 
 function get_character_info($character_id) {
@@ -391,7 +392,7 @@ function get_setting($key, $default = null) {
 		$ret = $r[0];
 	}
 
-	return $ret;
+	return unserialize($ret);
 }
 
 /**
@@ -404,7 +405,7 @@ function put_setting($key, $value) {
 	global $__osmium_state;
 	$accountid = $__osmium_state['a']['accountid'];
 	\Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
-	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, $value));
+	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, serialize($value)));
 
 	return $value;
 }
@@ -416,6 +417,11 @@ function put_setting($key, $value) {
  */
 function get_token() {
 	global $__osmium_state;
+
+	if(!isset($__osmium_state['logouttoken'])) {
+		$__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
+	}
+
 	return $__osmium_state['logouttoken'];
 }
 
@@ -544,5 +550,36 @@ function invalidate_cache($key) {
 	} else {
 		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
 		if(file_exists($f)) unlink($f);
+	}
+}
+
+/**
+ * Get a state variable previously stored by put_state_trypersist().
+ *
+ * This is just a wrapper that uses settings for logged-in users, and
+ * state vars for anonymous users.
+ */
+function get_state_trypersist($key, $default = null) {
+	if(is_logged_in()) {
+		return get_setting($key, $default);
+	} else {
+		return get_state('__setting_'.$key, $default);
+	}
+}
+
+/**
+ * Store a state variable, and try to persist changes as much as
+ * possible.
+ *
+ * This is just a wrapper that uses settings for logged-in users, and
+ * state vars for anonymous users.
+ */
+function put_state_trypersist($key, $value) {
+	if(is_logged_in()) {
+		/* For regular users, use database-stored persistent storage */
+		return put_setting($key, $value);
+	} else {
+		/* For anonymous users, use session-based storage (not really persistent, but better than nothing) */
+		return put_state('__setting_'.$key, $value);
 	}
 }

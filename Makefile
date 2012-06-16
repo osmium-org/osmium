@@ -4,7 +4,10 @@ static/chrome.css: src/sass/root.scss src/sass/*.scss
 	sass --unix-newlines -t compact $< | tr -s '\n' > $@
 
 tests:
-	phpunit --exclude-group expensive
+	phpunit --exclude-group expensive,database
+
+db-tests:
+	phpunit --group database
 
 all-tests:
 	phpunit
