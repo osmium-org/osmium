@@ -225,7 +225,7 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 		$jsonpreset['presetname'] = $preset['name'];
 		if($preset['description'] != '') $jsonpreset['presetdescription'] = $preset['description'];
 
-		foreach($fit['modules'] as $type => $a) {
+		foreach($preset['modules'] as $type => $a) {
 			foreach($a as $index => $module) {
 				$jsonmodule = array();
 
@@ -238,9 +238,10 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 
 				/* Only put state if it is not the default state */
 				list($isactivable, ) = get_module_states($fit, $module['typeid']);
+				$state = $module['state'] === null ? $module['old_state'] : $module['state'];
 				if(($isactivable && $module['state'] != STATE_ACTIVE)
 				   || (!$isactivable && $module['state'] != STATE_ONLINE)) {
-					$jsonmodule['state'] = lcfirst($statenames[$module['state']][0]);
+					$jsonmodule['state'] = lcfirst($statenames[$state][0]);
 				}
 
 				foreach($preset['chargepresets'] as $cpid => $chargepreset) {
