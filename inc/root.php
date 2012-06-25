@@ -58,7 +58,7 @@ define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 define(__NAMESPACE__.'\USE_MEMCACHED', get_ini_setting('use_memcached'));
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
-	osmium_fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
+	fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
 
 if(!get_ini_setting('use_memcached_for_sessions')) {
