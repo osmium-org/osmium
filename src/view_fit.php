@@ -28,15 +28,24 @@ if(!\Osmium\State\can_view_fit($loadoutid)) {
 	\Osmium\fatal(404, 'Loadout not found.');
 }
 
-$fit = \Osmium\Fit\get_fit($loadoutid);
+if(isset($_GET['revision'])) {
+	$fit = \Osmium\Fit\get_fit($loadoutid, $_GET['revision']);
+
+	if($fit === false) {
+		\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, are you sure you specified a valid revision number? (loadoutid: '.$loadoutid.')');
+	}
+} else {
+	$fit = \Osmium\Fit\get_fit($loadoutid);
+
+	if($fit === false) {
+		\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
+	}
+}
+
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
 $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
-
-if($fit === false) {
-	\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
-}
 
 if(!\Osmium\State\can_access_fit($fit)) {
 	if(!isset($_POST['pw']) || !\Osmium\State\check_password($_POST['pw'], $fit['metadata']['password'])) {

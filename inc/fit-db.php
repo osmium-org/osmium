@@ -276,6 +276,12 @@ function get_fit($loadoutid, $revision = null) {
 		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT latestrevision FROM osmium.loadoutslatestrevision WHERE loadoutid = $1', array($loadoutid)));
 		if($row === false) return false;
 		$revision = $row[0];
+
+		$latest_revision = true;
+	}
+
+	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null)) !== null) {
+		return $cache;
 	}
 
 	$loadout = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, viewpermission, editpermission, visibility, passwordhash FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
@@ -385,6 +391,9 @@ function get_fit($loadoutid, $revision = null) {
 	\reset($fit['dronepresets']);
 	\Osmium\Fit\use_drone_preset($fit, key($fit['dronepresets']));
   
-	\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
+	if(isset($latest_revision) && $latest_revision === true) {
+		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
+	}
+	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit);
 	return $fit;
 }
