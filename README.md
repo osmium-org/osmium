@@ -165,11 +165,15 @@ per table in the dump. Then, import the following (in this order):
      \i dgmtypeattribs-data.sql
      \i dgmtypeeffects-data.sql
 
+Import the Osmium schema:
+
+    <pre>pg_restore -O osmium_pgsql.backup | psql osmium osmium_user</pre>
+
 Now, use the cache_expressions script to populate the `cacheexpressions`
 table:
 
     bin/cache_expressions
 
 That's it! You can now delete the `dgmoperands` and `dgmexpressions`
-tables, and dump the relevant tables and save them for later use (for
-example by using the `backup_eve` script).
+tables, and dump the eve schema for later use (for example by using
+the `backup_eve` script).
