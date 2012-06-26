@@ -36,27 +36,14 @@ if(!isset($_GET['loadoutid'])) {
 
 $loadoutid = $_GET['loadoutid'];
 
-if(\Osmium\State\is_logged_in()) {
-	$a = \Osmium\State\get_state('a');
-	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
-} else {
-	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
-}
-
-if($count == 0) {
+if(!\Osmium\State\can_view_fit($loadoutid)) {
 	\Osmium\fatal(404, "Loadout not found.");
 }
 
 $fit = \Osmium\Fit\get_fit($loadoutid);
-if($fit === false) {
-	\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
-}
 
-if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-	$green = \Osmium\State\get_state('green_fits', array());
-	if(!isset($green[$loadoutid]) || $green[$loadoutid] !== true) {
-		\Osmium\fatal(403, "The loadout is password-protected. Please enter the password on the view loadout page (../loadout/".$loadoutid."), and retry.");
-	}
+if(!\Osmium\State\can_access_fit($fit)) {
+	\Osmium\fatal(403, "This fit is password-protected. Please go to ../loadout/".$loadoutid." and input the password, then retry.");
 }
 
 if(isset($_GET['pid']) && isset($fit['presets'][$_GET['pid']])) {

@@ -582,3 +582,70 @@ function put_state_trypersist($key, $value) {
 		return put_state('__setting_'.$key, $value);
 	}
 }
+
+/**
+ * Checks whether a loadout can be viewed (but maybe still needing a
+ * password) by the current user.
+ */
+function can_view_fit($loadoutid) {
+	if(is_logged_in()) {
+		$a = get_state('a');
+		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+	} else {
+		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
+	}
+
+	return (boolean)$count;
+}
+
+/**
+ * Checks whether a loadout can be viewed by the current user, and
+ * that the user has been granted access if the fit is password
+ * protected.
+ */
+function can_access_fit($fit) {
+	if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
+		$pw = get_state('pw_fits', array());
+		$a = get_state('a', array());
+
+		/* Author of the loadout can always access his loadout */
+		if(isset($a['accountid']) && $a['accountid'] == $fit['metadata']['accountid']) {
+			return true;
+		}
+
+		/* Require password authorization */
+		if(isset($pw[$fit['metadata']['loadoutid']]) && $pw[$fit['metadata']['loadoutid']] > time()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Checks whether a loadout can be edited by the current user.
+ */
+function can_edit_fit($loadoutid) {
+	$can_edit = false;
+	if(is_logged_in()) {
+		$a = get_state('a');
+		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+		$can_edit = ($c == 1);
+	}
+
+	return $can_edit;
+}
+
+/**
+ * Grant permission for the current user to see a password-protected
+ * fit for a given duration. This does not circumvent can_view_fit(),
+ * only makes can_access_fit() return true if the fit is password
+ * protected.
+ */
+function grant_fit_access($fit, $duration) {
+	$pw = get_state('pw_fits', array());
+	$pw[$fit['metadata']['loadoutid']] = time() + $duration;
+	put_state('pw_fits', $pw);
+}

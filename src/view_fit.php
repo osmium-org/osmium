@@ -24,14 +24,7 @@ require __DIR__.'/../inc/root.php';
 
 $loadoutid = intval($_GET['loadoutid']);
 
-if(\Osmium\State\is_logged_in()) {
-	$a = \Osmium\State\get_state('a');
-	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
-} else {
-	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
-}
-
-if($count == 0) {
+if(!\Osmium\State\can_view_fit($loadoutid)) {
 	\Osmium\fatal(404, 'Loadout not found.');
 }
 
@@ -39,44 +32,33 @@ $fit = \Osmium\Fit\get_fit($loadoutid);
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
 $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
-$can_edit = false;
-if(\Osmium\State\is_logged_in()) {
-	list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
-	$can_edit = ($c == 1);
-}
+$can_edit = \Osmium\State\can_edit_fit($loadoutid);
 
 if($fit === false) {
 	\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
 }
 
-if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-	$pw = \Osmium\State\get_state('pw_fits', array());
-	if((!isset($a) || $a['accountid'] != $fit['metadata']['accountid']) 
-	   && ((!isset($pw[$loadoutid]) || $pw[$loadoutid] < time()))) {
-		unset($pw[$loadoutid]);
-    
-		if(!isset($_POST['pw']) || !\Osmium\State\check_password($_POST['pw'], $fit['metadata']['password'])) {
-			if(isset($_POST['pw'])) {
-				\Osmium\Forms\add_field_error('pw', 'Incorrect password.');
-			}
-      
-			/* Show the password form */
-			\Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', "<meta name='robots' content='noindex' />\n");
-      
-			echo "<div id='pwfit'>\n";
-			\Osmium\Forms\print_form_begin();
-			\Osmium\Forms\print_text('<p class="m">This fit is password-protected. Please input password to continue.</p>');
-			\Osmium\Forms\print_generic_field('Password', 'password', 'pw');
-			\Osmium\Forms\print_submit();
-			\Osmium\Forms\print_form_end();
-			echo "</div>\n";
-      
-			\Osmium\Chrome\print_footer();
-			die();
-		} else {
-			$pw[$loadoutid] = time() + PASSWORD_AUTHENTICATION_DURATION;
-			\Osmium\State\put_state('pw_fits', $pw);
+if(!\Osmium\State\can_access_fit($fit)) {
+	if(!isset($_POST['pw']) || !\Osmium\State\check_password($_POST['pw'], $fit['metadata']['password'])) {
+		if(isset($_POST['pw'])) {
+			\Osmium\Forms\add_field_error('pw', 'Incorrect password.');
 		}
+      
+		/* Show the password form */
+		\Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', "<meta name='robots' content='noindex' />\n");
+      
+		echo "<div id='pwfit'>\n";
+		\Osmium\Forms\print_form_begin();
+		\Osmium\Forms\print_text('<p class="m">This fit is password-protected. Please input password to continue.</p>');
+		\Osmium\Forms\print_generic_field('Password', 'password', 'pw');
+		\Osmium\Forms\print_submit();
+		\Osmium\Forms\print_form_end();
+		echo "</div>\n";
+      
+		\Osmium\Chrome\print_footer();
+		die();
+	} else {
+		\Osmium\State\grant_fit_access($fit, PASSWORD_AUTHENTICATION_DURATION);
 	}
 }
 
