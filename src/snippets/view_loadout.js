@@ -61,6 +61,8 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 			}
 		}
 
+		var used_bandwidth = 0;
+		var total_bandwidth;
 		$("div#inbay > ul, div#inspace > ul").empty();
 		for(var i = 0; i < json['drones'].length; ++i) {
 			var drone = json['drones'][i];
@@ -81,9 +83,18 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 						+ drone['typeid'] + "_32.png' />"
 						+ drone['typename'] + " <strong>×"
 						+ drone['quantityinspace'] + "</strong></li>");
+				used_bandwidth += drone['quantityinspace'] * drone['bandwidth'], 10;
 			}
 		}
 
+		total_bandwidth = json['dronebandwidth'];
+		$("span#dronebandwidth").text(used_bandwidth + " / " + total_bandwidth);
+		if(used_bandwidth > total_bandwidth) {
+			$("span#dronebandwidth").addClass('overflow');
+		} else {
+			$("span#dronebandwidth").removeClass('overflow');
+		}
+		
 		if($("div#inbay > ul > li").length === 0) {
 			$("div#inbay > ul").append("<li><em>(no drones in bay)</em></li>");
 		}

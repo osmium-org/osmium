@@ -73,6 +73,7 @@ if(isset($_GET['transferdrone']) && $_GET['transferdrone'] > 0) {
 $array = 
 	array(
 		'drones' => array_values($fit['drones']),
+		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit, '..'),
 		'states' => \Osmium\AjaxCommon\get_module_states($fit),
 		);
