@@ -57,7 +57,7 @@ function print_loadout_title($name, $viewpermission, $visibility, $author, $rela
 		$fav = ($fav !== false);
 
 		if($fav) {
-			$title = 'On of your favorite loadouts; click to un-favorite';
+			$title = 'One of your favorite loadouts; click to un-favorite';
 			$favimg = '';
 		} else {
 			$title = 'Add to your favorite loadouts';
