@@ -151,10 +151,12 @@ function finalize() {
 
 	\Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
 	$loadoutid = $fit['metadata']['loadoutid'];
+	$revision = $fit['metadata']['revision'];
 	\Osmium\Fit\reset($fit);
 	\Osmium\State\put_state('new_fit', $fit);
 	\Osmium\State\put_state('create_fit_step', 1);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);
 
 	header('Location: ./loadout/'.$loadoutid);
 	die();

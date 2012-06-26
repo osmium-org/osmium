@@ -237,6 +237,8 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
     VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $nextrev, $fit['metadata']['hash'], $accountid, time()));
 
 		$fit['metadata']['revision'] = $nextrev;
+	} else {
+		$fit['metadata']['revision'] = $row[1];
 	}
 
 	$fit['metadata']['accountid'] = $ownerid;
