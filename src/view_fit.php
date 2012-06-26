@@ -71,7 +71,7 @@ if(!\Osmium\State\can_access_fit($fit)) {
 	}
 }
 
-$title = $fit['ship']['typename'].' / '.$fit['metadata']['name'];
+$title = $fit['ship']['typename'].' / '.htmlspecialchars($fit['metadata']['name']);
 \Osmium\Chrome\print_header(strip_tags($title), '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
 
 $green_fits = \Osmium\State\get_state('green_fits', array());
@@ -162,6 +162,7 @@ if($can_edit) {
 	echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
 	echo "<li><a href='../delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
 }
+echo "<li><a href='../loadouthistory/$loadoutid'>View revision history</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
 
