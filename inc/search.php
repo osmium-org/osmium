@@ -116,22 +116,27 @@ function get_meta() {
 	return $meta;
 }
 
-function print_pretty_results($relative, $query, $more = '', $offset = 0, $limit = 1000) {
+function print_pretty_results($relative, $query, $more = '', $offset = 0, $limit = 1000, $message = 'No loadouts matched your query.') {
 	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $limit);
 	if($ids === false) {
 		echo "<p class='error_box no_search_result'>The supplied query is invalid.</p>\n";
 		return;
 	}
 
-	$meta = \Osmium\Search\get_meta();
-  
-	/* Do not trust the total from meta, index may not always be perfectly up-to-date */
-	$actually_printed = 0;
-	if($meta['total'] > 0) {  
-		$orderby = implode(',', array_map(function($id) { return 'loadouts.loadoutid='.$id.' DESC'; }, $ids));
-		$in = implode(',', $ids);
+	print_loadout_list($ids, $relative, $offset, $message);
+}
+
+function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message = 'No loadouts.') {
+	if($ids === array()) {
+		echo "<p class='error_box no_search_result'>".$nothing_message."</p>\n";
+		return;		
+	}
+
+	$orderby = implode(',', array_map(function($id) { return 'loadouts.loadoutid='.$id.' DESC'; }, $ids));
+	$in = implode(',', $ids);
+	$first = true;
     
-		$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -141,35 +146,37 @@ JOIN eve.invtypes ON hullid = invtypes.typeid
 LEFT JOIN osmium.loadoutstaglist ON loadoutstaglist.loadoutid = loadouts.loadoutid
 WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
-		echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
-		while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
-			echo "<li>\n";
-			echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_64.png' alt='".$loadout['typename']."' />\n";
-			echo "<a href='$relative/loadout/".$loadout['loadoutid']."'>";
-			\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], \Osmium\Fit\VISIBILITY_PUBLIC, $loadout, $relative);
-			echo "</a>\n<br />\n";
-			echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
-			echo " — <a href='$relative/search?q=".urlencode('@author "'.$loadout['charactername'].'"')."'>".$loadout['charactername']."</a>";
-			echo " — revision #".$loadout['latestrevision'];
-			echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
-      
-			$tags = array_filter(explode(' ', $loadout['taglist']), function($tag) { return trim($tag) != ''; });
-			if(count($tags) == 0) {
-				echo "<em>(no tags)</em>";
-			} else {
-				echo "<ul class='tags'>\n".implode('', array_map(function($tag) use($relative) {
-							$tag = trim($tag);
-							return "<li><a href='$relative/search?q=".urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
-						}, $tags))."</ul>\n";
-			}
-			echo "</li>\n";
-
-			++$actually_printed;
+	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
+		if($first === true) {
+			$first = false;
+			/* Only write the <ol> tag if there is at least one loadout */
+			echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
 		}
-		echo "</ol>\n";
+		echo "<li>\n";
+		echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_64.png' alt='".$loadout['typename']."' />\n";
+		echo "<a href='$relative/loadout/".$loadout['loadoutid']."'>";
+		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
+		echo "</a>\n<br />\n";
+		echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
+		echo " — <a href='$relative/profile/".$loadout['accountid']."'>".$loadout['charactername']."</a>";
+		echo " — revision #".$loadout['latestrevision'];
+		echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
+      
+		$tags = array_filter(explode(' ', $loadout['taglist']), function($tag) { return trim($tag) != ''; });
+		if(count($tags) == 0) {
+			echo "<em>(no tags)</em>";
+		} else {
+			echo "<ul class='tags'>\n".implode('', array_map(function($tag) use($relative) {
+						$tag = trim($tag);
+						return "<li><a href='$relative/search?q=".urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
+					}, $tags))."</ul>\n";
+		}
+		echo "</li>\n";
 	}
 
-	if($actually_printed === 0) {
-		echo "<p class='error_box no_search_result'>No loadouts matched your query.</p>\n";
+	if($first === false) {
+		echo "</ol>\n";
+	} else {
+		echo "<p class='error_box no_search_result'>".$nothing_message."</p>\n";
 	}
 }

@@ -28,6 +28,6 @@ echo "<div class='quick' id='search_mini'>\n";
 \Osmium\Chrome\print_search_form();
 echo "</div>\n<div id='recent_loadouts'>\n";
 echo "<h2>Recently updated</h2>\n";
-\Osmium\Search\print_pretty_results('.', '', 'ORDER BY updatedate DESC', 0, 10);
+\Osmium\Search\print_pretty_results('.', '', 'ORDER BY updatedate DESC', 0, 10, 'No loadouts yet! What are you waiting for?');
 echo "</div>\n";
 \Osmium\Chrome\print_footer();

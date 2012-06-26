@@ -122,6 +122,16 @@ a {
 		color: #F30;
 	}
 
+	&.profile {
+		color: black;
+		text-decoration: none;
+
+		&:hover {
+			color: #1122CC;
+			text-decoration: underline;
+		}
+	}
+
 	&> img {
 		border: none;
 	}

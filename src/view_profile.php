@@ -39,15 +39,17 @@ echo "<header>\n";
 $sep = "<tr class='sep'><td colspan='3'>&nbsp;</td></tr>\n";
 
 $allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
+$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
 $moderator = ($row['ismoderator'] === 't') ? '<small>Moderator '.\Osmium\Flag\MODERATOR_SYMBOL.'</small>' : '';
-echo "<h2>".$row['charactername']." $moderator</h2>\n<p>\n";
+$isthisme = $myprofile ? '<small>(this is you!)</small>' : '';
+echo "<h2>".$row['charactername']." $moderator$isthisme</h2>\n<p>\n";
 
 echo "<img src='http://image.eveonline.com/Character/".$row['characterid']."_256.jpg' alt='portrait' /><br />";
-echo "<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_128.png' alt='corporation logo' />";
-echo "<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' /></p>\n";
+echo "<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_128.png' alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' />";
+echo "<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></p>\n";
 echo "<table>\n<tbody>\n";
 
-echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".htmlspecialchars($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".htmlspecialchars($row['alliancename'] ?: '(no alliance)')."</td>\n</tr>\n";
+echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".htmlspecialchars($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".htmlspecialchars($alliancename)."</td>\n</tr>\n";
 
 echo $sep;
 
@@ -60,7 +62,33 @@ if($myprofile) {
 
 echo "</tbody>\n</table>\n</header>\n";
 
-echo "<section id=''";
+echo "<section id='ploadouts' class='psection'>\n";
+echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.$row['charactername'].'"')."\">(browse all)</a></small></h2>\n";
+\Osmium\Search\print_pretty_results("..", '@author "'.$row['charactername'].'"', 'ORDER BY creationdate DESC', 0, 5, $row['charactername'].' does not have submitted any loadouts.');
+echo "</section>\n";
+
+if($myprofile) {
+	$a = \Osmium\State\get_state('a');
+	/* TODO: paginate this */
+
+	echo "<section id='pfavorites' class='psection'>\n<h2>My favorite loadouts</h2>\n";
+	$favorites = array();
+	$favq = \Osmium\Db\query_params('SELECT loadoutid FROM osmium.accountfavorites WHERE accountid = $1 ORDER BY favoritedate DESC', array($a['accountid']));
+	while($r = \Osmium\Db\fetch_row($favq)) {
+		$favorites[] = $r[0];
+	}
+	\Osmium\Search\print_loadout_list($favorites, '..', 0, 'You have no favorited loadouts.');
+	echo "</section>\n";
+
+	echo "<section id='phidden' class='psection'>\n<h2>My hidden loadouts</h2>\n";
+	$hidden = array();
+	$hiddenq = \Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadouts WHERE accountid = $1 AND visibility = $2 ORDER BY loadoutid DESC', array($a['accountid'], \Osmium\Fit\VISIBILITY_PRIVATE));
+	while($r = \Osmium\Db\fetch_row($hiddenq)) {
+		$hidden[] = $r[0];
+	}
+	\Osmium\Search\print_loadout_list($hidden, '..', 0, 'You have no hidden loadouts.');	
+	echo "</section>\n";
+}
 
 echo "</div>\n";
 \Osmium\Chrome\print_footer();

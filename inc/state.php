@@ -163,7 +163,7 @@ function print_logoff_box($relative) {
 	$id = $__osmium_state['a']['characterid'];
 	$tok = urlencode(get_token());
 
-	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>".\Osmium\Flag\format_moderator_name($__osmium_state['a'])."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>".\Osmium\Chrome\format_character_name($__osmium_state['a'], $relative)."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 /**
@@ -385,14 +385,13 @@ function get_setting($key, $default = null) {
 
 	global $__osmium_state;
 	$accountid = $__osmium_state['a']['accountid'];
-	$ret = $default;
 
 	$k = \Osmium\Db\query_params('SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
 	while($r = \Osmium\Db\fetch_row($k)) {
 		$ret = $r[0];
 	}
 
-	return unserialize($ret);
+	return isset($ret) ? unserialize($ret) : $default;
 }
 
 /**

@@ -41,8 +41,8 @@ if($row === false) {
 $fav = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.accountfavorites WHERE accountid = $1 AND loadoutid = $2', array($accountid, $loadoutid)));
 
 if($fav === false) {
-	\Osmium\Db\query_params('INSERT INTO osmium.accountfavorites (accountid, loadoutid) VALUES ($1, $2)',
-	                        array($accountid, $loadoutid));
+	\Osmium\Db\query_params('INSERT INTO osmium.accountfavorites (accountid, loadoutid, favoritedate) VALUES ($1, $2, $3)',
+	                        array($accountid, $loadoutid, time()));
 } else {
 	\Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE accountid = $1 AND loadoutid = $2',
 	                        array($accountid, $loadoutid));

@@ -8,6 +8,14 @@ div#vprofile {
 		&> h2 {
 			margin: 1em 0 0.5em 0;
 			border-bottom: 1px solid black;
+			position: relative;
+
+			&> small {
+				position: absolute;
+				right: 0;
+				bottom: 0;
+				color: #888;
+			}
 		}
 	}
 
@@ -53,5 +61,9 @@ div#vprofile {
 				}
 			}
 		}
+	}
+
+	&> section.psection {
+		margin-bottom: 1em;
 	}
 }
