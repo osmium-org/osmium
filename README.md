@@ -42,7 +42,8 @@ For users
     PostgreSQL extension,
     MySQLi extension (not mysqld itself),
     cURL extension,
-    SimpleXML support.
+    SimpleXML support,
+    zlib extension.
 
 * PostgreSQL >= 9.0
 

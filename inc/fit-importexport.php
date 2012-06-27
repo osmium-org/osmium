@@ -239,8 +239,8 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 				/* Only put state if it is not the default state */
 				list($isactivable, ) = get_module_states($fit, $module['typeid']);
 				$state = $module['state'] === null ? $module['old_state'] : $module['state'];
-				if(($isactivable && $module['state'] != STATE_ACTIVE)
-				   || (!$isactivable && $module['state'] != STATE_ONLINE)) {
+				if(($isactivable && $state != STATE_ACTIVE)
+				   || (!$isactivable && $state != STATE_ONLINE)) {
 					$jsonmodule['state'] = lcfirst($statenames[$state][0]);
 				}
 
@@ -310,4 +310,151 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 
 	$flags = $minify ? 0 : JSON_PRETTY_PRINT;
 	return json_encode($json, $flags);
+}
+
+/**
+ * Generate a Markdown-formatted description of a loadout. This is a
+ * one-way operation only, unless $embedclf is set to true.
+ */
+function export_to_markdown($fit, $embedclf = true) {
+	static $statenames = null;
+	if($statenames === null) $statenames = get_state_names();
+
+	$md = "## ".$fit['ship']['typename']." loadout\n";
+
+	$quote = function($text) {
+		if((string)$text === "") return "";
+
+		return "> ".str_replace("\n", "\n> ", wordwrap(trim($text), 70));
+	};
+
+	if(isset($fit['metadata']['name'])) {
+		$md .= "# ".$fit['metadata']['name']."\n\n";
+	} else {
+		$md .= "\n";
+	}
+
+	if(isset($fit['metadata']['description'])) {
+		$q = $quote($fit['metadata']['description']);
+		if($q !== "") $md .= $q."\n\n";
+	}
+
+	if(isset($fit['metadata']['tags']) && count($fit['metadata']['tags']) > 0) {
+		$md .= "Tags: ".implode(", ", $fit['metadata']['tags'])."\n\n";
+	}
+
+	if(count($fit['presets']) > 0) $md .= "# Presets\n\n";
+	foreach($fit['presets'] as $pid => $preset) {
+		$md .= "## ".$preset['name']."\n\n";
+
+		if(isset($preset['description'])) {
+			$q = $quote($preset['description']);
+			if($q !== "") $md .= $q."\n\n";
+		}
+
+		/* Enforce consistent ordering of slot types, instead of just using foreach */
+		foreach(get_slottypes() as $type) {
+			if(!isset($preset['modules'][$type]) || count($preset['modules'][$type]) == 0) continue;
+
+			$md .= "### ".ucfirst($type)." slots\n\n";
+
+			ksort($preset['modules'][$type]);
+			foreach($preset['modules'][$type] as $index => $module) {
+				$md .= "- ".$module['typename'];
+
+				list($isactivable, ) = get_module_states($fit, $module['typeid']);
+				$state = $module['state'] === null ? $module['old_state'] : $module['state'];
+				if(($isactivable && $state != STATE_ACTIVE) || (!$isactivable && $state != STATE_ONLINE)) {
+					$md .= " (".lcfirst($statenames[$state][0]).")";
+				}
+
+				$md .= "\n";
+			}
+
+			$md .= "\n";
+		}
+
+		if(!isset($preset['chargepresets'])) continue;
+		$hascharges = false;
+		foreach($preset['chargepresets'] as $cp) {
+			foreach($cp['charges'] as $type => $a) {
+				foreach($a as $index => $c) {
+					$hascharges = true;
+					break 3;
+				}
+			}
+		}
+
+		if(!$hascharges) continue;
+
+		$md .= "### Charge presets\n\n";
+
+		ksort($preset['chargepresets']);
+		foreach($preset['chargepresets'] as $cpid => $cp) {
+			$md .= "#### ".$cp['name']."\n\n";
+
+			if(isset($cp['description'])) {
+				$q = $quote($cp['description']);
+				if($q !== "") $md .= $q."\n\n";
+			}
+
+			foreach(get_slottypes() as $type) {
+				if(!isset($cp['charges'][$type])) continue;
+
+				foreach($cp['charges'][$type] as $index => $charge) {
+					$md .= "- ".$charge['typename']."\n";
+				}
+			}
+
+			$md .= "\n";
+		}
+	}
+
+	$hasdrones = false;
+	if(isset($fit['dronepresets'])) {
+		foreach($fit['dronepresets'] as $dp) {
+			foreach($dp['drones'] as $drone) {
+				if($drone['quantityinbay'] > 0 || $drone['quantityinspace'] > 0) {
+					$hasdrones = true;
+					break 2;
+				}
+			}
+		}
+	}
+
+	if($hasdrones) {
+		$md .= "# Drone presets\n\n";
+
+		foreach($fit['dronepresets'] as $dp) {
+			$md .= "## ".$dp['name']."\n\n";
+			
+			if(isset($dp['description'])) {
+				$q = $quote($dp['description']);
+				if($q !== "") $md .= $q."\n\n";
+			}
+
+			foreach($dp['drones'] as $drone) {
+				$qties = array();
+				if($drone['quantityinspace'] > 0) {
+					$qties[] = $drone['quantityinspace']." in space";
+				}
+				if($drone['quantityinbay'] > 0) {
+					$qties[] = $drone['quantityinbay']." in bay";
+				}
+
+				if($qties === array()) continue;
+
+				$md .= "- ".$drone['typename']." (".implode(', ', $qties).")\n";
+			}
+
+			$md .= "\n";
+		}
+	}
+
+	if($embedclf) {
+		$md .= "----------\n\n";
+		$md .= "    BEGIN gzCLF BLOCK\n    ".wordwrap(base64_encode(gzcompress(export_to_common_loadout_format($fit, true))), 68, "\n    ", true)."\n    END gzCLF BLOCK\n\n";
+	}
+
+	return $md;
 }

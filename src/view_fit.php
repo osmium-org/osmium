@@ -168,7 +168,7 @@ echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].
 
 $slug = $author['charactername'].' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
 $slug = preg_replace('%[^a-z0-9-]%', '', str_replace(' ', '-', strtolower($slug)));
-echo "<li><small>Export this loadout: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Export in the Common Loadout Format'>CLF</a>, <a title='Export in the Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1'>minified CLF</a></small></li>\n";
+echo "<li><small>Export this loadout: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Export in the Common Loadout Format'>CLF</a>, <a title='Export in the Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}.md'>Markdown+gzCLF</a></small></li>\n";
 
 echo "</ul>\n";
 
