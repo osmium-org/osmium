@@ -18,7 +18,22 @@ ol#lhistory {
 
 		&> pre {
 			background-color: #F4F4F8;
-			padding: 0.5em;
+			color: #555;
+
+			&> ins {
+				background-color: #DFD;
+				color: black;
+			}
+
+			&> del {
+				background-color: #FDD;
+				color: black;
+			}
+
+			&> ins, &> del {
+				text-decoration: none;
+				opacity: 1.0;
+			}
 		}
 	}
 }

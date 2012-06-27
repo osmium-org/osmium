@@ -1080,3 +1080,23 @@ function sanitize(&$fit) {
 	/* Unset any extra charges of nonexistent modules. */
 	/* TODO */
 }
+
+/**
+ * Generate a delta (diff) between two fittings.
+ *
+ * @returns a string, containing HTML code (safe to print as-is,
+ * delta() already does some escaping), or null if a diff could not be
+ * generated
+ */
+function delta($old, $new) {
+	@include_once 'Horde/Autoloader/Default.php';
+	if(!class_exists('Horde_Text_Diff')) return null;
+
+	$oldt = \Osmium\Fit\export_to_markdown($old, false);
+	$newt = \Osmium\Fit\export_to_markdown($new, false);
+
+	$diff = new \Horde_Text_Diff('auto', array(explode("\n", $oldt), 
+	                                           explode("\n", $newt)));
+	$renderer = new \Horde_Text_Diff_Renderer_Inline();
+	return $renderer->render($diff);
+}

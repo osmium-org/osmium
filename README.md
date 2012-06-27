@@ -50,6 +50,8 @@ For users
 * Sphinx search server >= 2.0.4 
   (using the `sphinx.conf` from the `sphinx/` directory)
 
+* (Optional) Horde_Text_Diff PEAR package, see http://pear.horde.org
+
 * (Optional) memcached + PECL/memcached, for obvious reasons
 
 For developers

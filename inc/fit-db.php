@@ -403,3 +403,22 @@ function get_fit($loadoutid, $revision = null) {
 	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit);
 	return $fit;
 }
+
+/**
+ * If necessary, generate and insert the delta between the supplied
+ * fit's previous revision and its current revision in the database.
+ */
+function insert_fitting_delta_against_previous_revision($fit) {
+	if(!isset($fit['metadata']['revision']) || $fit['metadata']['revision'] == 1) return;
+
+	$old = get_fit($fit['metadata']['loadoutid'], $fit['metadata']['revision'] - 1);
+
+	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT delta FROM osmium.fittingdeltas WHERE fittinghash1 = $1 AND fittinghash2 = $2', array($old['metadata']['hash'], $fit['metadata']['hash'])));
+
+	if($row !== false) return; /* Delta already inserted */
+
+	$delta = delta($old, $fit);
+	if($delta === null) return;
+
+	\Osmium\Db\query_params('INSERT INTO osmium.fittingdeltas (fittinghash1, fittinghash2, delta) VALUES ($1, $2, $3)', array($old['metadata']['hash'], $fit['metadata']['hash'], $delta));
+}

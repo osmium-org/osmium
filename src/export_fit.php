@@ -26,7 +26,7 @@ if(!isset($_GET['type'])) {
 
 $type = $_GET['type'];
 
-if($type != "clf") {
+if($type != "clf" && $type != "md") {
 	\Osmium\fatal(400, "Invalid type specified.");
 }
 
@@ -62,5 +62,11 @@ if($type == 'clf') {
 	$json = \Osmium\Fit\export_to_common_loadout_format($fit, $minify);
 	header('Content-Type: application/json');
 	echo $json;
+	die();
+}
+
+if($type == 'md') {
+	header('Content-Type: text/plain');
+	echo \Osmium\Fit\export_to_markdown($fit);
 	die();
 }

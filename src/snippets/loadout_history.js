@@ -1,9 +1,9 @@
 toggle_revision_delta = function(li) {
 	if(li.hasClass('hidden')) {
-		li.find('p > a.toggle').text("hide diff");
+		li.find('p > a.toggle').text("hide changes");
 		li.find('pre').fadeIn(500);
 	} else {
-		li.find('p > a.toggle').text("show diff");
+		li.find('p > a.toggle').text("show changes");
 		li.find('pre').hide();
 	}
 
@@ -11,7 +11,7 @@ toggle_revision_delta = function(li) {
 }
 
 $(function() {
-	$("ol#lhistory > li > p > small.anchor").not(":last").before("<a href='javascript:void(0);' class='toggle'>show diff</a> — ");
+	$("ol#lhistory > li > p > small.anchor").not(":last").before("<a href='javascript:void(0);' class='toggle'>show changes</a> — ");
 	$("ol#lhistory > li > pre").hide();
 	$("ol#lhistory > li").addClass('hidden');
 

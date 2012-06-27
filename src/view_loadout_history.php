@@ -43,6 +43,7 @@ if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token()
 		\Osmium\Db\query_params('INSERT INTO osmium.loadouthistory (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $newrev, $hash, $accountid, time()));
 
 		\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
+		\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
 		header('Location: ./'.$loadoutid);
 		die();
 	}
@@ -78,7 +79,7 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 
 	if($rev['revision'] > 1) {
 		echo "<pre>";
-		echo $rev['delta'] === null ? '(delta is not available, sorry)' : htmlspecialchars($rev['delta']);
+		echo $rev['delta'] === null ? '(delta is not available, sorry)' : $rev['delta'];
 		echo "</pre>\n";
 	}
 
