@@ -42,6 +42,7 @@ if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token()
 		$accountid = \Osmium\State\get_state('a')['accountid'];
 		\Osmium\Db\query_params('INSERT INTO osmium.loadouthistory (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $newrev, $hash, $accountid, time()));
 
+		\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
 		header('Location: ./'.$loadoutid);
 		die();
 	}

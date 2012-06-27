@@ -283,6 +283,10 @@ function get_fit($loadoutid, $revision = null) {
 	}
 
 	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null)) !== null) {
+		if(isset($latest_revision) && $latest_revision === true) {
+			\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
+		}
+
 		return $cache;
 	}
 
