@@ -197,11 +197,11 @@ if(count($fit['metadata']['tags']) > 0) {
 	foreach($fit['metadata']['tags'] as $tag) {
 		echo "<li><a href='../search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
 	}
-	echo "</ul>\n</div>\n";
+	echo "</ul>\n";
 } else {
 	echo "<em>(no tags)</em>";
 }
-echo "</header>\n";
+echo "</div>\n</header>\n";
 
 $aslots = \Osmium\Fit\get_attr_slottypes();
 $astates = \Osmium\Fit\get_state_names();
