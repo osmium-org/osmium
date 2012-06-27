@@ -11,10 +11,9 @@ toggle_revision_delta = function(li) {
 }
 
 $(function() {
-	$("ol#lhistory > li > p > small.anchor").before("<a href='javascript:void(0);' class='toggle'>show diff</a> ");
+	$("ol#lhistory > li > p > small.anchor").not(":last").before("<a href='javascript:void(0);' class='toggle'>show diff</a> — ");
 	$("ol#lhistory > li > pre").hide();
 	$("ol#lhistory > li").addClass('hidden');
-	$("ol#lhistory > li > p > a.toggle").last().remove();
 
 	var first = $("ol#lhistory > li").first();
 	first.find('pre').show();

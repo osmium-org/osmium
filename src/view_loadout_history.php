@@ -32,10 +32,25 @@ if(!\Osmium\State\can_access_fit($fit)) {
 	\Osmium\fatal(403, "Password-protected fit, please enter password on the view loadout page first.");
 }
 
+if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token() && isset($_GET['rollback'])) {
+	$hash = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT fittinghash FROM osmium.loadouthistory WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $_GET['rollback'])));
+	$rev = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT MAX(revision) FROM osmium.loadouthistory WHERE loadoutid = $1', array($loadoutid)));
+	if($hash !== false && $rev !== false) {
+		$newrev = $rev[0] + 1;
+		$hash = $hash[0];
+
+		$accountid = \Osmium\State\get_state('a')['accountid'];
+		\Osmium\Db\query_params('INSERT INTO osmium.loadouthistory (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $newrev, $hash, $accountid, time()));
+
+		header('Location: ./'.$loadoutid);
+		die();
+	}
+}
+
 \Osmium\Chrome\print_header('Revision history of loadout #'.$loadoutid, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
 echo "<h1>Revision history of loadout <a href='../loadout/$loadoutid'>#$loadoutid</a></h1>\n";
 
-$histq = \Osmium\Db\query_params('SELECT loadouthistory.revision, loadouthistory.updatedate, delta, accounts.accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator
+$histq = \Osmium\Db\query_params('SELECT loadouthistory.fittinghash, loadouthistory.revision, loadouthistory.updatedate, delta, accounts.accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator
 FROM osmium.loadouthistory
 LEFT JOIN osmium.loadouthistory AS previousrev ON loadouthistory.loadoutid = previousrev.loadoutid
                                                AND previousrev.revision = (loadouthistory.revision - 1)
@@ -49,13 +64,16 @@ echo "<ol id='lhistory'>\n";
 $first = true;
 while($rev = \Osmium\Db\fetch_assoc($histq)) {
 	$class = $first ? 'opened' : 'closed';
-	if($first) $first = false;
 
 	echo "<li value='".$rev['revision']."' class='$class' id='revision".$rev['revision']."'>\n<p>";
 	echo "<a href='../loadout/$loadoutid?revision=".$rev['revision']."'><strong>Revision #".$rev['revision']."</strong></a>";
 	echo ", by ".\Osmium\Chrome\format_character_name($rev, '..');
 	echo " (".date('Y-m-d', $rev['updatedate']).")";
-	echo " <small class='anchor'><a href='#revision".$rev['revision']."'>#</a></small></p>\n";
+	echo " — <small class='anchor'><a href='#revision".$rev['revision']."'>#</a></small>";
+	if(!$first && $can_edit) {
+		echo " — <small><a class='dangerous' href='?rollback=".$rev['revision']."&amp;tok=".\Osmium\State\get_token()."'>rollback to this revision</a></small>";
+	}
+	echo "<br /><code>fittinghash ".$rev['fittinghash']."</code></p>\n";
 
 	if($rev['revision'] > 1) {
 		echo "<pre>";
@@ -64,6 +82,7 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 	}
 
 	echo "</li>\n";
+	if($first) $first = false;
 }
 echo "</ol>\n";
 
