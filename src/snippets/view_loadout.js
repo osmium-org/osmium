@@ -114,7 +114,8 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 			$("div#inspace > ul").append("<li><em>(no drones in space)</em></li>");
 		}
 
-		$("div#computed_attributes").html(json['attributes']);
+		var meta = $("div#computed_attributes > section#vmeta");
+		$("div#computed_attributes").html(json['attributes']).prepend(meta);
 		osmium_fattribs_load();
 
 		$("img#vloadoutbox_spinner").css('visibility', 'hidden');
