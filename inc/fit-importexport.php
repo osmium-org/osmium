@@ -598,3 +598,60 @@ function export_to_eft($fit) {
 
 	return $r;
 }
+
+/**
+ * Export a loadout to the EFT format. Use at your own risk.
+ */
+function export_to_dna($fit) {
+	static $slotorder = array('high', 'medium', 'low', 'rig');
+
+	$dna = $fit['ship']['typeid'];
+
+	if(isset($fit['modules']['subsystem'])) {
+		foreach($fit['modules']['subsystem'] as $s) {
+			$dna .= ':'.$s['typeid'];
+		}
+	}
+
+	$tids = array();
+
+	foreach($slotorder as $type) {
+		if(isset($fit['modules'][$type])) {	
+			foreach($fit['modules'][$type] as $m) {
+				if(!isset($tids[$m['typeid']])) {
+					$tids[$m['typeid']] = 1;
+				} else {
+					++$tids[$m['typeid']];
+				}
+			}
+		}
+	}
+
+	foreach($fit['drones'] as $d) {
+		if(!isset($tids[$d['typeid']])) {
+			$tids[$d['typeid']] = 0;
+		}
+
+		$tids[$d['typeid']] += $d['quantityinspace'];
+		$tids[$d['typeid']] += $d['quantityinbay'];
+	}
+
+	foreach($fit['charges'] as $a) {
+		foreach($a as $c) {
+			if(!isset($tids[$c['typeid']])) {
+				$tids[$c['typeid']] = 1;
+			} else {
+				++$tids[$c['typeid']];
+			}	
+		}
+	}
+
+	$ftids = array();
+	foreach($tids as $tid => $qty) {
+		$ftids[] = $tid.";".$qty;
+	}
+
+	$dna .= ':'.implode(':', $ftids);
+
+	return $dna.'::';
+}

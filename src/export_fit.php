@@ -26,7 +26,7 @@ if(!isset($_GET['type'])) {
 
 $type = $_GET['type'];
 
-if($type != "clf" && $type != "md" && $type != "evexml" && $type != "eft") {
+if($type != "clf" && $type != "md" && $type != "evexml" && $type != "eft" && $type != "dna") {
 	\Osmium\fatal(400, "Invalid type specified.");
 }
 
@@ -82,5 +82,11 @@ if($type == 'evexml') {
 if($type == 'eft') {
 	header('Content-Type: text/plain');
 	echo \Osmium\Fit\export_to_eft($fit);
+	die();
+}
+
+if($type == 'dna') {
+	header('Content-Type: text/plain');
+	echo \Osmium\Fit\export_to_dna($fit);
 	die();
 }

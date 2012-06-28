@@ -18,5 +18,6 @@ RewriteRule ^/?export/(.+)-clf-([1-9][0-9]*)\.json$ src/export_fit.php?type=clf&
 RewriteRule ^/?export/(.+)-md-([1-9][0-9]*)\.md$ src/export_fit.php?type=md&loadoutid=$2 [L,QSA]
 RewriteRule ^/?export/(.+)-evexml-([1-9][0-9]*)\.xml src/export_fit.php?type=evexml&loadoutid=$2 [L,QSA]
 RewriteRule ^/?export/(.+)-eft-([1-9][0-9]*)\.txt src/export_fit.php?type=eft&loadoutid=$2 [L,QSA]
+RewriteRule ^/?export/(.+)-dna-([1-9][0-9]*)\.txt src/export_fit.php?type=dna&loadoutid=$2 [L,QSA]
 
 RewriteRule !^/?(src|static) - [L,R=404]
