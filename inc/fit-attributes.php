@@ -364,3 +364,43 @@ function get_damage_from_drones(&$fit) {
 
 	return 1000 * $dps;
 }
+
+/**
+ * Get the optimal range, falloff and tracking speed of a module (in
+ * the current preset).
+ *
+ * @returns an array with any of the three keys: trackingspeed, range,
+ * falloff.
+ */
+function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
+	$categories = get_state_categories();
+
+	$attributes = array();
+	$typeid = $fit['modules'][$type][$index]['typeid'];
+	$state = $fit['modules'][$type][$index]['state'];
+
+	foreach($fit['cache'][$typeid]['effects'] as $effect) {
+		$effectdata = $fit['cache']['__effects'][$effect['effectname']];
+
+		if(!in_array($effectdata['effectcategory'], $categories[$state])) continue;
+		if(!$effectdata['trackingspeedattributeid']
+		   && !$effectdata['rangeattributeid']
+		   && !$effectdata['falloffattributeid']) {
+			continue;
+		}
+
+		foreach(array('trackingspeed', 'range', 'falloff') as $t) {
+			if(!$effectdata[$t.'attributeid']) continue;
+			$attributeid = $effectdata[$t.'attributeid'];
+
+			get_attribute_in_cache($attributeid, $fit['cache']);
+			$attributename = $fit['cache']['__attributes'][$attributeid]['attributename'];
+
+			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
+		}
+
+		break;
+	}
+
+	return $attributes;
+}

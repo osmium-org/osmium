@@ -61,6 +61,18 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 			}
 		}
 
+		if($.type(json['ranges']) === 'object') {
+			for(var type in json['ranges']) {
+				for(var index in json['ranges'][type]) {
+					var li = $("div#vloadoutbox > div.slots > ul > li").filter(function() {
+						return $(this).data('slottype') == type && $(this).data('index') == index;
+					});
+					li.find('span.range').text(json['ranges'][type][index][0])
+						.attr('title', json['ranges'][type][index][1]);
+				}
+			}
+		}
+
 		var used_bandwidth = 0;
 		var total_bandwidth;
 		$("div#inbay > ul, div#inspace > ul").empty();

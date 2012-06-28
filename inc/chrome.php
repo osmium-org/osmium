@@ -149,6 +149,9 @@ function format_resonance($resonance) {
 	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
 }
 
+/**
+ * Format a character name (with a link to the profile).
+ */
 function format_character_name($a, $relative = '.') {
 	$m = \Osmium\Flag\format_moderator_name($a);
 
@@ -157,4 +160,74 @@ function format_character_name($a, $relative = '.') {
 	} else {
 		return $m;
 	}
+}
+
+/**
+ * Format a optimal/falloff to give a short result (like 5+3.2k).
+ *
+ * @param $ranges array as returned by
+ * get_optimal_falloff_tracking_of_module().
+ */
+function format_short_range($ranges) {
+	if(!isset($ranges['range'])) $ranges['range'] = 0;
+
+	$optimal = round($ranges['range'] / 1000, $ranges['range'] >= 10000 ? 0 : 1);
+
+	if(isset($ranges['falloff'])) {
+		$falloff = '+'.round($ranges['falloff'] / 1000, $ranges['falloff'] >= 10000 ? 0 : 1);
+	} else {
+		$falloff = '';
+	}
+
+	return $optimal.$falloff.'k';
+}
+
+/**
+ * Format a optimal/falloff/tracking speed.
+ *
+ * @param $ranges array as returned by
+ * get_optimal_falloff_tracking_of_module().
+ */
+function format_long_range($ranges) {
+	$r = array();
+
+	if(isset($ranges['range'])) {
+		if($ranges['range'] >= 10000) {
+			$range = round($ranges['range'] / 1000, 1).' km';
+		} else {
+			$range = round($ranges['range']).' m';
+		}
+
+		$r[] = "Optimal: ".$range;
+	}
+
+	if(isset($ranges['falloff'])) {
+		if($ranges['falloff'] >= 10000) {
+			$falloff = round($ranges['falloff'] / 1000, 1).' km';
+		} else {
+			$falloff = round($ranges['falloff']).' m';
+		}
+
+		$r[] = "Falloff: ".$falloff;
+	}
+
+	if(isset($ranges['trackingspeed'])) {
+		$r[] = "Tracking: ".round_sd($ranges['trackingspeed'], 2)." rad/s";
+	}
+
+	return implode(";&#10;", $r);
+}
+
+/**
+ * Round a number with a fixed number of significant digits.
+ */
+function round_sd($number, $digits = 0) {
+	if($number == 0) $normalized = 0;
+	else {
+		$normalized = $number / ($m = pow(10, floor(log10($number))));
+	}
+
+	$normalized = number_format($normalized, $digits);
+
+	return $normalized * $m;
 }

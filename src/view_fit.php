@@ -221,6 +221,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 
 	foreach($modules as $index => $mod) {
 		$state = \Osmium\Fit\get_module_state_by_location($fit, $type, $index);
+		$ranges = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, $type, $index);
 
 		$charge = '';
 		if(isset($fit['charges'][$type][$index])) {
@@ -229,7 +230,14 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 
 		list($stname, $stpicture) = $astates[$state];
 
-		echo "<li data-typeid='".$mod['typeid']."' data-index='".$index."' data-slottype='".$type."' data-state='".$state."'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span><a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='../static/icons/$stpicture' alt='$stname' /></a></li>\n";
+		echo "<li data-typeid='".$mod['typeid']."' data-index='".$index."' data-slottype='".$type."' data-state='".$state."'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span>";
+		echo "<a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='../static/icons/$stpicture' alt='$stname' /></a>";
+
+		if($ranges !== array()) {
+			echo "<span class='range' title='".\Osmium\Chrome\format_long_range($ranges)."'>".\Osmium\Chrome\format_short_range($ranges)."</span>";
+		}
+
+		echo "</li>\n";
 	}
 
 	for($i = count($modules); $i < $slotcount; ++$i) {

@@ -77,6 +77,7 @@ function get_loadable_fit(&$fit) {
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
 		'slots' => get_slot_usage($fit),
 		'states' => get_module_states($fit),
+		'ranges' => get_module_ranges($fit),
 		'presetid' => $fit['modulepresetid'],
 		'presets' => \Osmium\Fit\get_presets($fit),
 		'presetdesc' => $fit['modulepresetdesc']
@@ -156,4 +157,24 @@ function get_loadable_charges(&$fit) {
 		'chargepresetdesc' => $fit['chargepresetdesc'],
 		'charges' => get_fittable_charges($fit)
 		);
+}
+
+function get_module_ranges($fit) {
+	$ranges = array();
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
+		foreach($a as $index => $m) {
+			$r = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, $type, $index);
+			if($r === array()) {
+				$ranges[$type][$index] = array('', '');
+				continue;
+			}
+
+			$ranges[$type][$index] = array(
+				\Osmium\Chrome\format_short_range($r),
+				\Osmium\Chrome\format_long_range($r)
+				);
+		}
+	}
+
+	return $ranges;
 }

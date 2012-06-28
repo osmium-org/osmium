@@ -53,6 +53,17 @@ $module-width: 19em;
 	}
 }
 
+@mixin module-bottom-corner-info {
+	display: inline;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	font-size: 0.8em;
+	line-height: 1em;
+	height: 1em;
+	opacity: 0.4;
+}
+
 @mixin module-list-togglable {
 	width: $module-width;
 	display: inline-block;
@@ -73,6 +84,10 @@ $module-width: 19em;
 
 			&> a.toggle {
 				display: none;
+			}
+
+			&> span.range {
+				@include module-bottom-corner-info;
 			}
 		}
 	}

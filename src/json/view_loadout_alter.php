@@ -76,6 +76,7 @@ $array =
 		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
 		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit, '..'),
 		'states' => \Osmium\AjaxCommon\get_module_states($fit),
+		'ranges' => \Osmium\AjaxCommon\get_module_ranges($fit),
 		);
 
 \Osmium\Chrome\return_json($array);

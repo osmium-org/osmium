@@ -58,7 +58,15 @@ osmium_populate_slots = function(json, slot_type) {
     for(var i in json['modules'][slot_type]) {
 		var c = '';
 		var sttoggle = '';
+		var ranges = '';
 
+		if(slot_type in json['ranges'] && i in json['ranges'][slot_type]) {
+			ranges = "<span class='range' title='"
+				+ json['ranges'][slot_type][i][1]
+				+ "'>"
+				+ json['ranges'][slot_type][i][0]
+				+ "</span>";
+		}
 		if(slot_type in json['states']) {
 			var stname = json['states'][slot_type][i]['name'];
 			var stpicture = json['states'][slot_type][i]['image'];
@@ -79,7 +87,8 @@ osmium_populate_slots = function(json, slot_type) {
 				+ "' data-index='" + i
 				+ "'><img src='http://image.eveonline.com/Type/" 
 				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
-				+ json['modules'][slot_type][i]['typename'] + sttoggle
+				+ json['modules'][slot_type][i]['typename']
+				+ sttoggle + ranges
 				+ "</li>\n"
 		);
     }
