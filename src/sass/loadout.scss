@@ -282,6 +282,20 @@ div#computed_attributes > section {
 			}
 		}	
 	}
+
+	&> div > ul {
+		list-style-type: square;
+		margin: 0;
+		padding-left: 1.25em;
+
+		&> li.export {
+			font-size: 0.8em;
+
+			&> ul {
+				padding-left: 1.25em;
+			}
+		}
+	}
 }
 
 div#computed_attributes > section > div > table#resists {

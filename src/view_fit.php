@@ -157,7 +157,9 @@ if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['
 	echo"</form>\n";
 }
 
-echo "<ul>\n";
+echo "<div id='computed_attributes'>\n";
+
+echo "<section id='vmeta'>\n<h4>Meta</h4>\n<div>\n<ul>\n";
 if($can_edit) {
 	echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
 	echo "<li><a href='../delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
@@ -168,16 +170,14 @@ echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].
 
 $slug = $author['charactername'].' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
 $slug = preg_replace('%[^a-z0-9-]%', '', str_replace(' ', '-', strtolower($slug)));
-echo "<li><small>Export this loadout: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Export in the Common Loadout Format'>CLF</a>, <a title='Export in the Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}.md'>Markdown+gzCLF</a></small></li>\n";
+echo "<li class='export'>Export this loadout:\n<ul>\n";
+echo "<li>Lossless formats: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Common Loadout Format, human-readable'>CLF</a>, <a title='Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}.md' title='Markdown with embedded gzipped Common Loadout Format'>Markdown+gzCLF</a></li>\n";
+echo "</ul>\n</li>\n";
 
-echo "</ul>\n";
+echo "</ul>\n</div>\n</section>\n";
 
-echo "<div id='computed_attributes'>\n";
 \Osmium\Chrome\print_formatted_loadout_attributes($fit, '..');
 echo "</div>\n";
-
-echo "<h2>Fitting description</h2>\n";
-echo "<p id='fitdesc'>\n".nl2br(htmlspecialchars($fit['metadata']['description']))."</p>\n";
 
 echo "</div>\n";
 
@@ -286,6 +286,23 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 
 	echo "</div>\n";
 }
+
+echo "<div id='vdescriptions'>\n";
+echo "<h2>Fitting description</h2>\n";
+echo "<p id='fitdesc'>\n".nl2br(htmlspecialchars($fit['metadata']['description']))."</p>\n";
+if(isset($fit['modulepresetdesc']) && $fit['modulepresetdesc']) {
+	echo "<h3>Preset description</h3>\n<p id='presetdesc'>\n"
+		.nl2br(htmlspecialchars($fit['modulepresetdesc']))."</p>\n";
+}
+if(isset($fit['chargepresetdesc']) && $fit['chargepresetdesc']) {
+	echo "<h3>Charge preset description</h3>\n<p id='chargepresetdesc'>\n"
+		.nl2br(htmlspecialchars($fit['chargepresetdesc']))."</p>\n";
+}
+if(isset($fit['dronepresetdesc']) && $fit['dronepresetdesc']) {
+	echo "<h3>Drone preset description</h3>\n<p id='dronepresetdesc'>\n"
+		.nl2br(htmlspecialchars($fit['dronepresetdesc']))."</p>\n";
+}
+echo "</div>\n";
 
 echo "</div>\n";
 
