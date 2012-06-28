@@ -561,3 +561,40 @@ function export_to_eve_xml_single(\DOMDocument $f, $fit, $embedclf = true) {
 
 	return $e;
 }
+
+/**
+ * Export a loadout to the EFT format. Use at your own risk.
+ */
+function export_to_eft($fit) {
+	static $slotorder = array('low', 'medium', 'high', 'rig', 'subsystem');
+	$r = '['.$fit['ship']['typename'];
+
+	$name = isset($fit['metadata']['name']) ? $fit['metadata']['name'] : 'unnamed';
+	$r .= ', '.$name."]\n\n";
+
+	foreach($slotorder as $type) {
+		if(!isset($fit['modules'][$type])) continue;
+
+		foreach($fit['modules'][$type] as $index => $module) {
+			$r .= $module['typename'];
+			if(isset($fit['charges'][$type][$index])) {
+				$r .= ', '.$fit['charges'][$type][$index]['typename'];
+			}
+
+			$r .= "\n";
+		}
+
+		$r .= "\n";
+	}
+
+	foreach($fit['drones'] as $drone) {
+		$qty = 0;
+		if(isset($drone['quantityinbay'])) $qty += $drone['quantityinbay'];
+		if(isset($drone['quantityinspace'])) $qty += $drone['quantityinspace'];
+		if($qty == 0) continue;
+
+		$r .= $drone['typename'].' x'.$qty."\n";
+	}
+
+	return $r;
+}
