@@ -313,6 +313,18 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 }
 
 /**
+ * Generate base64-encoded, gzipped CLF of a fit. Designed to be easy
+ * to recognize/parse by machines, and resilient to user/program
+ * stupidity (such as encoding changes, line breaks, added symbols
+ * etc.).
+ */
+function export_to_gzclf($fit) {
+	return "BEGIN gzCLF BLOCK\n"
+		.wordwrap(base64_encode(gzcompress(export_to_common_loadout_format($fit, true))), 72, "\n", true)
+		."\nEND gzCLF BLOCK\n";
+}
+
+/**
  * Generate a Markdown-formatted description of a loadout. This is a
  * one-way operation only, unless $embedclf is set to true.
  */
@@ -453,8 +465,99 @@ function export_to_markdown($fit, $embedclf = true) {
 
 	if($embedclf) {
 		$md .= "----------\n\n";
-		$md .= "    BEGIN gzCLF BLOCK\n    ".wordwrap(base64_encode(gzcompress(export_to_common_loadout_format($fit, true))), 68, "\n    ", true)."\n    END gzCLF BLOCK\n\n";
+		$md .= "    ".str_replace("\n", "\n    ", trim(export_to_gzclf($fit)))."\n\n";
 	}
 
 	return $md;
+}
+
+/**
+ * Export an array of fits to the EVE XML format (which can be later
+ * imported in the client).
+ */
+function export_to_eve_xml(array $fits, $embedclf = true) {
+	$xml = new \DOMDocument();
+	$fittings = $xml->createElement('fittings');
+	$xml->appendChild($fittings);
+
+	foreach($fits as $fit) {
+		$fittings->appendChild(export_to_eve_xml_single($xml, $fit, $embedclf));
+	}
+
+	return $xml->saveXML();
+}
+
+/** @internal */
+function export_to_eve_xml_single(\DOMDocument $f, $fit, $embedclf = true) {
+	static $modtypes = array(
+		'low' => 'low',
+		'medium' => 'med',
+		'high' => 'hi',
+		'rig' => 'rig',
+		'subsystem' => 'subsystem',
+		);
+
+	$e = $f->createElement('fitting');
+
+	$name = isset($fit['metadata']['name']) ? $fit['metadata']['name'] : 'Unnamed fitting';
+	$description = isset($fit['metadata']['description']) ? $fit['metadata']['description'] : '';
+	if($embedclf) {
+		if($description) $description = rtrim($description)."\n\n";
+		$description .= export_to_gzclf($fit);
+	}
+
+	$aname = $f->createAttribute('name');
+	$aname->appendChild($f->createTextNode($name));
+	$e->appendChild($aname);
+
+	$edesc = $f->createElement('description');
+	$avalue = $f->createAttribute('value');
+	$avalue->appendChild($f->createTextNode($description));
+	$edesc->appendChild($avalue);
+	$e->appendChild($edesc);
+
+	$eshiptype = $f->createElement('shipType');
+	$avalue = $f->createAttribute('value');
+	$avalue->appendChild($f->createTextNode($fit['ship']['typename']));
+	$eshiptype->appendChild($avalue);
+	$e->appendChild($eshiptype);
+
+	foreach($fit['modules'] as $type => $a) {
+		ksort($a);
+		/* Ensure contiguous indexes */
+		$i = 0;
+		foreach($a as $module) {
+			$ehardware = $f->createElement('hardware');
+			$aslot = $f->createAttribute('slot');
+			$aslot->appendChild($f->createTextNode($modtypes[$type].' slot '.$i));
+			$atype = $f->createAttribute('type');
+			$atype->appendChild($f->createTextNode($module['typename']));
+			$ehardware->appendChild($aslot);
+			$ehardware->appendChild($atype);
+			$e->appendChild($ehardware);
+
+			++$i;
+		}
+	}
+
+	foreach($fit['drones'] as $drone) {
+		$qty = 0;
+		if(isset($drone['quantityinbay'])) $qty += $drone['quantityinbay'];
+		if(isset($drone['quantityinspace'])) $qty += $drone['quantityinspace'];
+		if($qty == 0) continue;
+
+		$ehardware = $f->createElement('hardware');
+		$aqty = $f->createAttribute('qty');
+		$aqty->appendChild($f->createTextNode($qty));
+		$aslot = $f->createAttribute('slot');
+		$aslot->appendChild($f->createTextNode('drone bay'));
+		$atype = $f->createAttribute('type');
+		$atype->appendChild($f->createTextNode($drone['typename']));
+		$ehardware->appendChild($aqty);
+		$ehardware->appendChild($aslot);
+		$ehardware->appendChild($atype);
+		$e->appendChild($ehardware);
+	}
+
+	return $e;
 }

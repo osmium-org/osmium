@@ -26,7 +26,7 @@ if(!isset($_GET['type'])) {
 
 $type = $_GET['type'];
 
-if($type != "clf" && $type != "md") {
+if($type != "clf" && $type != "md" && $type != "evexml") {
 	\Osmium\fatal(400, "Invalid type specified.");
 }
 
@@ -68,5 +68,13 @@ if($type == 'clf') {
 if($type == 'md') {
 	header('Content-Type: text/plain');
 	echo \Osmium\Fit\export_to_markdown($fit);
+	die();
+}
+
+if($type == 'evexml') {
+	$embedclf = !isset($_GET['embedclf']) || $_GET['embedclf'];
+
+	header('Content-Type: application/xml');
+	echo \Osmium\Fit\export_to_eve_xml(array($fit), $embedclf);
 	die();
 }
