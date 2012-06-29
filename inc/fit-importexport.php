@@ -18,6 +18,313 @@
 
 namespace Osmium\Fit;
 
+const CLF_PATH = '/../lib/common-loadout-format/validators/php/lib.php';
+
+/*
+ * Try to parse a loadout from a CLF string (containing JSON-encoded
+ * data). Any errors will be put in $errors.
+ *
+ * Returns false if there was an unrecoverable error, or a $fit.
+ */
+function try_parse_fit_from_common_loadout_format($jsonstring, &$errors) {
+	require_once __DIR__.CLF_PATH;
+
+	$status = \CommonLoadoutFormat\validate_clf($jsonstring, $errors);
+	if($status !== \CommonLoadoutFormat\OK && $status !== \CommonLoadoutFormat\OK_WITH_WARNINGS) {
+		return false;
+	}
+
+	$json = json_decode($jsonstring, true);
+	$version =  $json['clf-version'];
+	if(!function_exists($parse = 'Osmium\Fit\clf_parse_'.$version)) {
+		$errors[] = "Fatal: unsupported CLF version.";
+		return false;
+	}
+
+	$fit = $parse($json, $errors);
+	if($fit === false) return false;
+
+	\reset($fit['presets']);
+	use_preset($fit, key($fit['presets']));
+	\reset($fit['chargepresets']);
+	use_charge_preset($fit, key($fit['chargepresets']));
+	\reset($fit['dronepresets']);
+	use_drone_preset($fit, key($fit['dronepresets']));
+
+	return $fit;
+}
+
+/** @internal */
+function clf_parse_1(array $json, &$errors) {
+	create($fit);
+	select_ship($fit, $json['ship']['typeid']);
+
+	if(isset($json['presets']) && is_array($json['presets'])) {
+		clf_parse_presets_1($fit, $json['presets'], $errors);
+	}
+
+	if(isset($json['drones']) && is_array($json['drones'])) {
+		clf_parse_dronepresets_1($fit, $json['drones'], $errors);
+	}
+
+	if(isset($json['metadata']) && is_array($json['metadata'])) {
+		clf_parse_meta_1($fit, $json['metadata'], $errors);
+	}
+
+	return $fit;
+}
+
+/** @internal */
+function clf_parse_presets_1(&$fit, &$presets, &$errors) {
+	$names = array();
+	$firstpreset = true;
+	$i = 0;
+
+	foreach($presets as &$preset) {
+		if(isset($preset['presetname']) && !isset($names[$preset['presetname']])) {
+			$name = $preset['presetname'];
+		} else {
+			if(isset($preset['presetname'])) $overwritename = $preset['presetname'];
+
+			do {
+				$name = 'Preset #'.(++$i);
+			} while(isset($names[$name]));
+		}
+
+		$description = isset($preset['presetdescription']) ?
+			$preset['presetdescription'] : '';
+
+		$preset['presetname'] = $name;
+		$preset['presetdescription'] = $description;
+
+		if($firstpreset) {
+			$firstpreset = false;
+			$fit['modulepresetname'] = $name;
+			$fit['modulepresedesc'] = $description;
+			$id = $fit['modulepresetid'];
+		} else {
+			$id = create_preset($fit, $name, $description);
+			use_preset($fit, $id);
+
+			if(isset($overwritename) && $overwritename !== null) {
+				remove_preset($fit, $names[$name]);
+				$fit['modulepresetname'] = $overwritename;
+				$overwritename = null;
+			}
+		}
+		$names[$name] = $id;
+
+		if(isset($preset['modules']) && is_array($preset['modules'])) {
+			clf_parse_modules_1($fit, $preset['modules'], $errors);
+		}
+
+		if(isset($preset['chargepresets']) && is_array($preset['chargepresets'])) {
+			$modules = isset($preset['modules']) && is_array($preset['modules']) ?
+				$preset['modules'] : array();
+
+			clf_parse_chargepresets_1($fit, $preset['chargepresets'], $modules, $errors);
+		}
+	}
+}
+
+/** @internal */
+function clf_parse_modules_1(&$fit, &$modules, &$errors) {
+	static $nstates = array(
+		'offline' => STATE_OFFLINE,
+		'online' => STATE_ONLINE,
+		'active' => STATE_ACTIVE,
+		'overloaded' => STATE_OVERLOADED,
+		);
+	static $states = array(
+		array(STATE_OFFLINE, STATE_ONLINE, STATE_ACTIVE, STATE_OVERLOADED),
+		array(STATE_OFFLINE, STATE_ONLINE, STATE_ACTIVE)
+		);
+
+	$indexes = array();
+
+	foreach($modules as $k => &$m) {
+		$type = \CommonLoadoutFormat\get_module_slottype($m['typeid']);
+		if($type == 'unknown') {
+			unset($modules[$k]);
+		}
+
+		if(isset($m['index']) && is_int($m['index']) && !isset($indexes[$type][$m['index']])) {
+			$index = $m['index'];
+		} else {
+			$index = 0;
+			while(isset($indexes[$type][$index])) ++$index;
+		}
+		$indexes[$type][$index] = true;
+
+		add_module($fit, $index, $m['typeid']);
+
+		list($isactivable, $isoverloadable) = get_module_states($fit, $m['typeid']);
+		if(isset($m['state']) && isset($nstates[$m['state']])) {
+			$state = $nstates[$m['state']];
+			if(($isoverloadable && in_array($state, $states[0]))
+			   || ($isactivable && in_array($state, $states[1]))) {
+				change_module_state_by_typeid($fit, $index, $m['typeid'], $state);
+			}
+		}
+
+		$m['slottype'] = $type;
+		$m['index'] = $index;
+	}
+}
+
+/** @internal */
+function clf_parse_chargepresets_1(&$fit, &$cpresets, &$modules, &$errors) {
+	$names = array();
+	$firstpreset = true;
+	$i = 0;
+	$cpids = array();
+
+	foreach($cpresets as &$cpreset) {
+		if(isset($cpreset['name']) && !isset($names[$cpreset['name']])) {
+			$name = $cpreset['name'];
+		} else {
+			if(isset($cpreset['name'])) $overwritename = $cpreset['name'];
+
+			do {
+				$name = 'Charge preset #'.(++$i);
+			} while(isset($names[$name]));
+		}
+
+		$description = isset($cpreset['description']) ?
+			$cpreset['description'] : '';
+
+		$cpreset['name'] = $name;
+		$cpreset['description'] = $description;
+		if(!isset($cpreset['id']) || !is_int($cpreset['id'])) {
+			$cpreset['id'] = 0;
+		}
+
+		if($firstpreset) {
+			$firstpreset = false;
+			$fit['chargepresetname'] = $name;
+			$fit['chargepresetdesc'] = $description;
+			$id = $fit['chargepresetid'];
+		} else {
+			$id = create_charge_preset($fit, $name, $description);
+			use_charge_preset($fit, $id);
+
+			if(isset($overwritename) && $overwritename !== null) {
+				remove_charge_preset($fit, $names[$cpreset['name']]);
+				$fit['chargepresetname'] = $overwritename;
+				$overwritename = null;
+			}
+		}
+		$cpids[$cpreset['id']] = $id;
+		$names[$cpreset['name']] = $id;
+
+		foreach($modules as &$m) {
+			if(!isset($m['charges']) || !is_array($m['charges'])) continue;
+			foreach($m['charges'] as &$c) {
+				if(!isset($c['cpid'])) $c['cpid'] = 0;
+				if($c['cpid'] != $cpreset['id']) continue;
+
+				if(!\CommonLoadoutFormat\check_typeof_type(
+					   $c['typeid'], "charge")) continue;
+				if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module(
+					   $m['typeid'], $c['typeid'])) continue;
+
+				/* The type and index are correct here, they were fixed previously */
+				add_charge($fit, $m['slottype'], $m['index'], $c['typeid']);
+			}
+		}
+	}	
+}
+
+/** @internal */
+function clf_parse_dronepresets_1(&$fit, &$drones, &$errors) {
+	$names = array();
+	$firstpreset = true;
+	$i = 0;
+
+	foreach($drones as &$dpreset) {
+		if(isset($dpreset['presetname']) && !isset($names[$dpreset['presetname']])) {
+			$name = $dpreset['presetname'];
+		} else {
+			if(isset($dpreset['presetname'])) $overwritename = $dpreset['presetname'];
+
+			do {
+				$name = 'Drone preset #'.(++$i);
+			} while(isset($names[$name]));
+		}
+
+		$description = isset($dpreset['presetdescription']) ?
+			$dpreset['presetdescription'] : '';
+
+		$dpreset['presetname'] = $name;
+		$dpreset['presetdescription'] = $description;
+
+		if($firstpreset) {
+			$firstpreset = false;
+			$fit['dronepresetname'] = $name;
+			$fit['dronepresedesc'] = $description;
+			$id = $fit['dronepresetid'];
+		} else {
+			$id = create_drone_preset($fit, $name, $description);
+			use_drone_preset($fit, $id);
+
+			if(isset($overwritename) && $overwritename !== null) {
+				remove_drone_preset($fit, $names[$name]);
+				$fit['dronepresetname'] = $overwritename;
+				$overwritename = null;
+			}
+		}
+		$names[$name] = $id;
+
+		if(isset($dpreset['inbay']) && is_array($dpreset['inbay'])) {
+			clf_parse_drones_1($fit, $dpreset['inbay'], 'bay', $errors);
+		}
+
+		if(isset($dpreset['inspace']) && is_array($dpreset['inspace'])) {
+			clf_parse_drones_1($fit, $dpreset['inspace'], 'space', $errors);
+		}
+	}
+}
+
+/** @internal */
+function clf_parse_drones_1(&$fit, &$drones, $from, &$errors) {
+	foreach($drones as &$d) {
+		if(!\CommonLoadoutFormat\check_typeof_type($d['typeid'], "drone")) continue;
+
+		if($from === 'bay') {
+			$qbay = $d['quantity'];
+			$qspace = 0;
+		} else if($from === 'space') {
+			$qspace = $d['quantity'];
+			$qbay = 0;
+		} else continue;
+
+		add_drone($fit, $d['typeid'], $qbay, $qspace);
+	}
+}
+
+/** @internal */
+function clf_parse_meta_1(&$fit, &$metadata, &$errors) {
+	if(isset($metadata['title']) && is_string($metadata['description'])) {
+		$fit['metadata']['name'] = $metadata['title'];
+	}
+
+	if(isset($metadata['description']) && is_string($metadata['description'])) {
+		$fit['metadata']['description'] = $metadata['description'];
+	}
+
+	/* Ignore creation date */
+
+	$fit['metadata']['tags'] = array();
+	if(isset($metadata['X-tags']) && is_array($metadata['X-tags'])) {
+		foreach($metadata['X-tags'] as $tag) {
+			if(!is_string($tag)) continue;
+			$fit['metadata']['tags'][$tag] = true;
+		}
+
+		$fit['metadata']['tags'] = array_keys($fit['metadata']['tags']);
+	}
+}
+
 /**
  * Try to parse a loadout in the EVE XML format.
  *
@@ -148,7 +455,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 			$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
 			continue;
 		}
-		/* "low" does not matter here, it will be corrected in update_modules later. */
+		/* "low" does not matter here, it will be corrected later. */
 		$realmodules['low'][] = $typename_to_id[$typename];
 	}
 
@@ -170,9 +477,6 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 	$fit['metadata']['name'] = $name;
 	$fit['metadata']['description'] = $description;
 	$fit['metadata']['tags'] = array();
-	$fit['metadata']['view_permission'] = VIEW_OWNER_ONLY;
-	$fit['metadata']['edit_permission'] = EDIT_OWNER_ONLY;
-	$fit['metadata']['visibility'] = VISIBILITY_PUBLIC;
 
 	return $fit;
 }

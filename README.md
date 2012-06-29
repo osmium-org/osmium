@@ -50,6 +50,11 @@ For users
 * Sphinx search server >= 2.0.4 
   (using the `sphinx.conf` from the `sphinx/` directory)
 
+* CLF repository:
+
+    git submodule init          <-- install-time only
+    git submodule update        <-- do this at every upgrade
+
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
   http://pear.horde.org
 
