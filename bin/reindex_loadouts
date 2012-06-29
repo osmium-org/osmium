@@ -19,10 +19,38 @@
 
 require __DIR__.'/../inc/root.php';
 
+/* Truncate the index (FIXME: replace this by TRUNCATE RTINDEX when
+ * available) */
+$q = \Osmium\Search\query('SELECT id FROM osmium_loadouts');
+while($row = \Osmium\Search\fetch_row($q)) {
+	\Osmium\Search\query('DELETE FROM osmium_loadouts WHERE id = '.$row[0]);
+}
+
+const BATCH_SIZE = 5;
+
 $i = 0;
 $r = \Osmium\Search\query_select_searchdata('ORDER BY loadoutid ASC');
 
-while($row = \Osmium\Db\fetch_assoc($r)) {
-	\Osmium\Search\index($row);
-	echo $row['loadoutid']."\n";
-}
+$offset = 0;
+do {
+	$q = \Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadouts WHERE visibility = $1 LIMIT $2 OFFSET $3',
+	                             array(\Osmium\Fit\VISIBILITY_PUBLIC, BATCH_SIZE, $offset));
+	$offset += BATCH_SIZE;
+
+	$ids = array();
+	while($row = \Osmium\Db\fetch_row($q)) {
+		$ids[] = $row[0];
+	}
+
+	if($ids === array()) die();
+
+	$in = implode(',', $ids);
+	$q = \Osmium\Search\query_select_searchdata('WHERE loadoutid IN ('.$in.')', array());
+
+	while($row = \Osmium\Db\fetch_assoc($q)) {
+		\Osmium\Search\index($row);
+		echo ".";
+	}
+
+	echo "\n";
+} while(true);
