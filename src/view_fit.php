@@ -170,10 +170,11 @@ echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].
 
 $slug = $author['charactername'].' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
 $slug = preg_replace('%[^a-z0-9-]%', '', str_replace(' ', '-', strtolower($slug)));
+$presets = 'pid='.$fit['modulepresetid'].'&amp;cpid='.$fit['chargepresetid'].'&amp;dpid='.$fit['dronepresetid'];
 $dna = \Osmium\Fit\export_to_dna($fit);
 echo "<li class='export'>Export this loadout:\n<ul>\n";
-echo "<li>Lossless formats: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Common Loadout Format, human-readable'>CLF</a>, <a title='Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}.md' title='Markdown with embedded gzipped Common Loadout Format'>Markdown+gzCLF</a>, <a href='../export/{$slug}-evexml-{$loadoutid}.xml' title='EVE XML with embedded gzipped Common Loadout Format'>XML+gzCLF</a></li>\n";
-echo "<li>Lossy formats: <a href='../export/{$slug}-evexml-{$loadoutid}.xml?embedclf=0' title='EVE XML'>XML</a>, <a href='../export/{$slug}-eft-{$loadoutid}.txt'>EFT</a>, <a href='../export/{$slug}-dna-{$loadoutid}.txt'>DNA</a>, <a href='javascript:CCPEVE.showFitting(\"$dna\");'>in-game DNA</a></li>\n";
+echo "<li>Lossless formats: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Common Loadout Format, human-readable'>CLF</a>, <a title='Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}.md' title='Markdown with embedded gzipped Common Loadout Format'>Markdown+gzCLF</a>, <a href='../export/{$slug}-evexml-{$loadoutid}.xml?{$presets}' title='EVE XML with embedded gzipped Common Loadout Format'>XML+gzCLF</a></li>\n";
+echo "<li>Lossy formats: <a href='../export/{$slug}-evexml-{$loadoutid}.xml?embedclf=0&amp;{$presets}' title='EVE XML'>XML</a>, <a href='../export/{$slug}-eft-{$loadoutid}.txt?{$presets}'>EFT</a>, <a href='../export/{$slug}-dna-{$loadoutid}.txt?{$presets}'>DNA</a>, <a href='javascript:CCPEVE.showFitting(\"$dna\");'>in-game DNA</a></li>\n";
 echo "</ul>\n</li>\n";
 
 echo "</ul>\n</div>\n</section>\n";
