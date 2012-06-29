@@ -142,7 +142,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		 * a new fitting or history entry */
 		\Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
 		$this->assertsame('', \Osmium\Db\last_error());
-		$this->assertSame($revision, $fit['metadata']['revision']);
+		$this->assertSame((int)$revision, (int)$fit['metadata']['revision']);
 		$this->assertSame($hash, $fit['metadata']['hash']);
 		$this->assertSame($loadoutid, $fit['metadata']['loadoutid']);
 
@@ -176,5 +176,6 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		\Osmium\Db\query_params('DELETE FROM osmium.fittingtags WHERE fittinghash = $1', array($hash));
 		\Osmium\Db\query_params('DELETE FROM osmium.fittings WHERE fittinghash = $1', array($hash));
 		\Osmium\Db\query('COMMIT;');
+		\Osmium\Search\unindex($lid);
 	}
 }
