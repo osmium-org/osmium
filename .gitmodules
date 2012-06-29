@@ -1,0 +1,3 @@
+[submodule "lib/common-loadout-format"]
+	path = lib/common-loadout-format
+	url = git://github.com/Artefact2/common-loadout-format.git
