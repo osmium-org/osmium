@@ -24,14 +24,12 @@ if(!\Osmium\State\is_logged_in() || $_GET['tok'] != \Osmium\State\get_token()) {
 	\Osmium\fatal(403, "Forbidden.");
 }
 
-$a = \Osmium\State\get_state('a');
+$loadoutid = isset($_GET['loadoutid']) ? $_GET['loadoutid'] : 0;
 
-list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($_GET['loadoutid'], $a['accountid'])));
-if($c != 1) {
+$can_edit = \Osmium\State\can_edit_fit($loadoutid);
+if(!$can_edit) {
 	\Osmium\fatal(403, "Forbidden.");
 }
-
-$loadoutid = $_GET['loadoutid'];
 
 \Osmium\Db\query('BEGIN;');
 \Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE loadoutid = $1', array($loadoutid));
