@@ -169,17 +169,22 @@ function format_character_name($a, $relative = '.') {
  * get_optimal_falloff_tracking_of_module().
  */
 function format_short_range($ranges) {
-	if(!isset($ranges['range'])) $ranges['range'] = 0;
+	if(isset($ranges['maxrange'])) {
+		$max = round($ranges['maxrange'] / 1000, $ranges['maxrange'] >= 10000 ? 0 : 1);
+		return '≤'.$max.'k';
+	} else if(isset($ranges['range'])) {
+		$optimal = round($ranges['range'] / 1000, $ranges['range'] >= 10000 ? 0 : 1);
 
-	$optimal = round($ranges['range'] / 1000, $ranges['range'] >= 10000 ? 0 : 1);
+		if(isset($ranges['falloff'])) {
+			$falloff = '+'.round($ranges['falloff'] / 1000, $ranges['falloff'] >= 10000 ? 0 : 1);
+		} else {
+			$falloff = '';
+		}
 
-	if(isset($ranges['falloff'])) {
-		$falloff = '+'.round($ranges['falloff'] / 1000, $ranges['falloff'] >= 10000 ? 0 : 1);
-	} else {
-		$falloff = '';
+		return $optimal.$falloff.'k';
 	}
 
-	return $optimal.$falloff.'k';
+	return '';
 }
 
 /**
@@ -213,6 +218,16 @@ function format_long_range($ranges) {
 
 	if(isset($ranges['trackingspeed'])) {
 		$r[] = "Tracking: ".round_sd($ranges['trackingspeed'], 2)." rad/s";
+	}
+
+	if(isset($ranges['maxrange'])) {
+		if($ranges['maxrange'] >= 10000) {
+			$max = round($ranges['maxrange'] / 1000, 1).' km';
+		} else {
+			$max = round($ranges['maxrange']).' m';
+		}
+
+		$r[] = "Maximum range: ".$max;
 	}
 
 	return implode(";&#10;", $r);

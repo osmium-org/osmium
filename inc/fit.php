@@ -272,7 +272,7 @@ function select_ship(&$fit, $new_typeid) {
 
 	$row = \Osmium\Db\fetch_row(
 		\Osmium\Db\query_params(
-			'SELECT invships.typename, mass FROM osmium.invships JOIN eve.invtypes ON invtypes.typeid = invships.typeid WHERE invships.typeid = $1', 
+			'SELECT invships.typename FROM osmium.invships JOIN eve.invtypes ON invtypes.typeid = invships.typeid WHERE invships.typeid = $1', 
 			array($new_typeid)));
 	if($row === false) return false;
 
@@ -286,7 +286,6 @@ function select_ship(&$fit, $new_typeid) {
 	foreach($fit['cache'][$fit['ship']['typeid']]['attributes'] as $attr) {
 		$fit['dogma']['ship'][$attr['attributename']] = $attr['value'];
 	}
-	$fit['dogma']['ship']['mass'] = $row[1];
 	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
 
 	/* Mass is in invtypes, not dgmtypeattribs, so it has to be hardcoded here */
@@ -998,12 +997,18 @@ function get_attributes_and_effects($typeids, &$out) {
 
 	$typeidIN = implode(',', $typeids);
   
-	$metaq = \Osmium\Db\query_params('SELECT typeid, typename, groupid, volume
+	$metaq = \Osmium\Db\query_params('SELECT typeid, typename, groupid, volume, mass
   FROM eve.invtypes WHERE typeid IN ('.$typeidIN.')', array());
 	while($row = \Osmium\Db\fetch_row($metaq)) {
 		$out[$row[0]]['typename'] = $row[1];
 		$out[$row[0]]['groupid'] = $row[2];
 		$out[$row[0]]['volume'] = $row[3];
+
+		$out[$row[0]]['attributes']['mass'] = array(
+			'attributename' => 'mass',
+			'attributeid' => '4',
+			'value' => $row[4],
+			);
 	}
 
 	/* Effect categories (maybe):

@@ -379,6 +379,8 @@ function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
 	$typeid = $fit['modules'][$type][$index]['typeid'];
 	$state = $fit['modules'][$type][$index]['state'];
 
+	if($state != STATE_ACTIVE && $state != STATE_OVERLOADED) return $attributes;
+
 	foreach($fit['cache'][$typeid]['effects'] as $effect) {
 		$effectdata = $fit['cache']['__effects'][$effect['effectname']];
 
@@ -399,7 +401,22 @@ function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
 			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
 		}
 
-		break;
+		return $attributes;
+	}
+
+	if(isset($fit['charges'][$type][$index])) {
+		$typeid = $fit['charges'][$type][$index]['typeid'];
+		if(isset($fit['cache'][$typeid]['attributes']['explosionDelay']) &&
+		   isset($fit['cache'][$typeid]['attributes']['maxVelocity'])) {
+			$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
+			$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
+			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
+			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
+
+			$attributes['maxrange'] = $velocity * ($flighttime - 1000000 / ($mass * $agility));
+
+			return $attributes;
+		}
 	}
 
 	return $attributes;
