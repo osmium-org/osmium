@@ -74,7 +74,7 @@ function index($loadout) {
 	             .')');
 }
 
-function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
+function get_search_query($search_query) {
 	$characterids = array(0);
 	$corporationids = array(0);
 	$allianceids = array(0);
@@ -86,15 +86,27 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 		if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
 	}
 
-	$ids = array();
-	$q = query('SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtocharacterid IN ('.implode(',', $characterids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).') '.$more_cond.' LIMIT '.$offset.','.$limit);
+	return 'SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtocharacterid IN ('.implode(',', $characterids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
+}
+
+function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
+	$q = query(get_search_query($search_query).' '.$more_cond.' LIMIT '.$offset.','.$limit);
 	if($q === false) return false; /* Invalid query */
 
+	$ids = array();
 	while($row = fetch_row($q)) {
 		$ids[] = $row[0];
 	}
 
 	return $ids;
+}
+
+function get_total_matches($search_query, $more_cond = '') {
+	$q = query(get_search_query($search_query).' '.$more_cond);
+	if($q === false) return 0;
+
+	$meta = get_meta();
+	return $meta['total_found'];
 }
 
 function fetch_assoc($result) {
@@ -116,14 +128,26 @@ function get_meta() {
 	return $meta;
 }
 
-function print_pretty_results($relative, $query, $more = '', $offset = 0, $limit = 1000, $message = 'No loadouts matched your query.') {
-	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $limit);
+function print_pretty_results($relative, $query, $more = '', $paginate = false, $perpage = 20, $pagename = 'p', $message = 'No loadouts matched your query.') {
+	$total = get_total_matches($query, $more);
+	if($paginate) {
+		$offset = \Osmium\Chrome\paginate($pagename, $perpage, $total, $pageresult, $pageinfo);
+	} else $offset = 0;
+
+	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $perpage);
 	if($ids === false) {
 		echo "<p class='error_box no_search_result'>The supplied query is invalid.</p>\n";
 		return;
 	}
 
-	print_loadout_list($ids, $relative, $offset, $message);
+	if($paginate) {
+		echo $pageinfo;
+		echo $pageresult;
+		print_loadout_list($ids, $relative, $offset, $message);
+		echo $pageresult;
+	} else {
+		print_loadout_list($ids, $relative, $offset, $message);
+	}
 }
 
 function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message = 'No loadouts.') {

@@ -1,5 +1,6 @@
 $footer-height: 1.7em;
 $nav-height: 2.5em;
+$link-color: #1122CC;
 
 @mixin ellipsis {
 	overflow: hidden;
@@ -111,15 +112,18 @@ img {
 
 a {
 	&, &:visited {
-		color: #1122CC;
+		color: $link-color;
+		border-color: $link-color;
 	}
 
 	&:active, &:focus {
 		color: red;
+		border-color: red;
 	}
 
 	&.dangerous {
 		color: #F30;
+		border-color: #F30;
 	}
 
 	&.profile {
@@ -127,7 +131,7 @@ a {
 		text-decoration: none;
 
 		&:hover {
-			color: #1122CC;
+			color: $link-color;
 			text-decoration: underline;
 		}
 	}

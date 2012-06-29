@@ -246,3 +246,63 @@ function round_sd($number, $digits = 0) {
 
 	return $normalized * $m;
 }
+
+function paginate($name, $perpage, $total, &$result, &$metaresult,
+                  $pageoverride = null, $format = 'Showing rows %1-%2 of %3.') {
+	if($pageoverride !== null) {
+		$page = $pageoverride;
+	} else if(isset($_GET[$name])) {
+		$page = intval($_GET[$name]);
+	} else {
+		$page = 1;
+	}
+
+	$maxpage = ceil($total / $perpage);
+
+	if($page < 1) $page = 1;
+	if($page > $maxpage) $page = $maxpage;
+
+	$offset = ($page - 1) * $perpage;
+	$max = min($total, $offset + $perpage);
+
+	$metaresult = "<p class='pagination'>\n";
+	$metaresult .= str_replace(array('%1', '%2', '%3'), array($offset + 1, $max, $total), $format);
+	$metaresult .= "\n</p>\n";
+
+	$r ="<ol class='pagination'>\n";
+
+	$inf = max(1, $page - 5);
+	$sup = min($maxpage, $page + 4);
+	$p = $_GET;
+
+	if($page > 1) {
+		$p[$name] = $page - 1;
+		$q = http_build_query($p, '', '&amp;');
+		$r .= "<li value='".($page - 1)."'><a title='go to previous page' href='?$q'>Previous</a></li>\n";
+	} else {
+		$r .= "<li class='dummy' value='".($page - 1)."'><span>Previous</span></li>\n";
+	}
+
+	for($i = $inf; $i <= $sup; ++$i) {
+		if($i != $page) {
+			$p[$name] = $i;
+			$q = http_build_query($p, '', '&amp;');
+			$r .= "<li value='$i'><a title='go to page $i' href='?$q'>$i</a></li>\n";
+		} else {
+			$r .= "<li class='current' value='$i'><span>$i</span></li>\n";
+		}
+	}
+
+	if($page < $maxpage) {
+		$p[$name] = $page + 1;
+		$q = http_build_query($p, '', '&amp;');
+		$r .= "<li value='".($page + 1)."'><a title='go to next page' href='?$q'>Next</a></li>\n";
+	} else {
+		$r .= "<li class='dummy' value='".($page + 1)."'><span>Next</span></li>\n";
+	}
+
+	$r .= "</ol>\n";
+
+	$result = $r;
+	return $offset;
+}

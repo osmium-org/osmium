@@ -64,7 +64,7 @@ echo "</tbody>\n</table>\n</header>\n";
 
 echo "<section id='ploadouts' class='psection'>\n";
 echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.$row['charactername'].'"')."\">(browse all)</a></small></h2>\n";
-\Osmium\Search\print_pretty_results("..", '@author "'.$row['charactername'].'"', 'ORDER BY creationdate DESC', 0, 5, $row['charactername'].' does not have submitted any loadouts.');
+\Osmium\Search\print_pretty_results("..", '@author "'.$row['charactername'].'"', 'ORDER BY creationdate DESC', false, 5, 'p', $row['charactername'].' does not have submitted any loadouts.');
 echo "</section>\n";
 
 if($myprofile) {

@@ -92,3 +92,54 @@ ol.loadout_sr {
 		}
 	}
 }
+
+p.pagination {
+	color: #777;
+	font-size: 0.8em;
+}
+
+ol.pagination {
+	list-style-type: none;
+
+	&> li {
+		display: inline-block;
+		text-align: center;
+		font-weight: bold;
+		min-width: 2em;
+
+		&:first-child, &:last-child {
+			min-width: 6em;
+			font-weight: normal;
+		}
+
+		&:first-child span:before, &:first-child a:before {
+			content: "⇦ ";
+		}
+
+		&:last-child span:after, &:last-child a:after {
+			content: " ⇨";
+		}
+
+		&> a {
+			font-weight: normal;
+			text-decoration: none;
+			opacity: 0.6;
+
+			&:hover, &:active, &:focus {
+				opacity: 1.0;
+			}
+		}
+
+		&> a, &> span {
+			display: block;
+			height: 1em;
+			line-height: 1em;
+			border: 1px solid;
+			padding: 0.25em 0.5em;
+		}
+
+		&.dummy {
+			opacity: 0.2;
+		}
+	}
+}
