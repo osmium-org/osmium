@@ -3,3 +3,29 @@ div#import_errors {
 	margin: 1em;
 	padding: 0;
 }
+
+div#methodselect {
+	line-height: $field-height;
+	height: $field-height;
+}
+
+div#methodselect > ul {
+	margin: 0;
+	padding: 0;
+
+	&> li {
+		display: inline-block;
+		min-width: 7em;
+		text-align: center;
+
+		&> a {
+			display: block;
+
+			&.selected {
+				color: black;
+				font-weight: bold;
+				text-decoration: none;
+			}
+		}
+	}
+}

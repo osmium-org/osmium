@@ -18,232 +18,196 @@
 
 namespace Osmium\Page\ImportLoadouts;
 
-const MAX_FILESIZE_PRETTY = '1 MiB';
 const MAX_FILESIZE = 1048576;
-const MAX_FITS = 25;
-
-ini_set('memory_limit', '256M');
+const MAX_FITS = 100;
 
 require __DIR__.'/../inc/root.php';
+
+const DEFAULT_VP = \Osmium\Fit\VIEW_EVERYONE;
+const DEFAULT_EP = \Osmium\Fit\EDIT_OWNER_ONLY;
+const DEFAULT_VIS = \Osmium\Fit\VISIBILITY_PRIVATE;
 
 if(!\Osmium\State\is_logged_in()) {
 	\Osmium\fatal(403, 'You must be logged in to import loadouts.');
 }
 
+$a = \Osmium\State\get_state('a');
+
 /* ----------------------------------------------------- */
 
-if(isset($_FILES['eve_xml_file']) || isset($_POST['eve_xml_url']) 
-   || isset($_POST['eve_xml_source'])) {
-
-	$xml_source = null;
-	$from = null;
-	
-	if($_FILES['eve_xml_file']['error'] != UPLOAD_ERR_NO_FILE) {
-		$error = $_FILES['eve_xml_file']['error'];
-		if($error == UPLOAD_ERR_INI_SIZE 
-		   || $error == UPLOAD_ERR_FORM_SIZE 
-		   || $_FILES['eve_xml_file']['size'] > MAX_FILESIZE) {
-		
-			\Osmium\Forms\add_field_error('eve_xml_file', 'The file you tried to upload is too big.');
-		} else if($error != UPLOAD_ERR_OK) {
-			\Osmium\Forms\add_field_error('eve_xml_file', "Internal error ($error), please report.");
+if(!empty($_POST['source'])) {
+	$source = truncate($_POST['source']);
+} else if(!empty($_POST['url'])) {
+	$url = $_POST['url'];
+	if(filter_var($url, FILTER_VALIDATE_URL) === false) {
+		\Osmium\Forms\add_field_error('url', 'Enter a correct URI or leave this field empty.');
+	} else {
+		$d = parse_url($url);
+		if($d['scheme'] != 'http' && $d['scheme'] != 'https') {
+			\Osmium\Forms\add_field_error('url', 'Invalid scheme. Use either <code>http://</code> or <code>https://</code> URLs.');
+		} else if(filter_var($d['host'], FILTER_VALIDATE_IP) !== false
+		          && !filter_var($d['host'], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE)) {
+			\Osmium\Forms\add_field_error('url', 'Please enter a public IP address or a domain name.');
 		} else {
-			$xml_source = fetch_xml($_FILES['eve_xml_file']['tmp_name']);
-			$from = 'eve_xml_file';
+			$source = fetch($url);
 		}
-	} else if(!empty($_POST['eve_xml_url'])) {
-		$url = $_POST['eve_xml_url'];
-		if(filter_var($url, FILTER_VALIDATE_URL) === false) {
-			\Osmium\Forms\add_field_error('eve_xml_url', 'Enter a correct URI or leave this field empty.');
-		} else {
-			$d = parse_url($url);
-			if($d['scheme'] != 'http' && $d['scheme'] != 'https') {
-				\Osmium\Forms\add_field_error('eve_xml_url', 'Invalid scheme. Use either <code>http://</code> or <code>https://</code> URLs.');
-			} else if(filter_var($d['host'], FILTER_VALIDATE_IP) !== false
-			          && !filter_var($d['host'], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE)) {
-				\Osmium\Forms\add_field_error('eve_xml_url', 'I see what you did there. Please don\'t.');
-			} else {
-				$xml_source = fetch_xml($url);
-				$from = 'eve_xml_url';
-			}
-		}
-	} else if(!empty($_POST['eve_xml_source'])) {
-		$xml_source = truncate_xml($_POST['eve_xml_source']);
-		$from = 'eve_xml_source';
 	}
-	
-	if($xml_source !== null) {
-		try {
-			libxml_use_internal_errors(true);
-			$xml = new \SimpleXMLElement($xml_source);
-			$fits = array();
-			$errors = array();
-
-			if(isset($xml->fitting)) {
-				foreach($xml->fitting as $fitting) {
-					if(count($fits) >= MAX_FITS) {
-						$errors[] = 'Input contained more than '.MAX_FITS.' fits; only showing the first '.MAX_FITS.'.';
-						break;
-					}
-					if($fit = \Osmium\Fit\try_parse_fit_from_eve_xml($fitting, $errors)) {
-						$fits[] = $fit;
-					}
-				}
-			} else {
-				if($fit = \Osmium\Fit\try_parse_fit_from_eve_xml($xml, $errors)) {
-					$fits[] = $fit;
-				}
-			}
-
-			\Osmium\State\put_state('import_fits', $fits);
-			\Osmium\State\put_state('import_errors', $errors);
-		} catch(\Exception $e) {
-			$errors = implode("</code><br />\n<code>", array_map(function($error) {
-						return 'Line '.$error->line.', column '.$error->column.': '.$error->message;
-					}, libxml_get_errors()));
-			libxml_clear_errors();
-			\Osmium\Forms\add_field_error($from, 'Could not parse the input as XML.<br /><code>'.$errors.'</code>');
-		}
+} else if(!empty($_FILES['file']) && $_FILES['file']['error'] != UPLOAD_ERR_NO_FILE) {
+	$error = $_FILES['file']['error'];
+	if($error == UPLOAD_ERR_INI_SIZE || $error == UPLOAD_ERR_FORM_SIZE 
+	   || $_FILES['file']['size'] > MAX_FILESIZE) {
+		\Osmium\Forms\add_field_error('file', 'The file you tried to upload is too big.');
+	} else if($error != UPLOAD_ERR_OK) {
+		\Osmium\Forms\add_field_error('file', "Internal error ($error), please report.");
+	} else {
+		$source = fetch($_FILES['file']['tmp_name']);
 	}
 }
 
-/* ----------------------------------------------------- */
+\Osmium\Chrome\print_header('Import loadouts', '.');
 
-if(isset($_POST['finalize_import'])) {
-	$fits = \Osmium\State\get_state('import_fits', array());
-	$a = \Osmium\State\get_state('a');
-	$imported = array();
-	foreach($fits as $i => $fit) {
-		if(isset($_POST['selectfit'][$i]) && $_POST['selectfit'][$i] == 'on') {
-			\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
-			$imported[] = array(
-				$fit['metadata']['loadoutid'],
-				$fit['metadata']['name'], 
-				$fit['metadata']['view_permission'],
-				);
+if(!empty($source)) {
+	$format = $_POST['format'];
+	$errors = array();
+	$ids = array();
+
+	if($format == 'autodetect') {
+		$json = json_decode($source, true);
+		if(json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+			/* Input is JSON array/object */
+
+			if(isset($json['clf-version']) && is_int($json['clf-version'])) {
+				/* Input looks like CLF */
+				$format = 'clf';
+			} else if(count($json) > 0) {
+				$first = reset($json);
+				if(isset($first['clf-version']) && is_int($first['clf-version'])) {
+					/* Input looks like a CLF array */
+					$format = 'clfarray';
+				}
+			}
+		} else {
+			/* Input is not JSON array/object */
+
+			if(($start = strpos($source, 'BEGIN gzCLF BLOCK')) !== false
+			   && ($end = strpos($source, 'END gzCLF BLOCK')) !== false
+			   && $start < $end) {
+				/* Input looks like gzCLF */
+				$format = 'gzclf';
+			}
 		}
-		/* Try to free some memory */
-		unset($fits[$i]);
-		unset($fit);
 	}
 
-	\Osmium\State\put_state('import_fits', array());
-	\Osmium\State\put_state('import_errors', array());
+	if($format == 'autodetect') {
+		/* Autodetect failed */
+		$errors[] = 'Fatal: input format could not be auto-detected.';
+	} else if($format == 'clf') {
+		import_clf($source, $errors, $ids, $a);
+	} else if($format == 'clfarray') {
+		$srcarray = json_decode($source, true);
+		if(json_last_error() !== JSON_ERROR_NONE) {
+			$errors[] = 'Fatal: source is not valid JSON';
+		} else if(!is_array($srcarray)) {
+			$errors[] = 'Fatal: source is not a JSON array';
+		} else {
+			$imported = 0;
+			foreach($srcarray as $s) {
+				import_clf(json_encode($s), $errors, $ids, $a);
+				++$imported;
 
-	if(count($imported) > 0) {
-		\Osmium\Chrome\print_header('Import complete', '.');
-		
-		echo "<h1>Import complete!</h1>\n<p>The following loadouts were imported:</p>\n<ol>\n";
-		
-		foreach($imported as $data) {
-			echo "<li><a href='./loadout/".$data[0]."'>";
-			\Osmium\Chrome\print_loadout_title($data[1], $data[2], \Osmium\Fit\VISIBILITY_PUBLIC, $a);
-			echo "</a></li>\n";
+				if($imported >= MAX_FITS) {
+					$errors[] = 'Limit of '.MAX_FITS.' loadouts reached - stopping.';
+					break;
+				}
+			}
 		}
+	} else if($format == 'gzclf') {
+		$source = explode('BEGIN gzCLF BLOCK', $source);
 
-		echo "</ol>\n";
-		\Osmium\Chrome\print_footer();
-		die();
+		$imported = 0;
+		foreach($source as $s) {
+			$s = explode('END gzCLF BLOCK', $s, 2);
+			if(count($s) !== 2) continue;
+
+			$gz = @base64_decode(html_entity_decode($s[0], ENT_XML1));
+			$jsonstring = @gzuncompress($gz, MAX_FILESIZE);
+
+			if($jsonstring === false) {
+				$errors[] = 'Fatal: could not uncompress gzCLF, output data too big or input is corrupted.';
+			} else {
+				import_clf($jsonstring, $errors, $ids, $a);
+				++$imported;
+
+				if($imported >= MAX_FITS) {
+					$errors[] = 'Limit of '.MAX_FITS.' loadouts reached - stopping.';
+					break;
+				}
+			}
+		}
 	}
-}
-
-/* ----------------------------------------------------- */
-
-$fits = \Osmium\State\get_state('import_fits', array());
-$errors = \Osmium\State\get_state('import_errors', array());
-if(count($errors) > 0 || count($fits) > 0) {
-	\Osmium\Chrome\print_header('Import loadouts', '.');
+	else {
+		$errors[] = 'Fatal: unknown format "'.$format.'"';
+	}
 
 	if(count($errors) > 0) {
-		echo "<div id='import_errors'>\n<p>Some errors happened while parsing:</p>\n<ol>\n";
+		echo "<h1>Import errors</h1>\n";
+		echo "<div id='import_errors'>\n<ol>\n";
 		foreach($errors as $e) {
 			echo "<li><code>".htmlspecialchars($e)."</code></li>\n";
 		}
 		echo "</ol>\n</div>\n";
 	}
 
-	if(count($fits) > 0) {
-		echo "<h1>Select loadouts to import</h1>\n";
-		echo "<p>".count($fits)." loadout(s) were successfully parsed. Please select which ones you want to import in the list below.<br />\n<strong>By default, the imported loadouts will be marked as private, so that you can edit them one last time to fix any problems (if any).</strong></p>\n";
-		
-		\Osmium\Forms\print_form_begin();
-		
-		foreach($fits as $i => $fit) {
-			\Osmium\Forms\print_checkbox("<span class='fitname'>".htmlspecialchars($fit['metadata']['name'])."</span> (".$fit['ship']['typename'].")", 'selectfit['.$i.']', null, true);
-		}
-
-		\Osmium\Forms\print_submit('Import selected loadout(s)', 'finalize_import');
-		\Osmium\Forms\print_form_end();
-	} else {
-		\Osmium\State\put_state('import_fits', array());
-		\Osmium\State\put_state('import_errors', array());
-		echo "<h1>No loadouts to import! <a href='./import'>Try again.</a></h1>\n";
-	}
-
-	\Osmium\Chrome\print_footer();
-	die();
+	echo "<h1>Import results</h1>\n";
+	\Osmium\Search\print_loadout_list($ids, '.', 0, 'No loadouts were imported.');
 }
 
-/* ----------------------------------------------------- */
-
-\Osmium\Chrome\print_header('Import loadouts', '.');
-echo "<p class='notice_box'><em>Note: you can import XML files up to ".MAX_FILESIZE_PRETTY." in size (or paste at most ".MAX_FILESIZE_PRETTY." of text).</em></p>\n";
-echo "<ol>\n";
-
-/* ----------------------------------------------------- */
-/*
-  echo "<li>\n<h1>Import from a XML file (Osmium)</h1>\n";
-  echo "<p>Use this for XML files your exported from Osmium (from this site, or from other instances of Osmium). You can upload a file from your computer, or from an URL, or paste the source directly.<br />You can use at most one of the three fields below:</p>\n";
-
-  \Osmium\Forms\print_form_begin(null, '', 'multipart/form-data');
-  \Osmium\Forms\print_file('Upload XML file', 'osmium_xml_file', MAX_FILESIZE);
-  \Osmium\Forms\print_generic_field('Fetch XML from URL', 'url', 'osmium_xml_url');
-  \Osmium\Forms\print_textarea('XML source', 'osmium_xml_source', null, 0, 'Paste the XML source here…');
-  \Osmium\Forms\print_submit('Import');
-  \Osmium\Forms\print_form_end();
-
-  echo "</li>\n";
-*/
-/* ----------------------------------------------------- */
-
-echo "<li>\n<h1>Import from a XML file (EVE, Pyfa, EFT)</h1>\n";
-echo "<p>Use this for XML files your exported from EVE, Pyfa or EFT.<br />You can use at most one of the three fields below:</p>\n";
+echo "<h1>Import loadouts</h1>\n";
 
 \Osmium\Forms\print_form_begin(null, '', 'multipart/form-data');
-\Osmium\Forms\print_file('Upload XML file', 'eve_xml_file', MAX_FILESIZE);
-\Osmium\Forms\print_generic_field('Fetch XML from URL', 'url', 'eve_xml_url');
-\Osmium\Forms\print_textarea('XML source', 'eve_xml_source', null, 0, 'Paste the XML source here…');
+\Osmium\Forms\print_select('Input format', 'format', array(
+	                           'autodetect' => '-- Try to autodetect format --',
+	                           'clf' => 'CLF (single)',
+	                           'clfarray' => 'CLF (array)',
+	                           'gzclf' => 'gzCLF (supports multiple blocks)',
+	                           //'xml' => 'EVE XML',
+	                           //'dna' => 'DNA',
+	                           //'eft' => 'EFT',
+	                           ), null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
+
+\Osmium\Forms\print_generic_row('', '<label>Method</label>', '<div id="methodselect"><noscript>Use at most one of the three methods below:</noscript></div>');
+
+\Osmium\Forms\print_textarea('Direct input', 'source', null, 0);
+\Osmium\Forms\print_generic_field('Fetch a URI', 'url', 'url');
+\Osmium\Forms\print_file('Upload file', 'file', MAX_FILESIZE);
 \Osmium\Forms\print_submit('Import');
 \Osmium\Forms\print_form_end();
 
-echo "</li>\n";
-
-/* ----------------------------------------------------- */
-/*
-  echo "<li>\n<h1>Import ship DNA (IGB)</h1>\n";
-  echo "<p>Use this from the in-game browser. Drag and drop one or more fittings (from the fitting list or the fitting window) in the textarea below.</p>\n";
-
-  \Osmium\Forms\print_form_begin();
-  \Osmium\Forms\print_textarea('Fitting links', 'dna_links', null, 0, 'Drag and drop fitting links here…');
-  \Osmium\Forms\print_submit('Import');
-  \Osmium\Forms\print_form_end();
-
-  echo "</li>\n";
-*/
-/* ----------------------------------------------------- */
-
-echo "</ol>\n";
+\Osmium\Chrome\print_js_snippet('import');
 \Osmium\Chrome\print_footer();
 
 /* ----------------------------------------------------- */
 
-function fetch_xml($uri) {
+function fetch($uri) {
 	$f = fopen($uri, 'rb');
 	$xml = fread($f, MAX_FILESIZE);
 	fclose($f);
 	return $xml;
 }
 
-function truncate_xml($text) {
+function truncate($text) {
 	return substr($text, 0, MAX_FILESIZE);
+}
+
+function import_clf($jsonstring, &$errors, &$ids, $a) {
+	$fit = \Osmium\Fit\try_parse_fit_from_common_loadout_format($jsonstring, $errors);
+	if($fit !== false) {
+		$fit['metadata']['view_permission'] = DEFAULT_VP;
+		$fit['metadata']['edit_permission'] = DEFAULT_EP;
+		$fit['metadata']['visibility'] = DEFAULT_VIS;
+
+		\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
+
+		$ids[] = $fit['metadata']['loadoutid'];
+	}
 }

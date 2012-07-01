@@ -57,7 +57,8 @@ if($step < 1) $step = 1;
 if($step > FINAL_STEP) $step = FINAL_STEP;
 
 $fit = \Osmium\State\get_state('new_fit', array());
-if(isset($fit['metadata']['revision'])) {
+
+if(isset($fit['metadata']['loadoutid'])) {
 	\Osmium\Chrome\print_header('Edit loadout #'.$fit['metadata']['loadoutid'], '.');
 	$g_title = 'Edit loadout <a href="./loadout/'.$fit['metadata']['loadoutid'].'">#'.$fit['metadata']['loadoutid'].'</a>';
 } else {
