@@ -52,8 +52,10 @@ For users
 
 * CLF repository:
 
-    git submodule init          <-- install-time only
-    git submodule update        <-- do this at every upgrade
+  ~~~~
+  git submodule init          <-- install-time only
+  git submodule update        <-- do this at every upgrade
+  ~~~~
 
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
   http://pear.horde.org
@@ -176,7 +178,7 @@ per table in the dump. Then, import the following (in this order):
 
 Import the Osmium schema:
 
-    <pre>pg_restore -O osmium_pgsql.backup | psql osmium osmium_user</pre>
+    pg_restore -O osmium_pgsql.backup | psql osmium osmium_user
 
 Now, use the cache_expressions script to populate the `cacheexpressions`
 table:
