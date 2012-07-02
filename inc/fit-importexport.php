@@ -335,6 +335,7 @@ function clf_parse_meta_1(&$fit, &$metadata, &$errors) {
  * will be appended at the end of the array.
  */
 function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
+	require_once __DIR__.CLF_PATH;
 	create($fit);
 
 	if(!isset($e['name'])) {
@@ -350,7 +351,6 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 	} else {
 		$description = (string)$e->description['value'];
 	}
-	$description = '(Imported from EVE XML format.)'."\n\n".$description;
 
 	if(!isset($e->shipType) || !isset($e->shipType['value'])) {
 		$errors[] = 'Expected <shipType> tag with value attribute, none found. Stopping.';
@@ -359,120 +359,69 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		$shipname = (string)$e->shipType['value'];
 	}
 
-	$row = \Osmium\Db\fetch_row(
-		\Osmium\Db\query_params(
-			'SELECT typeid FROM osmium.invships WHERE typename = $1',
-			array($shipname)));
-	if($row === false) {
+	if(($shipid = \CommonLoadoutFormat\get_typeid($shipname)) === false) {
 		$errors[] = 'Could not fetch typeID of "'.$shipname.'". Obsolete/unpublished ship? Stopping.';
 		return false;
 	}
-	select_ship($fit, $row[0]);
 
-	if(!isset($e->hardware)) {
-		$errors[] = 'No <hardware> element found. Expected at least 1. Stopping.';
+	if(!\CommonLoadoutFormat\check_typeof_type($shipid, "ship")) {
+		$errors[] = 'Typeid '.$shipid.' is not the typeid of a ship.';
 		return false;
 	}
 
-	$typenames = array();
-	$drones = array();
-	$modules = array();
-	$recover_modules = array();
+	select_ship($fit, $shipid);
 
-	static $modtypes = array(
-		'low' => 'low',
-		'med' => 'medium',
-		'hi' => 'high',
-		'rig' => 'rig',
-		'subsystem' => 'subsystem',
-		);
+	$indexes = array();
 
+	if(!isset($e->hardware)) return $fit;
 	foreach($e->hardware as $hardware) {
 		if(!isset($hardware['type'])) {
 			$errors[] = 'Tag <hardware> has no type attribute. Discarded.';
 			continue;
 		}
+
 		$type = (string)$hardware['type'];
-		$typenames[$type] = true;
+		$typeid = \CommonLoadoutFormat\get_typeid($type);
 
-		if(!isset($hardware['slot'])) {
-			$errors[] = 'Tag <hardware> has no slot attribute. (Recoverable error.)';
-			$slot = '';
-		} else {
-			$slot = (string)$hardware['slot'];
+		if($typeid === false) {
+			$errors[] = 'Could not get typeid of "'.$type.'". Discarded.';
+			continue;
 		}
 
-		if($slot === "drone bay") {
-			if(!isset($hardware['qty'])) $qty = 1;
-			else $qty = (int)$hardware['qty'];
-			if($qty <= 0) continue;
-
-			$drones[] = array('count' => $qty, 'typename' => $type);
-		} else {
-			$p_slot = $slot;
-			$slot = explode(' ', $slot);
-			if(count($slot) != 3
-			   || $slot[1] != 'slot'
-			   || !in_array($slot[0], array_keys($modtypes))
-			   || !is_numeric($slot[2])
-			   || (int)$slot[2] < 0
-			   || (int)$slot[2] > 7) {
-
-				$errors[] = 'Could not parse slot attribute "'.$p_slot.'". (Recoverable error.)';
-				$recover_modules[] = $type;
-			} else {
-				$slottype = $modtypes[$slot[0]];
-				$index = $slot[2];
-				$modules[$slottype][$index] = $type;
-			}
-		}
-	}
-
-	$typenames['OsmiumSentinel'] = true; /* Just in case $typenames were to be empty */
-	$typename_to_id = array();
-	/* That's a pretty dick move from CCP to NOT include
-	 * typeIDs. Whoever had that idea should be kicked in the nuts. */
-	$req = \Osmium\Db\query('SELECT typeid, typename FROM eve.invtypes WHERE typename IN ('
-	                        .implode(',', array_map(function($name) {
-				                        return "'".\Osmium\Db\escape_string($name)."'";
-			                        }, array_keys($typenames))).')');
-	while($row = \Osmium\Db\fetch_row($req)) {
-		$typename_to_id[$row[1]] = $row[0];
-	}
-
-	$realmodules = array();
-	foreach($modules as $type => $m) {
-		foreach($m as $i => $typename) {
-			if(!isset($typename_to_id[$typename])) {
-				$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
+		if(\CommonLoadoutFormat\check_typeof_type($typeid, "drone")) {
+			if(!isset($hardware['slot']) || (string)$hardware['slot'] !== 'drone bay') {
+				$errors[] = 'Nonsensical slot attribute for drone: "'.((string)$hardware['slot']).'". Discarded';
 				continue;
 			}
-			$realmodules[$type][$i] = $typename_to_id[$typename];
-		}
-	}
-	foreach($recover_modules as $typename) {
-		if(!isset($typename_to_id[$typename])) {
-			$errors[] = 'Could not find typeID of "'.$typename.'". Skipped.';
-			continue;
-		}
-		/* "low" does not matter here, it will be corrected later. */
-		$realmodules['low'][] = $typename_to_id[$typename];
-	}
 
-	$realdrones = array();
-	foreach($drones as $drone) {
-		if(!isset($typename_to_id[$drone['typename']])) {
-			$errors[] = 'Could not find typeID of "'.$drone['typename'].'". Skipped.';
-			continue;
-		}
-		
-		$typeid = $typename_to_id[$drone['typename']];
-		if(!isset($realdrones[$typeid])) $realdrones[$typeid]['quantityinbay'] = 0;
-		$realdrones[$typeid]['quantityinbay'] += $drone['count'];
-	}
+			if(!isset($hardware['qty']) || (int)$hardware['qty'] < 0) {
+				$errors[] = 'Incorrect qty attribute for drone: "'.((int)$hardware['qty']).'". Discarded.';
+				continue;
+			}
 
-	add_modules_batch($fit, $realmodules);
-	add_drones_batch($fit, $realdrones);
+			add_drone($fit, $typeid, (int)$hardware['qty'], 0);
+		} else {
+			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
+			if($slottype === 'unknown') {
+				$errors[] = 'Type "'.$type.'" is neither a drone nor a module. Discarded.';
+				continue;
+			}
+
+			if(isset($hardware['slot'])) {
+				preg_match_all('%^(hi|med|low|rig|subsystem) slot ([0-9]+)$%', (string)$hardware['slot'], $matches);
+				if(isset($matches[2]) && count($matches[2]) === 1) {
+					$index = (int)$matches[2][0];
+					add_module($fit, $index, $typeid);
+				} else {
+					$errors[] = 'Nonsensical slot attribute: "'.((string)$hardware['slot']).'". Discarded.';
+					continue;
+				}
+			} else {
+				$errors[] = 'No index found for module "'.$type.'". Discarded.';
+				continue;
+			}
+		}
+	}
 
 	$fit['metadata']['name'] = $name;
 	$fit['metadata']['description'] = $description;

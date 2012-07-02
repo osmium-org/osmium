@@ -72,33 +72,10 @@ if(!empty($source)) {
 	$ids = array();
 
 	if($format == 'autodetect') {
-		$json = json_decode($source, true);
-		if(json_last_error() === JSON_ERROR_NONE && is_array($json)) {
-			/* Input is JSON array/object */
-
-			if(isset($json['clf-version']) && is_int($json['clf-version'])) {
-				/* Input looks like CLF */
-				$format = 'clf';
-			} else if(count($json) > 0) {
-				$first = reset($json);
-				if(isset($first['clf-version']) && is_int($first['clf-version'])) {
-					/* Input looks like a CLF array */
-					$format = 'clfarray';
-				}
-			}
-		} else {
-			/* Input is not JSON array/object */
-
-			if(($start = strpos($source, 'BEGIN gzCLF BLOCK')) !== false
-			   && ($end = strpos($source, 'END gzCLF BLOCK')) !== false
-			   && $start < $end) {
-				/* Input looks like gzCLF */
-				$format = 'gzclf';
-			}
-		}
+		$format = autodetect($source);
 	}
 
-	if($format == 'autodetect') {
+	if($format === false) {
 		/* Autodetect failed */
 		$errors[] = 'Fatal: input format could not be auto-detected.';
 	} else if($format == 'clf') {
@@ -144,6 +121,38 @@ if(!empty($source)) {
 				}
 			}
 		}
+	} else if($format == 'xml') {
+		libxml_use_internal_errors(true);
+		libxml_clear_errors();
+
+		try {
+			$xml = new \SimpleXMLElement($source);
+
+			if(isset($xml->shipType)) {
+				/* Root element is <fitting> */
+				import_xml($xml, $errors, $ids, $a);
+			} else if(isset($xml->fitting)) {
+				/* Root element is <fittings> */
+				$imported = 0;
+				foreach($xml->fitting as $xmlf) {
+					import_xml($xmlf, $errors, $ids, $a);
+					++$imported;
+
+					if($imported >= MAX_FITS) {
+						$errors[] = 'Limit of '.MAX_FITS.' loadouts reached - stopping.';
+						break;
+					}
+				}
+			} else {
+				$errors[] = 'XML error: root element is neither <fitting> nor <fittings>, aborting';
+			}
+		} catch(\Exception $e) { }
+
+		foreach(libxml_get_errors() as $e) {
+			$errors[] = 'XML error at line '.$e->line.', column '.$e->column.': '.$e->message;
+		}
+
+		libxml_clear_errors();
 	}
 	else {
 		$errors[] = 'Fatal: unknown format "'.$format.'"';
@@ -170,7 +179,7 @@ echo "<h1>Import loadouts</h1>\n";
 	                           'clf' => 'CLF (single)',
 	                           'clfarray' => 'CLF (array)',
 	                           'gzclf' => 'gzCLF (supports multiple blocks)',
-	                           //'xml' => 'EVE XML',
+	                           'xml' => 'EVE XML (also supports one &lt;loadout&gt; element)',
 	                           //'dna' => 'DNA',
 	                           //'eft' => 'EFT',
 	                           ), null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
@@ -199,15 +208,60 @@ function truncate($text) {
 	return substr($text, 0, MAX_FILESIZE);
 }
 
+function post_import(&$fit, &$ids, $a) {
+	if($fit == false) return;
+
+	$fit['metadata']['view_permission'] = DEFAULT_VP;
+	$fit['metadata']['edit_permission'] = DEFAULT_EP;
+	$fit['metadata']['visibility'] = DEFAULT_VIS;
+
+	\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
+
+	$ids[] = $fit['metadata']['loadoutid'];
+}
+
 function import_clf($jsonstring, &$errors, &$ids, $a) {
 	$fit = \Osmium\Fit\try_parse_fit_from_common_loadout_format($jsonstring, $errors);
-	if($fit !== false) {
-		$fit['metadata']['view_permission'] = DEFAULT_VP;
-		$fit['metadata']['edit_permission'] = DEFAULT_EP;
-		$fit['metadata']['visibility'] = DEFAULT_VIS;
+	post_import($fit, $ids, $a);
+}
 
-		\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
+function import_xml(\SimpleXMLElement $e, &$errors, &$ids, $a) {
+	$fit = \Osmium\Fit\try_parse_fit_from_eve_xml($e, $errors);
+	post_import($fit, $ids, $a);
+}
 
-		$ids[] = $fit['metadata']['loadoutid'];
+function autodetect($source) {
+	$json = json_decode($source, true);
+	if(json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+		/* Input is JSON array/object */
+
+		if(isset($json['clf-version']) && is_int($json['clf-version'])) {
+			/* Input looks like CLF */
+			return 'clf';
+		} else if(count($json) > 0) {
+			$first = reset($json);
+			if(isset($first['clf-version']) && is_int($first['clf-version'])) {
+				/* Input looks like a CLF array */
+				return 'clfarray';
+			}
+		}
 	}
+
+	if(($start = strpos($source, 'BEGIN gzCLF BLOCK')) !== false
+	   && ($end = strpos($source, 'END gzCLF BLOCK')) !== false
+	   && $start < $end) {
+		/* Input looks like gzCLF */
+		return 'gzclf';
+	}
+
+	libxml_use_internal_errors(true);
+	try {
+		$xml = new \SimpleXMLElement($source);
+
+		if(isset($xml->fitting) || isset($xml->shipType)) {
+			return 'xml';
+		}
+	} catch(\Exception $e) { }
+
+	return false;
 }
