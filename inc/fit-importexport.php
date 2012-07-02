@@ -431,6 +431,116 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 }
 
 /**
+ * Try to parse a loadout in the EFT format. Since the format is not
+ * documented anywhere, use at your own risk!
+ */
+function try_parse_fit_from_eft_format($eftstring, &$errors) {
+	require_once __DIR__.CLF_PATH;
+
+	$lines = array_map('trim', explode("\n", $eftstring));
+	if(count($lines) == 0) {
+		$errors[] = 'No input - aborting.';
+		return false;
+	}
+
+	$meta = array_shift($lines);
+	if(!preg_match('%^\[(.+)(,(.+)?)\]$%U', $meta, $match)) {
+		$errors[] = 'Nonsensical first line, expected [ShipType, LoadoutName].';
+		return false;
+	}
+
+	$shipname = trim($match[1]);
+	$shiptype = \CommonLoadoutFormat\get_typeid($shipname);
+	if($shiptype === false) {
+		$errors[] = 'Ship "'.$shipname.'" not found.';
+		return false;
+	}
+
+	if(!\CommonLoadoutFormat\check_typeof_type($shiptype, 'ship')) {
+		$errors[] = 'Type "'.$shipname.'" is not a ship.';
+		return false;
+	}
+
+	create($fit);
+	select_ship($fit, $shiptype);
+
+	$name = isset($match[3]) ? trim($match[3]) : '';
+	if(!$name) {
+		$name = 'Unnamed loadout';
+	}
+
+	$fit['metadata']['name'] = $name;
+	$fit['metadata']['description'] = '';
+	$fit['metadata']['tags'] = array();
+
+	$indexes = array();
+	foreach($lines as $l) {
+		if(!$l) continue; /* Ignore empty lines */
+		if(strpos($l, ',') !== false) {
+			list($module, $charge) = explode(',', $l, 2);
+			$module = trim($module);
+			$charge = trim($charge);
+		} else {
+			$module = $l; /* Already trimmed */
+			$charge = false;
+		}
+
+		if(preg_match('%^(.+)(\s+)x([0-9]+)$%U', $module, $match)) {
+			$module = $match[1];
+			$qty = (int)$match[3];
+			if(!$qty) continue; /* Foobar x0 ?! */
+		} else {
+			$qty = 1;
+		}
+
+		$moduleid = \CommonLoadoutFormat\get_typeid($module);
+		if($moduleid === false) {
+			$errors[] = 'Type "'.$module.'" not found.';
+			continue;
+		}
+
+		if(\CommonLoadoutFormat\check_typeof_type($moduleid, 'drone')) {
+			add_drone($fit, $moduleid, $qty, 0);
+		} else {
+			$slottype = \CommonLoadoutFormat\get_module_slottype($moduleid);
+			if($slottype === 'unknown') {
+				$errors[] = 'Type "'.$type.'" is neither a drone nor a module. Discarded.';
+				continue;
+			}
+
+			if(!isset($indexes[$slottype])) {
+				$indexes[$slottype] = 0;
+			}
+			$index = ($indexes[$slottype]++);
+
+			add_module($fit, $index, $moduleid);
+
+			if($charge !== false) {
+				$chargeid = \CommonLoadoutFormat\get_typeid($charge);
+				if($chargeid === false) {
+					$errors[] = 'Type "'.$charge.'" not found.';
+					continue;
+				}
+
+				if(!\CommonLoadoutFormat\check_typeof_type($chargeid, 'charge')) {
+					$errors[] = 'Type "'.$charge.'" is not a charge.';
+					continue;
+				}
+
+				if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module($moduleid, $chargeid)) {
+					$errors[] = 'Charge "'.$charge.'" cannot be fitted to module "'.$module.'".';
+					continue;
+				}
+
+				add_charge($fit, $slottype, $index, $chargeid);
+			}
+		}
+	}
+
+	return $fit;
+}
+
+/**
  * Export a fit to the common loadout format (CLF).
  *
  * @returns a string containing the JSON object.

@@ -153,6 +153,31 @@ if(!empty($source)) {
 		}
 
 		libxml_clear_errors();
+	} else if($format == 'eft') {
+		$efts = array();
+		$lines = array_map('trim', explode("\n", $source));
+
+		foreach($lines as $l) {
+			if(preg_match('%^\[(.+)(,(.+)?)\]$%U', $l)) {
+				if(isset($eft)) $efts[] = $eft;
+				$eft = '';
+			}
+
+			$eft .= $l."\n";
+		}
+
+		if(isset($eft)) $efts[] = $eft;
+
+		$imported = 0;
+		foreach($efts as $eftstring) {
+			import_eft($eftstring, $errors, $ids, $a);
+			++$imported;
+
+			if($imported >= MAX_FITS) {
+				$errors[] = 'Limit of '.MAX_FITS.' loadouts reached - stopping.';
+				break;
+			}
+		}
 	}
 	else {
 		$errors[] = 'Fatal: unknown format "'.$format.'"';
@@ -181,7 +206,7 @@ echo "<h1>Import loadouts</h1>\n";
 	                           'gzclf' => 'gzCLF (supports multiple blocks)',
 	                           'xml' => 'EVE XML (also supports one &lt;loadout&gt; element)',
 	                           //'dna' => 'DNA',
-	                           //'eft' => 'EFT',
+	                           'eft' => 'EFT (supports multiple fits)',
 	                           ), null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
 \Osmium\Forms\print_generic_row('', '<label>Method</label>', '<div id="methodselect"><noscript>Use at most one of the three methods below:</noscript></div>');
@@ -230,6 +255,11 @@ function import_xml(\SimpleXMLElement $e, &$errors, &$ids, $a) {
 	post_import($fit, $ids, $a);
 }
 
+function import_eft($eftstring, &$errors, &$ids, $a) {
+	$fit = \Osmium\Fit\try_parse_fit_from_eft_format($eftstring, $errors);
+	post_import($fit, $ids, $a);
+}
+
 function autodetect($source) {
 	$json = json_decode($source, true);
 	if(json_last_error() === JSON_ERROR_NONE && is_array($json)) {
@@ -262,6 +292,10 @@ function autodetect($source) {
 			return 'xml';
 		}
 	} catch(\Exception $e) { }
+
+	if(preg_match('%^\[(.+),(.+)\]%U', $source)) {
+		return 'eft';
+	}
 
 	return false;
 }
