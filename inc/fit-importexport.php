@@ -19,6 +19,7 @@
 namespace Osmium\Fit;
 
 const CLF_PATH = '/../lib/common-loadout-format/validators/php/lib.php';
+const DNA_REGEX = '([0-9]+)(:([0-9]+)(;([0-9]+))?)*::';
 
 /*
  * Try to parse a loadout from a CLF string (containing JSON-encoded
@@ -533,6 +534,100 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 				}
 
 				add_charge($fit, $slottype, $index, $chargeid);
+			}
+		}
+	}
+
+	return $fit;
+}
+
+/**
+ * Try to parse a fit in the ShipDNA format. Since the only
+ * documentation available on this format is highly ambiguous (and
+ * mostly wrong), use this at your own risk!
+ */
+function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
+	require_once __DIR__.CLF_PATH;
+
+	if(!preg_match('%^'.DNA_REGEX.'$%U', $dnastring)) {
+		$errors[] = 'Could not make sense out of the supplied DNA string.';
+		return false;
+	}
+
+	$dnaparts = explode(':', rtrim($dnastring, ':'));
+	$shipid = (int)array_shift($dnaparts);
+
+	if(!\CommonLoadoutFormat\check_typeof_type($shipid, "ship")) {
+		$errors[] = 'Typeid "'.$shipid.'" is not a ship.';
+		return false;
+	}
+
+	create($fit);
+	select_ship($fit, $shipid);
+
+	$fit['metadata']['name'] = $name;
+	$fit['metadata']['description'] = '';
+	$fit['metadata']['tags'] = array();
+
+	$indexes = array();
+	$modules = array();
+	$charges = array();
+
+	foreach($dnaparts as $d) {
+		if(strpos($d, ';') !== false) {
+			$d = explode(';', $d, 2);
+			$typeid = (int)$d[0];
+			$qty = (int)$d[1];
+		} else {
+			$typeid = (int)$d;
+			$qty = 1;
+		}
+
+		if($qty <= 0) continue;
+
+		if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {
+			add_drone($fit, $typeid, $qty, 0);
+		}
+		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
+			/* The game won't generate/recognize charges, but it
+			 * dosen't hurt to support them */
+
+			for($z = 0; $z < $qty; ++$z) {
+				/* Fit charge to first appropriate module */
+				foreach($modules as $type => $a) {
+					foreach($a as $index => $m) {
+						if(isset($charges[$type][$index])) continue;
+						if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module($m, $typeid)) continue;
+						
+						$charges[$type][$index] = $typeid;
+						add_charge($fit, $type, $index, $typeid);
+
+						continue 3;
+					}
+				}
+
+				$errors[] = 'Could not add charge "'.$typeid.'", discarded.';
+				/* There's no point trying to add the same charge
+				 * again, all the modules have already been tested */
+				break;
+			}
+		} else {
+			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
+			if($slottype === 'unknown') {
+				$errors[] = 'Unknown typeid "'.$typeid.'". Discarded.';
+				continue;
+			}
+
+			if(!isset($indexes[$slottype])) {
+				$indexes[$slottype] = 0;
+			}
+
+			for($z = 0; $z < $qty; ++$z) {
+				$index = $indexes[$slottype];
+				++$indexes[$slottype];
+				
+				$modules[$slottype][$index] = $typeid;
+				add_module($fit, $index, $typeid);
 			}
 		}
 	}

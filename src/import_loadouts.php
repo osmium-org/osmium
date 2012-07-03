@@ -178,6 +178,32 @@ if(!empty($source)) {
 				break;
 			}
 		}
+	} else if($format == 'dna') {	
+	$dna = array();
+
+		$source = preg_replace_callback(
+			'%<url=fitting:(?P<dna>'.\Osmium\Fit\DNA_REGEX.')>(?P<name>.+)</url>%U',
+			function($match) use(&$dna) {
+				$dna[] = array('name' => $match['name'], 'dna' => $match['dna']);
+				return ''; /* To avoid rematching them later */
+			},
+			$source);
+
+		preg_match_all('%'.\Osmium\Fit\DNA_REGEX.'%U', $source, $matches);
+		foreach($matches[0] as $dnastring) {
+			$dna[] = array('dna' => $dnastring, 'name' => 'Unnamed loadout');
+		}
+
+		$imported = 0;
+		foreach($dna as $d) {
+			import_dna($d['dna'], $d['name'], $errors, $ids, $a);
+			++$imported;
+
+			if($imported >= MAX_FITS) {
+				$errors[] = 'Limit of '.MAX_FITS.' loadouts reached - stopping.';
+				break;
+			}
+		}
 	}
 	else {
 		$errors[] = 'Fatal: unknown format "'.$format.'"';
@@ -205,7 +231,7 @@ echo "<h1>Import loadouts</h1>\n";
 	                           'clfarray' => 'CLF (array)',
 	                           'gzclf' => 'gzCLF (supports multiple blocks)',
 	                           'xml' => 'EVE XML (also supports one &lt;loadout&gt; element)',
-	                           //'dna' => 'DNA',
+	                           'dna' => 'DNA (&lt;url=fitting:&gt; syntax supported)',
 	                           'eft' => 'EFT (supports multiple fits)',
 	                           ), null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
@@ -260,6 +286,11 @@ function import_eft($eftstring, &$errors, &$ids, $a) {
 	post_import($fit, $ids, $a);
 }
 
+function import_dna($dnastring, $name, &$errors, &$ids, $a) {
+	$fit = \Osmium\Fit\try_parse_fit_from_shipdna($dnastring, $name, $errors);
+	post_import($fit, $ids, $a);
+}
+
 function autodetect($source) {
 	$json = json_decode($source, true);
 	if(json_last_error() === JSON_ERROR_NONE && is_array($json)) {
@@ -295,6 +326,10 @@ function autodetect($source) {
 
 	if(preg_match('%^\[(.+),(.+)\]%U', $source)) {
 		return 'eft';
+	}
+
+	if(preg_match('%'.\Osmium\Fit\DNA_REGEX.'%U', $source)) {
+		return 'dna';
 	}
 
 	return false;
