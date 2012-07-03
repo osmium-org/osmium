@@ -25,7 +25,9 @@ function final_settings() {
 	load_metadata();
 
 	if($anonymous) {
-		echo "<p class='warning_box' style='max-width: 100%;'>You are not logged in. You can still login now (or register) and save your fitting to your account, as long as you don't close your browser window. If you don't want to, you can still click the \"Finalize\" button below, and this will export the loadout. You can then save it for later use.</p>";
+		$formats = \Osmium\Fit\get_export_formats();
+
+		echo "<p class='warning_box' style='max-width: 100%;'>You are not logged in. You can still login now (or register) and save your fitting to your account, as long as you don't close your browser window. If you don't want to, you can still export your new loadout in one of the supported export formats.</p>";
 	}
 
 	\Osmium\Forms\print_form_begin();
@@ -64,6 +66,14 @@ function final_settings() {
 		                           \Osmium\Forms\FIELD_REMEMBER_VALUE);
 		\Osmium\Forms\print_generic_field('Password', 'password', 'pw', 'pw',
 		                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+	} else {
+		$options = array();
+
+		foreach($formats as $name => $format) {
+			$options[$name] = $format[0];
+		}
+
+		\Osmium\Forms\print_select('Export format', 'export_format', $options, null, 'export_format', \Osmium\Forms\FIELD_REMEMBER_VALUE);
 	}
 
 	print_form_prevnext();

@@ -25,8 +25,9 @@ if(!isset($_GET['type'])) {
 }
 
 $type = $_GET['type'];
+$formats = \Osmium\Fit\get_export_formats();
 
-if($type != "clf" && $type != "md" && $type != "evexml" && $type != "eft" && $type != "dna") {
+if(!isset($formats[$type])) {
 	\Osmium\fatal(400, "Invalid type specified.");
 }
 
@@ -56,37 +57,6 @@ if(isset($_GET['dpid']) && isset($fit['dronepresets'][$_GET['dpid']])) {
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 }
 
-if($type == 'clf') {
-	$minify = isset($_GET['minify']) && $_GET['minify'] == 1;
-
-	$json = \Osmium\Fit\export_to_common_loadout_format($fit, $minify);
-	header('Content-Type: application/json');
-	echo $json;
-	die();
-}
-
-if($type == 'md') {
-	header('Content-Type: text/plain');
-	echo \Osmium\Fit\export_to_markdown($fit);
-	die();
-}
-
-if($type == 'evexml') {
-	$embedclf = !isset($_GET['embedclf']) || $_GET['embedclf'];
-
-	header('Content-Type: application/xml');
-	echo \Osmium\Fit\export_to_eve_xml(array($fit), $embedclf);
-	die();
-}
-
-if($type == 'eft') {
-	header('Content-Type: text/plain');
-	echo \Osmium\Fit\export_to_eft($fit);
-	die();
-}
-
-if($type == 'dna') {
-	header('Content-Type: text/plain');
-	echo \Osmium\Fit\export_to_dna($fit);
-	die();
-}
+header('Content-Type: '.$formats[$type][1]);
+echo $formats[$type][2]($fit, $_GET);
+die();

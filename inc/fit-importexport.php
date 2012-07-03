@@ -21,6 +21,42 @@ namespace Osmium\Fit;
 const CLF_PATH = '/../lib/common-loadout-format/validators/php/lib.php';
 const DNA_REGEX = '([0-9]+)(:([0-9]+)(;([0-9]+))?)*::';
 
+/**
+ * Get a list of available export formats.
+ */
+function get_export_formats() {
+	return array(
+		'clf' => array(
+			'CLF', 'application/json',
+			function($fit, $opts = array()) {
+				$minify = isset($opts['minify']) && $opts['minify'];
+				return export_to_common_loadout_format($fit, $minify);
+			}),
+		'md' => array(
+			'Markdown+gzCLF', 'text/plain',
+			function($fit, $opts = array()) {
+				$embedclf = !isset($opts['embedclf']) || $opts['embedclf'];
+				return export_to_markdown($fit, $embedclf);
+			}),
+		'evexml' => array(
+			'XML+gzCLF', 'application/xml',
+			function($fit, $opts = array()) {
+				$embedclf = !isset($opts['embedclf']) || $opts['embedclf'];
+				return export_to_eve_xml(array($fit), $embedclf);
+			}),
+		'eft' => array(
+			'EFT', 'text/plain',
+			function($fit, $opts = array()) {
+				return export_to_eft($fit);
+			}),
+		'dna' => array(
+			'DNA', 'text/plain',
+			function($fit, $opts = array()) {
+				return export_to_dna($fit);
+			}),
+		);
+}
+
 /*
  * Try to parse a loadout from a CLF string (containing JSON-encoded
  * data). Any errors will be put in $errors.

@@ -88,12 +88,16 @@ function call_local($name) {
 }
 
 function print_form_prevnext() {
-	global $step;
+	global $step, $anonymous;
 
 	$prevd = $step == 1 ? "disabled='disabled' " : '';
 
 	if($step == FINAL_STEP) {
-		$next = "<input type='submit' name='finalize' value='Finalize fitting' class='final_step' />";
+		if($anonymous) {
+			$next = "<input type='submit' name='finalize' value='Export fitting' class='final_step' />";
+		} else {
+			$next = "<input type='submit' name='finalize' value='Finalize fitting' class='final_step' />";
+		}
 	} else {
 		$next = "<input type='submit' name='next_step' value='Next step &gt;' class='next_step' />";
 	}
@@ -134,12 +138,13 @@ function finalize() {
 	\Osmium\Fit\sanitize($fit);
 
 	if($anonymous) {
-		$unique = \Osmium\Fit\get_unique($fit);
-		
-		header('Content-Type: text/plain');
-		var_export($unique);
+		$formats = \Osmium\Fit\get_export_formats();
+		$format = $_POST['export_format'];
 
-		/* FIXME print CLF export here */
+		if(isset($formats[$format])) {
+			header('Content-Type: '.$formats[$format][1]);
+			echo $formats[$format][2]($fit);
+		}
 
 		die();
 	}
