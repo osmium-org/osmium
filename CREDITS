@@ -1,0 +1,9 @@
+# People who contributed to the Osmium project:
+# Please keep this file sorted alphabetically by name.
+#
+# Format: Real name <email>, short description of contributions
+#
+# If your git "commit name" is not the same as your real name,
+# you should also add an entry in the .mailmap file.
+
+Romain Dalmaso <artefact2@gmail.com>, original author

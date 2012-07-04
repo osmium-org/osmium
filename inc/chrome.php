@@ -306,3 +306,34 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	$result = $r;
 	return $offset;
 }
+
+function format_sanitize_md($markdowntext) {
+	static $purifier = null;
+
+	require_once 'HTMLPurifier.includes.php';
+	require_once 'HTMLPurifier.auto.php';
+	require_once \Osmium\ROOT.'/lib/markdown.php';
+
+	$html = \Markdown($markdowntext);
+
+	if($purifier === null) {
+		$config = \HTMLPurifier_Config::createDefault();
+
+		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
+		$config->set('HTML.DefinitionID', 'Osmium '.\Osmium\VERSION.' '.\Osmium\ROOT);
+		$config->set('HTML.DefinitionRev', 1);
+
+		/* Forbid all classes. IDs are forbidden by default. */
+		$config->set('Attr.AllowedClasses', array());
+
+		/* (Try) detering bots. */
+		$config->set('HTML.Nofollow', true);
+
+		/* Disable inline CSS (to avoid seizure-inducing spam/trolls). */
+		$config->set('CSS.AllowedProperties', array());
+
+		$purifier = new \HTMLPurifier($config);
+	}
+
+	return $purifier->purify($html);
+}

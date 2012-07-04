@@ -3,6 +3,21 @@ Osmium
 
 Osmium is a user-friendly fitting tool for the EVE Online game.
 
+Credits
+-------
+
+Osmium is released under the GNU Affero General Public License,
+version 3. You can see the full license text in the `COPYING` file.
+
+For the full list of Osmium contributors, see the `CREDITS` file.
+
+Osmium uses the PHP Markdown Extra library, released under the GNU
+General Public License, version 2.
+<http://michelf.com/projects/php-markdown/license/>
+
+Osmium uses the phpass library, released in the public domain.
+<http://www.openwall.com/phpass/>
+
 Caveats
 =======
 
@@ -56,6 +71,8 @@ For users
   git submodule init          <-- install-time only
   git submodule update        <-- do this at every upgrade
   ~~~~
+
+* HTMLPurifier PEAR package, see http://htmlpurifier.org/download#PEAR
 
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
   http://pear.horde.org
