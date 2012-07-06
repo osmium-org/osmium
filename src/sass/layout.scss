@@ -168,3 +168,11 @@ p#nojs_warning {
 	text-align: center;
 	background-color: #FFD8D8;
 }
+
+span.normalaccount:before {
+	content: '~';
+}
+
+span.apiverified:before {
+	content: '%';
+}

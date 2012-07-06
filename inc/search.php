@@ -33,7 +33,7 @@ function get_link() {
 }
 
 function query_select_searchdata($cond, array $params = array()) {
-	return \Osmium\Db\query_params('SELECT loadoutid, restrictedtocharacterid, restrictedtocorporationid, restrictedtoallianceid, tags, modules, author, name, description, shipid, ship, creationdate, updatedate FROM osmium.loadoutssearchdata '.$cond, $params);
+	return \Osmium\Db\query_params('SELECT loadoutid, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid, tags, modules, author, name, description, shipid, ship, creationdate, updatedate FROM osmium.loadoutssearchdata '.$cond, $params);
 }
 
 function query($q) {
@@ -55,11 +55,11 @@ function index($loadout) {
 	unindex($loadout['loadoutid']);
 	
 	return query('INSERT INTO osmium_loadouts 
-  (id, restrictedtocharacterid, restrictedtocorporationid, restrictedtoallianceid, 
+  (id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid, 
   shipid, creationdate, updatedate, ship, author, name, description, tags, modules) 
   VALUES ('
 	             .$loadout['loadoutid'].','
-	             .$loadout['restrictedtocharacterid'].','
+	             .$loadout['restrictedtoaccountid'].','
 	             .$loadout['restrictedtocorporationid'].','
 	             .$loadout['restrictedtoallianceid'].','
 	             .$loadout['shipid'].','
@@ -75,18 +75,21 @@ function index($loadout) {
 }
 
 function get_search_query($search_query) {
-	$characterids = array(0);
+	$accountids = array(0);
 	$corporationids = array(0);
 	$allianceids = array(0);
 
 	if(\Osmium\State\is_logged_in()) {
 		$a = \Osmium\State\get_state('a');
-		$characterids[] = intval($a['characterid']);
-		$corporationids[] = intval($a['corporationid']);
-		if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
+		$accountids[] = intval($a['accountid']);
+
+		if($a['apiverified'] === 't') {
+			$corporationids[] = intval($a['corporationid']);
+			if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
+		}
 	}
 
-	return 'SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtocharacterid IN ('.implode(',', $characterids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
+	return 'SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtoaccountid IN ('.implode(',', $accountids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
 }
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
@@ -160,7 +163,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -182,7 +185,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
 		echo "</a>\n<br />\n";
 		echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
-		echo " — <a href='$relative/profile/".$loadout['accountid']."'>".$loadout['charactername']."</a>";
+		echo " — <a href='$relative/profile/".$loadout['accountid']."'>".\Osmium\Chrome\format_character_name($loadout, $relative)."</a>";
 		echo " — revision #".$loadout['latestrevision'];
 		echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
       

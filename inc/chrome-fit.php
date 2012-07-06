@@ -40,10 +40,13 @@ function print_loadout_title($name, $viewpermission, $visibility, $author, $rela
 	if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 		$pic = "<img src='$relative/static/icons/private.png' alt='(password-protected)' title='Password-protected fit' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
-		$pic = "<img src='$relative/static/icons/corporation.png' alt='(".$author['alliancename']." only)' title='".$author['alliancename']." only' />";
+		$aname = ($author['apiverified'] === 't' && $author['allianceid'] > 0) ?
+			htmlspecialchars($author['alliancename'], ENT_QUOTES) : 'My alliance';
+		$pic = "<img src='$relative/static/icons/corporation.png' alt='($aname only)' title='$aname only' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
-		if(!$author['allianceid']) $author['alliancename'] = '*no alliance*';
-		$pic = "<img src='$relative/static/icons/corporation.png' alt='(".$author['corporationname']." only)' title='".$author['corporationname']." only' />";
+		$cname = ($author['apiverified'] === 't') ?
+			htmlspecialchars($author['corporationname'], ENT_QUOTES) : 'My corporation';
+		$pic = "<img src='$relative/static/icons/corporation.png' alt='($cname only)' title='$cname only' />";
 	} else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
 		$pic = "<img src='$relative/static/icons/onlyme.png' alt='(only visible by me)' title='Only visible by me' />";
 	}

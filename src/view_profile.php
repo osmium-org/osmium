@@ -24,7 +24,7 @@ if(!isset($_GET['accountid'])) {
 	\Osmium\fatal(404, 'No accountid given.');
 }
 
-$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
+$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
 
 if($row === false) {
 	\Osmium\fatal(404, 'Invalid accountid.');
@@ -32,28 +32,38 @@ if($row === false) {
 
 $myprofile = \Osmium\State\is_logged_in() && \Osmium\State\get_state('a', array())['accountid'] == $_GET['accountid'];
 
-\Osmium\Chrome\print_header($row['charactername']."'s profile", '..');
+$name = \Osmium\Chrome\get_name($row, $rname);
+\Osmium\Chrome\print_header(htmlspecialchars($rname)."'s profile", '..');
 
 echo "<div id='vprofile'>\n";
 echo "<header>\n";
 $sep = "<tr class='sep'><td colspan='3'>&nbsp;</td></tr>\n";
 
-$allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
-$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
 $moderator = ($row['ismoderator'] === 't') ? '<small>Moderator '.\Osmium\Flag\MODERATOR_SYMBOL.'</small>' : '';
 $isthisme = $myprofile ? '<small>(this is you!)</small>' : '';
-echo "<h2>".$row['charactername']." $moderator$isthisme</h2>\n<p>\n";
+echo "<h2>".$name." $moderator$isthisme</h2>\n";
 
-echo "<img src='http://image.eveonline.com/Character/".$row['characterid']."_256.jpg' alt='portrait' /><br />";
-echo "<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_128.png' alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' />";
-echo "<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></p>\n";
+if($row['apiverified'] === 't') {
+	$allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
+	$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
+
+	echo "<p>\n<img src='http://image.eveonline.com/Character/".$row['characterid']."_256.jpg' alt='portrait' /><br />";
+	echo "<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_128.png' alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' />";
+	echo "<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></p>\n";
+}
+
 echo "<table>\n<tbody>\n";
 
-echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".htmlspecialchars($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".htmlspecialchars($alliancename)."</td>\n</tr>\n";
+if($row['apiverified'] === 't') {
+	echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".htmlspecialchars($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".htmlspecialchars($alliancename)."</td>\n</tr>\n";
+	echo $sep;
+}
+
+echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['creationdate'])."</td>\n</tr>\n<tr>\n<td>last seen</td>\n<td>".(($s = \Osmium\Chrome\format_long_duration(time() - $row['lastlogindate'], null)) === null ? 'today' : $s.' ago')."</td>\n</tr>\n";
 
 echo $sep;
 
-echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['creationdate'])."</td>\n</tr>\n<tr>\n<td>last seen</td>\n<td>".(($s = \Osmium\Chrome\format_long_duration(time() - $row['lastlogindate'], null)) === null ? 'today' : $s.' ago')."</td>\n</tr>\n";
+echo "<tr>\n<th rowspan='1'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n";
 
 if($myprofile) {
 	echo $sep;
@@ -63,8 +73,8 @@ if($myprofile) {
 echo "</tbody>\n</table>\n</header>\n";
 
 echo "<section id='ploadouts' class='psection'>\n";
-echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.$row['charactername'].'"')."\">(browse all)</a></small></h2>\n";
-\Osmium\Search\print_pretty_results("..", '@author "'.$row['charactername'].'"', 'ORDER BY creationdate DESC', false, 5, 'p', $row['charactername'].' does not have submitted any loadouts.');
+echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.htmlspecialchars($rname, ENT_QUOTES).'"')."\">(browse all)</a></small></h2>\n";
+\Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 5, 'p', htmlspecialchars($rname).' does not have submitted any loadouts.');
 echo "</section>\n";
 
 if($myprofile) {

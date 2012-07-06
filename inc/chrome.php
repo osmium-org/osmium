@@ -150,15 +150,37 @@ function format_resonance($resonance) {
 }
 
 /**
+ * Get nickname or character name of current user.
+ */
+function get_name($a, &$rawname) {
+	$name = $rawname = 'Anonymous';
+
+	if(isset($a['accountid']) && $a['accountid'] > 0) {
+		if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
+		   isset($a['characterid']) && $a['characterid'] > 0) {
+			$name = '<span class="apiverified">'.htmlspecialchars($rawname = $a['charactername']).'</span>';
+		} else {
+			$name = '<span class="normalaccount">'.htmlspecialchars($rawname = $a['nickname']).'</span>';
+		}
+	}
+
+	return $name;
+}
+
+/**
  * Format a character name (with a link to the profile).
  */
-function format_character_name($a, $relative = '.') {
-	$m = \Osmium\Flag\format_moderator_name($a);
+function format_character_name($a, $relative = '.', &$rawname = null) {
+	$name = get_name($a, $rawname);
+	$name = \Osmium\Flag\maybe_add_moderator_symbol($a, $name);
+	return maybe_add_profile_link($a, $relative, $name);
+}
 
+function maybe_add_profile_link($a, $relative = '.', $name) {
 	if(isset($a['accountid'])) {
-		return "<a class='profile' href='$relative/profile/".$a['accountid']."'>$m</a>";
+		return "<a class='profile' href='$relative/profile/".$a['accountid']."'>$name</a>";
 	} else {
-		return $m;
+		return $name;
 	}
 }
 
@@ -257,7 +279,7 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 		$page = 1;
 	}
 
-	$maxpage = ceil($total / $perpage);
+	$maxpage = max(1, ceil($total / $perpage));
 
 	if($page < 1) $page = 1;
 	if($page > $maxpage) $page = $maxpage;

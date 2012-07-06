@@ -48,7 +48,7 @@ const REQUIRED_ACCESS_MASK = 8; /* Just for CharacterSheet */
  */
 function is_logged_in() {
 	global $__osmium_state;
-	return isset($__osmium_state['a']['characterid']) && $__osmium_state['a']['characterid'] > 0;
+	return isset($__osmium_state['a']['accountid']) && $__osmium_state['a']['accountid'] > 0;
 }
 
 /**
@@ -63,14 +63,13 @@ function is_logged_in() {
 function do_post_login($account_name, $use_cookie = false) {
 	global $__osmium_state;
 
-	$q = \Osmium\Db\query_params('SELECT accountid, accountname, keyid, verificationcode, creationdate, lastlogindate, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
+	$q = \Osmium\Db\query_params('SELECT accountid, accountname, nickname,
+	creationdate, lastlogindate,
+	keyid, verificationcode, apiverified,
+	characterid, charactername, corporationid, corporationname, allianceid, alliancename,
+	ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
 	$a = \Osmium\Db\fetch_assoc($q);
-
-	if(!check_api_key($a)) {
-		logoff();
-		return;
-	}
-
+	check_api_key($a);
 	$__osmium_state['a'] = $a;
 
 	if($use_cookie) {
@@ -160,10 +159,16 @@ function print_login_box($relative) {
 /** @internal */
 function print_logoff_box($relative) {
 	global $__osmium_state;
-	$id = $__osmium_state['a']['characterid'];
+	$a = $__osmium_state['a'];
 	$tok = urlencode(get_token());
 
-	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as <img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' /> <strong>".\Osmium\Chrome\format_character_name($__osmium_state['a'], $relative)."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+	$portrait = '';
+	if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
+	   isset($a['characterid']) && $a['characterid'] > 0) {
+		$portrait = "<img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' class='portrait' /> ";
+	}
+
+	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 /**
@@ -248,70 +253,96 @@ function try_recover() {
 }
 
 /**
- * Check the API key associated with the current account.
+ * Check the API key associated with the current account, and update
+ * character/corp/alliance values in the database.
  *
- * If the API is unavailable, logs off the user. If the API key is
- * outdated/incorrect, set the must_renew_api state to true. If the
- * API key is correct, update character/corp/alliance information in
- * the database.
+ * @returns null on serious error, or a boolean indicating if the user
+ * must revalidate his API key.
  */
 function check_api_key($a) {
+	if(!isset($a['keyid']) || !isset($a['verificationcode'])
+	   || $a['keyid'] === null || $a['verificationcode'] === null) return null;
+
 	$key_id = $a['keyid'];
 	$v_code = $a['verificationcode'];
-	$info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $key_id, 'vCode' => $v_code));
+	$must_renew = false;
+
+	$info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx',
+	                             array('keyID' => $key_id, 'vCode' => $v_code));
 
 	if(!($info instanceof \SimpleXMLElement)) {
-		global $__osmium_login_state;
-
-		logoff(false);
-		$__osmium_login_state['error'] = 'Login failed because of API issues (osmium_api() returned a non-object). Sorry for the inconvenience.';
-		return false;
+		/* Could be anything major, ignore */
+		return null;
 	}
 
 	if(isset($info->error) && !empty($info->error)) {
 		$err_code = (int)$info->error['code'];
 		/* Error code details: http://wiki.eve-id.net/APIv2_Eve_ErrorList_XML */
 		if(200 <= $err_code && $err_code < 300) {
-			/* Most likely user error (deleted API key or modified vcode) */
-			\Osmium\State\put_state('must_renew_api', true);
-			return true;
+			$must_renew = true;
 		} else {
 			/* Most likely internal error */
-			global $__osmium_login_state;
-
-			$__osmium_login_state['error'] = 'Login failed because of API issues (got error '.$err_code.': '.((string)$info->error).'). Sorry for the inconvenience.';
-			return false;
+			return;
 		}
 	}
 
-	if((string)$info->result->key["type"] !== 'Character'
+	if(!$must_renew
+	   && (string)$info->result->key["type"] !== 'Character'
 	   || (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK
 	   || (int)$info->result->key->rowset->row['characterID'] != $a['characterid']) {
-		/* Key settings got modified since last login, and they are invalid now. */
-		\Osmium\State\put_state('must_renew_api', true);
-		return true;
+		$must_renew = true;
 	}
 
-	list($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager) = \Osmium\State\get_character_info($a['characterid']);
-	if($character_name != $a['charactername']
-	   || $corporation_id != $a['corporationid']
-	   || $corporation_name != $a['corporationname']
-	   || $alliance_id != $a['allianceid']
-	   || $alliance_name != $a['alliancename']) {
-		/* Update values in the DB. */
-		\Osmium\Db\query_params('UPDATE osmium.accounts SET charactername = $1, corporationid = $2, corporationname = $3, allianceid = $4, alliancename = $5, isfittingmanager = $6 WHERE accountid = $7', array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, $is_fitting_manager, $a['accountid']));
+	if($must_renew) {
+		\Osmium\Db\query_params('UPDATE osmium.accounts SET
+		characterid = null, charactername = null,
+		corporationid = null, corporationname = null,
+		allianceid = null, alliancename = null,
+		isfittingmanager = false, apiverified = false
+		WHERE accountid = $7', array($a['accountid']));
 
-		/* Put the correct values in state */
-		$a['charactername'] = $character_name;
-		$a['corporationid'] = $corporation_id;
-		$a['corporation_name'] = $corporation_name;
-		$a['allianceid'] = $alliance_id;
-		$a['alliancename'] = $alliance_name;
+		$a['characterid'] = null;
+		$a['charactername'] = null;
+		$a['corporationid'] = null;
+		$a['corporationname'] = null;
+		$a['allianceid'] = null;
+		$a['alliancename'] = null;
+		$a['apiverified'] = 'f';
+	} else if(isset($a['apiverified']) && $a['apiverified'] === 't') {
+		list($character_name,
+		     $corporation_id, $corporation_name,
+		     $alliance_id, $alliance_name,
+		     $is_fitting_manager) = \Osmium\State\get_character_info($a['characterid']);
 
-		\Osmium\State\put_state('a', $a);
+		if($character_name != $a['charactername']
+		   || $corporation_id != $a['corporationid']
+		   || $corporation_name != $a['corporationname']
+		   || $alliance_id != $a['allianceid']
+		   || $alliance_name != $a['alliancename']
+		   || $is_fitting_manager != ($a['isfittingmanager'] === 't')) {
+
+			\Osmium\Db\query_params('UPDATE osmium.accounts SET
+			charactername = $1,
+			corporationid = $2, corporationname = $3,
+		    allianceid = $4, alliancename = $5,
+			isfittingmanager = $6
+			WHERE accountid = $7', array($character_name,
+			                             $corporation_id, $corporation_name,
+			                             $alliance_id, $alliance_name,
+			                             $is_fitting_manager,
+			                             $a['accountid']));
+
+			$a['charactername'] = $character_name;
+			$a['corporationid'] = $corporation_id;
+			$a['corporationname'] = $corporation_name;
+			$a['allianceid'] = $alliance_id;
+			$a['alliancename'] = $alliance_name;
+			$a['isfittingmanager'] = $is_fitting_manager;
+		}
 	}
 
-	return true;
+	\Osmium\State\put_state('a', $a);
+	return $must_renew;
 }
 
 function get_character_info($character_id) {
@@ -351,28 +382,6 @@ function get_character_info($character_id) {
 	}
   
 	return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, (int)$is_fitting_manager);
-}
-
-/**
- * Checks the must_renew_api state variable, and redirects the user to
- * the renew API page if it is set to true.
- *
- * This function will not redirect the user if the current page is
- * already the renew API page.
- */
-function api_maybe_redirect($relative) {
-	global $__osmium_state;
-
-	if(!is_logged_in()) return;
-
-	$must_renew_api = \Osmium\State\get_state('must_renew_api', false);
-	$pagename = explode('?', $_SERVER['REQUEST_URI'], 2);
-	$pagename = explode('/', $pagename[0]);
-	$pagename = array_pop($pagename);
-	if($must_renew_api === true && $pagename != 'renew_api') {
-		header('Location: '.$relative.'/renew_api?non_consensual=1', true, 303);
-		die();
-	}
 }
 
 /**

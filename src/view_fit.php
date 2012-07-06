@@ -42,8 +42,8 @@ if(isset($_GET['revision'])) {
 	}
 }
 
-$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
-$lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
+$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
+$lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
 
@@ -71,8 +71,8 @@ if(!\Osmium\State\can_access_fit($fit)) {
 	}
 }
 
-$title = $fit['ship']['typename'].' / '.htmlspecialchars($fit['metadata']['name']);
-\Osmium\Chrome\print_header(strip_tags($title), '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
+$title = htmlspecialchars($fit['ship']['typename'].' / '.$fit['metadata']['name']);
+\Osmium\Chrome\print_header($title, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
 
 $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;
@@ -101,13 +101,18 @@ echo "<div id='metadatabox'>\n";
 echo "<h2>Fitting metadata</h2>\n";
 
 echo "<ul>\n";
-echo "<li>Originally created by: <strong>".\Osmium\Chrome\format_character_name($author, '..')."</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")<br />";
-echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_64.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
-echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_64.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
-if($author['allianceid'] > 0) {
-	echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_64.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
+$authorname = \Osmium\Chrome\format_character_name($author, '..', $rauthorname);
+echo "<li>Originally created by: <strong>$authorname</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")";
+
+if($author['apiverified'] === 't') {
+	echo "<br />";
+	echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_64.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
+	echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_64.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
+	if($author['allianceid'] > 0) {
+		echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_64.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
+	}
 }
-echo "<br /> </li>\n";
+echo "</li>\n";
 if($fit['metadata']['revision'] > 1) {
 	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Chrome\format_character_name($lastrev, '..')."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
@@ -166,7 +171,7 @@ if($can_edit) {
 }
 echo "<li><a href='../loadouthistory/$loadoutid'>View revision history</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
-echo "<li><a href='../search?q=".urlencode('@author "'.$author['charactername'].'"')."'>Browse loadouts from the same author</a></li>\n";
+echo "<li><a href='../search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a></li>\n";
 
 $slug = $author['charactername'].' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
 $slug = preg_replace('%[^a-z0-9-]%', '', str_replace(' ', '-', strtolower($slug)));

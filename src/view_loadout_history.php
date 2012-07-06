@@ -52,7 +52,7 @@ if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token()
 \Osmium\Chrome\print_header('Revision history of loadout #'.$loadoutid, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
 echo "<h1>Revision history of loadout <a href='../loadout/$loadoutid'>#$loadoutid</a></h1>\n";
 
-$histq = \Osmium\Db\query_params('SELECT loadouthistory.fittinghash, loadouthistory.revision, loadouthistory.updatedate, delta, accounts.accountid, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator
+$histq = \Osmium\Db\query_params('SELECT loadouthistory.fittinghash, loadouthistory.revision, loadouthistory.updatedate, delta, accounts.accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator
 FROM osmium.loadouthistory
 LEFT JOIN osmium.loadouthistory AS previousrev ON loadouthistory.loadoutid = previousrev.loadoutid
                                                AND previousrev.revision = (loadouthistory.revision - 1)

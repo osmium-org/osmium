@@ -34,8 +34,6 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	global $__osmium_chrome_relative;
 	$__osmium_chrome_relative = $relative;
 
-	\Osmium\State\api_maybe_redirect($relative);
-
 	if($title == '') {
 		$title = 'Osmium / '.\Osmium\SHORT_DESCRIPTION;
 	} else {
