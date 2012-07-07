@@ -42,10 +42,10 @@ if(isset($_POST['account_name'])) {
 		\Osmium\Forms\add_field_error('account_name', 'Must be at least 3 characters.');
 	} else if(mb_strlen($_POST['nickname']) < 3) {
 		\Osmium\Forms\add_field_error('nickname', 'Must be at least 3 characters.');
-	} else if(!preg_match('%[a-zA-Z]%', $pw) || !preg_match('%[0-9]%', $pw) || mb_strlen($pw) < 5) {
-		\Osmium\Forms\add_field_error('password_0', 'Your password must be at least 5 characters long, and contain at least one letter (a-z, A-Z) and one number (0-9).');
+	} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
+		\Osmium\Forms\add_field_error('password_0', $s);
 	} else if($pw !== $pw1) {
-		\Osmium\Forms\add_field_error('password_1', 'The two password are not equal.');
+		\Osmium\Forms\add_field_error('password_1', 'The two passwords are not equal.');
 	} else {
 		$hash = \Osmium\State\hash_password($pw);
 

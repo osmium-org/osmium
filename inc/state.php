@@ -18,6 +18,8 @@
 
 namespace Osmium\State;
 
+const MINIMUM_PASSWORD_ENTROPY = 40;
+
 /** Global variable that stores all Osmium-related session state.
  *
  * FIXME: get rid of this */
@@ -152,7 +154,7 @@ function print_login_box($relative) {
 	echo "<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n";
 	echo "$error<p>\n<input type='text' name='account_name' placeholder='Account name' $value/>\n";
 	echo "<input type='password' name='password' placeholder='Password' />\n";
-	echo "<input type='submit' name='__osmium_login' value='Login' /> (<small><input type='checkbox' name='remember' id='remember' $remember/> <label for='remember'>Remember me</label></small>) or <a href='$relative/register'>create an account</a><br />\n";
+	echo "<input type='submit' name='__osmium_login' value='Login' /> (<small><input type='checkbox' name='remember' id='remember' $remember/> <label for='remember'>Remember me</label></small>) or <a href='$relative/register'>create an account</a> <small>(<a href='$relative/reset_password'>reset password?</a>)</small><br />\n";
 	echo "</p>\n</form>\n</div>\n";
 }
 
@@ -170,6 +172,37 @@ function print_logoff_box($relative) {
 	}
 
 	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+}
+
+/** @internal */
+function print_api_link() {
+	echo "<p>\nYou can create an API key here: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."'>https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."</a></strong><br />\n";
+	echo "<strong>Make sure that you only select one character, do not change any of the checkboxes on the right.</strong>\n</p>\n";
+	echo "<p>\nIf you are still having errors despite having updated your API key, you will have to wait for the cache to expire, or just create a whole new API key altogether (no waiting involved!).\n</p>\n";
+}
+
+/**
+ * Check if a given password is strong enough to be used for an
+ * account.
+ *
+ * @returns true if the password is strong enough, or a string
+ * containing an error message.
+ */
+function is_password_sane($pw) {
+	$choices = 0;
+
+	if(preg_match('%[a-z]%', $pw)) $choices += 26;
+	if(preg_match('%[A-Z]%', $pw)) $choices += 26;
+	if(preg_match('%[0-9]%', $pw)) $choices += 10;
+	if(preg_match('%[^a-zA-Z0-9]%', $pw)) $choices += 32;
+
+	$entropy = strlen($pw) * log(max(1, $choices)) / log(2);
+
+	if($entropy < MINIMUM_PASSWORD_ENTROPY) {
+		return "This password is too weak (score: ".round($entropy, 2).", needs at least ".MINIMUM_PASSWORD_ENTROPY."). Try a longer password, or try adding symbols, numbers, or mixed case letters.";
+	}
+
+	return true;
 }
 
 /**
@@ -258,7 +291,7 @@ function try_recover() {
  *
  * @returns true, or a string containing an error message.
  */
-function check_api_key_sanity($accountid, $keyid, $vcode) {
+function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, &$charactername = null) {
 	$api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $keyid, 'vCode' => $vcode));
 
 	if(!($api instanceof \SimpleXMLElement)) {
@@ -278,11 +311,13 @@ function check_api_key_sanity($accountid, $keyid, $vcode) {
 		return 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK.' (or use the link above).';
 	}
 
-	$cid = (int)$api->result->key->rowset->row['characterID'];
-	$cname = (string)$api->result->key->rowset->row['characterName'];
-	list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)', array($accountid, $cid, $cname)));
-	if($c > 0) {
-		return "Character <strong>".htmlspecialchars($cname)."</strong> is already used by another account.";
+	$characterid = (int)$api->result->key->rowset->row['characterID'];
+	$charactername = (string)$api->result->key->rowset->row['characterName'];
+	if($accountid !== null) {
+		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)', array($accountid, $characterid, $charactername)));
+		if($c > 0) {
+			return "Character <strong>".htmlspecialchars($charactername)."</strong> is already used by another account.";
+		}
 	}
 
 	return true;

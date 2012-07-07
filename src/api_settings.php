@@ -21,7 +21,7 @@ namespace Osmium\Page\ApiSettings;
 require __DIR__.'/../inc/root.php';
 
 if(!\Osmium\State\is_logged_in()) {
-	osmium_fatal(403, "You are not logged in.");
+	\Osmium\fatal(403, "You are not logged in.");
 }
 
 $a = \Osmium\State\get_state('a');
@@ -61,17 +61,14 @@ if($a['apiverified'] !== 't') {
 	echo "<p>\nVerifying your account with an API key will allow you to:</p>\n";
 	echo "<ul>\n";
 	echo "<li>Share loadouts with your corporation/alliance, and access corporation/alliance-restricted loadouts;</li>\n";
-	echo "<li>Have your character name used instead of your nickname.</li>\n";
+	echo "<li>Have your character name used instead of your nickname;</li>\n";
+	echo "<li>Reset your password if you ever forget it.</li>\n";
 	echo "</ul>\n";
 }
 
 echo "<h1>API credentials</h1>\n";
 
-echo "<p>\nYou can create an API key here: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."'>https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."</a></strong><br />\n";
-echo "<strong>Make sure that you only select one character, do not change any of the checkboxes on the right.</strong>\n</p>\n";
-
-echo "<p>\nIf you are still having errors despite having updated your API key, you will have to wait for the cache to expire, or just create a whole new API key altogether (no waiting involved!).\n</p>\n";
-
+\Osmium\State\print_api_link();
 \Osmium\Forms\print_form_begin();
 
 \Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
