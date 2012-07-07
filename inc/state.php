@@ -299,7 +299,7 @@ function check_api_key($a) {
 		corporationid = null, corporationname = null,
 		allianceid = null, alliancename = null,
 		isfittingmanager = false, apiverified = false
-		WHERE accountid = $7', array($a['accountid']));
+		WHERE accountid = $1', array($a['accountid']));
 
 		$a['characterid'] = null;
 		$a['charactername'] = null;
