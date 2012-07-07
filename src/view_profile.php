@@ -39,9 +39,9 @@ echo "<div id='vprofile'>\n";
 echo "<header>\n";
 $sep = "<tr class='sep'><td colspan='3'>&nbsp;</td></tr>\n";
 
-$moderator = ($row['ismoderator'] === 't') ? '<small>Moderator '.\Osmium\Flag\MODERATOR_SYMBOL.'</small>' : '';
-$isthisme = $myprofile ? '<small>(this is you!)</small>' : '';
-echo "<h2>".$name." $moderator$isthisme</h2>\n";
+$moderator = ($row['ismoderator'] === 't') ? 'Moderator '.\Osmium\Flag\MODERATOR_SYMBOL : '';
+$isthisme = $myprofile ? '(this is you!)' : '';
+echo "<h2>".$name." <small>$isthisme $moderator</small></h2>\n";
 
 if($row['apiverified'] === 't') {
 	$allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
