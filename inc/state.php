@@ -41,7 +41,7 @@ $__osmium_cache_enabled = true;
 const COOKIE_AUTH_DURATION = 604800;
 
 /** Access mask required for API keys. */
-const REQUIRED_ACCESS_MASK = 8; /* Just for CharacterSheet */
+const REQUIRED_ACCESS_MASK = 33554440; /* CharacterSheet+AccountStatus */
 
 /**
  * Checks whether the current user is logged in.
@@ -67,7 +67,7 @@ function do_post_login($account_name, $use_cookie = false) {
 	creationdate, lastlogindate,
 	keyid, verificationcode, apiverified,
 	characterid, charactername, corporationid, corporationname, allianceid, alliancename,
-	ismoderator FROM osmium.accounts WHERE accountname = $1', array($account_name));
+	ismoderator, isfittingmanager FROM osmium.accounts WHERE accountname = $1', array($account_name));
 	$a = \Osmium\Db\fetch_assoc($q);
 	check_api_key($a);
 	$__osmium_state['a'] = $a;
@@ -165,6 +165,7 @@ function print_logoff_box($relative) {
 	$portrait = '';
 	if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
 	   isset($a['characterid']) && $a['characterid'] > 0) {
+		$id = $a['characterid'];
 		$portrait = "<img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' class='portrait' /> ";
 	}
 
@@ -253,13 +254,48 @@ function try_recover() {
 }
 
 /**
+ * Check that a given API key can be used to API-verify an account.
+ *
+ * @returns true, or a string containing an error message.
+ */
+function check_api_key_sanity($accountid, $keyid, $vcode) {
+	$api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $keyid, 'vCode' => $vcode));
+
+	if(!($api instanceof \SimpleXMLElement)) {
+		/* Aouch */
+		return "API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!";
+	}
+
+	if(isset($api->error) && !empty($api->error)) {
+		return '('.((int)$api->error['code']).') '.(string)$api->error;
+	}
+
+	if((string)$api->result->key["type"] !== 'Character') {
+	    return 'Invalid key type. Make sure you only select one character.';
+	}
+
+	if((int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK) {
+		return 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK.' (or use the link above).';
+	}
+
+	$cid = (int)$api->result->key->rowset->row['characterID'];
+	$cname = (string)$api->result->key->rowset->row['characterName'];
+	list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)', array($accountid, $cid, $cname)));
+	if($c > 0) {
+		return "Character <strong>".htmlspecialchars($cname)."</strong> is already used by another account.";
+	}
+
+	return true;
+}
+
+/**
  * Check the API key associated with the current account, and update
  * character/corp/alliance values in the database.
  *
  * @returns null on serious error, or a boolean indicating if the user
  * must revalidate his API key.
  */
-function check_api_key($a) {
+function check_api_key($a, $initial = false) {
 	if(!isset($a['keyid']) || !isset($a['verificationcode'])
 	   || $a['keyid'] === null || $a['verificationcode'] === null) return null;
 
@@ -289,7 +325,7 @@ function check_api_key($a) {
 	if(!$must_renew
 	   && (string)$info->result->key["type"] !== 'Character'
 	   || (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK
-	   || (int)$info->result->key->rowset->row['characterID'] != $a['characterid']) {
+	   || (!$initial && (int)$info->result->key->rowset->row['characterID'] != $a['characterid'])) {
 		$must_renew = true;
 	}
 
@@ -309,12 +345,15 @@ function check_api_key($a) {
 		$a['alliancename'] = null;
 		$a['apiverified'] = 'f';
 	} else if(isset($a['apiverified']) && $a['apiverified'] === 't') {
+		$character_id = (int)$info->result->key->rowset->row['characterID'];
+
 		list($character_name,
 		     $corporation_id, $corporation_name,
 		     $alliance_id, $alliance_name,
-		     $is_fitting_manager) = \Osmium\State\get_character_info($a['characterid']);
+		     $is_fitting_manager) = \Osmium\State\get_character_info($character_id);
 
-		if($character_name != $a['charactername']
+		if($character_id != $a['characterid']
+		   || $character_name != $a['charactername']
 		   || $corporation_id != $a['corporationid']
 		   || $corporation_name != $a['corporationname']
 		   || $alliance_id != $a['allianceid']
@@ -322,22 +361,23 @@ function check_api_key($a) {
 		   || $is_fitting_manager != ($a['isfittingmanager'] === 't')) {
 
 			\Osmium\Db\query_params('UPDATE osmium.accounts SET
-			charactername = $1,
-			corporationid = $2, corporationname = $3,
-		    allianceid = $4, alliancename = $5,
-			isfittingmanager = $6
-			WHERE accountid = $7', array($character_name,
+			characterid = $1, charactername = $2,
+			corporationid = $3, corporationname = $4,
+		    allianceid = $5, alliancename = $6,
+			isfittingmanager = $7
+			WHERE accountid = $8', array($character_id, $character_name,
 			                             $corporation_id, $corporation_name,
 			                             $alliance_id, $alliance_name,
-			                             $is_fitting_manager,
+			                             $is_fitting_manager ? 't' : 'f',
 			                             $a['accountid']));
 
+			$a['characterid'] = $character_id;
 			$a['charactername'] = $character_name;
 			$a['corporationid'] = $corporation_id;
 			$a['corporationname'] = $corporation_name;
 			$a['allianceid'] = $alliance_id;
 			$a['alliancename'] = $alliance_name;
-			$a['isfittingmanager'] = $is_fitting_manager;
+			$a['isfittingmanager'] = $is_fitting_manager ? 't' : 'f';
 		}
 	}
 
