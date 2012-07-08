@@ -74,7 +74,7 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 function print_footer() {
 	global $__osmium_chrome_relative;
 	echo "<div id='push'></div>\n</div>\n<footer>\n";
-	echo "<p><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong> — (Artefact2/Indalecia) — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
+	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
 	echo "</footer>\n</body>\n</html>\n";
 }
 
