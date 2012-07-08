@@ -118,6 +118,37 @@ function format_long_duration($seconds, $lessthanoneday = '1 day') {
 	return implode(', ', $out);
 }
 
+function format_relative_date($date, $now = null) {
+	if($now === null) $now = time();
+
+	if($date > $now || $date < ($now - 2 * 86400)) {
+		return date('Y-m-d', $date);
+	}
+
+	$duration = $now - $date;
+
+	if($duration < 2) return "less than a second ago";
+
+	$s = $duration % 60;
+	$m = (($duration - $s) / 60) % 60;
+	$h = (($duration - $s - 60 * $m) / 3600) % 24;
+	$d = ($duration - $s - 60 * $m - 3600 * $h);
+
+	$a = array_filter(array(
+		                  'd' => $d,
+		                  'h' => $h,
+		                  'm' => $m,
+		                  's' => $s
+		                  ));
+
+	$ret = array();
+	foreach($a as $k => $v) {
+		$ret[] = $v.$k;
+	}
+
+	return implode(' ', array_slice($ret, 0, 2)).' ago';
+}
+
 /**
  * Format the capacitor stability percentage or the time it lasts.
  *
@@ -342,17 +373,39 @@ function format_sanitize_md($markdowntext) {
 		$config = \HTMLPurifier_Config::createDefault();
 
 		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-		$config->set('HTML.DefinitionID', 'Osmium '.\Osmium\VERSION.' '.\Osmium\ROOT);
+		$config->set('HTML.DefinitionID', 'Osmium-full '.\Osmium\VERSION.' '.\Osmium\ROOT);
 		$config->set('HTML.DefinitionRev', 1);
 
-		/* Forbid all classes. IDs are forbidden by default. */
 		$config->set('Attr.AllowedClasses', array());
-
-		/* (Try) detering bots. */
 		$config->set('HTML.Nofollow', true);
-
-		/* Disable inline CSS (to avoid seizure-inducing spam/trolls). */
 		$config->set('CSS.AllowedProperties', array());
+
+		$purifier = new \HTMLPurifier($config);
+	}
+
+	return $purifier->purify($html);
+}
+
+function format_sanitize_md_phrasing($markdowntext) {
+	static $purifier = null;
+
+	require_once 'HTMLPurifier.includes.php';
+	require_once 'HTMLPurifier.auto.php';
+	require_once \Osmium\ROOT.'/lib/markdown.php';
+
+	$html = \Markdown($markdowntext);
+
+	if($purifier === null) {
+		$config = \HTMLPurifier_Config::createDefault();
+
+		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
+		$config->set('HTML.DefinitionID', 'Osmium-phrasing '.\Osmium\VERSION.' '.\Osmium\ROOT);
+		$config->set('HTML.DefinitionRev', 1);
+
+		$config->set('Attr.AllowedClasses', array());
+		$config->set('HTML.Nofollow', true);
+		$config->set('CSS.AllowedProperties', array());
+		$config->set('HTML.AllowedElements', 'a, abbr, b, cite, code, del, em, i, ins, kbd, q, s, samp, small, span, strong, sub, sup');
 
 		$purifier = new \HTMLPurifier($config);
 	}

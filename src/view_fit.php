@@ -45,6 +45,10 @@ if(isset($_GET['revision'])) {
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
 $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
+list($commentsallowed) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT allowcomments FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
+$commentsallowed = ($commentsallowed === 't');
+$loggedin = \Osmium\State\is_logged_in();
+
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
 
 if(!\Osmium\State\can_access_fit($fit)) {
@@ -68,6 +72,36 @@ if(!\Osmium\State\can_access_fit($fit)) {
 		die();
 	} else {
 		\Osmium\State\grant_fit_access($fit, PASSWORD_AUTHENTICATION_DURATION);
+	}
+}
+
+if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
+	$body = trim($_POST['commentbody']);
+	$formatted = \Osmium\Chrome\format_sanitize_md($body);
+	$a = \Osmium\State\get_state('a');
+
+	if($body && $formatted) {
+		\Osmium\Db\query('BEGIN;');
+		$r = \Osmium\Db\query_params('INSERT INTO osmium.loadoutcomments (loadoutid, accountid, creationdate, revision) VALUES ($1, $2, $3, $4) RETURNING commentid', array($loadoutid, $a['accountid'], $t = time(), $fit['metadata']['revision']));
+		if($r !== false) {
+			list($commentid) = \Osmium\Db\fetch_row($r);
+			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentrevisions (commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody) VALUES ($1, $2, $3, $4, $5, $6)', array($commentid, 1, $a['accountid'], $t, $_POST['commentbody'], $formatted));
+			\Osmium\Db\query('COMMIT;');
+		} else {
+			\Osmium\Db\query('ROLLBACK;');
+		}
+	}
+} else if($commentsallowed && isset($_POST['replybody']) && $loggedin) {
+	$commentexists = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT commentid FROM osmium.loadoutcomments WHERE commentid = $1 AND loadoutid = $2 AND revision <= $3', array($_POST['commentid'], $loadoutid, $fit['metadata']['revision'])));
+
+	if($commentexists !== false) {
+		$a = \Osmium\State\get_state('a');
+		$body = trim($_POST['replybody']);
+		$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);
+
+		if($body && $formatted) {
+			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentreplies (commentid, accountid, creationdate, replybody, replyformattedbody, updatedate, updatedbyaccountid) VALUES ($1, $2, $3, $4, $5, null, null)', array($_POST['commentid'], $a['accountid'], time(), $body, $formatted));
+		}
 	}
 }
 
@@ -310,6 +344,103 @@ if(isset($fit['dronepresetdesc']) && $fit['dronepresetdesc']) {
 	echo "<h3>Drone preset description</h3>\n<p id='dronepresetdesc'>\n"
 		.nl2br(htmlspecialchars($fit['dronepresetdesc']))."</p>\n";
 }
+echo "</div>\n";
+
+echo "<div id='vcomments'>\n<h2>Comments</h2>\n";
+
+list($totalcomments) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(commentid) FROM osmium.loadoutcomments WHERE loadoutid = $1 AND revision <= $2', array($loadoutid, $fit['metadata']['revision'])));
+$offset = \Osmium\Chrome\paginate('pagec', 10, $totalcomments, $result, $metaresult);
+
+$commentidsq = \Osmium\Db\query_params('SELECT commentid FROM osmium.loadoutcomments WHERE loadoutid = $1 AND revision <= $2 ORDER BY revision DESC, creationdate DESC LIMIT 10 OFFSET $3', array($loadoutid, $fit['metadata']['revision'], $offset));
+$commentids = array(-1);
+while($r = \Osmium\Db\fetch_row($commentidsq)) {
+	$commentids[] = $r[0];
+}
+$cq = \Osmium\Db\query('
+SELECT lc.commentid, lc.accountid, lc.creationdate, lc.revision AS loadoutrevision,
+lcrev.revision AS commentrevision, lcrev.updatedbyaccountid, lcrev.updatedate, lcrev.commentformattedbody,
+lcrep.commentreplyid, lcrep.creationdate AS repcreationdate, lcrep.replyformattedbody, lcrep.updatedate AS repupdatedate,
+cacc.accountid, cacc.nickname, cacc.apiverified, cacc.characterid, cacc.charactername, cacc.ismoderator,
+racc.accountid AS raccountid, racc.nickname AS rnickname, racc.apiverified AS rapiverified, racc.characterid AS rcharacterid, racc.charactername AS rcharactername, racc.ismoderator AS rismoderator,
+uacc.accountid AS uaccountid, uacc.nickname AS unickname, uacc.apiverified AS uapiverified, uacc.characterid AS ucharacterid, uacc.charactername AS ucharactername, uacc.ismoderator AS uismoderator
+FROM osmium.loadoutcomments AS lc
+JOIN osmium.accounts AS cacc ON cacc.accountid = lc.accountid
+JOIN osmium.loadoutcommentslatestrevision AS lclr ON lc.commentid = lclr.commentid
+JOIN osmium.loadoutcommentrevisions AS lcrev ON lcrev.commentid = lc.commentid
+                                             AND lcrev.revision = lclr.latestrevision
+JOIN osmium.accounts AS uacc ON uacc.accountid = lcrev.updatedbyaccountid
+LEFT JOIN osmium.loadoutcommentreplies AS lcrep ON lcrep.commentid = lc.commentid
+LEFT JOIN osmium.accounts AS racc ON racc.accountid = lcrep.accountid
+WHERE lc.commentid IN ('.implode(',', $commentids).')
+ORDER BY lc.revision DESC, lc.creationdate DESC, lcrep.creationdate ASC
+');
+
+$endcomment = function($commentid) use(&$loggedin) {
+	if($loggedin) {
+		echo "<li class='new'><form method='post' action='#creplies".$commentid."' accept-charset='utf-8'><textarea name='replybody' placeholder='Type your reply… (Markdown and some HTML allowed, basic formatting only)'></textarea> <input type='hidden' name='commentid' value='".$commentid."' /><input type='submit' value='Submit reply' /></form></li>\n";
+	}
+
+	echo "</ul>\n";
+	if($loggedin) echo "<a href='javascript:void(0);' class='add_comment'>reply to this comment</a>\n";
+	echo "</div>\n";
+};
+
+$previouscommentid = false;
+while($row = \Osmium\Db\fetch_assoc($cq)) {
+	if($row['commentid'] !== $previouscommentid) {
+		if($previouscommentid !== false) {
+			$endcomment($previouscommentid);
+		}
+		$previouscommentid = $row['commentid'];
+
+		/* Show comment */
+		echo "<div class='comment' id='c".$row['commentid']."'>\n";
+		echo "<div class='body'>\n".$row['commentformattedbody']."</div>\n";
+		echo "<header>\n<div class='author'>\n";
+		if($row['apiverified'] === 't' && $row['characterid'] > 0) {
+			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$row['characterid']."_64.jpg' alt='' />";
+		}
+		echo "<small>commented by</small><br />\n";
+		echo \Osmium\Chrome\format_character_name($row, '..')."<br />\n";
+		echo "<time datetime='".date('c', $row['creationdate'])."'>".\Osmium\Chrome\format_relative_date($row['creationdate'])."</time>\n";
+		echo "</div>\n";
+		echo "<div class='meta'>\n";
+		echo "<a href='#c".$row['commentid']."'>permanent link</a>";
+		echo "</div>\n</header>\n";
+		echo "<ul id='creplies".$row['commentid']."' class='replies'>\n";
+	}
+
+	if($row['commentreplyid'] !== null) {
+		/* Show reply */
+		$c = array('accountid' => $row['raccountid'],
+		           'nickname' => $row['rnickname'],
+		           'apiverified' => $row['rapiverified'],
+		           'characterid' => $row['rcharacterid'],
+		           'charactername' => $row['rcharactername'],
+		           'ismoderator' => $row['rismoderator']);
+
+		echo "<li id='r".$row['commentreplyid']."'>\n<div class='body'>".$row['replyformattedbody']."</div>";
+		echo " — ".\Osmium\Chrome\format_character_name($c, '..');
+		echo " — <time datetime='".date('c', $row['repcreationdate'])."'>".\Osmium\Chrome\format_relative_date($row['repcreationdate'])."</time>";
+		echo "</li>\n";
+	}
+}
+
+if($previouscommentid !== false) {
+	$endcomment($previouscommentid);
+}
+
+echo $result;
+
+if($commentsallowed && $loggedin) {
+	echo "<h3>Add a comment</h3>\n";
+
+	\Osmium\Forms\print_form_begin(htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES).'#vcomments');
+	\Osmium\Forms\print_textarea('Comment body<br /><small>(Markdown and some HTML allowed)</small>', 'commentbody', 'commentbody', \Osmium\Forms\FIELD_REMEMBER_VALUE);
+	\Osmium\Forms\print_submit('Submit comment');
+	\Osmium\Forms\print_form_end();
+}
+
 echo "</div>\n";
 
 echo "</div>\n";

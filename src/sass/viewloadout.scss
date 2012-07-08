@@ -58,3 +58,116 @@ div#pwfit {
 	border: 2px solid #FFC0C0;
 	background-color: #FFF8F8;
 }
+
+$authorbox-width: 13em;
+
+div#vcomments {
+	&> div.comment {
+		border-bottom: 1px solid #888;
+		padding: 0.5em 0;
+
+		&:first-child {
+			border-bottom: 0;
+		}
+
+		&> header {
+			position: relative;
+			height: 3.5em;
+			margin-top: 0.5em;
+
+			&> div.author {
+				position: absolute;
+				right: 0.5em;
+				background-color: #F4F4F8;
+				height: 100%;
+				width: $authorbox-width;
+
+				@include ellipsis;
+
+				&> img.portrait {
+					float: left;
+					padding: 0.25em 0.25em 0 0.25em;
+					height: 3em;
+				}
+
+				&> time {
+					color: #888;
+					font-size: 0.9em;
+				}
+
+				&> a.profile {
+					font-weight: bold;
+					text-decoration: underline;
+				}
+			}
+
+			&> div.meta {
+				position: absolute;
+				left: 0.25em;
+				right: (2 * $authorbox-width) + 0.5em;
+				height: 100%;
+				color: #CCC;
+				font-size: 0.9em;
+			}
+		}
+
+		&> a.add_comment, &> header > div.meta > a {
+			color: #888;
+			text-decoration: none;
+			
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+
+		&> a.add_comment {
+			padding-left: 0.25em;
+			font-size: 0.9em;
+		}
+
+		&> div.body {
+			padding-left: 0.25em;
+
+			&> p, &> h1, &> h2, &> h3, &> h4, &> h5, &> h6 {
+				&:first-child {
+					margin-top: 0;
+				}
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+		}
+
+		&> ul.replies {
+			list-style-type: none;
+			padding: 0;
+			margin: 0.5em 1em;
+
+			&> li {
+				border-bottom: 1px dotted #CCC;
+				color: #CCC;
+				padding: 0.5em 2em;
+
+				&:first-child {
+					border-top: 1px dotted #CCC;
+				}
+
+				&> div.body {
+					display: inline;
+					color: black;
+				}
+
+				&> time, &> a.profile {
+					font-size: 0.9em;
+					color: #888;
+				}
+			}
+
+			&> li.new {
+				color: black;
+				display: none;
+			}
+		}
+	}
+}

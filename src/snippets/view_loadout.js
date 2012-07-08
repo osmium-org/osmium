@@ -161,4 +161,8 @@ $(function() {
 	$("form.presets > select").change(function() {
 		$(this).parent().submit();
 	});
+
+	$("div#vcomments > div.comment > a.add_comment").click(function() {
+		$(this).parent().find('ul.replies > li.new').fadeIn(500).find('textarea').focus();
+	});
 });
