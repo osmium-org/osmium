@@ -150,7 +150,7 @@ div#presetsbox {
 	@include column;
 
 	&> ul#presets {
-		list-style-type: 0;
+		list-style-type: none;
 		padding-left: 0;
 	}
 

@@ -1,18 +1,19 @@
 $main-font: "Linux Biolinum", Helvetica, Arial, sans-serif;
 $mono-font: Inconsolata, monospace;
 
-@mixin linux-biolinum($url, $weight, $style) {
+@mixin linux-biolinum($localname, $url, $weight, $style) {
 	@font-face {
 		font-family: 'Linux Biolinum';
-		src: local('Linux Biolinum') url($url) format('woff');
+		src: local($localname), url($url) format('woff');
 		font-weight: $weight;
 		font-style: $style;
 	}
 }
 
-@include linux-biolinum('./fonts/linbiolinum_r.woff', normal, normal);
-@include linux-biolinum('./fonts/linbiolinum_rb.woff', bold, normal);
-@include linux-biolinum('./fonts/linbiolinum_ri.woff', normal, italic);
+@include linux-biolinum('Linux Biolinum', './fonts/linbiolinum_r.woff', normal, normal);
+@include linux-biolinum('Linux Biolinum Bold', './fonts/linbiolinum_rb.woff', bold, normal);
+@include linux-biolinum('Linux Biolinum Italic', './fonts/linbiolinum_ri.woff', normal, italic);
+@include linux-biolinum('Linux Biolinum Italic', './fonts/linbiolinum_ri.woff', normal, oblique);
 
 html, body {
 	font-family: $main-font;
