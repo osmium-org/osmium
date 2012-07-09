@@ -149,7 +149,11 @@ if($author['apiverified'] === 't') {
 }
 echo "</li>\n";
 if($fit['metadata']['revision'] > 1) {
-	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: <img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> <strong>".\Osmium\Chrome\format_character_name($lastrev, '..')."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
+	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: ";
+	if($lastrev['apiverified'] === 't') {
+		echo "<img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> ";
+	}
+	echo "<strong>".\Osmium\Chrome\format_character_name($lastrev, '..')."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
 echo "</ul>\n";
 
