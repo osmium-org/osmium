@@ -301,7 +301,8 @@ function round_sd($number, $digits = 0) {
 }
 
 function paginate($name, $perpage, $total, &$result, &$metaresult,
-                  $pageoverride = null, $format = 'Showing rows %1-%2 of %3.') {
+                  $pageoverride = null, $format = 'Showing rows %1-%2 of %3.',
+                  $anchor = '') {
 	if($pageoverride !== null) {
 		$page = $pageoverride;
 	} else if(isset($_GET[$name])) {
@@ -331,7 +332,7 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	if($page > 1) {
 		$p[$name] = $page - 1;
 		$q = http_build_query($p, '', '&amp;');
-		$r .= "<li value='".($page - 1)."'><a title='go to previous page' href='?$q'>Previous</a></li>\n";
+		$r .= "<li value='".($page - 1)."'><a title='go to previous page' href='?$q$anchor'>Previous</a></li>\n";
 	} else {
 		$r .= "<li class='dummy' value='".($page - 1)."'><span>Previous</span></li>\n";
 	}
@@ -340,7 +341,7 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 		if($i != $page) {
 			$p[$name] = $i;
 			$q = http_build_query($p, '', '&amp;');
-			$r .= "<li value='$i'><a title='go to page $i' href='?$q'>$i</a></li>\n";
+			$r .= "<li value='$i'><a title='go to page $i' href='?$q$anchor'>$i</a></li>\n";
 		} else {
 			$r .= "<li class='current' value='$i'><span>$i</span></li>\n";
 		}
@@ -349,7 +350,7 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	if($page < $maxpage) {
 		$p[$name] = $page + 1;
 		$q = http_build_query($p, '', '&amp;');
-		$r .= "<li value='".($page + 1)."'><a title='go to next page' href='?$q'>Next</a></li>\n";
+		$r .= "<li value='".($page + 1)."'><a title='go to next page' href='?$q$anchor'>Next</a></li>\n";
 	} else {
 		$r .= "<li class='dummy' value='".($page + 1)."'><span>Next</span></li>\n";
 	}

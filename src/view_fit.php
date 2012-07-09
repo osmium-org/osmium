@@ -19,6 +19,7 @@
 namespace Osmium\Page\ViewFit;
 
 const PASSWORD_AUTHENTICATION_DURATION = 1800; /* How long to "remember" the password for protected fits */
+const COMMENTS_PER_PAGE = 10;
 
 require __DIR__.'/../inc/root.php';
 
@@ -349,9 +350,24 @@ echo "</div>\n";
 echo "<div id='vcomments'>\n<h2>Comments</h2>\n";
 
 list($totalcomments) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(commentid) FROM osmium.loadoutcomments WHERE loadoutid = $1 AND revision <= $2', array($loadoutid, $fit['metadata']['revision'])));
-$offset = \Osmium\Chrome\paginate('pagec', 10, $totalcomments, $result, $metaresult);
 
-$commentidsq = \Osmium\Db\query_params('SELECT commentid FROM osmium.loadoutcomments WHERE loadoutid = $1 AND revision <= $2 ORDER BY revision DESC, creationdate DESC LIMIT 10 OFFSET $3', array($loadoutid, $fit['metadata']['revision'], $offset));
+$pageoverride = null;
+if(isset($_GET['jtc']) && $_GET['jtc'] > 0) {
+	$jtc = $_GET['jtc'];
+	unset($_GET['jtc']);
+
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT revision, creationdate FROM osmium.loadoutcomments WHERE commentid = $1', array($jtc)));
+
+	if($r !== false) {
+		list($before) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(commentid) FROM osmium.loadoutcomments WHERE loadoutid = $1 AND revision <= $2 AND (revision > $3 OR (revision = $3 AND creationdate > $4))', array($loadoutid, $fit['metadata']['revision'], $r[0], $r[1])));
+
+		$pageoverride = 1 + floor($before / COMMENTS_PER_PAGE);
+	}
+}
+
+$offset = \Osmium\Chrome\paginate('pagec', COMMENTS_PER_PAGE, $totalcomments, $result, $metaresult, $pageoverride, '', '#vcomments');
+
+$commentidsq = \Osmium\Db\query_params('SELECT commentid FROM osmium.loadoutcomments WHERE loadoutid = $1 AND revision <= $2 ORDER BY revision DESC, creationdate DESC LIMIT $3 OFFSET $4', array($loadoutid, $fit['metadata']['revision'], COMMENTS_PER_PAGE, $offset));
 $commentids = array(-1);
 while($r = \Osmium\Db\fetch_row($commentidsq)) {
 	$commentids[] = $r[0];
@@ -405,7 +421,12 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<time datetime='".date('c', $row['creationdate'])."'>".\Osmium\Chrome\format_relative_date($row['creationdate'])."</time>\n";
 		echo "</div>\n";
 		echo "<div class='meta'>\n";
-		echo "<a href='#c".$row['commentid']."'>permanent link</a>";
+		echo "<a href='?jtc=".$row['commentid']."#c".$row['commentid']."'>permanent link</a>";
+
+		if($row['loadoutrevision'] < $fit['metadata']['revision']) {
+			echo "<br />\n<span class='outdated'>(this comment applies to a previous revision of this loadout: <a href='?revision=".$row['loadoutrevision']."'>revision #".$row['loadoutrevision']."</a>)</span>\n";
+		}
+
 		echo "</div>\n</header>\n";
 		echo "<ul id='creplies".$row['commentid']."' class='replies'>\n";
 	}
@@ -421,7 +442,16 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 
 		echo "<li id='r".$row['commentreplyid']."'>\n<div class='body'>".$row['replyformattedbody']."</div>";
 		echo " — ".\Osmium\Chrome\format_character_name($c, '..');
+		if($row['repupdatedate'] !== null) {
+			echo " <span title='This reply was edited (".\Osmium\Chrome\format_relative_date($row['repupdatedate']).").'>✏</span>";
+		}
+
 		echo " — <time datetime='".date('c', $row['repcreationdate'])."'>".\Osmium\Chrome\format_relative_date($row['repcreationdate'])."</time>";
+
+		echo "<span class='meta'>";
+		echo " — <a href='?jtc=".$row['commentid']."#r".$row['commentreplyid']."'>#</a>";
+		echo "</span>";
+
 		echo "</li>\n";
 	}
 }

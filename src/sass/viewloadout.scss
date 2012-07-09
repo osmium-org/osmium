@@ -108,6 +108,15 @@ div#vcomments {
 				height: 100%;
 				color: #CCC;
 				font-size: 0.9em;
+
+				&> span.outdated, &> span.outdated > a {
+					color: #888;
+				}
+
+				&> span.outdated {
+					display: block;
+					padding-top: 0.5em;
+				}
 			}
 		}
 
@@ -158,9 +167,17 @@ div#vcomments {
 					color: black;
 				}
 
-				&> time, &> a.profile {
+				&> time, &> a.profile, &> span.meta > a {
 					font-size: 0.9em;
 					color: #888;
+				}
+
+				&> span.meta {
+					visibility: hidden;
+				}
+
+				&:hover > span.meta {
+					visibility: visible;
 				}
 			}
 
