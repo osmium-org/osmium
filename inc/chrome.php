@@ -132,7 +132,7 @@ function format_relative_date($date, $now = null) {
 	$s = $duration % 60;
 	$m = (($duration - $s) / 60) % 60;
 	$h = (($duration - $s - 60 * $m) / 3600) % 24;
-	$d = ($duration - $s - 60 * $m - 3600 * $h);
+	$d = ($duration - $s - 60 * $m - 3600 * $h) / 86400;
 
 	$a = array_filter(array(
 		                  'd' => $d,
