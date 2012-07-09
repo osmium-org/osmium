@@ -424,6 +424,21 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo \Osmium\Chrome\format_character_name($row, '..')."<br />\n";
 		echo "<time datetime='".date('c', $row['creationdate'])."'>".\Osmium\Chrome\format_relative_date($row['creationdate'])."</time>\n";
 		echo "</div>\n";
+
+		if($row['commentrevision'] > 1) {
+			echo "<div class='author edit'>\n";
+			echo "<small>revision #".$row['commentrevision']." edited by</small><br />\n";
+			$u = array('accountid' => $row['uaccountid'],
+			           'nickname' => $row['unickname'],
+			           'apiverified' => $row['uapiverified'],
+			           'characterid' => $row['ucharacterid'],
+			           'charactername' => $row['ucharactername'],
+			           'ismoderator' => $row['uismoderator']);
+			echo \Osmium\Chrome\format_character_name($u, '..')."<br />\n";
+			echo "<time datetime='".date('c', $row['updatedate'])."'>".\Osmium\Chrome\format_relative_date($row['updatedate'])."</time>\n";
+			echo "</div>\n";
+		}
+
 		echo "<div class='meta'>\n";
 		echo "<a href='?jtc=".$row['commentid']."#c".$row['commentid']."'>permanent link</a>";
 
