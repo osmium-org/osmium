@@ -1,0 +1,100 @@
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\Page\EditComment;
+
+require __DIR__.'/../inc/root.php';
+
+if(!\Osmium\State\is_logged_in()) {
+	\Osmium\fatal(403, "Forbidden.");
+}
+
+$a = \Osmium\State\get_state('a');
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if($_GET['type'] == 'comment') {
+	$comment = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT commentbody, accountid, latestrevision FROM osmium.loadoutcommentslatestrevision AS lclr JOIN osmium.loadoutcommentrevisions AS lcr ON lcr.commentid = lclr.commentid AND lcr.revision = lclr.latestrevision JOIN osmium.loadoutcomments lc ON lc.commentid = lclr.commentid WHERE lclr.commentid = $1', array($id)));
+	
+	if($comment === false) {
+		\Osmium\fatal(404, "Comment not found.");
+	}
+	
+	if($a['ismoderator'] !== 't' && $a['accountid'] != $comment['accountid']) {
+		\Osmium\fatal(403, "You can't edit that comment.");
+	}
+	
+	$body = $comment['commentbody'];
+	$ftype = 'Comment';
+} else if($_GET['type'] == 'commentreply') {
+	$reply = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT replybody, accountid, commentid FROM osmium.loadoutcommentreplies WHERE commentreplyid = $1', array($id)));
+
+	if($reply === false) {
+		\Osmium\fatal(404, "Comment reply not found.");
+	}
+
+	if($a['ismoderator'] !== 't' && $a['accountid'] != $reply['accountid']) {
+		\Osmium\fatal(403, "You can't edit that comment reply.");
+	}
+
+	$body = $reply['replybody'];
+	$ftype = 'Comment reply';
+} else {
+	\Osmium\fatal(404, "Invalid type.");
+}
+
+if(isset($_POST['body'])) {
+	if($_GET['type'] == 'comment') {
+		$body = trim($_POST['body']);
+		$formatted = \Osmium\Chrome\format_sanitize_md($body);
+
+		if($_POST['body'] == $comment['commentbody'] && $a['accountid'] == $comment['accountid']) {
+			/* Keep the same revision, but updated the formattedbody */
+			\Osmium\Db\query_params('UPDATE osmium.loadoutcommentrevisions SET commentformattedbody = $1 WHERE commentid = $2 AND revision = $3', array($formattedbody, $id, $comment['latestrevision']));
+		} else {
+			/* Insert a new revision */
+			$newrevision = $comment['latestrevision'] + 1;
+			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentrevisions (commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody) VALUES ($1, $2, $3, $4, $5, $6)', array($id, $newrevision, $a['accountid'], time(), $_POST['body'], $formatted));
+		}
+
+		$anchor = 'c'.$id;
+		$commentid = $id;
+	} else if($_GET['type'] == 'commentreply') {
+		$body = trim($_POST['body']);
+		$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);
+
+		\Osmium\Db\query_params('UPDATE osmium.loadoutcommentreplies SET replybody = $1, replyformattedbody = $2, updatedate = $3, updatedbyaccountid = $4 WHERE commentreplyid = $5', array($_POST['body'], $formatted, time(), $a['accountid'], $id));
+
+		$anchor = 'r'.$id;
+		$commentid = $reply['commentid'];
+	}
+
+	list($loadoutid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadoutcomments WHERE commentid = $1', array($commentid)));
+	header('Location: ../loadout/'.$loadoutid.'?jtc='.$commentid.'#'.$anchor);
+	die();
+}
+
+\Osmium\Chrome\print_header($t = 'Edit '.lcfirst($ftype).' #'.$id, '..');
+
+echo "<h1>$t</h1>\n";
+
+$_POST['body'] = $body; /* Will be escaped by print_textarea() */
+\Osmium\Forms\print_form_begin();
+\Osmium\Forms\print_textarea($ftype.' body', 'body', null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
+\Osmium\Forms\print_submit('Confirm edit');
+\Osmium\Forms\print_form_end();
+\Osmium\Chrome\print_footer();

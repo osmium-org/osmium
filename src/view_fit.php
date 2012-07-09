@@ -49,6 +49,8 @@ $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, ac
 list($commentsallowed) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT allowcomments FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
 $commentsallowed = ($commentsallowed === 't');
 $loggedin = \Osmium\State\is_logged_in();
+$a = \Osmium\State\get_state('a', array());
+$ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
 
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
 
@@ -79,7 +81,6 @@ if(!\Osmium\State\can_access_fit($fit)) {
 if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 	$body = trim($_POST['commentbody']);
 	$formatted = \Osmium\Chrome\format_sanitize_md($body);
-	$a = \Osmium\State\get_state('a');
 
 	if($body && $formatted) {
 		\Osmium\Db\query('BEGIN;');
@@ -96,7 +97,6 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 	$commentexists = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT commentid FROM osmium.loadoutcomments WHERE commentid = $1 AND loadoutid = $2 AND revision <= $3', array($_POST['commentid'], $loadoutid, $fit['metadata']['revision'])));
 
 	if($commentexists !== false) {
-		$a = \Osmium\State\get_state('a');
 		$body = trim($_POST['replybody']);
 		$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);
 
@@ -427,6 +427,10 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<div class='meta'>\n";
 		echo "<a href='?jtc=".$row['commentid']."#c".$row['commentid']."'>permanent link</a>";
 
+		if($ismoderator || $row['accountid'] == $a['accountid']) {
+			echo " — <a href='../editcomment/".$row['commentid']."'>edit</a>";
+		}
+
 		if($row['loadoutrevision'] < $fit['metadata']['revision']) {
 			echo "<br />\n<span class='outdated'>(this comment applies to a previous revision of this loadout: <a href='?revision=".$row['loadoutrevision']."'>revision #".$row['loadoutrevision']."</a>)</span>\n";
 		}
@@ -447,13 +451,18 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<li id='r".$row['commentreplyid']."'>\n<div class='body'>".$row['replyformattedbody']."</div>";
 		echo " — ".\Osmium\Chrome\format_character_name($c, '..');
 		if($row['repupdatedate'] !== null) {
-			echo " <span title='This reply was edited (".\Osmium\Chrome\format_relative_date($row['repupdatedate']).").'>✏</span>";
+			echo " <span class='updated' title='This reply was edited (".\Osmium\Chrome\format_relative_date($row['repupdatedate']).").'>✎</span>";
 		}
 
 		echo " — <time datetime='".date('c', $row['repcreationdate'])."'>".\Osmium\Chrome\format_relative_date($row['repcreationdate'])."</time>";
 
 		echo "<span class='meta'>";
 		echo " — <a href='?jtc=".$row['commentid']."#r".$row['commentreplyid']."'>#</a>";
+
+		if($ismoderator || $row['raccountid'] == $a['accountid']) {
+			echo " — <a href='../editcommentreply/".$row['commentreplyid']."'>edit</a>";
+		}
+
 		echo "</span>";
 
 		echo "</li>\n";
@@ -470,7 +479,7 @@ if($commentsallowed && $loggedin) {
 	echo "<h3>Add a comment</h3>\n";
 
 	\Osmium\Forms\print_form_begin(htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES).'#vcomments');
-	\Osmium\Forms\print_textarea('Comment body<br /><small>(Markdown and some HTML allowed)</small>', 'commentbody', 'commentbody', \Osmium\Forms\FIELD_REMEMBER_VALUE);
+	\Osmium\Forms\print_textarea('Comment body<br /><small>(Markdown and some HTML allowed)</small>', 'commentbody', 'commentbody');
 	\Osmium\Forms\print_submit('Submit comment');
 	\Osmium\Forms\print_form_end();
 }

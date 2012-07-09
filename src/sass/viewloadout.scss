@@ -167,7 +167,7 @@ div#vcomments {
 					color: black;
 				}
 
-				&> time, &> a.profile, &> span.meta > a {
+				&> time, &> a.profile, &> span.meta > a, &> span.updated {
 					font-size: 0.9em;
 					color: #888;
 				}
