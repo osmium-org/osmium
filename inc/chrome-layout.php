@@ -44,7 +44,7 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo "<meta charset='UTF-8' />\n";
 	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
 	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
-	echo "<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>\n";
+	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css'>\n";
 	echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
 	echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
 	echo "<title>$title</title>\n";

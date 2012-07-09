@@ -1,20 +1,16 @@
-$main-font: "Linux Biolinum", Helvetica, Arial, sans-serif;
-$mono-font: Inconsolata, monospace;
+$sans-font: "Droid Sans", Helvetica, Arial, sans-serif;
+$serif-font: "Droid Serif", Georgia, serif;
+$mono-font: "Droid Sans Mono", monospace;
 
-@mixin linux-biolinum($localname, $url, $weight, $style) {
-	@font-face {
-		font-family: 'Linux Biolinum';
-		src: local($localname), url($url) format('woff');
-		font-weight: $weight;
-		font-style: $style;
-	}
+body {
+	font-family: $sans-font;
+	font-size: 0.9em;
 }
 
-@include linux-biolinum('Linux Biolinum', './fonts/linbiolinum_r.woff', normal, normal);
-@include linux-biolinum('Linux Biolinum Bold', './fonts/linbiolinum_rb.woff', bold, normal);
-@include linux-biolinum('Linux Biolinum Italic', './fonts/linbiolinum_ri.woff', normal, italic);
-@include linux-biolinum('Linux Biolinum Italic', './fonts/linbiolinum_ri.woff', normal, oblique);
+h1, h2, h3, h4, h5, h6 {
+	font-family: $serif-font;
+}
 
-html, body {
-	font-family: $main-font;
+code, tt, textarea, input, select, optgroup, option {
+	font-family: $mono-font;
 }
