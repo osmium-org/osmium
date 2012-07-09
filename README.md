@@ -18,6 +18,12 @@ General Public License, version 2.
 Osmium uses the phpass library, released in the public domain.
 <http://www.openwall.com/phpass/>
 
+Contact
+-------
+
+* <artefact2@gmail.com>
+* `#osmium` on `irc.coldfront.net`
+
 Caveats
 =======
 
