@@ -185,7 +185,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
 		echo "</a>\n<br />\n";
 		echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
-		echo " — <a href='$relative/profile/".$loadout['accountid']."'>".\Osmium\Chrome\format_character_name($loadout, $relative)."</a>";
+		echo " — ".\Osmium\Chrome\format_character_name($loadout, $relative);
 		echo " — revision #".$loadout['latestrevision'];
 		echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
       

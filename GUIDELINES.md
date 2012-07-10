@@ -145,6 +145,15 @@ Code conventions
   $value;` instead of `define('CONSTANT', $value)` if it is possible
   to do so.
 
+* If your code prints or generates HTML code, make sure you write
+  polyglot markup (see
+  http://dev.w3.org/html5/html-xhtml-author-guide/). In particular, do
+  not use the shorthand notation for attributes (`<input type='text'
+  required='required' />` instead of `<input type='text' required
+  />`), always specify closing tags (and use the `/>` shorthand for
+  void elements like `img`, `br` etc.) and do not use named entitiy
+  references other than `amp`, `lt`, `gt`, `apos` and `quot`.
+
 Getting your code merged
 ------------------------
 

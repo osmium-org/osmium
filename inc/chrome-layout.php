@@ -46,11 +46,15 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 		$title .= ' / Osmium';
 	}
 
-	echo "<!DOCTYPE html>\n<html>\n<head>\n";
-	echo "<meta charset='UTF-8' />\n";
-	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
-	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
-	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css'>\n";
+	$xhtml = isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false);
+
+	if($xhtml) {
+		header('Content-Type: application/xhtml+xml; charset=utf-8');
+		echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	}
+	echo "<!DOCTYPE html>\n<html xmlns='http://www.w3.org/1999/xhtml'>\n<head>\n";
+	if(!$xhtml) echo "<meta charset='UTF-8' />\n";
+	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
 	echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
 	echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
 	echo "<title>$title</title>\n";
@@ -70,7 +74,6 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo "</ul>\n";
 	\Osmium\State\print_login_or_logout_box($relative);
 	echo "</nav>\n";
-	echo "<noscript>\n<p id='nojs_warning'>To get the full Osmium experience, please enable Javascript for host <strong>".$_SERVER['HTTP_HOST']."</strong>.</p>\n</noscript>\n";
 }
 
 /**
@@ -83,6 +86,9 @@ function print_footer() {
 	echo "<div id='push'></div>\n</div>\n<footer>\n";
 	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
 	echo "</footer>\n";
+
+	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
+	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
 
 	if(count($__osmium_js_snippets) > 0) {
 		$cache = '/static/cache/JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
