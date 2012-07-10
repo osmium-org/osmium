@@ -1,8 +1,8 @@
 div#loadoutbox {
 	@include column;
 
-	margin-left: 31em;
-	margin-right: 21em;
+	margin-left: $metadata-width + 1em;
+	margin-right: $module-width + 1.5em;
 	border-left: 1px dotted #CCC;
 	border-right: 1px dotted #CCC;
 	padding-left: 1em;
@@ -25,7 +25,7 @@ div#dronelistbox {
 	@include column;
 
 	float: right;
-	width: 20em;
+	width: $module-width + 0.5em;
 	padding-right: 0.5em;
 
 	&> form > input[type='search'] {
@@ -37,7 +37,7 @@ div#shortlistbox {
 	@include column;
 
 	float: right;
-	width: 20em;
+	width: $module-width + 0.5em;
 	padding-right: 0.5em;
 
 	&> div#searchbox {
@@ -185,7 +185,7 @@ div#presetsbox {
 div#chargegroupsbox {
 	@include column;
 
-	margin-left: 31em;
+	margin-left: $metadata-width + 1em;
 	border-left: 1px dotted #CCC;
 	padding-left: 1em;
 
@@ -233,9 +233,9 @@ div#chargegroupsbox {
 div#dronebay {
 	@include column;
 
-	margin-left: 31em;
+	margin-left: $metadata-width + 1em;
 	padding-left: 1em;
-	margin-right: 21em;
+	margin-right: $module-width + 1.5em;
 	padding-right: 1em;
 	border-left: 1px dotted #CCC;
 	border-right: 1px dotted #CCC;

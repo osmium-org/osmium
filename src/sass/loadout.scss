@@ -1,4 +1,5 @@
 $module-width: 22.5em;
+$metadata-width: 30em;
 
 @mixin column {
 	&> h2 {
@@ -206,7 +207,7 @@ div#metadatabox {
 	@include column;
 
 	float: left;
-	width: 30em;
+	width: $metadata-width;
 
 	&> p#fitdesc {
 		margin-left: 1em;
