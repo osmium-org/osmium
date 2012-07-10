@@ -166,21 +166,21 @@ $(function() {
 		return false;
 	});
 
-	$("div#inbay > ul").on('click', 'li > a.moveonedrone', function() {
+	$("div#inbay > ul").on('click', 'li > span.links > a.moveonedrone', function() {
 		osmium_commit_load(null, null, null,
-						   $(this).parent().data('typeid'), 1, 'bay');
+						   $(this).parent().parent().data('typeid'), 1, 'bay');
 	});
-	$("div#inbay > ul").on('click', 'li > a.movefivedrones', function() {
-		osmium_commit_load(null, null, null, $(this).parent().data('typeid'),
-						   Math.min($(this).parent().data('count'), 5), 'bay');
+	$("div#inbay > ul").on('click', 'li > span.links > a.movefivedrones', function() {
+		osmium_commit_load(null, null, null, $(this).parent().parent().data('typeid'),
+						   Math.min($(this).parent().parent().data('count'), 5), 'bay');
 	});
-	$("div#inspace > ul").on('click', 'li > a.moveonedrone', function() {
+	$("div#inspace > ul").on('click', 'li > span.links > a.moveonedrone', function() {
 		osmium_commit_load(null, null, null,
-						   $(this).parent().data('typeid'), 1, 'space');
+						   $(this).parent().parent().data('typeid'), 1, 'space');
 	});
-	$("div#inspace > ul").on('click', 'li > a.movefivedrones', function() {
-		osmium_commit_load(null, null, null, $(this).parent().data('typeid'),
-						   Math.min($(this).parent().data('count'), 5), 'space');
+	$("div#inspace > ul").on('click', 'li > span.links > a.movefivedrones', function() {
+		osmium_commit_load(null, null, null, $(this).parent().parent().data('typeid'),
+						   Math.min($(this).parent().parent().data('count'), 5), 'space');
 	});
 
 	$("div#inbay > ul, div#inspace > ul").sortable({
