@@ -444,6 +444,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 
 		if($ismoderator || ($loggedin && $row['accountid'] == $a['accountid'])) {
 			echo " — <a href='../editcomment/".$row['commentid']."'>edit</a>";
+			echo " — <a onclick='return confirm(\"Deleting this comment will also delete all its replies. This operation cannot be undone. Continue?\");' href='../deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
 		}
 
 		if($row['loadoutrevision'] < $fit['metadata']['revision']) {
@@ -476,6 +477,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 
 		if($ismoderator || ($loggedin && $row['raccountid'] == $a['accountid'])) {
 			echo " — <a href='../editcommentreply/".$row['commentreplyid']."'>edit</a>";
+			echo " — <a onclick='return confirm(\"You are about to delete a reply. This operation cannot be undone. Continue?\");' href='../deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
 		}
 
 		echo "</span>";

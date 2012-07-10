@@ -124,6 +124,11 @@ a {
 	&.dangerous {
 		color: #F30;
 		border-color: #F30;
+
+		&:hover {
+			color: #F30 !important;
+			border-color: #F30 !important;
+		}
 	}
 
 	&.profile {

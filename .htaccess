@@ -22,5 +22,7 @@ RewriteRule ^/?export/(.+)-eft-([1-9][0-9]*)\.txt$ src/export_fit.php?type=eft&l
 RewriteRule ^/?export/(.+)-dna-([1-9][0-9]*)\.txt$ src/export_fit.php?type=dna&loadoutid=$2 [L,QSA]
 RewriteRule ^/?editcomment/([1-9][0-9]*)$ src/edit_comment.php?id=$1&type=comment [L,QSA]
 RewriteRule ^/?editcommentreply/([1-9][0-9]*)$ src/edit_comment.php?id=$1&type=commentreply [L,QSA]
+RewriteRule ^/?deletecomment/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=comment [L,QSA]
+RewriteRule ^/?deletecommentreply/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=commentreply [L,QSA]
 
 RewriteRule !^/?(src|static) - [L,R=404]
