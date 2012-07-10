@@ -26,7 +26,8 @@ This goes without saying, but by contributing code you implicitely
 agree to place it under the GNU AGPL version 3 (or later).
 
 To keep things consistent, please place the following copyright notice
-at the top (line 2, just after `<?php`) of any source file you create:
+at the top (for PHP files, at line 2, just after `<?php`, or line 1
+for Javascript files) of any source file you create:
 
 ~~~~
 /* Osmium

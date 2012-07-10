@@ -27,11 +27,11 @@ Contact
 Caveats
 =======
 
-Make sure the `cache` directory is writeable by your `http` user. You
+Make sure the cache directories are writeable by your `http` user. You
 can do it by using (assuming your `http` user is in group `http`):
 
-    chgrp -c http cache
-    chmod -c g+rwx cache
+    chgrp -c http cache static/cache
+    chmod -c g+rwx cache static/cache
 
 If you are NOT using the Apache HTTP Server, you will have to adapt
 the rules in the `.htaccess` file.
@@ -79,6 +79,10 @@ For users
   ~~~~
 
 * HTMLPurifier PEAR package, see http://htmlpurifier.org/download#PEAR
+
+* (Optional) UglifyJS (`uglifyjs` should be in your `$PATH`), see
+  https://github.com/mishoo/UglifyJS **(heavily recommended for
+  production)**
 
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
   http://pear.horde.org

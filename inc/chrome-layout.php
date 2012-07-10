@@ -18,6 +18,12 @@
 
 namespace Osmium\Chrome;
 
+/** Relative path to Osmium root */
+$__osmium_chrome_relative = '.';
+
+/** Javascript snippets to add just before </body> */
+$__osmium_js_snippets = array();
+
 /**
  * Print the page header. Nothing should be printed before this call
  * (except header() calls).
@@ -72,10 +78,39 @@ function print_header($title = '', $relative = '.', $add_head = '') {
  * should be printed after calling this.
  */
 function print_footer() {
-	global $__osmium_chrome_relative;
+	global $__osmium_chrome_relative, $__osmium_js_snippets;
+
 	echo "<div id='push'></div>\n</div>\n<footer>\n";
 	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
-	echo "</footer>\n</body>\n</html>\n";
+	echo "</footer>\n";
+
+	if(count($__osmium_js_snippets) > 0) {
+		$cache = '/static/cache/JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
+		$cachefile = \Osmium\ROOT.$cache;
+		$cacheuri = $__osmium_chrome_relative.$cache;
+
+		if(!file_exists($cachefile)) {
+			if($ujs = \Osmium\get_ini_setting('use_uglifyjs')) {
+				/* Concatenate & minify */
+				shell_exec('cat '.
+				           implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
+				           .' | uglifyjs -o '
+				           .escapeshellarg($cachefile));
+			}
+
+			if(!$ujs || !file_exists($cachefile)) {
+				/* Not using UglifyJS, or UglifyJS failed for some reason */
+				/* Just concatenate the files together */
+
+				file_put_contents($cachefile,
+				                  implode("\n", array_map('file_get_contents', $__osmium_js_snippets)));
+			}
+		}
+
+		echo "<script src='".htmlspecialchars($cacheuri, ENT_QUOTES)."' type='application/javascript'></script>\n";
+	}
+
+	echo "</body>\n</html>\n";
 }
 
 function get_navigation_link($dest, $label) {
@@ -100,7 +135,9 @@ function get_significant_uri($uri) {
  * (assumed to be in /src/snippets/).
  */
 function print_js_snippet($js_file) {
-	echo "<script>\n".file_get_contents(\Osmium\ROOT.'/src/snippets/'.$js_file.'.js')."</script>\n";
+	global $__osmium_js_snippets;
+
+	$__osmium_js_snippets[] = \Osmium\ROOT.'/src/snippets/'.$js_file.'.js';
 }
 
 /**

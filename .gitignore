@@ -1,5 +1,7 @@
 cache/*
 !cache/.htaccess
+static/cache/*
+!static/cache/.htaccess
 config.ini
 sphinx/*
 !sphinx/sphinx.conf
