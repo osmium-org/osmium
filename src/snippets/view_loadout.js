@@ -1,3 +1,20 @@
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 osmium_commit_load = function(toggletype, toggleindex, toggledirection, 
 							  transferdrone, transferquantity, transferfrom) {
 	$("img#vloadoutbox_spinner").css('visibility', 'visible');
@@ -99,6 +116,8 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 			}
 		}
 
+		osmium_drones_add_links();
+
 		total_bandwidth = json['dronebandwidth'];
 		$("span#dronebandwidth").text(used_bandwidth + " / " + total_bandwidth);
 		if(used_bandwidth > total_bandwidth) {
@@ -122,6 +141,11 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 	});
 };
 
+osmium_drones_add_links = function() {
+	$("div#inbay > ul > li[data-typeid]").append(" <a href='javascript:void(0);' title='Launch 5 drones' class='movefivedrones'>⇉</a> <a href='javascript:void(0);' title='Launch one drone' class='moveonedrone'>→</a>");
+	$("div#inspace > ul > li[data-typeid]").append(" <a href='javascript:void(0);' title='Return 5 drones to bay' class='movefivedrones'>⇇</a> <a href='javascript:void(0);' title='Return one drone to bay' class='moveonedrone'>←</a>");
+};
+
 $(function() {
 	$('ul#vpresets > li > a').click(function() {
 		$('ul#vpresets > li > a.active').removeClass('active');
@@ -142,18 +166,28 @@ $(function() {
 		return false;
 	});
 
-	$(document).on('dblclick', 'div#inbay > ul > li', function() {
-		osmium_commit_load(null, null, null, $(this).data('typeid'), 1, 'bay');		
+	$("div#inbay > ul").on('click', 'li > a.moveonedrone', function() {
+		osmium_commit_load(null, null, null,
+						   $(this).parent().data('typeid'), 1, 'bay');
 	});
-	$(document).on('dblclick', 'div#inspace > ul > li', function() {
-		osmium_commit_load(null, null, null, $(this).data('typeid'), 1, 'space');		
+	$("div#inbay > ul").on('click', 'li > a.movefivedrones', function() {
+		osmium_commit_load(null, null, null, $(this).parent().data('typeid'),
+						   Math.min($(this).parent().data('count'), 5), 'bay');
+	});
+	$("div#inspace > ul").on('click', 'li > a.moveonedrone', function() {
+		osmium_commit_load(null, null, null,
+						   $(this).parent().data('typeid'), 1, 'space');
+	});
+	$("div#inspace > ul").on('click', 'li > a.movefivedrones', function() {
+		osmium_commit_load(null, null, null, $(this).parent().data('typeid'),
+						   Math.min($(this).parent().data('count'), 5), 'space');
 	});
 
 	$("div#inbay > ul, div#inspace > ul").sortable({
 		receive: function() {
 			osmium_commit_load(null, null, null, null, null, null);
 		},
-		items: '[data-count]',
+		items: '[data-typeid]',
 		connectWith: 'div#inbay > ul, div#inspace > ul'
 	});
 
@@ -165,4 +199,6 @@ $(function() {
 	$("div#vcomments > div.comment > a.add_comment").click(function() {
 		$(this).parent().find('ul.replies > li.new').fadeIn(500).find('textarea').focus();
 	});
+
+	osmium_drones_add_links();
 });
