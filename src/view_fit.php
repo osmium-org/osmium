@@ -442,7 +442,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<div class='meta'>\n";
 		echo "<a href='?jtc=".$row['commentid']."#c".$row['commentid']."'>permanent link</a>";
 
-		if($ismoderator || $row['accountid'] == $a['accountid']) {
+		if($ismoderator || ($loggedin && $row['accountid'] == $a['accountid'])) {
 			echo " — <a href='../editcomment/".$row['commentid']."'>edit</a>";
 		}
 
@@ -474,7 +474,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<span class='meta'>";
 		echo " — <a href='?jtc=".$row['commentid']."#r".$row['commentreplyid']."'>#</a>";
 
-		if($ismoderator || $row['raccountid'] == $a['accountid']) {
+		if($ismoderator || ($loggedin && $row['raccountid'] == $a['accountid'])) {
 			echo " — <a href='../editcommentreply/".$row['commentreplyid']."'>edit</a>";
 		}
 
