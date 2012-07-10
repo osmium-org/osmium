@@ -13,13 +13,15 @@ osmium_load_drones = function(json) {
 			osmium_add_drone(json['drones'][i]['typeid'],
 							 json['drones'][i]['typename'],
 							 json['drones'][i]['quantityinbay'],
-							 "div#dronebay > div#inbay > ul");
+							 "div#dronebay > div#inbay > ul",
+							 "↓", "⇊");
 		}
 		if(json['drones'][i]['quantityinspace'] > 0) {
 			osmium_add_drone(json['drones'][i]['typeid'],
 							 json['drones'][i]['typename'],
 							 json['drones'][i]['quantityinspace'],
-							 "div#dronebay > div#inspace > ul");
+							 "div#dronebay > div#inspace > ul",
+							 "↑", "⇈");
 			used_bandwidth += json['drones'][i]['quantityinspace'] * json['drones'][i]['bandwidth'];
 		}
 		
@@ -64,14 +66,15 @@ osmium_load_drones = function(json) {
 	osmium_fattribs_load();
 };
 
-osmium_add_drone = function(typeid, typename, count, selector) {
+osmium_add_drone = function(typeid, typename, count, selector, toggleone, togglefive) {
 	$(selector).append(
 		"<li class='drone' data-typeid='"
 			+ typeid + "' data-count='" 
 			+ count + "'><img src='http://image.eveonline.com/Type/" 
 			+ typeid + "_32.png' alt='' title='' />" 
 			+ typename + " <strong>×" + count
-			+ "</strong></li>");
+			+ "</strong>"
+			+ "<span class='links'><a href='javascript:void(0);' title='Toggle 5 drones' class='movefivedrones'>" + togglefive + "</a><a href='javascript:void(0);' title='Toggle one drone' class='moveonedrone'>" + toggleone + "</a><a href='javascript:void(0);' title='Delete one drone' class='deleteonedrone'>-1</a><a href='javascript:void(0);' title='Delete 5 drones' class='deletefivedrones'>-5</a></span></li>");
 	
 	$(selector + " > li.drone > img").last()
 		.attr('alt', typename)
@@ -104,13 +107,14 @@ osmium_drones_commit = function() {
     });
 };
 
-osmium_pop_drone = function(from, typeid) {
+osmium_pop_drone = function(from, typeid, quantity) {
     $("img#dronebay_spinner").css('visibility', 'visible');
 
     $.getJSON('./src/json/pop_drone.php', {
 		token: osmium_tok,
 		typeid: typeid,
-		from: from
+		from: from,
+		quantity: quantity
     }, function(json) {
 		osmium_load_drones(json);
 		$("img#dronebay_spinner").css('visibility', 'hidden');
@@ -155,7 +159,7 @@ $(function() {
 			$("ul#search_results").empty();
 			$("p#search_warning").remove();
 			for(var i = 0; i < json['payload'].length; ++i) {
-				$("ul#search_results").append("<li class='drone' data-count='1' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_32.png' alt='' title='' />" + json['payload'][i]['typename'] + "</li>\n");
+				$("ul#search_results").append("<li class='drone' data-count='1' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_32.png' alt='' title='' />" + json['payload'][i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addonedrone' title='Add one drone to bay'>+1</a><a href='javascript:void(0);' class='addfivedrones' title='Add five drones to bay'>+5</a></span></li>\n");
 				$("ul#search_results > li.drone > img").last()
 					.attr('alt', json['payload'][i]['typename'])
 					.attr('title', json['payload'][i]['typename']);
@@ -196,16 +200,105 @@ $(function() {
 		placeholder: "drone_placeholder"
     });
 
-    $(document).on('dblclick', "ul#search_results > li.drone", function(obj) {
-		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before($(this).clone());
+    $("ul#search_results").on('dblclick', "li.drone", function(obj) {
+		var clone = $(this).clone();
+		clone.find('span.links').remove();
+		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
 		osmium_drones_commit();
-    });
+    }).on('click', 'li.drone > span.links > a.addonedrone', function(obj) {
+		$(this).parent().parent().trigger('dblclick');
+		obj.stopPropagation();
+		obj.preventDefault();
+	}).on('click', 'li.drone > span.links > a.addfivedrones', function(obj) {
+		var clone = $(this).parent().parent().clone();
+		clone.data('count', 5);
+		clone.find('span.links').remove();
+		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
 
-    $(document).on('dblclick', "div#dronebay > div#inbay > ul > li.drone", function(obj) {
-		osmium_pop_drone('bay', $(this).data('typeid'));
-    });
-    $(document).on('dblclick', "div#dronebay > div#inspace > ul > li.drone", function(obj) {
-		osmium_pop_drone('space', $(this).data('typeid'));
+		osmium_drones_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
+	});
+
+	/* TODO this needs to be refactored */
+    $("div#dronebay").on('dblclick', "div#inbay > ul > li.drone", function(obj) {
+		osmium_pop_drone('bay', $(this).data('typeid'), 1);
+    }).on('dblclick', "div#inspace > ul > li.drone", function(obj) {
+		osmium_pop_drone('space', $(this).data('typeid'), 1);
+    }).on('click', "div#inbay > ul > li.drone > span.links > a.deleteonedrone", function(obj) {
+		var drone = $(this).parent().parent();
+		osmium_pop_drone('bay', drone.data('typeid'), 1);
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inspace > ul > li.drone > span.links > a.deleteonedrone", function(obj) {
+		var drone = $(this).parent().parent();
+		osmium_pop_drone('space', drone.data('typeid'), 1);
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inbay > ul > li.drone > span.links > a.deletefivedrones", function(obj) {
+		var drone = $(this).parent().parent();
+		osmium_pop_drone('bay', drone.data('typeid'), Math.min(5, drone.data('count')));
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inspace > ul > li.drone > span.links > a.deletefivedrones", function(obj) {
+		var drone = $(this).parent().parent();
+		osmium_pop_drone('space', drone.data('typeid'), Math.min(5, drone.data('count')));
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inbay > ul > li.drone > span.links > a.moveonedrone", function(obj) {
+		var drone = $(this).parent().parent();
+		var clone = drone.clone();
+
+		clone.data('count', 1);
+		clone.find('strong').text('×1');
+		drone.data('count', drone.data('count') - 1);
+		drone.find('strong').text('×' + drone.data('count'));
+		$("div#dronebay > div#inspace > ul > li.drone_placeholder").before(clone);
+
+		osmium_drones_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inspace > ul > li.drone > span.links > a.moveonedrone", function(obj) {
+		var drone = $(this).parent().parent();
+		var clone = drone.clone();
+
+		clone.data('count', 1);
+		clone.find('strong').text('×1');
+		drone.data('count', drone.data('count') - 1);
+		drone.find('strong').text('×' + drone.data('count'));
+		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
+
+		osmium_drones_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inbay > ul > li.drone > span.links > a.movefivedrones", function(obj) {
+		var drone = $(this).parent().parent();
+		var clone = drone.clone();
+		var cnt = Math.min(5, drone.data('count'));
+
+		clone.data('count', cnt);
+		clone.find('strong').text('×' + cnt);
+		drone.data('count', drone.data('count') - cnt);
+		drone.find('strong').text('×' + drone.data('count'));
+		$("div#dronebay > div#inspace > ul > li.drone_placeholder").before(clone);
+
+		osmium_drones_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
+    }).on('click', "div#inspace > ul > li.drone > span.links > a.movefivedrones", function(obj) {
+		var drone = $(this).parent().parent();
+		var clone = drone.clone();
+		var cnt = Math.min(5, drone.data('count'));
+
+		clone.data('count', cnt);
+		clone.find('strong').text('×' + cnt);
+		drone.data('count', drone.data('count') - cnt);
+		drone.find('strong').text('×' + drone.data('count'));
+		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
+
+		osmium_drones_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
     });
 
 	$("button#create_drone_preset").click(function() {

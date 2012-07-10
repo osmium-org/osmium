@@ -142,8 +142,8 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 };
 
 osmium_drones_add_links = function() {
-	$("div#inbay > ul > li[data-typeid]").append(" <a href='javascript:void(0);' title='Launch 5 drones' class='movefivedrones'>⇉</a> <a href='javascript:void(0);' title='Launch one drone' class='moveonedrone'>→</a>");
-	$("div#inspace > ul > li[data-typeid]").append(" <a href='javascript:void(0);' title='Return 5 drones to bay' class='movefivedrones'>⇇</a> <a href='javascript:void(0);' title='Return one drone to bay' class='moveonedrone'>←</a>");
+	$("div#inbay > ul > li[data-typeid]").append(" <span class='links'><a href='javascript:void(0);' title='Launch 5 drones' class='movefivedrones'>⇉</a> <a href='javascript:void(0);' title='Launch one drone' class='moveonedrone'>→</a></span>");
+	$("div#inspace > ul > li[data-typeid]").append(" <span class='links'><a href='javascript:void(0);' title='Return 5 drones to bay' class='movefivedrones'>⇇</a> <a href='javascript:void(0);' title='Return one drone to bay' class='moveonedrone'>←</a></span>");
 };
 
 $(function() {

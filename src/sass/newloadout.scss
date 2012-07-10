@@ -31,6 +31,24 @@ div#dronelistbox {
 	&> form > input[type='search'] {
 		width: 16em;
 	}
+
+	&> ul#search_results > li.drone {
+		position: relative;
+		padding-right: 3.25em;
+
+		&> span.links {
+			position: absolute;
+			right: 0;
+			display: inline-block;
+			width: 3em;
+
+			&> a {
+				display: inline-block;
+				width: 1.5em;
+				text-align: right;
+			}
+		}
+	}
 }
 
 div#shortlistbox {
@@ -272,10 +290,25 @@ div#dronebay {
 	&> div > ul > li {
 		@include module;
 		cursor: move;
+		position: relative;
+		padding-right: 6.25em;
 
 		&.drone_placeholder {
 			text-align: center;
 			font-style: italic;
+		}
+
+		&> span.links {
+			position: absolute;
+			right: 0;
+			display: inline-block;
+			width: 6em;
+
+			&> a {
+				display: inline-block;
+				width: 1.5em;
+				text-align: right;
+			}
 		}
 	}
 }
