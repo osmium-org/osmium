@@ -513,6 +513,7 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 	$indexes = array();
 	foreach($lines as $l) {
 		if(!$l) continue; /* Ignore empty lines */
+		if(preg_match('%^\[empty (low|med|high|rig|subsystem) slot\]$%', trim($l))) continue;
 		if(strpos($l, ',') !== false) {
 			list($module, $charge) = explode(',', $l, 2);
 			$module = trim($module);
