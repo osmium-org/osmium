@@ -63,6 +63,27 @@ div#shortlistbox {
 			}
 		}
 	}
+
+	&> ul#modules_shortlist > li.module, &> div#searchbox > ul#search_results > li.module {
+		position: relative;
+		padding-right: 2.25em;
+
+		&> span.links {
+			position: absolute;
+			width: 2em;
+			display: inline-block;
+			right: 0;
+
+			&> a {
+				display: inline-block;
+				width: 1em;
+			}
+
+			&> a.removemodulefromshortlist {
+				text-decoration: line-through !important;
+			}
+		}
+	}
 }
 
 div#searchbox > ul#search_results,
@@ -85,24 +106,6 @@ div#shortlistbox > ul#modules_shortlist {
 		&.shortlist_dummy {
 			text-align: center;
 		}
-	}
-}
-
-div#shortlistbox > ul#modules_shortlist > li.module {
-	position: relative;
-
-	&> a.delete {
-		@include module-top-corner-link;
-
-		display: none;
-	}
-
-	&:hover {
-		padding-right: 1em;
-	}
-
-	&:hover > a.delete {
-		display: inline;
 	}
 }
 

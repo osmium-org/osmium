@@ -7,7 +7,7 @@ $(function() {
 			$("ul#search_results").empty();
 			$("p#search_warning").remove();
 			for(var i = 0; i < json['payload'].length; ++i) {
-				$("ul#search_results").append("<li class='module' data-slottype='" + json['payload'][i]['slottype'] + "' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_32.png' alt='' />" + json['payload'][i]['typename'] + "</li>\n");
+				$("ul#search_results").append("<li class='module' data-slottype='" + json['payload'][i]['slottype'] + "' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_32.png' alt='' />" + json['payload'][i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='addmoduletoshortlist' title='Add module to shortlist'>♡</a></span></li>\n");
 			}
 			if(json['warning']) {
 				$("p#search_filters").after("<p id='search_warning' class='warning_box'>" + json['warning'] + "</p>");
@@ -28,10 +28,10 @@ $(function() {
 osmium_shortlist_load = function(json) {
     $("div#shortlistbox > ul#modules_shortlist").empty();
     for(var i = 0; i < json.length; ++i) {
-		$("div#shortlistbox > ul#modules_shortlist").append("<li class='module' data-slottype='" + json[i]['slottype'] + "' data-typeid='" + json[i]['typeid'] + "'><a class='delete' href='javascript:void(0);' title='Delete from shortlist'><img src='./static/icons/delete.png' alt='X' /></a><img src='http://image.eveonline.com/Type/" + json[i]['typeid'] + "_32.png' alt='' />" + json[i]['typename'] + "</li>\n");
+		$("div#shortlistbox > ul#modules_shortlist").append("<li class='module' data-slottype='" + json[i]['slottype'] + "' data-typeid='" + json[i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json[i]['typeid'] + "_32.png' alt='' />" + json[i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='removemodulefromshortlist' title='Remove module from shortlist'>♡</a></span></li>\n");
     }
 
-    $("div#shortlistbox > ul#modules_shortlist").append("<li class='shortlist_dummy'><em>Drag here to add to shortlist…</em></li>\n");
+    $("div#shortlistbox > ul#modules_shortlist").append("<li class='shortlist_dummy'><em>Drag modules here to add to shortlist…</em></li>\n");
 };
 
 osmium_shortlist_commit = function() {
@@ -86,7 +86,8 @@ osmium_populate_slots = function(json, slot_type) {
 				+ "' data-state='" + json['modules'][slot_type][i]['state'] 
 				+ "' data-index='" + i
 				+ "'><img src='http://image.eveonline.com/Type/" 
-				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />" 
+				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />"
+				+ " <span class='links'><a href='javascript:void(0);' class='removemodule' title='Unfit module'>x</a></span> "
 				+ json['modules'][slot_type][i]['typename']
 				+ sttoggle + ranges
 				+ "</li>\n"
@@ -235,7 +236,6 @@ $(function() {
 			$(ui.item).data('index', osmium_get_next_index($(ui.item).data('slottype'))).css('opacity', '1.0');
 		},
 		remove: function(event, ui) {
-			$(ui.item).find('a.delete').remove();
 			$("ul#modules_shortlist li.clone").removeClass('clone');
 		},
 		stop: function(event, ui) {
@@ -291,12 +291,20 @@ $(function() {
 		}
     });
 
-    $(document).on('dblclick', "ul#search_results > li.module, ul#modules_shortlist > li.module", function(obj) {
+	$("ul#search_results").on('click', 'li.module > span.links > a.addmoduletoshortlist', function(obj) {
+		$("ul#modules_shortlist > li.shortlist_dummy").before($(this).parent().parent().clone());
+		osmium_shortlist_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
+	});
+
+    $("ul#search_results, ul#modules_shortlist").on('dblclick', "li.module", function(obj) {
 		var phony = $("div#" + $(this).data('slottype') + "_slots > ul > li.empty_slot");
 		var clone = $(this).clone();
 		var type = $(this).data('slottype');
 
 		clone.data('index', osmium_get_next_index(type));
+		clone.find('span.links').remove();
 
 		if(phony.length == 0) {
 			$("div#" + type + "_slots > ul").append(clone);
@@ -305,28 +313,38 @@ $(function() {
 			phony.first().remove();
 		}
 		osmium_loadout_commit();
-    });
+    }).on('click', "li.module > span.links > a.addmoduletoloadout", function(obj) {
+		$(this).parent().parent().trigger('dblclick');
+		obj.stopPropagation();
+		obj.preventDefault();
+	});
 
-    $(document).on('click', "div.loadout_slot_cat.stateful > ul > li.module > a.toggle", function(obj) {
+    $("div.loadout_slot_cat.stateful").on('click', "ul > li.module > a.toggle", function(obj) {
 		osmium_loadout_commit_toggle($(this).parent().data('index'), $(this).parent().data('typeid'), true);
 		obj.stopPropagation();
 		obj.preventDefault();
 		return false;
-    }).on('contextmenu', "div.loadout_slot_cat.stateful > ul > li.module > a.toggle", function(obj) {
+    }).on('contextmenu', "ul > li.module > a.toggle", function(obj) {
 		osmium_loadout_commit_toggle($(this).parent().data('index'), $(this).parent().data('typeid'), false);
 		obj.stopPropagation();
 		obj.preventDefault();
 		return false;
 	});
 
-    $(document).on('dblclick', "div.loadout_slot_cat > ul > li.module", function(obj) {
+    $("div.loadout_slot_cat").on('dblclick', "ul > li.module", function(obj) {
 		osmium_loadout_commit_delete($(this).data('index'), $(this).data('typeid'));
 		$(this).remove();
-    });
+    }).on('click', "li.module > span.links > a.removemodule", function(obj) {
+		$(this).parent().parent().trigger('dblclick');
+		obj.stopPropagation();
+		obj.preventDefault();
+	});
 
-    $(document).on('click', "ul#modules_shortlist > li.module > a.delete", function(obj) {
-		$(this).parent().remove();
+    $("ul#modules_shortlist").on('click', "li.module > span.links > a.removemodulefromshortlist", function(obj) {
+		$(this).parent().parent().remove();
 		osmium_shortlist_commit();
+		obj.stopPropagation();
+		obj.preventDefault();
     });
 
 	$("button#create_preset").click(function() {
