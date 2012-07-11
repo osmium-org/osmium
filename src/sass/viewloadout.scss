@@ -1,5 +1,5 @@
 div#vloadoutbox {
-    margin-left: $metadata-width + 1em;
+	@include prop-metadata-width(margin-left, 1em);
 	border-left: 1px dotted #CCC;
 	padding: 0 1em;
 

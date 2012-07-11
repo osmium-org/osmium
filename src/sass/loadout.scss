@@ -1,5 +1,19 @@
 $module-width: 22.5em;
+$module-width-small: 19em;
+$module-width-extrasmall: 16em;
 $metadata-width: 30em;
+$metadata-width-small: 20em;
+
+@mixin prop-metadata-width($prop, $add:0) {
+	@include layout-type(small) { #{$prop}: $metadata-width-small + $add; }
+	@include layout-type(normal) { #{$prop}: $metadata-width + $add; }
+}
+
+@mixin prop-module-width($prop, $add:0) {
+	@include layout-type(extrasmall) { #{$prop}: $module-width-extrasmall + $add; }
+	@include layout-type(small) { #{$prop}: $module-width-small + $add; }
+	@include layout-type(normal) { #{$prop}: $module-width + $add; }
+}
 
 @mixin column {
 	&> h2 {
@@ -68,7 +82,7 @@ $metadata-width: 30em;
 }
 
 @mixin module-list-togglable {
-	width: $module-width;
+	@include prop-module-width(width);
 	display: inline-block;
 	vertical-align: top;
 	margin: 0 2em 2em 0;
@@ -209,7 +223,7 @@ div#metadatabox {
 	@include column;
 
 	float: left;
-	width: $metadata-width;
+	@include prop-metadata-width(width);
 
 	&> p#fitdesc {
 		margin-left: 1em;

@@ -1,11 +1,16 @@
 div#loadoutbox {
 	@include column;
 
-	margin-left: $metadata-width + 1em;
-	margin-right: $module-width + 1.5em;
+	@include prop-metadata-width(margin-left, 1em);
+	@include prop-module-width(margin-right, 1.5em);
 	border-left: 1px dotted #CCC;
 	border-right: 1px dotted #CCC;
 	padding-left: 1em;
+
+	@include layout-type(smallandextrasmall) {
+		margin-right: 1em;
+		border-right: 0;
+	}
 
 	&> form > table {
 		width: 100%;
@@ -23,10 +28,20 @@ div#loadoutbox {
 
 div#dronelistbox {
 	@include column;
+	text-align: center;
+	@include prop-metadata-width(margin-left, 1em);
+	border-left: 1px dotted #CCC;
+	margin-right: 1em;
 
-	float: right;
-	width: $module-width + 0.5em;
-	padding-right: 0.5em;
+	@include layout-type(normal) {
+		float: right;
+		width: $module-width + 0.5em;
+		padding-right: 0.5em;
+
+		text-align: left;
+		border: 0;
+		margin: 0;
+	}
 
 	&> form > input[type='search'] {
 		width: 16em;
@@ -53,10 +68,20 @@ div#dronelistbox {
 
 div#shortlistbox {
 	@include column;
+	text-align: center;
+	@include prop-metadata-width(margin-left, 1em);
+	border-left: 1px dotted #CCC;
+	margin-right: 1em;
 
-	float: right;
-	width: $module-width + 0.5em;
-	padding-right: 0.5em;
+	@include layout-type(normal) {
+		float: right;
+		width: $module-width + 0.5em;
+		padding-right: 0.5em;
+
+		text-align: left;
+		border: 0;
+		margin: 0;
+	}
 
 	&> div#searchbox {
 		@include column;
@@ -137,7 +162,7 @@ div#metadatabox {
 
 		&> select, &> textarea {
 			font-size: 1em;
-			min-width: 25em;
+			@include prop-metadata-width(min-width, -5em);
 			margin: 0.25em 0;
 		}
 
@@ -206,7 +231,7 @@ div#presetsbox {
 div#chargegroupsbox {
 	@include column;
 
-	margin-left: $metadata-width + 1em;
+	@include prop-metadata-width(margin-left, 1em);
 	border-left: 1px dotted #CCC;
 	padding-left: 1em;
 
@@ -284,12 +309,19 @@ div#chargegroupsbox {
 div#dronebay {
 	@include column;
 
-	margin-left: $metadata-width + 1em;
+	@include prop-metadata-width(margin-left, 1em);
+	@include prop-module-width(margin-right, 1.5em);
+	border-left: 1px dotted #CCC;
+	border-right: 1px dotted #CCC;
 	padding-left: 1em;
-	margin-right: $module-width + 1.5em;
 	padding-right: 1em;
 	border-left: 1px dotted #CCC;
 	border-right: 1px dotted #CCC;
+
+	@include layout-type(smallandextrasmall) {
+		margin-right: 0;
+		border-right: 0;
+	}
 
 	&> h2 {
 		text-align: left;
