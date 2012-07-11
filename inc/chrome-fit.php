@@ -182,9 +182,9 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
 	$h = print_tank_layer($fit, 'structureRepair', 'structureDamageAmount', $ehp['hull']['resonance'], $cap,
 	                      $relative, 'hullrepair.png', 'Hull repairs', 'Hull EHP repaired per second', false);
 	$a = print_tank_layer($fit, 'armorRepair', 'armorDamageAmount', $ehp['armor']['resonance'], $cap,
-	                      $relative, 'armorrepair.png', 'Armor repairs', 'Armor EHP repaired per second');
+	                      $relative, 'armorrepair.png', 'Armor repairs', 'Armor EHP repaired per second', false);
 	$s = print_tank_layer($fit, 'shieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
-	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second');
+	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second', false);
 	$s = print_tank_layer($fit, 'fueledShieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
 	                      $relative, 'fueledshieldboost.png', 'Fueled Shield boost', 'Shield EHP boost per second',
 	                      false, true);
