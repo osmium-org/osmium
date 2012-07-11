@@ -319,9 +319,15 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	$offset = ($page - 1) * $perpage;
 	$max = min($total, $offset + $perpage);
 
+	$replacement = ($total > 0) ? array($offset + 1, $max, $total) : array(0, 0, 0);
 	$metaresult = "<p class='pagination'>\n";
-	$metaresult .= str_replace(array('%1', '%2', '%3'), array($offset + 1, $max, $total), $format);
+	$metaresult .= str_replace(array('%1', '%2', '%3'), $replacement, $format);
 	$metaresult .= "\n</p>\n";
+
+	if($maxpage == 1) {
+		$result = '';
+		return $offset;
+	}
 
 	$r ="<ol class='pagination'>\n";
 
