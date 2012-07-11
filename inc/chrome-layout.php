@@ -63,7 +63,10 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 
-	echo "<nav>\n<ul>\n";
+	echo "<nav>\n";
+	\Osmium\State\print_login_or_logout_box($relative);
+
+	echo "<ul>\n";
 	echo get_navigation_link($relative.'/', "Main page");
 	echo get_navigation_link($relative.'/search', "Search loadouts");
 	echo get_navigation_link($relative.'/new', "New loadout");
@@ -73,9 +76,8 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	} else {
 
 	}
-
 	echo "</ul>\n";
-	\Osmium\State\print_login_or_logout_box($relative);
+
 	echo "</nav>\n";
 }
 

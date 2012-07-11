@@ -94,7 +94,7 @@ For developers
 
 These are only needed if you want to contribute and/or hack the codebase.
 
-* Sass (http://sass-lang.com/)
+* Sass >= 3.2 (http://sass-lang.com/)
 
 * (Optional) PHPUnit
 

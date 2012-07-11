@@ -40,18 +40,16 @@ footer, div#push {
 }
 
 nav {
-	height: $nav-height;
+	min-height: $nav-height;
 	width: 100%;
-	position: relative;
 	border-bottom: 1px dotted #CCC;
 
 	&> ul {
 		margin: 0;
 		padding: 0;
 		list-style-type: none;
-		position: absolute;
-		left: 0;
-		top: 0;
+		display: inline;
+		text-align: left;
 
 		&> li {
 			display: inline-block;
@@ -66,9 +64,7 @@ nav {
 	}
 
 	&> div#state_box {
-		position: absolute;
-		top: 0;
-		right: 0;
+		float: right;
 
 		&> p, &> form > p {
 			margin: 0;

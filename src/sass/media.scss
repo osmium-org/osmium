@@ -1,0 +1,18 @@
+$layout-small: 320px;
+$layout-large: 1024px;
+
+@mixin layout-type($type) {
+	@if $type == extrasmall {
+		@media (max-width: $layout-small) { @content; }
+	} @else if $type == small {
+		@media (max-width: $layout-large - 1px) and (min-width: $layout-small + 1px) { @content; }
+	} @else if $type == smallandextrasmall {
+		@media (max-width: $layout-large - 1px) { @content; }
+	} @else if $type == normal {
+		@media (min-width: $layout-large) { @content; }
+	}
+}
+
+@mixin orientation-type($type) {
+	@media (orientation: $type) { @content; }
+}
