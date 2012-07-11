@@ -45,11 +45,10 @@ $metadata-width-small: 20em;
 		border-top: none;
 	}
 	
-	&> img:first-child {
-		height: 2em;
+	&> img {
+		height: 32px;
+		width: 32px;
 		margin-right: 0.125em;
-		image-rendering: optimizeSpeed;
-		image-rendering: optimize-contrast;
 	}
 }
 
