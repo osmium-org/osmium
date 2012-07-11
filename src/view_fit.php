@@ -137,21 +137,21 @@ echo "<h2>Fitting metadata</h2>\n";
 
 echo "<ul>\n";
 $authorname = \Osmium\Chrome\format_character_name($author, '..', $rauthorname);
-echo "<li>Originally created by: <strong>$authorname</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")";
+echo "<li class='author'>Originally created by: <strong>$authorname</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")";
 
 if($author['apiverified'] === 't') {
 	echo "<br />";
-	echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_64.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
-	echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_64.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
+	echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
+	echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
 	if($author['allianceid'] > 0) {
-		echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_64.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
+		echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
 	}
 }
 echo "</li>\n";
 if($fit['metadata']['revision'] > 1) {
-	echo "<li>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: ";
+	echo "<li class='revision'>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: ";
 	if($lastrev['apiverified'] === 't') {
-		echo "<img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_32.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> ";
+		echo "<img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_128.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> ";
 	}
 	echo "<strong>".\Osmium\Chrome\format_character_name($lastrev, '..')."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
 }
@@ -418,7 +418,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<div class='body'>\n".$row['commentformattedbody']."</div>\n";
 		echo "<header>\n<div class='author'>\n";
 		if($row['apiverified'] === 't' && $row['characterid'] > 0) {
-			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$row['characterid']."_64.jpg' alt='' />";
+			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$row['characterid']."_256.jpg' alt='' />";
 		}
 		echo "<small>commented by</small><br />\n";
 		echo \Osmium\Chrome\format_character_name($row, '..')."<br />\n";

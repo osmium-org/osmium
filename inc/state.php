@@ -168,7 +168,7 @@ function print_logoff_box($relative) {
 	if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
 	   isset($a['characterid']) && $a['characterid'] > 0) {
 		$id = $a['characterid'];
-		$portrait = "<img src='http://image.eveonline.com/Character/${id}_32.jpg' alt='' class='portrait' /> ";
+		$portrait = "<img src='http://image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
 	}
 
 	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";

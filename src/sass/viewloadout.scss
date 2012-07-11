@@ -191,3 +191,15 @@ div#vcomments {
 		}
 	}
 }
+
+div#metadatabox > ul > li {
+	&.author > img {
+		width: 4em;
+		height: 4em;
+	}
+
+	&.revision > img {
+		width: 2em;
+		height: 2em;
+	}
+}

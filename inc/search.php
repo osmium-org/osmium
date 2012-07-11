@@ -180,7 +180,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
 		}
 		echo "<li>\n";
-		echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_64.png' alt='".$loadout['typename']."' />\n";
+		echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' />\n";
 		echo "<a href='$relative/loadout/".$loadout['loadoutid']."'>";
 		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
 		echo "</a>\n<br />\n";
