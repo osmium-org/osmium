@@ -30,7 +30,7 @@ function ship_select() {
 		$o[$row[2]][$row[0]] = $row[1];
 	}
 
-	if(isset($fit['hull']['typeid'])) $_POST['hullid'] = $fit['hull']['typeid'];
+	if(isset($fit['ship']['typeid'])) $_POST['hullid'] = $fit['ship']['typeid'];
 	\Osmium\Forms\print_select('', 'hullid', $o, 16, null, 
 	                           \Osmium\Forms\HAS_OPTGROUPS | \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
