@@ -178,7 +178,7 @@ function get_ehp_and_resists(&$fit) {
  * @param $capacitor assumes same format as the returned value of
  * get_capacitor_stability()
  */
-function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor) {
+function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor, $nullifydischargeifchargepresent = false) {
 	if(!isset($fit['cache']['__effects'][$effectname])) {
 		/* The interesting effect is not cached, so no module has
 		 * it. It is useless to continue further. */
@@ -210,7 +210,9 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 
 			$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $boostattributename);
 			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-			$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
+			if($nullifydischargeifchargepresent && isset($fit['charges'][$type][$index]['typeid'])) {
+				$discharge = 0;
+			} else $discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
 			
 			$total += $amount / $duration;
 
@@ -221,6 +223,9 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 
 	/* Sort modules by best HP repaired per capacitor unit */
 	usort($modules, function($b, $a) {
+			if($a[2] == 0) return ($b[2] == 0) ? 0 : 1;
+			else if($b[2] == 0) return -1;
+
 			$k =  $a[0] / $a[2] - $b[0] / $b[2];
 			return $k > 0 ? 1 : ($k < 0 ? -1 : 0);
 		});
@@ -229,7 +234,8 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 	while($capusage < 0 && ($m = array_shift($modules)) !== null) {
 		$module_capusage = $m[2] / $m[1];
 
-		$fraction = max(min(1, -$capusage / $module_capusage), 0);
+		if($module_capusage == 0) $fraction = 1;
+		else $fraction = max(min(1, -$capusage / $module_capusage), 0);
 		$capusage += $fraction * $module_capusage;
 		$sustained += $fraction * ($m[0] / $m[1]);
 	}

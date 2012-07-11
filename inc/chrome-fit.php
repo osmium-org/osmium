@@ -185,6 +185,9 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
 	                      $relative, 'armorrepair.png', 'Armor repairs', 'Armor EHP repaired per second');
 	$s = print_tank_layer($fit, 'shieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
 	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second');
+	$s = print_tank_layer($fit, 'fueledShieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
+	                      $relative, 'fueledshieldboost.png', 'Fueled Shield boost', 'Shield EHP boost per second',
+	                      false, true);
 
 	$total = format_number($passiverechargerate + 1000 * ($h[0] + $a[0] + $s[0]), -1);
 	$tehp = format_number($ehp['ehp']['avg'], -2);
@@ -217,9 +220,9 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 }
 
 function print_tank_layer($fit, $effectname, $shipattributename, $resonances, $cap, 
-                          $relative, $imagesrc, $imagetitle, $title, $forceshow = true) {
+                          $relative, $imagesrc, $imagetitle, $title, $forceshow = true, $nullifyifcharge = false) {
 	list($reinforced, $sustained) = \Osmium\Fit\get_repaired_amount_per_second(
-		$fit, $effectname, $shipattributename, $resonances, $cap
+		$fit, $effectname, $shipattributename, $resonances, $cap, $nullifyifcharge
 		);
 
 	if($reinforced == 0 && !$forceshow) return;

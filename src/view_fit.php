@@ -169,7 +169,7 @@ if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['
 
 	}
 
-	if(count($fit['presets']) > 1) {
+	if(count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
 		/* Use one big select, with optgroups for charge presets */
 		echo "<select name='pid' id='preset'>\n";
 

@@ -404,4 +404,42 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$dps = \Osmium\Fit\get_damage_from_drones($fit);
 		$this->assertEquals(185, $dps, '', 1);
 	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testAncillaryShieldBoosters() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 16231); /* Cyclone */
+		\Osmium\Fit\add_module($fit, 0, 32780); /* X-Large ASB */
+		\Osmium\Fit\add_module($fit, 1, 4391); /* Large ASB */
+		\Osmium\Fit\add_module($fit, 2, 4391);
+
+		/* Pyfa 1.1.8 */
+
+		$this->assertEquals(400, \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad'), '', 0.05);
+		$this->assertEquals(800, \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad'), '', 0.05);
+		$this->assertEquals(531.2, \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput'), '', 0.05);
+		$this->assertEquals(1512.5, \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput'), '', 0.05);
+
+		$resonances = \Osmium\Fit\get_ehp_and_resists($fit)['shield']['resonance'];
+		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
+		list($reinforced, $sustained) = \Osmium\Fit\get_repaired_amount_per_second($fit, 
+			'fueledShieldBoosting', 'shieldBonus', $resonances, $capacitor, true);
+
+		$this->assertEquals(834.5, 1000 * $reinforced, '', 0.05);
+		$this->assertEquals(34.3, 1000 * $sustained, '', 0.05);
+
+		\Osmium\Fit\add_charge($fit, 'medium', 0, 11287);
+		\Osmium\Fit\add_charge($fit, 'medium', 1, 11283);
+		\Osmium\Fit\add_charge($fit, 'medium', 2, 11283);
+
+		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
+		list($reinforced, $sustained) = \Osmium\Fit\get_repaired_amount_per_second($fit, 
+			'fueledShieldBoosting', 'shieldBonus', $resonances, $capacitor, true);
+
+		$this->assertSame($reinforced, $sustained);
+		$this->assertEquals(834.5, 1000 * $reinforced, '', 0.05);
+	}
 }
