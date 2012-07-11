@@ -44,10 +44,9 @@ function charges_select() {
 	print_charge_groups();
 
 	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<script>\n$(function() {\n";
-	echo "osmium_charges_load(".json_encode(\Osmium\AjaxCommon\get_loadable_charges($fit)).");\n";
-	echo "});\n</script>\n";
-
+	\Osmium\Chrome\print_js_code("osmium_charges_load("
+	                             .json_encode(\Osmium\AjaxCommon\get_loadable_charges($fit))
+	                             .");");
 	\Osmium\Chrome\print_js_snippet('new_fitting-step3');
 }
 

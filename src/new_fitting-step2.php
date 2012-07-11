@@ -46,7 +46,7 @@ function print_modules_searchbox() {
 	echo "</p>\n</form>\n<ul id='search_results'></ul>\n</div>\n";
 
 	foreach($filters as &$val) $val = "$val: 0";
-	echo "<script>var search_params = {".implode(',', $filters)."};</script>\n";
+	\Osmium\Chrome\print_js_code("search_params = {".implode(',', $filters)."};");
 }
 
 function print_modulelist() {
@@ -91,10 +91,10 @@ function modules_select() {
 	\Osmium\Chrome\print_js_snippet('new_fitting-step2');
 
 	$fit = \Osmium\State\get_state('new_fit', array());
-	echo "<script>\n$(function() {\n";
-	echo "osmium_shortlist_load(".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n";
-	echo "osmium_loadout_load(".json_encode(\Osmium\AjaxCommon\get_loadable_fit($fit)).");\n";
-	echo "});\n</script>\n";
+	\Osmium\Chrome\print_js_code("osmium_shortlist_load("
+	                             .json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n"
+	                             ."osmium_loadout_load("
+	                             .json_encode(\Osmium\AjaxCommon\get_loadable_fit($fit)).");");
 }
 
 function modules_select_pre() { return true; }

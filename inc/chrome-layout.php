@@ -24,6 +24,9 @@ $__osmium_chrome_relative = '.';
 /** Javascript snippets to add just before </body> */
 $__osmium_js_snippets = array();
 
+/** Javascript code to add just before </body> */
+$__osmium_js_code = '';
+
 /**
  * Print the page header. Nothing should be printed before this call
  * (except header() calls).
@@ -81,7 +84,7 @@ function print_header($title = '', $relative = '.', $add_head = '') {
  * should be printed after calling this.
  */
 function print_footer() {
-	global $__osmium_chrome_relative, $__osmium_js_snippets;
+	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code;
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n";
 	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
@@ -113,7 +116,18 @@ function print_footer() {
 			}
 		}
 
-		echo "<script src='".htmlspecialchars($cacheuri, ENT_QUOTES)."' type='application/javascript'></script>\n";
+		echo "<script type='application/javascript' src='".htmlspecialchars($cacheuri, ENT_QUOTES)."'></script>\n";
+	}
+
+	if($__osmium_js_code !== '') {
+		echo "<script type='application/javascript'>\n";
+		echo "//<![CDATA[\n$(function() {\n";
+		/* Properly "escape" (for lack of a better word) CDATA
+		 * terminators. This looks complicated but actually this is
+		 * all it requires to do it properly. */
+		echo str_replace(']]>', ']]]]><![CDATA[>', $__osmium_js_code);
+		echo "});\n//]]>\n";
+		echo "</script>\n";
 	}
 
 	echo "</body>\n</html>\n";
@@ -144,6 +158,15 @@ function print_js_snippet($js_file) {
 	global $__osmium_js_snippets;
 
 	$__osmium_js_snippets[] = \Osmium\ROOT.'/src/snippets/'.$js_file.'.js';
+}
+
+/**
+ * Print Javascript code in the current document.
+ */
+function print_js_code($code) {
+	global $__osmium_js_code;
+
+	$__osmium_js_code .= trim($code)."\n";
 }
 
 /**

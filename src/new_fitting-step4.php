@@ -54,10 +54,9 @@ function drones_select() {
 	print_attributes($presetform, '');
 	print_dronebay();
 	\Osmium\Chrome\print_js_snippet('new_fitting-step4');
-	echo "<script>\n";
-	echo "$(function() {\n";
-	echo "osmium_load_drones(".json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit)).");\n";
-	echo "});\n</script>\n";
+	\Osmium\Chrome\print_js_code("osmium_load_drones("
+	                             .json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit))
+	                             .");");
 }
 
 function drones_select_pre() { return true; }

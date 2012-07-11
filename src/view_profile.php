@@ -37,7 +37,7 @@ $name = \Osmium\Chrome\get_name($row, $rname);
 
 echo "<div id='vprofile'>\n";
 echo "<header>\n";
-$sep = "<tr class='sep'><td colspan='3'>&nbsp;</td></tr>\n";
+$sep = "<tr class='sep'><td colspan='3'> </td></tr>\n";
 
 $moderator = ($row['ismoderator'] === 't') ? 'Moderator '.\Osmium\Flag\MODERATOR_SYMBOL : '';
 $isthisme = $myprofile ? '(this is you!)' : '';
