@@ -39,7 +39,10 @@ function get_unique($fit) {
 			'description' => $preset['description']
 			);
 
+		$newindexes = array();
 		foreach($preset['modules'] as $type => $d) {
+			$z = 0;
+
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
 				if($presetid == $fit['modulepresetid']) {
@@ -54,6 +57,8 @@ function get_unique($fit) {
 					$state = $module['old_state'];
 				}
 
+				$newindexes[$type][$index] = ($z++);
+
 				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$state);
 			}
 		}
@@ -66,7 +71,8 @@ function get_unique($fit) {
 
 			foreach($chargepreset['charges'] as $type => $a) {
 				foreach($a as $index => $charge) {
-					$uniquecp['charges'][$type][] = (int)$charge['typeid'];
+					$newindex = $newindexes[$type][$index];
+					$uniquecp['charges'][$type][$newindex] = (int)$charge['typeid'];
 				}
 			}
 
@@ -146,11 +152,11 @@ function commit_fitting(&$fit) {
 	foreach($fit['presets'] as $presetid => $preset) {
 		\Osmium\Db\query_params('INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)', array($fittinghash, $presetid, $preset['name'], $preset['description']));
 
-		$module_order = array();
+		$normalizedindexes = array();
 		foreach($preset['modules'] as $type => $data) {
 			$z = 0;
 			foreach($data as $index => $module) {
-				$module_order[$type][$index] = $z;
+				$normalizedindexes[$type][$index] = $z;
 				if($presetid == $fit['modulepresetid']) {
 					$state = $module['state'];
 				} else {
@@ -168,8 +174,8 @@ function commit_fitting(&$fit) {
 
 			foreach($chargepreset['charges'] as $type => $d) {
 				foreach($d as $index => $charge) {
-					if(!isset($module_order[$type][$index])) continue;
-					$z = $module_order[$type][$index];
+					if(!isset($normalizedindexes[$type][$index])) continue;
+					$z = $normalizedindexes[$type][$index];
 
 					\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetid, chargepresetid, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $cpid, $type, $z, $charge['typeid']));
 				}
@@ -359,9 +365,9 @@ function get_fit($loadoutid, $revision = null) {
 			}
 
 			$charges = array();
-			$chargesq = \Osmium\Db\query_params('SELECT slottype, typeid FROM osmium.fittingcharges WHERE fittinghash = $1 AND presetid = $2 AND chargepresetid = $3 ORDER BY index ASC', array($fit['metadata']['hash'], $preset['presetid'], $chargepreset['chargepresetid']));
+			$chargesq = \Osmium\Db\query_params('SELECT slottype, typeid, index FROM osmium.fittingcharges WHERE fittinghash = $1 AND presetid = $2 AND chargepresetid = $3 ORDER BY index ASC', array($fit['metadata']['hash'], $preset['presetid'], $chargepreset['chargepresetid']));
 			while($row = \Osmium\Db\fetch_row($chargesq)) {
-				$charges[$row[0]][] = $row[1];
+				$charges[$row[0]][$row[2]] = $row[1];
 			}
 			add_charges_batch($fit, $charges);
 		}

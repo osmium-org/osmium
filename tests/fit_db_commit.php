@@ -174,6 +174,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 16231);
 
+		/* Yes, the order matters! */
 		\Osmium\Fit\add_module($fit, 3, 12068);
 		\Osmium\Fit\add_module($fit, 0, 32780);
 		\Osmium\Fit\add_module($fit, 1, 32780);
