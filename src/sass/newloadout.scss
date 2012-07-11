@@ -31,6 +31,24 @@ div#dronelistbox {
 	&> form > input[type='search'] {
 		width: 16em;
 	}
+
+	&> ul#search_results > li.drone {
+		position: relative;
+		padding-right: 3.25em;
+
+		&> span.links {
+			position: absolute;
+			right: 0;
+			display: inline-block;
+			width: 3em;
+
+			&> a {
+				display: inline-block;
+				width: 1.5em;
+				text-align: right;
+			}
+		}
+	}
 }
 
 div#shortlistbox {
@@ -63,6 +81,27 @@ div#shortlistbox {
 			}
 		}
 	}
+
+	&> ul#modules_shortlist > li.module, &> div#searchbox > ul#search_results > li.module {
+		position: relative;
+		padding-right: 2.25em;
+
+		&> span.links {
+			position: absolute;
+			width: 2em;
+			display: inline-block;
+			right: 0;
+
+			&> a {
+				display: inline-block;
+				width: 1em;
+			}
+
+			&> a.removemodulefromshortlist {
+				text-decoration: line-through !important;
+			}
+		}
+	}
 }
 
 div#searchbox > ul#search_results,
@@ -85,24 +124,6 @@ div#shortlistbox > ul#modules_shortlist {
 		&.shortlist_dummy {
 			text-align: center;
 		}
-	}
-}
-
-div#shortlistbox > ul#modules_shortlist > li.module {
-	position: relative;
-
-	&> a.delete {
-		@include module-top-corner-link;
-
-		display: none;
-	}
-
-	&:hover {
-		padding-right: 1em;
-	}
-
-	&:hover > a.delete {
-		display: inline;
 	}
 }
 
@@ -194,6 +215,10 @@ div#chargegroupsbox {
 		margin-bottom: 0;
 	}
 
+	&> form > table {
+		width: auto;
+	}
+
 	&> form > table > tbody > tr > td > ul#chargegroups {
 		list-style-type: none;
 		margin: 0;
@@ -214,6 +239,9 @@ div#chargegroupsbox {
 			}
 
 			&> ul > li {
+				padding: 0.25em 0 0.25em 5em;
+				position: relative;
+
 				&.ui-selecting {
 					background-color: #FFFFCC;
 				}
@@ -221,10 +249,33 @@ div#chargegroupsbox {
 				&.ui-selected {
 					background-color: #E8FFE8;
 				}
+
+				&> img {
+					position: absolute;
+					width: 2em;
+					height: 2em;
+
+					top: 0;
+					left: 2.5em;
+
+					&:first-child {
+						left: 0;
+					}
+				}
+
+				&> select {
+					display: block;
+					min-width: 20em;
+				}
 			}
-			
-			&> ul > li > select {
-				width: auto;
+
+			&> span.links {
+				display: block;
+				text-align: center;
+
+				&> a {
+					margin: 0 1em;
+				}
 			}
 		}
 	}
@@ -269,10 +320,25 @@ div#dronebay {
 	&> div > ul > li {
 		@include module;
 		cursor: move;
+		position: relative;
+		padding-right: 6.25em;
 
 		&.drone_placeholder {
 			text-align: center;
 			font-style: italic;
+		}
+
+		&> span.links {
+			position: absolute;
+			right: 0;
+			display: inline-block;
+			width: 6em;
+
+			&> a {
+				display: inline-block;
+				width: 1.5em;
+				text-align: right;
+			}
 		}
 	}
 }

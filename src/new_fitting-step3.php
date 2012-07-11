@@ -25,7 +25,7 @@ function print_charge_presetsbox() {
 function print_charge_groups() {
 	echo "<div id='chargegroupsbox'>\n<h2 class='has_spinner'>Charge groups";
 	echo "<img src='./static/icons/spinner.gif' id='chargegroupsbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Select multiple items by dragging or using <kbd>Ctrl</kbd>)</em>\n</h2>\n";
+	echo "<em class='help'>(Use links, drag or <kbd>Ctrl</kbd>+click to select multiple items)</em>\n</h2>\n";
   
 	\Osmium\Forms\print_form_begin();
 	echo "<tr><td colspan='2'>\n<ul id='chargegroups'>\n";

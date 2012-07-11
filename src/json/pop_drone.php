@@ -28,6 +28,7 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 $fit = \Osmium\State\get_state('new_fit', array());
 $typeid = intval($_GET['typeid']);
 $from = $_GET['from'];
-\Osmium\Fit\remove_drone($fit, $typeid, $from);
+$quantity = intval($_GET['quantity']);
+\Osmium\Fit\remove_drone($fit, $typeid, $from, $quantity);
 \Osmium\State\put_state('new_fit', $fit);
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));

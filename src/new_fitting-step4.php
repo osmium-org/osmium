@@ -21,7 +21,7 @@ namespace Osmium\Page\NewFitting;
 function print_drone_searchbox() {
 	echo "<div id='dronelistbox'>\n<h2 class='has_spinner'>Search drones";
 	echo "<img src='./static/icons/spinner.gif' id='dronelistbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Double-click to add to bay)</em>\n</h2>\n";
+	echo "<em class='help'>(Click links or double-click to add to bay)</em>\n</h2>\n";
 	echo "<form action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' method='get'>\n";
 	echo "<input type='search' placeholder='Search by name or category...' />\n";
 	echo "<input type='submit' value='Search' />\n";
@@ -31,7 +31,7 @@ function print_drone_searchbox() {
 function print_dronebay() {
 	echo "<div id='dronebay'>\n<h2 class='has_spinner'>Drones";
 	echo "<img src='./static/icons/spinner.gif' id='dronebay_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
+	echo "<em class='help'>(Use links or double-click to remove)</em>\n</h2>\n";
 	echo "<p id='dronecapacity'><img src='./static/icons/dronecapacity.png' alt='Drone capacity' title='Drone capacity' /><strong></strong> m<sup>3</sup></p>\n<p id='dronebandwidth'><img src='./static/icons/bandwidth.png' alt='Drone bandwidth' title='Drone bandwidth' /><strong></strong> Mbit/s</p>\n";
 
 	foreach(array('bay', 'space') as $v) {

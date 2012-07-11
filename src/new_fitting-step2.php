@@ -21,7 +21,7 @@ namespace Osmium\Page\NewFitting;
 function print_modules_searchbox() {
 	echo "<div id='searchbox'>\n<h2 class='has_spinner'>Search modules";
 	echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
+	echo "<em class='help'>(Click '<code>+</code>' or double-click to fit)</em>\n</h2>\n";
 	echo "<form action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' method='get'>\n";
 	echo "<input type='search' placeholder='Search by name or category...' autofocus='autofocus' />\n";
 	echo "<input type='submit' value='Search' />\n<br />\n";
@@ -52,7 +52,7 @@ function print_modules_searchbox() {
 function print_modulelist() {
 	echo "<div id='loadoutbox'>\n<h2 class='has_spinner'>Loadout";
 	echo "<img src='./static/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Double-click to remove)</em>\n</h2>\n";
+	echo "<em class='help'>(Click '<code>x</code>' or double-click to remove)</em>\n</h2>\n";
   
 	foreach(get_slot_fnames() as $type => $fname) {
 		if(in_array($type, \Osmium\Fit\get_stateful_slottypes())) $class = ' stateful';
@@ -71,7 +71,7 @@ function print_modulelist() {
 function print_modules_shortlist($before = '', $after = '') {
 	echo "<div id='shortlistbox'>$before\n<h2 class='has_spinner'>Shortlist";
 	echo "<img src='./static/icons/spinner.gif' id='shortlistbox_spinner' class='spinner' alt='' /><br />\n";
-	echo "<em class='help'>(Double-click to fit)</em>\n</h2>\n";
+	echo "<em class='help'>(Click '<code>+</code>' or double-click to fit)</em>\n</h2>\n";
 	echo "<ul id='modules_shortlist'>\n";
 	echo "</ul>\n$after</div>\n";
 }
