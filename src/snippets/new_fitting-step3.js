@@ -8,6 +8,8 @@ osmium_charges_load = function(json) {
 	var cli;
 	var cimg;
 	var chargeid;
+	var cspan;
+	var clink;
 
 	select.empty();
 	for(var i = 0; i < json['presets'].length; ++i) {
@@ -60,7 +62,6 @@ osmium_charges_load = function(json) {
 			}
 			cli.append(cimg);
 			
-
 			cli.append(cselect.clone()
 					   .val(chargeid)
 					   .data('type', json['charges'][i]['modules'][j]['type'])
@@ -68,7 +69,25 @@ osmium_charges_load = function(json) {
 			cgroup.append(cli);
 		}
 
+		cspan = $(document.createElement('span'));
+		cspan.addClass('links');
+
+		clink = $(document.createElement('a'));
+		clink.attr('href', 'javascript:void(0);');
+		clink.attr('title', 'Select all modules in this group');
+		clink.attr('class', 'selectall');
+		clink.text('select all');
+		cspan.append(clink);
+
+		clink = $(document.createElement('a'));
+		clink.attr('href', 'javascript:void(0);');
+		clink.attr('title', 'Deselect all modules in this group');
+		clink.attr('class', 'selectnone');
+		clink.text('select none');
+		cspan.append(clink);
+
 		cli = $(document.createElement('li'));
+		cli.append(cspan);
 		cli.append(cgroup);
 		$("ul#chargegroups").append(cli);
 	}
@@ -85,6 +104,15 @@ osmium_charges_load = function(json) {
 		items: 'li',
 		autoRefresh: false
     });
+
+	$("ul#chargegroups > li > span.links > a.selectall").click(function() {
+		$(this).parent().parent().find('ul.chargegroup > li.ui-selectee').addClass('ui-selected');
+		$(this).blur();
+	});
+	$("ul#chargegroups > li > span.links > a.selectnone").click(function() {
+		$(this).parent().parent().find('ul.chargegroup > li.ui-selectee').removeClass('ui-selected');
+		$(this).blur();
+	});
 };
 
 osmium_presets_commit = function(opts) {

@@ -215,6 +215,10 @@ div#chargegroupsbox {
 		margin-bottom: 0;
 	}
 
+	&> form > table {
+		width: auto;
+	}
+
 	&> form > table > tbody > tr > td > ul#chargegroups {
 		list-style-type: none;
 		margin: 0;
@@ -235,6 +239,9 @@ div#chargegroupsbox {
 			}
 
 			&> ul > li {
+				padding: 0.25em 0 0.25em 5em;
+				position: relative;
+
 				&.ui-selecting {
 					background-color: #FFFFCC;
 				}
@@ -242,10 +249,33 @@ div#chargegroupsbox {
 				&.ui-selected {
 					background-color: #E8FFE8;
 				}
+
+				&> img {
+					position: absolute;
+					width: 2em;
+					height: 2em;
+
+					top: 0;
+					left: 2.5em;
+
+					&:first-child {
+						left: 0;
+					}
+				}
+
+				&> select {
+					display: block;
+					min-width: 20em;
+				}
 			}
-			
-			&> ul > li > select {
-				width: auto;
+
+			&> span.links {
+				display: block;
+				text-align: center;
+
+				&> a {
+					margin: 0 1em;
+				}
 			}
 		}
 	}
