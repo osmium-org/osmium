@@ -19,8 +19,39 @@
 require_once __DIR__.'/../inc/root.php';
 
 class FitDbCommit extends PHPUnit_Framework_TestCase {
-	private $loadoutid = null;
-	private $hash = null;
+	private $loadoutids = array();
+	private $hashes = array();
+
+	private function commitLoadoutPlumbing(&$fit) {
+		$fit['metadata']['name'] = 'Test loadout (PHPUnit-generated)';
+		$fit['metadata']['description'] = '(Not intended for public usage.)';
+		$fit['metadata']['view_permission'] = \Osmium\Fit\VIEW_EVERYONE;
+		$fit['metadata']['edit_permission'] = \Osmium\Fit\EDIT_OWNER_ONLY;
+		$fit['metadata']['visibility'] = \Osmium\Fit\VISIBILITY_PRIVATE;
+		$fit['metadata']['tags'] = array('test', 'do-not-use');
+
+		$accountq = \Osmium\Db\query('SELECT accountid FROM osmium.accounts ORDER BY accountid ASC LIMIT 1');
+		if($accountq === false) {
+			$this->markTestSkipped('Database is probably not running.');
+			return;
+		}
+		$row = \Osmium\Db\fetch_row($accountq);
+		if($row === false) {
+			$this->markTestSkipped('This test requires at least one registered account.');
+			return;
+		}
+		$accountid = $row[0];
+
+		\Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
+
+		$hash = $fit['metadata']['hash'];
+		$loadoutid = $fit['metadata']['loadoutid'];
+
+		$this->loadoutids[] = $loadoutid;
+		$this->hashes[] = $hash;
+
+		return $accountid;
+	}
 
 	/**
 	 * @group fit
@@ -109,34 +140,12 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\use_drone_preset($fit, $dpid);
 		\Osmium\Fit\add_drone($fit, 2488, 0, 5);
 
-		$fit['metadata']['name'] = 'Test loadout (PHPUnit-generated)';
-		$fit['metadata']['description'] = '(Not intended for public usage.)';
-		$fit['metadata']['view_permission'] = \Osmium\Fit\VIEW_EVERYONE;
-		$fit['metadata']['edit_permission'] = \Osmium\Fit\EDIT_OWNER_ONLY;
-		$fit['metadata']['visibility'] = \Osmium\Fit\VISIBILITY_PRIVATE;
-		$fit['metadata']['tags'] = array('test', 'do-not-use');
-
-		$accountq = \Osmium\Db\query('SELECT accountid FROM osmium.accounts ORDER BY accountid ASC LIMIT 1');
-		if($accountq === false) {
-			$this->markTestSkipped('Database is probably not running.');
-			return;
-		}
-		$row = \Osmium\Db\fetch_row($accountq);
-		if($row === false) {
-			$this->markTestSkipped('This test requires at least one registered account.');
-			return;
-		}
-		$accountid = $row[0];
-
-		\Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
+		$accountid = $this->commitLoadoutPlumbing($fit);
 		$this->assertSame('', \Osmium\Db\last_error());
 
 		$revision = $fit['metadata']['revision'];
 		$hash = $fit['metadata']['hash'];
 		$loadoutid = $fit['metadata']['loadoutid'];
-
-		$this->loadoutid = $loadoutid;
-		$this->hash = $hash;
 
 		/* Test that committing twice the same loadout does not insert
 		 * a new fitting or history entry */
@@ -157,25 +166,55 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		$this->assertSame(\Osmium\Fit\get_hash($fit), \Osmium\Fit\get_hash($dbfitrev));
 	}
 
-	protected function tearDown() {
-		$lid = $this->loadoutid;
-		$hash = $this->hash;
+	/**
+	 * @group fit
+	 * @group database
+	 */
+	public function testChargeIndexes() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 16231);
 
-		if($lid === null && $hash === null) return;
+		\Osmium\Fit\add_module($fit, 3, 12068);
+		\Osmium\Fit\add_module($fit, 0, 32780);
+		\Osmium\Fit\add_module($fit, 1, 32780);
+		\Osmium\Fit\add_charge($fit, 'medium', 0, 11287);
+		\Osmium\Fit\add_charge($fit, 'medium', 1, 11287);
+
+		$this->commitLoadoutPlumbing($fit);
+
+		\Osmium\State\set_cache_enabled(false);
+		$dbfit = \Osmium\Fit\get_fit($fit['metadata']['loadoutid']);
+		\Osmium\State\pop_cache_enabled();
+
+		$this->assertSame(2, count($dbfit['charges']['medium']));
+
+		foreach($dbfit['charges']['medium'] as $index => $charge) {
+			$this->assertSame(11287, (int)$charge['typeid']);
+			$this->assertSame(32780, (int)$dbfit['modules']['medium'][$index]['typeid']);
+		}
+	}
+
+	protected function tearDown() {
+		if(count($this->loadoutids) === 0 && count($this->hashes) === 0) return;
+		$l = implode(',', $this->loadoutids);
+		$h = implode(',', array_map(function($x) { return "'$x'"; }, $this->hashes));
 
 		\Osmium\Db\query('BEGIN;');
-		\Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE loadoutid = $1', array($lid));
-		\Osmium\Db\query_params('DELETE FROM osmium.loadouthistory WHERE loadoutid = $1', array($lid));
-		\Osmium\Db\query_params('DELETE FROM osmium.loadouts WHERE loadoutid = $1', array($lid));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingcharges WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingchargepresets WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingmodules WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingpresets WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingdrones WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingdronepresets WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittingtags WHERE fittinghash = $1', array($hash));
-		\Osmium\Db\query_params('DELETE FROM osmium.fittings WHERE fittinghash = $1', array($hash));
+		\Osmium\Db\query('DELETE FROM osmium.accountfavorites WHERE loadoutid IN ('.$l.')');
+		\Osmium\Db\query('DELETE FROM osmium.loadouthistory WHERE loadoutid IN ('.$l.')');
+		\Osmium\Db\query('DELETE FROM osmium.loadouts WHERE loadoutid IN ('.$l.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingcharges WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingchargepresets WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingmodules WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingpresets WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingdrones WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingdronepresets WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingtags WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittings WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('COMMIT;');
-		\Osmium\Search\unindex($lid);
+
+		foreach($this->loadoutids as $lid) {
+			\Osmium\Search\unindex($lid);
+		}
 	}
 }

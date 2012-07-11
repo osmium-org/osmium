@@ -129,9 +129,10 @@ Code conventions
 
 * Never, ever, EVER indent with spaces!
 
-* Function names should use the `a_function_name()`
-  convention. Variable names can use either `$a_variable_name` or
-  `$avariablename`.
+* Function names should use the `a_function_name()` convention (the
+  only exception is tests where you should use
+  `testSomethingWorksAsExpected`). Variable names can use either
+  `$a_variable_name` or `$avariablename`.
 
 * If your function prints something to the standard output, please
   prefix its name by `print_`, for example:
