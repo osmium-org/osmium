@@ -34,6 +34,8 @@ $metadata-width: 30em;
 	&> img:first-child {
 		height: 2em;
 		margin-right: 0.125em;
+		image-rendering: optimizeSpeed;
+		image-rendering: optimize-contrast;
 	}
 }
 
