@@ -153,7 +153,22 @@ Code conventions
   required='required' />` instead of `<input type='text' required
   />`), always specify closing tags (and use the `/>` shorthand for
   void elements like `img`, `br` etc.) and do not use named entitiy
-  references other than `amp`, `lt`, `gt`, `apos` and `quot`.
+  references other than `amp`, `lt`, `gt`, `apos` and `quot`. You can
+  use http://validator.nu to check if your source is correct (validate
+  both modes: use the HTML5 parser and then the XML parser).
+
+Accessibility guidelines
+------------------------
+
+* Do not rely **only** on color to convey information (for color blind
+  people).
+
+* Do not rely on drag and drop, double-click or hover for essential
+  functionality (not available on touchscreen devices).
+
+* Always fill the `alt` attribute of an image. It can be empty if the
+  image is purely decorational (or if it would be redundant with
+  information already next to it).
 
 Getting your code merged
 ------------------------
