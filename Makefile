@@ -18,4 +18,15 @@ test-coverage:
 tags:
 	ctags -e -R .
 
-.PHONY: default tags tests
+clear-harmless-cache:
+	rm -f cache/OsmiumCache_* static/cache/JS_*
+	rm -Rf cache/CSS cache/HTML cache/URI
+
+clear-api-cache:
+	rm -f cache/API_*
+
+clear-sessions:
+	rm -f cache/sess_*
+
+.PHONY: default tags tests clear-harmless-cache clear-api-cache clear-sessions
+
