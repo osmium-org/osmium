@@ -193,11 +193,31 @@ function format_optgroup($name, $options, $flags) {
 	return $f;
 }
 
-function print_checkbox($label, $name, $id = null, $checked = null) {
+function print_checkbox_or_radio($type, $label, $name, $id = null, $checked = null, $value = null, $flags = 0) {
 	if($id === null) $id = $name;
-	if($checked === true) {
+	if($checked === true || ($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name]) && $_POST[$name] == $value)) {
 		$checked = 'checked="checked" ';
 	} else $checked = '';
 
-	print_generic_row($name, "", "<input type='checkbox' name='$name' id='$id' $checked/> <label for='$id'>$label</label>");
+	if($value !== null) {
+		$value = 'value="'.htmlspecialchars($value, ENT_QUOTES).'" ';
+	} else $value = '';
+
+	print_generic_row($name, "", "<input type='$type' name='$name' id='$id' {$value}{$checked}/> <label for='$id'>$label</label>");
+}
+
+function print_checkbox($label, $name, $id = null, $checked = null, $flags = 0) {
+	print_checkbox_or_radio('checkbox', $label, $name, $id, $checked, null, $flags);
+}
+
+function print_radio($label, $name, $value, $id = null, $checked = null, $flags = 0) {
+	static $idcnt = 0;
+
+	if($id === null) {
+		/* Several radio buttons typically share the same name, but
+		 * must have different ids. */
+		$id = $name.($idcnt++);
+	}
+
+	print_checkbox_or_radio('radio', $label, $name, $id, $checked, $value, $flags);	
 }

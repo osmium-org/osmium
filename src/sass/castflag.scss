@@ -1,0 +1,15 @@
+div#castflag {
+	&> form > table > tbody > tr {
+		&> td > h2 {
+			margin: 0;
+		}
+
+		&> td > p {
+			margin-bottom: 0;
+		}
+
+		&> th {
+			padding-top: 0.75em;
+		}
+	}
+}

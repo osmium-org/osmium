@@ -24,5 +24,8 @@ RewriteRule ^/?editcomment/([1-9][0-9]*)$ src/edit_comment.php?id=$1&type=commen
 RewriteRule ^/?editcommentreply/([1-9][0-9]*)$ src/edit_comment.php?id=$1&type=commentreply [L,QSA]
 RewriteRule ^/?deletecomment/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=comment [L,QSA]
 RewriteRule ^/?deletecommentreply/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=commentreply [L,QSA]
+RewriteRule ^/?flag/([1-9][0-9]*)$ src/cast_flag.php?id=$1&type=loadout [L,QSA]
+RewriteRule ^/?flagcomment/([1-9][0-9]*)$ src/cast_flag.php?id=$1&type=comment [L,QSA]
+RewriteRule ^/?flagcommentreply/([1-9][0-9]*)$ src/cast_flag.php?id=$1&type=commentreply [L,QSA]
 
 RewriteRule !^/?(src|static) - [L,R=404]
