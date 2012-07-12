@@ -44,7 +44,7 @@ if(isset($_GET['revision'])) {
 }
 
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
-$lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
+$lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, nickname, apiverified, characterid, charactername, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
 
 list($commentsallowed) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT allowcomments FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
 $commentsallowed = ($commentsallowed === 't');
@@ -135,27 +135,32 @@ if(isset($_GET['dpid']) && isset($fit['dronepresets'][$_GET['dpid']])) {
 echo "<div id='metadatabox'>\n";
 echo "<h2>Fitting metadata</h2>\n";
 
-echo "<ul>\n";
-$authorname = \Osmium\Chrome\format_character_name($author, '..', $rauthorname);
-echo "<li class='author'>Originally created by: <strong>$authorname</strong> (".date('Y-m-d', $fit['metadata']['creation_date']).")";
-
+$class = $fit['metadata']['revision'] > 1 ? 'edited' : 'notedited';
+echo "<div id='loadoutcredits' class='$class'>\n";
+echo "<div class='author'>\n";
 if($author['apiverified'] === 't') {
-	echo "<br />";
-	echo "<img src='http://image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='".$author['charactername']."' title='".$author['charactername']."' /> ";
-	echo "<img src='http://image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='".$author['corporationname']."' title='".$author['corporationname']."' /> ";
 	if($author['allianceid'] > 0) {
-		echo "<img src='http://image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='".$author['alliancename']."' title='".$author['alliancename']."' />";
+		echo "<img class='alliance' src='http://image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='' title='member of ".htmlspecialchars($author['alliancename'], ENT_QUOTES)."' />";
+	} else {
+		echo "<img class='corporation' src='http://image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='' title='member of ".htmlspecialchars($author['corporationname'], ENT_QUOTES)."' />";
+	}
+	if($author['characterid'] > 0) {
+		echo "<img class='portrait' src='http://image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='' />";
 	}
 }
-echo "</li>\n";
+echo "<small>submitted by</small><br />\n";
+echo \Osmium\Chrome\format_character_name($author, '..', $rauthorname)."<br />\n";
+echo "<time datetime='".date('c', $fit['metadata']['creation_date'])."'>".\Osmium\Chrome\format_relative_date($fit['metadata']['creation_date'])."</time>\n";
+echo "</div>\n";
+
 if($fit['metadata']['revision'] > 1) {
-	echo "<li class='revision'>Revision <strong>#".$fit['metadata']['revision']."</strong> edited by: ";
-	if($lastrev['apiverified'] === 't') {
-		echo "<img src='http://image.eveonline.com/Character/".$lastrev['characterid']."_128.jpg' alt='".$lastrev['charactername']."' title='".$lastrev['charactername']."' /> ";
-	}
-	echo "<strong>".\Osmium\Chrome\format_character_name($lastrev, '..')."</strong> (".date('Y-m-d', $lastrev['updatedate']).")</li>";
+	echo "<div class='author edit'>\n";
+	echo "<small>revision #".$fit['metadata']['revision']." edited by</small><br />\n";
+	echo \Osmium\Chrome\format_character_name($lastrev, '..')."<br />\n";
+	echo "<time datetime='".date('c', $lastrev['updatedate'])."'>".\Osmium\Chrome\format_relative_date($lastrev['updatedate'])."</time>\n";
+	echo "</div>\n";
 }
-echo "</ul>\n";
+echo "</div>\n";
 
 if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
 	$action = explode('?', $_SERVER['REQUEST_URI'], 2)[0];

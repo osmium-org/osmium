@@ -1,3 +1,52 @@
+@mixin authorboxes {
+	&> div.author {
+		position: relative;
+		float: right;
+		margin-left: 0.5em;
+		background-color: #F4F4F8;
+		height: 3.5em;
+		width: 13em;
+
+		@include ellipsis;
+
+		&> img.portrait {
+			float: left;
+			height: 3em;
+			padding: 0.25em 0.25em 0 0.25em;
+		}
+
+		&> img.corporation, &> img.alliance {
+			position: absolute;
+			height: 3em;
+			top: 0.25em;
+			right: 0.25em;
+
+			opacity: 0.5;
+
+			@include layout-type(smallandextrasmall) {
+				opacity: 0.2;
+			}
+		}
+
+		&> time {
+			color: #888;
+			font-size: 0.9em;
+		}
+
+		&> a.profile {
+			font-weight: bold;
+			text-decoration: underline;
+		}
+	}
+
+	&> div.author.edit {
+		width: 10em;
+		margin-right: 0;
+		background-color: transparent;
+		opacity: 0.5;
+	}
+}
+
 div#vloadoutbox {
 	@include prop-metadata-width(margin-left, 1em);
 	border-left: 1px dotted #CCC;
@@ -70,38 +119,7 @@ div#vcomments {
 			min-height: 3.5em;
 			margin-top: 0.5em;
 
-			&> div.author {
-				float: right;
-				margin: 0 0.5em;
-				background-color: #F4F4F8;
-				height: 3.5em;
-				width: 13em;
-
-				@include ellipsis;
-
-				&> img.portrait {
-					float: left;
-					padding: 0.25em 0.25em 0 0.25em;
-					height: 3em;
-				}
-
-				&> time {
-					color: #888;
-					font-size: 0.9em;
-				}
-
-				&> a.profile {
-					font-weight: bold;
-					text-decoration: underline;
-				}
-			}
-
-			&> div.author.edit {
-				width: 10em;
-				margin-right: 0;
-				background-color: transparent;
-				opacity: 0.5;
-			}
+			@include authorboxes;
 
 			&> div.meta {
 				margin-left: 0.25em;
@@ -193,14 +211,26 @@ div#vcomments {
 	}
 }
 
-div#metadatabox > ul > li {
-	&.author > img {
-		width: 4em;
-		height: 4em;
+div#metadatabox > div#loadoutcredits {
+	@include authorboxes;
+	padding: 0 0.5em 0.5em 0.5em;
+
+	&> div.author {
+		width: 20em;
+		display: inline-block;
+		float: none;
+
+		@include layout-type(smallandextrasmall) {
+			width: 10em;
+		}
+
+		&.edit {
+			width: 7.5em;
+		}
 	}
 
-	&.revision > img {
-		width: 2em;
-		height: 2em;
+	&.notedited > div.author {
+		display: block;
+		width: 100%;
 	}
 }
