@@ -166,3 +166,39 @@ span.normalaccount:before {
 span.apiverified:before {
 	content: '%';
 }
+
+$target-highlight-color: #FFA;
+$target-final-color: #FFF;
+$animation-duration: 15s;
+
+:target {
+	animation-name: tfade;
+	-moz-animation-name: tfade;
+	-webkit-animation-name: tfade;
+	-o-animation-name: tfade;
+
+	animation-duration: $animation-duration;
+	-moz-animation-duration: $animation-duration;
+	-webkit-animation-duration: $animation-duration;
+	-o-animation-duration: $animation-duration;
+}
+
+@keyframes tfade {
+	from { background-color: $target-highlight-color; }
+	to { background-color: $target-final-color; }
+}
+
+@-moz-keyframes tfade {
+	from { background-color: $target-highlight-color; }
+	to { background-color: $target-final-color; }
+}
+
+@-webkit-keyframes tfade {
+	from { background-color: $target-highlight-color; }
+	to { background-color: $target-final-color; }
+}
+
+@-o-keyframes tfade {
+	from { background-color: $target-highlight-color; }
+	to { background-color: $target-final-color; }
+}
