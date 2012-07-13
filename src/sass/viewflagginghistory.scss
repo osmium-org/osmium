@@ -1,0 +1,33 @@
+div#vflaghistory {
+	@include fixed-width-page;
+
+	&> ul#summary {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+
+		text-align: right;
+		color: #888;
+
+		&> li {
+			display: inline-block;
+			width: 8em;
+			margin: 0.25em 1em;
+			padding: 0;
+		}
+	}
+
+	&> table > tbody > tr {
+		&.status0 {
+			background-color: #FFC;
+		}
+
+		&.status1 {
+			background-color: #DFD;
+		}
+
+		&.status2 {
+			background-color: #FDD;
+		}
+	}
+}

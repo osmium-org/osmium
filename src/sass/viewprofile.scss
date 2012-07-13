@@ -1,23 +1,7 @@
 $portrait-width: 10em;
 
 div#vprofile {
-	max-width: 60em;
-	margin: auto;
-
-	&> header, &> section {
-		&> h2 {
-			margin: 1em 0 0.5em 0;
-			border-bottom: 1px solid black;
-			position: relative;
-
-			&> small {
-				position: absolute;
-				right: 0;
-				bottom: 0;
-				color: #888;
-			}
-		}
-	}
+	@include fixed-width-page;
 
 	&> header {
 		&> p, &> table {

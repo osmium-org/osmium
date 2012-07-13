@@ -32,6 +32,8 @@ $options = array();
 $flagtype = null;
 $title = 'Flag';
 $ftitle = 'Flag';
+$otherid1 = null;
+$otherid2 = null;
 
 if($type == 'loadout') {
 	$flagtype = \Osmium\Flag\FLAG_TYPE_LOADOUT;
@@ -53,7 +55,7 @@ if($type == 'loadout') {
 			\Osmium\fatal(404, "Comment not found.");
 		}
 
-		$loadoutid = $row['loadoutid'];
+		$loadoutid = $otherid1 = $row['loadoutid'];
 	} else if($type == 'commentreply') {
 		$flagtype = \Osmium\Flag\FLAG_TYPE_COMMENTREPLY;
 		$entity = 'comment reply';
@@ -64,8 +66,8 @@ if($type == 'loadout') {
 			\Osmium\fatal(404, "Comment reply not found.");
 		}
 
-		$commentid = $row['commentid'];
-		$loadoutid = $row['loadoutid'];
+		$commentid = $otherid1 = $row['commentid'];
+		$loadoutid = $otherid2 = $row['loadoutid'];
 	}
 
 	$uri = "../loadout/{$loadoutid}?jtc={$commentid}#{$anchor}";
@@ -107,14 +109,16 @@ if(isset($_POST['flagtype']) && isset($options[$_POST['flagtype']])) {
 		if($row !== false) {
 			\Osmium\Forms\add_field_error('flagtype'.$flagsubtype, 'You already flagged this fit recently.');
 		} else {
-			\Osmium\Db\query_params('INSERT INTO osmium.flags (flaggedbyaccountid, createdat, type, subtype, status, other, target1, target2, target3) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL)', array(
+			\Osmium\Db\query_params('INSERT INTO osmium.flags (flaggedbyaccountid, createdat, type, subtype, status, other, target1, target2, target3) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', array(
 				                        $a['accountid'],
 				                        time(),
 				                        $flagtype,
 				                        $flagsubtype,
 				                        \Osmium\Flag\FLAG_STATUS_NEW,
 				                        $flagsubtype == \Osmium\Flag\FLAG_SUBTYPE_OTHER ? $other : null,
-				                        $id));
+				                        $id,
+				                        $otherid1,
+				                        $otherid2));
 
 			header('Location: '.$uri);
 			die();
