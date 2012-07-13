@@ -20,9 +20,94 @@ namespace Osmium;
 
 function fatal($code, $message) {
 	if(!headers_sent()) {
-		header('Content-Type: text/plain', true, $code);
+		http_response_code($code);
 	}
-	die((string)$message);
+	$message = htmlspecialchars($message)."<span id='caret'>_</span>";
+	$code = $code.'!';
+
+	$fcode = '';
+	$len = strlen($code);
+	for($i = 0; $i < $len; ++$i) {
+		$fcode .= $code[$i].'&#8203;';
+	}
+
+	echo <<<EOFATAL
+<!DOCTYPE html>
+<head>
+<title>$code / Osmium</title>
+<style type='text/css'>
+body {
+	font-family: monospace;
+	font-size: 2em;
+	color: white;
+	background-color: black;
+}
+
+div#bg {
+	color: #222;
+	overflow: hidden;
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
+
+div#bg, div#bg > strong {
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+
+	cursor: default;
+}
+
+div#bg > strong {
+	color: red;
+	outline: 1px solid red;
+	font-weight: normal;
+}
+
+h1 {
+	position: absolute;
+	top: 50%;
+	margin-top: -1em;
+	left: 0;
+	width: 100%;
+	text-align: center;
+}
+</style>
+</head>
+<body>
+<div unselectable='on' id='bg'></div>
+<h1>
+$message
+</h1>
+<script type='text/javascript'>
+osmium_fancy_error = function(string) {
+	var f = '';
+
+	for(var i = 0; i < 5000; ++i) {
+		if(Math.random() < 0.01) {
+			f = f + "<strong unselectable='on'>" + string + "</strong>";
+		} else {
+			f = f + string;
+		}
+	}
+
+	document.getElementById('bg').innerHTML = f;
+
+	setTimeout(function() { osmium_fancy_error(string); }, Math.random() * 1500 + 500);
+};
+
+osmium_fancy_error("$fcode");
+</script>
+</body>
+</html>
+
+EOFATAL;
+
+	die();
 }
 
 function printr($stuff) {

@@ -1,3 +1,4 @@
+Options -Indexes
 RewriteEngine On
 
 RewriteRule ^/?$ src/main.php [L,QSA]
@@ -26,3 +27,6 @@ RewriteRule ^/?deletecomment/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=co
 RewriteRule ^/?deletecommentreply/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=commentreply [L,QSA]
 
 RewriteRule !^/?(src|static) - [L,R=404]
+
+ErrorDocument 403 /src/fatal.php?code=403&message=Forbidden
+ErrorDocument 404 /src/fatal.php?code=404&message=Not%20Found
