@@ -30,5 +30,5 @@ putenv('PGPASSWORD='.$password);
 passthru('pg_dump --host '.escapeshellarg($host)
          .' --port '.escapeshellarg($port)
          .' --username '.escapeshellarg($user)
-         .' -F c --schema-only --verbose --file '.escapeshellarg(__DIR__.'/../osmium_pgsql.backup')
+         .' -F p -O --schema-only --verbose --file '.escapeshellarg(__DIR__.'/../pgsql/osmium.sql')
          .' --schema osmium '.escapeshellarg($dbname));

@@ -31,7 +31,7 @@ $dbname = \Osmium\get_ini_setting('dbname');
 
 putenv('PGPASSWORD='.$password);
 
-$out_file = __DIR__.'/../osmium-full-'.date('YmdHis').fmod(microtime(true), 1).'.pgsql';
+$out_file = __DIR__.'/../pgsql/osmium-full-'.date('YmdHis').fmod(microtime(true), 1).'.pgsql';
 
 passthru('pg_dump --host '.escapeshellarg($host)
          .' --port '.escapeshellarg($port)

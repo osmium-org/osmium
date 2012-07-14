@@ -115,7 +115,7 @@ the `osmium_user` user, follow these steps:
 
 3. Import the Osmium tables/views:
 
-    <pre>pg_restore -O osmium_pgsql.backup | psql osmium osmium_user</pre>
+    <pre>psql osmium osmium_user < pgsql/osmium.sql</pre>
 
 Updating the Osmium static data dump
 ====================================
@@ -183,9 +183,9 @@ to convert it in PostgreSQL tables:
 This will create two (one for the schema, one for the data) SQL files
 per table in the dump. Then, import the following (in this order):
 
-     # you can find eve_pgsql.backup in the root directory of the Osmium repo
+     # you can find eve.sql in the pgsql directory of the Osmium repo
      # it is more or less the raw schema with indexes, foreign keys and proper types
-     pg_restore -O eve_pgsql.backup | psql osmium osmium_user
+     psql osmium osmium_user < pgsql/eve.sql
 
      psql osmium osmium_user
      SET search_path TO eve;
@@ -205,7 +205,7 @@ per table in the dump. Then, import the following (in this order):
 
 Import the Osmium schema:
 
-    pg_restore -O osmium_pgsql.backup | psql osmium osmium_user
+    <pre>psql osmium osmium_user < pgsql/osmium.sql</pre>
 
 Now, use the cache_expressions script to populate the `cacheexpressions`
 table:

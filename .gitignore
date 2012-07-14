@@ -8,3 +8,5 @@ sphinx/*
 static/chrome.css
 .sass-cache
 tests/coverage
+pgsql/osmium-sde-*
+pgsql/osmium-full-*
