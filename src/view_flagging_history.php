@@ -42,7 +42,7 @@ echo "<h2>Flagging history</h2>\n";
 echo "<ul id='summary'>\n";
 $summaryq = \Osmium\Db\query_params('SELECT status, COUNT(flagid) AS count FROM osmium.flags WHERE flaggedbyaccountid = $1 GROUP BY status ORDER BY status ASC', array($accountid));
 $total = 0;
-$statuses = \Osmium\Flag\get_flag_status();
+$statuses = \Osmium\Flag\get_flag_statuses();
 while($row = \Osmium\Db\fetch_row($summaryq)) {
 	echo '<li>'.$row[1].' '.$statuses[$row[0]]."</li>\n";
 	$total += $row[1];

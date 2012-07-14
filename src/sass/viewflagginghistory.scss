@@ -16,7 +16,9 @@ div#vflaghistory {
 			padding: 0;
 		}
 	}
+}
 
+div#vflaghistory, div#modflags > form {
 	&> table > tbody > tr {
 		&.status0 {
 			background-color: #FFC;
@@ -30,4 +32,8 @@ div#vflaghistory {
 			background-color: #FDD;
 		}
 	}
+}
+
+div#modflags {
+	padding: 0 1em;
 }

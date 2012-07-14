@@ -30,14 +30,6 @@ const MIN_FLAG_WEIGHT = 0;
 /** The maximum flag weight that can be attained. */
 const MAX_FLAG_WEIGHT = 500;
 
-/** Add this quantity to the flag weight of a user when he made a
- * helpful flag. */
-const HELPFUL_FLAG_BONUS = 10;
-
-/** Add this quantity to the flag weight of a user when he made an
- * abusive flag. */
-const ABUSIVE_FLAG_PENALTY = -5;
-
 const FLAG_TYPE_LOADOUT = 1;
 const FLAG_TYPE_COMMENT = 2;
 const FLAG_TYPE_COMMENTREPLY = 3;
@@ -84,11 +76,22 @@ function get_flag_subtypes() {
 /**
  * Get an array of all flag statuses.
  */
-function get_flag_status() {
+function get_flag_statuses() {
 	return array(
 		FLAG_STATUS_NEW => 'new',
 		FLAG_STATUS_HELPFUL => 'helpful',
 		FLAG_STATUS_ABUSIVE => 'abusive',
+		);
+}
+
+/**
+ * Get an array of flag weight changes per status.
+ */
+function get_flag_weight_deltas() {
+	return array(
+		FLAG_STATUS_NEW => 0, /* <- do not change this */
+		FLAG_STATUS_HELPFUL => 10,
+		FLAG_STATUS_ABUSIVE => -5,
 		);
 }
 
