@@ -32,7 +32,7 @@ if($row === false) {
 
 $a = \Osmium\State\get_state('a', array());
 $myprofile = \Osmium\State\is_logged_in() && $a['accountid'] == $_GET['accountid'];
-$ismoderator = $a['ismoderator'] === 't';
+$ismoderator = isset($a['ismoderator']) && $a['ismoderator'] === 't';
 
 $name = \Osmium\Chrome\get_name($row, $rname);
 \Osmium\Chrome\print_header(htmlspecialchars($rname)."'s profile", '..');
