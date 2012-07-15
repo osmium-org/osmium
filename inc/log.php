@@ -16,19 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Page\Main;
+namespace Osmium\Log;
 
-require __DIR__.'/../inc/root.php';
+const LOG_TYPE_CHANGED_FLAG_STATUS = 1;
 
-\Osmium\Chrome\print_header('', '.');
-
-echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
-
-echo "<div class='quick' id='search_mini'>\n";
-\Osmium\Chrome\print_search_form();
-echo "</div>\n<div id='recent_loadouts'>\n";
-echo "<h2>Recently updated</h2>\n";
-\Osmium\Search\print_pretty_results('.', '', 'ORDER BY updatedate DESC', false, 10, 'p', 'No loadouts yet! What are you waiting for?');
-echo "</div>\n";
-
-\Osmium\Chrome\print_footer();
+function add_log_entry($type, $subtype, $target1 = null, $target2 = null, $target3 = null) {
+	return \Osmium\Db\query_params(
+		'INSERT INTO osmium.log (clientid, creationdate, type, subtype, target1, target2, target3) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+		array(\Osmium\State\get_client_id(),
+		      time(),
+		      $type,
+		      $subtype,
+		      $target1,
+		      $target2,
+		      $target3));
+}

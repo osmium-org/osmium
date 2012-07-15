@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.4
 -- Dumped by pg_dump version 9.1.4
--- Started on 2012-07-15 11:22:06 CEST
+-- Started on 2012-07-15 12:32:59 CEST
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -82,7 +82,7 @@ CREATE SEQUENCE accounts_accountid_seq
 
 
 --
--- TOC entry 2215 (class 0 OID 0)
+-- TOC entry 2249 (class 0 OID 0)
 -- Dependencies: 174
 -- Name: accounts_accountid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
 --
@@ -119,7 +119,7 @@ CREATE SEQUENCE loadouts_loadoutid_seq
 
 --
 -- TOC entry 177 (class 1259 OID 17674)
--- Dependencies: 2067 2068 7
+-- Dependencies: 2080 2081 7
 -- Name: loadouts; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -136,7 +136,7 @@ CREATE TABLE loadouts (
 
 --
 -- TOC entry 178 (class 1259 OID 17682)
--- Dependencies: 2050 7
+-- Dependencies: 2063 7
 -- Name: allowedloadoutsanonymous; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -146,7 +146,7 @@ CREATE VIEW allowedloadoutsanonymous AS
 
 --
 -- TOC entry 179 (class 1259 OID 17686)
--- Dependencies: 2051 7
+-- Dependencies: 2064 7
 -- Name: allowedloadoutsbyaccount; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -167,6 +167,44 @@ CREATE TABLE cacheexpressions (
 
 
 --
+-- TOC entry 214 (class 1259 OID 25892)
+-- Dependencies: 7
+-- Name: clients; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE clients (
+    clientid integer NOT NULL,
+    remoteaddress inet NOT NULL,
+    useragent character varying(4095) NOT NULL,
+    accept character varying(1023) NOT NULL,
+    loggedinaccountid integer
+);
+
+
+--
+-- TOC entry 213 (class 1259 OID 25890)
+-- Dependencies: 214 7
+-- Name: clients_clientid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE clients_clientid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- TOC entry 2250 (class 0 OID 0)
+-- Dependencies: 213
+-- Name: clients_clientid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE clients_clientid_seq OWNED BY clients.clientid;
+
+
+--
 -- TOC entry 181 (class 1259 OID 17697)
 -- Dependencies: 7
 -- Name: cookietokens; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
@@ -182,7 +220,7 @@ CREATE TABLE cookietokens (
 
 --
 -- TOC entry 182 (class 1259 OID 17703)
--- Dependencies: 2052 7
+-- Dependencies: 2065 7
 -- Name: editableloadoutsbyaccount; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -322,7 +360,7 @@ CREATE TABLE fittingtags (
 
 --
 -- TOC entry 212 (class 1259 OID 25855)
--- Dependencies: 2072 7
+-- Dependencies: 2085 7
 -- Name: flags; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -343,7 +381,7 @@ CREATE TABLE flags (
 
 --
 -- TOC entry 211 (class 1259 OID 25853)
--- Dependencies: 212 7
+-- Dependencies: 7 212
 -- Name: flags_flagid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
 --
 
@@ -356,7 +394,7 @@ CREATE SEQUENCE flags_flagid_seq
 
 
 --
--- TOC entry 2216 (class 0 OID 0)
+-- TOC entry 2251 (class 0 OID 0)
 -- Dependencies: 211
 -- Name: flags_flagid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
 --
@@ -366,7 +404,7 @@ ALTER SEQUENCE flags_flagid_seq OWNED BY flags.flagid;
 
 --
 -- TOC entry 192 (class 1259 OID 17753)
--- Dependencies: 2053 7
+-- Dependencies: 2066 7
 -- Name: invcharges; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -376,7 +414,7 @@ CREATE VIEW invcharges AS
 
 --
 -- TOC entry 193 (class 1259 OID 17758)
--- Dependencies: 2054 7
+-- Dependencies: 2067 7
 -- Name: invdrones; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -386,7 +424,7 @@ CREATE VIEW invdrones AS
 
 --
 -- TOC entry 194 (class 1259 OID 17763)
--- Dependencies: 2055 7
+-- Dependencies: 2068 7
 -- Name: invmodules; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -396,7 +434,7 @@ CREATE VIEW invmodules AS
 
 --
 -- TOC entry 195 (class 1259 OID 17768)
--- Dependencies: 2056 7
+-- Dependencies: 2069 7
 -- Name: invmetagroups; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -406,7 +444,7 @@ CREATE VIEW invmetagroups AS
 
 --
 -- TOC entry 196 (class 1259 OID 17772)
--- Dependencies: 2057 7
+-- Dependencies: 2070 7
 -- Name: invships; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -416,7 +454,7 @@ CREATE VIEW invships AS
 
 --
 -- TOC entry 197 (class 1259 OID 17777)
--- Dependencies: 2058 7
+-- Dependencies: 2071 7
 -- Name: invskills; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -426,7 +464,7 @@ CREATE VIEW invskills AS
 
 --
 -- TOC entry 198 (class 1259 OID 17782)
--- Dependencies: 2059 7
+-- Dependencies: 2072 7
 -- Name: invusedtypes; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -454,7 +492,7 @@ CREATE TABLE loadoutcommentreplies (
 
 --
 -- TOC entry 209 (class 1259 OID 18265)
--- Dependencies: 7 210
+-- Dependencies: 210 7
 -- Name: loadoutcommentreplies_commentreplyid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
 --
 
@@ -467,7 +505,7 @@ CREATE SEQUENCE loadoutcommentreplies_commentreplyid_seq
 
 
 --
--- TOC entry 2217 (class 0 OID 0)
+-- TOC entry 2252 (class 0 OID 0)
 -- Dependencies: 209
 -- Name: loadoutcommentreplies_commentreplyid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
 --
@@ -521,7 +559,7 @@ CREATE SEQUENCE loadoutcomments_commentid_seq
 
 
 --
--- TOC entry 2218 (class 0 OID 0)
+-- TOC entry 2253 (class 0 OID 0)
 -- Dependencies: 201
 -- Name: loadoutcomments_commentid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
 --
@@ -531,7 +569,7 @@ ALTER SEQUENCE loadoutcomments_commentid_seq OWNED BY loadoutcomments.commentid;
 
 --
 -- TOC entry 208 (class 1259 OID 18246)
--- Dependencies: 2065 7
+-- Dependencies: 2078 7
 -- Name: loadoutcommentslatestrevision; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -556,7 +594,7 @@ CREATE TABLE loadouthistory (
 
 --
 -- TOC entry 203 (class 1259 OID 17808)
--- Dependencies: 2060 7
+-- Dependencies: 2073 7
 -- Name: loadoutslatestrevision; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -566,7 +604,7 @@ CREATE VIEW loadoutslatestrevision AS
 
 --
 -- TOC entry 204 (class 1259 OID 17812)
--- Dependencies: 2061 7
+-- Dependencies: 2074 7
 -- Name: loadoutsmodulelist; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -576,7 +614,7 @@ CREATE VIEW loadoutsmodulelist AS
 
 --
 -- TOC entry 205 (class 1259 OID 17817)
--- Dependencies: 2062 7
+-- Dependencies: 2075 7
 -- Name: loadoutstaglist; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -586,7 +624,7 @@ CREATE VIEW loadoutstaglist AS
 
 --
 -- TOC entry 206 (class 1259 OID 17821)
--- Dependencies: 2063 7
+-- Dependencies: 2076 7
 -- Name: searchableloadouts; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -596,7 +634,7 @@ CREATE VIEW searchableloadouts AS
 
 --
 -- TOC entry 207 (class 1259 OID 18097)
--- Dependencies: 2064 7
+-- Dependencies: 2077 7
 -- Name: loadoutssearchdata; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -605,7 +643,48 @@ CREATE VIEW loadoutssearchdata AS
 
 
 --
--- TOC entry 2066 (class 2604 OID 17831)
+-- TOC entry 216 (class 1259 OID 25909)
+-- Dependencies: 7
+-- Name: log; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE log (
+    logentryid integer NOT NULL,
+    clientid integer NOT NULL,
+    creationdate integer NOT NULL,
+    type integer NOT NULL,
+    subtype integer,
+    target1 integer,
+    target2 integer,
+    target3 integer
+);
+
+
+--
+-- TOC entry 215 (class 1259 OID 25907)
+-- Dependencies: 7 216
+-- Name: log_logentryid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE log_logentryid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- TOC entry 2254 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: log_logentryid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE log_logentryid_seq OWNED BY log.logentryid;
+
+
+--
+-- TOC entry 2079 (class 2604 OID 17831)
 -- Dependencies: 174 173
 -- Name: accountid; Type: DEFAULT; Schema: osmium; Owner: -
 --
@@ -614,7 +693,16 @@ ALTER TABLE ONLY accounts ALTER COLUMN accountid SET DEFAULT nextval('accounts_a
 
 
 --
--- TOC entry 2071 (class 2604 OID 25858)
+-- TOC entry 2086 (class 2604 OID 25895)
+-- Dependencies: 213 214 214
+-- Name: clientid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY clients ALTER COLUMN clientid SET DEFAULT nextval('clients_clientid_seq'::regclass);
+
+
+--
+-- TOC entry 2084 (class 2604 OID 25858)
 -- Dependencies: 211 212 212
 -- Name: flagid; Type: DEFAULT; Schema: osmium; Owner: -
 --
@@ -623,7 +711,7 @@ ALTER TABLE ONLY flags ALTER COLUMN flagid SET DEFAULT nextval('flags_flagid_seq
 
 
 --
--- TOC entry 2070 (class 2604 OID 18270)
+-- TOC entry 2083 (class 2604 OID 18270)
 -- Dependencies: 210 209 210
 -- Name: commentreplyid; Type: DEFAULT; Schema: osmium; Owner: -
 --
@@ -632,7 +720,7 @@ ALTER TABLE ONLY loadoutcommentreplies ALTER COLUMN commentreplyid SET DEFAULT n
 
 
 --
--- TOC entry 2069 (class 2604 OID 17833)
+-- TOC entry 2082 (class 2604 OID 17833)
 -- Dependencies: 201 200
 -- Name: commentid; Type: DEFAULT; Schema: osmium; Owner: -
 --
@@ -641,7 +729,16 @@ ALTER TABLE ONLY loadoutcomments ALTER COLUMN commentid SET DEFAULT nextval('loa
 
 
 --
--- TOC entry 2076 (class 2606 OID 17835)
+-- TOC entry 2087 (class 2604 OID 25912)
+-- Dependencies: 216 215 216
+-- Name: logentryid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY log ALTER COLUMN logentryid SET DEFAULT nextval('log_logentryid_seq'::regclass);
+
+
+--
+-- TOC entry 2091 (class 2606 OID 17835)
 -- Dependencies: 172 172 172
 -- Name: accountfavorites_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -651,7 +748,7 @@ ALTER TABLE ONLY accountfavorites
 
 
 --
--- TOC entry 2079 (class 2606 OID 17837)
+-- TOC entry 2094 (class 2606 OID 17837)
 -- Dependencies: 173 173
 -- Name: accounts_accountname_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -661,7 +758,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- TOC entry 2084 (class 2606 OID 17839)
+-- TOC entry 2099 (class 2606 OID 17839)
 -- Dependencies: 173 173
 -- Name: accounts_characterid_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -671,7 +768,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- TOC entry 2086 (class 2606 OID 17841)
+-- TOC entry 2101 (class 2606 OID 17841)
 -- Dependencies: 173 173
 -- Name: accounts_charactername_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -681,7 +778,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- TOC entry 2092 (class 2606 OID 17843)
+-- TOC entry 2107 (class 2606 OID 17843)
 -- Dependencies: 173 173
 -- Name: accounts_nickname_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -691,7 +788,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- TOC entry 2094 (class 2606 OID 17845)
+-- TOC entry 2109 (class 2606 OID 17845)
 -- Dependencies: 173 173
 -- Name: accounts_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -701,7 +798,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- TOC entry 2097 (class 2606 OID 17847)
+-- TOC entry 2112 (class 2606 OID 17847)
 -- Dependencies: 175 175 175
 -- Name: accountsettings_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -711,7 +808,7 @@ ALTER TABLE ONLY accountsettings
 
 
 --
--- TOC entry 2105 (class 2606 OID 17849)
+-- TOC entry 2120 (class 2606 OID 17849)
 -- Dependencies: 180 180
 -- Name: cacheexpressions_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -721,7 +818,27 @@ ALTER TABLE ONLY cacheexpressions
 
 
 --
--- TOC entry 2109 (class 2606 OID 17851)
+-- TOC entry 2200 (class 2606 OID 25900)
+-- Dependencies: 214 214
+-- Name: clients_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY clients
+    ADD CONSTRAINT clients_pkey PRIMARY KEY (clientid);
+
+
+--
+-- TOC entry 2203 (class 2606 OID 25902)
+-- Dependencies: 214 214 214 214 214
+-- Name: clients_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY clients
+    ADD CONSTRAINT clients_uniq UNIQUE (remoteaddress, useragent, accept, loggedinaccountid);
+
+
+--
+-- TOC entry 2124 (class 2606 OID 17851)
 -- Dependencies: 181 181
 -- Name: cookietokens_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -731,7 +848,7 @@ ALTER TABLE ONLY cookietokens
 
 
 --
--- TOC entry 2113 (class 2606 OID 17853)
+-- TOC entry 2128 (class 2606 OID 17853)
 -- Dependencies: 183 183 183 183
 -- Name: fittingchargepresets_fittinghash_presetid_name_unique; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -741,7 +858,7 @@ ALTER TABLE ONLY fittingchargepresets
 
 
 --
--- TOC entry 2115 (class 2606 OID 17855)
+-- TOC entry 2130 (class 2606 OID 17855)
 -- Dependencies: 183 183 183 183
 -- Name: fittingchargepresets_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -751,7 +868,7 @@ ALTER TABLE ONLY fittingchargepresets
 
 
 --
--- TOC entry 2120 (class 2606 OID 17857)
+-- TOC entry 2135 (class 2606 OID 17857)
 -- Dependencies: 184 184 184 184 184 184
 -- Name: fittingcharges_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -761,7 +878,7 @@ ALTER TABLE ONLY fittingcharges
 
 
 --
--- TOC entry 2125 (class 2606 OID 17859)
+-- TOC entry 2140 (class 2606 OID 17859)
 -- Dependencies: 185 185 185
 -- Name: fittingdeltas_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -771,7 +888,7 @@ ALTER TABLE ONLY fittingdeltas
 
 
 --
--- TOC entry 2128 (class 2606 OID 17861)
+-- TOC entry 2143 (class 2606 OID 17861)
 -- Dependencies: 186 186 186
 -- Name: fittingdronepresets_fittinghash_name_unique; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -781,7 +898,7 @@ ALTER TABLE ONLY fittingdronepresets
 
 
 --
--- TOC entry 2130 (class 2606 OID 17863)
+-- TOC entry 2145 (class 2606 OID 17863)
 -- Dependencies: 186 186 186
 -- Name: fittingdronepresets_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -791,7 +908,7 @@ ALTER TABLE ONLY fittingdronepresets
 
 
 --
--- TOC entry 2133 (class 2606 OID 17865)
+-- TOC entry 2148 (class 2606 OID 17865)
 -- Dependencies: 187 187 187 187
 -- Name: fittingdrones_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -801,7 +918,7 @@ ALTER TABLE ONLY fittingdrones
 
 
 --
--- TOC entry 2136 (class 2606 OID 17867)
+-- TOC entry 2151 (class 2606 OID 17867)
 -- Dependencies: 188 188 188 188 188
 -- Name: fittingmodules_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -811,7 +928,7 @@ ALTER TABLE ONLY fittingmodules
 
 
 --
--- TOC entry 2139 (class 2606 OID 17869)
+-- TOC entry 2154 (class 2606 OID 17869)
 -- Dependencies: 189 189 189
 -- Name: fittingpresets_fittinghash_name_unique; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -821,7 +938,7 @@ ALTER TABLE ONLY fittingpresets
 
 
 --
--- TOC entry 2141 (class 2606 OID 17871)
+-- TOC entry 2156 (class 2606 OID 17871)
 -- Dependencies: 189 189 189
 -- Name: fittingpresets_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -831,7 +948,7 @@ ALTER TABLE ONLY fittingpresets
 
 
 --
--- TOC entry 2144 (class 2606 OID 17873)
+-- TOC entry 2159 (class 2606 OID 17873)
 -- Dependencies: 190 190
 -- Name: fittings_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -841,7 +958,7 @@ ALTER TABLE ONLY fittings
 
 
 --
--- TOC entry 2147 (class 2606 OID 17875)
+-- TOC entry 2162 (class 2606 OID 17875)
 -- Dependencies: 191 191 191
 -- Name: fittingtags_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -851,7 +968,7 @@ ALTER TABLE ONLY fittingtags
 
 
 --
--- TOC entry 2175 (class 2606 OID 25864)
+-- TOC entry 2190 (class 2606 OID 25864)
 -- Dependencies: 212 212
 -- Name: flags_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -861,7 +978,7 @@ ALTER TABLE ONLY flags
 
 
 --
--- TOC entry 2170 (class 2606 OID 18275)
+-- TOC entry 2185 (class 2606 OID 18275)
 -- Dependencies: 210 210
 -- Name: loadoutcommentreplies_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -871,7 +988,7 @@ ALTER TABLE ONLY loadoutcommentreplies
 
 
 --
--- TOC entry 2151 (class 2606 OID 17881)
+-- TOC entry 2166 (class 2606 OID 17881)
 -- Dependencies: 199 199 199
 -- Name: loadoutcommentrevisions_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -881,7 +998,7 @@ ALTER TABLE ONLY loadoutcommentrevisions
 
 
 --
--- TOC entry 2158 (class 2606 OID 17883)
+-- TOC entry 2173 (class 2606 OID 17883)
 -- Dependencies: 200 200
 -- Name: loadoutcomments_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -891,7 +1008,7 @@ ALTER TABLE ONLY loadoutcomments
 
 
 --
--- TOC entry 2163 (class 2606 OID 17885)
+-- TOC entry 2178 (class 2606 OID 17885)
 -- Dependencies: 202 202 202
 -- Name: loadouthistory_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -901,7 +1018,7 @@ ALTER TABLE ONLY loadouthistory
 
 
 --
--- TOC entry 2101 (class 2606 OID 17887)
+-- TOC entry 2116 (class 2606 OID 17887)
 -- Dependencies: 177 177
 -- Name: loadouts_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -911,7 +1028,17 @@ ALTER TABLE ONLY loadouts
 
 
 --
--- TOC entry 2073 (class 1259 OID 17888)
+-- TOC entry 2208 (class 2606 OID 25919)
+-- Dependencies: 216 216
+-- Name: log_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY log
+    ADD CONSTRAINT log_pkey PRIMARY KEY (logentryid);
+
+
+--
+-- TOC entry 2088 (class 1259 OID 17888)
 -- Dependencies: 172
 -- Name: accountfavorites_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -920,7 +1047,7 @@ CREATE INDEX accountfavorites_accountid_idx ON accountfavorites USING btree (acc
 
 
 --
--- TOC entry 2074 (class 1259 OID 17889)
+-- TOC entry 2089 (class 1259 OID 17889)
 -- Dependencies: 172
 -- Name: accountfavorites_loadoutid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -929,7 +1056,7 @@ CREATE INDEX accountfavorites_loadoutid_idx ON accountfavorites USING btree (loa
 
 
 --
--- TOC entry 2077 (class 1259 OID 17890)
+-- TOC entry 2092 (class 1259 OID 17890)
 -- Dependencies: 173
 -- Name: accounts_accountname_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -938,7 +1065,7 @@ CREATE INDEX accounts_accountname_idx ON accounts USING btree (accountname);
 
 
 --
--- TOC entry 2080 (class 1259 OID 17891)
+-- TOC entry 2095 (class 1259 OID 17891)
 -- Dependencies: 173
 -- Name: accounts_allianceid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -947,7 +1074,7 @@ CREATE INDEX accounts_allianceid_idx ON accounts USING btree (allianceid);
 
 
 --
--- TOC entry 2081 (class 1259 OID 17892)
+-- TOC entry 2096 (class 1259 OID 17892)
 -- Dependencies: 173
 -- Name: accounts_apiverified_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -956,7 +1083,7 @@ CREATE INDEX accounts_apiverified_idx ON accounts USING btree (apiverified);
 
 
 --
--- TOC entry 2082 (class 1259 OID 17893)
+-- TOC entry 2097 (class 1259 OID 17893)
 -- Dependencies: 173
 -- Name: accounts_characterid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -965,7 +1092,7 @@ CREATE INDEX accounts_characterid_idx ON accounts USING btree (characterid);
 
 
 --
--- TOC entry 2087 (class 1259 OID 17894)
+-- TOC entry 2102 (class 1259 OID 17894)
 -- Dependencies: 173
 -- Name: accounts_corporationid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -974,7 +1101,7 @@ CREATE INDEX accounts_corporationid_idx ON accounts USING btree (corporationid);
 
 
 --
--- TOC entry 2088 (class 1259 OID 17895)
+-- TOC entry 2103 (class 1259 OID 17895)
 -- Dependencies: 173
 -- Name: accounts_isfittingmanager_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -983,7 +1110,7 @@ CREATE INDEX accounts_isfittingmanager_idx ON accounts USING btree (isfittingman
 
 
 --
--- TOC entry 2089 (class 1259 OID 17896)
+-- TOC entry 2104 (class 1259 OID 17896)
 -- Dependencies: 173
 -- Name: accounts_ismoderator_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -992,7 +1119,7 @@ CREATE INDEX accounts_ismoderator_idx ON accounts USING btree (ismoderator);
 
 
 --
--- TOC entry 2090 (class 1259 OID 18094)
+-- TOC entry 2105 (class 1259 OID 18094)
 -- Dependencies: 173
 -- Name: accounts_nickname_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1001,7 +1128,7 @@ CREATE INDEX accounts_nickname_idx ON accounts USING btree (nickname);
 
 
 --
--- TOC entry 2095 (class 1259 OID 17897)
+-- TOC entry 2110 (class 1259 OID 17897)
 -- Dependencies: 175
 -- Name: accountsettings_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1010,7 +1137,43 @@ CREATE INDEX accountsettings_accountid_idx ON accountsettings USING btree (accou
 
 
 --
--- TOC entry 2106 (class 1259 OID 17898)
+-- TOC entry 2197 (class 1259 OID 25906)
+-- Dependencies: 214
+-- Name: clients_accept_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX clients_accept_idx ON clients USING btree (accept);
+
+
+--
+-- TOC entry 2198 (class 1259 OID 25903)
+-- Dependencies: 214
+-- Name: clients_loggedinaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX clients_loggedinaccountid_idx ON clients USING btree (loggedinaccountid);
+
+
+--
+-- TOC entry 2201 (class 1259 OID 25904)
+-- Dependencies: 214
+-- Name: clients_remoteaddress_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX clients_remoteaddress_idx ON clients USING btree (remoteaddress);
+
+
+--
+-- TOC entry 2204 (class 1259 OID 25905)
+-- Dependencies: 214
+-- Name: clients_useragent_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX clients_useragent_idx ON clients USING btree (useragent);
+
+
+--
+-- TOC entry 2121 (class 1259 OID 17898)
 -- Dependencies: 181
 -- Name: cookietokens_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1019,7 +1182,7 @@ CREATE INDEX cookietokens_accountid_idx ON cookietokens USING btree (accountid);
 
 
 --
--- TOC entry 2107 (class 1259 OID 17899)
+-- TOC entry 2122 (class 1259 OID 17899)
 -- Dependencies: 181
 -- Name: cookietokens_expirationdate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1028,7 +1191,7 @@ CREATE INDEX cookietokens_expirationdate_idx ON cookietokens USING btree (expira
 
 
 --
--- TOC entry 2110 (class 1259 OID 17900)
+-- TOC entry 2125 (class 1259 OID 17900)
 -- Dependencies: 183
 -- Name: fittingchargepresets_fittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1037,7 +1200,7 @@ CREATE INDEX fittingchargepresets_fittinghash_idx ON fittingchargepresets USING 
 
 
 --
--- TOC entry 2111 (class 1259 OID 17901)
+-- TOC entry 2126 (class 1259 OID 17901)
 -- Dependencies: 183 183
 -- Name: fittingchargepresets_fittinghash_presetid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1046,7 +1209,7 @@ CREATE INDEX fittingchargepresets_fittinghash_presetid_idx ON fittingchargeprese
 
 
 --
--- TOC entry 2116 (class 1259 OID 17902)
+-- TOC entry 2131 (class 1259 OID 17902)
 -- Dependencies: 184
 -- Name: fittingcharges_fittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1055,7 +1218,7 @@ CREATE INDEX fittingcharges_fittinghash_idx ON fittingcharges USING btree (fitti
 
 
 --
--- TOC entry 2117 (class 1259 OID 17903)
+-- TOC entry 2132 (class 1259 OID 17903)
 -- Dependencies: 184 184 184
 -- Name: fittingcharges_fittinghash_presetid_chargepresetid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1064,7 +1227,7 @@ CREATE INDEX fittingcharges_fittinghash_presetid_chargepresetid_idx ON fittingch
 
 
 --
--- TOC entry 2118 (class 1259 OID 17904)
+-- TOC entry 2133 (class 1259 OID 17904)
 -- Dependencies: 184 184 184 184
 -- Name: fittingcharges_fittinghash_presetid_slottype_index_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1073,7 +1236,7 @@ CREATE INDEX fittingcharges_fittinghash_presetid_slottype_index_idx ON fittingch
 
 
 --
--- TOC entry 2121 (class 1259 OID 17905)
+-- TOC entry 2136 (class 1259 OID 17905)
 -- Dependencies: 184
 -- Name: fittingcharges_typeid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1082,7 +1245,7 @@ CREATE INDEX fittingcharges_typeid_idx ON fittingcharges USING btree (typeid);
 
 
 --
--- TOC entry 2122 (class 1259 OID 17906)
+-- TOC entry 2137 (class 1259 OID 17906)
 -- Dependencies: 185
 -- Name: fittingdeltas_fittinghash1_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1091,7 +1254,7 @@ CREATE INDEX fittingdeltas_fittinghash1_idx ON fittingdeltas USING btree (fittin
 
 
 --
--- TOC entry 2123 (class 1259 OID 17907)
+-- TOC entry 2138 (class 1259 OID 17907)
 -- Dependencies: 185
 -- Name: fittingdeltas_fittinghash2_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1100,7 +1263,7 @@ CREATE INDEX fittingdeltas_fittinghash2_idx ON fittingdeltas USING btree (fittin
 
 
 --
--- TOC entry 2126 (class 1259 OID 17908)
+-- TOC entry 2141 (class 1259 OID 17908)
 -- Dependencies: 186
 -- Name: fittingdronepresets_fittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1109,7 +1272,7 @@ CREATE INDEX fittingdronepresets_fittinghash_idx ON fittingdronepresets USING bt
 
 
 --
--- TOC entry 2131 (class 1259 OID 17909)
+-- TOC entry 2146 (class 1259 OID 17909)
 -- Dependencies: 187 187
 -- Name: fittingdrones_fittinghash_dronepresetid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1118,7 +1281,7 @@ CREATE INDEX fittingdrones_fittinghash_dronepresetid_idx ON fittingdrones USING 
 
 
 --
--- TOC entry 2134 (class 1259 OID 17910)
+-- TOC entry 2149 (class 1259 OID 17910)
 -- Dependencies: 187
 -- Name: fittingdrones_typeid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1127,7 +1290,7 @@ CREATE INDEX fittingdrones_typeid_idx ON fittingdrones USING btree (typeid);
 
 
 --
--- TOC entry 2137 (class 1259 OID 17911)
+-- TOC entry 2152 (class 1259 OID 17911)
 -- Dependencies: 189
 -- Name: fittingpresets_fittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1136,7 +1299,7 @@ CREATE INDEX fittingpresets_fittinghash_idx ON fittingpresets USING btree (fitti
 
 
 --
--- TOC entry 2142 (class 1259 OID 17912)
+-- TOC entry 2157 (class 1259 OID 17912)
 -- Dependencies: 190
 -- Name: fittings_hullid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1145,7 +1308,7 @@ CREATE INDEX fittings_hullid_idx ON fittings USING btree (hullid);
 
 
 --
--- TOC entry 2145 (class 1259 OID 17913)
+-- TOC entry 2160 (class 1259 OID 17913)
 -- Dependencies: 191
 -- Name: fittingtags_fittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1154,7 +1317,7 @@ CREATE INDEX fittingtags_fittinghash_idx ON fittingtags USING btree (fittinghash
 
 
 --
--- TOC entry 2148 (class 1259 OID 17914)
+-- TOC entry 2163 (class 1259 OID 17914)
 -- Dependencies: 191
 -- Name: fittingtags_tagname_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1163,7 +1326,7 @@ CREATE INDEX fittingtags_tagname_idx ON fittingtags USING btree (tagname);
 
 
 --
--- TOC entry 2172 (class 1259 OID 25870)
+-- TOC entry 2187 (class 1259 OID 25870)
 -- Dependencies: 212
 -- Name: flags_createdat_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1172,7 +1335,7 @@ CREATE INDEX flags_createdat_idx ON flags USING btree (createdat);
 
 
 --
--- TOC entry 2173 (class 1259 OID 25871)
+-- TOC entry 2188 (class 1259 OID 25871)
 -- Dependencies: 212
 -- Name: flags_flaggedbyaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1181,7 +1344,7 @@ CREATE INDEX flags_flaggedbyaccountid_idx ON flags USING btree (flaggedbyaccount
 
 
 --
--- TOC entry 2176 (class 1259 OID 25872)
+-- TOC entry 2191 (class 1259 OID 25872)
 -- Dependencies: 212
 -- Name: flags_status_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1190,7 +1353,7 @@ CREATE INDEX flags_status_idx ON flags USING btree (status);
 
 
 --
--- TOC entry 2177 (class 1259 OID 25873)
+-- TOC entry 2192 (class 1259 OID 25873)
 -- Dependencies: 212
 -- Name: flags_subtype_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1199,7 +1362,7 @@ CREATE INDEX flags_subtype_idx ON flags USING btree (subtype);
 
 
 --
--- TOC entry 2178 (class 1259 OID 25874)
+-- TOC entry 2193 (class 1259 OID 25874)
 -- Dependencies: 212
 -- Name: flags_target1_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1208,7 +1371,7 @@ CREATE INDEX flags_target1_idx ON flags USING btree (target1);
 
 
 --
--- TOC entry 2179 (class 1259 OID 25875)
+-- TOC entry 2194 (class 1259 OID 25875)
 -- Dependencies: 212
 -- Name: flags_target2_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1217,7 +1380,7 @@ CREATE INDEX flags_target2_idx ON flags USING btree (target2);
 
 
 --
--- TOC entry 2180 (class 1259 OID 25876)
+-- TOC entry 2195 (class 1259 OID 25876)
 -- Dependencies: 212
 -- Name: flags_target3_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1226,7 +1389,7 @@ CREATE INDEX flags_target3_idx ON flags USING btree (target3);
 
 
 --
--- TOC entry 2181 (class 1259 OID 25877)
+-- TOC entry 2196 (class 1259 OID 25877)
 -- Dependencies: 212
 -- Name: flags_type_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1235,7 +1398,7 @@ CREATE INDEX flags_type_idx ON flags USING btree (type);
 
 
 --
--- TOC entry 2166 (class 1259 OID 18291)
+-- TOC entry 2181 (class 1259 OID 18291)
 -- Dependencies: 210
 -- Name: loadoutcommentreplies_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1244,7 +1407,7 @@ CREATE INDEX loadoutcommentreplies_accountid_idx ON loadoutcommentreplies USING 
 
 
 --
--- TOC entry 2167 (class 1259 OID 18292)
+-- TOC entry 2182 (class 1259 OID 18292)
 -- Dependencies: 210
 -- Name: loadoutcommentreplies_commentid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1253,7 +1416,7 @@ CREATE INDEX loadoutcommentreplies_commentid_idx ON loadoutcommentreplies USING 
 
 
 --
--- TOC entry 2168 (class 1259 OID 18293)
+-- TOC entry 2183 (class 1259 OID 18293)
 -- Dependencies: 210
 -- Name: loadoutcommentreplies_creationdate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1262,7 +1425,7 @@ CREATE INDEX loadoutcommentreplies_creationdate_idx ON loadoutcommentreplies USI
 
 
 --
--- TOC entry 2171 (class 1259 OID 18294)
+-- TOC entry 2186 (class 1259 OID 18294)
 -- Dependencies: 210
 -- Name: loadoutcommentreplies_updatedbyaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1271,7 +1434,7 @@ CREATE INDEX loadoutcommentreplies_updatedbyaccountid_idx ON loadoutcommentrepli
 
 
 --
--- TOC entry 2149 (class 1259 OID 17923)
+-- TOC entry 2164 (class 1259 OID 17923)
 -- Dependencies: 199
 -- Name: loadoutcommentrevisions_commentid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1280,7 +1443,7 @@ CREATE INDEX loadoutcommentrevisions_commentid_idx ON loadoutcommentrevisions US
 
 
 --
--- TOC entry 2152 (class 1259 OID 17924)
+-- TOC entry 2167 (class 1259 OID 17924)
 -- Dependencies: 199
 -- Name: loadoutcommentrevisions_revision_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1289,7 +1452,7 @@ CREATE INDEX loadoutcommentrevisions_revision_idx ON loadoutcommentrevisions USI
 
 
 --
--- TOC entry 2153 (class 1259 OID 17925)
+-- TOC entry 2168 (class 1259 OID 17925)
 -- Dependencies: 199
 -- Name: loadoutcommentrevisions_updatedbyaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1298,7 +1461,7 @@ CREATE INDEX loadoutcommentrevisions_updatedbyaccountid_idx ON loadoutcommentrev
 
 
 --
--- TOC entry 2154 (class 1259 OID 17926)
+-- TOC entry 2169 (class 1259 OID 17926)
 -- Dependencies: 200
 -- Name: loadoutcomments_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1307,7 +1470,7 @@ CREATE INDEX loadoutcomments_accountid_idx ON loadoutcomments USING btree (loado
 
 
 --
--- TOC entry 2155 (class 1259 OID 17927)
+-- TOC entry 2170 (class 1259 OID 17927)
 -- Dependencies: 200
 -- Name: loadoutcomments_creationdate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1316,7 +1479,7 @@ CREATE INDEX loadoutcomments_creationdate_idx ON loadoutcomments USING btree (cr
 
 
 --
--- TOC entry 2156 (class 1259 OID 17928)
+-- TOC entry 2171 (class 1259 OID 17928)
 -- Dependencies: 200
 -- Name: loadoutcomments_loadoutid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1325,7 +1488,7 @@ CREATE INDEX loadoutcomments_loadoutid_idx ON loadoutcomments USING btree (loado
 
 
 --
--- TOC entry 2159 (class 1259 OID 17929)
+-- TOC entry 2174 (class 1259 OID 17929)
 -- Dependencies: 200
 -- Name: loadoutcomments_revision_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1334,7 +1497,7 @@ CREATE INDEX loadoutcomments_revision_idx ON loadoutcomments USING btree (revisi
 
 
 --
--- TOC entry 2160 (class 1259 OID 17930)
+-- TOC entry 2175 (class 1259 OID 17930)
 -- Dependencies: 202
 -- Name: loadouthistory_fittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1343,7 +1506,7 @@ CREATE INDEX loadouthistory_fittinghash_idx ON loadouthistory USING btree (fitti
 
 
 --
--- TOC entry 2161 (class 1259 OID 17931)
+-- TOC entry 2176 (class 1259 OID 17931)
 -- Dependencies: 202
 -- Name: loadouthistory_loadoutid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1352,7 +1515,7 @@ CREATE INDEX loadouthistory_loadoutid_idx ON loadouthistory USING btree (loadout
 
 
 --
--- TOC entry 2164 (class 1259 OID 17932)
+-- TOC entry 2179 (class 1259 OID 17932)
 -- Dependencies: 202
 -- Name: loadouthistory_updatedate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1361,7 +1524,7 @@ CREATE INDEX loadouthistory_updatedate_idx ON loadouthistory USING btree (update
 
 
 --
--- TOC entry 2165 (class 1259 OID 17933)
+-- TOC entry 2180 (class 1259 OID 17933)
 -- Dependencies: 202
 -- Name: loadouthistory_updatedbyaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1370,7 +1533,7 @@ CREATE INDEX loadouthistory_updatedbyaccountid_idx ON loadouthistory USING btree
 
 
 --
--- TOC entry 2098 (class 1259 OID 17934)
+-- TOC entry 2113 (class 1259 OID 17934)
 -- Dependencies: 177
 -- Name: loadouts_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1379,7 +1542,7 @@ CREATE INDEX loadouts_accountid_idx ON loadouts USING btree (accountid);
 
 
 --
--- TOC entry 2099 (class 1259 OID 17935)
+-- TOC entry 2114 (class 1259 OID 17935)
 -- Dependencies: 177
 -- Name: loadouts_editpermission_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1388,7 +1551,7 @@ CREATE INDEX loadouts_editpermission_idx ON loadouts USING btree (editpermission
 
 
 --
--- TOC entry 2102 (class 1259 OID 17936)
+-- TOC entry 2117 (class 1259 OID 17936)
 -- Dependencies: 177
 -- Name: loadouts_viewpermission_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1397,7 +1560,7 @@ CREATE INDEX loadouts_viewpermission_idx ON loadouts USING btree (viewpermission
 
 
 --
--- TOC entry 2103 (class 1259 OID 17937)
+-- TOC entry 2118 (class 1259 OID 17937)
 -- Dependencies: 177
 -- Name: loadouts_visibility_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
@@ -1406,8 +1569,71 @@ CREATE INDEX loadouts_visibility_idx ON loadouts USING btree (visibility);
 
 
 --
--- TOC entry 2182 (class 2606 OID 17938)
--- Dependencies: 172 2093 173
+-- TOC entry 2205 (class 1259 OID 25925)
+-- Dependencies: 216
+-- Name: log_clientid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_clientid_idx ON log USING btree (clientid);
+
+
+--
+-- TOC entry 2206 (class 1259 OID 25926)
+-- Dependencies: 216
+-- Name: log_creationdate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_creationdate_idx ON log USING btree (creationdate);
+
+
+--
+-- TOC entry 2209 (class 1259 OID 25928)
+-- Dependencies: 216
+-- Name: log_subtype_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_subtype_idx ON log USING btree (subtype);
+
+
+--
+-- TOC entry 2210 (class 1259 OID 25929)
+-- Dependencies: 216
+-- Name: log_target1_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_target1_idx ON log USING btree (target1);
+
+
+--
+-- TOC entry 2211 (class 1259 OID 25930)
+-- Dependencies: 216
+-- Name: log_target2_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_target2_idx ON log USING btree (target2);
+
+
+--
+-- TOC entry 2212 (class 1259 OID 25931)
+-- Dependencies: 216
+-- Name: log_target3_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_target3_idx ON log USING btree (target3);
+
+
+--
+-- TOC entry 2213 (class 1259 OID 25927)
+-- Dependencies: 216
+-- Name: log_type_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX log_type_idx ON log USING btree (type);
+
+
+--
+-- TOC entry 2214 (class 2606 OID 17938)
+-- Dependencies: 2108 172 173
 -- Name: accountfavorites_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1416,8 +1642,8 @@ ALTER TABLE ONLY accountfavorites
 
 
 --
--- TOC entry 2183 (class 2606 OID 17943)
--- Dependencies: 2100 177 172
+-- TOC entry 2215 (class 2606 OID 17943)
+-- Dependencies: 177 2115 172
 -- Name: accountfavorites_loadoutid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1426,8 +1652,8 @@ ALTER TABLE ONLY accountfavorites
 
 
 --
--- TOC entry 2184 (class 2606 OID 17948)
--- Dependencies: 2093 173 175
+-- TOC entry 2216 (class 2606 OID 17948)
+-- Dependencies: 173 175 2108
 -- Name: accountsettings_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1436,8 +1662,18 @@ ALTER TABLE ONLY accountsettings
 
 
 --
--- TOC entry 2186 (class 2606 OID 17953)
--- Dependencies: 2093 181 173
+-- TOC entry 2245 (class 2606 OID 25913)
+-- Dependencies: 173 2108 214
+-- Name: clients_loggedinaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY clients
+    ADD CONSTRAINT clients_loggedinaccountid_fkey FOREIGN KEY (loggedinaccountid) REFERENCES accounts(accountid);
+
+
+--
+-- TOC entry 2218 (class 2606 OID 17953)
+-- Dependencies: 2108 173 181
 -- Name: cookietokens_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1446,8 +1682,8 @@ ALTER TABLE ONLY cookietokens
 
 
 --
--- TOC entry 2187 (class 2606 OID 17958)
--- Dependencies: 189 183 183 2140 189
+-- TOC entry 2219 (class 2606 OID 17958)
+-- Dependencies: 183 2155 189 189 183
 -- Name: fittingchargepresets_fittinghash_presetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1456,8 +1692,8 @@ ALTER TABLE ONLY fittingchargepresets
 
 
 --
--- TOC entry 2188 (class 2606 OID 17963)
--- Dependencies: 183 184 184 184 183 183 2114
+-- TOC entry 2220 (class 2606 OID 17963)
+-- Dependencies: 2129 184 183 184 183 184 183
 -- Name: fittingcharges_fittinghash_presetid_chargepresetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1466,8 +1702,8 @@ ALTER TABLE ONLY fittingcharges
 
 
 --
--- TOC entry 2189 (class 2606 OID 17968)
--- Dependencies: 2135 188 188 184 184 184 184 188 188
+-- TOC entry 2221 (class 2606 OID 17968)
+-- Dependencies: 184 184 184 184 188 2150 188 188 188
 -- Name: fittingcharges_fittinghash_presetid_slottype_index_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1476,7 +1712,7 @@ ALTER TABLE ONLY fittingcharges
 
 
 --
--- TOC entry 2190 (class 2606 OID 17973)
+-- TOC entry 2222 (class 2606 OID 17973)
 -- Dependencies: 184 171
 -- Name: fittingcharges_typeid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
@@ -1486,8 +1722,8 @@ ALTER TABLE ONLY fittingcharges
 
 
 --
--- TOC entry 2191 (class 2606 OID 17978)
--- Dependencies: 2143 190 185
+-- TOC entry 2223 (class 2606 OID 17978)
+-- Dependencies: 2158 190 185
 -- Name: fittingdeltas_fittinghash1_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1496,8 +1732,8 @@ ALTER TABLE ONLY fittingdeltas
 
 
 --
--- TOC entry 2192 (class 2606 OID 17983)
--- Dependencies: 190 185 2143
+-- TOC entry 2224 (class 2606 OID 17983)
+-- Dependencies: 2158 185 190
 -- Name: fittingdeltas_fittinghash2_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1506,8 +1742,8 @@ ALTER TABLE ONLY fittingdeltas
 
 
 --
--- TOC entry 2193 (class 2606 OID 17988)
--- Dependencies: 2143 186 190
+-- TOC entry 2225 (class 2606 OID 17988)
+-- Dependencies: 2158 190 186
 -- Name: fittingdronepresets_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1516,8 +1752,8 @@ ALTER TABLE ONLY fittingdronepresets
 
 
 --
--- TOC entry 2194 (class 2606 OID 17993)
--- Dependencies: 186 187 186 2129 187
+-- TOC entry 2226 (class 2606 OID 17993)
+-- Dependencies: 2144 186 187 186 187
 -- Name: fittingdrones_fittinghash_dronepresetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1526,7 +1762,7 @@ ALTER TABLE ONLY fittingdrones
 
 
 --
--- TOC entry 2195 (class 2606 OID 17998)
+-- TOC entry 2227 (class 2606 OID 17998)
 -- Dependencies: 171 187
 -- Name: fittingdrones_typeid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
@@ -1536,8 +1772,8 @@ ALTER TABLE ONLY fittingdrones
 
 
 --
--- TOC entry 2196 (class 2606 OID 18003)
--- Dependencies: 188 2140 189 189 188
+-- TOC entry 2228 (class 2606 OID 18003)
+-- Dependencies: 189 2155 188 189 188
 -- Name: fittingmodules_fittinghash_presetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1546,7 +1782,7 @@ ALTER TABLE ONLY fittingmodules
 
 
 --
--- TOC entry 2197 (class 2606 OID 18008)
+-- TOC entry 2229 (class 2606 OID 18008)
 -- Dependencies: 171 188
 -- Name: fittingmodules_typeid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
@@ -1556,8 +1792,8 @@ ALTER TABLE ONLY fittingmodules
 
 
 --
--- TOC entry 2198 (class 2606 OID 18013)
--- Dependencies: 2143 189 190
+-- TOC entry 2230 (class 2606 OID 18013)
+-- Dependencies: 2158 189 190
 -- Name: fittingpresets_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1566,7 +1802,7 @@ ALTER TABLE ONLY fittingpresets
 
 
 --
--- TOC entry 2199 (class 2606 OID 18018)
+-- TOC entry 2231 (class 2606 OID 18018)
 -- Dependencies: 190 171
 -- Name: fittings_hullid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
@@ -1576,8 +1812,8 @@ ALTER TABLE ONLY fittings
 
 
 --
--- TOC entry 2200 (class 2606 OID 18023)
--- Dependencies: 2143 190 191
+-- TOC entry 2232 (class 2606 OID 18023)
+-- Dependencies: 191 2158 190
 -- Name: fittingtags_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1586,8 +1822,8 @@ ALTER TABLE ONLY fittingtags
 
 
 --
--- TOC entry 2212 (class 2606 OID 25865)
--- Dependencies: 2093 212 173
+-- TOC entry 2244 (class 2606 OID 25865)
+-- Dependencies: 2108 212 173
 -- Name: flags_flaggedbyaccountid; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1596,8 +1832,8 @@ ALTER TABLE ONLY flags
 
 
 --
--- TOC entry 2209 (class 2606 OID 18276)
--- Dependencies: 173 2093 210
+-- TOC entry 2241 (class 2606 OID 18276)
+-- Dependencies: 2108 173 210
 -- Name: loadoutcommentreplies_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1606,8 +1842,8 @@ ALTER TABLE ONLY loadoutcommentreplies
 
 
 --
--- TOC entry 2210 (class 2606 OID 18281)
--- Dependencies: 2157 210 200
+-- TOC entry 2242 (class 2606 OID 18281)
+-- Dependencies: 210 2172 200
 -- Name: loadoutcommentreplies_commentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1616,8 +1852,8 @@ ALTER TABLE ONLY loadoutcommentreplies
 
 
 --
--- TOC entry 2211 (class 2606 OID 18286)
--- Dependencies: 173 210 2093
+-- TOC entry 2243 (class 2606 OID 18286)
+-- Dependencies: 173 2108 210
 -- Name: loadoutcommentreplies_updatedbyaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1626,8 +1862,8 @@ ALTER TABLE ONLY loadoutcommentreplies
 
 
 --
--- TOC entry 2201 (class 2606 OID 18048)
--- Dependencies: 199 2157 200
+-- TOC entry 2233 (class 2606 OID 18048)
+-- Dependencies: 200 199 2172
 -- Name: loadoutcommentrevisions_commentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1636,8 +1872,8 @@ ALTER TABLE ONLY loadoutcommentrevisions
 
 
 --
--- TOC entry 2202 (class 2606 OID 18053)
--- Dependencies: 2093 173 199
+-- TOC entry 2234 (class 2606 OID 18053)
+-- Dependencies: 199 173 2108
 -- Name: loadoutcommentrevisions_updatedbyaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1646,8 +1882,8 @@ ALTER TABLE ONLY loadoutcommentrevisions
 
 
 --
--- TOC entry 2203 (class 2606 OID 18058)
--- Dependencies: 2093 173 200
+-- TOC entry 2235 (class 2606 OID 18058)
+-- Dependencies: 200 2108 173
 -- Name: loadoutcomments_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1656,8 +1892,8 @@ ALTER TABLE ONLY loadoutcomments
 
 
 --
--- TOC entry 2204 (class 2606 OID 18063)
--- Dependencies: 200 177 2100
+-- TOC entry 2236 (class 2606 OID 18063)
+-- Dependencies: 177 2115 200
 -- Name: loadoutcomments_loadoutid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1666,8 +1902,8 @@ ALTER TABLE ONLY loadoutcomments
 
 
 --
--- TOC entry 2205 (class 2606 OID 18068)
--- Dependencies: 200 200 202 202 2162
+-- TOC entry 2237 (class 2606 OID 18068)
+-- Dependencies: 2177 200 200 202 202
 -- Name: loadoutcomments_loadoutid_revision_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1676,8 +1912,8 @@ ALTER TABLE ONLY loadoutcomments
 
 
 --
--- TOC entry 2206 (class 2606 OID 18073)
--- Dependencies: 202 190 2143
+-- TOC entry 2238 (class 2606 OID 18073)
+-- Dependencies: 190 202 2158
 -- Name: loadouthistory_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1686,8 +1922,8 @@ ALTER TABLE ONLY loadouthistory
 
 
 --
--- TOC entry 2207 (class 2606 OID 18078)
--- Dependencies: 202 177 2100
+-- TOC entry 2239 (class 2606 OID 18078)
+-- Dependencies: 202 2115 177
 -- Name: loadouthistory_loadoutid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1696,8 +1932,8 @@ ALTER TABLE ONLY loadouthistory
 
 
 --
--- TOC entry 2208 (class 2606 OID 18083)
--- Dependencies: 2093 202 173
+-- TOC entry 2240 (class 2606 OID 18083)
+-- Dependencies: 202 173 2108
 -- Name: loadouthistory_updatedbyaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1706,8 +1942,8 @@ ALTER TABLE ONLY loadouthistory
 
 
 --
--- TOC entry 2185 (class 2606 OID 18088)
--- Dependencies: 177 2093 173
+-- TOC entry 2217 (class 2606 OID 18088)
+-- Dependencies: 177 173 2108
 -- Name: loadouts_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1715,7 +1951,17 @@ ALTER TABLE ONLY loadouts
     ADD CONSTRAINT loadouts_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
 
 
--- Completed on 2012-07-15 11:22:06 CEST
+--
+-- TOC entry 2246 (class 2606 OID 25920)
+-- Dependencies: 2199 214 216
+-- Name: log_clientid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY log
+    ADD CONSTRAINT log_clientid_fkey FOREIGN KEY (clientid) REFERENCES clients(clientid);
+
+
+-- Completed on 2012-07-15 12:33:00 CEST
 
 --
 -- PostgreSQL database dump complete

@@ -60,6 +60,7 @@ if(isset($_POST['status'])) {
 				$delta,
 				$flag['flaggedbyaccountid']));
 	}
+	\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CHANGED_FLAG_STATUS, $status, $flagid);
 	\Osmium\Db\query('COMMIT;');
 }
 

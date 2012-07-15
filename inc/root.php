@@ -160,6 +160,7 @@ require ROOT.'/inc/fit.php';
 require ROOT.'/inc/dogma.php';
 require ROOT.'/inc/flag.php';
 require ROOT.'/inc/search.php';
+require ROOT.'/inc/log.php';
 
 \Osmium\Forms\post_redirect_get();
 

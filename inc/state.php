@@ -733,3 +733,23 @@ function grant_fit_access($fit, $duration) {
 	$pw[$fit['metadata']['loadoutid']] = time() + $duration;
 	put_state('pw_fits', $pw);
 }
+
+/**
+ * Get the clientid of the current user (inserts a new row in the
+ * clients table if necessary).
+ */
+function get_client_id() {
+	$remote = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
+	$useragent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Unknown';
+	$accept = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : 'Unknown';
+	$accountid = get_state('a', array('accountid' => null))['accountid'];
+
+	$client = array($remote, $useragent, $accept, $accountid);
+
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT clientid FROM osmium.clients WHERE remoteaddress = $1 AND useragent = $2 AND accept = $3 AND ($4::integer IS NULL AND loggedinaccountid IS NULL OR loggedinaccountid = $4)', $client));
+	if($r === false) {
+		$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.clients (remoteaddress, useragent, accept, loggedinaccountid) VALUES ($1, $2, $3, $4) RETURNING clientid', $client));
+	}
+
+	return $r[0];
+}
