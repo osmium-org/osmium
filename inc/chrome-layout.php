@@ -111,7 +111,7 @@ function print_footer() {
 				/* Concatenate & minify */
 				shell_exec('cat '.
 				           implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
-				           .' | uglifyjs -o '
+				           .' | uglifyjs -nc -o '
 				           .escapeshellarg($cachefile));
 			}
 
