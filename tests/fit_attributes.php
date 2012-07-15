@@ -442,4 +442,19 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$this->assertSame($reinforced, $sustained);
 		$this->assertEquals(834.5, 1000 * $reinforced, '', 0.05);
 	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testStrategicCruiserAvailableHardpoints() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 29984); /* Tengu */
+		\Osmium\Fit\add_module($fit, 0, 30122); /* Accelerated Ejection Bay */
+		\Osmium\Fit\add_module($fit, 0, 2410); /* Heavy Missile Launcher */
+		\Osmium\Fit\add_module($fit, 1, 2410);
+
+		$this->assertEquals(5, \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots'));
+		$this->assertEquals(3, \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft'));
+	}
 }

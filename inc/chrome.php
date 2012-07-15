@@ -44,11 +44,12 @@ function format_used($used, $total, $digits, $show_percent, &$overflow) {
 		return '0';
 	}
 
+
 	$ret = format_number($used).' / '.format_number($total);
 	$percent = $total > 0 ? (100 * $used / $total) : 100;
 	$overflow = max(min(6, ceil($percent) - 100), 0);
 	if($show_percent) {
-		$ret .= '<br />'.round(100 * $used / $total, $digits).' %';
+		$ret .= '<br />'.($total == 0 ? '∞' : round(100 * $used / $total, $digits)).' %';
 	}
 
 	return $ret;

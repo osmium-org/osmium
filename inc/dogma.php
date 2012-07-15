@@ -261,6 +261,22 @@ function get_ship_attribute(&$fit, $name, $failonerror = true) {
 		}
 
 		return $base;
+	} else if(in_array($name, array('turretSlotsLeft', 'launcherSlotsLeft'))) {
+		$base = 0;
+		$type = substr($name, 0, -9);
+
+		if(isset($fit['dogma']['modules']['subsystem'])) {
+			foreach($fit['dogma']['modules']['subsystem'] as $subsystem) {
+				if(isset($subsystem[$type.'HardPointModifier'])) {
+					$base += $subsystem[$type.'HardPointModifier'];
+				}
+			}
+		}
+
+		return $base + get_final_attribute_value($fit,
+		                                         array('name' => $name,
+		                                               'source' => array('ship')),
+		                                         $failonerror);
 	}
 
 	return get_final_attribute_value($fit,
