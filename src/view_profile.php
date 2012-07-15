@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Page\NewFitting;
+namespace Osmium\Page\ViewProfile;
 
 require __DIR__.'/../inc/root.php';
 
@@ -30,7 +30,9 @@ if($row === false) {
 	\Osmium\fatal(404, 'Invalid accountid.');
 }
 
-$myprofile = \Osmium\State\is_logged_in() && \Osmium\State\get_state('a', array())['accountid'] == $_GET['accountid'];
+$a = \Osmium\State\get_state('a', array());
+$myprofile = \Osmium\State\is_logged_in() && $a['accountid'] == $_GET['accountid'];
+$ismoderator = $a['ismoderator'] === 't';
 
 $name = \Osmium\Chrome\get_name($row, $rname);
 \Osmium\Chrome\print_header(htmlspecialchars($rname)."'s profile", '..');
@@ -65,9 +67,9 @@ echo $sep;
 
 echo "<tr>\n<th rowspan='1'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n";
 
-if($myprofile) {
+if($myprofile || $ismoderator) {
 	echo $sep;
-	echo "<tr>\n<th>private</th>\n<td>flag weight</td>\n<td>".$row['flagweight']."</td>\n</tr>\n";
+	echo "<tr>\n<th>private</th>\n<td>flag weight</td>\n<td>".$row['flagweight']." <a href='../flagginghistory/".$row['accountid']."'>(see flagging history)</a></td>\n</tr>\n";
 }
 
 echo "</tbody>\n</table>\n</header>\n";

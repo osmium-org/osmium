@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.4
 -- Dumped by pg_dump version 9.1.4
--- Started on 2012-07-15 00:00:29 CEST
+-- Started on 2012-07-15 11:22:06 CEST
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -1715,7 +1715,7 @@ ALTER TABLE ONLY loadouts
     ADD CONSTRAINT loadouts_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
 
 
--- Completed on 2012-07-15 00:00:29 CEST
+-- Completed on 2012-07-15 11:22:06 CEST
 
 --
 -- PostgreSQL database dump complete

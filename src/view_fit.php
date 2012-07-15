@@ -31,12 +31,14 @@ if(!\Osmium\State\can_view_fit($loadoutid)) {
 
 if(isset($_GET['revision'])) {
 	$fit = \Osmium\Fit\get_fit($loadoutid, $_GET['revision']);
+	$fitlatestrev = false; /* FIXME this is not always false */
 
 	if($fit === false) {
 		\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, are you sure you specified a valid revision number? (loadoutid: '.$loadoutid.')');
 	}
 } else {
 	$fit = \Osmium\Fit\get_fit($loadoutid);
+	$fitlatestrev = true;
 
 	if($fit === false) {
 		\Osmium\fatal(500, '\Osmium\Fit\get_fit() returned false, please report! (loadoutid: '.$loadoutid.')');
@@ -51,6 +53,7 @@ $commentsallowed = ($commentsallowed === 't');
 $loggedin = \Osmium\State\is_logged_in();
 $a = \Osmium\State\get_state('a', array());
 $ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
+$isflaggable = \Osmium\Flag\is_fit_flaggable($fit);
 
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
 
@@ -212,6 +215,9 @@ echo "<section id='vmeta'>\n<h4>Meta</h4>\n<div>\n<ul>\n";
 if($can_edit) {
 	echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
 	echo "<li><a href='../delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
+}
+if($isflaggable && $fitlatestrev) {
+	echo "<li><a class='dangerous' href='../flag/".$loadoutid."' title='This loadout requires moderator attention'>Flag this loadout</a></li>\n";
 }
 echo "<li><a href='../loadouthistory/$loadoutid'>View revision history</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
@@ -451,6 +457,9 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 			echo " — <a href='../editcomment/".$row['commentid']."'>edit</a>";
 			echo " — <a onclick='return confirm(\"Deleting this comment will also delete all its replies. This operation cannot be undone. Continue?\");' href='../deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
 		}
+		if($isflaggable) {
+			echo " — <a class='dangerous' href='../flagcomment/".$row['commentid']."' title='This comment requires moderator attention'>flag</a>";
+		}
 
 		if($row['loadoutrevision'] < $fit['metadata']['revision']) {
 			echo "<br />\n<span class='outdated'>(this comment applies to a previous revision of this loadout: <a href='?revision=".$row['loadoutrevision']."'>revision #".$row['loadoutrevision']."</a>)</span>\n";
@@ -484,7 +493,9 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 			echo " — <a href='../editcommentreply/".$row['commentreplyid']."'>edit</a>";
 			echo " — <a onclick='return confirm(\"You are about to delete a reply. This operation cannot be undone. Continue?\");' href='../deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
 		}
-
+		if($isflaggable) {
+			echo " — <a class='dangerous' href='../flagcommentreply/".$row['commentreplyid']."' title='This comment reply requires moderator attention'>flag</a>";
+		}
 		echo "</span>";
 
 		echo "</li>\n";

@@ -71,8 +71,14 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo get_navigation_link($relative.'/search', "Search loadouts");
 	echo get_navigation_link($relative.'/new', "New loadout");
 	if(\Osmium\State\is_logged_in()) {
+		$a = \Osmium\State\get_state('a');
+
 		echo get_navigation_link($relative.'/import', "Import loadouts");
 		echo get_navigation_link($relative.'/api_settings', "API settings");
+
+		if($a['ismoderator'] === 't') {
+			echo get_navigation_link($relative.'/moderation/', \Osmium\Flag\MODERATOR_SYMBOL);
+		}
 	} else {
 
 	}
@@ -136,7 +142,7 @@ function print_footer() {
 }
 
 function get_navigation_link($dest, $label) {
-	if(get_significant_uri($dest) == get_significant_uri($_SERVER['REQUEST_URI'])) {
+	if(is_current($dest)) {
 		return "<li><strong><a href='$dest'>$label</a></strong></li>\n";
 	}
 
@@ -144,10 +150,25 @@ function get_navigation_link($dest, $label) {
 }
 
 /** @internal */
-function get_significant_uri($uri) {
-	$uri = explode('?', $uri, 2)[0];
-	$uri = explode('/', $uri);
-	return array_pop($uri);
+function is_current($relativeuri) {
+	$relativeparts = explode('/', explode('?', $relativeuri, 2)[0]);
+	$absoluteparts = explode('/', $uri = explode('?', $_SERVER['REQUEST_URI'], 2)[0]);
+
+	foreach($relativeparts as $p) {
+		if($p === '.') {
+			array_pop($absoluteparts);
+			$absoluteparts[] = '';
+		} else if($p === '..') {
+			if(array_pop($absoluteparts) === '') {
+				array_pop($absoluteparts);
+				$absoluteparts[] = '';
+			}
+		} else {
+			$absoluteparts[] = $p;
+		}
+	}
+
+	return ltrim(implode('/', $absoluteparts), '/') == ltrim($uri, '/');
 }
 
 /**

@@ -8,6 +8,24 @@ $link-color: #1122CC;
 	white-space: nowrap;
 }
 
+@mixin fixed-width-page {
+	max-width: 60em;
+	margin: auto;
+
+	&> header > h2, &> section > h2, &> h2 {
+		margin: 1em 0 0.5em 0;
+		border-bottom: 1px solid black;
+		position: relative;
+
+		&> small {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			color: #888;
+		}
+	}
+}
+
 html, body {
 	margin: 0;
 	padding: 0;
@@ -118,10 +136,7 @@ a {
 	}
 
 	&.dangerous {
-		color: #F30;
-		border-color: #F30;
-
-		&:hover {
+		&:hover, &:focus {
 			color: #F30 !important;
 			border-color: #F30 !important;
 		}

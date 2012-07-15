@@ -30,13 +30,70 @@ const MIN_FLAG_WEIGHT = 0;
 /** The maximum flag weight that can be attained. */
 const MAX_FLAG_WEIGHT = 500;
 
-/** Add this quantity to the flag weight of a user when he made a
- * helpful flag. */
-const HELPFUL_FLAG_BONUS = 10;
+const FLAG_TYPE_LOADOUT = 1;
+const FLAG_TYPE_COMMENT = 2;
+const FLAG_TYPE_COMMENTREPLY = 3;
 
-/** Add this quantity to the flag weight of a user when he made an
- * abusive flag. */
-const ABUSIVE_FLAG_PENALTY = -5;
+/* General subtypes */
+const FLAG_SUBTYPE_OTHER = 0;
+const FLAG_SUBTYPE_OFFENSIVE = 1;
+const FLAG_SUBTYPE_SPAM = 2;
+
+/* Loadout specific */
+const FLAG_SUBTYPE_NOT_A_REAL_LOADOUT = 101;
+
+/* Comment specific */
+const FLAG_SUBTYPE_NOT_CONSTRUCTIVE = 201;
+
+const FLAG_STATUS_NEW = 0;
+const FLAG_STATUS_HELPFUL = 1;
+const FLAG_STATUS_ABUSIVE = 2;
+
+/**
+ * Get an array of all flag types.
+ */
+function get_flag_types() {
+	return array(
+		FLAG_TYPE_LOADOUT => 'loadout',
+		FLAG_TYPE_COMMENT => 'comment',
+		FLAG_TYPE_COMMENTREPLY => 'comment reply',
+		);
+}
+
+/**
+ * Get an array of all flag subtypes.
+ */
+function get_flag_subtypes() {
+	return array(
+		FLAG_SUBTYPE_OTHER => 'other',
+		FLAG_SUBTYPE_OFFENSIVE => 'offensive',
+		FLAG_SUBTYPE_SPAM => 'spam',
+		FLAG_SUBTYPE_NOT_A_REAL_LOADOUT => 'not a real loadout',
+		FLAG_SUBTYPE_NOT_CONSTRUCTIVE => 'not constructive',
+		);
+}
+
+/**
+ * Get an array of all flag statuses.
+ */
+function get_flag_statuses() {
+	return array(
+		FLAG_STATUS_NEW => 'new',
+		FLAG_STATUS_HELPFUL => 'helpful',
+		FLAG_STATUS_ABUSIVE => 'abusive',
+		);
+}
+
+/**
+ * Get an array of flag weight changes per status.
+ */
+function get_flag_weight_deltas() {
+	return array(
+		FLAG_STATUS_NEW => 0, /* <- do not change this */
+		FLAG_STATUS_HELPFUL => 10,
+		FLAG_STATUS_ABUSIVE => -5,
+		);
+}
 
 /**
  * Checks whether a fit can be flagged by the current user.

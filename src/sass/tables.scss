@@ -1,0 +1,39 @@
+table.d {
+	width: 100%;
+	border-collapse: collapse;
+
+	&> thead {
+		border-bottom: 1px solid #888;
+	}
+
+	&> tfoot {
+		border-top: 1px solid #888;
+	}
+
+	&> thead, &> tfoot {
+		background-color: #F4F4F8;
+	}
+
+	&> tbody {
+		&> tr {
+			border-top: 1px dotted #CCC;
+
+			&:first-child {
+				border: none;
+			}
+
+			&:nth-child(2n) > td {
+				background-color: rgba(10, 10, 0, 0.04);
+			}
+		}
+	}
+
+	&> thead, &> tfoot, &> tbody {
+		&> tr {
+			&> td, &> th {
+				padding: 0.25em;
+				text-align: center;
+			}
+		}
+	}
+}

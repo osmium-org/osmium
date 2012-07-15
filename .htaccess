@@ -16,6 +16,7 @@ RewriteRule ^/?favorite/([1-9][0-9]*)$ src/toggle_favorite.php?loadoutid=$1 [L,Q
 RewriteRule ^/?search$ src/search.php [L,QSA]
 RewriteRule ^/?import$ src/import_loadouts.php [L,QSA]
 RewriteRule ^/?profile/([1-9][0-9]*)$ src/view_profile.php?accountid=$1 [L,QSA]
+RewriteRule ^/?flagginghistory/([1-9][0-9]*)$ src/view_flagging_history.php?accountid=$1 [L,QSA]
 RewriteRule ^/?export/(.+)-clf-([1-9][0-9]*)\.json$ src/export_fit.php?type=clf&loadoutid=$2 [L,QSA]
 RewriteRule ^/?export/(.+)-md-([1-9][0-9]*)\.md$ src/export_fit.php?type=md&loadoutid=$2 [L,QSA]
 RewriteRule ^/?export/(.+)-evexml-([1-9][0-9]*)\.xml$ src/export_fit.php?type=evexml&loadoutid=$2 [L,QSA]
@@ -25,6 +26,12 @@ RewriteRule ^/?editcomment/([1-9][0-9]*)$ src/edit_comment.php?id=$1&type=commen
 RewriteRule ^/?editcommentreply/([1-9][0-9]*)$ src/edit_comment.php?id=$1&type=commentreply [L,QSA]
 RewriteRule ^/?deletecomment/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=comment [L,QSA]
 RewriteRule ^/?deletecommentreply/([1-9][0-9]*)$ src/delete_comment.php?id=$1&type=commentreply [L,QSA]
+RewriteRule ^/?flag/([1-9][0-9]*)$ src/cast_flag.php?id=$1&type=loadout [L,QSA]
+RewriteRule ^/?flagcomment/([1-9][0-9]*)$ src/cast_flag.php?id=$1&type=comment [L,QSA]
+RewriteRule ^/?flagcommentreply/([1-9][0-9]*)$ src/cast_flag.php?id=$1&type=commentreply [L,QSA]
+
+RewriteRule ^/?moderation/$ src/moderation/main.php [L,QSA]
+RewriteRule ^/?moderation/flags$ src/moderation/view_flags.php [L,QSA]
 
 RewriteRule !^/?(src|static) - [L,R=404]
 

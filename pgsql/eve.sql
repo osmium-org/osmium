@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.4
 -- Dumped by pg_dump version 9.1.4
--- Started on 2012-07-14 23:51:23 CEST
+-- Started on 2012-07-15 11:22:10 CEST
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -652,7 +652,7 @@ ALTER TABLE ONLY invtypes
     ADD CONSTRAINT invtypes_groupid_fkey FOREIGN KEY (groupid) REFERENCES invgroups(groupid);
 
 
--- Completed on 2012-07-14 23:51:23 CEST
+-- Completed on 2012-07-15 11:22:10 CEST
 
 --
 -- PostgreSQL database dump complete
