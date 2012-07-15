@@ -115,7 +115,9 @@ the `osmium_user` user, follow these steps:
 
 3. Import the Osmium tables/views:
 
-    <pre>psql osmium osmium_user < pgsql/osmium.sql</pre>
+    ~~~~
+    psql osmium osmium_user < pgsql/osmium.sql
+    ~~~~
 
 Updating the Osmium static data dump
 ====================================
@@ -205,7 +207,7 @@ per table in the dump. Then, import the following (in this order):
 
 Import the Osmium schema:
 
-    <pre>psql osmium osmium_user < pgsql/osmium.sql</pre>
+     psql osmium osmium_user < pgsql/osmium.sql
 
 Now, use the cache_expressions script to populate the `cacheexpressions`
 table:
