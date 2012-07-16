@@ -659,7 +659,7 @@ function eval_defassociation(&$fit, $exp) {
 }
 
 function eval_defattribute(&$fit, $exp) {
-	$name = lcfirst($exp['name']);
+	$name = lcfirst(trim($exp['name']));
 	return array('name' => $name, 'source' => $fit['dogma']['source']);
 }
 
