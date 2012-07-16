@@ -121,14 +121,16 @@ function format_long_duration($seconds, $lessthanoneday = '1 day') {
 
 function format_relative_date($date, $now = null) {
 	if($now === null) $now = time();
+	$before = "<time datetime='".date('c', $date)."'>";
+	$after = '</time>';
 
 	if($date > $now || $date < ($now - 2 * 86400)) {
-		return date('Y-m-d', $date);
+		return $before.date('Y-m-d', $date).$after;
 	}
 
 	$duration = $now - $date;
 
-	if($duration < 2) return "less than a second ago";
+	if($duration < 2) return $before."less than a second ago".$after;
 
 	$s = $duration % 60;
 	$m = (($duration - $s) / 60) % 60;
@@ -147,7 +149,7 @@ function format_relative_date($date, $now = null) {
 		$ret[] = $v.$k;
 	}
 
-	return implode(' ', array_slice($ret, 0, 2)).' ago';
+	return $before.implode(' ', array_slice($ret, 0, 2)).' ago'.$after;
 }
 
 /**

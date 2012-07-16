@@ -153,14 +153,14 @@ if($author['apiverified'] === 't') {
 }
 echo "<small>submitted by</small><br />\n";
 echo \Osmium\Chrome\format_character_name($author, '..', $rauthorname)."<br />\n";
-echo "<time datetime='".date('c', $fit['metadata']['creation_date'])."'>".\Osmium\Chrome\format_relative_date($fit['metadata']['creation_date'])."</time>\n";
+echo \Osmium\Chrome\format_relative_date($fit['metadata']['creation_date'])."\n";
 echo "</div>\n";
 
 if($fit['metadata']['revision'] > 1) {
 	echo "<div class='author edit'>\n";
 	echo "<small>revision #".$fit['metadata']['revision']." edited by</small><br />\n";
 	echo \Osmium\Chrome\format_character_name($lastrev, '..')."<br />\n";
-	echo "<time datetime='".date('c', $lastrev['updatedate'])."'>".\Osmium\Chrome\format_relative_date($lastrev['updatedate'])."</time>\n";
+	echo \Osmium\Chrome\format_relative_date($lastrev['updatedate'])."\n";
 	echo "</div>\n";
 }
 echo "</div>\n";
@@ -433,7 +433,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		}
 		echo "<small>commented by</small><br />\n";
 		echo \Osmium\Chrome\format_character_name($row, '..')."<br />\n";
-		echo "<time datetime='".date('c', $row['creationdate'])."'>".\Osmium\Chrome\format_relative_date($row['creationdate'])."</time>\n";
+		echo \Osmium\Chrome\format_relative_date($row['creationdate'])."\n";
 		echo "</div>\n";
 
 		if($row['commentrevision'] > 1) {
@@ -446,7 +446,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 			           'charactername' => $row['ucharactername'],
 			           'ismoderator' => $row['uismoderator']);
 			echo \Osmium\Chrome\format_character_name($u, '..')."<br />\n";
-			echo "<time datetime='".date('c', $row['updatedate'])."'>".\Osmium\Chrome\format_relative_date($row['updatedate'])."</time>\n";
+			echo \Osmium\Chrome\format_relative_date($row['updatedate'])."\n";
 			echo "</div>\n";
 		}
 
@@ -484,7 +484,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 			echo " <span class='updated' title='This reply was edited (".\Osmium\Chrome\format_relative_date($row['repupdatedate']).").'>✎</span>";
 		}
 
-		echo " — <time datetime='".date('c', $row['repcreationdate'])."'>".\Osmium\Chrome\format_relative_date($row['repcreationdate'])."</time>";
+		echo " — ".\Osmium\Chrome\format_relative_date($row['repcreationdate']);
 
 		echo "<span class='meta'>";
 		echo " — <a href='?jtc=".$row['commentid']."#r".$row['commentreplyid']."'>#</a>";
