@@ -148,13 +148,14 @@ function finalize() {
 		die();
 	}
 
+	$accountid = \Osmium\State\get_state('a')['accountid'];
 	if(isset($fit['metadata']['accountid'])) {
-		$accountid = $fit['metadata']['accountid'];
+		$ownerid = $fit['metadata']['accountid'];
 	} else {
-		$accountid = \Osmium\State\get_state('a')['accountid'];
+		$ownerid = $accountid;
 	}
 
-	\Osmium\Fit\commit_loadout($fit, $accountid, $accountid);
+	\Osmium\Fit\commit_loadout($fit, $ownerid, $accountid);
 	$loadoutid = $fit['metadata']['loadoutid'];
 	$revision = $fit['metadata']['revision'];
 	\Osmium\Fit\reset($fit);
