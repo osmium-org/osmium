@@ -47,8 +47,8 @@ if(isset($_GET['revision'])) {
 
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
 $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, nickname, apiverified, characterid, charactername, ismoderator FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
+list($truecreationdate, $commentsallowed) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT updatedate, allowcomments FROM osmium.loadouts AS l JOIN osmium.loadouthistory AS lh ON (l.loadoutid = lh.loadoutid AND lh.revision = 1) WHERE l.loadoutid = $1', array($loadoutid)));
 
-list($commentsallowed) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT allowcomments FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
 $commentsallowed = ($commentsallowed === 't');
 $loggedin = \Osmium\State\is_logged_in();
 $a = \Osmium\State\get_state('a', array());
@@ -153,7 +153,7 @@ if($author['apiverified'] === 't') {
 }
 echo "<small>submitted by</small><br />\n";
 echo \Osmium\Chrome\format_character_name($author, '..', $rauthorname)."<br />\n";
-echo \Osmium\Chrome\format_relative_date($fit['metadata']['creation_date'])."\n";
+echo \Osmium\Chrome\format_relative_date($truecreationdate)."\n";
 echo "</div>\n";
 
 if($fit['metadata']['revision'] > 1) {
