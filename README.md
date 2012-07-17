@@ -18,6 +18,10 @@ General Public License, version 2.
 Osmium uses the phpass library, released in the public domain.
 <http://www.openwall.com/phpass/>
 
+Osmium uses the Common Loadout Format PHP validator, released under
+the WTFPL license, version 2.
+<https://github.com/Artefact2/common-loadout-format/blob/master/COPYING>
+
 Contact
 -------
 
@@ -25,13 +29,7 @@ Contact
 * `#osmium` on `irc.coldfront.net`
 
 Caveats
-=======
-
-Make sure the cache directories are writeable by your `http` user. You
-can do it by using (assuming your `http` user is in group `http`):
-
-    chgrp -c http cache static/cache
-    chmod -c g+rwx cache static/cache
+-------
 
 If you are NOT using the Apache HTTP Server, you will have to adapt
 the rules in the `.htaccess` file.
@@ -39,29 +37,127 @@ the rules in the `.htaccess` file.
 Running Osmium
 ==============
 
-1. Install the dependencies below.
+Installation
+------------
 
-2. Run `Make` to generate the stylesheet.
+Assuming your webserver process runs with user `http` and group
+`http`, follow the following steps:
 
-3. Start the Sphinx search daemon (usually by running `sphinx-searchd`
+1. Clone the repository, switch to latest stable release, and fetch
+   submodules:
+
+   ~~~~
+   git clone git://github.com/Artefact2/osmium.git
+   cd osmium
+   git checkout production
+   git submodule init
+   git submodule update
+   ~~~~
+
+2. Make cache directories writeable by your webserver:
+
+   ~~~~
+   chgrp http cache static/cache
+   chmod g+rwx cache static/cache
+   ~~~~
+
+3. Install the dependencies listed below.
+
+4. Run `Make` to generate the stylesheet.
+
+5. Start the Sphinx search daemon (usually by running `sphinx-searchd`
    in the `sphinx/` directory).
 
-4. See the caveats above.
-
-5. Copy the example configuration file `config-example.ini` to
+6. Copy the example configuration file `config-example.ini` to
    `config.ini`, and edit it accordingly.
 
-6. See Initial database setup below.
+7. See Initial database setup below.
+
+Initial database setup
+----------------------
+
+Assuming your PostgreSQL database name is `osmium` and it is owned by
+the `osmium_user` user, follow these steps:
+
+1. Get the latest Osmium static data dump (see below for how to get it)
+
+2. Import the Osmium static dump:
+
+    ~~~~
+    xzcat osmium-sde-*.sql.xz | psql osmium osmium_user
+    ~~~~
+
+3. Import the Osmium tables/views:
+
+    ~~~~
+    psql osmium osmium_user < pgsql/osmium.sql
+    ~~~~
+
+Updating
+--------
+
+1. Stop your webserver, and backup your database (you can use
+   `bin/backup_osmium`).
+
+2. Fetch the latest version and use it:
+
+   ~~~~
+   git fetch origin
+   git merge origin/production
+   git submodule update
+   make
+   ~~~~
+
+3. Read the `UPDATING` file for release-specific upgrade instructions.
+
+4. Start your webserver and test changes.
+
+Updating the `eve` database schema
+----------------------------------
+
+*(Only do this if `UPDATING` specifies the `eve` schema has been
+updated.)*
+
+1. Backup the `osmium` schema (`bin/backup_osmium`).
+
+2. Drop the two schemas:
+
+   ~~~~
+   DROP SCHEMA osmium CASCADE;
+   DROP SCHEMA eve CASCADE;
+   ~~~~
+
+3. Redo step 1 and 2 of the initial database setup section (see
+   above).
+
+4. Restore the `osmium` schema.
+
+   ~~~~
+   pg_restore pgsql/osmium-full-XXXXX.pgsql | psql osmium osmium_user
+   ~~~~
+
+Updating the `osmium` database schema
+-------------------------------------
+
+*(Only do this if `UPDATING` specifies the `osmium` schema has been
+updated.)*
+
+1. Backup the `osmium` schema (`bin/backup_osmium`).
+
+2. Apply all the database patches for the version you are upgrading
+   from (if you skipped multiple versions, use all patches in versions
+   greater or equal than the version you are upgrading from):
+
+   ~~~~
+   cat pgsql/patches/<previous_version>/*.sql | psql osmium osmium_user
+   ~~~~
 
 Dependencies
 ============
 
-For users
----------
-
 * PHP >= 5.4 with:
-    PostgreSQL extension,
-    MySQLi extension (not mysqld itself),
+    PostgreSQL extension (`pgsql.so`),
+    MySQLi extension (`mysqli.so`, not mysqld itself),
     cURL extension,
     SimpleXML support,
     zlib extension.
@@ -71,81 +167,22 @@ For users
 * Sphinx search server >= 2.0.4 
   (using the `sphinx.conf` from the `sphinx/` directory)
 
-* CLF repository:
-
-  ~~~~
-  git submodule init          <-- install-time only
-  git submodule update        <-- do this at every upgrade
-  ~~~~
-
 * HTMLPurifier PEAR package, see http://htmlpurifier.org/download#PEAR
+
+* Sass >= 3.2 (http://sass-lang.com/)
 
 * (Optional) UglifyJS (`uglifyjs` should be in your `$PATH`), see
   https://github.com/mishoo/UglifyJS **(heavily recommended for
   production)**
 
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
-  http://pear.horde.org
+  http://pear.horde.org **(heavily recommended for production)**
 
-* (Optional) memcached + PECL/memcached, for obvious reasons
+* (Optional) memcached + PECL/memcached
 
-For developers
---------------
-
-These are only needed if you want to contribute and/or hack the codebase.
-
-* Sass >= 3.2 (http://sass-lang.com/)
-
-* (Optional) PHPUnit
+* (Optional) PHPUnit, for automated tests
 
 * (Optional) Xdebug, for debugging and code coverage reports
-
-Initial database setup
-======================
-
-Assuming your PostgreSQL database name is `osmium` and it is owned by
-the `osmium_user` user, follow these steps:
-
-1. Get the latest Osmium static data dump (see below for how to get it)
-
-2. Import the Osmium static dump:
-
-    <pre>unxz osmium-sde-*.sql.xz
-    cat osmium-sde-*.sql | psql osmium osmium_user</pre>
-
-3. Import the Osmium tables/views:
-
-    ~~~~
-    psql osmium osmium_user < pgsql/osmium.sql
-    ~~~~
-
-Updating the Osmium static data dump
-====================================
-
-Because of the tight dependencies between the EVE tables and the
-Osmium tables, upgrading the EVE DB (for example after an expansion)
-is not as simple as it ought to be. You can do it using the following
-steps:
-
-1. Backup your Osmium schema.
-
-    <pre>pg_dump -n osmium -U osmium_user osmium -F c > OSMIUM_DUMP.backup
-    # or use the bin/backup_osmium script</pre>
-
-2. Delete the `osmium` and `eve` schemas.
-
-    <pre>DROP SCHEMA osmium CASCADE;
-    DROP SCHEMA eve CASCADE;</pre>
-
-3. Follow steps 1 and 2 of the previous section ("Initial database
-   setup").
-
-4. Restore your Osmium schema.
-
-    <pre>pg_restore -O OSMIUM_DUMP.backup | psql osmium osmium_user</pre>
-
-   If you run into integrity issues, you may have to delete some
-   fittings that use removed modules/ships.
 
 Getting the Osmium data dump
 ============================
@@ -154,11 +191,6 @@ The quick way
 -------------
 
 Get it from here: <http://artefact2.com/files/osmium-data/>
-
-Use `unxz` to decompress.
-
-(Please be kind and use this with moderation, I don't have a lot of
-bandwidth! If you can mirror this, please do so.)
 
 The long way
 ------------
