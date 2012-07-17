@@ -422,3 +422,36 @@ function format_sanitize_md_phrasing($markdowntext) {
 
 	return $purifier->purify($html);
 }
+
+function print_market_group_with_children($groups, $groupid, $headinglevel = 1, $formatfunc = null) {
+	if($formatfunc === null) {
+		$formatfunc = function($typeid, $typename) {
+			echo "<li data-typeid='".$typeid."'><img src='http://image.eveonline.com/Render/{$typeid}_256.png' alt='' />".htmlspecialchars($typename)."</li>\n";
+		};
+	}
+
+	$headinglevel = min(max(1, $headinglevel), 6);
+	$g = $groups[$groupid];
+
+	echo "<div data-marketgroupid='".$groupid."' class='mgroup'>\n<h$headinglevel>".$g['groupname']."</h$headinglevel>\n";
+
+	if(isset($g['subgroups'])) {
+		echo "<ul class='subgroups'>\n";
+		foreach($g['subgroups'] as $subgroupid => $foo) {
+			echo "<li>\n";
+			print_market_group_with_children($groups, $subgroupid, $headinglevel + 1, $formatfunc);
+			echo "</li>\n";
+		}
+		echo "</ul>\n";
+	}
+
+	if(isset($g['types'])) {
+		echo "<ul class='types'>\n";
+		foreach($g['types'] as $typeid => $typename) {
+			$formatfunc($typeid, $typename);
+		}
+		echo "</ul>\n";
+	}
+
+	echo "</div>\n";
+}

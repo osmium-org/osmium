@@ -22,20 +22,26 @@ function ship_select() {
 	$fit = \Osmium\State\get_state('new_fit', array());
 
 	print_h1('select ship hull');
-	\Osmium\Forms\print_form_begin();
+	echo "<div id='selectship'>\n";
 
-	$q = \Osmium\Db\query_params('SELECT typeid, typename, groupname FROM osmium.invships ORDER BY groupname ASC, typename ASC', array());
-	$o = array();
-	while($row = \Osmium\Db\fetch_row($q)) {
-		$o[$row[2]][$row[0]] = $row[1];
+	$hierarchy = \Osmium\State\get_cache('new_fit_step1_ship_hierarchy', null);
+	if($hierarchy === null) {
+		$hierarchy = get_ship_hierarchy();
+		\Osmium\State\put_cache('new_fit_step1_ship_hierarchy', $hierarchy);
 	}
 
-	if(isset($fit['ship']['typeid'])) $_POST['hullid'] = $fit['ship']['typeid'];
-	\Osmium\Forms\print_select('', 'hullid', $o, 16, null, 
-	                           \Osmium\Forms\HAS_OPTGROUPS | \Osmium\Forms\FIELD_REMEMBER_VALUE);
+	\Osmium\Forms\print_form_begin();
+	\Osmium\Forms\print_generic_row(
+		'hullid',
+		"<input type='hidden' name='hullid' id='hullidhidden' value='"
+		.(isset($fit['ship']['typeid']) ? $fit['ship']['typeid'] : -1)."' />",
+		$hierarchy);
 
 	print_form_prevnext();
 	\Osmium\Forms\print_form_end();
+	echo "</div>\n";
+
+	\Osmium\Chrome\print_js_snippet('new_fitting-step1');
 }
 
 function ship_select_pre() { /* Unreachable code for the 1st step */ }
@@ -45,11 +51,67 @@ function ship_select_post() {
 	if($fit === array()) {
 		\Osmium\Fit\create($fit);
 	}
-	if(!isset($_POST['hullid']) || !\Osmium\Fit\select_ship($fit, $_POST['hullid'])) {
-		\Osmium\Forms\add_field_error('hullid', "Please select a ship first. (You can still change your mind later!)");
-		return false;
+
+	if(isset($_POST['hullid'])) {
+		$shipid = isset($_POST['next_step']) && is_array($_POST['next_step']) ?
+			key($_POST['next_step']) : $_POST['hullid'];
+
+		if(!\Osmium\Fit\select_ship($fit, $shipid)) {
+			\Osmium\Forms\add_field_error('hullid', "Please select a ship first. (You can still change your mind later!)");
+			return false;
+		}
 	}
 
 	\Osmium\State\put_state('new_fit', $fit);
 	return true;
+}
+
+function get_ship_hierarchy() {
+	$groups = array();
+	$fetchparentsof = array();
+
+	$q = \Osmium\Db\query('SELECT typeid, typename, marketgroupid, marketgroupname FROM osmium.invships ORDER BY marketgroupname ASC, typename ASC');
+	while($ship = \Osmium\Db\fetch_assoc($q)) {
+		$groups[$ship['marketgroupid']]['groupname'] = $ship['marketgroupname'];
+		$groups[$ship['marketgroupid']]['types'][$ship['typeid']] = $ship['typename'];
+
+		if($ship['marketgroupid'] !== null) $fetchparentsof[$ship['marketgroupid']] = true;
+	}
+
+	while($fetchparentsof !== array()) {
+		/* Query in a loop, like a pro! */
+		$q = \Osmium\Db\query('SELECT c.parentgroupid, p.marketgroupname AS parentname, c.marketgroupid, c.marketgroupname FROM eve.invmarketgroups AS c LEFT JOIN eve.invmarketgroups AS p ON p.marketgroupid = c.parentgroupid WHERE c.marketgroupid IN ('.implode(',', array_keys($fetchparentsof)).') ORDER BY marketgroupname ASC');
+
+		$fetchparentsof = array();
+		while($group = \Osmium\Db\fetch_assoc($q)) {
+			if($group['parentgroupid'] === null) continue;
+
+			$groups[$group['marketgroupid']]['parent'] = $group['parentgroupid'];
+			$groups[$group['parentgroupid']]['groupname'] = $group['parentname'];
+			$groups[$group['parentgroupid']]['subgroups'][$group['marketgroupid']] = true;
+			$fetchparentsof[$group['parentgroupid']] = true;
+		}
+	}
+
+	foreach($groups as &$g) {
+		if(!isset($g['subgroups'])) continue;
+
+		/* Sort subgroups alphabetically */
+		uksort($g['subgroups'], function($a, $b) use($groups) {
+				return strcmp($groups[$a]['groupname'], $groups[$b]['groupname']);
+			});
+	}
+
+	/* Fix uncategorized ships */
+	$groups[null]['groupname'] = 'Uncategorized ships';
+	$groups[null]['parent'] = 4;
+	$groups[4]['subgroups'][null] = true;
+
+	ob_start();
+
+	\Osmium\Chrome\print_market_group_with_children($groups, 4, 1, function($typeid, $typename) {
+			echo "<li data-typeid='".$typeid."'><img src='http://image.eveonline.com/Render/{$typeid}_256.png' alt='' />".htmlspecialchars($typename)." <input type='submit' name='next_step[".$typeid."]' value='select' /></li>\n";
+		});
+
+	return ob_get_clean();
 }
