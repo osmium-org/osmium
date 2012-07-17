@@ -24,7 +24,7 @@ $(function() {
 			$("ul#search_results").empty();
 			$("p#search_warning").remove();
 			for(var i = 0; i < json['payload'].length; ++i) {
-				$("ul#search_results").append("<li class='module' data-slottype='" + json['payload'][i]['slottype'] + "' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_32.png' alt='' />" + json['payload'][i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='addmoduletoshortlist' title='Add module to shortlist'>♡</a></span></li>\n");
+				$("ul#search_results").append("<li class='module' data-slottype='" + json['payload'][i]['slottype'] + "' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_64.png' alt='' />" + json['payload'][i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='addmoduletoshortlist' title='Add module to shortlist'>♡</a></span></li>\n");
 			}
 			if(json['warning']) {
 				$("p#search_filters").after("<p id='search_warning' class='warning_box'>" + json['warning'] + "</p>");
@@ -45,7 +45,7 @@ $(function() {
 osmium_shortlist_load = function(json) {
     $("div#shortlistbox > ul#modules_shortlist").empty();
     for(var i = 0; i < json.length; ++i) {
-		$("div#shortlistbox > ul#modules_shortlist").append("<li class='module' data-slottype='" + json[i]['slottype'] + "' data-typeid='" + json[i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json[i]['typeid'] + "_32.png' alt='' />" + json[i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='removemodulefromshortlist' title='Remove module from shortlist'>♡</a></span></li>\n");
+		$("div#shortlistbox > ul#modules_shortlist").append("<li class='module' data-slottype='" + json[i]['slottype'] + "' data-typeid='" + json[i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json[i]['typeid'] + "_64.png' alt='' />" + json[i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='removemodulefromshortlist' title='Remove module from shortlist'>♡</a></span></li>\n");
     }
 
     $("div#shortlistbox > ul#modules_shortlist").append("<li class='shortlist_dummy'><em>Drag modules here to add to shortlist…</em></li>\n");
@@ -103,7 +103,7 @@ osmium_populate_slots = function(json, slot_type) {
 				+ "' data-state='" + json['modules'][slot_type][i]['state'] 
 				+ "' data-index='" + i
 				+ "'><img src='http://image.eveonline.com/Type/" 
-				+ json['modules'][slot_type][i]['typeid'] + "_32.png' alt='' />"
+				+ json['modules'][slot_type][i]['typeid'] + "_64.png' alt='' />"
 				+ " <span class='links'><a href='javascript:void(0);' class='removemodule' title='Unfit module'>x</a></span> "
 				+ json['modules'][slot_type][i]['typename']
 				+ sttoggle + ranges

@@ -283,12 +283,12 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 
 		$charge = '';
 		if(isset($fit['charges'][$type][$index])) {
-			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$fit['charges'][$type][$index]['typeid']."_32.png' alt='' />".$fit['charges'][$type][$index]['typename'];
+			$charge = ",<br /><img src='http://image.eveonline.com/Type/".$fit['charges'][$type][$index]['typeid']."_64.png' alt='' />".$fit['charges'][$type][$index]['typename'];
 		}
 
 		list($stname, $stpicture) = $astates[$state];
 
-		echo "<li data-typeid='".$mod['typeid']."' data-index='".$index."' data-slottype='".$type."' data-state='".$state."'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_32.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span>";
+		echo "<li data-typeid='".$mod['typeid']."' data-index='".$index."' data-slottype='".$type."' data-state='".$state."'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_64.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span>";
 		echo "<a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='../static/icons/$stpicture' alt='$stname' /></a>";
 
 		if($ranges !== array()) {
@@ -331,7 +331,7 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 				$qty = " <strong>×".$quantity."</strong>";
 			}
 			
-			echo "<li data-typeid='$typeid' data-count='$quantity'><img src='http://image.eveonline.com/Type/".$drone['typeid']."_32.png' alt='' />".$drone['typename'].$qty."</li>\n";
+			echo "<li data-typeid='$typeid' data-count='$quantity'><img src='http://image.eveonline.com/Type/".$drone['typeid']."_64.png' alt='' />".$drone['typename'].$qty."</li>\n";
 			++$z;
 		}
 

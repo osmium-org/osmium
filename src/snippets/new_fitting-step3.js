@@ -65,7 +65,7 @@ osmium_charges_load = function(json) {
 			cli = $(document.createElement('li'));
 			cimg = $(document.createElement('img'));
 			cimg.attr('src', 'http://image.eveonline.com/Type/'
-					  + json['charges'][i]['modules'][j]['typeid'] + '_32.png');
+					  + json['charges'][i]['modules'][j]['typeid'] + '_64.png');
 			cimg.attr('alt', json['charges'][i]['modules'][j]['typename']);
 			cimg.attr('title', json['charges'][i]['modules'][j]['typename']);
 			cli.append(cimg);
@@ -73,7 +73,7 @@ osmium_charges_load = function(json) {
 			cimg = $(document.createElement('img'));
 			chargeid = json['charges'][i]['modules'][j]['chargeid'];
 			if(chargeid > 0) {
-				cimg.attr('src', 'http://image.eveonline.com/Type/' + chargeid + '_32.png');
+				cimg.attr('src', 'http://image.eveonline.com/Type/' + chargeid + '_64.png');
 			} else {
 				cimg.attr('src', './static/icons/no_charge.png');
 			}

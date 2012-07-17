@@ -88,7 +88,7 @@ osmium_add_drone = function(typeid, typename, count, selector, toggleone, toggle
 		"<li class='drone' data-typeid='"
 			+ typeid + "' data-count='" 
 			+ count + "'><img src='http://image.eveonline.com/Type/" 
-			+ typeid + "_32.png' alt='' title='' />" 
+			+ typeid + "_64.png' alt='' title='' />" 
 			+ typename + " <strong>×" + count
 			+ "</strong>"
 			+ "<span class='links'><a href='javascript:void(0);' title='Toggle 5 drones' class='movefivedrones'>" + togglefive + "</a><a href='javascript:void(0);' title='Toggle one drone' class='moveonedrone'>" + toggleone + "</a><a href='javascript:void(0);' title='Delete one drone' class='deleteonedrone'>-1</a><a href='javascript:void(0);' title='Delete 5 drones' class='deletefivedrones'>-5</a></span></li>");
@@ -176,7 +176,7 @@ $(function() {
 			$("ul#search_results").empty();
 			$("p#search_warning").remove();
 			for(var i = 0; i < json['payload'].length; ++i) {
-				$("ul#search_results").append("<li class='drone' data-count='1' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_32.png' alt='' title='' />" + json['payload'][i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addonedrone' title='Add one drone to bay'>+1</a><a href='javascript:void(0);' class='addfivedrones' title='Add five drones to bay'>+5</a></span></li>\n");
+				$("ul#search_results").append("<li class='drone' data-count='1' data-typeid='" + json['payload'][i]['typeid'] + "'><img src='http://image.eveonline.com/Type/" + json['payload'][i]['typeid'] + "_64.png' alt='' title='' />" + json['payload'][i]['typename'] + " <span class='links'><a href='javascript:void(0);' class='addonedrone' title='Add one drone to bay'>+1</a><a href='javascript:void(0);' class='addfivedrones' title='Add five drones to bay'>+5</a></span></li>\n");
 				$("ul#search_results > li.drone > img").last()
 					.attr('alt', json['payload'][i]['typename'])
 					.attr('title', json['payload'][i]['typename']);

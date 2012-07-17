@@ -45,7 +45,7 @@ $metadata-width-small: 20em;
 		border-top: none;
 	}
 	
-	&> img {
+	&> img, &> span.charge > img {
 		height: 32px;
 		width: 32px;
 		margin-right: 0.125em;

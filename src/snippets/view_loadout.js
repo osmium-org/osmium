@@ -56,7 +56,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 
 					charge.append(',<br />');
 					charge.append("<img src='http://image.eveonline.com/Type/" 
-								  + json['preset'][type][index]['typeid'] + "_32.png' alt='' />");
+								  + json['preset'][type][index]['typeid'] + "_64.png' alt='' />");
 					charge.append(json['preset'][type][index]['typename']);
 				}
 			}
@@ -100,7 +100,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 					"<li data-typeid='"
 						+ drone['typeid'] + "' data-count='"
 						+ drone['quantityinbay'] + "'><img alt='' src='http://image.eveonline.com/Type/" 
-						+ drone['typeid'] + "_32.png' />"
+						+ drone['typeid'] + "_64.png' />"
 						+ drone['typename'] + " <strong>×"
 						+ drone['quantityinbay'] + "</strong></li>");
 			}
@@ -109,7 +109,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 					"<li data-typeid='"
 						+ drone['typeid'] + "' data-count='"
 						+ drone['quantityinspace'] + "'><img alt='' src='http://image.eveonline.com/Type/" 
-						+ drone['typeid'] + "_32.png' />"
+						+ drone['typeid'] + "_64.png' />"
 						+ drone['typename'] + " <strong>×"
 						+ drone['quantityinspace'] + "</strong></li>");
 				used_bandwidth += drone['quantityinspace'] * drone['bandwidth'], 10;
