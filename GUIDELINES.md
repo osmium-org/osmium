@@ -10,12 +10,14 @@ Directory structure
 
 ~~~~
 bin/ - executable command-line scripts
-cache/ - temporary cache files
+cache/ - temporary cache files, not accessible via HTTP
 inc/ - Osmium include files
 lib/ - Non-osmium include files
+pgsql/ - Database schemas, backups and patches
 sphinx/ - search engine index and configuration
 src/ - Osmium pages source files
 static/ - static content like images, fonts, stylesheets, ... (accessible directory, not URL-rewritten)
+static/cache/ - temporary cache files, accessible via HTTP
 tests/ - PHPUnit tests
 ~~~~
 
@@ -146,16 +148,58 @@ Code conventions
   $value;` instead of `define('CONSTANT', $value)` if it is possible
   to do so.
 
-* If your code prints or generates HTML code, make sure you write
-  polyglot markup (see
-  http://dev.w3.org/html5/html-xhtml-author-guide/). In particular, do
-  not use the shorthand notation for attributes (`<input type='text'
-  required='required' />` instead of `<input type='text' required
-  />`), always specify closing tags (and use the `/>` shorthand for
-  void elements like `img`, `br` etc.) and do not use named entitiy
-  references other than `amp`, `lt`, `gt`, `apos` and `quot`. You can
-  use http://validator.nu to check if your source is correct (validate
-  both modes: use the HTML5 parser and then the XML parser).
+Polyglot markup
+---------------
+
+Any HTML code you print should validate as both XTHML5 and HTML5.
+
+You can use http://validator.nu to check if your code is correct (your
+code should validate with both the HTML5 parser and the XML parser).
+
+Here are the most important gotchas to keep in mind:
+
+* Never use the shorthand notation for attributes:
+
+  ~~~~
+  <input type='text' required />                // No
+  <input type='text' required='required' />     // Yes
+  ~~~~
+
+* Always close attributes (even when they can be omitted in strict HTML5):
+
+  ~~~~
+  <p>Foo <p>Bar                                 // No
+  <p>Foo</p><p>Bar</p>                          // Yes
+
+  <br>                                          // No
+  <br></br>                                     // No
+  <br />                                        // Yes
+  ~~~~
+
+* When using tables, always explicitely insert the `<tbody>` tag (and
+  optionally `<thead>` and `<tfoot>`), for example:
+
+  ~~~~
+  <table><tr><td>Foo</td></tr></table>                  // No
+  <table><tbody><tr><td>Foo</td></tr></tbody></table>   // Yes
+  ~~~~
+
+* If using name entities, only use `amp`, `lt`, `gt`, `apos` and
+  `quot`.
+
+  ~~~~
+  &nbsp;                                        // No
+  &#xa0;                                        // Yes
+  ~~~~
+
+* If using Javascript, do not use `document.write()` (it is bad
+  practice anyway, and XHTML5 forbids it).
+
+* If using inline `<script>` tags, escape their contents correctly
+  with `CDATA` sections (or use `Osmium\Chrome\print_js_code()` that
+  already does it for you).
+
+See the full list at: http://dev.w3.org/html5/html-xhtml-author-guide/
 
 Accessibility guidelines
 ------------------------
@@ -169,6 +213,18 @@ Accessibility guidelines
 * Always fill the `alt` attribute of an image. It can be empty if the
   image is purely decorational (or if it would be redundant with
   information already next to it).
+
+Tracking database changes
+-------------------------
+
+Do not change the `eve` schema structure, it follows the structure of
+the Eos dump.
+
+If you make changes to the `osmium` schema (for example, adding a
+table), always use the `bin/backup_osmium_schema` script before
+commiting, and include the new schema in the commit. You must also
+write a patch in `pgsql/patches/current/` that can be used to update a
+production database (without having to drop then reinsert everything).
 
 Getting your code merged
 ------------------------
