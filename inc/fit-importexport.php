@@ -688,7 +688,7 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 
 	$json = array('clf-version' => 1);
 	if($extraprops) {
-		$json['X-generatedby'] = 'Osmium-'.\Osmium\VERSION;
+		$json['X-generatedby'] = 'Osmium-'.\Osmium\get_osmium_version();
 	}
 
 	if(isset($fit['metadata']['name'])) {

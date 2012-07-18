@@ -383,7 +383,7 @@ function format_sanitize_md($markdowntext) {
 		$config = \HTMLPurifier_Config::createDefault();
 
 		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-		$config->set('HTML.DefinitionID', 'Osmium-full '.\Osmium\VERSION.' '.\Osmium\ROOT);
+		$config->set('HTML.DefinitionID', 'Osmium-full');
 		$config->set('HTML.DefinitionRev', 1);
 
 		$config->set('Attr.AllowedClasses', array());
@@ -409,7 +409,7 @@ function format_sanitize_md_phrasing($markdowntext) {
 		$config = \HTMLPurifier_Config::createDefault();
 
 		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-		$config->set('HTML.DefinitionID', 'Osmium-phrasing '.\Osmium\VERSION.' '.\Osmium\ROOT);
+		$config->set('HTML.DefinitionID', 'Osmium-phrasing');
 		$config->set('HTML.DefinitionRev', 1);
 
 		$config->set('Attr.AllowedClasses', array());

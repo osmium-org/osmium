@@ -108,9 +108,15 @@ Updating
    make
    ~~~~
 
-3. Read the `UPDATING` file for release-specific upgrade instructions.
+3. Clear stale cache files:
 
-4. Start your webserver and test changes.
+   ~~~~
+   make clear-harmless-cache
+   ~~~~
+
+4. Read the `UPDATING` file for release-specific upgrade instructions.
+
+5. Start your webserver and test changes.
 
 Updating the `eve` database schema
 ----------------------------------
@@ -179,8 +185,6 @@ Dependencies
 
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
   http://pear.horde.org **(heavily recommended for production)**
-
-* (Optional) memcached + PECL/memcached
 
 * (Optional) PHPUnit, for automated tests
 

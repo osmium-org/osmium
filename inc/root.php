@@ -134,10 +134,24 @@ function get_ini_setting($key) {
 	return isset($cnf[$key]) ? $cnf[$key] : null;
 }
 
+function get_osmium_version() {
+	static $version = null;
+
+	if($version === null) {
+		$version = \Osmium\State\get_cache('git_version', null);
+		if($version === null) {
+			$version = trim(shell_exec('cd '.escapeshellarg(ROOT)
+			                           .'; (git describe --always --dirty 2>/dev/null || echo "unknown")'));
+			\Osmium\State\put_cache('git_version', $version, 600);
+		}
+	}
+
+	return $version;
+}
+
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
-define(__NAMESPACE__.'\VERSION', trim(shell_exec('cd '.escapeshellarg(ROOT).'; (git describe --always --dirty 2>/dev/null || echo "unknown")')));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

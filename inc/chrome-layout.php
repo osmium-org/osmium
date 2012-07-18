@@ -95,7 +95,7 @@ function print_footer() {
 	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code;
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n";
-	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\VERSION." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
+	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\get_osmium_version()." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
 	echo "</footer>\n";
 
 	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>\n";
