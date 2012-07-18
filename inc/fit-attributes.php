@@ -36,6 +36,7 @@ function get_capacitor_stability(&$fit) {
 	$tau = \Osmium\Dogma\get_ship_attribute($fit, 'rechargeRate') / 5.0;
 
 	$usage_rate = 0;
+	$usage = array();
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
 			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
@@ -56,6 +57,7 @@ function get_capacitor_stability(&$fit) {
 					$restored = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'capacitorBonus', false);
 
 					$usage_rate -= $restored / $duration;
+					$usage[] = array(-$restored, $duration, 0);
 					continue;
 				}
 
@@ -66,6 +68,7 @@ function get_capacitor_stability(&$fit) {
 					$fit['cache']['__attributes'][$effectdata['dischargeattributeid']]['attributename']);
 
 				$usage_rate += $discharge / $duration;
+				$usage[] = array($discharge, $duration, 0);
 			}
 		}
 	}
@@ -90,12 +93,23 @@ function get_capacitor_stability(&$fit) {
 		$capacitor = $capacity; /* Start with full capacitor */
 
 		/* Simulate what happens with the Runge-Kutta method (RK4) */
-		$f = function($c) use($capacity, $tau, $X) {
+		$f = function($c) use($capacity, $tau) {
 			$c = max($c, 0);
-			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau - $X;
+			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau;
 		};
 
-		while($capacitor > 0) {
+		/* The limit on $t is there for two reasons: 1. because there
+		 * is no guarantee this loop will ever exit otherwise, and
+		 * 2. to prevent malicious users from generating excessive
+		 * load. */
+		while($capacitor > 0 && $t < 3600000) {
+			foreach($usage as &$u) {
+				while($u[2] <= $t) {
+					$capacitor -= $u[0];
+					$u[2] += $u[1];
+				}
+			}
+
 			$k1 = $f($capacitor);
 			$k2 = $f($capacitor + 0.5 * $step * $k1);
 			$k3 = $f($capacitor + 0.5 * $step * $k2);
