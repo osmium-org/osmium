@@ -468,6 +468,9 @@ function offline_module(&$fit, $slottype, $index) {
 function sort_modules(&$fit, $order) {
 	foreach($fit['modules'] as $type => &$modules) {
 		uksort($modules, function($a, $b) use($type, $order) {
+				if(!isset($order[$type][$a])) return -1;
+				if(!isset($order[$type][$b])) return 1;
+
 				return $order[$type][$a] - $order[$type][$b];
 			});
 	}
