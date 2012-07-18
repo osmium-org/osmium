@@ -481,7 +481,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<li id='r".$row['commentreplyid']."'>\n<div class='body'>".$row['replyformattedbody']."</div>";
 		echo " — ".\Osmium\Chrome\format_character_name($c, '..');
 		if($row['repupdatedate'] !== null) {
-			echo " <span class='updated' title='This reply was edited (".\Osmium\Chrome\format_relative_date($row['repupdatedate']).").'>✎</span>";
+			echo " <span class='updated' title='This reply was edited (".strip_tags(\Osmium\Chrome\format_relative_date($row['repupdatedate'])).").'>✎</span>";
 		}
 
 		echo " — ".\Osmium\Chrome\format_relative_date($row['repcreationdate']);
