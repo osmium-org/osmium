@@ -163,7 +163,13 @@ function finalize() {
 	\Osmium\State\put_state('create_fit_step', 1);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);
+
+	/* FIXME: make sure commit_loadout() succeeded before doing this */
+
 	\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
+
+	$type = ($revision == 1) ? \Osmium\Log\LOG_TYPE_CREATE_LOADOUT : \Osmium\Log\LOG_TYPE_UPDATE_LOADOUT;
+	\Osmium\Log\add_log_entry($type, null, $loadoutid, $revision);
 
 	header('Location: ./loadout/'.$loadoutid);
 	die();

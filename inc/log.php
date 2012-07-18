@@ -20,6 +20,19 @@ namespace Osmium\Log;
 
 const LOG_TYPE_CHANGED_FLAG_STATUS = 1;
 
+const LOG_TYPE_CREATE_LOADOUT = 100;
+const LOG_TYPE_UPDATE_LOADOUT = 101;
+const LOG_TYPE_DELETE_LOADOUT = 102;
+const LOG_TYPE_REVERT_LOADOUT = 110;
+
+const LOG_TYPE_CREATE_COMMENT = 200;
+const LOG_TYPE_UPDATE_COMMENT = 201;
+const LOG_TYPE_DELETE_COMMENT = 202;
+
+const LOG_TYPE_CREATE_COMMENT_REPLY = 300;
+const LOG_TYPE_UPDATE_COMMENT_REPLY = 301;
+const LOG_TYPE_DELETE_COMMENT_REPLY = 302;
+
 function add_log_entry($type, $subtype, $target1 = null, $target2 = null, $target3 = null) {
 	return \Osmium\Db\query_params(
 		'INSERT INTO osmium.log (clientid, creationdate, type, subtype, target1, target2, target3) VALUES ($1, $2, $3, $4, $5, $6, $7)',

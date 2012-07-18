@@ -88,9 +88,10 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 	if($body && $formatted) {
 		\Osmium\Db\query('BEGIN;');
 		$r = \Osmium\Db\query_params('INSERT INTO osmium.loadoutcomments (loadoutid, accountid, creationdate, revision) VALUES ($1, $2, $3, $4) RETURNING commentid', array($loadoutid, $a['accountid'], $t = time(), $fit['metadata']['revision']));
-		if($r !== false) {
-			list($commentid) = \Osmium\Db\fetch_row($r);
+		if($r !== false && ($r = \Osmium\Db\fetch_row($r)) !== false) {
+			list($commentid) = $r;
 			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentrevisions (commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody) VALUES ($1, $2, $3, $4, $5, $6)', array($commentid, 1, $a['accountid'], $t, $_POST['commentbody'], $formatted));
+			\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CREATE_COMMENT, null, $commentid, $loadoutid);
 			\Osmium\Db\query('COMMIT;');
 		} else {
 			\Osmium\Db\query('ROLLBACK;');
@@ -104,7 +105,16 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 		$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);
 
 		if($body && $formatted) {
-			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentreplies (commentid, accountid, creationdate, replybody, replyformattedbody, updatedate, updatedbyaccountid) VALUES ($1, $2, $3, $4, $5, null, null)', array($_POST['commentid'], $a['accountid'], time(), $body, $formatted));
+			\Osmium\Db\query('BEGIN;');
+			$r = \Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentreplies (commentid, accountid, creationdate, replybody, replyformattedbody, updatedate, updatedbyaccountid) VALUES ($1, $2, $3, $4, $5, null, null) RETURNING commentreplyid', array($_POST['commentid'], $a['accountid'], time(), $body, $formatted));
+
+			if($r !== false && ($r = \Osmium\Db\fetch_row($r)) !== false) {
+				list($crid) = $r;
+				\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CREATE_COMMENT_REPLY, null, $crid, $_POST['commentid'], $loadoutid);
+				\Osmium\Db\query('COMMIT;');
+			} else {
+				\Osmium\Db\query('ROLLBACK;');
+			}
 		}
 	}
 }

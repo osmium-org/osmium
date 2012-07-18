@@ -84,6 +84,13 @@ if(isset($_POST['body'])) {
 	}
 
 	list($loadoutid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadoutcomments WHERE commentid = $1', array($commentid)));
+
+	if($_GET['type'] == 'comment') {
+		\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_UPDATE_COMMENT, null, $id, $loadoutid);
+	} else if($_GET['type'] == 'commentreply') {
+		\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_UPDATE_COMMENT_REPLY, null, $id, $commentid, $loadoutid);
+	}
+
 	header('Location: ../loadout/'.$loadoutid.'?jtc='.$commentid.'#'.$anchor);
 	die();
 }

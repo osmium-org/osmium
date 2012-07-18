@@ -43,6 +43,7 @@ if($type == 'comment') {
 	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentreplies WHERE commentid = $1', array($id));
 	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentrevisions WHERE commentid = $1', array($id));
 	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE commentid = $1', array($id));
+	\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_COMMENT, null, $id, $row['loadoutid']);
 	\Osmium\Db\query('COMMIT;');
 
 	$afteruri = '#vcomments';
@@ -57,7 +58,10 @@ if($type == 'comment') {
 		\Osmium\fatal(403, "You cannot delete that comment reply.");
 	}
 
+	\Osmium\Db\query('BEGIN;');
 	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentreplies WHERE commentreplyid = $1', array($id));
+	\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_COMMENT_REPLY, null, $id, $row['commentid'], $row['loadoutid']);
+	\Osmium\Db\query('COMMIT;');
 
 	$afteruri = '?jtc='.$row['commentid'].'#c'.$row['commentid'];
 } else {
