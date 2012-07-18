@@ -90,6 +90,9 @@ const STATE_ACTIVE = 2;
 const STATE_OVERLOADED = 3;
 
 
+/** Maximum number of tags allowed on a fit. */
+const MAXIMUM_TAGS = 5;
+
 /* ----------------------------------------------------- */
 
 /** Get the different module slot categories. */
@@ -1086,7 +1089,36 @@ function get_attributes_and_effects($typeids, &$out) {
  */
 function sanitize(&$fit) {
 	/* Unset any extra charges of nonexistent modules. */
-	/* TODO */
+	foreach($fit['presets'] as &$p) {
+		foreach($p['chargepresets'] as &$cp) {
+			foreach($cp['charges'] as $type => &$a) {
+				foreach($a as $index => &$charge) {
+					if(!isset($p['modules'][$type][$index])) {
+						unset($a[$index]);
+					}
+				}
+			}
+		}
+	}
+
+	/* Enforce tag consistency */
+	if(!isset($fit['metadata']['tags'])) {
+		$fit['metadata']['tags'] = array();
+	}
+	$tags =& $fit['metadata']['tags'];
+	$tags = array_slice($tags, 0, MAXIMUM_TAGS);
+	$tags = array_map(function($tag) {
+			if(class_exists('Normalizer')) {
+				$tag = \Normalizer::normalize($tag, \Normalizer::FORM_KD);
+			}
+			if(function_exists('iconv')) {
+				$tag = iconv("UTF-8", 'US-ASCII//TRANSLIT//IGNORE', $tag);
+			}
+			$tag = strtolower(str_replace('_', '-', $tag));
+			return preg_replace('%[^a-z0-9-]+%', '', $tag);
+		}, $tags);
+	$tags = array_filter($tags, function($tag) { return $tag !== ''; });
+	$tags = array_unique($tags);
 }
 
 /**

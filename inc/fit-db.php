@@ -130,6 +130,8 @@ function get_hash($fit) {
  * nothing is inserted at all, so integrity is always enforced.
  */
 function commit_fitting(&$fit) {
+	sanitize($fit);
+
 	$fittinghash = get_hash($fit);
 
 	$fit['metadata']['hash'] = $fittinghash;

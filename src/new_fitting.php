@@ -23,7 +23,6 @@ require __DIR__.'/../inc/ajax_common.php';
 
 const FINAL_STEP = 5;
 const DO_NOT_HASH_SENTINEL = '························';
-const MAXIMUM_TAGS = 5;
 
 for($i = 1; $i <= FINAL_STEP; ++$i) {
 	require __DIR__.'/new_fitting-step'.$i.'.php';
@@ -134,7 +133,6 @@ function print_attributes($before = '', $after = '') {
 function finalize() {
 	global $anonymous;
 	$fit = \Osmium\State\get_state('new_fit', array());
-	\Osmium\Fit\sanitize($fit);
 
 	if($anonymous) {
 		$formats = \Osmium\Fit\get_export_formats();

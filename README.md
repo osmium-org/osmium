@@ -155,12 +155,14 @@ updated.)*
 Dependencies
 ============
 
-* PHP >= 5.4 with:
-    PostgreSQL extension (`pgsql.so`),
-    MySQLi extension (`mysqli.so`, not mysqld itself),
-    cURL extension,
-    SimpleXML support,
-    zlib extension.
+* PHP >= 5.4, with:
+  * PostgreSQL extension (`pgsql.so`)
+  * MySQLi extension (`mysqli.so`)
+  * cURL extension (`curl.so`)
+  * SimpleXML support (enabled by default)
+  * Zlib support
+  * (Optional) iconv extension (`iconv.so`)
+  * (Optional) intl extension (`intl.so`)
 
 * PostgreSQL >= 9.0
 

@@ -1,3 +1,8 @@
+staging
+=======
+
+Dependencies have changed: iconv and intl are now used if available.
+
 v0.1-rc3, released 2012-07-16
 =============================
 

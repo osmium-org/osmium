@@ -36,7 +36,7 @@ function final_settings() {
 	                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 	\Osmium\Forms\print_textarea('Description<br /><small>(optional)</small>', 'description', 'description',
 	                             \Osmium\Forms\FIELD_REMEMBER_VALUE);
-	\Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated,<br />'.MAXIMUM_TAGS.' maximum)</small>', 'text', 'tags', 'tags',
+	\Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated,<br />'.\Osmium\Fit\MAXIMUM_TAGS.' maximum)</small>', 'text', 'tags', 'tags',
 	                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
 	if(!$anonymous) {
@@ -120,13 +120,7 @@ function update_metadata() {
 	}
 
 	$fdesc = trim($_POST['description']);
-	$tags = preg_split('/\s/', $_POST['tags'], -1, PREG_SPLIT_NO_EMPTY);
-	$tags = array_map(function($tag) {
-			$tag = str_replace('_', '-', $tag);
-			return preg_replace('%[^A-Za-z0-9-]+%', '', $tag);
-		}, $tags);
-	$tags = array_unique(array_filter($tags, function($tag) { return strlen($tag) > 0; }));
-	$tags = array_slice($tags, 0, MAXIMUM_TAGS);
+	$tags = preg_split('/\s+/', $_POST['tags'], -1, PREG_SPLIT_NO_EMPTY);
 
 	$fit['metadata']['name'] = $fname;
 	$fit['metadata']['description'] = $fdesc;
