@@ -140,15 +140,12 @@ define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\VERSION', trim(shell_exec('cd '.escapeshellarg(ROOT).'; (git describe --always --dirty 2>/dev/null || echo "unknown")')));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
-define(__NAMESPACE__.'\USE_MEMCACHED', get_ini_setting('use_memcached'));
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 	fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
 
-if(!get_ini_setting('use_memcached_for_sessions')) {
-	session_save_path(CACHE_DIRECTORY);
-}
+session_save_path(CACHE_DIRECTORY);
 session_start();
 
 require ROOT.'/inc/chrome.php';

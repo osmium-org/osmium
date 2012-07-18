@@ -31,9 +31,6 @@ $__osmium_state =& $_SESSION['__osmium_state'];
 $__osmium_login_state = array();
 
 /** @internal */
-$__osmium_memcached = null;
-
-/** @internal */
 $__osmium_cache_stack = array();
 
 /** @internal */
@@ -556,18 +553,6 @@ function pop_cache_enabled() {
 	$__osmium_cache_enabled = array_pop($__osmium_cache_stack);
 }
 
-/** @internal */
-function init_memcached() {
-	global $__osmium_memcached;
-
-	if($__osmium_memcached === null) {
-		$__osmium_memcached = new \Memcached();
-		$servers = \Osmium\get_ini_setting('servers');
-		foreach($servers as &$s) $s = explode(':', $s);
-		$__osmium_memcached->addServers($servers);
-	}
-}
-
 /**
  * Get a cache variable previously set by put_cache().
  *
@@ -578,22 +563,14 @@ function get_cache($key, $default = null) {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return $default;
 
-	global $__osmium_memcached;
-
-	if(\Osmium\USE_MEMCACHED) {
-		init_memcached();
-		if(($v = $__osmium_memcached->get($key)) === false) {
-			if($__osmium_memcached->getResultCode() === \Memcached::RES_NOTFOUND) {
-				$v = $default;
-			}
+	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	if(file_exists($f)) {
+		$mtime = filemtime($f);
+		if($mtime === 0 || $mtime > time()) {
+			return unserialize(file_get_contents($f));
 		}
-		
-		return $v;
-	} else {
-		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
-		if(file_exists($f)) return unserialize(file_get_contents($f));
-		return $default;
 	}
+	return $default;
 }
 
 /**
@@ -607,15 +584,10 @@ function put_cache($key, $value, $expires = 0) {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
-	global $__osmium_memcached;
+	if($expires > 0) $expires = time() + $expires;
 
-	if(\Osmium\USE_MEMCACHED) {
-		init_memcached();
-		return $__osmium_memcached->set($key, $value, $expires);
-	} else {
-		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
-		return file_put_contents($f, serialize($value));
-	}
+	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+    return file_put_contents($f, serialize($value)) && touch($f, $expires);
 }
 
 /**
@@ -625,15 +597,8 @@ function invalidate_cache($key) {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
-	global $__osmium_memcached;
-
-	if(\Osmium\USE_MEMCACHED) {
-		init_memcached();
-		$__osmium_memcached->delete($key);
-	} else {
-		$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
-		if(file_exists($f)) unlink($f);
-	}
+	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	if(file_exists($f)) unlink($f);
 }
 
 /**
