@@ -161,7 +161,7 @@ updated.)*
 Dependencies
 ============
 
-* PHP >= 5.4, with:
+* PHP >= 5.4, **< 5.4.5**, with:
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)
