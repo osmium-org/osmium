@@ -41,6 +41,7 @@ function ship_select() {
 	\Osmium\Forms\print_form_end();
 	echo "</div>\n";
 
+	\Osmium\Chrome\print_js_snippet('togglable_market_sections');
 	\Osmium\Chrome\print_js_snippet('new_fitting-step1');
 }
 
@@ -78,29 +79,7 @@ function get_ship_hierarchy() {
 		if($ship['marketgroupid'] !== null) $fetchparentsof[$ship['marketgroupid']] = true;
 	}
 
-	while($fetchparentsof !== array()) {
-		/* Query in a loop, like a pro! */
-		$q = \Osmium\Db\query('SELECT c.parentgroupid, p.marketgroupname AS parentname, c.marketgroupid, c.marketgroupname FROM eve.invmarketgroups AS c LEFT JOIN eve.invmarketgroups AS p ON p.marketgroupid = c.parentgroupid WHERE c.marketgroupid IN ('.implode(',', array_keys($fetchparentsof)).') ORDER BY marketgroupname ASC');
-
-		$fetchparentsof = array();
-		while($group = \Osmium\Db\fetch_assoc($q)) {
-			if($group['parentgroupid'] === null) continue;
-
-			$groups[$group['marketgroupid']]['parent'] = $group['parentgroupid'];
-			$groups[$group['parentgroupid']]['groupname'] = $group['parentname'];
-			$groups[$group['parentgroupid']]['subgroups'][$group['marketgroupid']] = true;
-			$fetchparentsof[$group['parentgroupid']] = true;
-		}
-	}
-
-	foreach($groups as &$g) {
-		if(!isset($g['subgroups'])) continue;
-
-		/* Sort subgroups alphabetically */
-		uksort($g['subgroups'], function($a, $b) use($groups) {
-				return strcmp($groups[$a]['groupname'], $groups[$b]['groupname']);
-			});
-	}
+	fetch_parents_and_sort($groups, $fetchparentsof);
 
 	/* Fix uncategorized ships */
 	$groups[null]['groupname'] = 'Uncategorized ships';
@@ -110,7 +89,8 @@ function get_ship_hierarchy() {
 	ob_start();
 
 	\Osmium\Chrome\print_market_group_with_children($groups, 4, 1, function($typeid, $typename) {
-			echo "<li data-typeid='".$typeid."'><img src='http://image.eveonline.com/Render/{$typeid}_256.png' alt='' />".htmlspecialchars($typename)." <input type='submit' name='next_step[".$typeid."]' value='select' /></li>\n";
+			echo "<li data-typeid='".$typeid."'><div class='imgplaceholder' data-src='http://image.eveonline.com/Render/{$typeid}_256.png'>
+ </div>".htmlspecialchars($typename)." <input type='submit' name='next_step[".$typeid."]' value='select' /></li>\n";
 		});
 
 	return ob_get_clean();

@@ -1,3 +1,122 @@
+@mixin marketcategories($p, $q) {
+	&> h1 {
+		display: none;
+	}
+
+	&> ul.subgroups > li:first-child > div.mgroup > h2 {
+		border-top: 1px solid #CCC;
+	}
+
+	&> ul.subgroups > li > div.mgroup {
+
+		&> ul.subgroups > li > div.mgroup {
+			&> h3 {
+				padding-left: $p;
+			}
+
+			&> ul.types > li {
+				padding-left: $p + $q;
+			}
+
+			&> ul.subgroups > li > div.mgroup {
+				&> h4 {
+					padding-left: $p * 1.5;
+				}
+
+				&> ul.types > li {
+					padding-left: $p * 1.5 + $q;
+				}
+
+				&> ul.subgroups > li > div.mgroup {
+					&> h5 {
+						padding-left: $p * 2;
+					}
+
+					&> ul.types > li {
+						padding-left: $p * 2 + $q;
+					}
+
+					&> ul.subgroups > li > div.mgroup {
+						&> h6 {
+							padding-left: $p * 2.5;
+						}
+
+						&> ul.types > li {
+							padding-left: $p * 2.5 + $q;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	div.mgroup {
+		&> h2, &> h3, &> h4, &> h5, &> h6 {
+			&:first-child:before {
+				content: $developed-char;
+				padding-right: 0.25em;
+			}
+		}
+
+		&.hidden {
+			&> h2, &> h3, &> h4, &> h5, &> h6 {
+				&:first-child:before {
+					content: $hidden-char;
+				}
+			}
+		}
+	}
+
+	ul.types > li[data-typeid] {
+		padding-right: 6em;
+		padding: 0.5em 0;
+		border-top: 1px dashed #888;
+		background-color: white;
+
+		&:first-child {
+			border-top: none;
+		}
+
+		&:hover {
+			background-color: #F8F8FC;
+		}
+
+		&.selected {
+			background-color: #FFFFCC;
+		}
+
+		&> img:first-child, &> div.imgplaceholder:first-child {
+			width: 32px;
+			height: 32px;
+			padding-right: 0.25em;
+		}
+
+		&> div.imgplaceholder:first-child {
+			display: inline-block;
+			vertical-align: middle;
+		}
+	}
+
+	ul.types, ul.subgroups {
+		list-style-type: none;
+		margin: 0;
+		padding: 0 0 0 0;
+	}
+
+	h2, h3, h4, h5, h6 {
+		margin: 0;
+		font-size: 1em;
+		padding: 0.25em;
+		border-bottom: 1px solid #CCC;
+		background-color: #F4F4F8;
+		text-align: left;
+
+		&:hover {
+			background-color: #E8E8F0;
+		}
+	}
+}
+
 div#loadoutbox {
 	@include column;
 
@@ -66,12 +185,13 @@ div#dronelistbox {
 	}
 }
 
-div#shortlistbox {
+div#s2tabs {
 	@include column;
-	text-align: center;
 	@include prop-metadata-width(margin-left, 1em);
 	border-left: 1px dotted #CCC;
 	margin-right: 1em;
+	padding-left: 1em;
+	text-align: center;
 
 	@include layout-type(normal) {
 		float: right;
@@ -83,12 +203,13 @@ div#shortlistbox {
 		margin: 0;
 	}
 
+	&> ul.tabs {
+		@include tabs;
+	}
+
 	&> div#searchbox {
 		@include column;
-
-		&> ul {
-			padding: 0;
-		}
+		text-align: center;
 		
 		&> form > input[type='search'] {
 			width: 16em;
@@ -107,9 +228,31 @@ div#shortlistbox {
 		}
 	}
 
-	&> ul#modules_shortlist > li.module, &> div#searchbox > ul#search_results > li.module {
+	&> div#modulebrowser {
+		@include column;
+
+		&> div > div.mgroup {
+			@include marketcategories(1em, 1em);
+
+			ul.types > li[data-typeid] {
+				@include ellipsis;
+				padding-top: 0.125em;
+				padding-bottom: 0.125em;
+				line-height: 2em;
+				cursor: copy;
+			}
+		}
+	}
+
+	&> div#shortlistbox {
+		@include column;
+	}
+
+	&> div#shortlistbox > ul#modules_shortlist > li.module, 
+	&> div#searchbox > ul#search_results > li.module,
+	&> div#modulebrowser > div div.mgroup > ul.types > li {
 		position: relative;
-		padding-right: 2.25em;
+		padding-right: 2.25em !important;
 
 		&> span.links {
 			position: absolute;
@@ -127,27 +270,27 @@ div#shortlistbox {
 			}
 		}
 	}
-}
 
-div#searchbox > ul#search_results,
-div#dronelistbox > ul#search_results,
-div#shortlistbox > ul#modules_shortlist {
-	margin: 0;
-	padding: 0;
-	list-style-type: none;
-	width: $module-width;
-	display: inline-block;
-	text-align: left;
+	div#searchbox > ul#search_results,
+	div#dronelistbox > ul#search_results,
+	div#shortlistbox > ul#modules_shortlist {
+		margin: 0;
+		padding: 0;
+		list-style-type: none;
+		width: $module-width;
+		display: inline-block;
+		text-align: left;
 
-	&> li {
-		@include module;
+		&> li {
+			@include module;
 
-		&.module, &.drone {
-			cursor: move;
-		}
+			&.module, &.drone {
+				cursor: move;
+			}
 
-		&.shortlist_dummy {
-			text-align: center;
+			&.shortlist_dummy {
+				text-align: center;
+			}
 		}
 	}
 }
@@ -377,117 +520,7 @@ div#dronebay {
 
 div#selectship {
 	&> form > table > tbody > tr > td > div.mgroup {
+		@include marketcategories(2em, 4em);
 		min-width: 40em;
-
-		&> h1 {
-			display: none;
-		}
-
-		&> ul.subgroups > li:first-child > div.mgroup > h2 {
-			border-top: 1px solid #CCC;
-		}
-
-		&> ul.subgroups > li > div.mgroup {
-
-			&> ul.subgroups > li > div.mgroup {
-				&> h3 {
-					padding-left: 2em;
-				}
-
-				&> ul.types > li {
-					padding-left: 6em;
-				}
-
-				&> ul.subgroups > li > div.mgroup {
-					&> h4 {
-						padding-left: 3em;
-					}
-
-					&> ul.types > li {
-						padding-left: 7em;
-					}
-
-					&> ul.subgroups > li > div.mgroup {
-						&> h5 {
-							padding-left: 4em;
-						}
-
-						&> ul.types > li {
-							padding-left: 8em;
-						}
-
-						&> ul.subgroups > li > div.mgroup {
-							&> h6 {
-								padding-left: 5em;
-							}
-
-							&> ul.types > li {
-								padding-left: 9em;
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		div.mgroup {
-			&> h2, &> h3, &> h4, &> h5, &> h6 {
-				&:first-child:before {
-					content: $developed-char;
-					padding-right: 0.25em;
-				}
-			}
-
-			&.hidden {
-				&> h2, &> h3, &> h4, &> h5, &> h6 {
-					&:first-child:before {
-						content: $hidden-char;
-					}
-				}
-			}
-		}
-
-		ul.types > li[data-typeid] {
-			padding-right: 6em;
-			padding: 0.5em 0;
-			border-top: 1px dashed #888;
-			background-color: white;
-
-			&:first-child {
-				border-top: none;
-			}
-
-			&:hover {
-				background-color: #F8F8FC;
-			}
-
-			&.selected {
-				background-color: #FFFFCC;
-			}
-
-			&> img:first-child {
-				width: 32px;
-				height: 32px;
-				padding-right: 0.25em;
-			}
-		}
-	}
-
-	ul.types, ul.subgroups {
-		list-style-type: none;
-		margin: 0;
-		padding: 0 0 0 0;
-	}
-
-	h2, h3, h4, h5, h6 {
-		margin: 0;
-		font-size: 1em;
-		padding: 0.25em;
-		border-bottom: 1px solid #CCC;
-		background-color: #F4F4F8;
-
-		&:hover {
-			background-color: #E8E8F0;
-		}
 	}
 }

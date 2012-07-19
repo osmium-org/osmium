@@ -172,3 +172,29 @@ function finalize() {
 	header('Location: ./loadout/'.$loadoutid);
 	die();
 }
+
+function fetch_parents_and_sort(array &$groups, array $fetchparentsof) {
+	while($fetchparentsof !== array()) {
+		/* Query in a loop, like a pro! */
+		$q = \Osmium\Db\query('SELECT c.parentgroupid, p.marketgroupname AS parentname, c.marketgroupid, c.marketgroupname FROM eve.invmarketgroups AS c LEFT JOIN eve.invmarketgroups AS p ON p.marketgroupid = c.parentgroupid WHERE c.marketgroupid IN ('.implode(',', array_keys($fetchparentsof)).') ORDER BY marketgroupname ASC');
+
+		$fetchparentsof = array();
+		while($group = \Osmium\Db\fetch_assoc($q)) {
+			if($group['parentgroupid'] === null) continue;
+
+			$groups[$group['marketgroupid']]['parent'] = $group['parentgroupid'];
+			$groups[$group['parentgroupid']]['groupname'] = $group['parentname'];
+			$groups[$group['parentgroupid']]['subgroups'][$group['marketgroupid']] = true;
+			$fetchparentsof[$group['parentgroupid']] = true;
+		}
+	}
+
+	foreach($groups as &$g) {
+		if(!isset($g['subgroups'])) continue;
+
+		/* Sort subgroups alphabetically */
+		uksort($g['subgroups'], function($a, $b) use($groups) {
+				return strcmp($groups[$a]['groupname'], $groups[$b]['groupname']);
+			});
+	}
+}

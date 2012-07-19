@@ -423,13 +423,7 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return $purifier->purify($html);
 }
 
-function print_market_group_with_children($groups, $groupid, $headinglevel = 1, $formatfunc = null) {
-	if($formatfunc === null) {
-		$formatfunc = function($typeid, $typename) {
-			echo "<li data-typeid='".$typeid."'><img src='http://image.eveonline.com/Render/{$typeid}_256.png' alt='' />".htmlspecialchars($typename)."</li>\n";
-		};
-	}
-
+function print_market_group_with_children($groups, $groupid, $headinglevel, $formatfunc) {
 	$headinglevel = min(max(1, $headinglevel), 6);
 	$g = $groups[$groupid];
 

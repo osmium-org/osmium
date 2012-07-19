@@ -16,34 +16,7 @@
  */
 
 $(function() {
-	$("div#selectship").on('click', 'h2, h3, h4, h5, h6', function() {
-		var d = $(this).parent();
-		var hidden = d.hasClass('hidden');
-		var marketgroupid = d.data('marketgroupid');
-		var key = 'new_fitting_step1_' + marketgroupid;
-
-		if(hidden) {
-			d.children('ul.subgroups, ul.types').fadeIn(500);
-			d.removeClass('hidden');
-		} else {
-			d.children('ul.subgroups, ul.types').hide();
-			d.addClass('hidden');
-		}
-
-		localStorage.setItem(key, hidden ? "0" : "1");
-	});
-
-	$("div#selectship div.mgroup div.mgroup").each(function() {
-		var mgroup = $(this);
-		var marketgroupid = mgroup.data('marketgroupid');
-		var hidden = localStorage.getItem("new_fitting_step1_" + marketgroupid);
-		if(hidden === null) hidden = "1";
-
-		if(hidden === "1") {
-			mgroup.children('ul.subgroups, ul.types').hide();
-			mgroup.addClass('hidden');
-		}
-	});
+	osmium_togglify_market_sections('new_fitting_step1', $("div#selectship"));
 
 	$("div#selectship ul.types > li[data-typeid]").click(function() {
 		$("div#selectship ul.types > li.selected").removeClass('selected');
