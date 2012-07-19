@@ -1,0 +1,31 @@
+@mixin tabs {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+
+	border-bottom: 1px solid #888;
+
+	&> li {
+		position: relative;
+		bottom: -1px;
+
+		display: inline-block;
+		border: 1px solid #888;
+
+		&.active {
+			border-bottom: 1px solid white;
+
+			&> a {
+				color: black;
+				text-decoration: none;
+				font-weight: bold;
+			}
+		}
+
+		&> a {
+			display: block;
+			padding: 0.25em 0.5em;
+		}
+	}
+}

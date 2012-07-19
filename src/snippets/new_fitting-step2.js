@@ -238,6 +238,21 @@ osmium_get_next_index = function(type) {
 };
 
 $(function() {
+	osmium_tabify($("div#s2tabs > ul.tabs"), 0);
+	$("div#s2tabs > ul.tabs > li").eq(1).bind('afteractive', function() {
+		osmium_togglify_lazy_load_images($("div#modulebrowser > div"));
+	});
+
+	$("img#modulebrowser_spinner").css("visibility", "visible");
+	$.get('./static/cache/HTML_modules.html', function(modules) {
+		$('div#modulebrowser > div')
+			.html(modules)
+			.find('div.mgroup > ul.types > li')
+			.append("<span class='links'><a href='javascript:void(0);' class='addmoduletoloadout' title='Add module to the loadout'>+</a><a href='javascript:void(0);' class='addmoduletoshortlist' title='Add module to shortlist'>♡</a></span>");
+		osmium_togglify_market_sections('new_fitting_step2', $("div#modulebrowser > div"));
+		$("img#modulebrowser_spinner").css('visibility', 'hidden');
+	});
+
     $("ul#modules_shortlist").sortable({
 		update: osmium_shortlist_commit,
 		items: ".module",
@@ -308,19 +323,20 @@ $(function() {
 		}
     });
 
-	$("ul#search_results").on('click', 'li.module > span.links > a.addmoduletoshortlist', function(obj) {
-		$("ul#modules_shortlist > li.shortlist_dummy").before($(this).parent().parent().clone());
+	$("ul#search_results, div#modulebrowser > div").on('click', 'li[data-typeid] > span.links > a.addmoduletoshortlist', function(obj) {
+		$("ul#modules_shortlist > li.shortlist_dummy").before($(this).parent().parent().clone().addClass('module'));
 		osmium_shortlist_commit();
 		obj.stopPropagation();
 		obj.preventDefault();
 	});
 
-    $("ul#search_results, ul#modules_shortlist").on('dblclick', "li.module", function(obj) {
+    $("ul#search_results, ul#modules_shortlist, div#modulebrowser > div").on('dblclick', "li[data-typeid]", function(obj) {
 		var phony = $("div#" + $(this).data('slottype') + "_slots > ul > li.empty_slot");
 		var clone = $(this).clone();
 		var type = $(this).data('slottype');
 
 		clone.data('index', osmium_get_next_index(type));
+		clone.addClass('module');
 		clone.find('span.links').remove();
 
 		if(phony.length == 0) {
@@ -330,7 +346,7 @@ $(function() {
 			phony.first().remove();
 		}
 		osmium_loadout_commit();
-    }).on('click', "li.module > span.links > a.addmoduletoloadout", function(obj) {
+    }).on('click', "li[data-typeid] > span.links > a.addmoduletoloadout", function(obj) {
 		$(this).parent().parent().trigger('dblclick');
 		obj.stopPropagation();
 		obj.preventDefault();

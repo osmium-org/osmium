@@ -19,7 +19,7 @@ tags:
 	ctags -e -R .
 
 clear-harmless-cache:
-	rm -f cache/OsmiumCache_* static/cache/JS_*
+	rm -f cache/OsmiumCache_* static/cache/*.{js,html}
 	rm -Rf cache/CSS cache/HTML cache/URI
 
 clear-api-cache:

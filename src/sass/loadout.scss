@@ -4,8 +4,8 @@ $module-width-extrasmall: 16em;
 $metadata-width: 30em;
 $metadata-width-small: 20em;
 
-$developed-char: '▾';
-$hidden-char: '▸';
+$developed-char: '\0025BE';
+$hidden-char: '\0025B8';
 
 @mixin prop-metadata-width($prop, $add:0) {
 	@include layout-type(small) { #{$prop}: $metadata-width-small + $add; }
