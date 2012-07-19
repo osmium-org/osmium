@@ -1,10 +1,11 @@
-staging
-=======
+v0.2-rc1, released 2012-07-19
+=============================
 
 Dependencies have changed: iconv and intl are now used if available.
 
 The eve and osmium schemas have been updated to include (and use) the
-invmarketgroups data from the Eos dump.
+invmarketgroups data from the Eos dump. See the README for how to
+correctly update the schema in your production environment.
 
 v0.1-rc3, released 2012-07-16
 =============================
