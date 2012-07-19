@@ -4,6 +4,9 @@ $module-width-extrasmall: 16em;
 $metadata-width: 30em;
 $metadata-width-small: 20em;
 
+$developed-char: '▾';
+$hidden-char: '▸';
+
 @mixin prop-metadata-width($prop, $add:0) {
 	@include layout-type(small) { #{$prop}: $metadata-width-small + $add; }
 	@include layout-type(normal) { #{$prop}: $metadata-width + $add; }
@@ -252,7 +255,7 @@ div#computed_attributes > section {
 		cursor: pointer;
 
 		&:before {
-			content: '▾';
+			content: $developed-char;
 			padding-right: 0.25em;
 		}
 
@@ -266,7 +269,7 @@ div#computed_attributes > section {
 	}
 
 	&.hidden > h4:before {
-		content: '▸';
+		content: $hidden-char;
 	}
 
 	&:first-child > h4 {

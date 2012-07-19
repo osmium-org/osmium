@@ -374,3 +374,120 @@ div#dronebay {
 		}
 	}
 }
+
+div#selectship {
+	&> form > table > tbody > tr > td > div.mgroup {
+		min-width: 40em;
+
+		&> h1 {
+			display: none;
+		}
+
+		&> ul.subgroups > li:first-child > div.mgroup > h2 {
+			border-top: 1px solid #CCC;
+		}
+
+		&> ul.subgroups > li > div.mgroup {
+
+			&> ul.subgroups > li > div.mgroup {
+				&> h3 {
+					padding-left: 2em;
+				}
+
+				&> ul.types > li {
+					padding-left: 6em;
+				}
+
+				&> ul.subgroups > li > div.mgroup {
+					&> h4 {
+						padding-left: 3em;
+					}
+
+					&> ul.types > li {
+						padding-left: 7em;
+					}
+
+					&> ul.subgroups > li > div.mgroup {
+						&> h5 {
+							padding-left: 4em;
+						}
+
+						&> ul.types > li {
+							padding-left: 8em;
+						}
+
+						&> ul.subgroups > li > div.mgroup {
+							&> h6 {
+								padding-left: 5em;
+							}
+
+							&> ul.types > li {
+								padding-left: 9em;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		div.mgroup {
+			&> h2, &> h3, &> h4, &> h5, &> h6 {
+				&:first-child:before {
+					content: $developed-char;
+					padding-right: 0.25em;
+				}
+			}
+
+			&.hidden {
+				&> h2, &> h3, &> h4, &> h5, &> h6 {
+					&:first-child:before {
+						content: $hidden-char;
+					}
+				}
+			}
+		}
+
+		ul.types > li[data-typeid] {
+			padding-right: 6em;
+			padding: 0.5em 0;
+			border-top: 1px dashed #888;
+			background-color: white;
+
+			&:first-child {
+				border-top: none;
+			}
+
+			&:hover {
+				background-color: #F8F8FC;
+			}
+
+			&.selected {
+				background-color: #FFFFCC;
+			}
+
+			&> img:first-child {
+				width: 32px;
+				height: 32px;
+				padding-right: 0.25em;
+			}
+		}
+	}
+
+	ul.types, ul.subgroups {
+		list-style-type: none;
+		margin: 0;
+		padding: 0 0 0 0;
+	}
+
+	h2, h3, h4, h5, h6 {
+		margin: 0;
+		font-size: 1em;
+		padding: 0.25em;
+		border-bottom: 1px solid #CCC;
+		background-color: #F4F4F8;
+
+		&:hover {
+			background-color: #E8E8F0;
+		}
+	}
+}

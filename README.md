@@ -223,25 +223,28 @@ to convert it in PostgreSQL tables:
 This will create two (one for the schema, one for the data) SQL files
 per table in the dump. Then, import the following (in this order):
 
-     # you can find eve.sql in the pgsql directory of the Osmium repo
-     # it is more or less the raw schema with indexes, foreign keys and proper types
-     psql osmium osmium_user < pgsql/eve.sql
+~~~~
+# you can find eve.sql in the pgsql directory of the Osmium repo
+# it is more or less the raw schema with indexes, foreign keys and proper types
+psql osmium osmium_user < pgsql/eve.sql
 
-     psql osmium osmium_user
-     SET search_path TO eve;
-     \i dgmoperands-schema.sql
-     \i dgmoperands-data.sql
-     \i dgmexpressions-schema.sql
-     \i dgmexpressions-data.sql
-     \i invcategories-data.sql
-     \i invgroups-data.sql
-     \i invtypes-data.sql
-     \i invmetagroups-data.sql
-     \i invmetatypes-data.sql
-     \i dgmattribs-data.sql
-     \i dgmeffects-data.sql
-     \i dgmtypeattribs-data.sql
-     \i dgmtypeeffects-data.sql
+psql osmium osmium_user
+SET search_path TO eve;
+\i dgmoperands-schema.sql
+\i dgmoperands-data.sql
+\i dgmexpressions-schema.sql
+\i dgmexpressions-data.sql
+\i invcategories-data.sql
+\i invgroups-data.sql
+\i invmarketgroups-data.sql
+\i invtypes-data.sql
+\i invmetagroups-data.sql
+\i invmetatypes-data.sql
+\i dgmattribs-data.sql
+\i dgmeffects-data.sql
+\i dgmtypeattribs-data.sql
+\i dgmtypeeffects-data.sql
+~~~~
 
 Import the Osmium schema:
 

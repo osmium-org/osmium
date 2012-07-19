@@ -3,6 +3,9 @@ staging
 
 Dependencies have changed: iconv and intl are now used if available.
 
+The eve and osmium schemas have been updated to include (and use) the
+invmarketgroups data from the Eos dump.
+
 v0.1-rc3, released 2012-07-16
 =============================
 

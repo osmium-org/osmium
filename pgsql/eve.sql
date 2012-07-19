@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.4
 -- Dumped by pg_dump version 9.1.4
--- Started on 2012-07-15 11:22:10 CEST
+-- Started on 2012-07-16 19:26:44 CEST
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -13,7 +13,7 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- TOC entry 6 (class 2615 OID 16919)
+-- TOC entry 6 (class 2615 OID 26157)
 -- Name: eve; Type: SCHEMA; Schema: -; Owner: -
 --
 
@@ -27,7 +27,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- TOC entry 162 (class 1259 OID 16920)
+-- TOC entry 161 (class 1259 OID 26158)
 -- Dependencies: 6
 -- Name: dgmattribs; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
@@ -54,7 +54,7 @@ CREATE TABLE dgmattribs (
 
 
 --
--- TOC entry 163 (class 1259 OID 16926)
+-- TOC entry 162 (class 1259 OID 26164)
 -- Dependencies: 6
 -- Name: dgmcacheexpressions; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
@@ -66,7 +66,7 @@ CREATE TABLE dgmcacheexpressions (
 
 
 --
--- TOC entry 164 (class 1259 OID 16932)
+-- TOC entry 163 (class 1259 OID 26170)
 -- Dependencies: 6
 -- Name: dgmeffects; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
@@ -106,7 +106,7 @@ CREATE TABLE dgmeffects (
 
 
 --
--- TOC entry 165 (class 1259 OID 16938)
+-- TOC entry 164 (class 1259 OID 26176)
 -- Dependencies: 6
 -- Name: dgmtypeattribs; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
@@ -119,7 +119,7 @@ CREATE TABLE dgmtypeattribs (
 
 
 --
--- TOC entry 166 (class 1259 OID 16941)
+-- TOC entry 165 (class 1259 OID 26179)
 -- Dependencies: 6
 -- Name: dgmtypeeffects; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
@@ -132,8 +132,8 @@ CREATE TABLE dgmtypeeffects (
 
 
 --
--- TOC entry 167 (class 1259 OID 16944)
--- Dependencies: 2040 2041 6
+-- TOC entry 166 (class 1259 OID 26182)
+-- Dependencies: 1897 1898 6
 -- Name: invcategories; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -149,8 +149,8 @@ CREATE TABLE invcategories (
 
 
 --
--- TOC entry 168 (class 1259 OID 16952)
--- Dependencies: 2042 2043 6
+-- TOC entry 167 (class 1259 OID 26190)
+-- Dependencies: 1899 1900 6
 -- Name: invgroups; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -173,8 +173,28 @@ CREATE TABLE invgroups (
 
 
 --
--- TOC entry 169 (class 1259 OID 16960)
--- Dependencies: 2044 2045 6
+-- TOC entry 171 (class 1259 OID 26347)
+-- Dependencies: 6
+-- Name: invmarketgroups; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE invmarketgroups (
+    parentgroupid integer,
+    marketgroupid integer NOT NULL,
+    marketgroupname character varying(100) NOT NULL,
+    description character varying(3000) NOT NULL,
+    graphicid integer,
+    hastypes integer NOT NULL,
+    iconid integer,
+    dataid integer NOT NULL,
+    marketgroupnameid integer NOT NULL,
+    descriptionid integer NOT NULL
+);
+
+
+--
+-- TOC entry 168 (class 1259 OID 26198)
+-- Dependencies: 1901 1902 6
 -- Name: invmetagroups; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -190,7 +210,7 @@ CREATE TABLE invmetagroups (
 
 
 --
--- TOC entry 170 (class 1259 OID 16968)
+-- TOC entry 169 (class 1259 OID 26206)
 -- Dependencies: 6
 -- Name: invmetatypes; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
@@ -203,8 +223,8 @@ CREATE TABLE invmetatypes (
 
 
 --
--- TOC entry 171 (class 1259 OID 16971)
--- Dependencies: 2046 2047 6
+-- TOC entry 170 (class 1259 OID 26209)
+-- Dependencies: 1903 1904 6
 -- Name: invtypes; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -234,8 +254,8 @@ CREATE TABLE invtypes (
 
 
 --
--- TOC entry 2052 (class 2606 OID 16980)
--- Dependencies: 163 163
+-- TOC entry 1909 (class 2606 OID 26218)
+-- Dependencies: 162 162
 -- Name: cacheexpressions_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -244,8 +264,8 @@ ALTER TABLE ONLY dgmcacheexpressions
 
 
 --
--- TOC entry 2050 (class 2606 OID 16982)
--- Dependencies: 162 162
+-- TOC entry 1907 (class 2606 OID 26220)
+-- Dependencies: 161 161
 -- Name: dgmattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -254,8 +274,8 @@ ALTER TABLE ONLY dgmattribs
 
 
 --
--- TOC entry 2059 (class 2606 OID 16984)
--- Dependencies: 164 164
+-- TOC entry 1916 (class 2606 OID 26222)
+-- Dependencies: 163 163
 -- Name: dgmeffects_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -264,8 +284,8 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- TOC entry 2066 (class 2606 OID 16986)
--- Dependencies: 165 165 165
+-- TOC entry 1923 (class 2606 OID 26224)
+-- Dependencies: 164 164 164
 -- Name: dgmtypeattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -274,8 +294,8 @@ ALTER TABLE ONLY dgmtypeattribs
 
 
 --
--- TOC entry 2070 (class 2606 OID 16988)
--- Dependencies: 166 166 166
+-- TOC entry 1927 (class 2606 OID 26226)
+-- Dependencies: 165 165 165
 -- Name: dgmtypeeffects_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -284,8 +304,8 @@ ALTER TABLE ONLY dgmtypeeffects
 
 
 --
--- TOC entry 2073 (class 2606 OID 16990)
--- Dependencies: 167 167
+-- TOC entry 1930 (class 2606 OID 26228)
+-- Dependencies: 166 166
 -- Name: invcategories_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -294,8 +314,8 @@ ALTER TABLE ONLY invcategories
 
 
 --
--- TOC entry 2076 (class 2606 OID 16992)
--- Dependencies: 168 168
+-- TOC entry 1933 (class 2606 OID 26230)
+-- Dependencies: 167 167
 -- Name: invgroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -304,8 +324,18 @@ ALTER TABLE ONLY invgroups
 
 
 --
--- TOC entry 2078 (class 2606 OID 16994)
--- Dependencies: 169 169
+-- TOC entry 1949 (class 2606 OID 26354)
+-- Dependencies: 171 171
+-- Name: invmarketgroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY invmarketgroups
+    ADD CONSTRAINT invmarketgroups_pkey PRIMARY KEY (marketgroupid);
+
+
+--
+-- TOC entry 1935 (class 2606 OID 26232)
+-- Dependencies: 168 168
 -- Name: invmetagroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -314,8 +344,8 @@ ALTER TABLE ONLY invmetagroups
 
 
 --
--- TOC entry 2082 (class 2606 OID 16996)
--- Dependencies: 170 170
+-- TOC entry 1939 (class 2606 OID 26234)
+-- Dependencies: 169 169
 -- Name: invmetatypes_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -324,8 +354,8 @@ ALTER TABLE ONLY invmetatypes
 
 
 --
--- TOC entry 2086 (class 2606 OID 16998)
--- Dependencies: 171 171
+-- TOC entry 1944 (class 2606 OID 26236)
+-- Dependencies: 170 170
 -- Name: invtypes_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -334,8 +364,8 @@ ALTER TABLE ONLY invtypes
 
 
 --
--- TOC entry 2048 (class 1259 OID 16999)
--- Dependencies: 162
+-- TOC entry 1905 (class 1259 OID 26237)
+-- Dependencies: 161
 -- Name: dgmattribs_attributename_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -343,8 +373,8 @@ CREATE INDEX dgmattribs_attributename_idx ON dgmattribs USING btree (attributena
 
 
 --
--- TOC entry 2053 (class 1259 OID 17000)
--- Dependencies: 164
+-- TOC entry 1910 (class 1259 OID 26238)
+-- Dependencies: 163
 -- Name: dgmeffects_dischargeattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -352,8 +382,8 @@ CREATE INDEX dgmeffects_dischargeattributeid_idx ON dgmeffects USING btree (disc
 
 
 --
--- TOC entry 2054 (class 1259 OID 17001)
--- Dependencies: 164
+-- TOC entry 1911 (class 1259 OID 26239)
+-- Dependencies: 163
 -- Name: dgmeffects_durationattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -361,8 +391,8 @@ CREATE INDEX dgmeffects_durationattributeid_idx ON dgmeffects USING btree (durat
 
 
 --
--- TOC entry 2055 (class 1259 OID 17002)
--- Dependencies: 164
+-- TOC entry 1912 (class 1259 OID 26240)
+-- Dependencies: 163
 -- Name: dgmeffects_effectcategory_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -370,8 +400,8 @@ CREATE INDEX dgmeffects_effectcategory_idx ON dgmeffects USING btree (effectcate
 
 
 --
--- TOC entry 2056 (class 1259 OID 17003)
--- Dependencies: 164
+-- TOC entry 1913 (class 1259 OID 26241)
+-- Dependencies: 163
 -- Name: dgmeffects_effectname_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -379,8 +409,8 @@ CREATE INDEX dgmeffects_effectname_idx ON dgmeffects USING btree (effectname);
 
 
 --
--- TOC entry 2057 (class 1259 OID 17004)
--- Dependencies: 164
+-- TOC entry 1914 (class 1259 OID 26242)
+-- Dependencies: 163
 -- Name: dgmeffects_falloffattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -388,8 +418,8 @@ CREATE INDEX dgmeffects_falloffattributeid_idx ON dgmeffects USING btree (fallof
 
 
 --
--- TOC entry 2060 (class 1259 OID 17005)
--- Dependencies: 164
+-- TOC entry 1917 (class 1259 OID 26243)
+-- Dependencies: 163
 -- Name: dgmeffects_postexpression_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -397,8 +427,8 @@ CREATE INDEX dgmeffects_postexpression_idx ON dgmeffects USING btree (postexpres
 
 
 --
--- TOC entry 2061 (class 1259 OID 17006)
--- Dependencies: 164
+-- TOC entry 1918 (class 1259 OID 26244)
+-- Dependencies: 163
 -- Name: dgmeffects_preexpression_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -406,8 +436,8 @@ CREATE INDEX dgmeffects_preexpression_idx ON dgmeffects USING btree (preexpressi
 
 
 --
--- TOC entry 2062 (class 1259 OID 17007)
--- Dependencies: 164
+-- TOC entry 1919 (class 1259 OID 26245)
+-- Dependencies: 163
 -- Name: dgmeffects_rangeattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -415,8 +445,8 @@ CREATE INDEX dgmeffects_rangeattributeid_idx ON dgmeffects USING btree (rangeatt
 
 
 --
--- TOC entry 2063 (class 1259 OID 17008)
--- Dependencies: 164
+-- TOC entry 1920 (class 1259 OID 26246)
+-- Dependencies: 163
 -- Name: dgmeffects_trackingspeedattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -424,8 +454,8 @@ CREATE INDEX dgmeffects_trackingspeedattributeid_idx ON dgmeffects USING btree (
 
 
 --
--- TOC entry 2064 (class 1259 OID 17009)
--- Dependencies: 165
+-- TOC entry 1921 (class 1259 OID 26247)
+-- Dependencies: 164
 -- Name: dgmtypeattribs_attributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -433,8 +463,8 @@ CREATE INDEX dgmtypeattribs_attributeid_idx ON dgmtypeattribs USING btree (attri
 
 
 --
--- TOC entry 2067 (class 1259 OID 17010)
--- Dependencies: 165
+-- TOC entry 1924 (class 1259 OID 26248)
+-- Dependencies: 164
 -- Name: dgmtypeattribs_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -442,8 +472,8 @@ CREATE INDEX dgmtypeattribs_typeid_idx ON dgmtypeattribs USING btree (typeid);
 
 
 --
--- TOC entry 2068 (class 1259 OID 17011)
--- Dependencies: 166
+-- TOC entry 1925 (class 1259 OID 26249)
+-- Dependencies: 165
 -- Name: dgmtypeeffects_effectid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -451,8 +481,8 @@ CREATE INDEX dgmtypeeffects_effectid_idx ON dgmtypeeffects USING btree (effectid
 
 
 --
--- TOC entry 2071 (class 1259 OID 17012)
--- Dependencies: 166
+-- TOC entry 1928 (class 1259 OID 26250)
+-- Dependencies: 165
 -- Name: dgmtypeeffects_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -460,8 +490,8 @@ CREATE INDEX dgmtypeeffects_typeid_idx ON dgmtypeeffects USING btree (typeid);
 
 
 --
--- TOC entry 2074 (class 1259 OID 17013)
--- Dependencies: 168
+-- TOC entry 1931 (class 1259 OID 26251)
+-- Dependencies: 167
 -- Name: invgroups_categoryid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -469,8 +499,17 @@ CREATE INDEX invgroups_categoryid_idx ON invgroups USING btree (categoryid);
 
 
 --
--- TOC entry 2079 (class 1259 OID 17014)
--- Dependencies: 170
+-- TOC entry 1947 (class 1259 OID 26360)
+-- Dependencies: 171
+-- Name: invmarketgroups_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE INDEX invmarketgroups_parentgroupid_idx ON invmarketgroups USING btree (parentgroupid);
+
+
+--
+-- TOC entry 1936 (class 1259 OID 26252)
+-- Dependencies: 169
 -- Name: invmetatypes_metagroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -478,8 +517,8 @@ CREATE INDEX invmetatypes_metagroupid_idx ON invmetatypes USING btree (metagroup
 
 
 --
--- TOC entry 2080 (class 1259 OID 17015)
--- Dependencies: 170
+-- TOC entry 1937 (class 1259 OID 26253)
+-- Dependencies: 169
 -- Name: invmetatypes_parenttypeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -487,8 +526,8 @@ CREATE INDEX invmetatypes_parenttypeid_idx ON invmetatypes USING btree (parentty
 
 
 --
--- TOC entry 2083 (class 1259 OID 17016)
--- Dependencies: 170
+-- TOC entry 1940 (class 1259 OID 26254)
+-- Dependencies: 169
 -- Name: invmetatypes_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -496,8 +535,8 @@ CREATE INDEX invmetatypes_typeid_idx ON invmetatypes USING btree (typeid);
 
 
 --
--- TOC entry 2084 (class 1259 OID 17017)
--- Dependencies: 171
+-- TOC entry 1941 (class 1259 OID 26255)
+-- Dependencies: 170
 -- Name: invtypes_groupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -505,8 +544,17 @@ CREATE INDEX invtypes_groupid_idx ON invtypes USING btree (groupid);
 
 
 --
--- TOC entry 2087 (class 1259 OID 17018)
--- Dependencies: 171
+-- TOC entry 1942 (class 1259 OID 26361)
+-- Dependencies: 170
+-- Name: invtypes_marketgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE INDEX invtypes_marketgroupid_idx ON invtypes USING btree (marketgroupid);
+
+
+--
+-- TOC entry 1945 (class 1259 OID 26256)
+-- Dependencies: 170
 -- Name: invtypes_published_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -514,8 +562,8 @@ CREATE INDEX invtypes_published_idx ON invtypes USING btree (published);
 
 
 --
--- TOC entry 2088 (class 1259 OID 17019)
--- Dependencies: 171
+-- TOC entry 1946 (class 1259 OID 26257)
+-- Dependencies: 170
 -- Name: invtypes_typename_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -523,8 +571,8 @@ CREATE INDEX invtypes_typename_idx ON invtypes USING btree (typename);
 
 
 --
--- TOC entry 2089 (class 2606 OID 17020)
--- Dependencies: 164 162 2049
+-- TOC entry 1950 (class 2606 OID 26258)
+-- Dependencies: 1906 161 163
 -- Name: dgmeffects_dischargeattributeid; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -533,8 +581,8 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- TOC entry 2090 (class 2606 OID 17025)
--- Dependencies: 164 162 2049
+-- TOC entry 1951 (class 2606 OID 26263)
+-- Dependencies: 163 161 1906
 -- Name: dgmeffects_durationattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -543,8 +591,8 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- TOC entry 2091 (class 2606 OID 17030)
--- Dependencies: 164 162 2049
+-- TOC entry 1952 (class 2606 OID 26268)
+-- Dependencies: 163 1906 161
 -- Name: dgmeffects_falloffattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -553,8 +601,8 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- TOC entry 2092 (class 2606 OID 17035)
--- Dependencies: 162 164 2049
+-- TOC entry 1953 (class 2606 OID 26273)
+-- Dependencies: 1906 161 163
 -- Name: dgmeffects_rangeattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -563,8 +611,8 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- TOC entry 2093 (class 2606 OID 17040)
--- Dependencies: 164 162 2049
+-- TOC entry 1954 (class 2606 OID 26278)
+-- Dependencies: 163 1906 161
 -- Name: dgmeffects_trackingspeedattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -573,8 +621,8 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- TOC entry 2094 (class 2606 OID 17045)
--- Dependencies: 165 162 2049
+-- TOC entry 1955 (class 2606 OID 26283)
+-- Dependencies: 1906 164 161
 -- Name: dgmtypeattribs_attributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -583,8 +631,8 @@ ALTER TABLE ONLY dgmtypeattribs
 
 
 --
--- TOC entry 2095 (class 2606 OID 17050)
--- Dependencies: 166 164 2058
+-- TOC entry 1956 (class 2606 OID 26288)
+-- Dependencies: 165 163 1915
 -- Name: dgmtypeeffects_effectid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -593,8 +641,8 @@ ALTER TABLE ONLY dgmtypeeffects
 
 
 --
--- TOC entry 2096 (class 2606 OID 17055)
--- Dependencies: 166 171 2085
+-- TOC entry 1957 (class 2606 OID 26293)
+-- Dependencies: 165 170 1943
 -- Name: dgmtypeeffects_typeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -603,8 +651,8 @@ ALTER TABLE ONLY dgmtypeeffects
 
 
 --
--- TOC entry 2097 (class 2606 OID 17060)
--- Dependencies: 167 2072 168
+-- TOC entry 1958 (class 2606 OID 26298)
+-- Dependencies: 1929 166 167
 -- Name: invgroups_categoryid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -613,8 +661,18 @@ ALTER TABLE ONLY invgroups
 
 
 --
--- TOC entry 2098 (class 2606 OID 17065)
--- Dependencies: 169 2077 170
+-- TOC entry 1964 (class 2606 OID 26355)
+-- Dependencies: 171 171 1948
+-- Name: invmarketgroups_parentgroupid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY invmarketgroups
+    ADD CONSTRAINT invmarketgroups_parentgroupid_fkey FOREIGN KEY (parentgroupid) REFERENCES invmarketgroups(marketgroupid) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- TOC entry 1959 (class 2606 OID 26303)
+-- Dependencies: 168 1934 169
 -- Name: invmetatypes_metagroupid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -623,8 +681,8 @@ ALTER TABLE ONLY invmetatypes
 
 
 --
--- TOC entry 2099 (class 2606 OID 17070)
--- Dependencies: 170 171 2085
+-- TOC entry 1960 (class 2606 OID 26308)
+-- Dependencies: 1943 170 169
 -- Name: invmetatypes_parenttypeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -633,8 +691,8 @@ ALTER TABLE ONLY invmetatypes
 
 
 --
--- TOC entry 2100 (class 2606 OID 17075)
--- Dependencies: 170 171 2085
+-- TOC entry 1961 (class 2606 OID 26313)
+-- Dependencies: 1943 170 169
 -- Name: invmetatypes_typeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -643,8 +701,8 @@ ALTER TABLE ONLY invmetatypes
 
 
 --
--- TOC entry 2101 (class 2606 OID 17080)
--- Dependencies: 171 2075 168
+-- TOC entry 1962 (class 2606 OID 26318)
+-- Dependencies: 167 1932 170
 -- Name: invtypes_groupid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -652,7 +710,17 @@ ALTER TABLE ONLY invtypes
     ADD CONSTRAINT invtypes_groupid_fkey FOREIGN KEY (groupid) REFERENCES invgroups(groupid);
 
 
--- Completed on 2012-07-15 11:22:10 CEST
+--
+-- TOC entry 1963 (class 2606 OID 26362)
+-- Dependencies: 1948 171 170
+-- Name: invtypes_marketgroupid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY invtypes
+    ADD CONSTRAINT invtypes_marketgroupid_fkey FOREIGN KEY (marketgroupid) REFERENCES invmarketgroups(marketgroupid);
+
+
+-- Completed on 2012-07-16 19:26:44 CEST
 
 --
 -- PostgreSQL database dump complete
