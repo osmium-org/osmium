@@ -433,7 +433,7 @@ function print_market_group_with_children($groups, $groupid, $headinglevel = 1, 
 	$headinglevel = min(max(1, $headinglevel), 6);
 	$g = $groups[$groupid];
 
-	echo "<div data-marketgroupid='".$groupid."' class='mgroup'>\n<h$headinglevel>".$g['groupname']."</h$headinglevel>\n";
+	echo "<div data-marketgroupid='".$groupid."' class='mgroup'>\n<h$headinglevel>".htmlspecialchars($g['groupname'])."</h$headinglevel>\n";
 
 	if(isset($g['subgroups'])) {
 		echo "<ul class='subgroups'>\n";
