@@ -270,27 +270,27 @@ div#s2tabs {
 			}
 		}
 	}
+}
 
-	div#searchbox > ul#search_results,
-	div#dronelistbox > ul#search_results,
-	div#shortlistbox > ul#modules_shortlist {
-		margin: 0;
-		padding: 0;
-		list-style-type: none;
-		width: $module-width;
-		display: inline-block;
-		text-align: left;
+div#s2tabs > div#searchbox > ul#search_results,
+div#dronelistbox > ul#search_results,
+div#s2tabs > div#shortlistbox > ul#modules_shortlist {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	width: $module-width;
+	display: inline-block;
+	text-align: left;
 
-		&> li {
-			@include module;
+	&> li {
+		@include module;
 
-			&.module, &.drone {
-				cursor: move;
-			}
+		&.module, &.drone {
+			cursor: move;
+		}
 
-			&.shortlist_dummy {
-				text-align: center;
-			}
+		&.shortlist_dummy {
+			text-align: center;
 		}
 	}
 }
