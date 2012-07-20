@@ -297,7 +297,6 @@ function select_ship(&$fit, $new_typeid) {
 		'stackable' => 0,
 		'highisgood' => 1,
 		);
-	$fit['cache']['__attributes']['4'] =& $fit['cache']['__attributes']['mass'];
 	
 	\Osmium\Dogma\eval_ship_preexpressions($fit);
 
@@ -971,16 +970,16 @@ function maybe_remove_cache(&$fit, $deleted_typeid) {
 function get_attribute_in_cache($attributenameorid, &$out) {
 	if(isset($out['__attributes'][$attributenameorid])) return;
 
-	$column = is_numeric($attributenameorid) ? 'attributeid' : 'attributename';
+	$name = is_numeric($attributenameorid) ?
+		\Osmium\Dogma\get_attributename($attributenameorid) : $attributenameorid;
 
 	$attribsq = \Osmium\Db\query_params('SELECT attributename, attributeid, highisgood, stackable, defaultvalue
   FROM eve.dgmattribs 
-  WHERE dgmattribs.'.$column.' = $1', array($attributenameorid));
+  WHERE attributename = $1', array($name));
 
 	$row = \Osmium\Db\fetch_assoc($attribsq);
 		
 	$out['__attributes'][$row['attributename']] = $row;
-	$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];
 }
 
 /** @internal */
@@ -1047,7 +1046,6 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out['__effects'][$row['effectname']]['rangeattributeid'] = $row['rangeattributeid'];
 		$out['__effects'][$row['effectname']]['falloffattributeid'] = $row['falloffattributeid'];
 		$out['__effects'][$row['effectname']]['effectcategory'] = $row['effectcategory'];
-		$out['__effects'][$row['effectid']] =& $out['__effects'][$row['effectname']];
 
 		unset($row['typeid']);
 		unset($row['durationattributeid']);
@@ -1071,7 +1069,6 @@ function get_attributes_and_effects($typeids, &$out) {
 		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'];
 		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'];
 		$out['__attributes'][$row['attributename']]['defaultvalue'] = $row['defaultvalue'];
-		$out['__attributes'][$row['attributeid']] =& $out['__attributes'][$row['attributename']];
 
 		unset($row['typeid']);
 		unset($row['stackable']);

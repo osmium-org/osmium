@@ -45,8 +45,9 @@ function get_capacitor_stability(&$fit) {
 				if(!in_array($effectdata['effectcategory'], $categories[$module['state']])) continue;
 				if(!isset($effectdata['durationattributeid'])) continue;
 
-				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
-					$fit['cache']['__attributes'][$effectdata['durationattributeid']]['attributename']);
+				$duration = \Osmium\Dogma\get_module_attribute(
+					$fit, $type, $index, 
+					\Osmium\Dogma\get_attributename($effectdata['durationattributeid']));
 
 				if($effect['effectname'] == 'powerBooster') {
 					/* Special case must be hardcoded (eg. cap boosters) */
@@ -64,8 +65,9 @@ function get_capacitor_stability(&$fit) {
 				if(!isset($effectdata['dischargeattributeid'])) continue;
 				get_attribute_in_cache($effectdata['dischargeattributeid'], $fit['cache']);
 
-				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 
-					$fit['cache']['__attributes'][$effectdata['dischargeattributeid']]['attributename']);
+				$discharge = \Osmium\Dogma\get_module_attribute(
+					$fit, $type, $index, 
+					\Osmium\Dogma\get_attributename($effectdata['dischargeattributeid']));
 
 				$usage_rate += $discharge / $duration;
 				$usage[] = array($discharge, $duration, 0);
@@ -208,8 +210,8 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 	get_attribute_in_cache($durationattributeid, $fit['cache']);
 	get_attribute_in_cache($dischargeattributeid, $fit['cache']);
 
-	$durationattributename = $fit['cache']['__attributes'][$durationattributeid]['attributename'];
-	$dischargeattributename = $fit['cache']['__attributes'][$dischargeattributeid]['attributename'];
+	$durationattributename = \Osmium\Dogma\get_attributename($durationattributeid);
+	$dischargeattributename = \Osmium\Dogma\get_attributename($dischargeattributeid);
 
 	$modules = array();
 
@@ -287,9 +289,8 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
 
 	get_attribute_in_cache($fit['cache']['__effects'][$attackeffectname]['durationattributeid'], $fit['cache']);
 
-	$durationattributename = $fit['cache']['__attributes'][
-		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']
-		]['attributename'];
+	$durationattributename = \Osmium\Dogma\get_attributename(
+		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']);
 
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
@@ -359,9 +360,8 @@ function get_damage_from_drones(&$fit) {
 
 	get_attribute_in_cache($fit['cache']['__effects']['targetAttack']['durationattributeid'], $fit['cache']);
 
-	$durationattributename = $fit['cache']['__attributes'][
-		$fit['cache']['__effects']['targetAttack']['durationattributeid']
-		]['attributename'];
+	$durationattributename = 
+		\Osmium\Dogma\get_attributename($fit['cache']['__effects']['targetAttack']['durationattributeid']);
 
 	foreach($fit['drones'] as $drone) {
 		if($drone['quantityinspace'] == 0) continue;
@@ -416,7 +416,7 @@ function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
 			$attributeid = $effectdata[$t.'attributeid'];
 
 			get_attribute_in_cache($attributeid, $fit['cache']);
-			$attributename = $fit['cache']['__attributes'][$attributeid]['attributename'];
+			$attributename = \Osmium\Dogma\get_attributename($attributeid);
 
 			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
 		}

@@ -24,6 +24,31 @@ const USEFUL_SKILLGROUPS = '(273, 272, 271, 255, 269, 256, 275, 257, 989)';
 
 /* ----------------------------------------------------- */
 
+function get_attributename($attributeid) {
+	static $cache = null;
+	if($cache === null) {
+		$f = \Osmium\CACHE_DIRECTORY.'/DogmaCache_AttributeMap.php';
+		if(file_exists($f)) {
+			$cache = require $f;
+		} else {
+			$cache = array();
+			$q = \Osmium\Db\query('SELECT attributename, attributeid FROM eve.dgmattribs');
+			while($r = \Osmium\Db\fetch_row($q)) {
+				$cache[$r[1]] = $r[0];
+			}
+			file_put_contents($f, "<?php\nreturn ".var_export($cache, true).";\n");
+		}
+	}
+
+	if(!isset($cache[$attributeid])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('get_attributename(): unknown attributeid "'.$attributeid.'"', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
+	}
+
+	return $cache[$attributeid];
+}
+
 function get_expression_maybe_overriden($effectname, $type) {
 	return file_exists($f =__DIR__.'/effectoverrides/'.$effectname.'-'.$type.'.php') ?
 		(require $f) : false;
@@ -317,11 +342,6 @@ function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
 
 /** @internal */
 function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
-	static $hardcoded = array(
-		'cpu OutputBonus' => 'cpuOutputBonus2',
-		'passivethermicDamageResistanceBonus' => 'passiveThermicDamageResistanceBonus',
-		);
-
 	$name = $attribute['name'];
 	$stype = $attribute['source'][0];
 	$modifiers = array();
@@ -382,10 +402,6 @@ function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
 
 	if(isset($src['__modifiers'][$name])) {
 		$modifiers = array_merge_recursive($modifiers, $src['__modifiers'][$name]);
-	}
-
-	if(isset($hardcoded[$name])) {
-		$name = $hardcoded[$name];
 	}
 
 	\Osmium\Fit\get_attribute_in_cache($name, $fit['cache']);
@@ -659,7 +675,7 @@ function eval_defassociation(&$fit, $exp) {
 }
 
 function eval_defattribute(&$fit, $exp) {
-	$name = lcfirst(trim($exp['name']));
+	$name = get_attributename($exp['attributeid']);
 	return array('name' => $name, 'source' => $fit['dogma']['source']);
 }
 
