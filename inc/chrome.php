@@ -449,3 +449,21 @@ function print_market_group_with_children($groups, $groupid, $headinglevel, $for
 
 	echo "</div>\n";
 }
+
+function format_isk($isk) {
+	if($isk >= 10000000000) {
+		$isk = round($isk / 1000000000, 2).'B';
+	} else if($isk >= 1000000000) {
+		$isk = round($isk / 1000000000, 3).'B';
+	} else if($isk > 100000000) {
+		$isk = round($isk / 1000000, 1).'M';
+	} else if($isk > 10000000) {
+		$isk = round($isk / 1000000, 2).'M';
+	} else if($isk > 1000000) {
+		$isk = round($isk / 1000000, 3).'M';
+	} else {
+		$isk = round($isk / 1000, 1).'K';
+	}
+
+	return $isk.' ISK';
+}
