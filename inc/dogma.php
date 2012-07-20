@@ -469,25 +469,25 @@ function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood
 	/* TODO: optimize stuff if we have a postassignment (skip everything before) */
 
 	foreach($actions as $name => $func) {
-		if(isset($modifiers[$name])) {
-			foreach($modifiers[$name] as $type => $a) {
-				$penalize = array();
+		if(!isset($modifiers[$name])) continue;
 
-				foreach($a as $attr) {
-					if($stackable || !is_modifier_penalizable($name, $attr)) {
-						$func($base_value, get_final_attribute_value($fit, $attr));
-					} else {
-						$v = 1;
-						$func($v, get_final_attribute_value($fit, $attr));
-						/* Only penalize the final multiplier (and not
-						 * the percentage in case of postpercent */
-						$penalize[] = $v;
-					}
+		$penalize = array();
+
+		foreach($modifiers[$name] as $type => $a) {
+			foreach($a as $attr) {
+				if($stackable || !is_modifier_penalizable($name, $attr)) {
+					$func($base_value, get_final_attribute_value($fit, $attr));
+				} else {
+					$v = 1;
+					$func($v, get_final_attribute_value($fit, $attr));
+					/* Only penalize the final multiplier (and not
+					 * the percentage in case of postpercent */
+					$penalize[] = $v;
 				}
-
-				$base_value *= penalize($penalize, $highisgood);
 			}
 		}
+
+		$base_value *= penalize($penalize, $highisgood);
 	}
 
 	return $base_value;

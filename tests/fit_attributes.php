@@ -468,8 +468,32 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 0, 20448); /* Dual 1000mm Railgun I */
 		\Osmium\Fit\add_charge($fit, 'high', 0, 17648); /* Antimatter Charge XL */
 
+		/* Pyfa 1.1.8 */
 		list($dps, $alpha) = \Osmium\Fit\get_damage_from_turrets($fit);
 		$this->assertEquals(465, $dps, '', 0.5);
 		$this->assertEquals(4802.4, $alpha, '', 0.05);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testFalloffWithStackingPenalizedRig() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 28665); /* Vargur */
+		\Osmium\Fit\add_module($fit, 0, 2929); /* 800mm Repeating Artillery II */
+		\Osmium\Fit\add_charge($fit, 'high', 0, 201); /* EMP L */
+
+		\Osmium\Fit\add_module($fit, 0, 15965); /* RF Tracking Enhancer */
+		\Osmium\Fit\add_module($fit, 1, 15965);
+		\Osmium\Fit\add_module($fit, 0, 15792); /* FN Tracking Computer */
+		\Osmium\Fit\add_charge($fit, 'medium', 0, 28999); /* Optimal Range Script */
+		\Osmium\Fit\add_module($fit, 0, 26038); /* Large Projectile Ambit Extension I */
+
+		/* Pyfa 1.1.8 */
+		$a = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, 'high', 0);
+		$this->assertEquals(4.27, $a['range'] / 1000, '', 0.005);
+		$this->assertEquals(73.1, $a['falloff'] / 1000, '', 0.05);
+		$this->assertEquals(0.0888, $a['trackingspeed'], '', 0.00005);
 	}
 }
