@@ -314,11 +314,11 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		/* Test the active bonus */
 		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_ACTIVE);
-		//$this->assertShieldResistances($fit, 0.4688, 0.6812, 0.7211, 0.7344);
+		$this->assertShieldResistances($fit, 0.4688, 0.6812, 0.7211, 0.7344);
 
 		/* Test the active bonus when overloaded */
 		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_OVERLOADED);
-		//$this->assertShieldResistances($fit, 0.5625, 0.7375, 0.7703, 0.7812);
+		$this->assertShieldResistances($fit, 0.5625, 0.7375, 0.7703, 0.7812);
 	}
 
 	/**
