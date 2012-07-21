@@ -169,6 +169,7 @@ Dependencies
   * Zlib support
   * (Optional) iconv extension (`iconv.so`)
   * (Optional) intl extension (`intl.so`)
+  * (Optional) APC extension (`apc.so`)
 
 * PostgreSQL >= 9.0
 

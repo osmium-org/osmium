@@ -559,11 +559,11 @@ function pop_cache_enabled() {
  * @param $default the value to return if $key is not found in the
  * cache.
  */
-function get_cache($key, $default = null) {
+function get_cache($key, $default = null, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return $default;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
 	if(file_exists($f)) {
 		$mtime = filemtime($f);
 		if($mtime === 0 || $mtime > time()) {
@@ -580,24 +580,24 @@ function get_cache($key, $default = null) {
  * unless explicitely invalidated. If not, *try* to keep the value in
  * cache for $expires seconds.
  */
-function put_cache($key, $value, $expires = 0) {
+function put_cache($key, $value, $expires = 0, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
 	if($expires > 0) $expires = time() + $expires;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
     return file_put_contents($f, serialize($value)) && touch($f, $expires);
 }
 
 /**
  * Delete a cached variable.
  */
-function invalidate_cache($key) {
+function invalidate_cache($key, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/OsmiumCache_'.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
 	if(file_exists($f)) unlink($f);
 }
 
@@ -629,6 +629,43 @@ function put_state_trypersist($key, $value) {
 	} else {
 		/* For anonymous users, use session-based storage (not really persistent, but better than nothing) */
 		return put_state('__setting_'.$key, $value);
+	}
+}
+
+if(function_exists('apc_store')) {
+	/* Use APC-based memory cache */
+
+	/** @see get_cache() */
+	function get_cache_memory($key, $default = null) {
+		$v = apc_fetch('Osmium_'.$key, $success);
+		return $success ? $v : $default;
+	}
+
+	/** @see put_cache() */
+	function put_cache_memory($key, $value, $expires = 0) {
+		return apc_store('Osmium_'.$key, $value, $expires);
+	}
+
+	/** @see invalidate_cache() */
+	function invalidate_cache_memory($key) {
+		return apc_delete('Osmium_'.$key);
+	}
+} else {
+	/* Use disk-based cache as a fallback */
+
+	/** @see get_cache() */
+	function get_cache_memory($key, $default = null) {
+		return get_cache('MemoryFallback_'.$key, $default);
+	}
+
+	/** @see put_cache() */
+	function put_cache_memory($key, $value, $expires = 0) {
+		return put_cache('MemoryFallback_'.$key, $value, $expires);
+	}
+
+	/** @see invalidate_cache() */
+	function invalidate_cache_memory($key) {
+		return invalidate_cache('MemoryFallback_'.$key);
 	}
 }
 

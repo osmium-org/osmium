@@ -4,22 +4,26 @@ static/chrome.css: src/sass/root.scss src/sass/*.scss
 	sass --unix-newlines -t compact $< | tr -s '\n' > $@
 
 tests:
+	@make -s clear-harmless-cache
 	phpunit --exclude-group expensive,database
 
 db-tests:
+	@make -s clear-harmless-cache
 	phpunit --group database
 
 all-tests:
+	@make -s clear-harmless-cache
 	phpunit
 
 test-coverage:
+	@make -s clear-harmless-cache
 	phpunit --coverage-html tests/coverage
 
 tags:
 	ctags -e -R .
 
 clear-harmless-cache:
-	rm -f cache/OsmiumCache_* cache/DogmaCache_* static/cache/*.{js,html}
+	rm -f cache/OsmiumCache_* static/cache/*.{js,html}
 	rm -Rf cache/CSS cache/HTML cache/URI
 
 clear-api-cache:
@@ -28,5 +32,5 @@ clear-api-cache:
 clear-sessions:
 	rm -f cache/sess_*
 
-.PHONY: default tags tests clear-harmless-cache clear-api-cache clear-sessions
+.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions
 

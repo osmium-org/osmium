@@ -138,11 +138,11 @@ function get_osmium_version() {
 	static $version = null;
 
 	if($version === null) {
-		$version = \Osmium\State\get_cache('git_version', null);
+		$version = \Osmium\State\get_cache_memory('git_version', null);
 		if($version === null) {
 			$version = trim(shell_exec('cd '.escapeshellarg(ROOT)
 			                           .'; (git describe --always --dirty 2>/dev/null || echo "unknown")'));
-			\Osmium\State\put_cache('git_version', $version, 600);
+			\Osmium\State\put_cache_memory('git_version', $version, 600);
 		}
 	}
 

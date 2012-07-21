@@ -27,16 +27,14 @@ const USEFUL_SKILLGROUPS = '(273, 272, 271, 255, 269, 256, 275, 257, 989)';
 function get_attributename($attributeid) {
 	static $cache = null;
 	if($cache === null) {
-		$f = \Osmium\CACHE_DIRECTORY.'/DogmaCache_AttributeMap.php';
-		if(file_exists($f)) {
-			$cache = require $f;
-		} else {
+		$cache = \Osmium\State\get_cache_memory('dogma_attribute_map', null);
+		if($cache === null) {
 			$cache = array();
 			$q = \Osmium\Db\query('SELECT attributename, attributeid FROM eve.dgmattribs');
 			while($r = \Osmium\Db\fetch_row($q)) {
 				$cache[$r[1]] = $r[0];
 			}
-			file_put_contents($f, "<?php\nreturn ".var_export($cache, true).";\n");
+			\Osmium\State\put_cache_memory('dogma_attribute_map', $cache);
 		}
 	}
 
