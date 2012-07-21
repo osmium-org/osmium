@@ -84,8 +84,10 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 					var li = $("div#vloadoutbox > div.slots > ul > li").filter(function() {
 						return $(this).data('slottype') == type && $(this).data('index') == index;
 					});
+
+					var fullrange = $(document.createElement('div')).html(json['ranges'][type][index][1]).text();
 					li.find('span.range').text(json['ranges'][type][index][0])
-						.attr('title', json['ranges'][type][index][1]);
+						.attr('title', fullrange);
 				}
 			}
 		}

@@ -286,7 +286,7 @@ function format_long_range($ranges) {
 		$r[] = "Maximum range: ".$max;
 	}
 
-	return implode(";&#10;", $r);
+	return implode(";&#xa;", $r);
 }
 
 /**
