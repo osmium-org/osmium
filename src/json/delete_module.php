@@ -22,13 +22,13 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	
 	$index = intval($_GET['index']);
 	$typeid = intval($_GET['typeid']);
 
 	\Osmium\Fit\remove_module($fit, $index, $typeid);
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
 } else {
 	\Osmium\Chrome\return_json(array());

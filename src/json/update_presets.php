@@ -51,7 +51,7 @@ if(isset($_GET['type']) && $_GET['type'] == 'module') {
 	\Osmium\Chrome\return_json(array());
 }
 
-$fit = \Osmium\State\get_state('new_fit', array());
+$fit = \Osmium\State\get_new_fit();
 
 if($_GET['action'] == 'create') {
 	$presetid = $create($fit, $_GET['name'], '');
@@ -73,7 +73,7 @@ if($_GET['action'] == 'create') {
 	}
 }
 
-\Osmium\State\put_state('new_fit', $fit);
+\Osmium\State\put_new_fit($fit);
 
 if($_GET['returntype'] == 'module') {
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));

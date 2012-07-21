@@ -19,7 +19,7 @@
 namespace Osmium\Page\NewFitting;
 
 function ship_select() {
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 
 	print_h1('select ship hull');
 	echo "<div id='selectship'>\n";
@@ -48,7 +48,7 @@ function ship_select() {
 function ship_select_pre() { /* Unreachable code for the 1st step */ }
 
 function ship_select_post() {
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	if($fit === array()) {
 		\Osmium\Fit\create($fit);
 	}
@@ -63,7 +63,7 @@ function ship_select_post() {
 		}
 	}
 
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 	return true;
 }
 

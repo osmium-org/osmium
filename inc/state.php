@@ -755,3 +755,17 @@ function get_client_id() {
 
 	return $r[0];
 }
+
+/**
+ * Get the fit currently being edited by the user.
+ */
+function get_new_fit() {
+	return get_cache(SID, array(), 'NewFit_');
+}
+
+/**
+ * Update the fit currently being edited by the user.
+ */
+function put_new_fit($fit) {
+	return put_cache(SID, $fit, 86400, 'NewFit_');
+}

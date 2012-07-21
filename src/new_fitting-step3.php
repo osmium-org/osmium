@@ -43,7 +43,7 @@ function charges_select() {
 	print_attributes(ob_get_clean(), '');
 	print_charge_groups();
 
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	\Osmium\Chrome\print_js_code("osmium_charges_load("
 	                             .json_encode(\Osmium\AjaxCommon\get_loadable_charges($fit))
 	                             .");");

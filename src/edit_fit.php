@@ -32,7 +32,7 @@ if($c != 1) {
 }
 
 $fit = \Osmium\Fit\get_fit(intval($_GET['loadoutid']));
-\Osmium\State\put_state('new_fit', $fit);
+\Osmium\State\put_new_fit($fit);
 \Osmium\State\put_state('create_fit_step', 2); /* Just a hunch, step 5 or even 1 may be better. */
 
 header('Location: ../new');

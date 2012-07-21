@@ -20,9 +20,10 @@ namespace Osmium\Page\NewFitting;
 
 function final_settings() {
 	global $anonymous;
+	$fit = \Osmium\State\get_new_fit();
 
 	print_h1('final adjustments');
-	load_metadata();
+	load_metadata($fit);
 
 	if($anonymous) {
 		$formats = \Osmium\Fit\get_export_formats();
@@ -81,9 +82,8 @@ function final_settings() {
 	\Osmium\Chrome\print_js_snippet('new_fitting-step5');
 }
 
-function load_metadata() {
+function load_metadata(&$fit) {
 	global $anonymous;
-	$fit = \Osmium\State\get_state('new_fit', array());
 
 	isset($fit['metadata']['name']) && $_POST['name'] = $fit['metadata']['name'];
 	isset($fit['metadata']['description']) && $_POST['description'] = $fit['metadata']['description'];
@@ -108,7 +108,7 @@ function update_metadata() {
 	if(!isset($_POST['name'])) return false;
 
 	global $anonymous;
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	if(!isset($fit['metadata'])) $fit['metadata'] = array();
   
 	$errors = 0;
@@ -178,7 +178,7 @@ function update_metadata() {
 		$fit['metadata']['visibility'] = $visibility;
 	}
 
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 	return $errors === 0;
 }
 

@@ -22,7 +22,7 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	$modules = array();
 	$order = array();
 
@@ -41,7 +41,7 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	\Osmium\Fit\add_modules_batch($fit, $modules);
 	\Osmium\Fit\sort_modules($fit, $order);
 
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
 } else {
 	\Osmium\Chrome\return_json(array());

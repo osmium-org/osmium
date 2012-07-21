@@ -25,7 +25,7 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 	\Osmium\Chrome\return_json(array());
 }
 
-$fit = \Osmium\State\get_state('new_fit', array());
+$fit = \Osmium\State\get_new_fit();
 
 $new_charges = array();
 $current_charges = $fit['charges'];
@@ -59,5 +59,5 @@ foreach($current_charges as $type => $a) {
 
 \Osmium\fprintr($new_charges);
 
-\Osmium\State\put_state('new_fit', $fit);
+\Osmium\State\put_new_fit($fit);
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_charges($fit));

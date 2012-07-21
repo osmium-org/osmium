@@ -47,15 +47,15 @@ if(isset($_POST['prev_step'])) {
 } else if(isset($_POST['reset_fit'])) {
 	$step = 1;
 
-	$fit = \Osmium\State\get_state('new_fit');
+	$fit = \Osmium\State\get_new_fit();
 	\Osmium\Fit\destroy($fit);
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 }
 
 if($step < 1) $step = 1;
 if($step > FINAL_STEP) $step = FINAL_STEP;
 
-$fit = \Osmium\State\get_state('new_fit', array());
+$fit = \Osmium\State\get_new_fit();
 
 if(isset($fit['metadata']['loadoutid'])) {
 	\Osmium\Chrome\print_header('Edit loadout #'.$fit['metadata']['loadoutid'], '.');
@@ -132,7 +132,7 @@ function print_attributes($before = '', $after = '') {
 
 function finalize() {
 	global $anonymous;
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 
 	if($anonymous) {
 		$formats = \Osmium\Fit\get_export_formats();
@@ -157,7 +157,7 @@ function finalize() {
 	$loadoutid = $fit['metadata']['loadoutid'];
 	$revision = $fit['metadata']['revision'];
 	\Osmium\Fit\reset($fit);
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 	\Osmium\State\put_state('create_fit_step', 1);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);

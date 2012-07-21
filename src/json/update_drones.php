@@ -25,7 +25,7 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()) {
 	\Osmium\Chrome\return_json(array());
 }
 
-$fit = \Osmium\State\get_state('new_fit', array());
+$fit = \Osmium\State\get_new_fit();
 $drones = array();
 
 foreach($_GET as $k => $v) {
@@ -47,5 +47,5 @@ foreach($old_drones as $typeid => $drone) {
 	\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $drone['quantityinbay']);
 	\Osmium\Fit\remove_drone($fit, $typeid, 'space', $drone['quantityinspace']);
 }
-\Osmium\State\put_state('new_fit', $fit);
+\Osmium\State\put_new_fit($fit);
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));

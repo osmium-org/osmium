@@ -107,7 +107,7 @@ function modules_select() {
 	\Osmium\Chrome\print_js_snippet('tabs');
 	\Osmium\Chrome\print_js_snippet('new_fitting-step2');
 
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	\Osmium\Chrome\print_js_code("osmium_shortlist_load("
 	                             .json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n"
 	                             ."osmium_loadout_load("

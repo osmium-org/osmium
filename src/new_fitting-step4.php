@@ -46,7 +46,7 @@ function print_dronebay() {
 
 function drones_select() {
 	print_h1('select drones');
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 
 	$presetform = "<h2 class='has_spinner'>Drone presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' class='presets'>\n<select name='dronepreset' id='dronepreset'></select><br />\n<button type='button' id='create_drone_preset'>Create new</button> <button type='button' id='clone_drone_preset'>Clone current</button> <button type='button' id='rename_drone_preset'>Rename current</button> <button type='button' id='delete_drone_preset'>Delete current</button><br /><textarea placeholder='Description of this drone preset…' id='drone_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 

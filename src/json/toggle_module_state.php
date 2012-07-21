@@ -22,14 +22,14 @@ require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-	$fit = \Osmium\State\get_state('new_fit', array());
+	$fit = \Osmium\State\get_new_fit();
 	
 	$index = intval($_GET['index']);
 	$typeid = intval($_GET['typeid']);
 	$direction = isset($_GET['direction']) && $_GET['direction'] === 'true';
 
 	\Osmium\Fit\toggle_module_state($fit, $index, $typeid, $direction);
-	\Osmium\State\put_state('new_fit', $fit);
+	\Osmium\State\put_new_fit($fit);
 	\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_fit($fit));
 } else {
 	\Osmium\Chrome\return_json(array());
