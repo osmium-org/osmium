@@ -655,17 +655,17 @@ if(function_exists('apc_store')) {
 
 	/** @see get_cache() */
 	function get_cache_memory($key, $default = null) {
-		return get_cache('MemoryFallback_'.$key, $default);
+		return get_cache($key, $default, 'MemoryCache_');
 	}
 
 	/** @see put_cache() */
 	function put_cache_memory($key, $value, $expires = 0) {
-		return put_cache('MemoryFallback_'.$key, $value, $expires);
+		return put_cache($key, $value, $expires, 'MemoryCache_');
 	}
 
 	/** @see invalidate_cache() */
 	function invalidate_cache_memory($key) {
-		return invalidate_cache('MemoryFallback_'.$key);
+		return invalidate_cache($key, 'MemoryCache_');
 	}
 }
 
