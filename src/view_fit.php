@@ -251,7 +251,7 @@ echo "</div>\n";
 
 /* ----------------------------------------------------- */
 
-echo "<div id='vloadoutbox' data-loadoutid='".$fit['metadata']['loadoutid']."' data-presetid='".$fit['modulepresetid']."' data-cpid='".$fit['chargepresetid']."' data-dpid='".$fit['dronepresetid']."'>\n";
+echo "<div id='vloadoutbox' data-loadoutid='".$fit['metadata']['loadoutid']."' data-revision='".$fit['metadata']['revision']."' data-presetid='".$fit['modulepresetid']."' data-cpid='".$fit['chargepresetid']."' data-dpid='".$fit['dronepresetid']."'>\n";
 
 echo "<header>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";

@@ -21,6 +21,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 
 	var opts = {
 		loadoutid: $('div#vloadoutbox').data('loadoutid'),
+		revision: $('div#vloadoutbox').data('revision'),
 		pid: $('div#vloadoutbox').data('presetid'),
 		cpid: $('div#vloadoutbox').data('cpid'),
 		dpid: $('div#vloadoutbox').data('dpid'),

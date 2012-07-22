@@ -21,14 +21,23 @@ namespace Osmium\Json\ViewLoadoutAlter;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
+$loadoutid = isset($_GET['loadoutid']) ? intval($_GET['loadoutid']) : 0;
+$revision = isset($_GET['revision']) ? intval($_GET['revision']) : 0;
+$cachename = SID.'_view_fit_'.$loadoutid.'_'.$revision;
+
 $green = \Osmium\State\get_state('green_fits', array());
-if(!isset($green[$_GET['loadoutid']]) || $green[$_GET['loadoutid']] !== true) {
+if(!isset($green[$loadoutid]) || $green[$loadoutid] !== true) {
 	\Osmium\Chrome\return_json(array());
 }
 
-$fit = \Osmium\State\get_state('currently_viewing_fit', null);
-if($fit === null || $fit['metadata']['loadoutid'] != $_GET['loadoutid']) {
-	$fit = \Osmium\Fit\get_fit($_GET['loadoutid']);
+$fit = \Osmium\State\get_cache($cachename, null);
+if($fit === null) {
+	$fit = \Osmium\Fit\get_fit($_GET['loadoutid'], $revision);
+}
+
+if($fit === false) {
+	/* Invalid revision queried? */
+	\Osmium\Chrome\return_json(array());
 }
 
 \Osmium\Fit\use_preset($fit, $_GET['pid']);
@@ -68,7 +77,7 @@ if(isset($_GET['transferdrone']) && $_GET['transferdrone'] > 0) {
 	\Osmium\Fit\transfer_drone($fit, $typeid, $from, $quantity);
 }
 
-\Osmium\State\put_state('currently_viewing_fit', $fit);
+\Osmium\State\put_cache($cachename, $fit, 7200);
 
 $array = 
 	array(
