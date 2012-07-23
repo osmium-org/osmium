@@ -760,12 +760,12 @@ function get_client_id() {
  * Get the fit currently being edited by the user.
  */
 function get_new_fit() {
-	return get_cache(SID, array(), 'NewFit_');
+	return get_cache(session_id(), array(), 'NewFit_');
 }
 
 /**
  * Update the fit currently being edited by the user.
  */
 function put_new_fit($fit) {
-	return put_cache(SID, $fit, 86400, 'NewFit_');
+	return put_cache(session_id(), $fit, 86400, 'NewFit_');
 }
