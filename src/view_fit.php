@@ -233,7 +233,8 @@ echo "<li><a href='../loadouthistory/$loadoutid'>View revision history</a></li>\
 echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
 echo "<li><a href='../search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a></li>\n";
 
-$slug = $author['charactername'].' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
+$slugname = ($author['apiverified'] === 't' && $author['charactername']) ? $author['charactername'] : $author['nickname'];
+$slug = $slugname.' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
 $slug = preg_replace('%[^a-z0-9-]%', '', str_replace(' ', '-', strtolower($slug)));
 $presets = 'pid='.$fit['modulepresetid'].'&amp;cpid='.$fit['chargepresetid'].'&amp;dpid='.$fit['dronepresetid'];
 $dna = \Osmium\Fit\export_to_dna($fit);
