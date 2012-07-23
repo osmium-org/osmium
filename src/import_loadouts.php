@@ -160,9 +160,9 @@ if(!empty($source)) {
 		foreach($lines as $l) {
 			if(preg_match('%^\[(.+)(,(.+)?)\]$%U', $l)) {
 				if(isset($eft)) $efts[] = $eft;
-				$eft = '';
 			}
 
+			if(!isset($eft)) $eft = '';
 			$eft .= $l."\n";
 		}
 
