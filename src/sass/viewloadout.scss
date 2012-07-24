@@ -206,6 +206,11 @@ div#vcomments {
 			&> li.new {
 				color: black;
 				display: none;
+
+				&> form > textarea {
+					min-height: 4em;
+					width: 100%;
+				}
 			}
 		}
 	}
