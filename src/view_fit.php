@@ -93,6 +93,8 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentrevisions (commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody) VALUES ($1, $2, $3, $4, $5, $6)', array($commentid, 1, $a['accountid'], $t, $_POST['commentbody'], $formatted));
 			\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CREATE_COMMENT, null, $commentid, $loadoutid);
 			\Osmium\Db\query('COMMIT;');
+			header('Location: #c'.$commentid);
+			die();
 		} else {
 			\Osmium\Db\query('ROLLBACK;');
 		}
@@ -112,6 +114,8 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 				list($crid) = $r;
 				\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CREATE_COMMENT_REPLY, null, $crid, $_POST['commentid'], $loadoutid);
 				\Osmium\Db\query('COMMIT;');
+				header('Location: #r'.$crid);
+				die();
 			} else {
 				\Osmium\Db\query('ROLLBACK;');
 			}
