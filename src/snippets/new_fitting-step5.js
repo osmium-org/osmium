@@ -29,4 +29,15 @@ $(function() {
     });
 
     $('select#view_perms').trigger('change');
+
+	$('ul.tags > li > a').click(function() {
+		var t = $(this);
+		var tags = $("input#tags");
+
+		if(tags.val().match(new RegExp("(^|\\s)" + t.text() + "(\\s|$)")) === null) {
+			tags.val(tags.val() + " " + t.text());
+		}
+
+		t.blur();
+	});
 });
