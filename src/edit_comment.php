@@ -64,7 +64,7 @@ if(isset($_POST['body'])) {
 
 		if($_POST['body'] == $comment['commentbody'] && $a['accountid'] == $comment['accountid']) {
 			/* Keep the same revision, but updated the formattedbody */
-			\Osmium\Db\query_params('UPDATE osmium.loadoutcommentrevisions SET commentformattedbody = $1 WHERE commentid = $2 AND revision = $3', array($formattedbody, $id, $comment['latestrevision']));
+			\Osmium\Db\query_params('UPDATE osmium.loadoutcommentrevisions SET commentformattedbody = $1 WHERE commentid = $2 AND revision = $3', array($formatted, $id, $comment['latestrevision']));
 		} else {
 			/* Insert a new revision */
 			$newrevision = $comment['latestrevision'] + 1;
