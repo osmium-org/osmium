@@ -1,3 +1,8 @@
+staging
+=======
+
+The osmium schema has been updated (new table: notifications).
+
 v0.2-rc3, released 2012-07-23
 =============================
 

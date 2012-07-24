@@ -172,6 +172,7 @@ require ROOT.'/inc/dogma.php';
 require ROOT.'/inc/flag.php';
 require ROOT.'/inc/search.php';
 require ROOT.'/inc/log.php';
+require ROOT.'/inc/notification.php';
 
 \Osmium\Forms\post_redirect_get();
 

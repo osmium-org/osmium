@@ -577,6 +577,41 @@ ALTER SEQUENCE log_logentryid_seq OWNED BY log.logentryid;
 
 
 --
+-- Name: notifications; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE notifications (
+    notificationid integer NOT NULL,
+    accountid integer NOT NULL,
+    creationdate integer NOT NULL,
+    type integer NOT NULL,
+    fromaccountid integer,
+    targetid1 integer,
+    targetid2 integer,
+    targetid3 integer
+);
+
+
+--
+-- Name: notifications_notificationid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE notifications_notificationid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notifications_notificationid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE notifications_notificationid_seq OWNED BY notifications.notificationid;
+
+
+--
 -- Name: accountid; Type: DEFAULT; Schema: osmium; Owner: -
 --
 
@@ -616,6 +651,13 @@ ALTER TABLE ONLY loadoutcomments ALTER COLUMN commentid SET DEFAULT nextval('loa
 --
 
 ALTER TABLE ONLY log ALTER COLUMN logentryid SET DEFAULT nextval('log_logentryid_seq'::regclass);
+
+
+--
+-- Name: notificationid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY notifications ALTER COLUMN notificationid SET DEFAULT nextval('notifications_notificationid_seq'::regclass);
 
 
 --
@@ -856,6 +898,14 @@ ALTER TABLE ONLY loadouts
 
 ALTER TABLE ONLY log
     ADD CONSTRAINT log_pkey PRIMARY KEY (logentryid);
+
+
+--
+-- Name: notifications_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (notificationid);
 
 
 --
@@ -1321,6 +1371,55 @@ CREATE INDEX log_type_idx ON log USING btree (type);
 
 
 --
+-- Name: notifications_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_accountid_idx ON notifications USING btree (accountid);
+
+
+--
+-- Name: notifications_creationdate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_creationdate_idx ON notifications USING btree (creationdate);
+
+
+--
+-- Name: notifications_fromaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_fromaccountid_idx ON notifications USING btree (fromaccountid);
+
+
+--
+-- Name: notifications_targetid1_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_targetid1_idx ON notifications USING btree (targetid1);
+
+
+--
+-- Name: notifications_targetid2_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_targetid2_idx ON notifications USING btree (targetid2);
+
+
+--
+-- Name: notifications_targetid3_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_targetid3_idx ON notifications USING btree (targetid3);
+
+
+--
+-- Name: notifications_type_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX notifications_type_idx ON notifications USING btree (type);
+
+
+--
 -- Name: accountfavorites_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1582,6 +1681,22 @@ ALTER TABLE ONLY loadouts
 
 ALTER TABLE ONLY log
     ADD CONSTRAINT log_clientid_fkey FOREIGN KEY (clientid) REFERENCES clients(clientid);
+
+
+--
+-- Name: notifications_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY notifications
+    ADD CONSTRAINT notifications_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: notifications_fromaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY notifications
+    ADD CONSTRAINT notifications_fromaccountid_fkey FOREIGN KEY (fromaccountid) REFERENCES accounts(accountid);
 
 
 --

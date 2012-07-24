@@ -91,7 +91,17 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 		if($r !== false && ($r = \Osmium\Db\fetch_row($r)) !== false) {
 			list($commentid) = $r;
 			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentrevisions (commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody) VALUES ($1, $2, $3, $4, $5, $6)', array($commentid, 1, $a['accountid'], $t, $_POST['commentbody'], $formatted));
-			\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CREATE_COMMENT, null, $commentid, $loadoutid);
+
+			if($a['accountid'] != $author['accountid']) {
+				\Osmium\Notification\add_notification(
+					\Osmium\Notification\NOTIFICATION_TYPE_LOADOUT_COMMENTED,
+					$a['accountid'], $author['accountid'], $commentid, $loadoutid);
+			}
+
+			\Osmium\Log\add_log_entry(
+				\Osmium\Log\LOG_TYPE_CREATE_COMMENT,
+				null, $commentid, $loadoutid);
+
 			\Osmium\Db\query('COMMIT;');
 			header('Location: #c'.$commentid);
 			die();
@@ -112,7 +122,22 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 
 			if($r !== false && ($r = \Osmium\Db\fetch_row($r)) !== false) {
 				list($crid) = $r;
-				\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_CREATE_COMMENT_REPLY, null, $crid, $_POST['commentid'], $loadoutid);
+
+				/* Notify the comment author and all other users who replied before */
+				$ids = \Osmium\Db\query_params('SELECT accountid FROM osmium.loadoutcomments WHERE commentid = $1 UNION SELECT DISTINCT accountid FROM osmium.loadoutcommentreplies WHERE commentid = $1', array($_POST['commentid']));
+				while($id = \Osmium\Db\fetch_row($ids)) {
+					$id = $id[0];
+					if($id == $a['accountid']) continue;
+
+					\Osmium\Notification\add_notification(
+						\Osmium\Notification\NOTIFICATION_TYPE_COMMENT_REPLIED,
+						$a['accountid'], $id, $crid, $_POST['commentid'], $loadoutid);
+				}
+
+				\Osmium\Log\add_log_entry(
+					\Osmium\Log\LOG_TYPE_CREATE_COMMENT_REPLY,
+					null, $crid, $_POST['commentid'], $loadoutid);
+
 				\Osmium\Db\query('COMMIT;');
 				header('Location: #r'.$crid);
 				die();

@@ -1,0 +1,48 @@
+a#ncount {
+	background-color: red;
+	color: white;
+	font-weight: bold;
+	border-radius: 5em;
+	text-decoration: none;
+	font-size: 0.8em;
+
+	display: inline-block;
+	min-width: 1.5em;
+	height: 1.5em;
+	text-align: center;
+	line-height: 1.5em;
+
+	&[data-count="0"] {
+		display: none;
+	}
+}
+
+div#vnotifications {
+	@include fixed-width-page;
+
+	&> h2:first-child {
+		margin-bottom: 0;
+	}
+
+	&> table {
+		width: 100%;
+
+		&> tbody > tr {
+			&.new {
+				background-color: #FFC;
+			}
+
+			&> td {
+				text-align: left;
+			}
+
+			&> td:first-child {
+				white-space: nowrap;
+				padding-left: 1em;
+				padding-right: 1em;
+
+				text-align: center;
+			}
+		}
+	}
+}
