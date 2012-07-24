@@ -1,9 +1,7 @@
-div#recent_loadouts {
-    text-align: center;
+div#mainpcont > section {
+	@include fixed-width-page;
 
 	&> ol.loadout_sr {
-		display: inline-block;
-		width: 45em;
 		list-style-type: none;
 		padding: 0;
 		margin: 0;
@@ -11,6 +9,20 @@ div#recent_loadouts {
 
 		&> li {
 			@include ellipsis;
+		}
+	}
+
+	&> ul#populartags {
+		text-align: center;
+
+		&> li {
+			font-size: 1.0em;
+			margin: 0.5em;
+			font-weight: bold;
+
+			&> a {
+				font-weight: normal;
+			}
 		}
 	}
 }

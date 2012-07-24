@@ -161,6 +161,7 @@ function finalize() {
 	\Osmium\State\put_state('create_fit_step', 1);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
 	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);
+	\Osmium\State\invalidate_cache_memory('main_popular_tags');
 
 	/* FIXME: make sure commit_loadout() succeeded before doing this */
 
