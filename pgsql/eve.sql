@@ -22,6 +22,17 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: averagemarketprices; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE averagemarketprices (
+    typeid integer NOT NULL,
+    averageprice numeric(15,2) NOT NULL,
+    slowpaceaverageprice numeric(15,2) NOT NULL
+);
+
+
+--
 -- Name: dgmattribs; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -224,6 +235,14 @@ CREATE TABLE invtypes (
     typenameid integer,
     descriptionid integer
 );
+
+
+--
+-- Name: averagemarketprices_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY averagemarketprices
+    ADD CONSTRAINT averagemarketprices_pkey PRIMARY KEY (typeid);
 
 
 --
@@ -473,6 +492,14 @@ CREATE INDEX invtypes_published_idx ON invtypes USING btree (published);
 --
 
 CREATE INDEX invtypes_typename_idx ON invtypes USING btree (typename);
+
+
+--
+-- Name: averagemarketprices_typeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY averagemarketprices
+    ADD CONSTRAINT averagemarketprices_typeid_fkey FOREIGN KEY (typeid) REFERENCES invtypes(typeid);
 
 
 --

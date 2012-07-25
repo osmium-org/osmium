@@ -209,6 +209,30 @@ function print_formatted_navigation(&$fit, $relative) {
 	print_formatted_attribute_category('navigation', 'Navigation', '<span title="Maximum velocity">'.format_number($maxvelocity, -1).' m/s</span>', '', ob_get_clean());
 }
 
+function print_formatted_misc(&$fit) {
+	ob_start();
+
+	echo "<table>\n<tbody>\n";
+
+	$missing = array();
+	$p = \Osmium\Fit\get_average_price($fit, $missing);
+	if(!$p) {
+		$p = 'N/A';
+	} else {
+		$p = format_isk($p);
+		if(count($missing) > 0) {
+			$missing = implode(', ', $missing);
+			$p = "<span title='Estimate of the following items unavailable: "
+				.htmlspecialchars($missing, ENT_QUOTES)."'>≥".$p.'</span>';
+		}
+	}
+
+	echo "<tr><th>Average price:</th><td>$p</td></tr>\n";
+
+	echo "</tbody>\n</table>\n";
+	print_formatted_attribute_category('misc', 'Miscellaneous', $p, '', ob_get_clean());
+}
+
 function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	$cap = \Osmium\Fit\get_capacitor_stability($fit);
 	$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
@@ -217,6 +241,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	print_formatted_offense($fit, $relative);
 	print_formatted_defense($fit, $relative, $ehp, $cap);
 	print_formatted_navigation($fit, $relative);
+	print_formatted_misc($fit);
 }
 
 function print_tank_layer($fit, $effectname, $shipattributename, $resonances, $cap, 

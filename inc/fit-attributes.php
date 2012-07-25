@@ -441,3 +441,57 @@ function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
 
 	return $attributes;
 }
+
+/**
+ * Get the average price of a fit, using the in-game average
+ * prices. Items whose price cannot be determined will be added to
+ * $missing.
+ */
+function get_average_price(&$fit, &$missing) {
+	$total = 0;
+
+	$types = array();
+	$types[$fit['ship']['typeid']] = array(1, $fit['ship']['typename']);
+	foreach($fit['modules'] as $a) {
+		foreach($a as $m) {
+			if(isset($types[$m['typeid']])) {
+				++$types[$m['typeid']][0];
+			} else {
+				$types[$m['typeid']] = array(1, $m['typename']);
+			}
+		}
+	}
+	foreach($fit['charges'] as $a) {
+		foreach($a as $c) {
+			if(isset($types[$c['typeid']])) {
+				++$types[$c['typeid']][0];
+			} else {
+				$types[$c['typeid']] = array(1, $c['typename']);
+			}
+		}
+	}
+	foreach($fit['drones'] as $d) {
+		$qty = $d['quantityinbay'] + $d['quantityinspace'];
+
+		if(isset($types[$d['typeid']])) {
+			$types[$d['typeid']][0] += $qty;
+		} else {
+			$types[$d['typeid']] = array($qty, $d['typename']);
+		}
+	}
+
+	get_attributes_and_effects(array_keys($types), $fit['cache']);
+
+	foreach($types as $typeid => $a) {
+		list($qty, $name) = $a;
+
+		$p = isset($fit['cache'][$typeid]['averageprice']) ? $fit['cache'][$typeid]['averageprice'] : null;
+		if($p !== null) {
+			$total += $qty * $p;
+		} else {
+			$missing[$name] = true;
+		}
+	}
+
+	return $total;
+}

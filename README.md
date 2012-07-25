@@ -222,7 +222,15 @@ to convert it in PostgreSQL tables:
     bin/sqlite_to_postgres ~/dump.txt
    
 This will create two (one for the schema, one for the data) SQL files
-per table in the dump. Then, import the following (in this order):
+per table in the dump. 
+
+If you want average prices (optional), you must use the `datadump.py`
+script in the reverence repository <https://github.com/ntt/reverence>,
+then fix the formatting on the generated relevant file:
+
+    sed -e 's/$/;/g' MethodCall.server.config.GetAverageMarketPrices.sql > averagemarketprices.sql
+
+Next step is to import the following (in this order):
 
 ~~~~
 # you can find eve.sql in the pgsql directory of the Osmium repo
@@ -245,6 +253,11 @@ SET search_path TO eve;
 \i dgmeffects-data.sql
 \i dgmtypeattribs-data.sql
 \i dgmtypeeffects-data.sql
+
+-- optional, do this if you want average prices
+BEGIN;
+\i averagemarketprices.sql
+COMMIT;
 ~~~~
 
 Import the Osmium schema:

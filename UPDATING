@@ -1,7 +1,13 @@
 staging
 =======
 
-The osmium schema has been updated (new view: tagcount).
+The osmium schema has been updated:
+
+* new view: tagcount
+
+The eve schema has been updated:
+
+* new table averagemarketprices
 
 v0.2-rc3, released 2012-07-23
 =============================
