@@ -90,7 +90,10 @@ const STATE_ACTIVE = 2;
 const STATE_OVERLOADED = 3;
 
 
-/** Maximum number of tags allowed on a fit. */
+/** Maximum number of tags allowed on a fit.
+ *
+ * WARNING: when changing this, also change the hardcoded value in
+ * new_fitting-step5.js. */
 const MAXIMUM_TAGS = 5;
 
 /* ----------------------------------------------------- */

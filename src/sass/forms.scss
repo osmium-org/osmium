@@ -52,7 +52,7 @@ form > table {
 			margin: 0;
 		}
 
-		&> tr.error > td > input {
+		&> tr.error > td > input, &> tr > td > input.error {
 			border-color: #C30 !important;
 		}
 

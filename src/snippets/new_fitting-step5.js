@@ -39,5 +39,16 @@ $(function() {
 		}
 
 		t.blur();
+		tags.trigger('change');
+	});
+
+	$('input#tags').change(function() {
+		var t = $(this);
+
+		if(t.val().match(/[^\s]+/g).length > 5) {
+			t.addClass('error');
+		} else {
+			t.removeClass('error');
+		}
 	});
 });
