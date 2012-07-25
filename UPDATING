@@ -4,6 +4,7 @@ staging
 The osmium schema has been updated:
 
 * new view: tagcount
+* new table: notifications
 
 The eve schema has been updated:
 

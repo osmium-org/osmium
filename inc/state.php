@@ -129,9 +129,9 @@ function check_client_attributes($attributes) {
  * Prints the login box if the current user is not logged in, or print
  * the logout box if the user is logged in.
  */
-function print_login_or_logout_box($relative) {
+function print_login_or_logout_box($relative, $notifications) {
 	if(is_logged_in()) {
-		print_logoff_box($relative);
+		print_logoff_box($relative, $notifications);
 	} else {
 		print_login_box($relative);
 	}
@@ -156,7 +156,7 @@ function print_login_box($relative) {
 }
 
 /** @internal */
-function print_logoff_box($relative) {
+function print_logoff_box($relative, $notifications) {
 	global $__osmium_state;
 	$a = $__osmium_state['a'];
 	$tok = urlencode(get_token());
@@ -168,7 +168,7 @@ function print_logoff_box($relative) {
 		$portrait = "<img src='http://image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
 	}
 
-	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong>. <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong>. <a id='ncount' data-count='$notifications' href='$relative/notifications' title='$notifications new notification(s)'>$notifications</a> <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 /** @internal */

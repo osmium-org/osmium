@@ -170,6 +170,12 @@ function finalize() {
 	$type = ($revision == 1) ? \Osmium\Log\LOG_TYPE_CREATE_LOADOUT : \Osmium\Log\LOG_TYPE_UPDATE_LOADOUT;
 	\Osmium\Log\add_log_entry($type, null, $loadoutid, $revision);
 
+	if($revision > 1 && $ownerid != $accountid) {
+		\Osmium\Notification\add_notification(
+			\Osmium\Notification\NOTIFICATION_TYPE_LOADOUT_EDITED,
+			$accountid, $ownerid, $loadoutid, $revision);
+	}
+
 	header('Location: ./loadout/'.$loadoutid);
 	die();
 }

@@ -49,7 +49,13 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 		$title .= ' / Osmium';
 	}
 
-	$xhtml = isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false);
+	$xhtml = isset($_SERVER['HTTP_ACCEPT']) && 
+		(strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false);
+
+	$notifications = \Osmium\Notification\get_new_notification_count();
+	if($notifications > 0) {
+		$title = "({$notifications}) ".$title;
+	}
 
 	if($xhtml) {
 		header('Content-Type: application/xhtml+xml; charset=utf-8');
@@ -64,7 +70,7 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 
 	echo "<nav>\n";
-	\Osmium\State\print_login_or_logout_box($relative);
+	\Osmium\State\print_login_or_logout_box($relative, $notifications);
 
 	echo "<ul>\n";
 	echo get_navigation_link($relative.'/', "Main page");
@@ -79,6 +85,10 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 		if($a['ismoderator'] === 't') {
 			echo get_navigation_link($relative.'/moderation/', \Osmium\Flag\MODERATOR_SYMBOL);
 		}
+
+		\Osmium\Chrome\print_js_snippet('notifications');
+		\Osmium\Chrome\print_js_code('osmium_notifications("'
+		                             .str_replace('"', '\"', $relative).'");');
 	} else {
 
 	}
