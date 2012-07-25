@@ -34,7 +34,11 @@ if($query === false) {
 	\Osmium\Chrome\print_footer();
 	die();
 } else {
-	\Osmium\Chrome\print_header('Search results', '.');
+	$title = 'Search results';
+	if($query !== false && strlen($query) > 0) {
+		$title .= ' / '.htmlspecialchars($query);
+	}
+	\Osmium\Chrome\print_header($title, '.');
 	echo "<div id='search_mini'>\n";
 	\Osmium\Chrome\print_search_form();
 	echo "</div>\n";
