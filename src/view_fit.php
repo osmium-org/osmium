@@ -387,19 +387,19 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 
 /* TODO: cache the formatted descriptions if this becomes a resource hog */
 echo "<div id='vdescriptions'>\n";
-echo "<h2>Fitting description</h2>\n";
-echo "<p id='fitdesc'>\n".\Osmium\Chrome\format_sanitize_md($fit['metadata']['description'])."</p>\n";
+echo "<section id='fitdesc'>\n<h2>Fitting description</h2>\n";
+echo \Osmium\Chrome\format_sanitize_md($fit['metadata']['description'])."</section>\n";
 if(isset($fit['modulepresetdesc']) && $fit['modulepresetdesc']) {
-	echo "<h3>Preset description</h3>\n<p id='presetdesc'>\n"
-		.\Osmium\Chrome\format_sanitize_md($fit['modulepresetdesc'])."</p>\n";
+	echo "<section id='presetdesc'>\n<h3>Preset description</h3>\n"
+		.\Osmium\Chrome\format_sanitize_md($fit['modulepresetdesc'])."</section>\n";
 }
 if(isset($fit['chargepresetdesc']) && $fit['chargepresetdesc']) {
-	echo "<h3>Charge preset description</h3>\n<p id='chargepresetdesc'>\n"
-		.\Osmium\Chrome\format_sanitize_md($fit['chargepresetdesc'])."</p>\n";
+	echo "<section id='chargepresetdesc'>\n<h3>Charge preset description</h3>\n"
+		.\Osmium\Chrome\format_sanitize_md($fit['chargepresetdesc'])."</section>\n";
 }
 if(isset($fit['dronepresetdesc']) && $fit['dronepresetdesc']) {
-	echo "<h3>Drone preset description</h3>\n<p id='dronepresetdesc'>\n"
-		.\Osmium\Chrome\format_sanitize_md($fit['dronepresetdesc'])."</p>\n";
+	echo "<section id='dronepresetdesc'>\n<h3>Drone preset description</h3>\n"
+		.\Osmium\Chrome\format_sanitize_md($fit['dronepresetdesc'])."</section>\n";
 }
 echo "</div>\n";
 

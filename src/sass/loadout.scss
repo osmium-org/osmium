@@ -226,10 +226,6 @@ div#metadatabox {
 	float: left;
 	@include prop-metadata-width(width);
 
-	&> p#fitdesc {
-		margin-left: 1em;
-	}
-
 	&> ul > li > ul > li > a {
 		&.active {
 			text-decoration: none;
