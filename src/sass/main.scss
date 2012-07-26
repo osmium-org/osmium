@@ -1,6 +1,17 @@
 div#mainpcont > section {
 	@include fixed-width-page;
 
+	&> h2 > small:last-child > a > img {
+		width: 0.8em;
+		height: 0.8em;
+		padding-bottom: 0.125em;
+		opacity: 0.5;
+
+		&:hover {
+			opacity: 1.0;
+		}
+	}
+
 	&> ol.loadout_sr {
 		list-style-type: none;
 		padding: 0;

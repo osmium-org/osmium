@@ -19,8 +19,9 @@
 namespace Osmium\Page\Main;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/atom_common.php';
 
-\Osmium\Chrome\print_header('', '.');
+\Osmium\Chrome\print_header('', '.', "<link href='./atom/newfits.xml' type='application/atom+xml' rel='alternate' title='New fits' />\n<link href='./atom/recentlyupdated.xml' type='application/atom+xml' rel='alternate' title='Recently updated' />\n");
 
 echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
 echo "<div id='mainpcont'>\n";
@@ -55,39 +56,16 @@ echo $ptags;
 echo "</ul>\n</section>\n";
 
 echo "<section>\n";
-echo "<h2>New fits</h2>\n";
-
-$ids = array();
-$query = \Osmium\Db\query_params('SELECT a.loadoutid FROM osmium.searchableloadouts AS a 
-JOIN osmium.loadoutslatestrevision AS llr ON a.loadoutid = llr.loadoutid
-JOIN osmium.loadouthistory AS lhf ON (a.loadoutid = lhf.loadoutid AND lhf.revision = 1)
-JOIN osmium.loadouthistory AS lh ON (lh.loadoutid = a.loadoutid AND lh.revision = llr.latestrevision)
-WHERE a.accountid IN (0, $2) AND (lhf.updatedate >= ($1 - 86400) OR lh.revision = 1)
-ORDER BY lh.updatedate DESC
-LIMIT 5', array($now, $accountid));
-while($row = \Osmium\Db\fetch_row($query)) {
-	$ids[] = $row[0];
-}
-
-\Osmium\Search\print_loadout_list($ids, '.', 0, 'No loadouts yet! What are you waiting for?');
+echo "<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'><img src='./static/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+\Osmium\Search\print_loadout_list(\Osmium\AtomCommon\get_new_fits($accountid),
+                                  '.', 0, 'No loadouts yet! What are you waiting for?');
 echo "</section>\n";
 
 echo "<section>\n";
-echo "<h2>Recently updated</h2>\n";
-
-$ids = array();
-$query = \Osmium\Db\query_params('SELECT a.loadoutid FROM osmium.searchableloadouts AS a 
-JOIN osmium.loadoutslatestrevision AS llr ON a.loadoutid = llr.loadoutid
-JOIN osmium.loadouthistory AS lhf ON (a.loadoutid = lhf.loadoutid AND lhf.revision = 1)
-JOIN osmium.loadouthistory AS lh ON (lh.loadoutid = a.loadoutid AND lh.revision = llr.latestrevision)
-WHERE a.accountid IN (0, $2) AND (lhf.updatedate < ($1 - 86400) AND lh.revision > 1)
-ORDER BY lh.updatedate DESC
-LIMIT 5', array($now, $accountid));
-while($row = \Osmium\Db\fetch_row($query)) {
-	$ids[] = $row[0];
-}
-
-\Osmium\Search\print_loadout_list($ids, '.');
+echo "<h2>Recently updated <small><a href='./atom/recentlyupdated.xml' type='application/atom+xml'><img src='./static/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+\Osmium\Search\print_loadout_list(
+	\Osmium\AtomCommon\get_recently_updated_fits($accountid),
+	'.');
 echo "</section>\n";
 echo "</div>\n";
 

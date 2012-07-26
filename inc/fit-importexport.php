@@ -979,6 +979,7 @@ function export_to_eve_xml(array $fits, $embedclf = true) {
 		$fittings->appendChild(export_to_eve_xml_single($xml, $fit, $embedclf));
 	}
 
+	$xml->formatOutput = true;
 	return $xml->saveXML();
 }
 
