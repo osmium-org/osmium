@@ -25,13 +25,10 @@ require __DIR__.'/../inc/root.php';
 
 $q = \Osmium\Db\query('SELECT DISTINCT preexpression AS expressionid
 FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invusedtypes ON invusedtypes.typeid = dgmtypeeffects.typeid
 UNION
 SELECT DISTINCT postexpression AS expressionid
 FROM eve.dgmeffects
-JOIN eve.dgmtypeeffects ON dgmtypeeffects.effectid = dgmeffects.effectid
-JOIN osmium.invusedtypes ON invusedtypes.typeid = dgmtypeeffects.typeid');
+');
 while($row = \Osmium\Db\fetch_row($q)) {
 	echo $row[0]."\n";
 

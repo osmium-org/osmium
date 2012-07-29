@@ -1,0 +1,174 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\JsonToPostgres;
+
+ini_set('memory_limit', -1);
+
+$structure = array(
+	'dgmattribs', 'dgmattribs.json',
+	array(
+		'attributeID' => 'attributeid',
+		'attributeName' => 'attributename',
+		'defaultValue' => 'defaultvalue',
+		'stackable' => 'stackable',
+		'highIsGood' => 'highisgood',
+		),
+
+	'dgmeffects', 'dgmeffects.json',
+	array(
+		'effectID' => 'effectid',
+		'effectName' => 'effectname',
+		'effectCategory' => 'effectcategory',
+		'preExpression' => 'preexpression',
+		'postExpression' => 'postexpression',
+		'durationAttributeID' => 'durationattributeid',
+		'trackingSpeedAttributeID' => 'trackingspeedattributeid',
+		'dischargeAttributeID' => 'dischargeattributeid',
+		'rangeAttributeID' => 'rangeattributeid',
+		'falloffAttributeID' => 'falloffattributeid',
+		),
+
+	'invcategories', 'invcategories.json',
+	array(
+		'categoryID' => 'categoryid',
+		'categoryName' => 'categoryname',
+		),
+
+	'invgroups', 'invgroups.json',
+	array(
+		'groupID' => 'groupid',
+		'categoryID' => 'categoryid',
+		'groupName' => 'groupName',
+		'published' => 'published',
+		),
+
+	'invmarketgroups', 'marketProxy_GetMarketGroups.json',
+	array(
+		'marketGroupID' => 'marketgroupid',
+		'parentGroupID' => 'parentgroupid',
+		'marketGroupName' => 'marketgroupname'
+		),
+
+	'invmetagroups', 'invmetagroups.json',
+	array(
+		'metaGroupID' => 'metagroupid',
+		'metaGroupName' => 'metagroupname',
+		),
+
+	'invtypes', 'invtypes.json',
+	array(
+		'typeID' => 'typeid',
+		'groupID' => 'groupid',
+		'typeName' => 'typename',
+		'mass' => 'mass',
+		'volume' => 'volume',
+		'capacity' => 'capacity',
+		'published' => 'published',
+		'marketGroupID' => 'marketgroupid',
+		),
+
+	'dgmtypeattribs', 'dgmtypeattribs.json',
+	array(
+		'typeID' => 'typeid',
+		'attributeID' => 'attributeid',
+		'value' => 'value',
+		),
+
+	'dgmtypeeffects', 'dgmtypeeffects.json',
+	array(
+		'typeID' => 'typeid',
+		'effectID' => 'effectid',
+		'isDefault' => 'isdefault',
+		),
+
+	'invmetatypes', 'invmetatypes.json',
+	array(
+		'typeID' => 'typeid',
+		'metaGroupID' => 'metagroupid'
+		),
+
+	'averagemarketprices', 'config_GetAverageMarketPrices.json',
+	array(
+		'typeID' => 'typeid',
+		'averagePrice' => 'averageprice'
+		),
+
+	'dgmoperands', 'dogma_GetOperandsForChar.json',
+	array(
+		'operandID' => 'operandid',
+		'operandKey' => 'operandkey',
+		),
+
+	'dgmexpressions', 'dgmexpressions.json',
+	array(
+		'expressionID' => 'expressionid',
+		'operandID' => 'operandid',
+		'arg1' => 'arg1',
+		'arg2' => 'arg2',
+		'expressionName' => 'expressionname',
+		'expressionValue' => 'expressionvalue',
+		'expressionTypeID' => 'expressiontypeid',
+		'expressionGroupID' => 'expressiongroupid',
+		'expressionAttributeID' => 'expressionattributeid',
+		),
+	);
+
+$dir = $argv[1];
+$fout = fopen('./osmium-eve-data.sql', 'w');
+
+fwrite($fout, "BEGIN;\n\n");
+
+$count = count($structure);
+for($i = 0; $i < $count; $i += 3) {
+	$tablename = $structure[$i];
+	$json = $structure[$i + 1];
+	$cols = $structure[$i + 2];
+
+	fwrite($fout, "COPY $tablename (".implode(', ', array_values($cols)).") FROM stdin;\n");
+
+	$rows = json_decode(file_get_contents(rtrim($dir, '/').'/'.$json), true);
+	foreach($rows as $row) {
+		$values = array();
+
+		foreach($cols as $jsoncol => $sqlcol) {
+			$values[] = to_postgres($row[$jsoncol]);
+		}
+
+		fwrite($fout, implode("\t", $values));
+		fwrite($fout, "\n");
+	}
+
+	fwrite($fout, "\\.\n\n");
+}
+
+fwrite($fout, "COMMIT;\n");
+fclose($fout);
+
+function to_postgres($thing) {
+	if($thing === true) return 't';
+	if($thing === false) return 'f';
+	if($thing === null) return '\N';
+
+	return str_replace(
+		array("\\", "\b", "\f", "\n", "\r", "\t", "\v"),
+		array("\\\\", '\b', '\f', '\n', '\r', '\t', '\v'),
+		(string)$thing
+		);
+}

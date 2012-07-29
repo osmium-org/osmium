@@ -203,72 +203,60 @@ The long way
 ------------
 
 The dump file is generated from the database of the EVE client
-itself. Not all of the data (namely dgmexpressions and dgmoperands)
-are in the official Static Data Dump, so you'll have to dump the
+itself. Not all of the data is in the official Static Data Dump (and
+it's often lags behind the official patch), so you'll have to dump the
 database from the client yourself then do some minor transformations
 to make it PostgreSQL-friendly.
 
-Use the `eve2sql.py` script of the Eos repository
-<https://github.com/DarkFenX/Eos> to dump a SQLite database, then dump
-it in a text file :
-
-    PYTHONPATH=/path/to/reverence/library python2.7 scripts/eve2sql.py -e /path/to/eve -c /path/to/cache -l ~/dump.sqlite
-
-    sqlite3 ~/dump.sqlite .dump > ~/dump.txt
-
-Then use the `sqlite_to_postgres` script (included in `bin/`)
-to convert it in PostgreSQL tables:
-
-    bin/sqlite_to_postgres ~/dump.txt
-   
-This will create two (one for the schema, one for the data) SQL files
-per table in the dump. 
-
-If you want average prices (optional), you must use the `datadump.py`
-script in the reverence repository <https://github.com/ntt/reverence>,
-then fix the formatting on the generated relevant file:
-
-    sed -e 's/$/;/g' MethodCall.server.config.GetAverageMarketPrices.sql > averagemarketprices.sql
-
-Next step is to import the following (in this order):
+Use the [`phobos`](http://jira.dev.evefit.org/browse/PHOBOS) dumper to
+dump the EVE database as JSON files:
 
 ~~~~
-# you can find eve.sql in the pgsql directory of the Osmium repo
-# it is more or less the raw schema with indexes, foreign keys and proper types
+git clone git://dev.evefit.org/phobos.git
+cd phobos
+python2.7 setup.py build
+
+PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPrices,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
+~~~~
+
+Then convert the JSON files to SQL statements using the
+`json_to_postgres` script in the `bin/` directory:
+
+~~~~
+./bin/json_to_postgres <JSON_DIRECTORY>
+~~~~
+
+This will create one big SQL file with all the data (but not the
+structure). You can now import it:
+
+~~~~
+# Import the schema
 psql osmium osmium_user < pgsql/eve.sql
 
+# Import the data
 psql osmium osmium_user
-SET search_path TO eve;
-\i dgmoperands-schema.sql
-\i dgmoperands-data.sql
-\i dgmexpressions-schema.sql
-\i dgmexpressions-data.sql
-\i invcategories-data.sql
-\i invgroups-data.sql
-\i invmarketgroups-data.sql
-\i invtypes-data.sql
-\i invmetagroups-data.sql
-\i invmetatypes-data.sql
-\i dgmattribs-data.sql
-\i dgmeffects-data.sql
-\i dgmtypeattribs-data.sql
-\i dgmtypeeffects-data.sql
 
--- optional, do this if you want average prices
-BEGIN;
-\i averagemarketprices.sql
-COMMIT;
+SET search_path TO eve;
+\i osmium-eve-data.sql
 ~~~~
 
-Import the Osmium schema:
+Now, use the `cache_expressions` script to populate the
+`dgmcacheexpressions` table:
 
-     psql osmium osmium_user < pgsql/osmium.sql
+~~~~
+./bin/cache_expressions
+~~~~
 
-Now, use the cache_expressions script to populate the `cacheexpressions`
-table:
-
-    bin/cache_expressions
-
-That's it! You can now delete the `dgmoperands` and `dgmexpressions`
+That's it! You can now truncate the `dgmoperands` and `dgmexpressions`
 tables, and dump the eve schema for later use (for example by using
 the `backup_eve` script).
+
+~~~~
+psql osmium osmium_user
+
+SET search_path TO eve;
+TRUNCATE dgmoperands, dgmexpressions;
+\q
+
+./bin/backup_eve
+~~~~

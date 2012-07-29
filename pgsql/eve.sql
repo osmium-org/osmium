@@ -27,8 +27,7 @@ SET default_with_oids = false;
 
 CREATE TABLE averagemarketprices (
     typeid integer NOT NULL,
-    averageprice numeric(15,2) NOT NULL,
-    slowpaceaverageprice numeric(15,2) NOT NULL
+    averageprice numeric(15,2) NOT NULL
 );
 
 
@@ -37,23 +36,11 @@ CREATE TABLE averagemarketprices (
 --
 
 CREATE TABLE dgmattribs (
-    attributeid integer NOT NULL,
+    attributeid smallint NOT NULL,
     attributename character varying(100) NOT NULL,
-    attributecategory integer NOT NULL,
-    description character varying(1000) NOT NULL,
-    maxattributeid integer,
-    attributeidx integer,
-    chargerechargetimeid integer,
     defaultvalue real NOT NULL,
-    published smallint NOT NULL,
-    displayname character varying(100) NOT NULL,
-    unitid integer,
-    stackable smallint NOT NULL,
-    highisgood smallint NOT NULL,
-    categoryid integer,
-    iconid integer,
-    displaynameid integer,
-    dataid integer
+    stackable boolean NOT NULL,
+    highisgood boolean NOT NULL
 );
 
 
@@ -72,36 +59,43 @@ CREATE TABLE dgmcacheexpressions (
 --
 
 CREATE TABLE dgmeffects (
-    effectid integer NOT NULL,
+    effectid smallint NOT NULL,
     effectname character varying(300) NOT NULL,
-    effectcategory integer NOT NULL,
+    effectcategory smallint NOT NULL,
     preexpression integer NOT NULL,
     postexpression integer NOT NULL,
-    description character varying(1000),
-    guid character varying(1000),
-    isoffensive smallint NOT NULL,
-    isassistance smallint NOT NULL,
-    durationattributeid integer,
-    trackingspeedattributeid integer,
-    dischargeattributeid integer,
-    rangeattributeid integer,
-    falloffattributeid integer,
-    disallowautorepeat smallint NOT NULL,
-    published smallint NOT NULL,
-    displayname character varying(100) NOT NULL,
-    iswarpsafe smallint NOT NULL,
-    rangechance integer NOT NULL,
-    electronicchance integer NOT NULL,
-    propulsionchance integer NOT NULL,
-    distribution integer,
-    sfxname character varying(1000),
-    npcusagechanceattributeid integer,
-    npcactivationchanceattributeid integer,
-    fittingusagechanceattributeid integer,
-    iconid integer,
-    displaynameid integer,
-    descriptionid integer,
-    dataid integer
+    durationattributeid smallint,
+    trackingspeedattributeid smallint,
+    dischargeattributeid smallint,
+    rangeattributeid smallint,
+    falloffattributeid smallint
+);
+
+
+--
+-- Name: dgmexpressions; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE dgmexpressions (
+    expressionid integer NOT NULL,
+    operandid smallint NOT NULL,
+    arg1 integer,
+    arg2 integer,
+    expressionname text,
+    expressionvalue text,
+    expressiontypeid integer,
+    expressiongroupid integer,
+    expressionattributeid smallint
+);
+
+
+--
+-- Name: dgmoperands; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE dgmoperands (
+    operandid smallint NOT NULL,
+    operandkey character varying(100) NOT NULL
 );
 
 
@@ -123,7 +117,7 @@ CREATE TABLE dgmtypeattribs (
 CREATE TABLE dgmtypeeffects (
     typeid integer NOT NULL,
     effectid smallint NOT NULL,
-    isdefault smallint
+    isdefault boolean NOT NULL
 );
 
 
@@ -133,12 +127,7 @@ CREATE TABLE dgmtypeeffects (
 
 CREATE TABLE invcategories (
     categoryid integer NOT NULL,
-    categoryname character varying(100) DEFAULT NULL::character varying,
-    description character varying(3000) DEFAULT NULL::character varying,
-    published smallint,
-    iconid integer,
-    categorynameid integer,
-    dataid integer
+    categoryname character varying(100) NOT NULL
 );
 
 
@@ -148,19 +137,9 @@ CREATE TABLE invcategories (
 
 CREATE TABLE invgroups (
     groupid integer NOT NULL,
-    categoryid integer,
-    groupname character varying(100) DEFAULT NULL::character varying,
-    description character varying(3000) DEFAULT NULL::character varying,
-    usebaseprice smallint,
-    allowmanufacture smallint,
-    allowrecycler smallint,
-    anchored smallint,
-    anchorable smallint,
-    fittablenonsingleton smallint,
-    published smallint,
-    iconid integer,
-    groupnameid integer,
-    dataid integer
+    categoryid integer NOT NULL,
+    groupname character varying(100) NOT NULL,
+    published boolean NOT NULL
 );
 
 
@@ -169,16 +148,9 @@ CREATE TABLE invgroups (
 --
 
 CREATE TABLE invmarketgroups (
-    parentgroupid integer,
     marketgroupid integer NOT NULL,
-    marketgroupname character varying(100) NOT NULL,
-    description character varying(3000) NOT NULL,
-    graphicid integer,
-    hastypes integer NOT NULL,
-    iconid integer,
-    dataid integer NOT NULL,
-    marketgroupnameid integer NOT NULL,
-    descriptionid integer NOT NULL
+    parentgroupid integer,
+    marketgroupname character varying(100) NOT NULL
 );
 
 
@@ -188,12 +160,7 @@ CREATE TABLE invmarketgroups (
 
 CREATE TABLE invmetagroups (
     metagroupid smallint NOT NULL,
-    metagroupname character varying(100) DEFAULT NULL::character varying,
-    description character varying(1000) DEFAULT NULL::character varying,
-    iconid smallint,
-    metagroupnameid integer,
-    descriptionid integer,
-    dataid integer
+    metagroupname character varying(100) NOT NULL
 );
 
 
@@ -203,8 +170,7 @@ CREATE TABLE invmetagroups (
 
 CREATE TABLE invmetatypes (
     typeid integer NOT NULL,
-    parenttypeid integer,
-    metagroupid smallint
+    metagroupid smallint NOT NULL
 );
 
 
@@ -214,26 +180,13 @@ CREATE TABLE invmetatypes (
 
 CREATE TABLE invtypes (
     typeid integer NOT NULL,
-    groupid integer,
-    typename character varying(100) DEFAULT NULL::character varying,
-    description character varying(3000) DEFAULT NULL::character varying,
-    graphicid smallint,
-    radius double precision,
-    mass double precision,
-    volume double precision,
-    capacity double precision,
-    portionsize integer,
-    raceid smallint,
-    baseprice double precision,
-    published smallint,
-    marketgroupid integer,
-    chanceofduplicating double precision,
-    soundid integer,
-    dataid integer,
-    copytypeid integer,
-    iconid integer,
-    typenameid integer,
-    descriptionid integer
+    groupid integer NOT NULL,
+    typename character varying(100) NOT NULL,
+    mass double precision NOT NULL,
+    volume double precision NOT NULL,
+    capacity double precision NOT NULL,
+    published boolean NOT NULL,
+    marketgroupid integer
 );
 
 
@@ -267,6 +220,30 @@ ALTER TABLE ONLY dgmattribs
 
 ALTER TABLE ONLY dgmeffects
     ADD CONSTRAINT dgmeffects_pkey PRIMARY KEY (effectid);
+
+
+--
+-- Name: dgmexpressions_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY dgmexpressions
+    ADD CONSTRAINT dgmexpressions_pkey PRIMARY KEY (expressionid);
+
+
+--
+-- Name: dgmoperands_operandkey_uniq; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY dgmoperands
+    ADD CONSTRAINT dgmoperands_operandkey_uniq UNIQUE (operandkey);
+
+
+--
+-- Name: dgmoperands_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY dgmoperands
+    ADD CONSTRAINT dgmoperands_pkey PRIMARY KEY (operandid);
 
 
 --
@@ -439,6 +416,13 @@ CREATE INDEX invgroups_categoryid_idx ON invgroups USING btree (categoryid);
 
 
 --
+-- Name: invgroups_published_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE INDEX invgroups_published_idx ON invgroups USING btree (published);
+
+
+--
 -- Name: invmarketgroups_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -450,13 +434,6 @@ CREATE INDEX invmarketgroups_parentgroupid_idx ON invmarketgroups USING btree (p
 --
 
 CREATE INDEX invmetatypes_metagroupid_idx ON invmetatypes USING btree (metagroupid);
-
-
---
--- Name: invmetatypes_parenttypeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX invmetatypes_parenttypeid_idx ON invmetatypes USING btree (parenttypeid);
 
 
 --
@@ -543,6 +520,14 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
+-- Name: dgmexpressions_operandid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmexpressions
+    ADD CONSTRAINT dgmexpressions_operandid_fkey FOREIGN KEY (operandid) REFERENCES dgmoperands(operandid);
+
+
+--
 -- Name: dgmtypeattribs_attributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
 --
 
@@ -588,14 +573,6 @@ ALTER TABLE ONLY invmarketgroups
 
 ALTER TABLE ONLY invmetatypes
     ADD CONSTRAINT invmetatypes_metagroupid_fkey FOREIGN KEY (metagroupid) REFERENCES invmetagroups(metagroupid);
-
-
---
--- Name: invmetatypes_parenttypeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY invmetatypes
-    ADD CONSTRAINT invmetatypes_parenttypeid_fkey FOREIGN KEY (parenttypeid) REFERENCES invtypes(typeid);
 
 
 --
