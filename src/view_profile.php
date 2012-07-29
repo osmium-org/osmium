@@ -24,7 +24,7 @@ if(!isset($_GET['accountid'])) {
 	\Osmium\fatal(404, 'No accountid given.');
 }
 
-$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
+$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight, reputation FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
 
 if($row === false) {
 	\Osmium\fatal(404, 'Invalid accountid.');
@@ -65,7 +65,7 @@ echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chro
 
 echo $sep;
 
-echo "<tr>\n<th rowspan='1'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n";
+echo "<tr>\n<th rowspan='2'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n<tr>\n<td>reputation score</td>\n<td>".number_format($row['reputation'])."</td>\n</tr>\n";
 
 if($myprofile || $ismoderator) {
 	echo $sep;

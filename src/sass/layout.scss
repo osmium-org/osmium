@@ -182,6 +182,60 @@ span.apiverified:before {
 	content: '%';
 }
 
+span.reputation {
+	font-weight: bold;
+}
+
+div.votes {
+	display: inline-block;
+	width: 32px;
+	text-align: center;
+
+	&> a, &> strong {
+		display: block;
+	}
+
+	&> a {
+		width: 32px;
+		height: 16px;
+		overflow: hidden;
+		position: relative;
+		margin: 0.125em auto;
+		cursor: pointer;
+
+		&> img {
+			position: absolute;
+			top: -16px;
+			left: 0;
+			width: 64px;
+			height: 32px;
+		}
+
+		&.downvote > img {
+			left: -32px;
+		}
+
+		&.voted > img {
+			top: 0;
+		}
+	}
+
+	&> strong {
+		font-size: 1.5em;
+	}
+
+	&> div.verror {
+		position: relative;
+		z-index: 50000;
+		width: 20em;
+		padding: 1em;
+		background-color: #FF2400;
+		font-weight: bold;
+		font-size: 1.2em;
+		color: white;
+	}
+}
+
 $target-highlight-color: #FFC;
 $target-final-color: #FFF;
 $animation-duration: 15s;

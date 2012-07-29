@@ -176,6 +176,10 @@ function finalize() {
 			$accountid, $ownerid, $loadoutid, $revision);
 	}
 
+	if($revision > 1) {
+		\Osmium\Db\query_params('UPDATE osmium.votes SET cancellableuntil = NULL WHERE targettype = $1 AND targetid1 = $2 AND targetid2 IS NULL AND targetid3 IS NULL', array(\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT, $loadoutid));
+	}
+
 	header('Location: ./loadout/'.$loadoutid);
 	die();
 }

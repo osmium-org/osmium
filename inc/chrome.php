@@ -183,6 +183,18 @@ function format_resonance($resonance) {
 	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
 }
 
+function format_reputation($rep) {
+	if($rep <= 0) $rep = 0;
+
+	if($rep >= 10000) {
+		$rep = round(floor($rep / 100) / 10, 1).'k';
+	} else {
+		$rep = number_format($rep);
+	}
+
+	return "<span class='reputation' title='reputation'>$rep</span>";
+}
+
 /**
  * Get nickname or character name of current user.
  */
@@ -210,7 +222,7 @@ function format_character_name($a, $relative = '.', &$rawname = null) {
 	return maybe_add_profile_link($a, $relative, $name);
 }
 
-function maybe_add_profile_link($a, $relative = '.', $name) {
+function maybe_add_profile_link($a, $relative, $name) {
 	if(isset($a['accountid'])) {
 		return "<a class='profile' href='$relative/profile/".$a['accountid']."'>$name</a>";
 	} else {

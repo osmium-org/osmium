@@ -54,7 +54,8 @@ CREATE TABLE accounts (
     alliancename character varying(255),
     isfittingmanager boolean NOT NULL,
     ismoderator boolean NOT NULL,
-    flagweight integer NOT NULL
+    flagweight integer NOT NULL,
+    reputation integer NOT NULL
 );
 
 
@@ -181,6 +182,35 @@ CREATE TABLE cookietokens (
 
 CREATE VIEW editableloadoutsbyaccount AS
     SELECT accounts.accountid, loadouts.loadoutid FROM ((loadouts JOIN accounts author ON ((author.accountid = loadouts.accountid))) JOIN accounts ON (((((((((loadouts.editpermission = 3) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.allianceid = author.allianceid)) OR ((((loadouts.editpermission = 2) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid))) OR (((((loadouts.editpermission = 1) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid)) AND (accounts.isfittingmanager = true))) OR (accounts.accountid = author.accountid)) OR (accounts.ismoderator = true))));
+
+
+--
+-- Name: eveaccounts; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE eveaccounts (
+    eveaccountid integer NOT NULL,
+    creationdate integer NOT NULL
+);
+
+
+--
+-- Name: eveaccounts_eveaccountid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE eveaccounts_eveaccountid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: eveaccounts_eveaccountid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE eveaccounts_eveaccountid_seq OWNED BY eveaccounts.eveaccountid;
 
 
 --
@@ -602,6 +632,49 @@ CREATE VIEW tagcount AS
 
 
 --
+-- Name: votes; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE votes (
+    voteid integer NOT NULL,
+    fromaccountid integer NOT NULL,
+    fromeveaccountid integer NOT NULL,
+    fromclientid integer NOT NULL,
+    accountid integer NOT NULL,
+    creationdate integer NOT NULL,
+    cancellableuntil integer,
+    reputationgiventodest integer,
+    reputationgiventosource integer,
+    type integer NOT NULL,
+    targettype integer NOT NULL,
+    targetid1 integer,
+    targetid2 integer,
+    targetid3 integer,
+    CONSTRAINT votes_notaselfvote_check CHECK ((fromaccountid <> accountid)),
+    CONSTRAINT votes_notempty_check CHECK ((((targetid1 IS NOT NULL) OR (targetid2 IS NOT NULL)) OR (targetid3 IS NOT NULL)))
+);
+
+
+--
+-- Name: votes_voteid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE votes_voteid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: votes_voteid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE votes_voteid_seq OWNED BY votes.voteid;
+
+
+--
 -- Name: accountid; Type: DEFAULT; Schema: osmium; Owner: -
 --
 
@@ -613,6 +686,13 @@ ALTER TABLE ONLY accounts ALTER COLUMN accountid SET DEFAULT nextval('accounts_a
 --
 
 ALTER TABLE ONLY clients ALTER COLUMN clientid SET DEFAULT nextval('clients_clientid_seq'::regclass);
+
+
+--
+-- Name: eveaccountid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY eveaccounts ALTER COLUMN eveaccountid SET DEFAULT nextval('eveaccounts_eveaccountid_seq'::regclass);
 
 
 --
@@ -648,6 +728,13 @@ ALTER TABLE ONLY log ALTER COLUMN logentryid SET DEFAULT nextval('log_logentryid
 --
 
 ALTER TABLE ONLY notifications ALTER COLUMN notificationid SET DEFAULT nextval('notifications_notificationid_seq'::regclass);
+
+
+--
+-- Name: voteid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY votes ALTER COLUMN voteid SET DEFAULT nextval('votes_voteid_seq'::regclass);
 
 
 --
@@ -728,6 +815,22 @@ ALTER TABLE ONLY clients
 
 ALTER TABLE ONLY cookietokens
     ADD CONSTRAINT cookietokens_pkey PRIMARY KEY (token);
+
+
+--
+-- Name: eveaccounts_creationdate_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY eveaccounts
+    ADD CONSTRAINT eveaccounts_creationdate_uniq UNIQUE (creationdate);
+
+
+--
+-- Name: eveaccounts_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY eveaccounts
+    ADD CONSTRAINT eveaccounts_pkey PRIMARY KEY (eveaccountid);
 
 
 --
@@ -888,6 +991,22 @@ ALTER TABLE ONLY log
 
 ALTER TABLE ONLY notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (notificationid);
+
+
+--
+-- Name: votes_fromaccountid_type_targettype_targetid1_targetid2_targeti; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY votes
+    ADD CONSTRAINT votes_fromaccountid_type_targettype_targetid1_targetid2_targeti UNIQUE (fromaccountid, type, targettype, targetid1, targetid2, targetid3);
+
+
+--
+-- Name: votes_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY votes
+    ADD CONSTRAINT votes_pkey PRIMARY KEY (voteid);
 
 
 --
@@ -1402,6 +1521,83 @@ CREATE INDEX notifications_type_idx ON notifications USING btree (type);
 
 
 --
+-- Name: votes_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_accountid_idx ON votes USING btree (accountid);
+
+
+--
+-- Name: votes_cancellableuntil_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_cancellableuntil_idx ON votes USING btree (cancellableuntil);
+
+
+--
+-- Name: votes_creationdate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_creationdate_idx ON votes USING btree (creationdate);
+
+
+--
+-- Name: votes_fromaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_fromaccountid_idx ON votes USING btree (fromaccountid);
+
+
+--
+-- Name: votes_fromclientid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_fromclientid_idx ON votes USING btree (fromclientid);
+
+
+--
+-- Name: votes_fromeveaccountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_fromeveaccountid_idx ON votes USING btree (fromeveaccountid);
+
+
+--
+-- Name: votes_targetid1_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_targetid1_idx ON votes USING btree (targetid1);
+
+
+--
+-- Name: votes_targetid2_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_targetid2_idx ON votes USING btree (targetid2);
+
+
+--
+-- Name: votes_targetid3_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_targetid3_idx ON votes USING btree (targetid3);
+
+
+--
+-- Name: votes_targettype_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_targettype_idx ON votes USING btree (targettype);
+
+
+--
+-- Name: votes_type_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX votes_type_idx ON votes USING btree (type);
+
+
+--
 -- Name: accountfavorites_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -1679,6 +1875,38 @@ ALTER TABLE ONLY notifications
 
 ALTER TABLE ONLY notifications
     ADD CONSTRAINT notifications_fromaccountid_fkey FOREIGN KEY (fromaccountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: votes_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY votes
+    ADD CONSTRAINT votes_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: votes_fromaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY votes
+    ADD CONSTRAINT votes_fromaccountid_fkey FOREIGN KEY (fromaccountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: votes_fromclientid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY votes
+    ADD CONSTRAINT votes_fromclientid_fkey FOREIGN KEY (fromclientid) REFERENCES clients(clientid);
+
+
+--
+-- Name: votes_fromeveaccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY votes
+    ADD CONSTRAINT votes_fromeveaccountid_fkey FOREIGN KEY (fromeveaccountid) REFERENCES eveaccounts(eveaccountid);
 
 
 --

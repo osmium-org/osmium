@@ -163,7 +163,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -186,6 +186,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		echo "</a>\n<br />\n";
 		echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
 		echo " — ".\Osmium\Chrome\format_character_name($loadout, $relative);
+		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")";
 		echo " — revision #".$loadout['latestrevision'];
 		echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
       
