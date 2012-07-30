@@ -8,8 +8,8 @@ Most columns that used to have the "smallint" for booleans type now
 have the proper boolean type, so osmium views that used those columns
 have been updated too.
 
-The osmium.invusedtypes view has been deleted, as it is no longer
-used.
+The osmium.invusedtypes view and cacheexpressions table have been
+deleted, as they are no longer used.
 
 IMPORTANT: when restoring the osmium schema back (before applyng
 patches), you will get errors about some broken views. This is normal.

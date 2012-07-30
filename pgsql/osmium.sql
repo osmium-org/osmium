@@ -132,16 +132,6 @@ CREATE VIEW allowedloadoutsbyaccount AS
 
 
 --
--- Name: cacheexpressions; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE TABLE cacheexpressions (
-    expressionid integer NOT NULL,
-    exp text NOT NULL
-);
-
-
---
 -- Name: clients; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -714,14 +704,6 @@ ALTER TABLE ONLY accounts
 
 ALTER TABLE ONLY accountsettings
     ADD CONSTRAINT accountsettings_pkey PRIMARY KEY (accountid, key);
-
-
---
--- Name: cacheexpressions_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY cacheexpressions
-    ADD CONSTRAINT cacheexpressions_pkey PRIMARY KEY (expressionid);
 
 
 --
