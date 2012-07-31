@@ -50,17 +50,25 @@ $a = \Osmium\State\get_state('a', array());
 
 $author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, reputation FROM osmium.accounts WHERE accountid = $1', array($fit['metadata']['accountid'])));
 $lastrev = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT updatedate, accountid, nickname, apiverified, characterid, charactername, ismoderator, reputation FROM osmium.loadouthistory JOIN osmium.accounts ON accounts.accountid = loadouthistory.updatedbyaccountid WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $fit['metadata']['revision'])));
-list($truecreationdate, $commentsallowed, $votetype) = \Osmium\Db\fetch_row(
-	\Osmium\Db\query_params(
-		'SELECT updatedate, allowcomments, v.type FROM osmium.loadouts AS l JOIN osmium.loadouthistory AS lh ON (l.loadoutid = lh.loadoutid AND lh.revision = 1) LEFT JOIN osmium.votes AS v ON (v.type IN ($2, $3) AND v.targetid1 = l.loadoutid AND v.targetid2 IS NULL AND v.targetid3 IS NULL AND v.fromaccountid = $4 AND v.targettype = $5) WHERE l.loadoutid = $1',
-		array(
-			$loadoutid,
-			\Osmium\Reputation\VOTE_TYPE_UP,
-			\Osmium\Reputation\VOTE_TYPE_DOWN,
-			$loggedin ? $a['accountid'] : 0,
-			\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT
-			)
-		));
+list($truecreationdate, $commentsallowed, $votetype, $totalvotes, $totalupvotes, $totaldownvotes) = 
+	\Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT updatedate, allowcomments, v.type, ludv.votes, ludv.upvotes, ludv.downvotes
+			FROM osmium.loadouts AS l
+			JOIN osmium.loadouthistory AS lh ON (l.loadoutid = lh.loadoutid AND lh.revision = 1)
+			LEFT JOIN osmium.votes AS v ON (v.type IN ($2, $3) AND v.targetid1 = l.loadoutid 
+				AND v.targetid2 IS NULL AND v.targetid3 IS NULL 
+				AND v.fromaccountid = $4 AND v.targettype = $5)
+			JOIN osmium.loadoutupdownvotes AS ludv ON ludv.loadoutid = l.loadoutid
+			WHERE l.loadoutid = $1',
+			array(
+				$loadoutid,
+				\Osmium\Reputation\VOTE_TYPE_UP,
+				\Osmium\Reputation\VOTE_TYPE_DOWN,
+				$loggedin ? $a['accountid'] : 0,
+				\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT
+				)
+			));
 
 $commentsallowed = ($commentsallowed === 't');
 $ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
@@ -329,23 +337,6 @@ echo "</div>\n";
 
 echo "<div id='vloadoutbox' data-loadoutid='".$fit['metadata']['loadoutid']."' data-revision='".$fit['metadata']['revision']."' data-presetid='".$fit['modulepresetid']."' data-cpid='".$fit['chargepresetid']."' data-dpid='".$fit['dronepresetid']."'>\n";
 
-$votes = array(
-	\Osmium\Reputation\VOTE_TYPE_UP => 0,
-	\Osmium\Reputation\VOTE_TYPE_DOWN => 0,
-	);
-$votesq = \Osmium\Db\query_params(
-	'SELECT type, COUNT(voteid) AS count FROM osmium.votes WHERE targettype = $1 AND type IN ($3, $4) AND targetid1 = $2 AND targetid2 IS NULL AND targetid3 IS NULL GROUP BY type',
-	array(
-		\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
-		$fit['metadata']['loadoutid'],
-		\Osmium\Reputation\VOTE_TYPE_UP,
-		\Osmium\Reputation\VOTE_TYPE_DOWN,
-		)
-	);
-while($votec = \Osmium\Db\fetch_assoc($votesq)) {
-	$votes[$votec['type']] = $votec['count'];
-}
-
 echo "<header>\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
@@ -363,12 +354,9 @@ if(count($fit['metadata']['tags']) > 0) {
 	echo "<em>(no tags)</em>";
 }
 echo "</div>\n";
-echo "<div class='votes'>\n";
+echo "<div class='votes' data-targettype='loadout'>\n";
 echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote".($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='upvote' /></a>\n";
-echo "<strong title='".$votes[\Osmium\Reputation\VOTE_TYPE_UP]
-." upvote(s), ".$votes[\Osmium\Reputation\VOTE_TYPE_DOWN]." downvote(s)'>"
-.($votes[\Osmium\Reputation\VOTE_TYPE_UP] - $votes[\Osmium\Reputation\VOTE_TYPE_DOWN])
-."</strong>\n";
+echo "<strong title='".$totalupvotes." upvote(s), ".$totaldownvotes." downvote(s)'>".$totalvotes."</strong>\n";
 echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort' class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='downvote' /></a>\n";
 echo "</div>\n";
 echo "</header>\n";
@@ -500,14 +488,19 @@ $commentids = array(-1);
 while($r = \Osmium\Db\fetch_row($commentidsq)) {
 	$commentids[] = $r[0];
 }
-$cq = \Osmium\Db\query('
-SELECT lc.commentid, lc.accountid, lc.creationdate, lc.revision AS loadoutrevision,
+$cq = \Osmium\Db\query_params(
+'SELECT lc.commentid, lc.accountid, lc.creationdate, lc.revision AS loadoutrevision,
+lcudv.votes, lcudv.upvotes, lcudv.downvotes, v.type AS votetype,
 lcrev.revision AS commentrevision, lcrev.updatedbyaccountid, lcrev.updatedate, lcrev.commentformattedbody,
 lcrep.commentreplyid, lcrep.creationdate AS repcreationdate, lcrep.replyformattedbody, lcrep.updatedate AS repupdatedate,
 cacc.accountid, cacc.nickname, cacc.apiverified, cacc.characterid, cacc.charactername, cacc.ismoderator, cacc.reputation,
 racc.accountid AS raccountid, racc.nickname AS rnickname, racc.apiverified AS rapiverified, racc.characterid AS rcharacterid, racc.charactername AS rcharactername, racc.ismoderator AS rismoderator,
 uacc.accountid AS uaccountid, uacc.nickname AS unickname, uacc.apiverified AS uapiverified, uacc.characterid AS ucharacterid, uacc.charactername AS ucharactername, uacc.ismoderator AS uismoderator, uacc.reputation AS ureputation
 FROM osmium.loadoutcomments AS lc
+JOIN osmium.loadoutcommentupdownvotes AS lcudv ON lcudv.commentid = lc.commentid
+LEFT JOIN osmium.votes AS v ON (v.targettype = $1 AND v.type IN ($2, $3)
+                                AND v.fromaccountid = $4 AND v.targetid1 = lc.commentid 
+                                AND v.targetid2 = lc.loadoutid AND v.targetid3 IS NULL)
 JOIN osmium.accounts AS cacc ON cacc.accountid = lc.accountid
 JOIN osmium.loadoutcommentslatestrevision AS lclr ON lc.commentid = lclr.commentid
 JOIN osmium.loadoutcommentrevisions AS lcrev ON lcrev.commentid = lc.commentid
@@ -516,8 +509,13 @@ JOIN osmium.accounts AS uacc ON uacc.accountid = lcrev.updatedbyaccountid
 LEFT JOIN osmium.loadoutcommentreplies AS lcrep ON lcrep.commentid = lc.commentid
 LEFT JOIN osmium.accounts AS racc ON racc.accountid = lcrep.accountid
 WHERE lc.commentid IN ('.implode(',', $commentids).')
-ORDER BY lc.revision DESC, lc.creationdate DESC, lcrep.creationdate ASC
-');
+ORDER BY lc.revision DESC, lcudv.votes DESC, lcrep.creationdate ASC',
+array(
+	\Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+	\Osmium\Reputation\VOTE_TYPE_UP,
+	\Osmium\Reputation\VOTE_TYPE_DOWN,
+	$loggedin ? $a['accountid'] : 0,
+	));
 
 $endcomment = function($commentid) use(&$loggedin) {
 	if($loggedin) {
@@ -538,8 +536,16 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		$previouscommentid = $row['commentid'];
 
 		/* Show comment */
-		echo "<div class='comment' id='c".$row['commentid']."'>\n";
+		echo "<div class='comment' id='c".$row['commentid']."' data-commentid='".$row['commentid']."'>\n";
+
+		echo "<div class='votes' data-targettype='comment'>\n";
+		echo "<a title='This comment is useful' class='upvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='upvote' /></a>\n";
+		echo "<strong title='".$row['upvotes']." upvote(s), ".$row['downvotes']." downvote(s)'>".$row['votes']."</strong>\n";
+		echo "<a title='This comment is off-topic, not constructive or not useful' class='downvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='downvote' /></a>\n";
+		echo "</div>\n";
+
 		echo "<div class='body'>\n".$row['commentformattedbody']."</div>\n";
+
 		echo "<header>\n<div class='author'>\n";
 		if($row['apiverified'] === 't' && $row['characterid'] > 0) {
 			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$row['characterid']."_256.jpg' alt='' />";

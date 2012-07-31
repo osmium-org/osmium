@@ -163,13 +163,14 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
 JOIN osmium.fittings ON fittings.fittinghash = loadouthistory.fittinghash 
 JOIN osmium.accounts ON accounts.accountid = loadouts.accountid 
-JOIN eve.invtypes ON hullid = invtypes.typeid 
+JOIN eve.invtypes ON hullid = invtypes.typeid
+JOIN osmium.loadoutupdownvotes ON loadoutupdownvotes.loadoutid = loadouts.loadoutid
 LEFT JOIN osmium.loadoutstaglist ON loadoutstaglist.loadoutid = loadouts.loadoutid
 WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
@@ -181,6 +182,10 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		}
 		echo "<li>\n";
 		echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' />\n";
+		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
+		echo "<div class='lscore'><span title='".$loadout['upvotes']
+			." upvote(s), ".$loadout['downvotes']." downvote(s)'><strong>"
+			.$loadout['votes']."</strong><br />$votes</span></div>\n";
 		echo "<a href='$relative/loadout/".$loadout['loadoutid']."'>";
 		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
 		echo "</a>\n<br />\n";

@@ -203,7 +203,7 @@ $(function() {
 		$(this).parent().find('ul.replies > li.new').fadeIn(500).find('textarea').focus();
 	});
 
-	$("div#vloadoutbox > header > div.votes > a").click(function() {
+	$("div#vloadoutbox > header > div.votes > a, div#vcomments > div.comment > div.votes > a").click(function() {
 		var t = $(this);
 		var score = t.parent().children('strong');
 		var delta = 0;
@@ -232,11 +232,18 @@ $(function() {
 
 		score.text(parseInt(score.text(), 10) + delta);
 
-		$.getJSON('../src/json/cast_vote.php', {
+		var targettype = t.parent().data('targettype');
+		var opts = {
+			targettype: targettype,
 			action: action,
-			loadoutid: $("div#vloadoutbox").data('loadoutid'),
-			targettype: 'loadout'
-		}, function(data) {
+			loadoutid: $("div#vloadoutbox").data('loadoutid')
+		};
+
+		if(targettype == 'comment') {
+			opts['commentid'] = t.parent().parent().data('commentid');
+		}
+
+		$.getJSON('../src/json/cast_vote.php', opts, function(data) {
 			if(!data['success']) {
 				score.text(parseInt(score.text(), 10) - delta);
 

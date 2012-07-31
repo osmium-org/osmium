@@ -501,6 +501,46 @@ CREATE VIEW loadoutcommentslatestrevision AS
 
 
 --
+-- Name: votes; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE votes (
+    voteid integer NOT NULL,
+    fromaccountid integer NOT NULL,
+    fromeveaccountid integer NOT NULL,
+    fromclientid integer NOT NULL,
+    accountid integer NOT NULL,
+    creationdate integer NOT NULL,
+    cancellableuntil integer,
+    reputationgiventodest integer,
+    reputationgiventosource integer,
+    type integer NOT NULL,
+    targettype integer NOT NULL,
+    targetid1 integer,
+    targetid2 integer,
+    targetid3 integer,
+    CONSTRAINT votes_notaselfvote_check CHECK ((fromaccountid <> accountid)),
+    CONSTRAINT votes_notempty_check CHECK ((((targetid1 IS NOT NULL) OR (targetid2 IS NOT NULL)) OR (targetid3 IS NOT NULL)))
+);
+
+
+--
+-- Name: votecount; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW votecount AS
+    SELECT count(votes.voteid) AS count, votes.type, votes.targettype, votes.targetid1, votes.targetid2, votes.targetid3 FROM votes GROUP BY votes.type, votes.targettype, votes.targetid1, votes.targetid2, votes.targetid3;
+
+
+--
+-- Name: loadoutcommentupdownvotes; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW loadoutcommentupdownvotes AS
+    SELECT c.commentid, (COALESCE(uv.count, (0)::bigint) - COALESCE(dv.count, (0)::bigint)) AS votes, COALESCE(uv.count, (0)::bigint) AS upvotes, COALESCE(dv.count, (0)::bigint) AS downvotes FROM ((loadoutcomments c LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 2)) AND (uv.targetid1 = c.commentid)) AND (uv.targetid2 = c.loadoutid)) AND (uv.targetid3 IS NULL)))) LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 2)) AND (dv.targetid1 = c.commentid)) AND (dv.targetid2 = c.loadoutid)) AND (dv.targetid3 IS NULL))));
+
+
+--
 -- Name: loadouthistory; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -551,6 +591,14 @@ CREATE VIEW searchableloadouts AS
 
 CREATE VIEW loadoutssearchdata AS
     SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE 0 END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE 0 END ELSE 0 END AS restrictedtoallianceid, loadoutstaglist.taglist AS tags, loadoutsmodulelist.modulelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittings.description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate FROM ((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) LEFT JOIN loadoutstaglist ON ((loadoutstaglist.loadoutid = loadoutslatestrevision.loadoutid))) LEFT JOIN loadoutsmodulelist ON ((loadoutsmodulelist.loadoutid = loadoutslatestrevision.loadoutid))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)));
+
+
+--
+-- Name: loadoutupdownvotes; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW loadoutupdownvotes AS
+    SELECT l.loadoutid, (COALESCE(uv.count, (0)::bigint) - COALESCE(dv.count, (0)::bigint)) AS votes, COALESCE(uv.count, (0)::bigint) AS upvotes, COALESCE(dv.count, (0)::bigint) AS downvotes FROM ((loadouts l LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 1)) AND (uv.targetid1 = l.loadoutid)) AND (uv.targetid2 IS NULL)) AND (uv.targetid3 IS NULL)))) LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 1)) AND (dv.targetid1 = l.loadoutid)) AND (dv.targetid2 IS NULL)) AND (dv.targetid3 IS NULL))));
 
 
 --
@@ -629,30 +677,6 @@ ALTER SEQUENCE notifications_notificationid_seq OWNED BY notifications.notificat
 
 CREATE VIEW tagcount AS
     SELECT ft.tagname, count(ft.fittinghash) AS count FROM ((((allowedloadoutsanonymous a JOIN loadoutslatestrevision llr ON ((a.loadoutid = llr.loadoutid))) JOIN loadouthistory lh ON (((lh.loadoutid = a.loadoutid) AND (lh.revision = llr.latestrevision)))) JOIN loadouts l ON ((l.loadoutid = a.loadoutid))) JOIN fittingtags ft ON ((ft.fittinghash = lh.fittinghash))) WHERE (l.visibility = 0) GROUP BY ft.tagname;
-
-
---
--- Name: votes; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE TABLE votes (
-    voteid integer NOT NULL,
-    fromaccountid integer NOT NULL,
-    fromeveaccountid integer NOT NULL,
-    fromclientid integer NOT NULL,
-    accountid integer NOT NULL,
-    creationdate integer NOT NULL,
-    cancellableuntil integer,
-    reputationgiventodest integer,
-    reputationgiventosource integer,
-    type integer NOT NULL,
-    targettype integer NOT NULL,
-    targetid1 integer,
-    targetid2 integer,
-    targetid3 integer,
-    CONSTRAINT votes_notaselfvote_check CHECK ((fromaccountid <> accountid)),
-    CONSTRAINT votes_notempty_check CHECK ((((targetid1 IS NOT NULL) OR (targetid2 IS NOT NULL)) OR (targetid3 IS NOT NULL)))
-);
 
 
 --

@@ -69,6 +69,30 @@ if($targettype === 'loadout') {
 	$targettype = \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT;
 	$id1 = $loadoutid;
 	$id2 = $id3 = null;
+} else if($targettype === 'comment') {
+	if(!isset($_GET['commentid'])) {
+		$result['error'] = 'commentid not specified';
+		$result['success'] = false;
+		\Osmium\Chrome\return_json($result);
+	}
+
+    $targetaccountid = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT accountid FROM osmium.loadoutcomments WHERE commentid = $1 AND loadoutid = $2',
+			array($_GET['commentid'], $loadoutid)
+			));
+
+    if($targetaccountid === false) {
+		$result['error'] = 'invalid commentid';
+		$result['success'] = false;
+		\Osmium\Chrome\return_json($result);
+    }
+
+    $targetaccountid = $targetaccountid[0];
+	$targettype = \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT;
+	$id1 = $_GET['commentid'];
+	$id2 = $loadoutid;
+	$id3 = null;
 } else {
 	$result['error'] = 'Unknown targettype';
 	$result['success'] = false;
