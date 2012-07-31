@@ -149,6 +149,10 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 }
 
 $title = htmlspecialchars($fit['ship']['typename'].' / '.$fit['metadata']['name']);
+if(!$fitlatestrev) {
+	$title .= " (revision ".$fit['metadata']['revision'].")";
+}
+
 \Osmium\Chrome\print_header($title, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC && !isset($_GET['jtc']));
 
 $green_fits = \Osmium\State\get_state('green_fits', array());
