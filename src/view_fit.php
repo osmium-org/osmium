@@ -152,6 +152,10 @@ $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;
 \Osmium\State\put_state('green_fits', $green_fits);
 
+$defaultpid = $fit['modulepresetid'];
+$defaultcpid = $fit['chargepresetid'];
+$defaultdpid = $fit['dronepresetid'];
+
 if(isset($_GET['pid'])) {
     $ids = explode('-', $_GET['pid'], 2);
     $pid = intval($ids[0]);
@@ -194,7 +198,12 @@ if(count($fit['dronepresets']) > 1) {
 
 \Osmium\Chrome\print_header(
 	$title, '..',
-	$fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC && !isset($_GET['jtc'])
+	$fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
+	&& !isset($_GET['jtc'])
+	&& ((!isset($_GET['pid']) && !isset($_GET['dpid']))
+	    || $fit['modulepresetid'] != $defaultpid
+	    || $fit['chargepresetid'] != $defaultcpid
+	    || $fit['dronepresetid'] != $defaultdpid)
 	);
 
 /* ----------------------------------------------------- */
