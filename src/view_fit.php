@@ -64,7 +64,7 @@ if(!\Osmium\State\can_access_fit($fit)) {
 		}
       
 		/* Show the password form */
-		\Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', "<meta name='robots' content='noindex' />\n");
+		\Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', false);
       
 		echo "<div id='pwfit'>\n";
 		\Osmium\Forms\print_form_begin();
@@ -149,7 +149,7 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 }
 
 $title = htmlspecialchars($fit['ship']['typename'].' / '.$fit['metadata']['name']);
-\Osmium\Chrome\print_header($title, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? "<meta name='robots' content='noindex' />\n" : '');
+\Osmium\Chrome\print_header($title, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC && !isset($_GET['jtc']));
 
 $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;

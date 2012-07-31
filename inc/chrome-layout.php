@@ -39,7 +39,7 @@ $__osmium_js_code = '';
  * @param $add_head optional HTML code to add just before </head>,
  * unescaped.
  */
-function print_header($title = '', $relative = '.', $add_head = '') {
+function print_header($title = '', $relative = '.', $index = true, $add_head = '') {
 	global $__osmium_chrome_relative;
 	$__osmium_chrome_relative = $relative;
 
@@ -63,6 +63,7 @@ function print_header($title = '', $relative = '.', $add_head = '') {
 	}
 	echo "<!DOCTYPE html>\n<html xmlns='http://www.w3.org/1999/xhtml'>\n<head>\n";
 	if(!$xhtml) echo "<meta charset='UTF-8' />\n";
+	if(!$index) echo "<meta name='robots' content='noindex' />\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
 	echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
 	echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";

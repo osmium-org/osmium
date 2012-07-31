@@ -21,7 +21,7 @@ namespace Osmium\Page\Main;
 require __DIR__.'/../inc/root.php';
 require \Osmium\ROOT.'/inc/atom_common.php';
 
-\Osmium\Chrome\print_header('', '.', "<link href='./atom/newfits.xml' type='application/atom+xml' rel='alternate' title='New fits' />\n<link href='./atom/recentlyupdated.xml' type='application/atom+xml' rel='alternate' title='Recently updated' />\n");
+\Osmium\Chrome\print_header('', '.', true, "<link href='./atom/newfits.xml' type='application/atom+xml' rel='alternate' title='New fits' />\n<link href='./atom/recentlyupdated.xml' type='application/atom+xml' rel='alternate' title='Recently updated' />\n");
 
 echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
 echo "<div id='mainpcont'>\n";
