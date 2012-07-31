@@ -148,13 +148,6 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 	}
 }
 
-$title = htmlspecialchars($fit['ship']['typename'].' / '.$fit['metadata']['name']);
-if(!$fitlatestrev) {
-	$title .= " (revision ".$fit['metadata']['revision'].")";
-}
-
-\Osmium\Chrome\print_header($title, '..', $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC && !isset($_GET['jtc']));
-
 $green_fits = \Osmium\State\get_state('green_fits', array());
 $green_fits[$fit['metadata']['loadoutid']] = true;
 \Osmium\State\put_state('green_fits', $green_fits);
@@ -175,6 +168,34 @@ if(isset($_GET['pid'])) {
 if(isset($_GET['dpid']) && isset($fit['dronepresets'][$_GET['dpid']])) {
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 }
+
+$title = htmlspecialchars($fit['ship']['typename'].' / '.$fit['metadata']['name']);
+if(!$fitlatestrev) {
+	$title .= " (revision ".$fit['metadata']['revision'].")";
+}
+if(count($fit['presets']) > 1 || count($fit['chargepresets']) > 1 || count($fit['dronepresets']) > 1) {
+	$title .= " / ";
+}
+if(count($fit['presets']) > 1) {
+	$title .= htmlspecialchars($fit['modulepresetname']);
+}
+if(count($fit['chargepresets']) > 1) {
+	if(count($fit['presets']) > 1) {
+		$title .= ', ';
+	}
+	$title .= htmlspecialchars($fit['chargepresetname']);
+}
+if(count($fit['dronepresets']) > 1) {
+	if(count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
+		$title .= ', ';
+	}
+	$title .= htmlspecialchars($fit['dronepresetname']);
+}
+
+\Osmium\Chrome\print_header(
+	$title, '..',
+	$fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC && !isset($_GET['jtc'])
+	);
 
 /* ----------------------------------------------------- */
 
