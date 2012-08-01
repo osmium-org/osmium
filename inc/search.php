@@ -139,7 +139,7 @@ function print_pretty_results($relative, $query, $more = '', $paginate = false, 
 
 	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $perpage);
 	if($ids === false) {
-		echo "<p class='error_box no_search_result'>The supplied query is invalid.</p>\n";
+		echo "<p class='placeholder'>The supplied query is invalid.</p>\n";
 		return;
 	}
 
@@ -155,7 +155,7 @@ function print_pretty_results($relative, $query, $more = '', $paginate = false, 
 
 function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message = 'No loadouts.') {
 	if($ids === array()) {
-		echo "<p class='error_box no_search_result'>".$nothing_message."</p>\n";
+		echo "<p class='placeholder'>".$nothing_message."</p>\n";
 		return;		
 	}
 
@@ -210,6 +210,6 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 	if($first === false) {
 		echo "</ol>\n";
 	} else {
-		echo "<p class='error_box no_search_result'>".$nothing_message."</p>\n";
+		echo "<p class='placeholder'>".$nothing_message."</p>\n";
 	}
 }

@@ -47,7 +47,115 @@ div#vprofile {
 		}
 	}
 
+	&> ul.tabs {
+		@include tabs;
+		text-align: right;
+		padding-top: 2em;
+		padding-right: 1em;
+	}
+
 	&> section.psection {
 		margin-bottom: 1em;
+	}
+
+	&> section#reputation {
+		$rep-width: 2em;
+		$positive-color: green;
+		$negative-color: red;
+
+		&> ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+
+			&> li {
+				padding-top: 0.5em;
+				border-top: 1px solid #CCC;
+
+				&:first-child {
+					padding-top: 0;
+					border-top: none;
+				}
+			}
+		}
+
+		&> ul > li > h4 {
+			position: relative;
+			font-size: 1.2em;
+			padding-left: $rep-width * 1.5 + 0.5em;
+			line-height: 1.2em * 1.5;
+			margin: 0;
+
+			&> span {
+				position: absolute;
+				display: inline-block;
+				left: 0;
+				width: $rep-width;
+				text-align: right;
+				font-size: 1.5em;
+
+				&.positive {
+					color: $positive-color;
+				}
+
+				&.negative {
+					color: $negative-color;
+				}
+			}
+		}
+
+		&> ul > li > table {
+			width: 100%;
+			margin-bottom: 1em;
+
+			&> tbody > tr {
+				background-color: #F4F4F8;
+			}
+
+			&> tbody > tr > td {
+				&.rep {
+					text-align: right;
+					width: $rep-width * 1.5;
+
+					&.positive {
+						color: $positive-color;
+					}
+					
+					&.negative {
+						color: $negative-color;
+					}
+				}
+
+				&.time {
+					color: #888;
+					width: 5em;
+					text-align: center;
+				}
+
+				&.type {
+					width: 10em;
+					text-align: left;
+				}
+
+				&.l {
+					text-align: left;
+				}
+			}
+		}
+
+		&> ul > li {
+			&> h4:before {
+				content: $developed-char;
+				padding-right: 0.25em;
+			}
+
+			&.hidden > h4:before {
+				content: $hidden-char;
+			}
+		}
+
+		&> ul > li.hidden > table {
+			display: none;
+		}
 	}
 }

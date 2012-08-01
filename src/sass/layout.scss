@@ -101,6 +101,11 @@ nav {
 			font-size: 0.9em;
 			line-height: 0.9em;
 		}
+
+		&.logout > p > a.rep {
+			color: black;
+			text-decoration: none;
+		}
 	}
 }
 
@@ -130,9 +135,15 @@ a {
 		border-color: $link-color;
 	}
 
+	&:hover {
+		color: $link-color !important;
+		border-color: $link-color !important;
+		text-decoration: underline !important;
+	}
+
 	&:active, &:focus {
-		color: red;
-		border-color: red;
+		color: red !important;
+		border-color: red !important;
 	}
 
 	&.dangerous {
@@ -250,6 +261,13 @@ $animation-duration: 15s;
 	-moz-animation-duration: $animation-duration;
 	-webkit-animation-duration: $animation-duration;
 	-o-animation-duration: $animation-duration;
+}
+
+.notarget:target {
+	animation-name: none;
+	-moz-animation-name: none;
+	-webkit-animation-name: none;
+	-o-animation-name: none;
 }
 
 @keyframes tfade {

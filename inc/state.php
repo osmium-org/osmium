@@ -168,7 +168,7 @@ function print_logoff_box($relative, $notifications) {
 		$portrait = "<img src='http://image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
 	}
 
-	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong> (".\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())."). <a id='ncount' data-count='$notifications' href='$relative/notifications' title='$notifications new notification(s)'>$notifications</a> <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong> (<a class='rep' href='$relative/profile/".$a['accountid']."#reputation'>".\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications' title='$notifications new notification(s)'>$notifications</a> <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 /** @internal */

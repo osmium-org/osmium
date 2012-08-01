@@ -59,15 +59,6 @@ div#search_full {
 	}
 }
 
-p.no_search_result {
-	@include notice;
-	margin: 1em;
-	text-align: center;
-	text-decoration: none;
-	color: #888;
-	font-style: italic;
-}
-
 ol.loadout_sr {
 	margin: 0;
 	padding: 0;
