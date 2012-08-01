@@ -57,6 +57,7 @@ if(isset($_GET['dpid']) && isset($fit['dronepresets'][$_GET['dpid']])) {
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 }
 
+header('X-Robots-Tag: noindex');
 header('Content-Type: '.$formats[$type][1]);
 echo $formats[$type][2]($fit, $_GET);
 die();
