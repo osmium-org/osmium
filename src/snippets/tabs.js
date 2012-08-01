@@ -25,6 +25,10 @@ osmium_tabify = function(ul, selected) {
 			$($(this).children('a').attr('href')).hide();
 		});
 
+		var hash = window.location.hash;
+		var href = window.location.href;
+		history.replaceState(null, null, href.substring(0, hash.length - href.length) + a.attr('href'));
+
 		$(a.attr('href')).fadeIn(500);
 		li.addClass('active').delay(501).trigger('afteractive');
 
