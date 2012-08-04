@@ -981,7 +981,9 @@ function get_attribute_in_cache($attributenameorid, &$out) {
   WHERE attributename = $1', array($name));
 
 	$row = \Osmium\Db\fetch_assoc($attribsq);
-		
+
+	$row['stackable'] = $row['stackable'] === 't';
+	$row['highisgood'] = $row['highisgood'] === 't';
 	$out['__attributes'][$row['attributename']] = $row;
 }
 
@@ -1072,8 +1074,8 @@ function get_attributes_and_effects($typeids, &$out) {
 		$tid = $row['typeid'];
 
 		$out['__attributes'][$row['attributename']]['attributename'] = $row['attributename'];
-		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'];
-		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'];
+		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'] === 't';
+		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'] === 't';
 		$out['__attributes'][$row['attributename']]['defaultvalue'] = $row['defaultvalue'];
 
 		unset($row['typeid']);
