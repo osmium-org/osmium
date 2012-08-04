@@ -433,7 +433,10 @@ function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
 			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
 			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
 
-			$attributes['maxrange'] = $velocity * ($flighttime - 1000000 / ($mass * $agility));
+			/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
+			/* Integrate the velocity of the missile from 0 to flighttime: */
+			$K = -1000000 / ($mass * $agility);
+			$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
 
 			return $attributes;
 		}

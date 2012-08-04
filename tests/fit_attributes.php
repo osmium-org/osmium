@@ -496,4 +496,19 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(73.1, $a['falloff'] / 1000, '', 0.05);
 		$this->assertEquals(0.0888, $a['trackingspeed'], '', 0.00005);
 	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testRocketRange() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 587); /* Rifter */
+		\Osmium\Fit\add_module($fit, 0, 10631); /* Rocket Launcher II */
+		\Osmium\Fit\add_charge($fit, 'high', 0, 2516); /* Nova Rocket */
+
+		/* Pyfa 1.1.8, the range is only an approximation and is actually slightly wrong */
+		$a = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, 'high', 0);
+		$this->assertEquals(9960, $a['maxrange'], '', 250);
+	}
 }
