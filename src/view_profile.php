@@ -81,7 +81,7 @@ if($myprofile) {
 }
 echo "<li><a href='#ploadouts'>Recent</a></li>\n";
 echo "<li><a href='#reputation'>Reputation</a></li>\n";
-//echo "<li><a href='#votes'>Votes</a></li>\n";
+echo "<li><a href='#votes'>Votes</a></li>\n";
 //echo "<li><a href='#comment'>Comments</a></li>\n";
 echo "</ul>\n";
 
@@ -116,6 +116,7 @@ if($myprofile) {
 echo "<section id='reputation' class='psection'>\n";
 echo "<h2>Reputation changes this month</h2>\n";
 
+$votetypes = \Osmium\Reputation\get_vote_types();
 $repchangesq = \Osmium\Db\query_params(
 	'SELECT v.creationdate, reputationgiventodest, type, targettype, targetid1, targetid2, targetid3,
 		sl.loadoutid, f.name
@@ -139,7 +140,25 @@ $lastday = null;
 $first = true;
 $data = array();
 
+function print_target($d) {
+	if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT) {
+		if($d['name'] !== null) {
+			echo "<a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
+		} else {
+			echo "<small>Private/hidden loadout</small>";
+		}
+	} else if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT) {
+		if($d['name'] !== null) {
+			echo "Comment <a href='../loadout/".$d['loadoutid']."?jtc=".$d['targetid1']."#c".$d['targetid1']."'>#".$d['targetid1']."</a> on <a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
+		} else {
+			echo "<small>Comment on a private/hidden loadout</small>";
+		}
+	}
+}
+
 function print_reputation_day($day, $data) {
+	global $votetypes;
+
 	$net = 0;
 	foreach($data as $d) $net += $d['reputationgiventodest'];
 	$class = ($net >= 0) ? 'positive' : 'negative';
@@ -157,17 +176,11 @@ function print_reputation_day($day, $data) {
 		$time = date('H:i', $d['creationdate']);
 		echo "<td class='time'>$time</td>\n";
 
-		if($d['type'] == \Osmium\Reputation\VOTE_TYPE_UP) $type = 'upvote';
-		else if($d['type'] == \Osmium\Reputation\VOTE_TYPE_DOWN) $type = 'downvote';
-		else $type = 'unknown';
+		$type = $votetypes[$d['type']];
 		echo "<td class='type'>$type</td>\n";
 
 		echo "<td class='l'>";
-		if($d['name'] !== null) {
-			echo "<a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
-		} else {
-			echo "<small>Private/hidden loadout</small>";
-		}
+		print_target($d);
 		echo "</td>\n";
 		echo "</tr>\n";
 	}
@@ -192,6 +205,52 @@ while($r = \Osmium\Db\fetch_assoc($repchangesq)) {
 if(!$first) print_reputation_day($day, $data);
 echo "</ul>\n";
 if($first) echo "<p class='placeholder'>No reputation changes this month.</p>\n";
+echo "</section>\n";
+
+echo "<section id='votes' class='psection'>\n";
+echo "<h2>Votes cast</h2>\n";
+
+list($total) = \Osmium\Db\fetch_row(
+	\Osmium\Db\query_params(
+		'SELECT COUNT(voteid) FROM osmium.votes WHERE fromaccountid = $1',
+		array($_GET['accountid'])
+		));
+$offset = \Osmium\Chrome\paginate('vp', 25, $total, $result, $metaresult, null, '', '#votes');
+echo $result;
+
+$votesq = \Osmium\Db\query_params(
+	'SELECT v.creationdate, type, targettype, targetid1, targetid2, targetid3, sl.loadoutid, f.name
+	FROM osmium.votes AS v
+	LEFT JOIN osmium.searchableloadouts AS sl ON ((v.targettype = $2 AND v.targetid1 = sl.loadoutid
+		AND v.targetid2 IS NULL AND v.targetid3 IS NULL)
+		OR (v.targettype = $3 AND v.targetid2 = sl.loadoutid AND v.targetid3 IS NULL))
+	LEFT JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = sl.loadoutid
+	LEFT JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = llr.latestrevision
+	LEFT JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
+	WHERE fromaccountid = $1 ORDER BY v.creationdate DESC LIMIT 25 OFFSET $4',
+	array($_GET['accountid'],
+	      \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+	      \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+	      $offset
+		));
+echo "<table class='d'>\n<tbody>\n";
+$first = true;
+while($v = \Osmium\Db\fetch_assoc($votesq)) {
+	$first = false;
+
+	echo "<tr>\n";
+
+	echo "<td class='date'>".\Osmium\Chrome\format_relative_date($v['creationdate'])."</td>\n";
+	echo "<td class='type'>".$votetypes[$v['type']]."</td>\n";
+
+	echo "<td class='l'>";
+	print_target($v);
+	echo "</td>\n";
+
+	echo "</tr>\n";
+}
+echo "</tbody>\n</table>\n";
+if($first) echo "<p class='placeholder'>No votes cast.</p>\n";
 echo "</section>\n";
 
 echo "</div>\n";

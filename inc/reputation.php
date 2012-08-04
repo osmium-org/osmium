@@ -84,6 +84,13 @@ function get_privileges() {
 		);
 }
 
+function get_vote_types() {
+	return array(
+		VOTE_TYPE_UP => 'upvote',
+		VOTE_TYPE_DOWN => 'downvote',
+		);
+}
+
 function is_fit_public($fit) {
 	return \Osmium\State\is_logged_in()
 		&& $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC

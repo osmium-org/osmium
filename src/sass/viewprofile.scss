@@ -158,4 +158,22 @@ div#vprofile {
 			display: none;
 		}
 	}
+
+	&> section#votes {
+		&> table > tbody > tr > td {
+			&.date {
+				color: #888;
+				width: 7em;
+			}
+
+			&.type {
+				width: 10em;
+				text-align: left;
+			}
+
+			&.l {
+				text-align: left;
+			}
+		}
+	}
 }
