@@ -221,7 +221,7 @@ function print_formatted_misc(&$fit) {
 	} else {
 		$p = format_isk($p);
 		if(count($missing) > 0) {
-			$missing = implode(', ', $missing);
+			$missing = implode(', ', array_keys($missing));
 			$p = "<span title='Estimate of the following items unavailable: "
 				.htmlspecialchars($missing, ENT_QUOTES)."'>≥".$p.'</span>';
 		}
