@@ -114,7 +114,7 @@ if($myprofile) {
 }
 
 echo "<section id='reputation' class='psection'>\n";
-echo "<h2>Reputation changes this month</h2>\n";
+echo "<h2>Reputation changes this month <small>".\Osmium\Chrome\format_reputation($row['reputation'])." reputation</small></h2>\n";
 
 $votetypes = \Osmium\Reputation\get_vote_types();
 $repchangesq = \Osmium\Db\query_params(
@@ -208,7 +208,6 @@ if($first) echo "<p class='placeholder'>No reputation changes this month.</p>\n"
 echo "</section>\n";
 
 echo "<section id='votes' class='psection'>\n";
-echo "<h2>Votes cast</h2>\n";
 
 list($total) = \Osmium\Db\fetch_row(
 	\Osmium\Db\query_params(
@@ -216,6 +215,8 @@ list($total) = \Osmium\Db\fetch_row(
 		array($_GET['accountid'])
 		));
 $offset = \Osmium\Chrome\paginate('vp', 25, $total, $result, $metaresult, null, '', '#votes');
+
+echo "<h2>Votes cast <small>".number_format($total)." votes cast</small></h2>\n";
 echo $result;
 
 $votesq = \Osmium\Db\query_params(
