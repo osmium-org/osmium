@@ -29,3 +29,10 @@ p.warning_box {
 p.notice_box {
 	@include notice;
 }
+
+p.placeholder {
+	color: #888;
+	text-align: center;
+	padding: 0.5em;
+	font-style: italic;
+}

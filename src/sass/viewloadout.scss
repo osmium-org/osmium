@@ -54,13 +54,15 @@ div#vloadoutbox {
 
 	&> header {
 		position: relative;
-		padding-left: 6.5em;
+		padding-left: 11em;
+		min-height: 7.5em;
 
 		&> img#fittypepic {
 			position: absolute;
-			top: 0;
-			left: 0;
-			height: 6em;
+			top: 0em;
+			left: 3.5em;
+			height: 7em;
+			width: 7em;
 		}
 
 		&> h1 {
@@ -80,6 +82,13 @@ div#vloadoutbox {
 				margin: 0;
 				font-size: 1em;
 			}
+		}
+
+		&> div.votes {
+			position: absolute;
+			left: 0;
+			top: 0.5em;
+			width: 3em;
 		}
 	}
 
@@ -114,10 +123,18 @@ div#vcomments {
 	&> div.comment {
 		border-top: 1px solid #888;
 		padding: 0.5em 0;
+		position: relative;
+
+		&> div.votes {
+			position: absolute;
+			left: 0.5em;
+			top: 0.5em;
+		}
 
 		&> header {
+			clear: left;
 			min-height: 3.5em;
-			margin-top: 0.5em;
+			padding-top: 1em;
 
 			@include authorboxes;
 
@@ -157,7 +174,9 @@ div#vcomments {
 		}
 
 		&> div.body {
-			padding-left: 0.25em;
+			padding-top: 0.5em;
+			padding-left: 50px;
+			min-height: 4em;
 
 			&> p, &> h1, &> h2, &> h3, &> h4, &> h5, &> h6 {
 				&:first-child {

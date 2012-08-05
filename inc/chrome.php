@@ -183,6 +183,18 @@ function format_resonance($resonance) {
 	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
 }
 
+function format_reputation($rep) {
+	if($rep <= 0) $rep = 0;
+
+	if($rep >= 10000) {
+		$rep = round(floor($rep / 100) / 10, 1).'k';
+	} else {
+		$rep = number_format($rep);
+	}
+
+	return "<span class='reputation' title='reputation'>$rep</span>";
+}
+
 /**
  * Get nickname or character name of current user.
  */
@@ -210,7 +222,7 @@ function format_character_name($a, $relative = '.', &$rawname = null) {
 	return maybe_add_profile_link($a, $relative, $name);
 }
 
-function maybe_add_profile_link($a, $relative = '.', $name) {
+function maybe_add_profile_link($a, $relative, $name) {
 	if(isset($a['accountid'])) {
 		return "<a class='profile' href='$relative/profile/".$a['accountid']."'>$name</a>";
 	} else {
@@ -303,6 +315,20 @@ function round_sd($number, $digits = 0) {
 	return $normalized * $m;
 }
 
+/**
+ * Generate pagination links and get the offset of the current page.
+ *
+ * @param $name name of the $_GET parameter
+ * @param $perpage number of elements per page
+ * @param $total total number of elements
+ * @param $result where the pagination links are stored
+ * @param $metaresult where the pagination info is stored
+ * @param $pageoverride force a certain page number instead of $_GET default
+ * @param $format format of $metaresult; %1, %2 and %3 will be replaced
+ * @param $anchor optional anchor to append to the generated link URIs
+ *
+ * @return offset of the current page
+ */
 function paginate($name, $perpage, $total, &$result, &$metaresult,
                   $pageoverride = null, $format = 'Showing rows %1-%2 of %3.',
                   $anchor = '') {

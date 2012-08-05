@@ -1,0 +1,2 @@
+ALTER TABLE accounts ADD COLUMN reputation integer NOT NULL DEFAULT 1;
+ALTER TABLE accounts ALTER COLUMN reputation DROP DEFAULT;

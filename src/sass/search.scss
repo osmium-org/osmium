@@ -59,15 +59,6 @@ div#search_full {
 	}
 }
 
-p.no_search_result {
-	@include notice;
-	margin: 1em;
-	text-align: center;
-	text-decoration: none;
-	color: #888;
-	font-style: italic;
-}
-
 ol.loadout_sr {
 	margin: 0;
 	padding: 0;
@@ -78,14 +69,37 @@ ol.loadout_sr {
 		border-bottom: 1px dotted #CCC;
 		padding-bottom: 1.5em;
 		padding-top: 0.5em;
-		padding-left: 5em;
+		padding-left: 9.5em;
 		height: 3em;
+
+		&> div.lscore, &> img:first-child {
+			position: absolute;
+			width: 4em;
+			height: 4em;
+			top: 0.5em;
+			left: 0.5em;
+		}
 
 		&> img:first-child {
 			position: absolute;
 			height: 4em;
 			top: 0.5em;
-			left: 0.5em;
+			left: 5em;
+		}
+
+		&> div.lscore {
+			text-align: center;
+			line-height: 4em;
+
+			&> span {
+				line-height: 1em;
+				display: inline-block;
+				vertical-align: middle;
+
+				&> strong {
+					font-size: 1.5em;
+				}
+			}
 		}
 
 		&> small, &> small > a {

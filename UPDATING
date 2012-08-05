@@ -8,11 +8,23 @@ Most columns that used to have the "smallint" for booleans type now
 have the proper boolean type, so osmium views that used those columns
 have been updated too.
 
-The osmium.invusedtypes view and cacheexpressions table have been
-deleted, as they are no longer used.
+The osmium schema has been updated:
+
+* new table: eveaccounts
+* new field: reputation in accounts
+* new table: votes
+* deleted view: invusedtypes (unused)
+* deleted table: cacheexpressions (unused)
 
 IMPORTANT: when restoring the osmium schema back (before applyng
 patches), you will get errors about some broken views. This is normal.
+
+IMPORTANT: make sure you apply create-votes.sql AFTER
+create-eveaccounts.sql.
+
+IMPORTANT: the config.ini file has been updated, you must copy the
+whole [osmium] section from the example file and add it to your config
+file.
 
 v0.3.0, released 2012-07-25
 ===========================

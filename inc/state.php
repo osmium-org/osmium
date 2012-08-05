@@ -168,7 +168,7 @@ function print_logoff_box($relative, $notifications) {
 		$portrait = "<img src='http://image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
 	}
 
-	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong>. <a id='ncount' data-count='$notifications' href='$relative/notifications' title='$notifications new notification(s)'>$notifications</a> <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong> (<a class='rep' href='$relative/profile/".$a['accountid']."#reputation'>".\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications' title='$notifications new notification(s)'>$notifications</a> <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
 }
 
 /** @internal */
@@ -751,6 +751,54 @@ function get_client_id() {
 	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT clientid FROM osmium.clients WHERE remoteaddress = $1 AND useragent = $2 AND accept = $3 AND ($4::integer IS NULL AND loggedinaccountid IS NULL OR loggedinaccountid = $4)', $client));
 	if($r === false) {
 		$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.clients (remoteaddress, useragent, accept, loggedinaccountid) VALUES ($1, $2, $3, $4) RETURNING clientid', $client));
+	}
+
+	return $r[0];
+}
+
+/**
+ * Get the EVE accountid of the current user (inserts a new row in the
+ * eveaccounts table if necessary). Requires current account to be API
+ * verified.
+ *
+ * @returns integer ID, or false on error
+ */
+function get_eveaccount_id(&$error = null) {
+	$a = get_state('a', null);
+	if($a === null || !isset($a['accountid'])) {
+		$error = 'Please login first.';
+		return false;
+	}
+	if(!isset($a['apiverified']) || $a['apiverified'] !== 't') {
+		$error = 'You must verify your API first.';
+		return false;
+	}
+
+	$accountstatus = \Osmium\EveApi\fetch(
+		'/account/AccountStatus.xml.aspx',
+		array(
+			'keyID' => $a['keyid'],
+			'vCode' => $a['verificationcode'],
+			));
+	if(!($accountstatus instanceof \SimpleXMLElement)
+	   || !isset($accountstatus->result->createDate)) {
+		$error = 'Unexpected EVE API error.';
+		return false;
+	}
+
+	$creationdate = strtotime((string)$accountstatus->result->createDate);
+
+	$r = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT eveaccountid FROM osmium.eveaccounts WHERE creationdate = $1',
+			array($creationdate)
+			));
+	if($r === false) {
+		$r = \Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'INSERT INTO osmium.eveaccounts (creationdate) VALUES ($1) RETURNING eveaccountid',
+				array($creationdate)
+				));
 	}
 
 	return $r[0];

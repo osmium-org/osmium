@@ -24,7 +24,7 @@ if(!isset($_GET['accountid'])) {
 	\Osmium\fatal(404, 'No accountid given.');
 }
 
-$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
+$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight, reputation FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
 
 if($row === false) {
 	\Osmium\fatal(404, 'Invalid accountid.');
@@ -65,7 +65,7 @@ echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chro
 
 echo $sep;
 
-echo "<tr>\n<th rowspan='1'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n";
+echo "<tr>\n<th rowspan='2'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n<tr>\n<td>reputation score</td>\n<td>".number_format($row['reputation'])."</td>\n</tr>\n";
 
 if($myprofile || $ismoderator) {
 	echo $sep;
@@ -73,6 +73,17 @@ if($myprofile || $ismoderator) {
 }
 
 echo "</tbody>\n</table>\n</header>\n";
+
+echo "<ul class='tabs'>\n";
+if($myprofile) {
+	echo "<li><a href='#pfavorites'>Favorites</a></li>\n";
+	echo "<li><a href='#phidden'>Hidden</a></li>\n";
+}
+echo "<li><a href='#ploadouts'>Recent</a></li>\n";
+echo "<li><a href='#reputation'>Reputation</a></li>\n";
+echo "<li><a href='#votes'>Votes</a></li>\n";
+//echo "<li><a href='#comment'>Comments</a></li>\n";
+echo "</ul>\n";
 
 echo "<section id='ploadouts' class='psection'>\n";
 echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.htmlspecialchars($rname, ENT_QUOTES).'"')."\">(browse all)</a></small></h2>\n";
@@ -102,5 +113,149 @@ if($myprofile) {
 	echo "</section>\n";
 }
 
+echo "<section id='reputation' class='psection'>\n";
+echo "<h2>Reputation changes this month <small>".\Osmium\Chrome\format_reputation($row['reputation'])." reputation</small></h2>\n";
+
+$votetypes = \Osmium\Reputation\get_vote_types();
+$repchangesq = \Osmium\Db\query_params(
+	'SELECT v.creationdate, reputationgiventodest, type, targettype, targetid1, targetid2, targetid3,
+		sl.loadoutid, f.name
+	FROM osmium.votes AS v
+	LEFT JOIN osmium.searchableloadouts AS sl ON ((v.targettype = $3 AND v.targetid1 = sl.loadoutid
+		AND v.targetid2 IS NULL AND v.targetid3 IS NULL)
+		OR (v.targettype = $4 AND v.targetid2 = sl.loadoutid AND v.targetid3 IS NULL))
+	LEFT JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = sl.loadoutid
+	LEFT JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = llr.latestrevision
+	LEFT JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
+	WHERE v.accountid = $1 AND v.creationdate >= $2 AND reputationgiventodest <> 0
+	ORDER BY creationdate DESC',
+	array($_GET['accountid'],
+	      time() - 86400 * 365.25 / 12,
+	      \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+	      \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+		)
+	);
+echo "<ul>\n";
+$lastday = null;
+$first = true;
+$data = array();
+
+function print_target($d) {
+	if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT) {
+		if($d['name'] !== null) {
+			echo "<a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
+		} else {
+			echo "<small>Private/hidden loadout</small>";
+		}
+	} else if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT) {
+		if($d['name'] !== null) {
+			echo "Comment <a href='../loadout/".$d['loadoutid']."?jtc=".$d['targetid1']."#c".$d['targetid1']."'>#".$d['targetid1']."</a> on <a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
+		} else {
+			echo "<small>Comment on a private/hidden loadout</small>";
+		}
+	}
+}
+
+function print_reputation_day($day, $data) {
+	global $votetypes;
+
+	$net = 0;
+	foreach($data as $d) $net += $d['reputationgiventodest'];
+	$class = ($net >= 0) ? 'positive' : 'negative';
+
+	echo "<li>\n<h4>$day <span class='$class'>$net</span></h4>\n";
+	echo "<table class='d'>\n<tbody>\n";
+
+	foreach($data as $d) {
+		echo "<tr>\n";
+		$rep = $d['reputationgiventodest'];
+		$class = ($rep >= 0) ? 'positive' : 'negative';
+		if($rep > 0) $rep = '+'.$rep;
+		echo "<td class='rep $class'>$rep</td>\n";
+
+		$time = date('H:i', $d['creationdate']);
+		echo "<td class='time'>$time</td>\n";
+
+		$type = $votetypes[$d['type']];
+		echo "<td class='type'>$type</td>\n";
+
+		echo "<td class='l'>";
+		print_target($d);
+		echo "</td>\n";
+		echo "</tr>\n";
+	}
+
+	echo "</tbody>\n</table>\n</li>\n";
+}
+
+while($r = \Osmium\Db\fetch_assoc($repchangesq)) {
+	$day = date('Y-m-d', $r['creationdate']);
+	if($lastday !== $day) {
+		if($first) $first = false;
+		else {
+			print_reputation_day($lastday, $data);
+		}
+
+		$lastday = $day;
+		$data = array();
+	}
+
+	$data[] = $r;
+}
+if(!$first) print_reputation_day($day, $data);
+echo "</ul>\n";
+if($first) echo "<p class='placeholder'>No reputation changes this month.</p>\n";
+echo "</section>\n";
+
+echo "<section id='votes' class='psection'>\n";
+
+list($total) = \Osmium\Db\fetch_row(
+	\Osmium\Db\query_params(
+		'SELECT COUNT(voteid) FROM osmium.votes WHERE fromaccountid = $1',
+		array($_GET['accountid'])
+		));
+$offset = \Osmium\Chrome\paginate('vp', 25, $total, $result, $metaresult, null, '', '#votes');
+
+echo "<h2>Votes cast <small>".number_format($total)." votes cast</small></h2>\n";
+echo $result;
+
+$votesq = \Osmium\Db\query_params(
+	'SELECT v.creationdate, type, targettype, targetid1, targetid2, targetid3, sl.loadoutid, f.name
+	FROM osmium.votes AS v
+	LEFT JOIN osmium.searchableloadouts AS sl ON ((v.targettype = $2 AND v.targetid1 = sl.loadoutid
+		AND v.targetid2 IS NULL AND v.targetid3 IS NULL)
+		OR (v.targettype = $3 AND v.targetid2 = sl.loadoutid AND v.targetid3 IS NULL))
+	LEFT JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = sl.loadoutid
+	LEFT JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = llr.latestrevision
+	LEFT JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
+	WHERE fromaccountid = $1 ORDER BY v.creationdate DESC LIMIT 25 OFFSET $4',
+	array($_GET['accountid'],
+	      \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+	      \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+	      $offset
+		));
+echo "<table class='d'>\n<tbody>\n";
+$first = true;
+while($v = \Osmium\Db\fetch_assoc($votesq)) {
+	$first = false;
+
+	echo "<tr>\n";
+
+	echo "<td class='date'>".\Osmium\Chrome\format_relative_date($v['creationdate'])."</td>\n";
+	echo "<td class='type'>".$votetypes[$v['type']]."</td>\n";
+
+	echo "<td class='l'>";
+	print_target($v);
+	echo "</td>\n";
+
+	echo "</tr>\n";
+}
+echo "</tbody>\n</table>\n";
+if($first) echo "<p class='placeholder'>No votes cast.</p>\n";
+echo "</section>\n";
+
 echo "</div>\n";
+\Osmium\Chrome\print_js_snippet('tabs');
+\Osmium\Chrome\print_js_snippet('view_profile');
+\Osmium\Chrome\print_js_code('osmium_tabify($("div#vprofile > ul.tabs"), '.($myprofile ? 2 : 0).');');
 \Osmium\Chrome\print_footer();
