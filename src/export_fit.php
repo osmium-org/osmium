@@ -35,13 +35,25 @@ if(!isset($_GET['loadoutid'])) {
 	\Osmium\fatal(400, "No loadoutid specified.");
 }
 
+if(isset($_GET['revision'])) {
+	$revision = intval($_GET['revision']);
+}
+if(!isset($revision) || $revision == 0) {
+	$revision = null;
+}
+
+
 $loadoutid = $_GET['loadoutid'];
 
 if(!\Osmium\State\can_view_fit($loadoutid)) {
 	\Osmium\fatal(404, "Loadout not found.");
 }
 
-$fit = \Osmium\Fit\get_fit($loadoutid);
+$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
+
+if($fit === false) {
+	\Osmium\fatal(404, "Loadout not found (get_fit() failure).");
+}
 
 if(!\Osmium\State\can_access_fit($fit)) {
 	\Osmium\fatal(403, "This fit is password-protected. Please go to ../loadout/".$loadoutid." and input the password, then retry.");

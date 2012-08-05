@@ -317,13 +317,14 @@ echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"
 echo "<li><a href='../search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a></li>\n";
 
 $slugname = ($author['apiverified'] === 't' && $author['charactername']) ? $author['charactername'] : $author['nickname'];
-$slug = $slugname.' '.$fit['ship']['typename'].' '.$fit['metadata']['name'].' '.$fit['metadata']['revision'];
+$slug = $slugname.' '.$fit['ship']['typename'].' '.$fit['metadata']['name'];
 $slug = preg_replace('%[^a-z0-9-]%', '', str_replace(' ', '-', strtolower($slug)));
 $presets = 'pid='.$fit['modulepresetid'].'&amp;cpid='.$fit['chargepresetid'].'&amp;dpid='.$fit['dronepresetid'];
 $dna = \Osmium\Fit\export_to_dna($fit);
+$revision = $fit['metadata']['revision'];
 echo "<li class='export'>Export this loadout:\n<ul>\n";
-echo "<li>Lossless formats: <a href='../export/{$slug}-clf-{$loadoutid}.json' title='Common Loadout Format, human-readable' type='application/json'>CLF</a>, <a title='Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}.json?minify=1' type='application/json'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}.md' title='Markdown with embedded gzipped Common Loadout Format' type='text/plain'>Markdown+gzCLF</a>, <a href='../export/{$slug}-evexml-{$loadoutid}.xml?{$presets}' title='EVE XML with embedded gzipped Common Loadout Format' type='application/xml'>XML+gzCLF</a></li>\n";
-echo "<li>Lossy formats: <a href='../export/{$slug}-evexml-{$loadoutid}.xml?embedclf=0&amp;{$presets}' title='EVE XML' type='application/xml'>XML</a>, <a href='../export/{$slug}-eft-{$loadoutid}.txt?{$presets}' type='text/plain'>EFT</a>, <a href='../export/{$slug}-dna-{$loadoutid}.txt?{$presets}' type='text/plain'>DNA</a>, <a href='javascript:CCPEVE.showFitting(\"$dna\");'>in-game DNA</a></li>\n";
+echo "<li>Lossless formats: <a href='../export/{$slug}-clf-{$loadoutid}-{$revision}.json' title='Common Loadout Format, human-readable' type='application/json'>CLF</a>, <a title='Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}-{$revision}.json?minify=1' type='application/json'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}-{$revision}.md' title='Markdown with embedded gzipped Common Loadout Format' type='text/plain'>Markdown+gzCLF</a>, <a href='../export/{$slug}-evexml-{$loadoutid}-{$revision}.xml?{$presets}' title='EVE XML with embedded gzipped Common Loadout Format' type='application/xml'>XML+gzCLF</a></li>\n";
+echo "<li>Lossy formats: <a href='../export/{$slug}-evexml-{$loadoutid}-{$revision}.xml?embedclf=0&amp;{$presets}' title='EVE XML' type='application/xml'>XML</a>, <a href='../export/{$slug}-eft-{$loadoutid}-{$revision}.txt?{$presets}' type='text/plain'>EFT</a>, <a href='../export/{$slug}-dna-{$loadoutid}-{$revision}.txt?{$presets}' type='text/plain'>DNA</a>, <a href='javascript:CCPEVE.showFitting(\"$dna\");'>in-game DNA</a></li>\n";
 echo "</ul>\n</li>\n";
 
 echo "</ul>\n</div>\n</section>\n";
