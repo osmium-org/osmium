@@ -342,7 +342,7 @@ echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
 echo "<h1 id='fitname' class='has_spinner'>";
 echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $fit['metadata']['visibility'], $author, '..', $fit['metadata']['loadoutid']);
-echo "<img src='../static/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
+echo "<img src='../static-".\Osmium\STATICVER."/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
 echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {
 	echo "<ul>\n";
@@ -355,9 +355,9 @@ if(count($fit['metadata']['tags']) > 0) {
 }
 echo "</div>\n";
 echo "<div class='votes' data-targettype='loadout'>\n";
-echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote".($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='upvote' /></a>\n";
+echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote".($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
 echo "<strong title='".$totalupvotes." upvote(s), ".$totaldownvotes." downvote(s)'>".$totalvotes."</strong>\n";
-echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort' class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='downvote' /></a>\n";
+echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort' class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
 echo "</div>\n";
 echo "</header>\n";
 
@@ -389,7 +389,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 		list($stname, $stpicture) = $astates[$state];
 
 		echo "<li data-typeid='".$mod['typeid']."' data-index='".$index."' data-slottype='".$type."' data-state='".$state."'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_64.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span>";
-		echo "<a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='../static/icons/$stpicture' alt='$stname' /></a>";
+		echo "<a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='../static-".\Osmium\STATICVER."/icons/$stpicture' alt='$stname' /></a>";
 
 		if($ranges !== array()) {
 			echo "<span class='range' title='".\Osmium\Chrome\format_long_range($ranges)."'>".\Osmium\Chrome\format_short_range($ranges)."</span>";
@@ -399,7 +399,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 	}
 
 	for($i = count($modules); $i < $slotcount; ++$i) {
-		echo "<li class='unused'><img src='../static/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
+		echo "<li class='unused'><img src='../static-".\Osmium\STATICVER."/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
 	}
 
 	echo "</ul>\n</div>\n";
@@ -417,7 +417,7 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 		$usedbandwidth += $drone['quantityinspace'] * $drone['bandwidth'];
 	}
 
-	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'><span><img src='../static/icons/bandwidth_ds.png' alt='Drone bandwidth' title='Drone bandwidth' /><span id='dronebandwidth'>$usedbandwidth / $totalbandwidth</span> Mbit/s</span><span><img src='../static/icons/dronecapacity_ds.png' alt='Drone capacity' title='Drone capacity' />$usedcapacity / $totalcapacity m<sup>3</sup></span></small></h3>\n";
+	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'><span><img src='../static-".\Osmium\STATICVER."/icons/bandwidth_ds.png' alt='Drone bandwidth' title='Drone bandwidth' /><span id='dronebandwidth'>$usedbandwidth / $totalbandwidth</span> Mbit/s</span><span><img src='../static-".\Osmium\STATICVER."/icons/dronecapacity_ds.png' alt='Drone capacity' title='Drone capacity' />$usedcapacity / $totalcapacity m<sup>3</sup></span></small></h3>\n";
 
 	foreach(array('bay', 'space') as $v) {
 		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul>\n";
@@ -539,9 +539,9 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<div class='comment' id='c".$row['commentid']."' data-commentid='".$row['commentid']."'>\n";
 
 		echo "<div class='votes' data-targettype='comment'>\n";
-		echo "<a title='This comment is useful' class='upvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='upvote' /></a>\n";
+		echo "<a title='This comment is useful' class='upvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
 		echo "<strong title='".$row['upvotes']." upvote(s), ".$row['downvotes']." downvote(s)'>".$row['votes']."</strong>\n";
-		echo "<a title='This comment is off-topic, not constructive or not useful' class='downvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static/icons/vote.svg' alt='downvote' /></a>\n";
+		echo "<a title='This comment is off-topic, not constructive or not useful' class='downvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
 		echo "</div>\n";
 
 		echo "<div class='body'>\n".$row['commentformattedbody']."</div>\n";
@@ -644,4 +644,5 @@ echo "</div>\n";
 
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_js_snippet('view_loadout');
+echo "<script>\nosmium_staticver = ".\Osmium\STATICVER.";\n</script>\n";
 \Osmium\Chrome\print_footer();

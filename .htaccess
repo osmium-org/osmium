@@ -37,6 +37,8 @@ RewriteRule ^/?atom/recentlyupdated\.xml$ src/atom/recentfits.php?type=recentlyu
 RewriteRule ^/?moderation/$ src/moderation/main.php [L,QSA]
 RewriteRule ^/?moderation/flags$ src/moderation/view_flags.php [L,QSA]
 
+RewriteRule ^/?static-([1-9][0-9]*)/(.*)$ static/$2 [L]
+
 RewriteRule !^/?(src|static) - [L,R=404]
 
 ErrorDocument 403 /src/fatal.php?code=403&message=Forbidden

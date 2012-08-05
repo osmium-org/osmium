@@ -20,7 +20,7 @@ namespace Osmium\Page\NewFitting;
 
 function print_modules_searchbox() {
 	echo "<div id='searchbox'>\n<h2 class='has_spinner'>Search modules";
-	echo "<img src='./static/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
+	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='searchbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Click '<code>+</code>' or double-click to fit)</em>\n</h2>\n";
 	echo "<form action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' method='get'>\n";
 	echo "<input type='search' placeholder='Search by name or category...' autofocus='autofocus' />\n";
@@ -39,8 +39,8 @@ function print_modules_searchbox() {
 			$nods = '';
 		}
 
-		echo "<img src='./static/icons/metagroup_$id.png' alt='Show $name modules' title='Show $name modules' class='meta_filter' id='meta_filter_$id' data-metagroupid='$id' data-toggle='meta_filter_{$id}_disabled' data-filterval='0' $nods/>";
-		echo "<img src='./static/icons/metagroup_{$id}_ds.png' alt='Hide $name modules' title='Hide $name modules' class='meta_filter ds' id='meta_filter_{$id}_disabled' data-metagroupid='$id' data-toggle='meta_filter_$id' data-filterval='1' $ds/>\n";
+		echo "<img src='./static-".\Osmium\STATICVER."/icons/metagroup_$id.png' alt='Show $name modules' title='Show $name modules' class='meta_filter' id='meta_filter_$id' data-metagroupid='$id' data-toggle='meta_filter_{$id}_disabled' data-filterval='0' $nods/>";
+		echo "<img src='./static-".\Osmium\STATICVER."/icons/metagroup_{$id}_ds.png' alt='Hide $name modules' title='Hide $name modules' class='meta_filter ds' id='meta_filter_{$id}_disabled' data-metagroupid='$id' data-toggle='meta_filter_$id' data-filterval='1' $ds/>\n";
 	}
 
 	echo "</p>\n</form>\n<ul id='search_results'></ul>\n</div>\n";
@@ -51,7 +51,7 @@ function print_modules_searchbox() {
 
 function print_modulelist() {
 	echo "<div id='loadoutbox'>\n<h2 class='has_spinner'>Loadout";
-	echo "<img src='./static/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
+	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='loadoutbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Click '<code>x</code>' or double-click to remove)</em>\n</h2>\n";
   
 	foreach(get_slot_fnames() as $type => $fname) {
@@ -70,14 +70,14 @@ function print_modulelist() {
 
 function print_modules_browse() {
 	echo "<div id='modulebrowser'>\n<h2 class='has_spinner'>Browse modules";
-	echo "<img src='./static/icons/spinner.gif' id='modulebrowser_spinner' class='spinner' alt='' /><br />\n";
+	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='modulebrowser_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Click '<code>+</code>' or double-click to fit)</em>\n</h2>\n";
 	echo "<div></div>\n</div>\n";
 }
 
 function print_modules_shortlist($before = '', $after = '') {
 	echo "<div id='shortlistbox'>\n<h2 class='has_spinner'>Shortlist";
-	echo "<img src='./static/icons/spinner.gif' id='shortlistbox_spinner' class='spinner' alt='' /><br />\n";
+	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='shortlistbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Click '<code>+</code>' or double-click to fit)</em>\n</h2>\n";
 	echo "<ul id='modules_shortlist'>\n";
 	echo "</ul>\n</div>\n";
@@ -86,7 +86,7 @@ function print_modules_shortlist($before = '', $after = '') {
 function modules_select() {
 	print_h1('select modules');
 
-	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create new</button> <button type='button' id='clone_preset'>Clone current</button> <button type='button' id='rename_preset'>Rename current</button> <button type='button' id='delete_preset'>Delete current</button><br /><textarea placeholder='Description of this preset…' id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
+	$presetform = "<h2 class='has_spinner'>Presets<img id='presets_spinner' class='spinner' alt='' src='./static-".\Osmium\STATICVER."/icons/spinner.gif' /></h2>\n<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' class='presets'>\n<select name='preset' id='preset'></select><br />\n<button type='button' id='create_preset'>Create new</button> <button type='button' id='clone_preset'>Clone current</button> <button type='button' id='rename_preset'>Rename current</button> <button type='button' id='delete_preset'>Delete current</button><br /><textarea placeholder='Description of this preset…' id='preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 
 	print_attributes($presetform, '');
 

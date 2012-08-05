@@ -56,13 +56,13 @@ echo $ptags;
 echo "</ul>\n</section>\n";
 
 echo "<section>\n";
-echo "<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'><img src='./static/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+echo "<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'><img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
 \Osmium\Search\print_loadout_list(\Osmium\AtomCommon\get_new_fits($accountid),
                                   '.', 0, 'No loadouts yet! What are you waiting for?');
 echo "</section>\n";
 
 echo "<section>\n";
-echo "<h2>Recently updated <small><a href='./atom/recentlyupdated.xml' type='application/atom+xml'><img src='./static/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+echo "<h2>Recently updated <small><a href='./atom/recentlyupdated.xml' type='application/atom+xml'><img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
 \Osmium\Search\print_loadout_list(
 	\Osmium\AtomCommon\get_recently_updated_fits($accountid),
 	'.');

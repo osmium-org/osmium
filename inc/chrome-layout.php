@@ -65,8 +65,8 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	if(!$xhtml) echo "<meta charset='UTF-8' />\n";
 	if(!$index) echo "<meta name='robots' content='noindex' />\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
-	echo "<link rel='stylesheet' href='$relative/static/chrome.css' type='text/css' />\n";
-	echo "<link rel='icon' type='image/png' href='$relative/static/favicon.png' />\n";
+	echo "<link rel='stylesheet' href='$relative/static-".\Osmium\STATICVER."/chrome.css' type='text/css' />\n";
+	echo "<link rel='icon' type='image/png' href='$relative/static-".\Osmium\STATICVER."/favicon.png' />\n";
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 
@@ -113,9 +113,10 @@ function print_footer() {
 	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js'></script>\n";
 
 	if(count($__osmium_js_snippets) > 0) {
-		$cache = '/static/cache/JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
+		$name = 'JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
+		$cache = '/static/cache/'.$name;
 		$cachefile = \Osmium\ROOT.$cache;
-		$cacheuri = $__osmium_chrome_relative.$cache;
+		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\STATICVER.'/cache/'.$name;
 
 		if(!file_exists($cachefile)) {
 			if($ujs = \Osmium\get_ini_setting('use_uglifyjs')) {

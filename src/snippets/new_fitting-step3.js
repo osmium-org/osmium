@@ -75,7 +75,7 @@ osmium_charges_load = function(json) {
 			if(chargeid > 0) {
 				cimg.attr('src', 'http://image.eveonline.com/Type/' + chargeid + '_64.png');
 			} else {
-				cimg.attr('src', './static/icons/no_charge.png');
+				cimg.attr('src', './static-' + osmium_staticver + '/icons/no_charge.png');
 			}
 			cli.append(cimg);
 			

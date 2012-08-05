@@ -20,7 +20,7 @@ namespace Osmium\Page\NewFitting;
 
 function print_drone_searchbox() {
 	echo "<div id='dronelistbox'>\n<h2 class='has_spinner'>Search drones";
-	echo "<img src='./static/icons/spinner.gif' id='dronelistbox_spinner' class='spinner' alt='' /><br />\n";
+	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='dronelistbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Click links or double-click to add to bay)</em>\n</h2>\n";
 	echo "<form action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' method='get'>\n";
 	echo "<input type='search' placeholder='Search by name or category...' />\n";
@@ -30,9 +30,9 @@ function print_drone_searchbox() {
 
 function print_dronebay() {
 	echo "<div id='dronebay'>\n<h2 class='has_spinner'>Drones";
-	echo "<img src='./static/icons/spinner.gif' id='dronebay_spinner' class='spinner' alt='' /><br />\n";
+	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='dronebay_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Use links or double-click to remove)</em>\n</h2>\n";
-	echo "<p id='dronecapacity'><img src='./static/icons/dronecapacity.png' alt='Drone capacity' title='Drone capacity' /><strong></strong> m<sup>3</sup></p>\n<p id='dronebandwidth'><img src='./static/icons/bandwidth.png' alt='Drone bandwidth' title='Drone bandwidth' /><strong></strong> Mbit/s</p>\n";
+	echo "<p id='dronecapacity'><img src='./static-".\Osmium\STATICVER."/icons/dronecapacity.png' alt='Drone capacity' title='Drone capacity' /><strong></strong> m<sup>3</sup></p>\n<p id='dronebandwidth'><img src='./static-".\Osmium\STATICVER."/icons/bandwidth.png' alt='Drone bandwidth' title='Drone bandwidth' /><strong></strong> Mbit/s</p>\n";
 
 	foreach(array('bay', 'space') as $v) {
 		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul></ul>\n</div>\n";
@@ -48,7 +48,7 @@ function drones_select() {
 	print_h1('select drones');
 	$fit = \Osmium\State\get_new_fit();
 
-	$presetform = "<h2 class='has_spinner'>Drone presets<img id='presets_spinner' class='spinner' alt='' src='./static/icons/spinner.gif' /></h2>\n<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' class='presets'>\n<select name='dronepreset' id='dronepreset'></select><br />\n<button type='button' id='create_drone_preset'>Create new</button> <button type='button' id='clone_drone_preset'>Clone current</button> <button type='button' id='rename_drone_preset'>Rename current</button> <button type='button' id='delete_drone_preset'>Delete current</button><br /><textarea placeholder='Description of this drone preset…' id='drone_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
+	$presetform = "<h2 class='has_spinner'>Drone presets<img id='presets_spinner' class='spinner' alt='' src='./static-".\Osmium\STATICVER."/icons/spinner.gif' /></h2>\n<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' class='presets'>\n<select name='dronepreset' id='dronepreset'></select><br />\n<button type='button' id='create_drone_preset'>Create new</button> <button type='button' id='clone_drone_preset'>Clone current</button> <button type='button' id='rename_drone_preset'>Rename current</button> <button type='button' id='delete_drone_preset'>Delete current</button><br /><textarea placeholder='Description of this drone preset…' id='drone_preset_desc'></textarea><br /><button type='button' id='update_desc'>Update description</button></form>\n";
 
 	print_attributes($presetform, '');
 	print_drone_searchbox();

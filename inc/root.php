@@ -151,6 +151,9 @@ function get_osmium_version() {
 
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 
+/** Bump this when static files (such as CSS, icons, JS snippets, etc.) are updated */
+const STATICVER = 1;
+
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');

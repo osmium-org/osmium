@@ -74,7 +74,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 						.attr('title', json['states'][type][index]['name'] + '; click to toggle')
 						.find('img')
 						.attr('alt', json['states'][type][index]['name'])
-						.attr('src', '../static/icons/' + json['states'][type][index]['image']);
+						.attr('src', '../static-' + osmium_staticver + '/icons/' + json['states'][type][index]['image']);
 				}
 			}
 		}

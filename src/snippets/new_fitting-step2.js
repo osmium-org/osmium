@@ -89,7 +89,7 @@ osmium_populate_slots = function(json, slot_type) {
 			var stpicture = json['states'][slot_type][i]['image'];
 
 			sttoggle = "<a class='toggle' href='javascript:void(0);' title='" + stname 
-				+ "; click to toggle'><img src='./static/icons/" 
+				+ "; click to toggle'><img src='./static-" + osmium_staticver + "/icons/" 
 				+ stpicture + "' alt='" + stname + "' /></a>";
 			
 		}
@@ -111,7 +111,7 @@ osmium_populate_slots = function(json, slot_type) {
 		);
     }
     for(var i = used_slots; i < max_slots; ++i) {
-		$("div#" + slot_type + "_slots > ul").append("<li class='" + slot_type + "_slot empty_slot'><img src='./static/icons/slot_" + slot_type + ".png' alt='' /> Empty " + slot_type + " slot</li>\n");
+		$("div#" + slot_type + "_slots > ul").append("<li class='" + slot_type + "_slot empty_slot'><img src='./static-" + osmium_staticver + "/icons/slot_" + slot_type + ".png' alt='' /> Empty " + slot_type + " slot</li>\n");
     }
 
     if(max_slots == 0 && used_slots == 0) {
@@ -244,7 +244,7 @@ $(function() {
 	});
 
 	$("img#modulebrowser_spinner").css("visibility", "visible");
-	$.get('./static/cache/HTML_modules.html', function(modules) {
+	$.get('./static-' + osmium_staticver + '/cache/HTML_modules.html', function(modules) {
 		$('div#modulebrowser > div')
 			.html(modules)
 			.find('div.mgroup > ul.types > li')

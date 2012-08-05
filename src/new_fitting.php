@@ -70,7 +70,7 @@ if(isset($fit['metadata']['loadoutid'])) {
 call_local($steps[$step]);
 
 \Osmium\Chrome\print_js_code("$('input[name=\"reset_fit\"]').click(function() { return confirm('This will reset all the changes you made. Continue?'); });");
-
+echo "<script>\nosmium_staticver = ".\Osmium\STATICVER.";\n</script>\n";
 \Osmium\State\put_state('create_fit_step', $step);
 \Osmium\Chrome\print_footer();
 
