@@ -28,7 +28,7 @@ $a = \Osmium\State\get_state('a');
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if($_GET['type'] == 'comment') {
-	$comment = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT commentbody, accountid, latestrevision FROM osmium.loadoutcommentslatestrevision AS lclr JOIN osmium.loadoutcommentrevisions AS lcr ON lcr.commentid = lclr.commentid AND lcr.revision = lclr.latestrevision JOIN osmium.loadoutcomments lc ON lc.commentid = lclr.commentid WHERE lclr.commentid = $1', array($id)));
+	$comment = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT commentbody, accountid, loadoutid, latestrevision FROM osmium.loadoutcommentslatestrevision AS lclr JOIN osmium.loadoutcommentrevisions AS lcr ON lcr.commentid = lclr.commentid AND lcr.revision = lclr.latestrevision JOIN osmium.loadoutcomments lc ON lc.commentid = lclr.commentid WHERE lclr.commentid = $1', array($id)));
 	
 	if($comment === false) {
 		\Osmium\fatal(404, "Comment not found.");
@@ -63,13 +63,20 @@ if(isset($_POST['body'])) {
 		$formatted = \Osmium\Chrome\format_sanitize_md($body);
 
 		if($_POST['body'] == $comment['commentbody'] && $a['accountid'] == $comment['accountid']) {
-			/* Keep the same revision, but updated the formattedbody */
+			/* Keep the same revision, but update the formattedbody */
 			\Osmium\Db\query_params('UPDATE osmium.loadoutcommentrevisions SET commentformattedbody = $1 WHERE commentid = $2 AND revision = $3', array($formatted, $id, $comment['latestrevision']));
 		} else {
 			/* Insert a new revision */
 			$newrevision = $comment['latestrevision'] + 1;
 			\Osmium\Db\query_params('INSERT INTO osmium.loadoutcommentrevisions (commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody) VALUES ($1, $2, $3, $4, $5, $6)', array($id, $newrevision, $a['accountid'], time(), $_POST['body'], $formatted));
 		}
+
+		\Osmium\Db\query_params('UPDATE osmium.votes SET cancellableuntil = NULL WHERE targettype = $1 AND targetid1 = $2 AND targetid2 = $3 AND targetid3 IS NULL',
+		                        array(
+			                        \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+			                        $id,
+			                        $comment['loadoutid'],
+			                        ));
 
 		$anchor = 'c'.$id;
 		$commentid = $id;
