@@ -60,6 +60,12 @@ osmium_charges_load = function(json) {
 				option = $(document.createElement('option'));
 				option.prop('value', json['charges'][i]['charges'][metagroupname][j]['typeid']);
 				option.text(json['charges'][i]['charges'][metagroupname][j]['typename']);
+
+				if(json['charges'][i]['charges'][metagroupname][j]['damagetypes'] != '') {
+					option.text(option.text() + " ("
+								+ json['charges'][i]['charges'][metagroupname][j]['damagetypes'] + ")");
+				}
+
 				optgroup.append(option);
 			}
 
