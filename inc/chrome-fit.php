@@ -229,6 +229,13 @@ function print_formatted_misc(&$fit) {
 
 	echo "<tr><th>Average price:</th><td>$p</td></tr>\n";
 
+	$yield = \Osmium\Fit\get_mining_yield($fit);
+	if($yield > 0) {
+		$yield *= 3600000; /* From m³/ms to m³/h */
+		$yield = number_format($yield);
+		echo "<tr><th>Mining yield:</th><td>$yield m<sup>3</sup>/h</td></tr>\n";
+	}
+
 	echo "</tbody>\n</table>\n";
 	print_formatted_attribute_category('misc', 'Miscellaneous', $p, '', ob_get_clean());
 }

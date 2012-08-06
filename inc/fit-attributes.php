@@ -498,3 +498,39 @@ function get_average_price(&$fit, &$missing) {
 
 	return $total;
 }
+
+/**
+ * Get the mining yield of the current fit, in m³ / ms (cubic meters
+ * per millisecond).
+ */
+function get_mining_yield(&$fit) {
+	if(!isset($fit['cache']['__effects']['miningLaser'])) return 0;
+	$total = 0;
+
+	foreach($fit['modules'] as $type => $a) {
+		foreach($a as $index => $m) {
+			$typeid = $m['typeid'];
+
+			if(!isset($fit['cache'][$typeid]['effects']['miningLaser'])) continue;
+			$durationid = $fit['cache']['__effects']['miningLaser']['durationattributeid'];
+
+			get_attribute_in_cache($durationid, $fit['cache']);
+			$durationname = \Osmium\Dogma\get_attributename($durationid);
+
+			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationname);
+
+			if(isset($fit['charges'][$type][$index])) {
+				/* Has crystal */
+				$amount = 'specialtyMiningAmount';
+			} else {
+				/* No crystal */
+				$amount = 'miningAmount';
+			}
+			$volume = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $amount);
+
+			$total += $volume / $duration;
+		}
+	}
+
+	return $total;
+}

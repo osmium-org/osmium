@@ -310,6 +310,15 @@ div#computed_attributes > section {
 			}
 		}
 	}
+
+	&#misc > div > table {
+		width: 100%;
+
+		&> tbody > tr > td, &> tbody > tr > th {
+			text-align: left;
+			width: 50%;
+		}
+	}
 }
 
 div#computed_attributes > section > div > table#resists {
