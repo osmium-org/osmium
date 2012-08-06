@@ -19,11 +19,9 @@ osmium_charges_load = function(json) {
 	var select = $("select#preset");
 	var chargeselect = $("select#chargepreset");
 
-	var option;
-	var cgroup;
-	var cselect;
-	var cli;
-	var cimg;
+	var option, optgroup;
+	var cgroup, cselect;
+	var cli, cimg;
 	var chargeid;
 	var cspan;
 	var clink;
@@ -54,11 +52,18 @@ osmium_charges_load = function(json) {
 		cselect = $(document.createElement('select'));
 		cselect.append('<option value="0">(No charge)</option>');
 
-		for(var j = 0; j < json['charges'][i]['charges'].length; ++j) {
-			option = $(document.createElement('option'));
-			option.prop('value', json['charges'][i]['charges'][j]['typeid']);
-			option.text(json['charges'][i]['charges'][j]['typename']);
-			cselect.append(option);
+		for(var metagroupname in json['charges'][i]['charges']) {
+			optgroup = $(document.createElement('optgroup'));
+			optgroup.prop('label', metagroupname);
+
+			for(var j = 0; j < json['charges'][i]['charges'][metagroupname].length; ++j) {
+				option = $(document.createElement('option'));
+				option.prop('value', json['charges'][i]['charges'][metagroupname][j]['typeid']);
+				option.text(json['charges'][i]['charges'][metagroupname][j]['typename']);
+				optgroup.append(option);
+			}
+
+			cselect.append(optgroup);
 		}
 
 		for(var j = 0; j < json['charges'][i]['modules'].length; ++j) {

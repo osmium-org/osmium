@@ -118,10 +118,34 @@ function get_fittable_charges(&$fit) {
 
 	$in = implode(',', array_keys($typeids));
 	if(empty($in)) $in = '-1';
-	$chargesq = \Osmium\Db\query('SELECT moduleid, chargeid, chargename FROM osmium.invcharges WHERE moduleid IN ('.$in.') ORDER BY moduleid ASC, chargename ASC');
-	while($row = \Osmium\Db\fetch_row($chargesq)) {
-		$allowed[$row[0]][] = array('typeid' => $row[1],
-		                            'typename' => $row[2]);
+	$chargesq = \Osmium\Db\query(
+		'SELECT moduleid, chargeid, chargename, metagroupname,
+		thdmg.value AS th, kidmg.value AS ki, exdmg.value AS ex, emdmg.value AS em
+		FROM osmium.invcharges
+		LEFT JOIN eve.dgmtypeattribs thdmg ON thdmg.typeid = chargeid AND thdmg.attributeid = 118
+		LEFT JOIN eve.dgmtypeattribs kidmg ON kidmg.typeid = chargeid AND kidmg.attributeid = 117
+		LEFT JOIN eve.dgmtypeattribs exdmg ON exdmg.typeid = chargeid AND exdmg.attributeid = 116
+		LEFT JOIN eve.dgmtypeattribs emdmg ON emdmg.typeid = chargeid AND emdmg.attributeid = 114
+		LEFT JOIN eve.invmetatypes ON invmetatypes.typeid = chargeid
+		LEFT JOIN eve.invmetagroups ON invmetagroups.metagroupid = COALESCE(invmetatypes.metagroupid, 1)
+		WHERE moduleid IN ('.$in.')
+		ORDER BY moduleid ASC, COALESCE(invmetatypes.metagroupid, 1) ASC,
+		(COALESCE(thdmg.value, 0) + COALESCE(kidmg.value, 0) + COALESCE(exdmg.value, 0)
+			+ COALESCE(emdmg.value, 0)) DESC,
+		chargename ASC');
+	while($row = \Osmium\Db\fetch_assoc($chargesq)) {
+		$damage = array_filter(array('Th' => $row['th'],
+		                             'Kin' => $row['ki'],
+		                             'Exp' => $row['ex'],
+		                             'EM' => $row['em']));
+		arsort($damage);
+		$fdamage = implode('/', array_keys($damage));
+
+		$allowed[$row['moduleid']][$row['metagroupname']][] =
+			array('typeid' => $row['chargeid'],
+			      'typename' => $row['chargename'],
+			      'damagetypes' => $fdamage,
+			      );
 	}
 
 	$groups = array();
