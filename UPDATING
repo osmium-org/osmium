@@ -26,6 +26,9 @@ IMPORTANT: the config.ini file has been updated, you must copy the
 whole [osmium] section from the example file and add it to your config
 file.
 
+IMPORTANT: you will have to generate the module search index for the
+first time, see the README for more details.
+
 v0.3.0, released 2012-07-25
 ===========================
 

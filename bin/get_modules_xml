@@ -1,0 +1,191 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+$q = \Osmium\Db\query(
+	'SELECT invmodules.typeid, typename, groupid, groupname, metagroupid,
+	CASE effectid
+		WHEN 11 THEN \'low\'
+		WHEN 12 THEN \'high\'
+		WHEN 13 THEN \'medium\'
+		WHEN 2663 THEN \'rig\'
+		WHEN 3772 THEN \'subsystem\'
+	END AS slottype
+	FROM osmium.invmodules
+	JOIN eve.dgmtypeeffects AS dte ON (invmodules.typeid = dte.typeid AND dte.effectid IN (11, 12, 13, 2663, 3772))
+	ORDER BY invmodules.typeid ASC'
+	);
+
+$xml = new \DOMDocument('1.0', 'utf-8');
+$docset = $xml->appendChild($xml->createElement('sphinx:docset'));
+
+$schema = $docset->appendChild($xml->createElement('sphinx:schema'));
+
+$field = $schema->appendChild($xml->createElement('sphinx:field'));
+$name = $field->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('typename'));
+
+$field = $schema->appendChild($xml->createElement('sphinx:field'));
+$name = $field->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('groupname'));
+
+$field = $schema->appendChild($xml->createElement('sphinx:field'));
+$name = $field->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('synonyms'));
+
+$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
+$name = $attr->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('groupid'));
+$type = $attr->appendChild($xml->createAttribute('type'));
+$type->appendChild($xml->createTextNode('int'));
+$bits = $attr->appendChild($xml->createAttribute('bits'));
+$bits->appendChild($xml->createTextNode('32'));
+
+$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
+$name = $attr->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('metagroupid'));
+$type = $attr->appendChild($xml->createAttribute('type'));
+$type->appendChild($xml->createTextNode('int'));
+$bits = $attr->appendChild($xml->createAttribute('bits'));
+$bits->appendChild($xml->createTextNode('32'));
+
+$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
+$name = $attr->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('slottype'));
+$type = $attr->appendChild($xml->createAttribute('type'));
+$type->appendChild($xml->createTextNode('string'));
+
+$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
+$name = $attr->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('typename2'));
+$type = $attr->appendChild($xml->createAttribute('type'));
+$type->appendChild($xml->createTextNode('string'));
+
+while($row = \Osmium\Db\fetch_assoc($q)) {
+	$document = $docset->appendChild($xml->createElement('sphinx:document'));
+	$id = $document->appendChild($xml->createAttribute('id'));
+	$id->appendChild($xml->createTextNode($row['typeid']));
+
+	$typename = $document->appendChild($xml->createElement('typename'));
+	$typename->appendChild($xml->createTextNode($row['typename']));
+
+	$groupname = $document->appendChild($xml->createElement('groupname'));
+	$groupname->appendChild($xml->createTextNode($row['groupname']));
+
+	$synonyms = $document->appendChild($xml->createElement('synonyms'));
+	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['typename'])));
+
+	$groupid = $document->appendChild($xml->createElement('groupid'));
+	$groupid->appendChild($xml->createTextNode($row['groupid']));
+
+	$metagroupid = $document->appendChild($xml->createElement('metagroupid'));
+	$metagroupid->appendChild($xml->createTextNode($row['metagroupid']));
+
+	$slottype = $document->appendChild($xml->createElement('slottype'));
+	$slottype->appendChild($xml->createTextNode($row['slottype']));
+
+	$typename2 = $document->appendChild($xml->createElement('typename2'));
+	$typename2->appendChild($xml->createTextNode($row['typename']));
+}
+
+$xml->formatOutput = true;
+echo $xml->saveXML();
+
+function get_synonyms($name) {
+	static $prefixes = 
+		array(
+			'Micro', 'Small', 'Medium', 'Large', 'X-Large',
+			);
+
+	static $suffixes =
+		array(
+			'I' => '1', 'II' => '2',
+			);
+
+	$tprefix = '';
+	$tprefixreplacement = '';
+	$tsuffix = '';
+	$tsuffixreplacement = '';
+
+	foreach($prefixes as $prefix => $replacement) {
+		if(is_int($prefix)) {
+			$prefix = $replacement;
+			$replacement = preg_replace('%[^A-Z]%', '', $replacement);
+		}
+
+		if(substr($name, 0, strlen($prefix) + 1) === $prefix.' ') {
+			$tprefix = $prefix;
+			$tprefixreplacement = $replacement;
+			$name = substr($name, strlen($prefix) + 1);
+			break;
+		}
+	}
+
+	foreach($suffixes as $suffix => $replacement) {
+		if(is_int($suffix)) {
+			$suffix = $replacement;
+			$replacement = preg_replace('%[^A-Z]%', '', $replacement);
+		}
+
+		$k = ' '.$suffix;
+		if(substr($name, strlen($name) - strlen($k)) === $k) {
+			$tsuffix = $suffix;
+			$tsuffixreplacement = $replacement;
+			$name = substr($name, 0, strlen($name) - strlen($k));
+			break;
+		}
+	}
+
+	$p = $tprefixreplacement;
+	$s = $tsuffixreplacement;
+
+	$name = str_replace(
+		array(
+			'Afterburner',
+			'Microwarpdrive',
+			),
+		array(
+			'AB',
+			'MWD',
+			),
+		$name);
+
+	if(preg_match('%^(.*)(([1-9][0-9]*)(mn|mm))(.*)$%i', $name, $matches)) {
+		$a = preg_replace('%[^A-Z]%', '', $matches[1])
+			.' '.$matches[2].' '
+			.preg_replace('%[^A-Z]%', '', $matches[5]);
+	} else {
+		$a = preg_replace('%[^A-Z]%', '', $name);
+	}
+
+	if($tprefix) {
+		if($tsuffix) {
+			return "$p $a $s $p$a $a$s $p$a$s";
+		} else {
+			return "$p $a $p$a";
+		}
+	} else {
+		if($tsuffix) {
+			return "$a $s $a$s";
+		} else {
+			return $a;
+		}
+	}
+}

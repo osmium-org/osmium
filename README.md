@@ -93,6 +93,15 @@ the `osmium_user` user, follow these steps:
     psql osmium osmium_user < pgsql/osmium.sql
     ~~~~
 
+4. Generate the module search index:
+
+   ~~~~
+   (stop searchd)
+   cd sphinx
+   sphinx-indexer osmium_modules
+   (start searchd)
+   ~~~~
+
 Updating
 --------
 
@@ -157,6 +166,17 @@ updated.)*
    ~~~~
    cat pgsql/patches/<previous_version>/*.sql | psql osmium osmium_user
    ~~~~
+
+3. Regenerate the module search index:
+
+   ~~~~
+   (stop searchd)
+   cd sphinx
+   sphinx-indexer osmium_modules
+   (start searchd)
+   ~~~~
+
+   You must do this after every `eve` or `osmium` schema update.
 
 Dependencies
 ============

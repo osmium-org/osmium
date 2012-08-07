@@ -20,7 +20,7 @@ namespace Osmium\Json\SearchModules;
 
 require __DIR__.'/../../inc/root.php';
 
-const MAX_MODULES = 10;
+const MAX_MODULES = 16;
 
 $q = $_GET['q'];
 unset($_GET['q']);
@@ -31,32 +31,23 @@ foreach($_GET as $i => $val) {
 	if($val == 0) $filters[] = $i;
 }
 
-$query = \Osmium\Db\query_params('SELECT invmodules.typeid, typename
-FROM osmium.invmodules
+$query = \Osmium\Search\query('SELECT id, typename2, slottype
+FROM osmium_modules
 WHERE metagroupid NOT IN ('.implode(',', array_merge(array(-1), $filters)).')
-AND (typename ~* $1 OR groupname ~* $1)
-ORDER BY metagroupid ASC, typename ASC
-LIMIT '.(MAX_MODULES + 1), array($q));
+AND MATCH(\''.\Osmium\Search\escape($q).'\')
+LIMIT '.(MAX_MODULES + 1));
 
 $out = array();
-$typeids = array();
-$i = 0;
-while($row = \Osmium\Db\fetch_row($query)) {
-	$out[] = array('typeid' => $row[0], 'typename' => $row[1]);
-	$typeids[] = $row[0];
-	++$i;
+while($row = \Osmium\Search\fetch_assoc($query)) {
+	$out[] = array('typeid' => $row['id'],
+	               'typename' => $row['typename2'],
+	               'slottype' => $row['slottype']);
 }
 
-$modattr = array();
-\Osmium\Fit\get_attributes_and_effects($typeids, $modattr['cache']);
-foreach($out as &$row) {
-	$row['slottype'] = \Osmium\Fit\get_module_slottype($modattr, $row['typeid']);
-}
-
-if($i == MAX_MODULES + 1) {
+if(count($out) == MAX_MODULES + 1) {
 	array_pop($out);
 	$warning = 'More modules matched the search.<br />Only showing the first '.MAX_MODULES.'.';
-} else if($i == 0) {
+} else if($out === array()) {
 	$warning = 'No match.';
 } else {
 	$warning = false;
