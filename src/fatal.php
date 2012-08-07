@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Page\EditComment;
+namespace Osmium\Page\Fatal;
 
 require __DIR__.'/../inc/root.php';
 
