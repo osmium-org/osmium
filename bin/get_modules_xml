@@ -109,52 +109,85 @@ $xml->formatOutput = true;
 echo $xml->saveXML();
 
 function get_synonyms($name) {
-	static $prefixes = 
-		array(
-			'Micro', 'Small', 'Medium', 'Large', 'X-Large',
-			);
+	static $prefixes = array('Micro', 'Small', 'Medium', 'Large', 'X-Large');
+	static $suffixes = array('I' => '1', 'II' => '2');
+	static $factions = false;
 
-	static $suffixes =
-		array(
-			'I' => '1', 'II' => '2',
-			);
+	if(!$factions) {
+		$faction = array();
+		$deadspace = array();
+		$officer = array();
 
-	$tprefix = '';
-	$tprefixreplacement = '';
-	$tsuffix = '';
-	$tsuffixreplacement = '';
+		$q = \Osmium\Db\query('SELECT typename, metagroupid FROM osmium.invmodules WHERE metagroupid IN (4,5,6)');
+		while($r = \Osmium\Db\fetch_assoc($q)) {
+			$k = explode(' ', $r['typename']);
+			$one = $k[0];
+			$two = $k[0].' '.$k[1];
 
-	foreach($prefixes as $prefix => $replacement) {
-		if(is_int($prefix)) {
-			$prefix = $replacement;
-			$replacement = preg_replace('%[^A-Z]%', '', $replacement);
+			if($r['metagroupid'] == 4) {
+				@$faction[$two]++;
+				@$faction[$one]++;
+			} else if($r['metagroupid'] == 5) {
+				$officer[$two] = true;
+			} else if($r['metagroupid'] == 6) {
+				$deadspace[$two] = true;
+			} else continue;
 		}
 
-		if(substr($name, 0, strlen($prefix) + 1) === $prefix.' ') {
-			$tprefix = $prefix;
-			$tprefixreplacement = $replacement;
-			$name = substr($name, strlen($prefix) + 1);
-			break;
+		$skipnext = false;
+		foreach($faction as $f => $count) {
+			if($skipnext) {
+				$skipnext = false;
+				continue;
+			}
+
+			if($count < 8) continue;
+
+			$prefixes[] = $f;
+			$skipnext = true;
 		}
+
+		$prefixes = array_merge($prefixes, array_keys($officer), array_keys($deadspace));
+		$factions = true;
 	}
 
-	foreach($suffixes as $suffix => $replacement) {
-		if(is_int($suffix)) {
-			$suffix = $replacement;
-			$replacement = preg_replace('%[^A-Z]%', '', $replacement);
-		}
+	$origname = $name;
+	$actualprefixes = array('' => '');
+	$actualsuffixes = array('' => '');
 
-		$k = ' '.$suffix;
-		if(substr($name, strlen($name) - strlen($k)) === $k) {
-			$tsuffix = $suffix;
-			$tsuffixreplacement = $replacement;
-			$name = substr($name, 0, strlen($name) - strlen($k));
-			break;
+	while(true) {
+		foreach($prefixes as $prefix => $replacement) {
+			if(is_int($prefix)) {
+				$prefix = $replacement;
+				$replacement = preg_replace('%[^A-Z]%', '', $replacement);
+			}
+
+			$k = $prefix.' ';
+			if(substr($name, 0, strlen($k)) === $k) {
+				$actualprefixes[$prefix] = $replacement;
+				$name = substr($name, strlen($k));
+				continue 2;
+			}
 		}
+		break;
 	}
 
-	$p = $tprefixreplacement;
-	$s = $tsuffixreplacement;
+	while(true) {
+		foreach($suffixes as $suffix => $replacement) {
+			if(is_int($suffix)) {
+				$suffix = $replacement;
+				$replacement = preg_replace('%[^A-Z]%', '', $replacement);
+			}
+
+			$k = ' '.$suffix;
+			if(substr($name, strlen($name) - strlen($k)) === $k) {
+				$actualsuffixes[$suffix] = $replacement;
+				$name = substr($name, 0, strlen($name) - strlen($k));
+				continue 2;
+			}
+		}
+		break;
+	}
 
 	$name = str_replace(
 		array(
@@ -168,24 +201,31 @@ function get_synonyms($name) {
 		$name);
 
 	if(preg_match('%^(.*)(([1-9][0-9]*)(mn|mm))(.*)$%i', $name, $matches)) {
-		$a = preg_replace('%[^A-Z]%', '', $matches[1])
+		$a = preg_replace('%[^A-Z0-9]%', '', $matches[1])
 			.' '.$matches[2].' '
-			.preg_replace('%[^A-Z]%', '', $matches[5]);
+			.preg_replace('%[^A-Z0-9]%', '', $matches[5]);
 	} else {
-		$a = preg_replace('%[^A-Z]%', '', $name);
+		$a = preg_replace('%[^A-Z0-9]%', '', $name);
 	}
 
-	if($tprefix) {
-		if($tsuffix) {
-			return "$p $a $s $p$a $a$s $p$a$s";
-		} else {
-			return "$p $a $p$a";
-		}
-	} else {
-		if($tsuffix) {
-			return "$a $s $a$s";
-		} else {
-			return $a;
+	$ret = array();
+
+	foreach($actualprefixes as $p) {
+		$ret[] = $p;
+	}
+
+	foreach($actualprefixes as $p) {
+		foreach($actualsuffixes as $s) {
+			$ret[] = $p.$a.$s;
 		}
 	}
+
+	foreach($actualsuffixes as $s) {
+		$ret[] = $s;
+	}
+
+	$ret[] = preg_replace('%[^A-Z0-9]%', '', $origname);
+	$ret[] = preg_replace('%[^A-Z]%', '', $origname);
+
+	return implode(' ', array_unique(array_filter($ret)));
 }
