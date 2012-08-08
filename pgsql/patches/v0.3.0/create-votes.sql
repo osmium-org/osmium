@@ -87,3 +87,11 @@ CREATE INDEX votes_type_idx
   USING btree
   (type );
 
+CREATE VIEW votecount AS
+    SELECT count(votes.voteid) AS count, votes.type, votes.targettype, votes.targetid1, votes.targetid2, votes.targetid3 FROM votes GROUP BY votes.type, votes.targettype, votes.targetid1, votes.targetid2, votes.targetid3;
+
+CREATE VIEW loadoutcommentupdownvotes AS
+    SELECT c.commentid, (COALESCE(uv.count, (0)::bigint) - COALESCE(dv.count, (0)::bigint)) AS votes, COALESCE(uv.count, (0)::bigint) AS upvotes, COALESCE(dv.count, (0)::bigint) AS downvotes FROM ((loadoutcomments c LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 2)) AND (uv.targetid1 = c.commentid)) AND (uv.targetid2 = c.loadoutid)) AND (uv.targetid3 IS NULL)))) LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 2)) AND (dv.targetid1 = c.commentid)) AND (dv.targetid2 = c.loadoutid)) AND (dv.targetid3 IS NULL))));
+
+CREATE VIEW loadoutupdownvotes AS
+    SELECT l.loadoutid, (COALESCE(uv.count, (0)::bigint) - COALESCE(dv.count, (0)::bigint)) AS votes, COALESCE(uv.count, (0)::bigint) AS upvotes, COALESCE(dv.count, (0)::bigint) AS downvotes FROM ((loadouts l LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 1)) AND (uv.targetid1 = l.loadoutid)) AND (uv.targetid2 IS NULL)) AND (uv.targetid3 IS NULL)))) LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 1)) AND (dv.targetid1 = l.loadoutid)) AND (dv.targetid2 IS NULL)) AND (dv.targetid3 IS NULL))));
