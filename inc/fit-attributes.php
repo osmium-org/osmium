@@ -512,6 +512,8 @@ function get_mining_yield(&$fit) {
 			$typeid = $m['typeid'];
 
 			if(!isset($fit['cache'][$typeid]['effects']['miningLaser'])) continue;
+			if($m['state'] != STATE_ACTIVE && $m['state'] != STATE_OVERLOADED) continue;
+
 			$durationid = $fit['cache']['__effects']['miningLaser']['durationattributeid'];
 
 			get_attribute_in_cache($durationid, $fit['cache']);
