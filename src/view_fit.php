@@ -449,7 +449,13 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 /* TODO: cache the formatted descriptions if this becomes a resource hog */
 echo "<div id='vdescriptions'>\n";
 echo "<section id='fitdesc'>\n<h2>Fitting description</h2>\n";
-echo \Osmium\Chrome\format_sanitize_md($fit['metadata']['description'])."</section>\n";
+$d = \Osmium\Chrome\format_sanitize_md($fit['metadata']['description']);
+if(trim($d)) {
+	echo $d;
+} else {
+	echo "<p class='placeholder'>No description given.</p>\n";
+}
+echo "</section>\n";
 if(isset($fit['modulepresetdesc']) && $fit['modulepresetdesc']) {
 	echo "<section id='presetdesc'>\n<h3>Preset description</h3>\n"
 		.\Osmium\Chrome\format_sanitize_md($fit['modulepresetdesc'])."</section>\n";
@@ -626,17 +632,22 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 
 if($previouscommentid !== false) {
 	$endcomment($previouscommentid);
+} else {
+	echo "<p class='placeholder'>There are no comments on this loadout.</p>\n";
 }
 
 echo $result;
 
+echo "<h3>Add a comment</h3>\n";
 if($commentsallowed && $loggedin) {
-	echo "<h3>Add a comment</h3>\n";
-
 	\Osmium\Forms\print_form_begin(htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES).'#vcomments');
 	\Osmium\Forms\print_textarea('Comment body<br /><small>(Markdown and some HTML allowed)</small>', 'commentbody', 'commentbody');
 	\Osmium\Forms\print_submit('Submit comment');
 	\Osmium\Forms\print_form_end();
+} else if(!$loggedin && $commentsallowed) {
+	echo "<p class='placeholder'>You have to log in to comment on this loadout.</p>\n";
+} else if(!$commentsallowed) {
+	echo "<p class='placeholder'>Comments have been disabled on this loadout.</p>\n";
 }
 
 echo "</div>\n";
