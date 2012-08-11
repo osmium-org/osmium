@@ -187,7 +187,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
 	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second', false);
 	$f = print_tank_layer($fit, 'fueledShieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
 	                      $relative, 'fueledshieldboost.png', 'Fueled Shield boost', 'Shield EHP boost per second',
-	                      false, true);
+	                      false);
 
 	$total = format_number($passiverechargerate + 1000 * ($h[0] + $a[0] + $s[0] + $f[0]), -1);
 	$tehp = format_number($ehp['ehp']['avg'], -2);

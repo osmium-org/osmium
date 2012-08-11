@@ -194,7 +194,7 @@ function get_ehp_and_resists(&$fit) {
  * @param $capacitor assumes same format as the returned value of
  * get_capacitor_stability()
  */
-function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor, $nullifydischargeifchargepresent = false) {
+function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor) {
 	if(!isset($fit['cache']['__effects'][$effectname])) {
 		/* The interesting effect is not cached, so no module has
 		 * it. It is useless to continue further. */
@@ -226,9 +226,7 @@ function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename,
 
 			$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $boostattributename);
 			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-			if($nullifydischargeifchargepresent && isset($fit['charges'][$type][$index]['typeid'])) {
-				$discharge = 0;
-			} else $discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
+		    $discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
 			
 			$total += $amount / $duration;
 
