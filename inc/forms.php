@@ -21,6 +21,7 @@ namespace Osmium\Forms;
 const FIELD_REMEMBER_VALUE = 1;
 const ALLOW_MULTISELECT = 2;
 const HAS_OPTGROUPS = 4;
+const FIELD_DISABLED = 8;
 
 $__osmium_form_errors = array();
 
@@ -106,8 +107,11 @@ function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
 	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
 		$value = "value='".htmlspecialchars($_POST[$name], ENT_QUOTES)."' ";
 	} else $value = '';
+	if($flags & FIELD_DISABLED) {
+		$disabled = "disabled='disabled' ";
+	} else $disabled = '';
 
-	print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' $value/>");
+	print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' {$value}{$disabled}/>");
 }
 
 function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = '') {
@@ -115,8 +119,11 @@ function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = ''
 	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
 		$value = htmlspecialchars($_POST[$name]);
 	} else $value = '';
+	if($flags & FIELD_DISABLED) {
+		$disabled = " disabled='disabled'";
+	} else $disabled = '';
 
-	print_generic_row($name, "<label for='$id'>$label</label>", "<textarea placeholder='".htmlspecialchars($placeholder, ENT_QUOTES)."' name='$name' id='$id'>$value</textarea>");
+	print_generic_row($name, "<label for='$id'>$label</label>", "<textarea placeholder='".htmlspecialchars($placeholder, ENT_QUOTES)."' name='$name' id='$id'{$disabled}>$value</textarea>");
 }
 
 function print_file($label, $name, $maxsize, $id = null) {
@@ -155,6 +162,9 @@ function print_select($label, $name, $options, $size = null, $id = null, $flags 
 
 	if($flags & ALLOW_MULTISELECT) $multiselect = ' multiple="multiple"';
 	else $multiselect = '';
+	if($flags & FIELD_DISABLED) {
+		$disabled = " disabled='disabled'";
+	} else $disabled = '';
 
 	if($size === null) $size = '';
 	else $size = " size='$size'";
@@ -172,7 +182,7 @@ function print_select($label, $name, $options, $size = null, $id = null, $flags 
 		$name = $name.'[]';
 	}
 
-	print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'$size$multiselect>\n$fOptions\n</select>\n");
+	print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'{$size}{$multiselect}{$disabled}>\n$fOptions\n</select>\n");
 }
 
 function format_optgroup($name, $options, $flags) {
@@ -198,12 +208,15 @@ function print_checkbox_or_radio($type, $label, $name, $id = null, $checked = nu
 	if($checked === true || ($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name]) && $_POST[$name] == $value)) {
 		$checked = 'checked="checked" ';
 	} else $checked = '';
+	if($flags & FIELD_DISABLED) {
+		$disabled = "disabled='disabled' ";
+	} else $disabled = '';
 
 	if($value !== null) {
 		$value = 'value="'.htmlspecialchars($value, ENT_QUOTES).'" ';
 	} else $value = '';
 
-	print_generic_row($name, "", "<input type='$type' name='$name' id='$id' {$value}{$checked}/> <label for='$id'>$label</label>");
+	print_generic_row($name, "", "<input type='$type' name='$name' id='$id' {$value}{$checked}{$disabled}/> <label for='$id'>$label</label>");
 }
 
 function print_checkbox($label, $name, $id = null, $checked = null, $flags = 0) {
