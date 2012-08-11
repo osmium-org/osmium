@@ -91,7 +91,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		\Osmium\Chrome\print_js_code('osmium_notifications("'
 		                             .str_replace('"', '\"', $relative).'");');
 	} else {
-
+		echo get_navigation_link($relative.'/import', "Import loadout");
 	}
 	echo "</ul>\n";
 

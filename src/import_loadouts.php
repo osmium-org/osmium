@@ -28,7 +28,7 @@ const DEFAULT_EP = \Osmium\Fit\EDIT_OWNER_ONLY;
 const DEFAULT_VIS = \Osmium\Fit\VISIBILITY_PRIVATE;
 
 if(!\Osmium\State\is_logged_in()) {
-	\Osmium\fatal(403, 'You must be logged in to import loadouts.');
+	$_POST['editimport'] = 'on';
 }
 
 $a = \Osmium\State\get_state('a');
@@ -240,6 +240,11 @@ echo "<h1>Import loadouts</h1>\n";
 \Osmium\Forms\print_textarea('Direct input', 'source', null, 0);
 \Osmium\Forms\print_generic_field('Fetch a URI', 'url', 'url');
 \Osmium\Forms\print_file('Upload file', 'file', MAX_FILESIZE);
+\Osmium\Forms\print_checkbox('Immediately edit the first loadout (instead of saving them all)',
+                             'editimport',
+                             null,
+                             \Osmium\State\is_logged_in() ? null : true,
+                             \Osmium\State\is_logged_in() ? 0 : \Osmium\Forms\FIELD_DISABLED);
 \Osmium\Forms\print_submit('Import');
 \Osmium\Forms\print_form_end();
 
@@ -265,6 +270,14 @@ function post_import(&$fit, &$ids, $a) {
 	$fit['metadata']['view_permission'] = DEFAULT_VP;
 	$fit['metadata']['edit_permission'] = DEFAULT_EP;
 	$fit['metadata']['visibility'] = DEFAULT_VIS;
+
+	if(isset($_POST['editimport']) && $_POST['editimport']) {
+		/* Do not commit the loadout, but overwrite $new_fit */
+		\Osmium\State\put_new_fit($fit);
+		\Osmium\State\put_state('create_fit_step', 2);
+		header('Location: ./new');
+		die();
+	}
 
 	\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
 
