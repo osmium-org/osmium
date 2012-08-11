@@ -27,7 +27,13 @@ osmium_tabify = function(ul, selected) {
 
 		var hash = window.location.hash;
 		var href = window.location.href;
-		history.replaceState(null, null, href.substring(0, hash.length - href.length) + a.attr('href'));
+		if(window.history && window.history.replaceState) {
+			window.history.replaceState(
+				null,
+				null,
+				href.substring(0, hash.length - href.length) + a.attr('href')
+			);
+		}
 
 		$(a.attr('href')).fadeIn(500);
 		li.addClass('active').delay(501).trigger('afteractive');
@@ -35,6 +41,7 @@ osmium_tabify = function(ul, selected) {
 		a.blur();
 		event.preventDefault();
 		event.stopPropagation();
+		return false;
 	});
 
 	var tab_anchor_update = function() {
