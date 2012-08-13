@@ -132,7 +132,7 @@ function print_formatted_offense(&$fit, $relative) {
 	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
 }
 
-function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
+function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile) {
 	ob_start();
 
 	$resists = array();
@@ -174,25 +174,60 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap) {
 	echo implode('', $resists['hull']);
 	echo "</tr>\n</tbody>\n</table>\n";
 
-	$passiverechargerate = 4 * 2500 * $ehp['shield']['capacity'] 
-		/ \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate') 
-		/ array_sum($ehp['shield']['resonance']);
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/shieldrecharge.png' alt='Passive shield recharge' title='Passive shield recharge' /><span title='Shield peak passive recharge rate' id='passiveshieldrecharge'>".\Osmium\Chrome\format_number($passiverechargerate)."</span></p>\n";
+	$layers = array(
+		'hull_repair' => array('hullrepair.png', 'Hull repairs',
+		                       'Hull EHP repaired per second', true),
+		'armor_repair' => array('armorrepair.png', 'Armor repairs',
+		                        'Armor EHP repaired per second', true),
+		'shield_boost' => array('shieldboost.png', 'Shield boost',
+		                        'Shield EHP boost per second', true),
+		'shield_boost_fueled' => array('fueledshieldboost.png', 'Fueled shield boost',
+		                               'Shield EHP boost per second', true),
+		'shield_passive' => array('shieldrecharge.png', 'Passive shield recharge',
+		                          'Peak shield EHP recharged per second', false),
+		);
 
-	$h = print_tank_layer($fit, 'structureRepair', 'structureDamageAmount', $ehp['hull']['resonance'], $cap,
-	                      $relative, 'hullrepair.png', 'Hull repairs', 'Hull EHP repaired per second', false);
-	$a = print_tank_layer($fit, 'armorRepair', 'armorDamageAmount', $ehp['armor']['resonance'], $cap,
-	                      $relative, 'armorrepair.png', 'Armor repairs', 'Armor EHP repaired per second', false);
-	$s = print_tank_layer($fit, 'shieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
-	                      $relative, 'shieldboost.png', 'Shield boost', 'Shield EHP boost per second', false);
-	$f = print_tank_layer($fit, 'fueledShieldBoosting', 'shieldBonus', $ehp['shield']['resonance'], $cap,
-	                      $relative, 'fueledshieldboost.png', 'Fueled Shield boost', 'Shield EHP boost per second',
-	                      false);
+	$rimg = "<img src='$relative/static-".\Osmium\STATICVER."/icons/tankreinforced.png' title='Reinforced tank' alt='Reinforced' />";
+	$simg = "<img src='$relative/static-".\Osmium\STATICVER."/icons/tanksustained.png' title='Sustained tank' alt='Sustained' />";
 
-	$total = format_number($passiverechargerate + 1000 * ($h[0] + $a[0] + $s[0] + $f[0]), -1);
+	$rtotal = 0;
+	$stotal = 0;
+	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap, $dmgprofile) as $lname => $a) {
+		list($reinforced, $sustained) = $a;
+		if($reinforced == 0) continue;
+
+		list($img, $alt, $title, $showboth) = $layers[$lname];
+
+		echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/$img' alt='$alt' title='$title' />";
+		if($showboth) {
+			echo "<span>";
+			echo $rimg."<span title='$title'>".format_number(1000 * $reinforced)."</span><br />";
+			echo $simg."<span title='$title'>".format_number(1000 * $sustained)."</span>";
+			echo "</span>";
+		} else {
+			echo "<span title='$title'>".format_number(1000 * $reinforced)."</span>";
+		}
+		echo "</p>\n";
+
+		$rtotal += $reinforced;
+		$stotal += $sustained;
+	}
+
 	$tehp = format_number($ehp['ehp']['avg'], -2);
+	$subtitles[] = '<span title="Average EHP">'.$tehp.' ehp</span>';
+
+	if($rtotal > 0) {
+		$rtotal = format_number(1000 * $rtotal, -1);
+		$subtitles[] = '<span title="Combined reinforced tank">'.$rtotal.' dps</span>';
+	}
+	if($stotal > 0) {
+		$stotal = format_number(1000 * $stotal, -1);
+		if($stotal !== $rtotal) {
+			$subtitles[] = '<span title="Combined sustained tank">'.$stotal.' dps</span>';
+		}
+	}
 	
-	print_formatted_attribute_category('defense', 'Defense', '<span title="Average EHP">'.$tehp.' ehp</span> | <span title="Combined reinforced tank">'.$total.' dps</span>', '', ob_get_clean());
+	print_formatted_attribute_category('defense', 'Defense', implode(' – ', $subtitles), '', ob_get_clean());
 }
 
 function print_formatted_navigation(&$fit, $relative) {
@@ -241,32 +276,16 @@ function print_formatted_misc(&$fit) {
 }
 
 function print_formatted_loadout_attributes(&$fit, $relative = '.') {
+	$dmgprofile = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
+
 	$cap = \Osmium\Fit\get_capacitor_stability($fit);
-	$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+	$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
 
 	print_formatted_engineering($fit, $relative, $cap);
 	print_formatted_offense($fit, $relative);
-	print_formatted_defense($fit, $relative, $ehp, $cap);
+	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile);
 	print_formatted_navigation($fit, $relative);
 	print_formatted_misc($fit);
-}
-
-function print_tank_layer($fit, $effectname, $shipattributename, $resonances, $cap, 
-                          $relative, $imagesrc, $imagetitle, $title, $forceshow = true, $nullifyifcharge = false) {
-	list($reinforced, $sustained) = \Osmium\Fit\get_repaired_amount_per_second(
-		$fit, $effectname, $shipattributename, $resonances, $cap, $nullifyifcharge
-		);
-
-	if($reinforced == 0 && !$forceshow) return;
-
-	$reinforcedimg = "<img src='$relative/static-".\Osmium\STATICVER."/icons/tankreinforced.png' title='Reinforced tank' alt='Reinforced' />";
-	$sustainedimg = "<img src='$relative/static-".\Osmium\STATICVER."/icons/tanksustained.png' title='Sustained tank' alt='Sustained tank' />";
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/$imagesrc' alt='$imagetitle' title='$imagetitle' /><span>";
-	echo $reinforcedimg."<span title='$title'>".format_number(1000 * $reinforced)."</span><br />";
-	echo $sustainedimg."<span title='$title'>".format_number(1000 * $sustained)."</span>";
-	echo "</span></p>\n";
-
-	return array($reinforced, $sustained);
 }
 
 function get_formatted_loadout_attributes(&$fit, $relative = '.') {

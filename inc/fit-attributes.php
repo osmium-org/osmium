@@ -138,11 +138,12 @@ function get_capacitor_stability(&$fit) {
  * Get maximum/average/minimum effective hitpoints and hull, armor and
  * shield resonances (1 - resistances).
  *
- * Returns an array of the following structure: array(ehp => {min,
- * avg, max}, {shield, armor, hull} => {capacity, resonance => {em,
- * thermal, kinetic, explosive}}).
+ * @param $damageprofile array(damagetype => damageamount)
+ *
+ * @returns array(ehp => {min, avg, max}, {shield, armor, hull} =>
+ * {capacity, resonance => {em, thermal, kinetic, explosive}}).
  */
-function get_ehp_and_resists(&$fit) {
+function get_ehp_and_resists(&$fit, $damageprofile) {
 	static $layers = array(
 		array('shield', 'shieldCapacity', 'shield'),
 		array('armor', 'armorHP', 'armor'),
@@ -172,90 +173,156 @@ function get_ehp_and_resists(&$fit) {
 
 		$out['ehp']['min'] += $out[$name]['capacity'] / max($out[$name]['resonance']);
 		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
-		/* TODO user-defined profiles */
-		$out['ehp']['avg'] += 4 * $out[$name]['capacity'] / array_sum($out[$name]['resonance']);
+
+		$sum = array_sum($damageprofile);
+		if($sum == 0) {
+			trigger_error(__FUNCTION__.'(): invalid damage profile', E_USER_WARNING);
+			$sum = 1;
+		}
+		$avgresonance = 0;
+		foreach($damageprofile as $type => $damage) {
+			$avgresonance += $damage * $out[$name]['resonance'][$type];
+		}
+		$avgresonance /= $sum;
+
+		$out['ehp']['avg'] += $out[$name]['capacity'] / $avgresonance;
 	}
 
 	return $out;
 }
 
+
 /**
- * Get reinforced/sustained tank. Returns an array of the two values
- * (reinforced/sustained in this order, in EHP repaired per second).
+ * Get reinforced/sustained tank.
  *
- * @param $effectname name of the effect that does the repairing
- *
- * @param $boostattributename value of the attribute that gets
- * increased by the repairing effect
- *
- * @param $resonances array of four resonances, for example
- * get_ehp_and_resists()['shield']['resonance']
+ * @param $ehp array of the same format as the return value of
+ * get_ehp_and_resists()
  *
  * @param $capacitor assumes same format as the returned value of
  * get_capacitor_stability()
+ *
+ * @param $damageprofile array(damagetype => damageamount)
+ *
+ * @returns array(repair_type => array(reinforced, sustained))
  */
-function get_repaired_amount_per_second(&$fit, $effectname, $boostattributename, $resonances, $capacitor) {
-	if(!isset($fit['cache']['__effects'][$effectname])) {
-		/* The interesting effect is not cached, so no module has
-		 * it. It is useless to continue further. */
-		return array(0, 0);
-	}
-
-	$total = 0;
-	$sustained = 0;
-	$capusage = $capacitor[0];
-
-	$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
-	$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
-	get_attribute_in_cache($durationattributeid, $fit['cache']);
-	get_attribute_in_cache($dischargeattributeid, $fit['cache']);
-
-	$durationattributename = \Osmium\Dogma\get_attributename($durationattributeid);
-	$dischargeattributename = \Osmium\Dogma\get_attributename($dischargeattributeid);
+function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
+	static $effects = array(
+		'hull_repair' => array('structureRepair', 'structureDamageAmount', 'hull'),
+		'armor_repair' => array('armorRepair', 'armorDamageAmount', 'armor'),
+		'shield_boost' =>  array('shieldBoosting', 'shieldBonus', 'shield'),
+		'shield_boost_fueled' => array('fueledShieldBoosting', 'shieldBonus', 'shield'),
+		'shield_passive' => array(null, null, 'shield'),
+		);
 
 	$modules = array();
+	$out = array();
 
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $module) {
-			if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
-				continue;
+	foreach($effects as $key => $effectd) {
+		list($effectname, $attributename, $type) = $effectd;
+
+		if(!isset($fit['cache']['__effects'][$effectname])) {
+			/* Effect not in cache, there's no point traversing the
+			 * modules */
+			$out[$key] = array(0, 0);
+			continue;
+		}
+
+		$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
+		$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
+		get_attribute_in_cache($durationattributeid, $fit['cache']);
+		get_attribute_in_cache($dischargeattributeid, $fit['cache']);
+		$durationattributename = \Osmium\Dogma\get_attributename($durationattributeid);
+		$dischargeattributename = \Osmium\Dogma\get_attributename($dischargeattributeid);
+
+		foreach(get_modules($fit) as $type => $a) {
+			foreach($a as $index => $module) {
+				if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
+					continue;
+				}
+
+				if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
+					continue;
+				}
+
+				$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
+				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
+				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
+
+				$modules[] = array($key, $amount, $duration, $discharge);				
 			}
-			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
-				continue;
-			}
-
-			$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $boostattributename);
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-		    $discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
-			
-			$total += $amount / $duration;
-
-			$modules[] = array($amount, $duration, $discharge);
-			$capusage -= $discharge / $duration;
 		}
 	}
 
-	/* Sort modules by best HP repaired per capacitor unit */
+	/* Sort modules by best EHP repaired per capacitor unit */
 	usort($modules, function($b, $a) {
-			if($a[2] == 0) return ($b[2] == 0) ? 0 : 1;
-			else if($b[2] == 0) return -1;
+			if($a[3] == 0) return ($b[3] == 0) ? 0 : 1;
+			else if($b[3] == 0) return -1;
 
-			$k =  $a[0] / $a[2] - $b[0] / $b[2];
+			$k =  $a[1] / $a[3] - $b[1] / $b[3];
 			return $k > 0 ? 1 : ($k < 0 ? -1 : 0);
 		});
 
-	/* Enable repairers until cap stability is lost */
-	while($capusage < 0 && ($m = array_shift($modules)) !== null) {
-		$module_capusage = $m[2] / $m[1];
+	$usage = $capacitor[0];
 
-		if($module_capusage == 0) $fraction = 1;
-		else $fraction = max(min(1, -$capusage / $module_capusage), 0);
-		$capusage += $fraction * $module_capusage;
-		$sustained += $fraction * ($m[0] / $m[1]);
+	/* First pass: reinforced tank values */
+	foreach($modules as $m) {
+		list($key, $amount, $duration, $discharge) = $m;
+
+		if(!isset($out[$key])) {
+			$out[$key] = array(0, 0);
+		}
+
+		$out[$key][0] += $amount / $duration;
+		$usage -= $discharge / $duration;
 	}
 
-	$factor = 4 / array_sum($resonances);
-	return array($total * $factor, $sustained * $factor);
+	/* Second pass: enable best modules while capacitor is available */
+	foreach($modules as $m) {
+		list($key, $amount, $duration, $discharge) = $m;
+
+		$moduleusage = $discharge / $duration;
+		if($moduleusage == 0) $fraction = 1;
+		else $fraction = min(1, -$usage / $moduleusage);
+
+		$usage += $fraction * $moduleusage;
+		$out[$key][1] += $fraction * $amount / $duration;
+	}
+
+	$passiverate = 2.5 * $ehp['shield']['capacity']
+		/ \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
+	$out['shield_passive'] = array($passiverate, $passiverate);
+
+	$sum = array_sum($damageprofile);
+	if($sum == 0) {
+		trigger_error(__FUNCTION__.'(): invalid damage profile given', E_USER_WARNING);
+		$sum = 1;
+	}
+	$multipliers = array();
+
+	foreach(array('shield', 'armor', 'hull') as $ltype) {
+		$resonances = $ehp[$ltype]['resonance'];
+		$multipliers[$ltype] = 0;
+
+		foreach($damageprofile as $type => $damage) {
+			$multipliers[$ltype] += $damage * $resonances[$type];
+		}
+
+		$multipliers[$ltype] /= $sum;
+	}
+
+	foreach($effects as $key => $e) {
+		list(, , $type) = $e;
+
+		if(!isset($out[$key])) continue;
+
+		$out[$key] = array(
+			$out[$key][0] / $multipliers[$type],
+			$out[$key][1] / $multipliers[$type],
+			);
+	}
+
+
+	return $out;
 }
 
 /**

@@ -37,16 +37,18 @@ class FitPresets extends PHPUnit_Framework_TestCase {
 		$t1 = $fit['modulepresetid'];
 		$t2 = \Osmium\Fit\clone_preset($fit, 'Tech II');
 
+		$uniform = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
+
 		\Osmium\Fit\add_module($fit, 0, 9632); /* Limited Adaptive Invuln. Field */
 		\Osmium\Fit\add_module($fit, 1, 8529); /* Large F-S9 Regolith Shield Induction */
 
-		$t1ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+		$t1ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 
 		\Osmium\Fit\use_preset($fit, $t2);
 		\Osmium\Fit\add_module($fit, 0, 2281); /* Invuln. Field II */
 		\Osmium\Fit\add_module($fit, 1, 3841); /* LSE II */
 
-		$t2ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+		$t2ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 
 		/* Pyfa 1.1.7-git */		
 		$this->assertEquals(61840, $t1ehp['ehp']['avg'], '', 1);
@@ -54,9 +56,9 @@ class FitPresets extends PHPUnit_Framework_TestCase {
 
 		/* Check internal consistency/sanity */
 		\Osmium\Fit\use_preset($fit, $t1);
-		$newt1ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+		$newt1ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 		\Osmium\Fit\use_preset($fit, $t2);
-		$newt2ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+		$newt2ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 		$this->assertSame(serialize($t1ehp), serialize($newt1ehp));
 		$this->assertSame(serialize($t2ehp), serialize($newt2ehp));
 	}

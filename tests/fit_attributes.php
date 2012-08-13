@@ -423,24 +423,23 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(531.2, \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput'), '', 0.05);
 		$this->assertEquals(1512.5, \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput'), '', 0.05);
 
-		$resonances = \Osmium\Fit\get_ehp_and_resists($fit)['shield']['resonance'];
+		$uniform = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
+		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
-		list($reinforced, $sustained) = \Osmium\Fit\get_repaired_amount_per_second($fit, 
-			'fueledShieldBoosting', 'shieldBonus', $resonances, $capacitor, true);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
 
-		$this->assertEquals(834.5, 1000 * $reinforced, '', 0.05);
-		$this->assertEquals(34.3, 1000 * $sustained, '', 0.05);
+		$this->assertEquals(834.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
+		$this->assertEquals(34.3, 1000 * $tank['shield_boost_fueled'][1], '', 0.05);
 
 		\Osmium\Fit\add_charge($fit, 'medium', 0, 11287);
 		\Osmium\Fit\add_charge($fit, 'medium', 1, 11283);
 		\Osmium\Fit\add_charge($fit, 'medium', 2, 11283);
 
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
-		list($reinforced, $sustained) = \Osmium\Fit\get_repaired_amount_per_second($fit, 
-			'fueledShieldBoosting', 'shieldBonus', $resonances, $capacitor, true);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
 
-		$this->assertSame($reinforced, $sustained);
-		$this->assertEquals(834.5, 1000 * $reinforced, '', 0.05);
+		$this->assertSame($tank['shield_boost_fueled'][0], $tank['shield_boost_fueled'][1]);
+		$this->assertEquals(834.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
 	}
 
 	/**
@@ -510,5 +509,58 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* Pyfa 1.1.8, the range is only an approximation and is actually slightly wrong */
 		$a = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, 'high', 0);
 		$this->assertEquals(9960, $a['maxrange'], '', 250);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testDamageProfiles() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 24690); /* Hyperion */
+		\Osmium\Fit\add_module($fit, 0, 3540); /* LAR II */
+		\Osmium\Fit\add_module($fit, 1, 3540); /* LAR II */
+		\Osmium\Fit\add_module($fit, 2, 3540); /* LAR II */
+		\Osmium\Fit\add_module($fit, 0, 10842); /* XL SB II */
+		\Osmium\Fit\add_module($fit, 1, 3665); /* Large Hull Repairer II */
+		\Osmium\Fit\add_module($fit, 2, 4391); /* Large ASB */
+
+		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
+
+		/* Test with uniform damage profile */
+		$profile = array('em' => 25, 'thermal' => 25, 'explosive' => 25, 'kinetic' => 25);
+		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $profile);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $profile);
+
+		/* Pyfa 1.1.8 (reinforced & sustained tank values and EHP) */
+
+		$this->assertEquals(38370, $ehp['ehp']['avg'], '', 1);
+		$this->assertEquals(17.2, 1000 * $tank['shield_passive'][0], '', 0.05);
+		$this->assertSame($tank['shield_passive'][1], $tank['shield_passive'][1]);
+		$this->assertEquals(165.5, 1000 * $tank['shield_boost'][0], '', 0.05);
+		$this->assertEquals(0, $tank['shield_boost'][1]);
+		$this->assertEquals(134.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
+		$this->assertEquals(0, $tank['shield_boost_fueled'][1]);
+		$this->assertEquals(434.6, 1000 * $tank['armor_repair'][0], '', 0.05);
+		$this->assertEquals(81.5, 1000 * $tank['armor_repair'][1], '', 0.05);
+		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
+		$this->assertEquals(0, $tank['hull_repair'][1]);
+
+		/* Test with a more general profile */
+		$profile = array('em' => 10, 'thermal' => 20, 'explosive' => 30, 'kinetic' => 40);
+		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $profile);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $profile);
+
+		$this->assertEquals(39132, $ehp['ehp']['avg'], '', 1);
+		$this->assertEquals(19.2, 1000 * $tank['shield_passive'][0], '', 0.05);
+		$this->assertSame($tank['shield_passive'][1], $tank['shield_passive'][1]);
+		$this->assertEquals(184.6, 1000 * $tank['shield_boost'][0], '', 0.05);
+		$this->assertEquals(0, $tank['shield_boost'][1]);
+		$this->assertEquals(150, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
+		$this->assertEquals(0, $tank['shield_boost_fueled'][1]);
+		$this->assertEquals(413.1, 1000 * $tank['armor_repair'][0], '', 0.05);
+		$this->assertEquals(77.5, 1000 * $tank['armor_repair'][1], '', 0.05);
+		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
+		$this->assertEquals(0, $tank['hull_repair'][1]);
 	}
 }
