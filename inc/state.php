@@ -379,10 +379,16 @@ function check_api_key($a, $initial = false) {
 	} else if(isset($a['apiverified']) && $a['apiverified'] === 't') {
 		$character_id = (int)$info->result->key->rowset->row['characterID'];
 
+		$cinfo = \Osmium\State\get_character_info($character_id, $a);
+		if($cinfo === false) {
+			/* API unavailable? */
+			return null;
+		}
+
 		list($character_name,
 		     $corporation_id, $corporation_name,
 		     $alliance_id, $alliance_name,
-		     $is_fitting_manager) = \Osmium\State\get_character_info($character_id);
+		     $is_fitting_manager) = $cinfo;
 
 		if($character_id != $a['characterid']
 		   || $character_name != $a['charactername']
@@ -417,8 +423,9 @@ function check_api_key($a, $initial = false) {
 	return $must_renew;
 }
 
-function get_character_info($character_id) {
+function get_character_info($character_id, $a) {
 	$char_info = \Osmium\EveApi\fetch('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
+	if($char_info === false) return false;
   
 	$character_name = (string)$char_info->result->characterName;
 	$corporation_id = (int)$char_info->result->corporationID;
@@ -429,13 +436,16 @@ function get_character_info($character_id) {
 	if($alliance_id == 0) $alliance_id = null;
 	if($alliance_name == '') $alliance_name = null;
 
-	$a = \Osmium\State\get_state('a');
 	$char_sheet = \Osmium\EveApi\fetch('/char/CharacterSheet.xml.aspx', 
 	                                   array(
 		                                   'characterID' => $character_id, 
 		                                   'keyID' => $a['keyid'],
 		                                   'vCode' => $a['verificationcode'],
 		                                   ));
+
+	if($char_sheet === false) {
+		return false;
+	}
 
 	$is_fitting_manager = false;
 	foreach(($char_sheet->result->rowset ?: array()) as $rowset) {
