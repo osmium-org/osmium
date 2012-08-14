@@ -26,6 +26,12 @@ const FIELD_DISABLED = 8;
 $__osmium_form_errors = array();
 
 function post_redirect_get() {
+	if(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+	   && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+		/* Don't PRG XHRs */
+		return;
+	}
+
 	$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
 	if(isset($_POST) && count($_POST) > 0) {
