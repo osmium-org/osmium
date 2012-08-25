@@ -1,3 +1,21 @@
+staging
+=======
+
+Cronjobs are now "formal" and should be set up as indicated in the
+README.
+
+The osmium schema has been updated:
+
+* new view: loadoutscores
+* updated view: loadoutssearchdata (now includes votes and score)
+
+The Sphinx loadout index has been updated. You must:
+
+* stop sphinx-searchd;
+* delete the sphinx/index.* files;
+* start sphinx-searchd;
+* run ./bin/reindex_loadouts.
+
 v0.4.1, released 2012-08-14
 ===========================
 

@@ -73,6 +73,15 @@ Assuming your webserver process runs with user `http` and group
 
 7. See Initial database setup below.
 
+8. Setup the cron jobs:
+
+   ~~~~
+   sudo crontab -e -u http
+
+   @hourly /path/to/osmium/bin/cron.hourly >/dev/null
+   @daily  /path/to/osmium/bin/cron.daily  >/dev/null
+   ~~~~
+
 Initial database setup
 ----------------------
 

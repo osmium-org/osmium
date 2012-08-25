@@ -1,0 +1,10 @@
+#!/usr/bin/env php
+<?php
+
+/* cron.daily - maintenance tasks that should ideally be executed on a
+ * daily basis */
+
+chdir(__DIR__);
+
+passthru('./update_charinfo');
+passthru('./reindex_loadouts');

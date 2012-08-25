@@ -1,0 +1,9 @@
+#!/usr/bin/env php
+<?php
+
+/* cron.hourly - maintenance tasks that should ideally be executed on
+ * an hourly basis */
+
+chdir(__DIR__);
+
+passthru('./update_lscores');

@@ -26,15 +26,23 @@ while($row = \Osmium\Search\fetch_row($q)) {
 	\Osmium\Search\query('DELETE FROM osmium_loadouts WHERE id = '.$row[0]);
 }
 
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 100;
 
 $i = 0;
 $r = \Osmium\Search\query_select_searchdata('ORDER BY loadoutid ASC');
 
 $offset = 0;
 do {
-	$q = \Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadouts WHERE visibility = $1 LIMIT $2 OFFSET $3',
-	                             array(\Osmium\Fit\VISIBILITY_PUBLIC, BATCH_SIZE, $offset));
+	$q = \Osmium\Db\query_params(
+		'SELECT loadoutid
+		FROM osmium.loadouts WHERE visibility = $1
+		LIMIT $2 OFFSET $3',
+		array(
+			\Osmium\Fit\VISIBILITY_PUBLIC,
+			BATCH_SIZE,
+			$offset
+			)
+		);
 	$offset += BATCH_SIZE;
 
 	$ids = array();
@@ -42,7 +50,7 @@ do {
 		$ids[] = $row[0];
 	}
 
-	if($ids === array()) die();
+	if($ids === array()) break;
 
 	$in = implode(',', $ids);
 	$q = \Osmium\Search\query_select_searchdata('WHERE loadoutid IN ('.$in.')', array());
@@ -51,6 +59,6 @@ do {
 		\Osmium\Search\index($row);
 		echo ".";
 	}
-
-	echo "\n";
 } while(true);
+
+echo "\n";
