@@ -34,7 +34,7 @@ function print_search_form() {
 	}
 
 	echo "<form method='get' action='./search'>\n";
-	echo "<h1><img src='./static-".\Osmium\STATICVER."/icons/search.png' alt='' />Search loadouts</h1>\n<p>\n<input type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
+	echo "<h1><label for='search'><img src='./static-".\Osmium\STATICVER."/icons/search.png' alt='' />Search loadouts</label></h1>\n<p>\n<input id='search' type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
 	echo "</form>\n";
 }
 

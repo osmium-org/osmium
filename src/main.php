@@ -35,7 +35,7 @@ $now = time();
 $accountid = $a === null ? 0 : $a['accountid'];
 
 echo "<section>\n";
-echo "<h2>Popular tags</h2>\n<ul class='tags' id='populartags'>\n";
+echo "<h2>Popular</h2>\n<ul class='tags' id='populartags'>\n";
 
 if(($ptags = \Osmium\State\get_cache_memory('main_popular_tags', null)) === null) {
 	$query = \Osmium\Db\query(
@@ -45,7 +45,7 @@ if(($ptags = \Osmium\State\get_cache_memory('main_popular_tags', null)) === null
 	while($row = \Osmium\Db\fetch_row($query)) {
 		list($name, $count) = $row;
 
-		$ptags .= "<li><a href='./search?q=".urlencode('@tags "'.$name.'"')
+		$ptags .= "<li><a href='./browse/best?f=".urlencode('@tags "'.$name.'"')
 			."'>$name</a> ($count)</li>\n";
 	}
 
@@ -53,12 +53,15 @@ if(($ptags = \Osmium\State\get_cache_memory('main_popular_tags', null)) === null
 }
 
 echo $ptags;
-echo "</ul>\n</section>\n";
+echo "</ul>\n";
+echo "<p class='b_more'><a href='./browse/best'>Browse all popular loadouts…</a></p>\n";
+echo "</section>\n";
 
 echo "<section>\n";
 echo "<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'><img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
 \Osmium\Search\print_loadout_list(\Osmium\AtomCommon\get_new_fits($accountid),
                                   '.', 0, 'No loadouts yet! What are you waiting for?');
+echo "<p class='b_more'><a href='./browse/new'>Browse more new loadouts…</a></p>\n";
 echo "</section>\n";
 
 echo "<section>\n";

@@ -38,7 +38,7 @@ if($query === false) {
 	if($query !== false && strlen($query) > 0) {
 		$title .= ' / '.htmlspecialchars($query);
 	}
-	\Osmium\Chrome\print_header($title, '.');
+	\Osmium\Chrome\print_header($title, '.', false);
 	echo "<div id='search_mini'>\n";
 	\Osmium\Chrome\print_search_form();
 	echo "</div>\n";
