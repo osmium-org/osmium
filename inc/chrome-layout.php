@@ -81,7 +81,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		$a = \Osmium\State\get_state('a');
 
 		echo get_navigation_link($relative.'/import', "Import loadouts");
-		echo get_navigation_link($relative.'/api_settings', "API settings");
+		echo get_navigation_link($relative.'/settings', "Settings");
 
 		if($a['ismoderator'] === 't') {
 			echo get_navigation_link($relative.'/moderation/', \Osmium\Flag\MODERATOR_SYMBOL);

@@ -22,6 +22,22 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: accountcharacters; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE accountcharacters (
+    accountid integer NOT NULL,
+    name character varying(255) NOT NULL,
+    keyid integer,
+    verificationcode character varying(255),
+    importname name,
+    importedskillset text,
+    overriddenskillset text,
+    lastimportdate integer
+);
+
+
+--
 -- Name: accountfavorites; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -770,6 +786,14 @@ ALTER TABLE ONLY votes ALTER COLUMN voteid SET DEFAULT nextval('votes_voteid_seq
 
 
 --
+-- Name: accountcharacters_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY accountcharacters
+    ADD CONSTRAINT accountcharacters_pkey PRIMARY KEY (accountid, name);
+
+
+--
 -- Name: accountfavorites_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1039,6 +1063,13 @@ ALTER TABLE ONLY votes
 
 ALTER TABLE ONLY votes
     ADD CONSTRAINT votes_pkey PRIMARY KEY (voteid);
+
+
+--
+-- Name: accountcharacters_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX accountcharacters_accountid_idx ON accountcharacters USING btree (accountid);
 
 
 --
@@ -1627,6 +1658,14 @@ CREATE INDEX votes_targettype_idx ON votes USING btree (targettype);
 --
 
 CREATE INDEX votes_type_idx ON votes USING btree (type);
+
+
+--
+-- Name: accountcharacters_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY accountcharacters
+    ADD CONSTRAINT accountcharacters_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
 
 
 --

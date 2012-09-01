@@ -39,7 +39,7 @@ $__osmium_cache_enabled = true;
 /** Default expire duration for the token cookie. 7 days. */
 const COOKIE_AUTH_DURATION = 604800;
 
-/** Access mask required for API keys. */
+const CHARACTER_SHEET_ACCESS_MASK = 8;
 const REQUIRED_ACCESS_MASK = 33554440; /* CharacterSheet+AccountStatus */
 
 /**
@@ -297,7 +297,7 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	}
 
 	if(isset($api->error) && !empty($api->error)) {
-		return '('.((int)$api->error['code']).') '.(string)$api->error;
+		return '('.((int)$api->error['code']).') '.htmlspecialchars((string)$api->error);
 	}
 
 	if((string)$api->result->key["type"] !== 'Character') {

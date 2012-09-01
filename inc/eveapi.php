@@ -74,11 +74,10 @@ function fetch($name, array $params) {
 	curl_close($c);
   
 	$xml = false;
-	$ex = null;
 	try {
 		$xml = new \SimpleXMLElement($raw_xml);
 	} catch(\Exception $e) {
-		$ex = $e;
+		$xml = false;
 	}
 
 	if($xml === false || $raw_xml === false) {
