@@ -8,6 +8,7 @@ The osmium schema has been updated:
 
 * new view: loadoutscores
 * updated view: loadoutssearchdata (now includes votes and score)
+* new table: accountcharacters
 
 The Sphinx loadout index has been updated. You must:
 
