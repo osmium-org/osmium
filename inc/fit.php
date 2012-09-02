@@ -1145,3 +1145,21 @@ function delta($old, $new) {
 	$renderer = new \Horde_Text_Diff_Renderer_Inline();
 	return $renderer->render($diff);
 }
+
+/**
+ * Use a custom skillset for this fitting (default is all skills to
+ * V).
+ *
+ * @param $skillset array(skilltypeid => skilllevel)
+ * @param $defaultlevel level to use for skills not in $skillset
+ */
+function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
+	foreach($fit['dogma']['skills'] as $typeid => &$s) {
+		$s['skillLevel'] = $defaultlevel;
+	}
+
+	foreach($skillset as $typeid => $level) {
+		if(!isset($fit['dogma']['skills'][$typeid])) continue;
+		$fit['dogma']['skills'][$typeid]['skillLevel'] = $level;
+	}
+}

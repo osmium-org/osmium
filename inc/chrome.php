@@ -493,3 +493,11 @@ function format_isk($isk) {
 
 	return $isk.' ISK';
 }
+
+function truncate_string($s, $length, $fill = '...') {
+	if(strlen($s) > $length) {
+		$s = substr($s, 0, $length - strlen($fill)).$fill;
+	}
+
+	return $s;
+}

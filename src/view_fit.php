@@ -20,6 +20,7 @@ namespace Osmium\Page\ViewFit;
 
 const PASSWORD_AUTHENTICATION_DURATION = 1800; /* How long to "remember" the password for protected fits */
 const COMMENTS_PER_PAGE = 10;
+const MAX_PRESET_LENGTH = 40;
 
 require __DIR__.'/../inc/root.php';
 
@@ -258,18 +259,10 @@ if($fit['metadata']['revision'] > 1) {
 }
 echo "</div>\n";
 
+$action = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
+echo "<form method='get' action='$action' class='presets'>\n";
+
 if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
-	$action = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
-	echo "<form method='get' action='$action' class='presets'>\n";
-
-	foreach(array(array('presets', 'pid', 'modulepresetid', 'preset'),
-	              array('chargepresets', 'cpid', 'chargepresetid', 'chargepreset'),
-	              array('dronepresets', 'dpid', 'dronepresetid', 'dronepreset')) as $presettype) {
-		list($key, $name, $current, $selectid) = $presettype;
-
-
-	}
-
 	if(count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
 		/* Use one big select, with optgroups for charge presets */
 		echo "<select name='pid' id='preset'>\n";
@@ -280,7 +273,9 @@ if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['
 			foreach($p['chargepresets'] as $cpid => $cp) {
 				$selected = $fit['modulepresetid'] == $presetid && $fit['chargepresetid'] == $cpid ?
 					" selected='selected'" : '';
-				echo "<option value='{$presetid}-{$cpid}'$selected>".htmlspecialchars($cp['name'])."</option>\n";
+				$name = $p['name'].', '.$cp['name'];
+				$name = \Osmium\Chrome\truncate_string($name, MAX_PRESET_LENGTH);
+				echo "<option value='{$presetid}-{$cpid}'$selected>".htmlspecialchars($name)."</option>\n";
 			}
 
 			echo "</optgroup>\n";
@@ -293,14 +288,17 @@ if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['
 		echo "<select name='dpid' id='dronepreset'>\n";
 		foreach($fit['dronepresets'] as $presetid => $p) {
 			$selected = $fit['dronepresetid'] == $presetid ? ' selected="selected"' : '';
-			echo "<option value='$presetid'$selected>".htmlspecialchars($p['name'])."</option>\n";
+
+			$name = \Osmium\Chrome\truncate_string($p['name'], MAX_PRESET_LENGTH);
+			echo "<option value='$presetid'$selected>".htmlspecialchars($name)."</option>\n";
 		}
 		echo "</select>\n";
 	}
 
 	echo "<span class='submit'>\n<br />\n<input type='submit' value='Switch presets' />\n</span>\n";
-	echo"</form>\n";
 }
+
+echo"</form>\n";
 
 echo "<div id='computed_attributes'>\n";
 
