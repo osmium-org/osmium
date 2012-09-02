@@ -27,7 +27,7 @@ function print_charge_groups() {
 	echo "<img src='./static-".\Osmium\STATICVER."/icons/spinner.gif' id='chargegroupsbox_spinner' class='spinner' alt='' /><br />\n";
 	echo "<em class='help'>(Use links, drag or <kbd>Ctrl</kbd>+click to select multiple items)</em>\n</h2>\n";
   
-	\Osmium\Forms\print_form_begin();
+	\Osmium\Forms\print_form_begin(null, 'prevnext');
 	echo "<tr><td colspan='2'>\n<ul id='chargegroups'>\n";
 	echo "</ul>\n</td></tr>\n";
 	print_form_prevnext();

@@ -62,7 +62,7 @@ function print_modulelist() {
 		echo "<ul></ul>\n";
 		echo "</div>\n";
 	}
-	\Osmium\Forms\print_form_begin();
+	\Osmium\Forms\print_form_begin(null, 'prevnext');
 	print_form_prevnext();
 	\Osmium\Forms\print_form_end();
 	echo "</div>\n";

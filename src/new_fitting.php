@@ -50,6 +50,29 @@ if(isset($_POST['prev_step'])) {
 	$fit = \Osmium\State\get_new_fit();
 	\Osmium\Fit\destroy($fit);
 	\Osmium\State\put_new_fit($fit);
+} else if(isset($_POST['change_step']) && is_array($_POST['change_step'])) {
+	reset($_POST['change_step']);
+	$targetstep = intval(key($_POST['change_step']));
+	$targetstep = min(FINAL_STEP, max(1, $targetstep));
+
+	while($step < $targetstep) {
+		if(call_local($steps[$step].'_post')) ++$step;
+		else break;
+	}
+	while($step > $targetstep) {
+		if(call_local($steps[$step].'_pre')) --$step;
+		else break;
+	}
+} else if(isset($_POST['tryfinalize'])) {
+	do {
+		while($step < FINAL_STEP) {
+			if(call_local($steps[$step].'_post')) ++$step;
+			else break 2;
+		}
+
+		if(call_local($steps[FINAL_STEP].'_post')) finalize();
+		else break;
+	} while(false);
 }
 
 if($step < 1) $step = 1;
@@ -111,6 +134,38 @@ function print_h1($name) {
 	global $step;
 	global $g_title;
 	echo "<h1 id='newloadout'>$g_title, step $step of ".FINAL_STEP.": $name</h1>\n";
+	print_breadcrumb();
+}
+
+function print_breadcrumb() {
+	static $labels = array(
+		1 => 'Ship',
+		2 => 'Modules',
+		3 => 'Charges',
+		4 => 'Drones',
+		5 => 'Metadata',
+		);
+
+	global $step;
+
+	echo "<nav id='nf_bc'>\n<ol>";
+
+	foreach($labels as $sn => $label) {
+		if($sn == $step) {
+			$inputcur = 'disabled="disabled" ';
+			$liclass = 'current';
+			$sep = "<img src='./static-".\Osmium\STATICVER."/icons/bcseparator.svg' alt='' />";
+		} else {
+			$sep = $inputcur = '';
+			$liclass = ($sn < $step) ? 'beforecur' : 'aftercur';
+		}
+
+		echo "<li value='$sn' class='$liclass'>$sep<input form='prevnext' type='submit' value='$sn. ".$label."' name='change_step[".$sn."]' $inputcur/></li>";
+	}
+
+	$label = \Osmium\State\is_logged_in() ? 'Finalize' : 'Export';
+	echo "<li value='".(FINAL_STEP + 1)."' class='finalize'><input form='prevnext' type='submit' value='$label' name='tryfinalize' /></li>";
+	echo "</ol>\n</nav>\n";
 }
 
 function get_slot_fnames() {
@@ -136,7 +191,7 @@ function finalize() {
 
 	if($anonymous) {
 		$formats = \Osmium\Fit\get_export_formats();
-		$format = $_POST['export_format'];
+		$format = isset($_POST['export_format']) ? $_POST['export_format'] : 'clf';
 
 		if(isset($formats[$format])) {
 			header('Content-Type: '.$formats[$format][1]);

@@ -30,7 +30,7 @@ function ship_select() {
 		\Osmium\State\put_cache('new_fit_step1_ship_hierarchy', $hierarchy);
 	}
 
-	\Osmium\Forms\print_form_begin();
+	\Osmium\Forms\print_form_begin(null, 'prevnext');
 	\Osmium\Forms\print_generic_row(
 		'hullid',
 		"<input type='hidden' name='hullid' id='hullidhidden' value='"
@@ -56,11 +56,14 @@ function ship_select_post() {
 	if(isset($_POST['hullid'])) {
 		$shipid = isset($_POST['next_step']) && is_array($_POST['next_step']) ?
 			key($_POST['next_step']) : $_POST['hullid'];
+	} else {
+		$shipid = isset($fit['ship']['typeid']) ? $fit['ship']['typeid'] : null;
+	}
 
-		if(!\Osmium\Fit\select_ship($fit, $shipid)) {
-			\Osmium\Forms\add_field_error('hullid', "Please select a ship first. (You can still change your mind later!)");
-			return false;
-		}
+	if($shipid === null || !\Osmium\Fit\select_ship($fit, $shipid)) {
+		\Osmium\Forms\add_field_error('hullid',
+		                              "Please select a ship first. (You can still change your mind later!)");
+		return false;
 	}
 
 	\Osmium\State\put_new_fit($fit);

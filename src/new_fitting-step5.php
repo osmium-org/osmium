@@ -31,7 +31,7 @@ function final_settings() {
 		echo "<p class='warning_box' style='max-width: 100%;'>You are not logged in. You can still login now (or register) and save your fitting to your account, as long as you don't close your browser window. If you don't want to, you can still export your new loadout in one of the supported export formats.</p>";
 	}
 
-	\Osmium\Forms\print_form_begin();
+	\Osmium\Forms\print_form_begin(null, 'prevnext');
 	\Osmium\Forms\print_text('<h2>Metadata</h2>');
 
 	\Osmium\Forms\print_generic_field('Fitting name', 'text', 'name', 'name', 
@@ -148,19 +148,11 @@ function update_metadata() {
 	global $anonymous;
 	$fit = \Osmium\State\get_new_fit();
 	if(!isset($fit['metadata'])) $fit['metadata'] = array();
-  
-	$errors = 0;
-  
-	$fname = trim($_POST['name']);
-	if(empty($fname)) {
-		\Osmium\Forms\add_field_error('name', 'You must choose a name. Any name will do. What about what your fit was designed for?');
-		++$errors;
-	}
 
 	$fdesc = trim($_POST['description']);
 	$tags = preg_split('/\s+/', $_POST['tags'], -1, PREG_SPLIT_NO_EMPTY);
 
-	$fit['metadata']['name'] = $fname;
+	$fit['metadata']['name'] = trim($_POST['name']);
 	$fit['metadata']['description'] = $fdesc;
 	$fit['metadata']['tags'] = $tags;
  
@@ -198,8 +190,6 @@ function update_metadata() {
 			$visibility = \Osmium\Fit\VISIBILITY_PRIVATE; /* Makes sense. */
 
 			if(empty($pw)) {
-				\Osmium\Forms\add_field_error('pw', 'If you want your fit to be password-protected, you must enter the password here.');
-				++$errors;
 				unset($fit['metadata']['password']);
 				unset($_POST['pw']);
 			} else {
@@ -217,7 +207,6 @@ function update_metadata() {
 	}
 
 	\Osmium\State\put_new_fit($fit);
-	return $errors === 0;
 }
 
 function get_recommended_tags($fit) {
@@ -345,5 +334,26 @@ function final_settings_pre() {
 }
 
 function final_settings_post() {
-	return update_metadata();
+	$fit = \Osmium\State\get_new_fit();
+
+	update_metadata();
+
+	if(!trim($fit['metadata']['name'])) {
+		\Osmium\Forms\add_field_error('name', 'You must choose a name. Any name will do. What about what your fit was designed for?');
+		return false;
+	}
+
+	if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
+	   && empty($fit['metadata']['password'])) {
+		\Osmium\Forms\add_field_error('pw', 'If you want your fit to be password-protected, you must enter the password here.');
+		return false;
+	}
+
+	if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
+	   && $fit['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PRIVATE) {
+		\Osmium\Forms\add_field_error('visibility', 'You cannot have a public password-protected fit. Make it private here.');
+		return false;
+	}
+
+	return true;
 }

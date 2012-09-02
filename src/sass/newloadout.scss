@@ -524,3 +524,59 @@ div#selectship {
 		min-width: 40em;
 	}
 }
+
+$nfbc-height: 1.5em;
+$nfbc-border-color: #CCC;
+nav#nf_bc > ol {
+	text-align: center;
+
+	&> li {
+		display: inline-block;
+		height: $nfbc-height;
+		line-height: $nfbc-height;
+
+		&> input[type='submit'] {
+			margin: 1px;
+			border: 0;
+			background-color: rgba(255, 255, 255, 0);
+			cursor: pointer;
+			color: $link-color;
+			text-decoration: underline;
+			margin-top: 0.15em;
+		}
+
+		border-top: 1px solid $nfbc-border-color;
+		border-bottom: 1px solid $nfbc-border-color;
+		padding-left: $nfbc-height;
+
+		&.current {
+			position: relative;
+
+			&> img {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: $nfbc-height;
+				height: $nfbc-height;
+			}
+
+			&> input[type='submit'] {
+				text-decoration: none;
+				color: black;
+			}
+		}
+
+		&.beforecur {
+			background-color: #E6E6E9;
+		}
+
+		&:last-child {
+			padding-right: $nfbc-height;
+			border-right: 1px solid $nfbc-border-color;
+		}
+
+		&:first-child {
+			border-left: 1px solid $nfbc-border-color;
+		}
+	}
+}
