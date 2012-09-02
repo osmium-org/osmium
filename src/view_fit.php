@@ -220,6 +220,7 @@ if(count($fit['dronepresets']) > 1) {
 	$title, '..',
 	$fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 	&& !isset($_GET['jtc'])
+	&& (!isset($_GET['ss']) || $_GET['ss'] == 'All V')
 	&& ((!isset($_GET['pid']) && !isset($_GET['dpid']))
 	    || $fit['modulepresetid'] != $defaultpid
 	    || $fit['chargepresetid'] != $defaultcpid
@@ -261,6 +262,44 @@ echo "</div>\n";
 
 $action = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
 echo "<form method='get' action='$action' class='presets'>\n";
+
+$names = array('All V', 'All 0');
+if($loggedin) {
+	$ssq = \Osmium\Db\query_params('SELECT name FROM osmium.accountcharacters WHERE accountid = $1 ORDER BY name ASC', array($a['accountid']));
+	while($row = \Osmium\Db\fetch_row($ssq)) {
+		$names[] = $row[0];
+	}
+}
+
+echo "<select name='ss' id='skillset'>\n";
+foreach($names as $n) {
+	if(isset($_GET['ss']) && $_GET['ss'] == $n) {
+		$selected = " selected='selected'";
+
+		if($n == 'All V') {
+			/* Default behavior, do nothing */
+		} else if($n == 'All 0') {
+			\Osmium\Fit\use_skillset($fit, array(), 0);
+		} else if($loggedin) {
+			$row = \Osmium\Db\fetch_assoc(
+				\Osmium\Db\query_params(
+					'SELECT importedskillset, overriddenskillset FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2',
+					array($a['accountid'], $_GET['ss'])
+					));
+			if($row !== false) {
+				$skillset = json_decode($row['importedskillset'], true);
+				foreach(json_decode($row['overriddenskillset'], true) as $typeid => $l) {
+					$skillset[$typeid] = $l;
+				}
+				\Osmium\Fit\use_skillset($fit, $skillset, 0);
+			}
+		}
+	} else $selected = '';
+
+	$n = htmlspecialchars($n, ENT_QUOTES);
+	echo "<option value='$n'$selected>$n</option>\n";
+}
+echo "</select>\n";
 
 if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
 	if(count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {

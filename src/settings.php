@@ -102,7 +102,10 @@ echo "<h3>Create a new character</h3>\n";
 if(isset($_POST['newcharname'])) {
 	$name = $_POST['newcharname'];
 	list($exists) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2', array($a['accountid'], $name)));
-	if($exists) {
+
+	if($name == 'All 0' || $name == 'All V') {
+		\Osmium\Forms\add_field_error('newcharname', 'You cannot pick this name, it has a special meaning and is reserved.');
+	} else if($exists) {
 		\Osmium\Forms\add_field_error('newcharname', 'You already have a character with the same name.');
 	} else {
 		\Osmium\Db\query_params('INSERT INTO osmium.accountcharacters (accountid, name) VALUES ($1, $2)', array($a['accountid'], $name));
