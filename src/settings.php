@@ -217,6 +217,12 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 			}
 		}
 	}
+} else if(isset($_POST['editoverrides']) && is_array($_POST['editoverrides'])) {
+	reset($_POST['editoverrides']);
+	$cname = key($_POST['editoverrides']);
+
+	header('Location: ./editskillset/'.urlencode($cname));
+	die();
 }
 
 echo "<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n";
@@ -243,6 +249,7 @@ while($c = \Osmium\Db\fetch_assoc($cq)) {
 	echo "<td>".($c['lastimportdate'] === null ? '<em>never</em>' : \Osmium\Chrome\format_relative_date($c['lastimportdate']))."</td>\n";
 	echo "<td>\n";
 	echo "<input type='submit' name='fetch[$cname]' value='Fetch skillset from API' /> ";
+	echo "<input type='submit' name='editoverrides[$cname]' value='Manually edit skill levels' /> ";
 	echo "<input type='submit' name='delete[$cname]' value='Delete character' /> ";
 	echo "</td>\n";
 	echo "</tr>\n";

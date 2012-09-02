@@ -1,0 +1,25 @@
+table#e_skillset {
+	max-width: 50em;
+	margin-left: 1em;
+
+	&> tbody > tr > td > select {
+		min-width: 0;
+		width: 10em;
+	}
+
+	&> tbody {
+		&> tr > td:first-child {
+			text-align: left;
+		}
+
+		&> tr > th {
+			background-color: #F4F4F8;
+
+			&.groupname {
+				text-align: left;
+				font-size: 1.2em;
+				padding: 0.5em;
+			}
+		}
+	}
+}
