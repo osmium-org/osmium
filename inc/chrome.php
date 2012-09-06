@@ -501,3 +501,98 @@ function truncate_string($s, $length, $fill = '...') {
 
 	return $s;
 }
+
+function format_number_with_unit($number, $unitid, $unitdisplayname) {
+	if($unitid == 1) {
+		/* Meters */
+		if($number >= 10000) {
+			$number /= 1000;
+			$unitdisplayname = 'km';
+		} else {
+			$unitdisplayname = 'm';
+		}
+	} else if($unitid == 101) {
+		/* Milliseconds */
+		$number /= 1000;
+		$unitdisplayname = 'sec';
+	} else if($unitid == 104) {
+		/* Multiplier */
+		return round($number, 3).' x';
+	} else if($unitid == 105) {
+		/* Percentage */
+		return round($number, 3).' %';
+	} else if($unitid == 108) {
+		/* Inverse absolute percent */
+		return round((1 - $number) * 100, 3).' %';
+	} else if($unitid == 109) {
+		/* Modifier percent */
+		$p = ($number - 1) * 100;
+		return ($p >= 0 ? '+' : '').round($p, 3).' %';
+	} else if($unitid == 111) {
+		/* Inversed modifier percent */
+		return round((1 - $number) * 100, 3).' %';
+	} else if($unitid == 115) {
+		/* Groupid */
+		$row = \Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'SELECT groupname, typeid FROM eve.invgroups LEFT JOIN eve.invtypes ON invtypes.groupid = invgroups.groupid AND invtypes.published = true WHERE invgroups.groupid = $1 ORDER BY typeid ASC LIMIT 1',
+				array($number)
+				));
+		if($row !== false) {
+			$image = '';
+			if($row[1] !== null) {
+				$image = "<img src='http://image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
+			}
+			return $image.htmlspecialchars($row[0]);
+		}
+	} else if($unitid == 116) {
+		/* Typeid */
+		$row = \Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'SELECT typename FROM eve.invtypes WHERE typeid = $1',
+				array($number)
+				));
+		if($row !== false) {
+			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> ".htmlspecialchars($row[0]);
+		}
+	} else if($unitid == 117) {
+		if($number == 1) return 'Small';
+		if($number == 2) return 'Medium';
+		if($number == 3) return 'Large';
+		if($number == 4) return 'XLarge';
+	} else if($unitid == 121) {
+		/* Real percentage */
+		return round($number, 3).' %';
+	} else if($unitid == 124) {
+		/* Modifier relative percent */
+		return round($number, 3).' %';
+	} else if($unitid == 125) {
+		$unitdisplayname = 'N';
+	} else if($unitid == 127) {
+		/* Absolute percent */
+		return round($number * 100, 3).' %';
+	} else if($unitid == 137) {
+		/* Boolean */
+		if($number == 0) return 'False';
+		if($number == 1) return 'True';
+	} else if($unitid == 139) {
+		/* Bonus */
+		if($number >= 0) return "+".round($number, 3);
+		else return round($number, 3);
+	} else if($unitid == 140) {
+		/* Level */
+		return 'Level '.$number;
+	} else if($unitid == 142) {
+		/* Sex */
+		if($number == 1) return 'Male';
+		if($number == 2) return 'Unisex';
+		if($number == 3) return 'Female';
+	}
+
+	$n = number_format($number, 3);
+	list($num, $dec) = explode('.', $n);
+	$dec = rtrim($dec, '0');
+	if($dec) $num .= '.'.$dec;
+
+	return $num.' '.htmlspecialchars($unitdisplayname);
+}

@@ -373,6 +373,63 @@ div#computed_attributes > section > div > table#resists {
 	}
 }
 
+ul#showinfotabs {
+	@include tabs;
+	text-align: left;
+	margin-top: 0.5em;
+	padding-left: 1em;
+}
+
+header#hsi > h2 {
+	@include ellipsis;
+
+	margin: 0.5em;
+	padding: 0;
+
+	&> img {
+		width: 2em;
+		height: 2em;
+	}
+}
+
+section#siattributes > table > tbody > tr {
+	&> td > img {
+		height: 2em;
+		width: 2em;
+	}
+
+	&> td {
+		width: 50%;
+		text-align: left;
+		padding-left: 0.25em;
+	}
+
+	&.sep {
+		border-top: 1px solid #CCC;
+	}
+}
+
+section#siaffectedby {
+	&> ul {
+		list-style-type: square;
+
+		&> li {
+			font-weight: bold;
+			margin-bottom: 2em;
+
+			&> img {
+				width: 2em;
+				height: 2em;
+			}
+
+			&> ul {
+				font-weight: normal;
+				list-style-type: square;
+			}
+		}
+	}
+}
+
 .overflow6 { @include error-background-opacity(0.6); }
 .overflow5 { @include error-background-opacity(0.5); }
 .overflow4 { @include error-background-opacity(0.4); }

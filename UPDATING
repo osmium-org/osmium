@@ -4,6 +4,11 @@ staging
 Cronjobs are now "formal" and should be set up as indicated in the
 README.
 
+The eve schema has been updated:
+
+* includes dgmunits
+* includes display name of attributes, and unitids
+
 The osmium schema has been updated:
 
 * new view: loadoutscores

@@ -22,13 +22,23 @@ namespace Osmium\CLI\JsonToPostgres;
 ini_set('memory_limit', -1);
 
 $structure = array(
+	'dgmunits', 'dgmunits.json',
+	array(
+		'unitID' => 'unitid',
+		'displayName' => 'displayname',
+		),
+
 	'dgmattribs', 'dgmattribs.json',
 	array(
 		'attributeID' => 'attributeid',
 		'attributeName' => 'attributename',
+		'displayName' => 'displayname',
 		'defaultValue' => 'defaultvalue',
 		'stackable' => 'stackable',
 		'highIsGood' => 'highisgood',
+		'unitID' => 'unitid',
+		'categoryID' => 'categoryid',
+		'published' => 'published',
 		),
 
 	'dgmeffects', 'dgmeffects.json',

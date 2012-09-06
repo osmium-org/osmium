@@ -21,28 +21,9 @@ namespace Osmium\Json\ViewLoadoutAlter;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-$loadoutid = isset($_GET['loadoutid']) ? intval($_GET['loadoutid']) : 0;
-$revision = isset($_GET['revision']) ? intval($_GET['revision']) : 0;
-$cachename = SID.'_view_fit_'.$loadoutid.'_'.$revision;
-
-$green = \Osmium\State\get_state('green_fits', array());
-if(!isset($green[$loadoutid]) || $green[$loadoutid] !== true) {
+if(!\Osmium\AjaxCommon\get_green_fit($fit, $cachename, $loadoutid, $revision)) {
 	\Osmium\Chrome\return_json(array());
 }
-
-$fit = \Osmium\State\get_cache($cachename, null);
-if($fit === null) {
-	$fit = \Osmium\Fit\get_fit($_GET['loadoutid'], $revision);
-}
-
-if($fit === false) {
-	/* Invalid revision queried? */
-	\Osmium\Chrome\return_json(array());
-}
-
-\Osmium\Fit\use_preset($fit, $_GET['pid']);
-\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
-\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 
 $types = implode('|', \Osmium\Fit\get_stateful_slottypes());
 foreach($_GET as $k => $v) {

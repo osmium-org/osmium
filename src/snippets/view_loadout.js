@@ -149,6 +149,20 @@ osmium_drones_add_links = function() {
 	$("div#inspace > ul > li[data-typeid]").append(" <span class='links'><a href='javascript:void(0);' title='Return 5 drones to bay' class='movefivedrones'>⇇</a> <a href='javascript:void(0);' title='Return one drone to bay' class='moveonedrone'>←</a></span>");
 };
 
+osmium_showinfo = function(opts) {
+	var lb = $("div#vloadoutbox");
+	opts.loadoutid = lb.data('loadoutid');
+	opts.revision = lb.data('revision');
+	opts.pid = lb.data('presetid');
+	opts.cpid = lb.data('cpid');
+	opts.dpid = lb.data('dpid');
+
+	$.getJSON('../src/json/show_info.php', opts, function(json) {
+		osmium_modal(json['modal']);
+		osmium_tabify($('ul#showinfotabs'), 0);
+	});
+};
+
 $(function() {
 	$('ul#vpresets > li > a').click(function() {
 		$('ul#vpresets > li > a.active').removeClass('active');
@@ -274,4 +288,35 @@ $(function() {
 	});
 
 	osmium_drones_add_links();
+
+	$("div.slots > ul > li[data-typeid] > img").click(function() {
+		var li = $(this).parent();
+		var opts = {
+			type: 'module',
+			slottype: li.data('slottype'),
+			index: li.data('index')
+		};
+		osmium_showinfo(opts);
+	});
+
+	$("div.slots > ul > li[data-typeid] > span.charge > img").click(function() {
+		var li = $(this).parent().parent();
+		var opts = {
+			type: 'charge',
+			slottype: li.data('slottype'),
+			index: li.data('index')
+		};
+		osmium_showinfo(opts);
+	});
+
+	$("div#vloadoutbox > header > img#fittypepic").click(function() {
+		var opts = { type: 'ship' };
+		osmium_showinfo(opts);
+	});
+
+	$("div#vdronebay li[data-typeid] > img").click(function() {
+		var li = $(this).parent();
+		var opts = { type: 'drone', typeid: li.data('typeid') };
+		osmium_showinfo(opts);
+	});
 });

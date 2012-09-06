@@ -18,6 +18,43 @@
 
 namespace Osmium\AjaxCommon;
 
+function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
+	$loadoutid = isset($_GET['loadoutid']) ? intval($_GET['loadoutid']) : 0;
+	$revision = isset($_GET['revision']) ? intval($_GET['revision']) : 0;
+	$cachename = session_id().'_view_fit_'.$loadoutid.'_'.$revision;
+
+	$green = \Osmium\State\get_state('green_fits', array());
+	if(!is_fit_green($loadoutid)) {
+		return false;
+	}
+
+	$fit = \Osmium\State\get_cache($cachename, null);
+	if($fit === null) {
+		$fit = \Osmium\Fit\get_fit($_GET['loadoutid'], $revision);
+	}
+
+	if($fit === false) {
+		/* Invalid revision queried? */
+		return false;
+	}
+
+	\Osmium\Fit\use_preset($fit, $_GET['pid']);
+	\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
+	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
+
+	return true;
+}
+
+function is_fit_green($loadoutid) {
+	$green = \Osmium\State\get_state('green_fits', array());
+	return isset($green[$loadoutid]) && $green[$loadoutid] === true; 
+}
+
+function set_fit_green($loadoutid) {
+	$green = \Osmium\State\get_state('green_fits', array());
+	$green[$loadoutid] = true;
+	\Osmium\State\put_state('green_fits', $green);
+}
 
 function get_module_shortlist($shortlist = null) {
 	$shortlist = \Osmium\State\get_state_trypersist('shortlist_modules', array());

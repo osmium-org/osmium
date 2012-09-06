@@ -23,6 +23,7 @@ const COMMENTS_PER_PAGE = 10;
 const MAX_PRESET_LENGTH = 40;
 
 require __DIR__.'/../inc/root.php';
+require __DIR__.'/../inc/ajax_common.php';
 
 $loadoutid = intval($_GET['loadoutid']);
 
@@ -168,9 +169,7 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 	}
 }
 
-$green_fits = \Osmium\State\get_state('green_fits', array());
-$green_fits[$fit['metadata']['loadoutid']] = true;
-\Osmium\State\put_state('green_fits', $green_fits);
+\Osmium\AjaxCommon\set_fit_green($fit['metadata']['loadoutid']);
 
 $defaultpid = $fit['modulepresetid'];
 $defaultcpid = $fit['chargepresetid'];
@@ -692,6 +691,8 @@ echo "</div>\n";
 echo "</div>\n";
 
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
+\Osmium\Chrome\print_js_snippet('modal');
+\Osmium\Chrome\print_js_snippet('tabs');
 \Osmium\Chrome\print_js_snippet('view_loadout');
 echo "<script>\nosmium_staticver = ".\Osmium\STATICVER.";\n</script>\n";
 \Osmium\Chrome\print_footer();

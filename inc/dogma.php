@@ -339,68 +339,10 @@ function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
 }
 
 /** @internal */
-function get_final_attribute_value(&$fit, $attribute, $failonerror = true) {
+function get_final_attribute_value(&$fit, $attribute, $failonerror = true, &$src = null) {
 	$name = $attribute['name'];
-	$stype = $attribute['source'][0];
-	$modifiers = array();
-
-	if($stype == 'char') {
-		$src = $fit['dogma']['char'];
-	} else if($stype === 'ship') {
-		$src = $fit['dogma']['ship'];
-	} else if($stype === 'self') {
-		$src = $fit['dogma']['self'];
-	} else if($stype === 'module') {
-		list(, $type, $index) = $attribute['source'];
-		$src = $fit['dogma']['modules'][$type][$index];
-	} else if($stype === 'charge') {
-		list(, $type, $index) = $attribute['source'];
-		$src = $fit['dogma']['charges'][$type][$index];
-	} else if($stype == 'drone') {
-		list(, $typeid) = $attribute['source'];
-		$src = $fit['dogma']['drones'][$typeid];
-	} else if($stype == 'skill') {
-		list(, $typeid) = $attribute['source'];
-		$src = $fit['dogma']['skills'][$typeid];
-	} else {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_final_attribute_value(): unknown source type ("'.$stype.'")', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
-
-	for($i = 1; $i <= 6; ++$i) {
-		if(!isset($src['requiredSkill'.$i])) continue;
-		$requiresskillid = $src['requiredSkill'.$i];
-
-		if(isset($fit['dogma']['ship']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
-			$modifiers = array_merge_recursive($modifiers,
-			                                   $fit['dogma']['ship']['__modifiers']
-			                                   ['__requires_skill'][$requiresskillid][$name]);
-		}
-		if(isset($fit['dogma']['char']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
-			$modifiers = array_merge_recursive($modifiers,
-			                                   $fit['dogma']['char']['__modifiers']
-			                                   ['__requires_skill'][$requiresskillid][$name]);
-		}
-	}
-
-	if(isset($src['typeid']) && isset($fit['cache'][$src['typeid']]['groupid'])) {
-		$groupid = $fit['cache'][$src['typeid']]['groupid'];
-		if(isset($fit['dogma']['ship']['__modifiers']['__group'][$groupid][$name])) {
-			$modifiers = array_merge_recursive($modifiers,
-			                                   $fit['dogma']['ship']['__modifiers']
-			                                   ['__group'][$groupid][$name]);
-		}
-		if(isset($fit['dogma']['char']['__modifiers']['__group'][$groupid][$name])) {
-			$modifiers = array_merge_recursive($modifiers,
-			                                   $fit['dogma']['char']['__modifiers']
-			                                   ['__group'][$groupid][$name]);
-		}
-	}
-
-	if(isset($src['__modifiers'][$name])) {
-		$modifiers = array_merge_recursive($modifiers, $src['__modifiers'][$name]);
-	}
+    $src = get_source($fit, $attribute['source']);
+	$modifiers = get_modifiers($fit, $name, $src);
 
 	\Osmium\Fit\get_attribute_in_cache($name, $fit['cache']);
 
@@ -447,31 +389,104 @@ function is_modifier_penalizable($name, $attr) {
 	return false;
 }
 
+function get_source(&$fit, $source) {
+	$stype = $source[0];
+
+	if($stype == 'char') {
+		$src = $fit['dogma']['char'];
+	} else if($stype === 'ship') {
+		$src = $fit['dogma']['ship'];
+	} else if($stype === 'self') {
+		$src = $fit['dogma']['self'];
+	} else if($stype === 'module') {
+		list(, $type, $index) = $source;
+		$src = $fit['dogma']['modules'][$type][$index];
+	} else if($stype === 'charge') {
+		list(, $type, $index) = $source;
+		$src = $fit['dogma']['charges'][$type][$index];
+	} else if($stype == 'drone') {
+		list(, $typeid) = $source;
+		$src = $fit['dogma']['drones'][$typeid];
+	} else if($stype == 'skill') {
+		list(, $typeid) = $source;
+		$src = $fit['dogma']['skills'][$typeid];
+	} else {
+		// @codeCoverageIgnoreStart
+		trigger_error(__FUNCTION__.'(): unknown source type ("'.$stype.'")', E_USER_ERROR);
+		return null;
+		// @codeCoverageIgnoreEnd
+	}
+
+	return $src;
+}
+
+function get_modifiers(&$fit, $name, $src) {
+	$modifiers = array();
+
+	for($i = 1; $i <= 6; ++$i) {
+		if(!isset($src['requiredSkill'.$i])) continue;
+		$requiresskillid = $src['requiredSkill'.$i];
+
+		if(isset($fit['dogma']['ship']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
+			$modifiers = array_merge_recursive($modifiers,
+			                                   $fit['dogma']['ship']['__modifiers']
+			                                   ['__requires_skill'][$requiresskillid][$name]);
+		}
+		if(isset($fit['dogma']['char']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
+			$modifiers = array_merge_recursive($modifiers,
+			                                   $fit['dogma']['char']['__modifiers']
+			                                   ['__requires_skill'][$requiresskillid][$name]);
+		}
+	}
+
+	if(isset($src['typeid']) && isset($fit['cache'][$src['typeid']]['groupid'])) {
+		$groupid = $fit['cache'][$src['typeid']]['groupid'];
+		if(isset($fit['dogma']['ship']['__modifiers']['__group'][$groupid][$name])) {
+			$modifiers = array_merge_recursive($modifiers,
+			                                   $fit['dogma']['ship']['__modifiers']
+			                                   ['__group'][$groupid][$name]);
+		}
+		if(isset($fit['dogma']['char']['__modifiers']['__group'][$groupid][$name])) {
+			$modifiers = array_merge_recursive($modifiers,
+			                                   $fit['dogma']['char']['__modifiers']
+			                                   ['__group'][$groupid][$name]);
+		}
+	}
+
+	if(isset($src['__modifiers'][$name])) {
+		$modifiers = array_merge_recursive($modifiers, $src['__modifiers'][$name]);
+	}
+
+	return $modifiers;
+}
+
+function apply_preassignment(&$v, $m)  { $v = $m; }
+function apply_premul(&$v, $m)         { $v *= $m; }
+function apply_prediv(&$v, $m)         { $v /= $m; }
+function apply_modadd(&$v, $m)         { $v += $m; }
+function apply_modsub(&$v, $m)         { $v -= $m; }
+function apply_postmul(&$v, $m)        { $v *= $m; }
+function apply_postdiv(&$v, $m)        { $v /= $m; }
+function apply_postpercent(&$v, $m)    { $v *= (1.00 + 0.01 * $m); }
+function apply_postassignment(&$v, $m) { $v = $m; }
+
 function apply_modifiers(&$fit, $modifiers, $base_value, $stackable, $highisgood) {
 	/* Evaluation order generously "stolen" from:
 	 * https://github.com/DarkFenX/Eos/blob/master/fit/attributeCalculator/map.py#L42 */
-	static $actions = null;
-	/* Ugly hack due to a PHP parser limitation… */
-	if($actions === null) $actions = array(
-		'preassignment'  => function(&$v, $m) { $v = $m; },
-		'premul'         => function(&$v, $m) { $v *= $m; },
-		'prediv'         => function(&$v, $m) { $v /= $m; },
-		'modadd'         => function(&$v, $m) { $v += $m; },
-		'modsub'         => function(&$v, $m) { $v -= $m; },
-		'postmul'        => function(&$v, $m) { $v *= $m; },
-		'postdiv'        => function(&$v, $m) { $v /= $m; },
-		'postpercent'    => function(&$v, $m) { $v *= (1.00 + 0.01 * $m); },
-		'postassignment' => function(&$v, $m) { $v = $m; },
-		);
-	
+	static $evalorder = array('preassignment', 'premul', 'prediv',
+	                          'modadd', 'modsub',
+	                          'postmul', 'postdiv', 'postpercent', 'postassignment');
+
 	/* TODO: optimize stuff if we have a postassignment (skip everything before) */
 
-	foreach($actions as $name => $func) {
+	foreach($evalorder as $name) {
 		if(!isset($modifiers[$name])) continue;
 
 		$penalize = array();
 
 		foreach($modifiers[$name] as $type => $a) {
+			$func = __NAMESPACE__.'\apply_'.$name;
+
 			foreach($a as $attr) {
 				if($stackable || !is_modifier_penalizable($name, $attr)) {
 					$func($base_value, get_final_attribute_value($fit, $attr));

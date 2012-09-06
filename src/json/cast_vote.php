@@ -19,6 +19,7 @@
 namespace Osmium\Json\CastVote;
 
 require __DIR__.'/../../inc/root.php';
+require __DIR__.'/../../inc/ajax_common.php';
 
 $result = array();
 
@@ -32,8 +33,7 @@ $loadoutid = intval($_GET['loadoutid']);
 $targettype = $_GET['targettype'];
 $action = $_GET['action'];
 
-$green = \Osmium\State\get_state('green_fits', array());
-if(!isset($green[$loadoutid]) || $green[$loadoutid] !== true) {
+if(!\Osmium\AjaxCommon\is_fit_green($loadoutid)) {
 	$result['error'] = 'Refresh page and try again';
 	$result['success'] = false;
 	\Osmium\Chrome\return_json($result);

@@ -38,9 +38,13 @@ CREATE TABLE averagemarketprices (
 CREATE TABLE dgmattribs (
     attributeid smallint NOT NULL,
     attributename character varying(100) NOT NULL,
+    displayname character varying(100),
     defaultvalue real NOT NULL,
     stackable boolean NOT NULL,
-    highisgood boolean NOT NULL
+    highisgood boolean NOT NULL,
+    unitid integer,
+    categoryid integer,
+    published boolean NOT NULL
 );
 
 
@@ -118,6 +122,16 @@ CREATE TABLE dgmtypeeffects (
     typeid integer NOT NULL,
     effectid smallint NOT NULL,
     isdefault boolean NOT NULL
+);
+
+
+--
+-- Name: dgmunits; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE dgmunits (
+    unitid integer NOT NULL,
+    displayname character varying(100) NOT NULL
 );
 
 
@@ -263,6 +277,14 @@ ALTER TABLE ONLY dgmtypeeffects
 
 
 --
+-- Name: dgmunits_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY dgmunits
+    ADD CONSTRAINT dgmunits_pkey PRIMARY KEY (unitid);
+
+
+--
 -- Name: invcategories_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -315,6 +337,13 @@ ALTER TABLE ONLY invtypes
 --
 
 CREATE INDEX dgmattribs_attributename_idx ON dgmattribs USING btree (attributename);
+
+
+--
+-- Name: dgmattribs_unitid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE INDEX dgmattribs_unitid_idx ON dgmattribs USING btree (unitid);
 
 
 --
@@ -477,6 +506,14 @@ CREATE INDEX invtypes_typename_idx ON invtypes USING btree (typename);
 
 ALTER TABLE ONLY averagemarketprices
     ADD CONSTRAINT averagemarketprices_typeid_fkey FOREIGN KEY (typeid) REFERENCES invtypes(typeid);
+
+
+--
+-- Name: dgmattribs_unitid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmattribs
+    ADD CONSTRAINT dgmattribs_unitid_fkey FOREIGN KEY (unitid) REFERENCES dgmunits(unitid);
 
 
 --
