@@ -49,8 +49,7 @@ function get_attributes($typeid, $getval_callback) {
 	WHERE typeid = $1 AND published = true AND dgmattribs.displayname <> ''
 	ORDER BY categoryid ASC, dgmattribs.attributeid ASC", array($typeid));
 	while($a = \Osmium\Db\fetch_assoc($aq)) {
-		$attributes[] = array(
-			$a['attributename'],
+		$attributes[$a['attributename']] = array(
 			ucfirst($a['displayname']),
 			\Osmium\Chrome\format_number_with_unit(
 				$getval_callback($a['attributename']),
@@ -107,11 +106,16 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 }
 
 $affectors = array();
-foreach($attributes as $a) {
-	list($aname, $dname, , ) = $a;
+$dogmasource = \Osmium\Dogma\get_source($fit, $source);
 
-	$dogmasource = \Osmium\Dogma\get_source($fit, $source);
+foreach($dogmasource as $aname => $val) {
+	if(isset($attributes[$aname])) {
+		$dname = $attributes[$aname][0];
+	} else $dname = ucfirst(preg_replace('%(([A-Z]+)|([0-9]))%', ' $1', $aname));
+
 	$modifiers = \Osmium\Dogma\get_modifiers($fit, $aname, $dogmasource);
+	if($modifiers === array()) continue;
+
 	$mstackable = $fit['cache']['__attributes'][$aname]['stackable'];
 
 	foreach($modifiers as $mtype => $m) {
@@ -158,7 +162,7 @@ $fresult = array(
 $fresult['attributes'] .= "<table class='d'>\n<tbody>\n";
 $previouscatid = null;
 foreach($attributes as $a) {
-	list(, $dname, $value, $catid) = $a;
+	list($dname, $value, $catid) = $a;
 	if($previouscatid !== $catid) {
 		if($previouscatid !== null) {
 			$class = " class='sep'";
