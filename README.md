@@ -190,7 +190,7 @@ updated.)*
 Dependencies
 ============
 
-* PHP >= 5.4, **< 5.4.5**, with:
+* PHP >= 5.4, with:
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)
@@ -198,7 +198,7 @@ Dependencies
   * Zlib support
   * (Optional) iconv extension (`iconv.so`)
   * (Optional) intl extension (`intl.so`)
-  * (Optional) APC extension (`apc.so`)
+  * (Optional) APC extension (`apc.so`, **≠ 3.1.12, see https://bugs.php.net/bug.php?id=62863**)
 
 * PostgreSQL >= 9.0
 
