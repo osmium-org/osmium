@@ -430,6 +430,15 @@ section#siaffectedby {
 	}
 }
 
+div#showinfoicon {
+	background-image: url('./icons/showinfo.png');
+	background-size: 100%;
+	width: 16px;
+	height: 16px;
+	display: none;
+	position: absolute;
+}
+
 .overflow6 { @include error-background-opacity(0.6); }
 .overflow5 { @include error-background-opacity(0.5); }
 .overflow4 { @include error-background-opacity(0.4); }

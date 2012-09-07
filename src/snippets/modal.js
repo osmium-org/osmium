@@ -22,11 +22,11 @@ osmium_modal = function(inside) {
 	var modal = $('body > div#modal');
 	var link = modal.find('a#closemodal');
 	modal.append(inside)
-		.css('margin-left', -modal.width() / 2)
-		.css('margin-top', -modal.height() / 2);
+		.css('margin-left', (-modal.width() / 2) + "px")
+		.css('margin-top', (-modal.height() / 2) + "px");
 	link
-		.css('margin-left', modal.width() / 2 - link.width() / 2)
-		.css('margin-top', -modal.height() / 2 - link.height() / 2);
+		.css('margin-left', (modal.width() / 2 - link.width() / 2) + "px")
+		.css('margin-top', (-modal.height() / 2 - link.height() / 2) + "px");
 
 	$('body > div#modal > a#closemodal').click(function() {
 		$('body > div#modal, body > div#modalbg').remove();

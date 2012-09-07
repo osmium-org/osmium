@@ -119,7 +119,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 			}
 		}
 
-		osmium_drones_add_links();
+		osmium_drones_load();
 
 		total_bandwidth = json['dronebandwidth'];
 		$("span#dronebandwidth").text(used_bandwidth + " / " + total_bandwidth);
@@ -144,12 +144,19 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 	});
 };
 
-osmium_drones_add_links = function() {
+osmium_drones_load = function() {
 	$("div#inbay > ul > li[data-typeid]").append(" <span class='links'><a href='javascript:void(0);' title='Launch 5 drones' class='movefivedrones'>⇉</a> <a href='javascript:void(0);' title='Launch one drone' class='moveonedrone'>→</a></span>");
 	$("div#inspace > ul > li[data-typeid]").append(" <span class='links'><a href='javascript:void(0);' title='Return 5 drones to bay' class='movefivedrones'>⇇</a> <a href='javascript:void(0);' title='Return one drone to bay' class='moveonedrone'>←</a></span>");
+
+	$("div#vdronebay li[data-typeid] > img").click(function() {
+		var li = $(this).parent();
+		var opts = { type: 'drone', typeid: li.data('typeid') };
+		osmium_showinfo_from_vl(opts);
+	});
+	osmium_addicon($("div#vdronebay li[data-typeid] > img"));
 };
 
-osmium_showinfo = function(opts) {
+osmium_showinfo_from_vl = function(opts) {
 	var lb = $("div#vloadoutbox");
 	opts.loadoutid = lb.data('loadoutid');
 	opts.revision = lb.data('revision');
@@ -157,10 +164,7 @@ osmium_showinfo = function(opts) {
 	opts.cpid = lb.data('cpid');
 	opts.dpid = lb.data('dpid');
 
-	$.getJSON('../src/json/show_info.php', opts, function(json) {
-		osmium_modal(json['modal']);
-		osmium_tabify($('ul#showinfotabs'), 0);
-	});
+	osmium_showinfo(opts);
 };
 
 $(function() {
@@ -287,7 +291,7 @@ $(function() {
 		});
 	});
 
-	osmium_drones_add_links();
+	osmium_drones_load();
 
 	$("div.slots > ul > li[data-typeid] > img").click(function() {
 		var li = $(this).parent();
@@ -296,7 +300,7 @@ $(function() {
 			slottype: li.data('slottype'),
 			index: li.data('index')
 		};
-		osmium_showinfo(opts);
+		osmium_showinfo_from_vl(opts);
 	});
 
 	$("div.slots > ul > li[data-typeid] > span.charge > img").click(function() {
@@ -306,17 +310,13 @@ $(function() {
 			slottype: li.data('slottype'),
 			index: li.data('index')
 		};
-		osmium_showinfo(opts);
+		osmium_showinfo_from_vl(opts);
 	});
 
 	$("div#vloadoutbox > header > img#fittypepic").click(function() {
 		var opts = { type: 'ship' };
-		osmium_showinfo(opts);
+		osmium_showinfo_from_vl(opts);
 	});
 
-	$("div#vdronebay li[data-typeid] > img").click(function() {
-		var li = $(this).parent();
-		var opts = { type: 'drone', typeid: li.data('typeid') };
-		osmium_showinfo(opts);
-	});
+	osmium_addicon($("div.slots > ul > li[data-typeid] > img, div.slots > ul > li[data-typeid] > span.charge > img, div#vloadoutbox > header > img#fittypepic"));
 });

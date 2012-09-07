@@ -690,9 +690,10 @@ echo "</div>\n";
 
 echo "</div>\n";
 
+\Osmium\Chrome\print_js_snippet('tabs');
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_js_snippet('modal');
-\Osmium\Chrome\print_js_snippet('tabs');
+\Osmium\Chrome\print_js_snippet('show_info');
 \Osmium\Chrome\print_js_snippet('view_loadout');
 echo "<script>\nosmium_staticver = ".\Osmium\STATICVER.";\n</script>\n";
 \Osmium\Chrome\print_footer();
