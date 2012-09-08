@@ -342,7 +342,7 @@ function get_drone_attribute(&$fit, $typeid, $name, $failonerror = true) {
 function get_final_attribute_value(&$fit, $attribute, $failonerror = true, &$src = null) {
 	$name = $attribute['name'];
     $src = get_source($fit, $attribute['source']);
-	$modifiers = get_modifiers($fit, $name, $src);
+    $modifiers = get_modifiers($fit, $name, $src);
 
 	\Osmium\Fit\get_attribute_in_cache($name, $fit['cache']);
 
@@ -417,17 +417,30 @@ function get_source(&$fit, $source) {
 		// @codeCoverageIgnoreEnd
 	}
 
+	$src['__type'] = $stype;
 	return $src;
 }
 
 function get_modifiers(&$fit, $name, $src) {
+	static $shiptypes = array('ship', 'module', 'charge');
+
 	$modifiers = array();
+	$type = $src['__type'];
+
+	if($type === 'self') {
+		// @codeCoverageIgnoreStart
+		trigger_error(__FUNCTION__.'(): self type not correctly implemented', E_USER_WARNING);
+		// @codeCoverageIgnoreEnd
+	}
+
+	$includeshipmodifiers = in_array($type, $shiptypes);
 
 	for($i = 1; $i <= 6; ++$i) {
 		if(!isset($src['requiredSkill'.$i])) continue;
 		$requiresskillid = $src['requiredSkill'.$i];
 
-		if(isset($fit['dogma']['ship']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
+		if($includeshipmodifiers &&
+		   isset($fit['dogma']['ship']['__modifiers']['__requires_skill'][$requiresskillid][$name])) {
 			$modifiers = array_merge_recursive($modifiers,
 			                                   $fit['dogma']['ship']['__modifiers']
 			                                   ['__requires_skill'][$requiresskillid][$name]);
@@ -441,7 +454,8 @@ function get_modifiers(&$fit, $name, $src) {
 
 	if(isset($src['typeid']) && isset($fit['cache'][$src['typeid']]['groupid'])) {
 		$groupid = $fit['cache'][$src['typeid']]['groupid'];
-		if(isset($fit['dogma']['ship']['__modifiers']['__group'][$groupid][$name])) {
+		if($includeshipmodifiers &&
+		   isset($fit['dogma']['ship']['__modifiers']['__group'][$groupid][$name])) {
 			$modifiers = array_merge_recursive($modifiers,
 			                                   $fit['dogma']['ship']['__modifiers']
 			                                   ['__group'][$groupid][$name]);
