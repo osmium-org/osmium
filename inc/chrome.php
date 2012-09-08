@@ -587,6 +587,8 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		if($number == 1) return 'Male';
 		if($number == 2) return 'Unisex';
 		if($number == 3) return 'Female';
+	} else if($unitid == null) {
+		$unitdisplayname = '';
 	}
 
 	$n = number_format($number, 3);

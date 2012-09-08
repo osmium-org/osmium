@@ -33,19 +33,13 @@ if(!isset($_GET['type'])) {
 	\Osmium\Chrome\return_json(array());
 }
 
-$attributesquery = "SELECT attributename, dgmattribs.displayname, dgmattribs.unitid, dgmunits.displayname AS udisplayname, categoryid FROM eve.dgmtypeattribs
-JOIN eve.dgmattribs ON dgmtypeattribs.attributeid = dgmattribs.attributeid
-JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
-WHERE typeid = $1 AND published = true AND dgmattribs.displayname <> ''
-ORDER BY categoryid ASC, dgmattribs.attributeid ASC";
-
 function get_attributes($typeid, $getval_callback) {
 	$attributes = array();
 
 	$aq = \Osmium\Db\query_params("SELECT attributename, dgmattribs.displayname,
 	dgmattribs.unitid, dgmunits.displayname AS udisplayname, categoryid FROM eve.dgmtypeattribs
 	JOIN eve.dgmattribs ON dgmtypeattribs.attributeid = dgmattribs.attributeid
-	JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
+	LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
 	WHERE typeid = $1 AND published = true AND dgmattribs.displayname <> ''
 	ORDER BY categoryid ASC, dgmattribs.attributeid ASC", array($typeid));
 	while($a = \Osmium\Db\fetch_assoc($aq)) {
