@@ -563,4 +563,27 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
 		$this->assertEquals(0, $tank['hull_repair'][1]);
 	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testShipSpecificModifiers() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 24696); /* Harbinger */
+		\Osmium\Fit\add_module($fit, 0, 2559); /* ECM - Phase Inverter II */
+		\Osmium\Fit\add_drone($fit, 23705, 0, 5); /* Vespa EC-600 */
+
+		/* Pyfa 1.1.9 */
+
+		/* ECM module should be affected by the Signal Dispersion skill */
+		$this->assertEquals(4.5,
+		                    \Osmium\Dogma\get_module_attribute($fit, 'medium', 0, 'scanLadarStrengthBonus'),
+		                    '', 0.05);
+
+		/* ECM drone should NOT be affected by the Signal Dispersion skill */
+		$this->assertEquals(1.5,
+		                    \Osmium\Dogma\get_drone_attribute($fit, 23705, 'scanLadarStrengthBonus'),
+		                    '', 0.05);
+	}
 }
