@@ -47,6 +47,9 @@ function charges_select() {
 	\Osmium\Chrome\print_js_code("osmium_charges_load("
 	                             .json_encode(\Osmium\AjaxCommon\get_loadable_charges($fit))
 	                             .");");
+	\Osmium\Chrome\print_js_snippet('tabs');
+	\Osmium\Chrome\print_js_snippet('modal');
+	\Osmium\Chrome\print_js_snippet('show_info');
 	\Osmium\Chrome\print_js_snippet('new_fitting-step3');
 }
 

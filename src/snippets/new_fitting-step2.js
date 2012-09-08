@@ -157,6 +157,8 @@ osmium_loadout_load = function(json) {
 	$('div#computed_attributes').html(json['attributes']);
 	osmium_fattribs_load();
 	osmium_presets_load(json);
+
+	osmium_addicon($("div.loadout_slot_cat > ul > li.module[data-typeid] > img"));
 };
 
 osmium_loadout_commit = function() {
@@ -427,5 +429,15 @@ $(function() {
 			action: 'switch',
 			presetid: $(this).val()
 		});
+	});
+
+	$("div.loadout_slot_cat > ul").on('click', "li.module[data-typeid] > img", function() {
+		var li = $(this).parent();
+		var opts = {
+			type: 'module',
+			slottype: li.data('slottype'),
+			index: li.data('index')
+		};
+		osmium_showinfo(opts, '.');
 	});
 });

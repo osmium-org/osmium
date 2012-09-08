@@ -81,6 +81,8 @@ osmium_load_drones = function(json) {
 
 	$('div#computed_attributes').html(json['computed_attributes']);
 	osmium_fattribs_load();
+
+	osmium_addicon($("div#dronebay li.drone[data-typeid] > img"));
 };
 
 osmium_add_drone = function(typeid, typename, count, selector, toggleone, togglefive) {
@@ -316,7 +318,12 @@ $(function() {
 		osmium_drones_commit();
 		obj.stopPropagation();
 		obj.preventDefault();
-    });
+    }).on('click', "li.drone[data-typeid] > img", function() {
+		osmium_showinfo({
+			type: 'drone',
+			typeid: $(this).parent().data('typeid')
+		}, '.');
+	});
 
 	$("button#create_drone_preset").click(function() {
 		var new_name = prompt('Enter the name of the new drone preset (must not conflict with another drone preset name):', 'Drone preset #' + ($("select#dronepreset > option").length + 1));

@@ -164,7 +164,7 @@ osmium_showinfo_from_vl = function(opts) {
 	opts.cpid = lb.data('cpid');
 	opts.dpid = lb.data('dpid');
 
-	osmium_showinfo(opts);
+	osmium_showinfo(opts, '..');
 };
 
 $(function() {

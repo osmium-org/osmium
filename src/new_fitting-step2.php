@@ -105,6 +105,8 @@ function modules_select() {
 	print_modulelist();
 	\Osmium\Chrome\print_js_snippet('togglable_market_sections');
 	\Osmium\Chrome\print_js_snippet('tabs');
+	\Osmium\Chrome\print_js_snippet('modal');
+	\Osmium\Chrome\print_js_snippet('show_info');
 	\Osmium\Chrome\print_js_snippet('new_fitting-step2');
 
 	$fit = \Osmium\State\get_new_fit();

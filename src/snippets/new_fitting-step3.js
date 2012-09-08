@@ -79,12 +79,14 @@ osmium_charges_load = function(json) {
 					  + json['charges'][i]['modules'][j]['typeid'] + '_64.png');
 			cimg.attr('alt', json['charges'][i]['modules'][j]['typename']);
 			cimg.attr('title', json['charges'][i]['modules'][j]['typename']);
+			cimg.addClass('moduleicon');
 			cli.append(cimg);
 
 			cimg = $(document.createElement('img'));
 			chargeid = json['charges'][i]['modules'][j]['chargeid'];
 			if(chargeid > 0) {
 				cimg.attr('src', 'http://image.eveonline.com/Type/' + chargeid + '_64.png');
+				cimg.addClass('chargeicon');
 			} else {
 				cimg.attr('src', './static-' + osmium_staticver + '/icons/no_charge.png');
 			}
@@ -119,6 +121,8 @@ osmium_charges_load = function(json) {
 		cli.append(cgroup);
 		$("ul#chargegroups").append(cli);
 	}
+
+	osmium_addicon($("ul#chargegroups li > img.moduleicon, ul#chargegroups li > img.chargeicon"));
 
 	if(json['chargepresets'].length === 1) {
 		$("button#delete_charge_preset").prop('disabled', 'disabled');
@@ -245,7 +249,7 @@ $(function() {
 		});
 	});
 
-	$(document).on("change", "ul#chargegroups > li > ul.chargegroup > li > select", function() {
+	$("ul#chargegroups").on("change", "li > ul.chargegroup > li > select", function() {
 		var li = $(this).parent();
 		var chargeid = $(this).val();
 		if(li.hasClass('ui-selected')) {
@@ -255,6 +259,22 @@ $(function() {
 		}
 
 		osmium_charges_commit();
+	}).on("click", "li > img.moduleicon", function() {
+		var select = $(this).parent().children('select');
+		var opts = {
+			type: 'module',
+			slottype: select.data('type'),
+			index: select.data('index')
+		};
+		osmium_showinfo(opts, '.');
+	}).on("click", "li > img.chargeicon", function() {
+		var select = $(this).parent().children('select');
+		var opts = {
+			type: 'charge',
+			slottype: select.data('type'),
+			index: select.data('index')
+		};
+		osmium_showinfo(opts, '.');
 	});
 
 	osmium_fattribs_load();
