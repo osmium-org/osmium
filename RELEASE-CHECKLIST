@@ -1,0 +1,42 @@
+Osmium release checklist
+========================
+
+SCM organization
+----------------
+
+* 3 main branches: 
+  * production (stable channel);
+  * master (going in the next minor release);
+  * staging (going in the next major release).
+
+* Other branches:
+  * experimental-* for code that may never be merged at all;
+  * staging-vX for specific staging branches
+
+* production branch is always on a tagged commit (vA.B.C-foo).
+
+The list
+--------
+
+* Move used patches from pgsql/patches/current/ to pgsql/patches/<current_version>/
+
+* Bump STATICVER if needed in inc/root.php
+
+* Put relevant info in UPDATING
+
+* Commit
+  git commit -m "Version X.Y.Z"
+
+* Tag this commit
+  git tag -s -m "Version X.Y.Z" vX.Y.Z
+
+* Move production branch to newest version
+  git checkout production
+  git merge master
+
+* Push production ref and new tag:
+   git push origin production:production
+   git push origin master:master
+   git push --tags
+
+* Update mdcms changelog, topic on #osmium, forum post
