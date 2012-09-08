@@ -20,8 +20,6 @@ namespace Osmium\Dogma;
 
 /* KEEP THIS NAMESPACE PRESET-AGNOSTIC. */
 
-const USEFUL_SKILLGROUPS = '(273, 272, 271, 255, 269, 256, 275, 257, 989)';
-
 /* ----------------------------------------------------- */
 
 function get_attributename($attributeid) {
@@ -105,7 +103,7 @@ function eval_skill_preexpressions(&$fit) {
 
 
 	$typeids = array();
-	$q = \Osmium\Db\query('SELECT invskills.typeid FROM osmium.invskills WHERE groupid IN '.USEFUL_SKILLGROUPS);
+	$q = \Osmium\Db\query('SELECT invskills.typeid FROM osmium.invskills');
 	while($row = \Osmium\Db\fetch_row($q)) {
 		$typeids[] = $row[0];
 	}
