@@ -179,7 +179,7 @@ JOIN osmium.fittings ON fittings.fittinghash = loadouthistory.fittinghash
 JOIN osmium.accounts ON accounts.accountid = loadouts.accountid 
 JOIN eve.invtypes ON hullid = invtypes.typeid
 JOIN osmium.loadoutupdownvotes ON loadoutupdownvotes.loadoutid = loadouts.loadoutid
-LEFT JOIN osmium.loadoutstaglist ON loadoutstaglist.loadoutid = loadouts.loadoutid
+LEFT JOIN osmium.loadoutstaglist ON loadoutstaglist.fittinghash = loadouthistory.fittinghash
 WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
 	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {

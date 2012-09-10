@@ -1,3 +1,11 @@
+staging
+=======
+
+The osmium schema has been updated:
+
+* loadoutstaglist now uses fittinghashes instead of just the latest
+  revision of a given loadoutid
+
 v0.5.0, released 2012-09-08
 ===========================
 

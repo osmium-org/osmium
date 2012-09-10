@@ -396,14 +396,17 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	return $offset;
 }
 
+function format_md($markdowntext) {
+	require_once \Osmium\ROOT.'/lib/markdown.php';
+
+    return \Markdown($markdowntext);
+}
+
 function format_sanitize_md($markdowntext) {
 	static $purifier = null;
 
 	require_once 'HTMLPurifier.includes.php';
 	require_once 'HTMLPurifier.auto.php';
-	require_once \Osmium\ROOT.'/lib/markdown.php';
-
-	$html = \Markdown($markdowntext);
 
 	if($purifier === null) {
 		$config = \HTMLPurifier_Config::createDefault();
@@ -419,7 +422,7 @@ function format_sanitize_md($markdowntext) {
 		$purifier = new \HTMLPurifier($config);
 	}
 
-	return $purifier->purify($html);
+	return $purifier->purify(format_md($markdowntext));
 }
 
 function format_sanitize_md_phrasing($markdowntext) {
@@ -427,9 +430,6 @@ function format_sanitize_md_phrasing($markdowntext) {
 
 	require_once 'HTMLPurifier.includes.php';
 	require_once 'HTMLPurifier.auto.php';
-	require_once \Osmium\ROOT.'/lib/markdown.php';
-
-	$html = \Markdown($markdowntext);
 
 	if($purifier === null) {
 		$config = \HTMLPurifier_Config::createDefault();
@@ -446,7 +446,7 @@ function format_sanitize_md_phrasing($markdowntext) {
 		$purifier = new \HTMLPurifier($config);
 	}
 
-	return $purifier->purify($html);
+	return $purifier->purify(format_md($markdowntext));
 }
 
 function print_market_group_with_children($groups, $groupid, $headinglevel, $formatfunc) {

@@ -35,6 +35,9 @@ RewriteRule ^/?atom/recentlyupdated\.xml$ src/atom/recentfits.php?type=recentlyu
 RewriteRule ^/?moderation/$ src/moderation/main.php [L,QSA]
 RewriteRule ^/?moderation/flags$ src/moderation/view_flags.php [L,QSA]
 
+RewriteRule ^/?api/$ src/mdstatic.php?relative=..&title=Osmium+API&f=api.md [L]
+RewriteRule ^/?api/json/query_loadouts\.json$ src/api/json/query_loadouts.php [L,QSA]
+
 RewriteRule ^/?static-([1-9][0-9]*)/(.*)$ static/$2 [L]
 
 RewriteRule !^/?(src|static) - [L,R=404]
