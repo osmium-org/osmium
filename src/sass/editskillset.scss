@@ -13,7 +13,7 @@ table#e_skillset {
 		}
 
 		&> tr > th {
-			background-color: #F4F4F8;
+			background-color: $subsection-bg-color;
 
 			&.groupname {
 				text-align: left;

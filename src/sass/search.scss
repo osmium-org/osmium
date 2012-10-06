@@ -5,7 +5,7 @@ div#search_mini {
 	}
 
 	&> form {
-		border-bottom: 1px dotted #CCC;
+		border-bottom: 1px dotted $subsection-border-color;
 
 		&> h1 {
 			font-size: 1.5em;
@@ -66,7 +66,7 @@ ol.loadout_sr {
 
 	&> li {
 		position: relative;
-		border-bottom: 1px dotted #CCC;
+		border-bottom: 1px dotted $subsection-border-color;
 		padding-bottom: 1.5em;
 		padding-top: 0.5em;
 		padding-left: 9.5em;
@@ -103,13 +103,13 @@ ol.loadout_sr {
 		}
 
 		&> small, &> small > a {
-			color: #093;
+			color: $loadout-search-metadata-text-color;
 		}
 	}
 }
 
 p.pagination {
-	color: #777;
+	color: $pagination-meta-text-color;
 	font-size: 0.8em;
 }
 

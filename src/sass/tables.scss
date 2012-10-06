@@ -3,27 +3,31 @@ table.d {
 	border-collapse: collapse;
 
 	&> thead {
-		border-bottom: 1px solid #888;
+		border-bottom: 1px solid $table-header-border-color;
 	}
 
 	&> tfoot {
-		border-top: 1px solid #888;
+		border-top: 1px solid $table-header-border-color;
 	}
 
 	&> thead, &> tfoot {
-		background-color: #F4F4F8;
+		background-color: $table-header-bg-color;
 	}
 
 	&> tbody {
 		&> tr {
-			border-top: 1px dotted #CCC;
+			border-top: 1px dotted $table-header-border-color;
 
 			&:first-child {
 				border: none;
 			}
 
 			&:nth-child(2n) > td {
-				background-color: rgba(10, 10, 0, 0.04);
+				background-color: $table-row-even-bg-color;
+			}
+
+			&:nth-child(2n+1) > td {
+				background-color: $table-row-odd-bg-color;
 			}
 		}
 	}

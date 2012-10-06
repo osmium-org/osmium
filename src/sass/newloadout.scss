@@ -4,7 +4,7 @@
 	}
 
 	&> ul.subgroups > li:first-child > div.mgroup > h2 {
-		border-top: 1px solid #CCC;
+		border-top: 1px solid $subsection-border-color;
 	}
 
 	&> ul.subgroups > li > div.mgroup {
@@ -70,19 +70,19 @@
 	ul.types > li[data-typeid] {
 		padding-right: 6em;
 		padding: 0.5em 0;
-		border-top: 1px dashed #888;
-		background-color: white;
+		border-top: 1px dashed $module-border-color;
+		background-color: $main-bg-color;
 
 		&:first-child {
 			border-top: none;
 		}
 
 		&:hover {
-			background-color: #F8F8FC;
+			background-color: $module-active-bg-color;
 		}
 
 		&.selected {
-			background-color: #FFFFCC;
+			background-color: $module-selected-bg-color;
 		}
 
 		&> img:first-child, &> div.imgplaceholder:first-child {
@@ -107,12 +107,12 @@
 		margin: 0;
 		font-size: 1em;
 		padding: 0.25em;
-		border-bottom: 1px solid #CCC;
-		background-color: #F4F4F8;
+		border-bottom: 1px solid $subsection-border-color;
+		background-color: $subsection-bg-color;
 		text-align: left;
 
 		&:hover {
-			background-color: #E8E8F0;
+			background-color: $subsection-active-bg-color;
 		}
 	}
 }
@@ -122,8 +122,8 @@ div#loadoutbox {
 
 	@include prop-metadata-width(margin-left, 1em);
 	@include prop-module-width(margin-right, 1.5em);
-	border-left: 1px dotted #CCC;
-	border-right: 1px dotted #CCC;
+	border-left: 1px dotted $loadout-column-border-color;
+	border-right: 1px dotted $loadout-column-border-color;
 	padding-left: 1em;
 
 	@include layout-type(smallandextrasmall) {
@@ -149,7 +149,7 @@ div#dronelistbox {
 	@include column;
 	text-align: center;
 	@include prop-metadata-width(margin-left, 1em);
-	border-left: 1px dotted #CCC;
+	border-left: 1px dotted $loadout-column-border-color;
 	margin-right: 1em;
 
 	@include layout-type(normal) {
@@ -188,7 +188,7 @@ div#dronelistbox {
 div#s2tabs {
 	@include column;
 	@include prop-metadata-width(margin-left, 1em);
-	border-left: 1px dotted #CCC;
+	border-left: 1px dotted $loadout-column-border-color;
 	margin-right: 1em;
 	padding-left: 1em;
 	text-align: center;
@@ -322,8 +322,8 @@ div#metadatabox {
 input[type='submit'] {
 	&.next_step, &.final_step, &.prev_step {
 		font-size: 1em;
-		border-color: darkgreen;
-		background-color: #F0FFF0;
+		border-color: $loadout-next-step-border-color;
+		background-color: $loadout-next-step-bg-color;
 	}
 }
 
@@ -335,47 +335,11 @@ h1#newloadout {
 	margin-bottom: 0;
 }
 
-div#presetsbox {
-	@include column;
-
-	&> ul#presets {
-		list-style-type: none;
-		padding-left: 0;
-	}
-
-	&> ul#presets > li {
-		@include ellipsis;
-
-		line-height: 2em;
-		border-top: 1px dotted #CCC;
-		padding-left: 0.5em;
-
-		&:first-child {
-			border-top: none;
-		}
-
-		&.selected {
-			background-color: #E8FFE8;
-		}
-
-		&> span {
-			float: right;
-			visibility: hidden;
-			font-size: 0.9em;
-			padding-right: 0.25em;
-		}
-
-		&:hover > span {
-			visibility: visible;
-		}
-	}
-}
-
 div#chargegroupsbox {
 	@include column;
 
 	@include prop-metadata-width(margin-left, 1em);
-	border-left: 1px dotted #CCC;
+	border-left: 1px dotted $loadout-column-border-color;
 	padding-left: 1em;
 
 	&> h2 {
@@ -394,7 +358,7 @@ div#chargegroupsbox {
 		margin-bottom: 2em;
 
 		&> li {
-			border-top: 1px dotted #CCC;
+			border-top: 1px dotted $subsection-border-color;
 			padding: 1em 0;
 
 			&:first-child {
@@ -411,11 +375,11 @@ div#chargegroupsbox {
 				position: relative;
 
 				&.ui-selecting {
-					background-color: #FFFFCC;
+					background-color: $chargegroup-selecting-bg-color;
 				}
 
 				&.ui-selected {
-					background-color: #E8FFE8;
+					background-color: $chargegroup-selected-bg-color;
 				}
 
 				&> img {
@@ -454,12 +418,10 @@ div#dronebay {
 
 	@include prop-metadata-width(margin-left, 1em);
 	@include prop-module-width(margin-right, 1.5em);
-	border-left: 1px dotted #CCC;
-	border-right: 1px dotted #CCC;
+	border-left: 1px dotted $loadout-column-border-color;
+	border-right: 1px dotted $loadout-column-border-color;
 	padding-left: 1em;
 	padding-right: 1em;
-	border-left: 1px dotted #CCC;
-	border-right: 1px dotted #CCC;
 
 	@include layout-type(smallandextrasmall) {
 		margin-right: 0;
@@ -479,7 +441,7 @@ div#dronebay {
 	}
 
 	&> div > h4 {
-		border-bottom: 1px solid #CCC;
+		border-bottom: 1px solid $subsection-border-color;
 		margin-bottom: 0.5em;
 		width: $module-width;
 		padding-left: 0.5em;
@@ -526,7 +488,6 @@ div#selectship {
 }
 
 $nfbc-height: 1.5em;
-$nfbc-border-color: #CCC;
 nav#nf_bc > ol {
 	text-align: center;
 
@@ -540,13 +501,13 @@ nav#nf_bc > ol {
 			border: 0;
 			background-color: rgba(255, 255, 255, 0);
 			cursor: pointer;
-			color: $link-color;
+			color: $link-text-color;
 			text-decoration: underline;
 			margin-top: 0.15em;
 		}
 
-		border-top: 1px solid $nfbc-border-color;
-		border-bottom: 1px solid $nfbc-border-color;
+		border-top: 1px solid $loadout-breadcrumbs-border-color;
+		border-bottom: 1px solid $loadout-breadcrumbs-border-color;
 		padding-left: $nfbc-height;
 
 		&.current {
@@ -562,21 +523,21 @@ nav#nf_bc > ol {
 
 			&> input[type='submit'] {
 				text-decoration: none;
-				color: black;
+				color: $main-text-color;
 			}
 		}
 
 		&.beforecur {
-			background-color: #E6E6E9;
+			background-color: $loadout-breadcrumbs-done-bg-color;
 		}
 
 		&:last-child {
 			padding-right: $nfbc-height;
-			border-right: 1px solid $nfbc-border-color;
+			border-right: 1px solid $loadout-breadcrumbs-border-color;
 		}
 
 		&:first-child {
-			border-left: 1px solid $nfbc-border-color;
+			border-left: 1px solid $loadout-breadcrumbs-border-color;
 		}
 	}
 }

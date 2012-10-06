@@ -9,7 +9,7 @@ div#account_settings {
 
 	&> section {
 		margin-top: 2em;
-		border-top: 1px dotted #888;
+		border-top: 1px dotted $section-border-color;
 
 		&:first-child {
 			border-top: 0;

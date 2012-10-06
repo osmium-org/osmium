@@ -3,7 +3,7 @@
 		position: relative;
 		float: right;
 		margin-left: 0.5em;
-		background-color: #F4F4F8;
+		background-color: $subsection-bg-color;
 		height: 3.5em;
 		width: 13em;
 
@@ -29,7 +29,7 @@
 		}
 
 		&> time {
-			color: #888;
+			color: $aside-text-color;
 			font-size: 0.9em;
 		}
 
@@ -49,7 +49,7 @@
 
 div#vloadoutbox {
 	@include prop-metadata-width(margin-left, 1em);
-	border-left: 1px dotted #CCC;
+	border-left: 1px dotted $loadout-column-border-color;
 	padding: 0 1em;
 
 	&> header {
@@ -113,15 +113,15 @@ div#pwfit {
 	text-align: center;
 
 	padding: 1em;
-	border: 2px solid #FFC0C0;
-	background-color: #FFF8F8;
+	border: 2px solid $loadout-input-pw-border-color;
+	background-color: $loadout-input-pw-bg-color;
 }
 
 div#vcomments {
 	margin: 0 2em 2em 0;
 
 	&> div.comment {
-		border-top: 1px solid #888;
+		border-top: 1px solid $loadout-comment-border-color;
 		padding: 0.5em 0;
 		position: relative;
 
@@ -140,7 +140,7 @@ div#vcomments {
 
 			&> div.meta {
 				margin-left: 0.25em;
-				color: #CCC;
+				color: $loadout-comment-meta-text-color;
 				font-size: 0.9em;
 
 				@include layout-type(smallandextrasmall) {
@@ -149,7 +149,7 @@ div#vcomments {
 				}
 
 				&> span.outdated, &> span.outdated > a {
-					color: #888;
+					color: $loadout-comment-meta-text-color;
 				}
 
 				&> span.outdated {
@@ -160,7 +160,7 @@ div#vcomments {
 		}
 
 		&> a.add_comment, &> header > div.meta > a {
-			color: #888;
+			color: $loadout-comment-meta-text-color;
 			text-decoration: none;
 			
 			&:hover {
@@ -195,22 +195,22 @@ div#vcomments {
 			margin: 0.5em 1em;
 
 			&> li {
-				border-bottom: 1px dotted #CCC;
-				color: #CCC;
+				border-bottom: 1px dotted $loadout-comment-reply-border-color;
+				color: $loadout-comment-reply-meta-text-color;
 				padding: 0.5em 2em;
 
 				&:first-child {
-					border-top: 1px dotted #CCC;
+					border-top: 1px dotted $loadout-comment-reply-border-color;
 				}
 
 				&> div.body {
 					display: inline;
-					color: black;
+					color: $main-text-color;
 				}
 
 				&> time, &> a.profile, &> span.meta > a, &> span.updated {
 					font-size: 0.9em;
-					color: #888;
+					color: $loadout-comment-reply-active-meta-text-color;
 				}
 
 				&> span.meta {
@@ -223,7 +223,7 @@ div#vcomments {
 			}
 
 			&> li.new {
-				color: black;
+				color: $main-text-color;
 				display: none;
 
 				&> form > textarea {

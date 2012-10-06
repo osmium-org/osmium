@@ -5,7 +5,7 @@ ol#lhistory {
 
 	&> li {
 		margin: 1em 0;
-		border-top: 1px dotted #CCC;
+		border-top: 1px dotted $subsection-border-color;
 
 		&:first-child {
 			margin-top: 0;
@@ -17,17 +17,17 @@ ol#lhistory {
 		}
 
 		&> pre {
-			background-color: #F4F4F8;
-			color: #555;
+			background-color: $diff-main-bg-color;
+			color: $diff-main-text-color;
 
 			&> ins {
-				background-color: #DFD;
-				color: black;
+				background-color: $diff-inserted-bg-color;
+				color: $diff-inserted-text-color;
 			}
 
 			&> del {
-				background-color: #FDD;
-				color: black;
+				background-color: $diff-removed-bg-color;
+				color: $diff-removed-text-color;
 			}
 
 			&> ins, &> del {

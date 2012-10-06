@@ -1,31 +1,39 @@
 $field-height: 1.5em;
 
 input, select, textarea, button {
-	border: 1px solid #777;
-	background-color: white;
+	color: $input-text-color;
+	border: 1px solid $input-border-color;
+	background-color: $input-bg-color;
 
 	&:active {
-		border-color: red;
+		color: $input-active-text-color;
+		border-color: $input-active-border-color;
+		background-color: $input-active-bg-color;
 	}
 
 	&:focus {
-		border-color: orange;
+		color: $input-focus-text-color;
+		border-color: $input-focus-border-color;
+		background-color: $input-focus-bg-color;
 	}
 
 	&:disabled {
-		color: #444;
-		border-color: black;
-		background-color: #F0F0F0;
+		color: $input-disabled-text-color;
+		border-color: $input-disabled-border-color;
+		background-color: $input-disabled-bg-color;
 	}
 }
 
 input[type='submit'], input[type='button'], button {
 	font-family: $sans-font;
-	background-color: #F0F0F0;
+	color: $button-text-color;
+	border-color: $button-border-color;
+	background-color: $button-bg-color;
 
 	&.dangerous {
-		border-color: red !important;
-		background-color: #FFF0F0 !important;
+		color: $dangerous-button-text-color;
+		border-color: $dangerous-button-border-color !important;
+		background-color: $dangerous-button-background-color !important;
 	}
 }
 
@@ -36,7 +44,7 @@ form > table {
 		&> td, &> th {
 			vertical-align: top;
 			padding: 0.5em;
-			border-top: 1px dotted #CCC;
+			border-top: 1px dotted $form-row-border-color;
 		}
 	}
 
@@ -53,13 +61,15 @@ form > table {
 		}
 
 		&> tr.error > td > input, &> tr > td > input.error {
-			border-color: #C30 !important;
+			color: $input-error-text-color !important;
+			border-color: $input-error-border-color !important;
+			background-color: $input-error-bg-color !important;
 		}
 
 		&> tr.separator > td > hr {
 			height: 1px;
-			color: #AAA;
-			background-color: #AAA;
+			color: $input-separator-color;
+			background-color: $input-separator-color;
 			border: none;
 		}
 	}

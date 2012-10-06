@@ -24,7 +24,7 @@ $hidden-char: '\0025B8';
 
 		&> em.help {
 			font-size: 0.7em;
-			color: #AAA;
+			color: $aside-text-color;
 		}
 	}
 
@@ -35,15 +35,15 @@ $hidden-char: '\0025B8';
 }
 
 @mixin error-background-opacity($opacity) {
-	background-color: rgba(255, 51, 0, $opacity);
+	background-color: rgba($overflow-alpha-bg-color, $opacity);
 }
 
 @mixin module {
 	@include ellipsis;
 	padding: 0.125em 0;
-	border-top: 1px dashed #888;
+	border-top: 1px dashed $module-border-color;
 	line-height: 2em;
-	
+
 	&:first-child {
 		border-top: none;
 	}
@@ -98,7 +98,7 @@ $hidden-char: '\0025B8';
 			@include module;
 
 			&.unused {
-				color: #888;
+				color: $unused-module-text-color;
 			}
 
 			&> a.toggle {
@@ -121,7 +121,7 @@ $hidden-char: '\0025B8';
 	}
 
 	&> h3 {
-		border-bottom: 1px solid #888;
+		border-bottom: 1px solid $section-border-color;
 		padding-left: 0.25em;
 		margin-bottom: 0;
 		position: relative;
@@ -130,7 +130,7 @@ $hidden-char: '\0025B8';
 			position: absolute;
 			right: 0.125em;
 			bottom: 0;
-			color: #888;
+			color: $aside-text-color;
 
 			&> span {
 				display: inline-block;
@@ -167,7 +167,7 @@ $hidden-char: '\0025B8';
 		&> h4 {
 			margin: 0.5em 0 0.25em 0;
 			padding-left: 0.25em;
-			border-bottom: 1px solid #CCC;
+			border-bottom: 1px solid $subsection-border-color;
 		}
 
 		&> ul {
@@ -203,11 +203,11 @@ div#fittags > ul, ul.tags {
 
 	&> li {
 		display: inline-block;
-		border: 1px solid #CCC;
+		border: 1px solid $tag-border-color;
 		border-radius: 1em;
 		font-size: 0.8em;
 		padding: 0.1em 0.5em;
-		background-color: #F8F8F8;
+		background-color: $tag-bg-color;
 	}
 }
 
@@ -229,7 +229,7 @@ div#metadatabox {
 	&> ul > li > ul > li > a {
 		&.active {
 			text-decoration: none;
-			color: black;
+			color: $strong-emphasis-text-color;
 			font-weight: bold;
 		}
 
@@ -244,7 +244,7 @@ div#computed_attributes > section {
 
 	&> h4 {
 		padding-left: 0.5em;
-		border-bottom: 1px solid #CCC;
+		border-bottom: 1px solid $subsection-border-color;
 		margin: 1em 0 0 0;
 		position: relative;
 		cursor: pointer;
@@ -259,7 +259,7 @@ div#computed_attributes > section {
 			right: 0;
 			bottom: 0;
 			font-size: 0.9em;
-			color: #888;
+			color: $aside-text-color;
 		}
 	}
 
@@ -272,7 +272,7 @@ div#computed_attributes > section {
 	}
 
 	&> div {
-		background-color: #F4F4F8;
+		background-color: $subsection-bg-color;
 		padding: 0.125em 0.25em;
 	}
 
@@ -352,15 +352,14 @@ div#computed_attributes > section > div > table#resists {
 			bottom: 0;
 			right: 0;
 			height: 2px;
-			background-color: black;
 		}
 	}
 
 	&> tbody > tr {
-		&> td.emresist > div > span.bar { background-color: #2685C6; }
-		&> td.thermalresist > div > span.bar { background-color: #C62626; }
-		&> td.kineticresist > div > span.bar { background-color: #A3A3A3; }
-		&> td.explosiveresist > div > span.bar { background-color: #C68526; }
+		&> td.emresist > div > span.bar { background-color: $em-bg-color; }
+		&> td.thermalresist > div > span.bar { background-color: $thermal-bg-color; }
+		&> td.kineticresist > div > span.bar { background-color: $kinetic-bg-color; }
+		&> td.explosiveresist > div > span.bar { background-color: $explosive-bg-color; }
 	}
 
 	&> thead > tr > th#ehp {
@@ -405,7 +404,7 @@ section#siattributes > table > tbody > tr {
 	}
 
 	&.sep {
-		border-top: 1px solid #CCC;
+		border-top: 1px solid $attribute-separator-border-color;
 	}
 }
 

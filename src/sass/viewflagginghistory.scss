@@ -7,7 +7,7 @@ div#vflaghistory {
 		padding: 0;
 
 		text-align: right;
-		color: #888;
+		color: $aside-text-color;
 
 		&> li {
 			display: inline-block;
@@ -21,15 +21,15 @@ div#vflaghistory {
 div#vflaghistory, div#modflags > form {
 	&> table > tbody > tr {
 		&.status0 {
-			background-color: #FFC;
+			background-color: $flag-new-bg-color;
 		}
 
 		&.status1 {
-			background-color: #DFD;
+			background-color: $flag-helpful-bg-color;
 		}
 
 		&.status2 {
-			background-color: #FDD;
+			background-color: $flag-abusive-bg-color;
 		}
 	}
 }

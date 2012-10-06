@@ -32,16 +32,16 @@ div#vprofile {
 			}
 
 			&> tr > th {
-				color: #888;
+				color: $aside-text-color;
 				font-weight: normal;
 				font-style: italic;
 			}
 
 			&> tr > td {
-				color: #333;
+				color: $main-text-color;
 
 				&:last-child {
-					color: black;
+					color: $emphasis-text-color;
 				}
 			}
 		}
@@ -60,8 +60,6 @@ div#vprofile {
 
 	&> section#reputation {
 		$rep-width: 2em;
-		$positive-color: green;
-		$negative-color: red;
 
 		&> ul {
 			list-style-type: none;
@@ -70,7 +68,7 @@ div#vprofile {
 
 			&> li {
 				padding-top: 0.5em;
-				border-top: 1px solid #CCC;
+				border-top: 1px solid $subsection-border-color;
 
 				&:first-child {
 					padding-top: 0;
@@ -95,11 +93,11 @@ div#vprofile {
 				font-size: 1.5em;
 
 				&.positive {
-					color: $positive-color;
+					color: $reputation-gain-text-color;
 				}
 
 				&.negative {
-					color: $negative-color;
+					color: $reputation-loss-text-color;
 				}
 			}
 		}
@@ -109,7 +107,7 @@ div#vprofile {
 			margin-bottom: 1em;
 
 			&> tbody > tr {
-				background-color: #F4F4F8;
+				background-color: $subsection-bg-color;
 			}
 
 			&> tbody > tr > td {
@@ -118,16 +116,16 @@ div#vprofile {
 					width: $rep-width * 1.5;
 
 					&.positive {
-						color: $positive-color;
+						color: $reputation-gain-text-color;
 					}
 					
 					&.negative {
-						color: $negative-color;
+						color: $reputation-loss-text-color;
 					}
 				}
 
 				&.time {
-					color: #888;
+					color: $aside-text-color;
 					width: 5em;
 					text-align: center;
 				}
@@ -162,7 +160,7 @@ div#vprofile {
 	&> section#votes {
 		&> table > tbody > tr > td {
 			&.date {
-				color: #888;
+				color: $aside-text-color;
 				width: 7em;
 			}
 

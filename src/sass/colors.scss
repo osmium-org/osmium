@@ -1,0 +1,199 @@
+//
+// General
+//
+
+$main-text-color: rgb(0, 0, 0);
+$main-bg-color: rgb(255, 255, 255);
+
+$aside-text-color: rgb(127, 127, 127);
+$emphasis-text-color: rgb(0, 0, 0);
+$strong-emphasis-text-color: rgb(0, 0, 0);
+
+$link-text-color: rgb(17, 34, 204);
+$link-border-color: $link-text-color;
+
+$active-link-text-color: rgb(255, 0, 0);
+$active-link-border-color: $active-link-text-color;
+
+$dangerous-link-text-color: rgb(255, 51, 0);
+$dangerous-link-border-color: $dangerous-link-text-color;
+
+$title-border-color: $main-text-color;
+
+$section-border-color: rgb(127, 127, 127);
+
+$subsection-border-color: rgb(204, 204, 204);
+$subsection-bg-color: rgb(244, 244, 248);
+
+$subsection-active-bg-color: rgb(232, 232, 240);
+
+$tab-border-color: $section-border-color;
+
+$tab-active-text-color: $strong-emphasis-text-color;
+
+$placeholder-text-color: rgb(136, 136, 136);
+
+$overflow-bg-color: rgb(255, 204, 204);
+$overflow-alpha-bg-color: rgb(255, 51, 0);
+
+$anchor-target-highlight-bg-color: rgb(255, 255, 204);
+$anchor-target-final-bg-color: $main-bg-color;
+
+$modal-border-color: rgb(0, 0, 0);
+$modal-bg-color: $main-bg-color;
+$modal-overlay-bg-color: rgba(255, 255, 255, 0.7);
+
+$close-modal-text-color: $dangerous-link-text-color;
+$close-modal-border-color: $close-modal-text-color;
+$close-modal-bg-color: $modal-bg-color;
+
+$top-navigation-border-color: rgb(204, 204, 204);
+
+$abbr-border-color: rgb(170, 170, 170);
+
+$pagination-meta-text-color: rgb(119, 119, 119);
+
+$diff-main-text-color: rgb(85, 85, 85);
+$diff-main-bg-color: $subsection-bg-color;
+
+$diff-inserted-text-color: rgb(0, 0, 0);
+$diff-inserted-bg-color: rgb(221, 255, 221);
+
+$diff-removed-text-color: rgb(0, 0, 0);
+$diff-removed-bg-color: rgb(255, 221, 221);
+
+//
+// Errors
+//
+
+$error-text-color: rgb(204, 51, 0);
+$error-border-color: $error-text-color;
+
+$warning-text-color: rgb(136, 136, 0);
+$warning-border-color: $warning-text-color;
+
+$notice-text-color: $main-text-color;
+
+$vote-error-text-color: rgb(255, 255, 255);
+$vote-error-background-color: rgb(255, 36, 0);
+
+//
+// Forms
+//
+
+$input-text-color: $main-text-color;
+$input-border-color: rgb(119, 119, 119);
+$input-bg-color: $main-bg-color;
+
+$input-active-text-color: $input-text-color;
+$input-active-border-color: rgb(255, 0, 0);
+$input-active-bg-color: $input-bg-color;
+
+$input-focus-text-color: $input-text-color;
+$input-focus-border-color: rgb(255, 127, 0);
+$input-focus-bg-color: $input-bg-color;
+
+$input-disabled-text-color: rgb(68, 68, 68);
+$input-disabled-border-color: rgb(0, 0, 0);
+$input-disabled-bg-color: rgb(240, 240, 240);
+
+$button-text-color: $input-text-color;
+$button-border-color: $input-border-color;
+$button-bg-color: rgb(240, 240, 240);
+
+$dangerous-button-text-color: $button-text-color;
+$dangerous-button-border-color: rgb(255, 0, 0);
+$dangerous-button-background-color: rgb(255, 240, 240);
+
+$input-error-text-color: $input-text-color;
+$input-error-border-color: $error-border-color;
+$input-error-bg-color: $input-bg-color;
+
+$input-separator-color: rgb(170, 170, 170);
+
+$form-row-border-color: rgb(204, 204, 204);
+
+//
+// Loadout
+//
+
+$module-border-color: rgb(127, 127, 127);
+
+$module-active-bg-color: rgb(248, 248, 252);
+
+$module-selected-bg-color: rgb(255, 255, 204);
+
+$unused-module-text-color: rgb(127, 127, 127);
+
+$tag-border-color: rgb(204, 204, 204);
+$tag-bg-color: rgb(248, 248, 248);
+
+$em-bg-color: rgb(38, 133, 198);
+$thermal-bg-color: rgb(198, 38, 38);
+$kinetic-bg-color: rgb(163, 163, 163);
+$explosive-bg-color: rgb(198, 133, 38);
+
+$attribute-separator-border-color: rgb(204, 204, 204);
+
+$loadout-column-border-color: rgb(204, 204, 204);
+
+$loadout-next-step-border-color: rgb(0, 100, 0);
+$loadout-next-step-bg-color: rgb(240, 255, 240);
+
+$chargegroup-selecting-bg-color: rgb(255, 255, 204);
+
+$chargegroup-selected-bg-color: rgb(232, 255, 232);
+
+$loadout-breadcrumbs-border-color: rgb(204, 204, 204);
+
+// Also hardcoded in bcseparator.svg
+$loadout-breadcrumbs-done-bg-color: rgb(230, 230, 233);
+
+$loadout-search-metadata-text-color: rgb(0, 153, 51);
+
+$loadout-input-pw-border-color: rgb(255, 192, 192);
+$loadout-input-pw-bg-color: rgb(255, 248, 248);
+
+$loadout-comment-border-color: rgb(127, 127, 127);
+
+$loadout-comment-meta-text-color: $loadout-comment-border-color;
+
+$loadout-comment-reply-border-color: rgb(204, 204, 204);
+
+$loadout-comment-reply-meta-text-color: $loadout-comment-reply-border-color;
+
+$loadout-comment-reply-active-meta-text-color: $loadout-comment-meta-text-color;
+
+//
+// Notifications
+//
+
+$notification-count-text-color: $strong-emphasis-text-color;
+$notification-count-bg-color: rgb(255, 0, 0);
+
+$notification-new-row-bg-color: rgb(255, 255, 204);
+
+//
+// Tables
+//
+
+$table-header-border-color: $section-border-color;
+$table-header-bg-color: $subsection-bg-color;
+
+$table-row-even-bg-color: rgba(10, 10, 0, 0.04);
+$table-row-odd-bg-color: rgba($main-bg-color, 0.04);
+
+//
+// Flags
+//
+
+$flag-new-bg-color: rgb(255, 255, 204);
+$flag-helpful-bg-color: rgb(221, 255, 221);
+$flag-abusive-bg-color: rgb(255, 221, 221);
+
+//
+// Reputation
+//
+
+$reputation-gain-text-color: rgb(0, 255, 0);
+$reputation-loss-text-color: rgb(255, 0, 0);
