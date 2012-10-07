@@ -61,7 +61,7 @@ footer, div#push {
 div#wrapper > nav:first-child {
 	min-height: $nav-height;
 	width: 100%;
-	border-bottom: 1px dotted $top-navigation-border-color;
+	border-bottom: 1px solid $top-navigation-border-color;
 
 	@include linear-gradient-lighten-top($top-navigation-bg-color, 15%);
 

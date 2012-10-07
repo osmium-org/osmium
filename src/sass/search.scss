@@ -72,6 +72,10 @@ ol.loadout_sr {
 		padding-left: 9.5em;
 		height: 3em;
 
+		&:nth-child(2n) {
+			background-color: $loadout-list-odd-bg-color;
+		}
+
 		&> div.lscore, &> img:first-child {
 			position: absolute;
 			width: 4em;
