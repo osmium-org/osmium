@@ -11,7 +11,7 @@ table.d {
 	}
 
 	&> thead, &> tfoot {
-		background-color: $table-header-bg-color;
+		@include linear-gradient-lighten-top($table-header-bg-color, 10%);
 	}
 
 	&> tbody {

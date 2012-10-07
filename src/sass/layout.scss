@@ -58,10 +58,12 @@ footer, div#push {
 	clear: both;
 }
 
-nav {
+div#wrapper > nav:first-child {
 	min-height: $nav-height;
 	width: 100%;
 	border-bottom: 1px dotted $top-navigation-border-color;
+
+	@include linear-gradient-lighten-top($top-navigation-bg-color, 15%);
 
 	&> ul {
 		margin: 0;
@@ -84,11 +86,11 @@ nav {
 
 	&> div#state_box {
 		float: right;
+		padding-right: 1em;
 
 		&> p, &> form > p {
 			margin: 0;
 			line-height: $nav-height;
-			padding-right: 1em;
 			display: inline-block;
 			vertical-align: middle;
 		}

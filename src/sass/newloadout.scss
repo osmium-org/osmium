@@ -78,11 +78,11 @@
 		}
 
 		&:hover {
-			background-color: $module-active-bg-color;
+			@include linear-gradient-lighten-top($module-active-bg-color);
 		}
 
 		&.selected {
-			background-color: $module-selected-bg-color;
+			@include linear-gradient-lighten-top($module-selected-bg-color);
 		}
 
 		&> img:first-child, &> div.imgplaceholder:first-child {
@@ -108,11 +108,11 @@
 		font-size: 1em;
 		padding: 0.25em;
 		border-bottom: 1px solid $subsection-border-color;
-		background-color: $subsection-bg-color;
+		@include linear-gradient-lighten-top($subsection-bg-color);
 		text-align: left;
 
 		&:hover {
-			background-color: $subsection-active-bg-color;
+			@include linear-gradient-lighten-top($subsection-active-bg-color);
 		}
 	}
 }
@@ -323,7 +323,11 @@ input[type='submit'] {
 	&.next_step, &.final_step, &.prev_step {
 		font-size: 1em;
 		border-color: $loadout-next-step-border-color;
-		background-color: $loadout-next-step-bg-color;
+		@include linear-gradient-lighten-top($loadout-next-step-bg-color, 10%);
+	}
+
+	&.dangerous {
+		@include linear-gradient-lighten-top($dangerous-button-bg-color, 10%);
 	}
 }
 
@@ -499,6 +503,7 @@ nav#nf_bc > ol {
 		&> input[type='submit'] {
 			margin: 1px;
 			border: 0;
+			background: 0;
 			background-color: rgba(255, 255, 255, 0);
 			cursor: pointer;
 			color: $link-text-color;

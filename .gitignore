@@ -5,7 +5,7 @@ static/cache/*
 config.ini
 sphinx/*
 !sphinx/sphinx.conf
-static/chrome.css
+static/*.css
 .sass-cache
 tests/coverage
 pgsql/osmium-sde-*

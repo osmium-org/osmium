@@ -80,7 +80,7 @@ $hidden-char: '\0025B8';
 	font-size: 0.8em;
 	line-height: 1em;
 	height: 1em;
-	opacity: 0.4;
+	opacity: 0.8;
 }
 
 @mixin module-list-togglable {
@@ -438,9 +438,9 @@ div#showinfoicon {
 	position: absolute;
 }
 
-.overflow6 { @include error-background-opacity(0.6); }
-.overflow5 { @include error-background-opacity(0.5); }
-.overflow4 { @include error-background-opacity(0.4); }
-.overflow3 { @include error-background-opacity(0.3); }
-.overflow2 { @include error-background-opacity(0.2); }
-.overflow1 { @include error-background-opacity(0.1); }
+.overflow6 { @include error-background-opacity(0.30); }
+.overflow5 { @include error-background-opacity(0.25); }
+.overflow4 { @include error-background-opacity(0.20); }
+.overflow3 { @include error-background-opacity(0.15); }
+.overflow2 { @include error-background-opacity(0.10); }
+.overflow1 { @include error-background-opacity(0.05); }

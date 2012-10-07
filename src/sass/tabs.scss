@@ -14,7 +14,7 @@
 		border: 1px solid $tab-border-color;
 
 		&.active {
-			border-bottom: 1px solid $main-bg-color;
+			border-bottom: 2px solid $main-bg-color;
 
 			&> a {
 				color: $tab-active-text-color;

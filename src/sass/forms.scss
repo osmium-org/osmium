@@ -1,20 +1,21 @@
 $field-height: 1.5em;
 
-input, select, textarea, button {
+input, select, textarea, button, option {
 	color: $input-text-color;
 	border: 1px solid $input-border-color;
 	background-color: $input-bg-color;
+	outline: none;
 
 	&:active {
 		color: $input-active-text-color;
 		border-color: $input-active-border-color;
-		background-color: $input-active-bg-color;
+		@include linear-gradient-lighten-top($input-active-bg-color);
 	}
 
 	&:focus {
 		color: $input-focus-text-color;
 		border-color: $input-focus-border-color;
-		background-color: $input-focus-bg-color;
+		@include linear-gradient-lighten-top($input-focus-bg-color);
 	}
 
 	&:disabled {
@@ -24,17 +25,29 @@ input, select, textarea, button {
 	}
 }
 
+optgroup {
+	background-color: $optgroup-bg-color;
+}
+
+optgroup, option {
+	border: 0;
+}
+
 input[type='submit'], input[type='button'], button {
 	font-family: $sans-font;
 	color: $button-text-color;
 	border-color: $button-border-color;
-	background-color: $button-bg-color;
+	@include linear-gradient-lighten-top($button-bg-color);
 
 	&.dangerous {
 		color: $dangerous-button-text-color;
 		border-color: $dangerous-button-border-color !important;
-		background-color: $dangerous-button-background-color !important;
+		background-color: $dangerous-button-bg-color !important;
 	}
+}
+
+input[type='search'] {
+	-webkit-appearance: none;
 }
 
 form > table {

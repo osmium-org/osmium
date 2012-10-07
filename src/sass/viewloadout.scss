@@ -115,6 +115,10 @@ div#pwfit {
 	padding: 1em;
 	border: 2px solid $loadout-input-pw-border-color;
 	background-color: $loadout-input-pw-bg-color;
+
+	& > form > table > tbody > tr > td > input#pw {
+		min-width: 20em;
+	}
 }
 
 div#vcomments {
