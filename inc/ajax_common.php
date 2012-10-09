@@ -23,8 +23,7 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 	$revision = isset($_GET['revision']) ? intval($_GET['revision']) : 0;
 	$cachename = session_id().'_view_fit_'.$loadoutid.'_'.$revision;
 
-	$green = \Osmium\State\get_state('green_fits', array());
-	if(!is_fit_green($loadoutid)) {
+	if(!\Osmium\State\is_fit_green($loadoutid)) {
 		return false;
 	}
 
@@ -43,17 +42,6 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 
 	return true;
-}
-
-function is_fit_green($loadoutid) {
-	$green = \Osmium\State\get_state('green_fits', array());
-	return isset($green[$loadoutid]) && $green[$loadoutid] === true; 
-}
-
-function set_fit_green($loadoutid) {
-	$green = \Osmium\State\get_state('green_fits', array());
-	$green[$loadoutid] = true;
-	\Osmium\State\put_state('green_fits', $green);
 }
 
 function get_module_shortlist($shortlist = null) {

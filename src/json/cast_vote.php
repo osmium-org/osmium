@@ -33,7 +33,7 @@ $loadoutid = intval($_GET['loadoutid']);
 $targettype = $_GET['targettype'];
 $action = $_GET['action'];
 
-if(!\Osmium\AjaxCommon\is_fit_green($loadoutid)) {
+if(!\Osmium\State\is_fit_green($loadoutid)) {
 	$result['error'] = 'Refresh page and try again';
 	$result['success'] = false;
 	\Osmium\Chrome\return_json($result);

@@ -27,9 +27,11 @@ if(!\Osmium\State\can_view_fit($loadoutid)) {
 }
 $fit = \Osmium\Fit\get_fit($loadoutid);
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
+$loadouturi = \Osmium\Fit\get_fit_uri($loadoutid, $fit['metadata']['visibility'], $fit['metadata']['privatetoken']);
 
-if(!\Osmium\State\can_access_fit($fit)) {
-	\Osmium\fatal(403, "Password-protected fit, please enter password on the view loadout page first.");
+if(!\Osmium\State\can_access_fit($fit) ||
+   ($fit['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PUBLIC && !\Osmium\State\is_fit_green($loadoutid))) {
+	\Osmium\fatal(403, "Please access the loadout page first (and eventually input the password), then retry.");
 }
 
 if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token() && isset($_GET['rollback'])) {
@@ -53,7 +55,7 @@ if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token()
 \Osmium\Chrome\print_header('Revision history of loadout #'.$loadoutid, '..',
                             $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC);
 
-echo "<h1>Revision history of loadout <a href='../loadout/$loadoutid'>#$loadoutid</a></h1>\n";
+echo "<h1>Revision history of loadout <a href='../$loadouturi'>#$loadoutid</a></h1>\n";
 
 $histq = \Osmium\Db\query_params('SELECT loadouthistory.fittinghash, loadouthistory.revision, loadouthistory.updatedate, delta, accounts.accountid, nickname, apiverified, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator
 FROM osmium.loadouthistory
@@ -71,7 +73,7 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 	$class = $first ? 'opened' : 'closed';
 
 	echo "<li value='".$rev['revision']."' class='$class' id='revision".$rev['revision']."'>\n<p>";
-	echo "<a href='../loadout/$loadoutid?revision=".$rev['revision']."'><strong>Revision #".$rev['revision']."</strong></a>";
+	echo "<a href='../$loadouturi?revision=".$rev['revision']."'><strong>Revision #".$rev['revision']."</strong></a>";
 	echo ", by ".\Osmium\Chrome\format_character_name($rev, '..');
 	echo " (".date('Y-m-d', $rev['updatedate']).")";
 	echo " — <small class='anchor'><a href='#revision".$rev['revision']."'>#</a></small>";

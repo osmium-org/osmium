@@ -82,7 +82,7 @@ $fit = \Osmium\State\get_new_fit();
 
 if(isset($fit['metadata']['loadoutid'])) {
 	\Osmium\Chrome\print_header('Edit loadout #'.$fit['metadata']['loadoutid'], '.');
-	$g_title = 'Edit loadout <a href="./loadout/'.$fit['metadata']['loadoutid'].'">#'.$fit['metadata']['loadoutid'].'</a>';
+	$g_title = 'Edit loadout <a href="./'.\Osmium\Fit\get_fit_uri($fit['metadata']['loadoutid'], $fit['metadata']['visibility'], $fit['metadata']['privatetoken']).'">#'.$fit['metadata']['loadoutid'].'</a>';
 } else {
 	\Osmium\Chrome\print_header('Create a new fitting', '.');
 	$g_title = 'New fitting';
@@ -211,6 +211,8 @@ function finalize() {
 	\Osmium\Fit\commit_loadout($fit, $ownerid, $accountid);
 	$loadoutid = $fit['metadata']['loadoutid'];
 	$revision = $fit['metadata']['revision'];
+	$visibility = $fit['metadata']['visibility'];
+	$privtoken = $fit['metadata']['privatetoken'];
 	\Osmium\Fit\reset($fit);
 	\Osmium\State\put_new_fit($fit);
 	\Osmium\State\put_state('create_fit_step', 1);
@@ -235,7 +237,7 @@ function finalize() {
 		\Osmium\Db\query_params('UPDATE osmium.votes SET cancellableuntil = NULL WHERE targettype = $1 AND targetid1 = $2 AND targetid2 IS NULL AND targetid3 IS NULL', array(\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT, $loadoutid));
 	}
 
-	header('Location: ./loadout/'.$loadoutid);
+	header('Location: ./'.\Osmium\Fit\get_fit_uri($loadoutid, $visibility, $privtoken));
 	die();
 }
 

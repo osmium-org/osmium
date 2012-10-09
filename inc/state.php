@@ -815,6 +815,27 @@ function get_eveaccount_id(&$error = null) {
 }
 
 /**
+ * Mark a loadout as "green", that is, this loadout has been
+ * successfully accessed by the current user recently in the current
+ * session.
+ */
+function set_fit_green($loadoutid) {
+	$green = get_state('green_fits', array());
+	$green[$loadoutid] = true;
+	put_state('green_fits', $green);
+}
+
+/**
+ * Check if a given loadout is "green".
+ *
+ * @see set_fit_green()
+ */
+function is_fit_green($loadoutid) {
+	$green = get_state('green_fits', array());
+	return isset($green[$loadoutid]) && $green[$loadoutid] === true; 
+}
+
+/**
  * Get the fit currently being edited by the user.
  */
 function get_new_fit() {

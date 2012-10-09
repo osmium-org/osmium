@@ -36,8 +36,8 @@ if(!\Osmium\State\can_view_fit($loadoutid)) {
 	\Osmium\fatal(404, 'No such loadout.');
 }
 $fit = \Osmium\Fit\get_fit($loadoutid);
-if(!\Osmium\State\can_access_fit($fit)) {
-	\Osmium\fatal(403, "This fit is password-protected. To add it to your favorites, please go to ../loadout/".$loadoutid." and input the password, then retry.");
+if(!\Osmium\State\can_access_fit($fit) || !\Osmium\State\is_fit_green($loadoutid)) {
+	\Osmium\fatal(403, "Please view the loadout page first (and eventually enter the password), then retry.");
 }
 
 $fav = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.accountfavorites WHERE accountid = $1 AND loadoutid = $2', array($accountid, $loadoutid)));
@@ -50,5 +50,5 @@ if($fav === false) {
 	                        array($accountid, $loadoutid));
 }
 
-header('Location: ../loadout/'.$loadoutid);
+header('Location: ../'.\Osmium\Fit\fetch_fit_uri($loadoutid));
 die();

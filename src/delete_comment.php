@@ -68,5 +68,5 @@ if($type == 'comment') {
 	\Osmium\fatal(404, "Incorrect type.");
 }
 
-header('Location: ../loadout/'.$row['loadoutid'].$afteruri);
+header('Location: ../'.\Osmium\Fit\fetch_fit_uri($row['loadoutid']).$afteruri);
 die();

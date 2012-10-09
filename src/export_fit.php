@@ -55,8 +55,9 @@ if($fit === false) {
 	\Osmium\fatal(404, "Loadout not found (get_fit() failure).");
 }
 
-if(!\Osmium\State\can_access_fit($fit)) {
-	\Osmium\fatal(403, "This fit is password-protected. Please go to ../loadout/".$loadoutid." and input the password, then retry.");
+if(!\Osmium\State\can_access_fit($fit) ||
+   ($fit['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PUBLIC && !\Osmium\State\is_fit_green($loadoutid))) {
+	\Osmium\fatal(403, "Please access the loadout page first (and eventually input the password), then retry.");
 }
 
 if(isset($_GET['pid']) && isset($fit['presets'][$_GET['pid']])) {

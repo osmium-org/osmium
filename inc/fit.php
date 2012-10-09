@@ -210,7 +210,7 @@ function get_state_categories() {
  *                                          array(effectid, effectname, preexp, postexp)))
  *
  * metadata => array(name, description, tags, view_permission, edit_permission, visibility, password,
- *                   loadoutid, hash, revision)
+ *                   loadoutid, hash, revision, privatetoken)
  */
 function create(&$fit) {
 	$fit = array(
@@ -1162,4 +1162,19 @@ function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
 		if(!isset($fit['dogma']['skills'][$typeid])) continue;
 		$fit['dogma']['skills'][$typeid]['skillLevel'] = $level;
 	}
+}
+
+/**
+ * Get the URI of this loadout (relative to the main page).
+ *
+ * @warning The rest of the code assumes this function returns a "base
+ * path", that is, no GET parameters (so it is possible to append
+ * "?foo=bar" after the returned value of get_fit_uri() in all cases).
+ */
+function get_fit_uri($loadoutid, $visibility, $privatetoken) {
+	if($visibility == VISIBILITY_PRIVATE) {
+		return 'loadout/private/'.$loadoutid.'/'.$privatetoken;
+	}
+
+	return 'loadout/'.$loadoutid;
 }

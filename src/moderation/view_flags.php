@@ -82,7 +82,19 @@ echo "<thead>\n$rows</thead>\n<tfoot>\n$rows</tfoot>\n<tbody>\n";
 $types = \Osmium\Flag\get_flag_types();
 $subtypes = \Osmium\Flag\get_flag_subtypes();
 $statuses = \Osmium\Flag\get_flag_statuses();
-$flagsq = \Osmium\Db\query_params('SELECT flagid, createdat, type, subtype, status, other, target1, target2, target3, accountid, nickname, apiverified, charactername, characterid, ismoderator, flagweight FROM osmium.flags LEFT JOIN osmium.accounts ON flaggedbyaccountid = accountid ORDER BY createdat DESC LIMIT 50 OFFSET $1', array($offset));
+$flagsq = \Osmium\Db\query_params('SELECT
+flagid, createdat, type, subtype, status, other, target1, target2, target3, accounts.accountid, nickname, apiverified, charactername, characterid, ismoderator, flagweight, l.visibility, l.privatetoken
+FROM osmium.flags
+LEFT JOIN osmium.accounts ON flaggedbyaccountid = accountid
+LEFT JOIN osmium.loadouts l ON (type = $2 AND target1 = l.loadoutid) OR (type = $3 AND target2 = l.loadoutid) OR (type = $4 AND target3 = l.loadoutid)
+ORDER BY createdat DESC
+LIMIT 50 OFFSET $1', array(
+	$offset,
+	\Osmium\Flag\FLAG_TYPE_LOADOUT,
+	\Osmium\Flag\FLAG_TYPE_COMMENT,
+	\Osmium\Flag\FLAG_TYPE_COMMENTREPLY,
+));
+
 while($flag = \Osmium\Db\fetch_assoc($flagsq)) {
 	echo "<tr class='status".$flag['status']."'>\n";
 	echo "<td>".$flag['flagid']."</td>\n";
@@ -92,11 +104,14 @@ while($flag = \Osmium\Db\fetch_assoc($flagsq)) {
 	echo "<td>".$statuses[$flag['status']]."</td>\n";
 	echo "<td>";
 	if($flag['type'] == \Osmium\Flag\FLAG_TYPE_LOADOUT) {
-		echo "<a href='../loadout/".$flag['target1']."'>#".$flag['target1']."</a>";
+		$uri = \Osmium\Fit\get_fit_uri($flag['target1'], $flag['visibility'], $flag['privatetoken']);
+		echo "<a href='../".$uri."'>#".$flag['target1']."</a>";
 	} else if($flag['type'] == \Osmium\Flag\FLAG_TYPE_COMMENT) {
-		echo "<a href='../loadout/".$flag['target2']."?jtc=".$flag['target1']."#c".$flag['target1']."'>#".$flag['target1']."</a>";
+		$uri = \Osmium\Fit\get_fit_uri($flag['target2'], $flag['visibility'], $flag['privatetoken']);
+		echo "<a href='../".$uri."?jtc=".$flag['target1']."#c".$flag['target1']."'>#".$flag['target1']."</a>";
 	} else if($flag['type'] == \Osmium\Flag\FLAG_TYPE_COMMENTREPLY) {
-		echo "<a href='../loadout/".$flag['target3']."?jtc=".$flag['target2']."#r".$flag['target1']."'>#".$flag['target1']."</a>";
+		$uri = \Osmium\Fit\get_fit_uri($flag['target3'], $flag['visibility'], $flag['privatetoken']);
+		echo "<a href='../".$uri."?jtc=".$flag['target2']."#r".$flag['target1']."'>#".$flag['target1']."</a>";
 	} else {
 		echo "<small>N/A</small>";
 	}

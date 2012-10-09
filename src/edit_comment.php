@@ -98,7 +98,7 @@ if(isset($_POST['body'])) {
 		\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_UPDATE_COMMENT_REPLY, null, $id, $commentid, $loadoutid);
 	}
 
-	header('Location: ../loadout/'.$loadoutid.'?jtc='.$commentid.'#'.$anchor);
+	header('Location: ../'.\Osmium\Fit\fetch_fit_uri($loadoutid).'?jtc='.$commentid.'#'.$anchor);
 	die();
 }
 

@@ -45,7 +45,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 		else opts[key] = count;
 	});
 
-	$.getJSON('../src/json/view_loadout_alter.php', opts, function(json) {
+	$.getJSON(osmium_relative + '/src/json/view_loadout_alter.php', opts, function(json) {
 		if($.type(json['preset']) === 'object') {
 			$("div#vloadoutbox > div.slots > ul > li > span.charge").empty();
 
@@ -74,7 +74,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 						.attr('title', json['states'][type][index]['name'] + '; click to toggle')
 						.find('img')
 						.attr('alt', json['states'][type][index]['name'])
-						.attr('src', '../static-' + osmium_staticver + '/icons/' + json['states'][type][index]['image']);
+						.attr('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + json['states'][type][index]['image']);
 				}
 			}
 		}
@@ -164,7 +164,7 @@ osmium_showinfo_from_vl = function(opts) {
 	opts.cpid = lb.data('cpid');
 	opts.dpid = lb.data('dpid');
 
-	osmium_showinfo(opts, '..');
+	osmium_showinfo(opts, osmium_relative);
 };
 
 $(function() {
@@ -261,7 +261,7 @@ $(function() {
 			opts['commentid'] = t.parent().parent().data('commentid');
 		}
 
-		$.getJSON('../src/json/cast_vote.php', opts, function(data) {
+		$.getJSON(osmium_relative + '/src/json/cast_vote.php', opts, function(data) {
 			if(!data['success']) {
 				score.text(parseInt(score.text(), 10) - delta);
 

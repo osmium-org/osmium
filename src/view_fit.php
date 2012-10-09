@@ -47,6 +47,18 @@ if(isset($_GET['revision'])) {
 	}
 }
 
+if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+	$privatetoken = $fit['metadata']['privatetoken'];
+
+	if(!isset($_GET['privatetoken']) || (string)$_GET['privatetoken'] !== (string)$privatetoken) {
+		\Osmium\fatal(403, 'This loadout is private.');
+	}
+
+	define('RELATIVE', '../../..');
+} else {
+	define('RELATIVE', '..');
+}
+
 $loggedin = \Osmium\State\is_logged_in();
 $a = \Osmium\State\get_state('a', array());
 
@@ -85,7 +97,7 @@ if(!\Osmium\State\can_access_fit($fit)) {
 		}
       
 		/* Show the password form */
-		\Osmium\Chrome\print_header('Password-protected fit requires authentication', '..', false);
+		\Osmium\Chrome\print_header('Password-protected fit requires authentication', RELATIVE, false);
       
 		echo "<div id='pwfit'>\n";
 		\Osmium\Forms\print_form_begin();
@@ -169,7 +181,7 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 	}
 }
 
-\Osmium\AjaxCommon\set_fit_green($fit['metadata']['loadoutid']);
+\Osmium\State\set_fit_green($fit['metadata']['loadoutid']);
 
 $defaultpid = $fit['modulepresetid'];
 $defaultcpid = $fit['chargepresetid'];
@@ -216,7 +228,7 @@ if(count($fit['dronepresets']) > 1) {
 }
 
 \Osmium\Chrome\print_header(
-	$title, '..',
+	$title, RELATIVE,
 	$fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 	&& !isset($_GET['jtc'])
 	&& (!isset($_GET['ss']) || $_GET['ss'] == 'All V')
@@ -245,14 +257,14 @@ if($author['apiverified'] === 't') {
 	}
 }
 echo "<small>submitted by</small><br />\n";
-echo \Osmium\Chrome\format_character_name($author, '..', $rauthorname)."<br />\n";
+echo \Osmium\Chrome\format_character_name($author, RELATIVE, $rauthorname)."<br />\n";
 echo \Osmium\Chrome\format_reputation($author['reputation']).' – '.\Osmium\Chrome\format_relative_date($truecreationdate)."\n";
 echo "</div>\n";
 
 if($fit['metadata']['revision'] > 1) {
 	echo "<div class='author edit'>\n";
 	echo "<small>revision #".$fit['metadata']['revision']." edited by</small><br />\n";
-	echo \Osmium\Chrome\format_character_name($lastrev, '..')."<br />\n";
+	echo \Osmium\Chrome\format_character_name($lastrev, RELATIVE)."<br />\n";
 	echo \Osmium\Chrome\format_reputation($lastrev['reputation']).' – '
 		.\Osmium\Chrome\format_relative_date($lastrev['updatedate'])."\n";
 	echo "</div>\n";
@@ -287,7 +299,9 @@ foreach($names as $n) {
 					));
 			if($row !== false) {
 				$skillset = json_decode($row['importedskillset'], true);
-				foreach(json_decode($row['overriddenskillset'], true) as $typeid => $l) {
+				$overridden = json_decode($row['overriddenskillset'], true);
+				if(!is_array($overridden)) $overridden = array();
+				foreach($overridden as $typeid => $l) {
 					$skillset[$typeid] = $l;
 				}
 				\Osmium\Fit\use_skillset($fit, $skillset, 0);
@@ -342,15 +356,15 @@ echo "<div id='computed_attributes'>\n";
 
 echo "<section id='vmeta'>\n<h4>Meta</h4>\n<div>\n<ul>\n";
 if($can_edit) {
-	echo "<li><a href='../edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
-	echo "<li><a href='../delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
+	echo "<li><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."'><strong>Edit this loadout</strong></a></li>\n";
+	echo "<li><a href='".RELATIVE."/delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
 }
 if($isflaggable && $fitlatestrev) {
-	echo "<li><a class='dangerous' href='../flag/".$loadoutid."' title='This loadout requires moderator attention'>Flag this loadout</a></li>\n";
+	echo "<li><a class='dangerous' href='".RELATIVE."/flag/".$loadoutid."' title='This loadout requires moderator attention'>Flag this loadout</a></li>\n";
 }
-echo "<li><a href='../loadouthistory/$loadoutid'>View revision history</a></li>\n";
-echo "<li><a href='../search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
-echo "<li><a href='../search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a></li>\n";
+echo "<li><a href='".RELATIVE."/loadouthistory/$loadoutid'>View revision history</a></li>\n";
+echo "<li><a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".$fit['ship']['typename']." loadouts</a></li>\n";
+echo "<li><a href='".RELATIVE."/search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a></li>\n";
 
 $slugname = ($author['apiverified'] === 't' && $author['charactername']) ? $author['charactername'] : $author['nickname'];
 $slug = $slugname.' '.$fit['ship']['typename'].' '.$fit['metadata']['name'];
@@ -359,13 +373,13 @@ $presets = 'pid='.$fit['modulepresetid'].'&amp;cpid='.$fit['chargepresetid'].'&a
 $dna = \Osmium\Fit\export_to_dna($fit);
 $revision = $fit['metadata']['revision'];
 echo "<li class='export'>Export this loadout:\n<ul>\n";
-echo "<li>Lossless formats: <a href='../export/{$slug}-clf-{$loadoutid}-{$revision}.json' title='Common Loadout Format, human-readable' type='application/json' rel='nofollow'>CLF</a>, <a title='Common Loadout Format, minified' href='../export/{$slug}-clf-{$loadoutid}-{$revision}.json?minify=1' type='application/json' rel='nofollow'>minified CLF</a>, <a href='../export/{$slug}-md-{$loadoutid}-{$revision}.md' title='Markdown with embedded gzipped Common Loadout Format' type='text/plain' rel='nofollow'>Markdown+gzCLF</a>, <a href='../export/{$slug}-evexml-{$loadoutid}-{$revision}.xml?{$presets}' title='EVE XML with embedded gzipped Common Loadout Format' type='application/xml' rel='nofollow'>XML+gzCLF</a></li>\n";
-echo "<li>Lossy formats: <a href='../export/{$slug}-evexml-{$loadoutid}-{$revision}.xml?embedclf=0&amp;{$presets}' title='EVE XML' type='application/xml' rel='nofollow'>XML</a>, <a href='../export/{$slug}-eft-{$loadoutid}-{$revision}.txt?{$presets}' type='text/plain' rel='nofollow'>EFT</a>, <a href='../export/{$slug}-dna-{$loadoutid}-{$revision}.txt?{$presets}' type='text/plain' rel='nofollow'>DNA</a>, <a href='javascript:CCPEVE.showFitting(\"$dna\");' rel='nofollow'>in-game DNA</a></li>\n";
+echo "<li>Lossless formats: <a href='".RELATIVE."/export/{$slug}-clf-{$loadoutid}-{$revision}.json' title='Common Loadout Format, human-readable' type='application/json' rel='nofollow'>CLF</a>, <a title='Common Loadout Format, minified' href='".RELATIVE."/export/{$slug}-clf-{$loadoutid}-{$revision}.json?minify=1' type='application/json' rel='nofollow'>minified CLF</a>, <a href='".RELATIVE."/export/{$slug}-md-{$loadoutid}-{$revision}.md' title='Markdown with embedded gzipped Common Loadout Format' type='text/plain' rel='nofollow'>Markdown+gzCLF</a>, <a href='".RELATIVE."/export/{$slug}-evexml-{$loadoutid}-{$revision}.xml?{$presets}' title='EVE XML with embedded gzipped Common Loadout Format' type='application/xml' rel='nofollow'>XML+gzCLF</a></li>\n";
+echo "<li>Lossy formats: <a href='".RELATIVE."/export/{$slug}-evexml-{$loadoutid}-{$revision}.xml?embedclf=0&amp;{$presets}' title='EVE XML' type='application/xml' rel='nofollow'>XML</a>, <a href='".RELATIVE."/export/{$slug}-eft-{$loadoutid}-{$revision}.txt?{$presets}' type='text/plain' rel='nofollow'>EFT</a>, <a href='".RELATIVE."/export/{$slug}-dna-{$loadoutid}-{$revision}.txt?{$presets}' type='text/plain' rel='nofollow'>DNA</a>, <a href='javascript:CCPEVE.showFitting(\"$dna\");' rel='nofollow'>in-game DNA</a></li>\n";
 echo "</ul>\n</li>\n";
 
 echo "</ul>\n</div>\n</section>\n";
 
-\Osmium\Chrome\print_formatted_loadout_attributes($fit, '..');
+\Osmium\Chrome\print_formatted_loadout_attributes($fit, RELATIVE);
 echo "</div>\n";
 
 echo "</div>\n";
@@ -378,13 +392,13 @@ echo "<header>\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
 echo "<h1 id='fitname' class='has_spinner'>";
-echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $fit['metadata']['visibility'], $author, '..', $fit['metadata']['loadoutid']);
-echo "<img src='../static-".\Osmium\STATICVER."/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
+echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $fit['metadata']['visibility'], $author, RELATIVE, $fit['metadata']['loadoutid']);
+echo "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
 echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {
 	echo "<ul>\n";
 	foreach($fit['metadata']['tags'] as $tag) {
-		echo "<li><a href='../search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
+		echo "<li><a href='".RELATIVE."/search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n"; /* No escaping needed, tags are [A-Za-z0-9-] */
 	}
 	echo "</ul>\n";
 } else {
@@ -392,9 +406,9 @@ if(count($fit['metadata']['tags']) > 0) {
 }
 echo "</div>\n";
 echo "<div class='votes' data-targettype='loadout'>\n";
-echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote".($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
+echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote".($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
 echo "<strong title='".$totalupvotes." upvote(s), ".$totaldownvotes." downvote(s)'>".$totalvotes."</strong>\n";
-echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort' class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
+echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort' class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
 echo "</div>\n";
 echo "</header>\n";
 
@@ -426,7 +440,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 		list($stname, $stpicture) = $astates[$state];
 
 		echo "<li data-typeid='".$mod['typeid']."' data-index='".$index."' data-slottype='".$type."' data-state='".$state."'><img src='http://image.eveonline.com/Type/".$mod['typeid']."_64.png' alt='' />".$mod['typename']."<span class='charge'>$charge</span>";
-		echo "<a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='../static-".\Osmium\STATICVER."/icons/$stpicture' alt='$stname' /></a>";
+		echo "<a class='toggle' href='javascript:void(0);' title='$stname; click to toggle'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/$stpicture' alt='$stname' /></a>";
 
 		if($ranges !== array()) {
 			echo "<span class='range' title='".\Osmium\Chrome\format_long_range($ranges)."'>".\Osmium\Chrome\format_short_range($ranges)."</span>";
@@ -436,7 +450,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 	}
 
 	for($i = count($modules); $i < $slotcount; ++$i) {
-		echo "<li class='unused'><img src='../static-".\Osmium\STATICVER."/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
+		echo "<li class='unused'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/slot_$type.png' alt='' />Unused $type slot</li>\n";
 	}
 
 	echo "</ul>\n</div>\n";
@@ -454,7 +468,7 @@ if(($totalcapacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity')) > 
 		$usedbandwidth += $drone['quantityinspace'] * $drone['bandwidth'];
 	}
 
-	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'><span><img src='../static-".\Osmium\STATICVER."/icons/bandwidth_ds.png' alt='Drone bandwidth' title='Drone bandwidth' /><span id='dronebandwidth'>$usedbandwidth / $totalbandwidth</span> Mbit/s</span><span><img src='../static-".\Osmium\STATICVER."/icons/dronecapacity_ds.png' alt='Drone capacity' title='Drone capacity' />$usedcapacity / $totalcapacity m<sup>3</sup></span></small></h3>\n";
+	echo "<div id='vdronebay'>\n<h3>Drones <small class='capacity'><span><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/bandwidth_ds.png' alt='Drone bandwidth' title='Drone bandwidth' /><span id='dronebandwidth'>$usedbandwidth / $totalbandwidth</span> Mbit/s</span><span><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/dronecapacity_ds.png' alt='Drone capacity' title='Drone capacity' />$usedcapacity / $totalcapacity m<sup>3</sup></span></small></h3>\n";
 
 	foreach(array('bay', 'space') as $v) {
 		echo "<div id='in$v'>\n<h4>In $v</h4>\n<ul>\n";
@@ -582,9 +596,9 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<div class='comment' id='c".$row['commentid']."' data-commentid='".$row['commentid']."'>\n";
 
 		echo "<div class='votes' data-targettype='comment'>\n";
-		echo "<a title='This comment is useful' class='upvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
+		echo "<a title='This comment is useful' class='upvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
 		echo "<strong title='".$row['upvotes']." upvote(s), ".$row['downvotes']." downvote(s)'>".$row['votes']."</strong>\n";
-		echo "<a title='This comment is off-topic, not constructive or not useful' class='downvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='../static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
+		echo "<a title='This comment is off-topic, not constructive or not useful' class='downvote".($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
 		echo "</div>\n";
 
 		echo "<div class='body'>\n".$row['commentformattedbody']."</div>\n";
@@ -594,7 +608,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$row['characterid']."_256.jpg' alt='' />";
 		}
 		echo "<small>commented by</small><br />\n";
-		echo \Osmium\Chrome\format_character_name($row, '..')."<br />\n";
+		echo \Osmium\Chrome\format_character_name($row, RELATIVE)."<br />\n";
 		echo \Osmium\Chrome\format_reputation($row['reputation']).' – '
 			.\Osmium\Chrome\format_relative_date($row['creationdate'])."\n";
 		echo "</div>\n";
@@ -608,7 +622,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 			           'characterid' => $row['ucharacterid'],
 			           'charactername' => $row['ucharactername'],
 			           'ismoderator' => $row['uismoderator']);
-			echo \Osmium\Chrome\format_character_name($u, '..')."<br />\n";
+			echo \Osmium\Chrome\format_character_name($u, RELATIVE)."<br />\n";
 			echo \Osmium\Chrome\format_reputation($row['ureputation']).' – '
 				.\Osmium\Chrome\format_relative_date($row['updatedate'])."\n";
 			echo "</div>\n";
@@ -618,11 +632,11 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo "<a href='?jtc=".$row['commentid']."#c".$row['commentid']."'>permanent link</a>";
 
 		if($ismoderator || ($loggedin && $row['accountid'] == $a['accountid'])) {
-			echo " — <a href='../editcomment/".$row['commentid']."'>edit</a>";
-			echo " — <a onclick='return confirm(\"Deleting this comment will also delete all its replies. This operation cannot be undone. Continue?\");' href='../deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
+			echo " — <a href='".RELATIVE."/editcomment/".$row['commentid']."'>edit</a>";
+			echo " — <a onclick='return confirm(\"Deleting this comment will also delete all its replies. This operation cannot be undone. Continue?\");' href='".RELATIVE."/deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
 		}
 		if($isflaggable) {
-			echo " — <a class='dangerous' href='../flagcomment/".$row['commentid']."' title='This comment requires moderator attention'>flag</a>";
+			echo " — <a class='dangerous' href='".RELATIVE."/flagcomment/".$row['commentid']."' title='This comment requires moderator attention'>flag</a>";
 		}
 
 		if($row['loadoutrevision'] < $fit['metadata']['revision']) {
@@ -643,7 +657,7 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		           'ismoderator' => $row['rismoderator']);
 
 		echo "<li id='r".$row['commentreplyid']."'>\n<div class='body'>".$row['replyformattedbody']."</div>";
-		echo " — ".\Osmium\Chrome\format_character_name($c, '..');
+		echo " — ".\Osmium\Chrome\format_character_name($c, RELATIVE);
 		if($row['repupdatedate'] !== null) {
 			echo " <span class='updated' title='This reply was edited (".strip_tags(\Osmium\Chrome\format_relative_date($row['repupdatedate'])).").'>✎</span>";
 		}
@@ -654,11 +668,11 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 		echo " — <a href='?jtc=".$row['commentid']."#r".$row['commentreplyid']."'>#</a>";
 
 		if($ismoderator || ($loggedin && $row['raccountid'] == $a['accountid'])) {
-			echo " — <a href='../editcommentreply/".$row['commentreplyid']."'>edit</a>";
-			echo " — <a onclick='return confirm(\"You are about to delete a reply. This operation cannot be undone. Continue?\");' href='../deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
+			echo " — <a href='".RELATIVE."/editcommentreply/".$row['commentreplyid']."'>edit</a>";
+			echo " — <a onclick='return confirm(\"You are about to delete a reply. This operation cannot be undone. Continue?\");' href='".RELATIVE."/deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>delete</a>";
 		}
 		if($isflaggable) {
-			echo " — <a class='dangerous' href='../flagcommentreply/".$row['commentreplyid']."' title='This comment reply requires moderator attention'>flag</a>";
+			echo " — <a class='dangerous' href='".RELATIVE."/flagcommentreply/".$row['commentreplyid']."' title='This comment reply requires moderator attention'>flag</a>";
 		}
 		echo "</span>";
 
@@ -695,5 +709,5 @@ echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('modal');
 \Osmium\Chrome\print_js_snippet('show_info');
 \Osmium\Chrome\print_js_snippet('view_loadout');
-echo "<script>\nosmium_staticver = ".\Osmium\STATICVER.";\n</script>\n";
+echo "<script>\nosmium_staticver = ".\Osmium\STATICVER.";\nosmium_relative = \"".RELATIVE."\";\n</script>\n";
 \Osmium\Chrome\print_footer();

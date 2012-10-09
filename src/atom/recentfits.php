@@ -72,7 +72,7 @@ $uri->appendChild($atom->createTextNode('http://artefact2.com/osmium/'));
 $version = $generator->appendChild($atom->createAttribute('version'));
 $version->appendChild($atom->createTextNode(\Osmium\get_osmium_version()));
 
-$q = \Osmium\Db\query('SELECT l.loadoutid, l.accountid,
+$q = \Osmium\Db\query('SELECT l.loadoutid, l.accountid, l.visibility,
 a.nickname, a.charactername, a.characterid, a.apiverified,
 lh.updatedate, f.name, f.hullid, it.typename AS hullname
 FROM osmium.loadouts AS l
@@ -109,7 +109,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$rel = $link->appendChild($atom->createAttribute('rel'));
 	$rel->appendChild($atom->createTextNode('alternate'));
 	$href = $link->appendChild($atom->createAttribute('href'));
-	$href->appendChild($atom->createTextNode('../loadout/'.$row['loadoutid']));
+	$href->appendChild($atom->createTextNode('../'.\Osmium\Fit\get_fit_uri($row['loadoutid'], $row['visibility'], '0')));
 
 	$author = $entry->appendChild($atom->createElement('author'));
 	$name = $author->appendChild($atom->createElement('name'));

@@ -77,16 +77,22 @@ function get_notifications($callback, $newonly = false) {
 		'SELECT notificationid, n.creationdate, n.type,
 		targetid1, targetid2, targetid3,
 		a.accountid, a.nickname, a.apiverified,
-		a.characterid, a.charactername, a.ismoderator
+		a.characterid, a.charactername, a.ismoderator,
+		l.visibility, l.privatetoken
 		FROM osmium.notifications AS n
 		JOIN osmium.accounts AS a ON n.fromaccountid = a.accountid
+		LEFT JOIN osmium.loadouts l ON (n.type = $5 AND n.targetid1 = l.loadoutid) OR (n.type = $6 AND n.targetid2 = l.loadoutid) OR (n.type = $7 AND n.targetdid3 = l.loadoutid)
 		WHERE (n.creationdate >= $1 OR ($2 AND n.creationdate >= $3))
 		AND n.accountid = $4
 		ORDER BY n.creationdate DESC',
 		array($threshold,
 		      $newonly ? 'f' : 't',
 		      time() - 86400 * 7,
-		      $a['accountid']));
+		      $a['accountid'],
+		      NOTIFICATION_TYPE_LOADOUT_EDITED,
+		      NOTIFICATION_TYPE_LOADOUT_COMMENTED,
+		      NOTIFICATION_TYPE_COMMENT_REPLIED,
+			));
 
 	while($row = \Osmium\Db\fetch_assoc($q)) {
 		$callback($row, $row['creationdate'] >= $threshold);
@@ -100,31 +106,35 @@ function reset_notification_count($thres = null) {
 
 function get_notification_body($row) {
 	$type = $row['type'];
+	$vis = $row['visibility'];
+	$ptok = $row['privatetoken'];
 
 	if($type == NOTIFICATION_TYPE_LOADOUT_EDITED) {
 		$loadoutid = $row['targetid1'];
 		$revision = $row['targetid2'];
 
 		return \Osmium\Chrome\format_character_name($row)
-			." has edited loadout <a href='./loadout/".$loadoutid."'>#"
+			." has edited loadout <a href='./".\Osmium\Fit\get_fit_uri($loadoutid, $vis, $ptok)."'>#"
 			.$loadoutid."</a>. <a href='./loadouthistory/"
 			.$loadoutid."#revision".$revision."'>View changes</a>";
 	} else if($type == NOTIFICATION_TYPE_LOADOUT_COMMENTED) {
 		$commentid = $row['targetid1'];
 		$loadoutid = $row['targetid2'];
+		$uri = \Osmium\Fit\get_fit_uri($loadout, $vis, $ptok);
 
 		return \Osmium\Chrome\format_character_name($row)
-			." has commented on loadout <a href='./loadout/".$loadoutid."'>#"
-			.$loadoutid."</a>. <a href='./loadout/".$loadoutid."?jtc="
+			." has commented on loadout <a href='./".$uri."'>#"
+			.$loadoutid."</a>. <a href='./".$uri."?jtc="
 			.$commentid."#c".$commentid."'>View comment</a>";
 	} else if($type == NOTIFICATION_TYPE_COMMENT_REPLIED) {
 		$replyid = $row['targetid1'];
 		$commentid = $row['targetid2'];
 		$loadoutid = $row['targetid3'];
+		$uri = \Osmium\Fit\get_fit_uri($loadout, $vis, $ptok);
 
 		return \Osmium\Chrome\format_character_name($row)
-			." has replied to one of your comments on loadout <a href='./loadout/"
-			.$loadoutid."'>#".$loadoutid."</a>. <a href='./loadout/".$loadoutid."?jtc="
+			." has replied to one of your comments on loadout <a href='./"
+			.$uri."'>#".$loadoutid."</a>. <a href='./".$uri."?jtc="
 			.$commentid."#r".$replyid."'>View reply</a>";
 	} else {
 		return 'Unknown notification type '.intval($type);

@@ -38,7 +38,7 @@ $otherid2 = null;
 if($type == 'loadout') {
 	$flagtype = \Osmium\Flag\FLAG_TYPE_LOADOUT;
 	$loadoutid = $id;
-	$uri = "../loadout/".$id;
+	$uri = "../".\Osmium\Fit\fetch_fit_uri($id);
 	$title = 'Flag loadout #'.$id;
 	$ftitle = "Flag loadout <a href='$uri'>#$id</a>";
 
@@ -70,7 +70,7 @@ if($type == 'loadout') {
 		$loadoutid = $otherid2 = $row['loadoutid'];
 	}
 
-	$uri = "../loadout/{$loadoutid}?jtc={$commentid}#{$anchor}";
+	$uri = "../".\Osmium\Fit\fetch_fit_uri($loadoutid)."?jtc={$commentid}#{$anchor}";
 	$title = 'Flag '.$entity.' #'.$id;
 	$ftitle = 'Flag '.$entity." <a href='$uri'>#$id</a>";
 

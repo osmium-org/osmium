@@ -6,6 +6,12 @@ The osmium schema has been updated:
 * loadoutstaglist now uses fittinghashes instead of just the latest
   revision of a given loadoutid
 
+* new column: privatetoken in loadouts (defaults to a random positive
+  64-bit integer)
+
+IMPORTANT: the $fit format has changed slightly, make sure to remove
+cache and NewFit_* files in the cache directory.
+
 v0.5.0, released 2012-09-08
 ===========================
 

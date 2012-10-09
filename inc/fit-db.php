@@ -222,9 +222,10 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 
 	if(!isset($fit['metadata']['loadoutid'])) {
 		/* Insert a new loadout */
-		list($loadoutid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password)));
+		list($loadoutid, $privatetoken) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid, privatetoken', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password)));
 
 		$fit['metadata']['loadoutid'] = $loadoutid;
+		$fit['metadata']['privatetoken'] = $privatetoken;
 	} else {
 		/* Update a loadout */
 		$loadoutid = $fit['metadata']['loadoutid'];
@@ -298,7 +299,7 @@ function get_fit($loadoutid, $revision = null) {
 		return $cache;
 	}
 
-	$loadout = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, viewpermission, editpermission, visibility, passwordhash FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
+	$loadout = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, viewpermission, editpermission, visibility, passwordhash, privatetoken FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid)));
 
 	if($loadout === false) return false;
 
@@ -310,6 +311,7 @@ function get_fit($loadoutid, $revision = null) {
 	select_ship($fit, $fitting['hullid']);
 
 	$fit['metadata']['loadoutid'] = $loadoutid;
+	$fit['metadata']['privatetoken'] = $loadout['privatetoken'];
 	$fit['metadata']['hash'] = $fitting['hash'];
 	$fit['metadata']['name'] = $fitting['name'];
 	$fit['metadata']['description'] = $fitting['description'];
@@ -429,4 +431,21 @@ function insert_fitting_delta_against_previous_revision($fit) {
 	if($delta === null) return;
 
 	\Osmium\Db\query_params('INSERT INTO osmium.fittingdeltas (fittinghash1, fittinghash2, delta) VALUES ($1, $2, $3)', array($old['metadata']['hash'], $fit['metadata']['hash'], $delta));
+}
+
+/**
+ * @see \Osmium\Fit\get_fit_uri().
+ *
+ * @note If you have $fit available, it is more efficient to use
+ * get_fit_uri() directly.
+ */
+function fetch_fit_uri($loadoutid) {
+	list($visibility, $ptoken) = 
+		\Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'SELECT visibility, privatetoken FROM osmium.loadouts WHERE loadoutid = $1',
+				array($loadoutid)
+				));
+
+	return get_fit_uri($loadoutid, $visibility, $ptoken);
 }
