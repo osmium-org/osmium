@@ -126,11 +126,18 @@ foreach($dogmasource as $aname => $val) {
 					$func = 'Osmium\Dogma\apply_'.$mtype;
 					$mul = 1;
 					$func($mul, $fvalue);
+
+					/* That's right, I am testing two floats for
+					 * equality. Sue me! */
+					if($mul == 1.0) continue;
+
 					$fvalue = 'x '.round($mul, 3);
 				} else if(in_array($mtype, array('modadd', 'modsub'))) {
 					$func = 'Osmium\Dogma\apply_'.$mtype;
 					$add = 0;
 					$func($add, $fvalue);
+
+					if($add == 0) continue;
 
 					$sign = ($add >= 0) ? '+' : '-';
 					$fvalue = $sign.' '.round(abs($add), 3);
