@@ -163,6 +163,7 @@ osmium_showinfo_from_vl = function(opts) {
 	opts.pid = lb.data('presetid');
 	opts.cpid = lb.data('cpid');
 	opts.dpid = lb.data('dpid');
+	opts.skillset = lb.data('skillset');
 
 	osmium_showinfo(opts, '..');
 };

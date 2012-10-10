@@ -42,6 +42,11 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 	\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 
+	if(isset($_GET['skillset'])) {
+		$a = \Osmium\State\get_state('a', null);
+		\Osmium\Fit\use_skillset_by_name($fit, $_GET['skillset'], $a);
+	}
+
 	return true;
 }
 

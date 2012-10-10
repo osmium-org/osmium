@@ -430,3 +430,51 @@ function insert_fitting_delta_against_previous_revision($fit) {
 
 	\Osmium\Db\query_params('INSERT INTO osmium.fittingdeltas (fittinghash1, fittinghash2, delta) VALUES ($1, $2, $3)', array($old['metadata']['hash'], $fit['metadata']['hash'], $delta));
 }
+
+/**
+ * @see \Osmium\Fit\get_fit_uri().
+ *
+ * @note If you have $fit available, it is more efficient to use
+ * get_fit_uri() directly.
+ */
+function fetch_fit_uri($loadoutid) {
+	list($visibility, $ptoken) = 
+		\Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'SELECT visibility, privatetoken FROM osmium.loadouts WHERE loadoutid = $1',
+				array($loadoutid)
+				));
+
+	return get_fit_uri($loadoutid, $visibility, $ptoken);
+}
+
+/**
+ * Parses a skillset title and fetches it using characters of account
+ * $a.
+ *
+ * @see use_skillset()
+ */
+function use_skillset_by_name(&$fit, $ssname, $a = null) {
+	if($ssname == 'All V') {
+		use_skillset($fit, array(), 5);
+	} else if($ssname == 'All 0') {
+		use_skillset($fit, array(), 0);
+	} else if(isset($a['accountid'])) {
+		$row = \Osmium\Db\fetch_assoc(
+			\Osmium\Db\query_params(
+				'SELECT importedskillset, overriddenskillset FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2',
+				array($a['accountid'], $ssname)
+				));
+		if($row !== false) {
+			$skillset = json_decode($row['importedskillset'], true);
+			$overridden = json_decode($row['overriddenskillset'], true);
+			if(!is_array($overridden)) $overridden = array();
+			foreach($overridden as $typeid => $l) {
+				$skillset[$typeid] = $l;
+			}
+			use_skillset($fit, $skillset, 0);
+		} else return false;
+	}
+
+	return $ssname;
+}

@@ -271,34 +271,17 @@ if($loggedin) {
 }
 
 echo "<select name='ss' id='skillset'>\n";
+$selectedss = isset($_GET['ss']) && in_array($_GET['ss'], $names) ? $_GET['ss'] : 'All V';
 foreach($names as $n) {
-	if(isset($_GET['ss']) && $_GET['ss'] == $n) {
+	if($n == $selectedss) {
 		$selected = " selected='selected'";
-
-		if($n == 'All V') {
-			/* Default behavior, do nothing */
-		} else if($n == 'All 0') {
-			\Osmium\Fit\use_skillset($fit, array(), 0);
-		} else if($loggedin) {
-			$row = \Osmium\Db\fetch_assoc(
-				\Osmium\Db\query_params(
-					'SELECT importedskillset, overriddenskillset FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2',
-					array($a['accountid'], $_GET['ss'])
-					));
-			if($row !== false) {
-				$skillset = json_decode($row['importedskillset'], true);
-				foreach(json_decode($row['overriddenskillset'], true) as $typeid => $l) {
-					$skillset[$typeid] = $l;
-				}
-				\Osmium\Fit\use_skillset($fit, $skillset, 0);
-			}
-		}
 	} else $selected = '';
 
 	$n = htmlspecialchars($n, ENT_QUOTES);
 	echo "<option value='$n'$selected>$n</option>\n";
 }
 echo "</select>\n";
+\Osmium\Fit\use_skillset_by_name($fit, $selectedss, $a);
 
 if(count($fit['dronepresets']) > 1 || count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
 	if(count($fit['presets']) > 1 || count($fit['chargepresets']) > 1) {
@@ -372,7 +355,7 @@ echo "</div>\n";
 
 /* ----------------------------------------------------- */
 
-echo "<div id='vloadoutbox' data-loadoutid='".$fit['metadata']['loadoutid']."' data-revision='".$fit['metadata']['revision']."' data-presetid='".$fit['modulepresetid']."' data-cpid='".$fit['chargepresetid']."' data-dpid='".$fit['dronepresetid']."'>\n";
+echo "<div id='vloadoutbox' data-skillset='".htmlspecialchars($selectedss, ENT_QUOTES)."' data-loadoutid='".$fit['metadata']['loadoutid']."' data-revision='".$fit['metadata']['revision']."' data-presetid='".$fit['modulepresetid']."' data-cpid='".$fit['chargepresetid']."' data-dpid='".$fit['dronepresetid']."'>\n";
 
 echo "<header>\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
