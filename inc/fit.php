@@ -765,6 +765,41 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 }
 
 /**
+ * Add a drone to a fitting.
+ *
+ * The drones will be added in priority in space as long as it is
+ * possible (in respect to bandwidth and maximum number of drones in
+ * space); if not then the drone is added in the bay.
+ */
+function add_drone_auto(&$fit, $typeid, $quantity) {
+	if($quantity == 0) return;
+
+	$available = 
+		\Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth')
+		- get_used_drone_bandwidth($fit);
+
+	/* Add drone to bay first */
+	add_drone($fit, $typeid, $quantity, 0);
+
+	$usedbw = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'droneBandwidthUsed');
+
+	/* How many drones can fit in the remaining bandwidth? */
+	$totransfer = min(
+		$usedbw > 0 ? (int)floor($available / $usedbw) : $quantity,
+		$quantity
+		);
+
+	/* How many more drones can be in space? */
+	$remainingslots = \Osmium\Dogma\get_char_attribute($fit, 'maxActiveDrones');
+	foreach($fit['drones'] as $d) {
+		$remainingslots -= $d['quantityinspace'];
+	}
+	$totransfer = min($totransfer, max($remainingslots, 0));
+
+	transfer_drone($fit, $typeid, 'bay', $totransfer);
+}
+
+/**
  * Remove drones from a fitting.
  *
  * @param $typeid the typeid of the drones to remove

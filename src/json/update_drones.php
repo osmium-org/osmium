@@ -47,5 +47,10 @@ foreach($old_drones as $typeid => $drone) {
 	\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $drone['quantityinbay']);
 	\Osmium\Fit\remove_drone($fit, $typeid, 'space', $drone['quantityinspace']);
 }
+
+if(isset($_GET['add_typeid']) && isset($_GET['add_quantity']) && $_GET['add_typeid'] > 0) {
+	\Osmium\Fit\add_drone_auto($fit, intval($_GET['add_typeid']), intval($_GET['add_quantity']));
+}
+
 \Osmium\State\put_new_fit($fit);
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_data_step_drone_select($fit));
