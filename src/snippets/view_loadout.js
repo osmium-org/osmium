@@ -93,7 +93,7 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 			}
 		}
 
-		var used_bandwidth = 0;
+		var used_bandwidth = json['usedbandwidth'];
 		var total_bandwidth;
 		$("div#inbay > ul, div#inspace > ul").empty();
 		for(var i = 0; i < json['drones'].length; ++i) {
@@ -115,7 +115,6 @@ osmium_commit_load = function(toggletype, toggleindex, toggledirection,
 						+ drone['typeid'] + "_64.png' />"
 						+ drone['typename'] + " <strong>×"
 						+ drone['quantityinspace'] + "</strong></li>");
-				used_bandwidth += drone['quantityinspace'] * drone['bandwidth'], 10;
 			}
 		}
 

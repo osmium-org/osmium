@@ -20,7 +20,7 @@ osmium_load_drones = function(json) {
 	var capacity = json['attributes']['dronecapacity'];
 	var bandwidth = json['attributes']['dronebandwidth'];
     var used_capacity = 0;
-	var used_bandwidth = 0;
+	var used_bandwidth = json['usedbandwidth'];
 
 	var select = $("select#dronepreset");
 	var option;
@@ -39,7 +39,6 @@ osmium_load_drones = function(json) {
 							 json['drones'][i]['quantityinspace'],
 							 "div#dronebay > div#inspace > ul",
 							 "↑", "⇈");
-			used_bandwidth += json['drones'][i]['quantityinspace'] * json['drones'][i]['bandwidth'];
 		}
 		
 		used_capacity += (json['drones'][i]['quantityinbay'] 

@@ -92,6 +92,7 @@ function get_data_step_drone_select($fit) {
 			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity'),
 			'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
 			),
+		'usedbandwidth' => \Osmium\Fit\get_used_drone_bandwidth($fit),
 		'computed_attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
 		'dronepresets' => \Osmium\Fit\get_drone_presets($fit),
 		'dpid' => $fit['dronepresetid'],

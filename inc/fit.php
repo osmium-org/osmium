@@ -749,7 +749,6 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 			'typeid' => $typeid,
 			'typename' => $fit['cache'][$typeid]['typename'],
 			'volume' => $fit['cache'][$typeid]['volume'],
-			'bandwidth' => $fit['cache'][$typeid]['attributes']['droneBandwidthUsed']['value'], /* FIXME it may have modifiers */
 			'quantityinbay' => 0,
 			'quantityinspace' => 0,
 			);
