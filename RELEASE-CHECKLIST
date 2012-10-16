@@ -25,7 +25,7 @@ The list
 * Put relevant info in UPDATING
 
 * Commit
-  git commit -m "Version X.Y.Z"
+  git commit -m "Version X.Y.Z."
 
 * Tag this commit
   git tag -s -m "Version X.Y.Z" vX.Y.Z
