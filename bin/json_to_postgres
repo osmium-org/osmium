@@ -158,6 +158,12 @@ for($i = 0; $i < $count; $i += 3) {
 		$values = array();
 
 		foreach($cols as $jsoncol => $sqlcol) {
+			/* XXX: Dirty dirty hack: ignore DUST stuff since it
+			 * breaks FK constraints */
+			if($sqlcol == 'typeid' && $row[$jsoncol] >= 350000) {
+				continue 2;
+			}
+
 			$values[] = to_postgres($row[$jsoncol]);
 		}
 
