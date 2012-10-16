@@ -65,7 +65,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	if(!$xhtml) echo "<meta charset='UTF-8' />\n";
 	if(!$index) echo "<meta name='robots' content='noindex' />\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
-	echo "<link rel='stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/chrome.css' type='text/css' />\n";
+	echo "<link rel='stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/dark.css' title='Dark' type='text/css' />\n";
 	echo "<link rel='icon' type='image/png' href='$relative/static-".\Osmium\STATICVER."/favicon.png' />\n";
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";

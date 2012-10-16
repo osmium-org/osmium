@@ -20,7 +20,7 @@ osmium_load_drones = function(json) {
 	var capacity = json['attributes']['dronecapacity'];
 	var bandwidth = json['attributes']['dronebandwidth'];
     var used_capacity = 0;
-	var used_bandwidth = 0;
+	var used_bandwidth = json['usedbandwidth'];
 
 	var select = $("select#dronepreset");
 	var option;
@@ -39,7 +39,6 @@ osmium_load_drones = function(json) {
 							 json['drones'][i]['quantityinspace'],
 							 "div#dronebay > div#inspace > ul",
 							 "↑", "⇈");
-			used_bandwidth += json['drones'][i]['quantityinspace'] * json['drones'][i]['bandwidth'];
 		}
 		
 		used_capacity += (json['drones'][i]['quantityinbay'] 
@@ -100,11 +99,13 @@ osmium_add_drone = function(typeid, typename, count, selector, toggleone, toggle
 		.attr('title', typename);
 }
 
-osmium_drones_commit = function() {
+osmium_drones_commit = function(addtypeid, addquantity) {
     $("img#dronebay_spinner").css('visibility', 'visible');
 
     var opts = {
-		token: osmium_tok
+		token: osmium_tok,
+		add_typeid: addtypeid,
+		add_quantity: addquantity
     };
 
     $("div#dronebay > div#inbay > ul > li.drone").each(function(i) {
@@ -213,28 +214,20 @@ $(function() {
     });
 
     $("div#dronebay > div > ul").sortable({
-		receive: osmium_drones_commit,
+		receive: function() { osmium_drones_commit(null, null); },
 		items: '.drone',
 		connectWith: "div#dronebay > div > ul",
 		placeholder: "drone_placeholder"
     });
 
     $("ul#search_results").on('dblclick', "li.drone", function(obj) {
-		var clone = $(this).clone();
-		clone.find('span.links').remove();
-		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
-		osmium_drones_commit();
-    }).on('click', 'li.drone > span.links > a.addonedrone', function(obj) {
-		$(this).parent().parent().trigger('dblclick');
+		osmium_drones_commit($(this).data('typeid'), 1);
 		obj.stopPropagation();
 		obj.preventDefault();
+    }).on('click', 'li.drone > span.links > a.addonedrone', function(obj) {
+		$(this).parent().parent().trigger('dblclick');
 	}).on('click', 'li.drone > span.links > a.addfivedrones', function(obj) {
-		var clone = $(this).parent().parent().clone();
-		clone.data('count', 5);
-		clone.find('span.links').remove();
-		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
-
-		osmium_drones_commit();
+		osmium_drones_commit($(this).parent().parent().data('typeid'), 5);
 		obj.stopPropagation();
 		obj.preventDefault();
 	});
@@ -274,7 +267,7 @@ $(function() {
 		drone.find('strong').text('×' + drone.data('count'));
 		$("div#dronebay > div#inspace > ul > li.drone_placeholder").before(clone);
 
-		osmium_drones_commit();
+		osmium_drones_commit(null, null);
 		obj.stopPropagation();
 		obj.preventDefault();
     }).on('click', "div#inspace > ul > li.drone > span.links > a.moveonedrone", function(obj) {
@@ -287,7 +280,7 @@ $(function() {
 		drone.find('strong').text('×' + drone.data('count'));
 		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
 
-		osmium_drones_commit();
+		osmium_drones_commit(null, null);
 		obj.stopPropagation();
 		obj.preventDefault();
     }).on('click', "div#inbay > ul > li.drone > span.links > a.movefivedrones", function(obj) {
@@ -301,7 +294,7 @@ $(function() {
 		drone.find('strong').text('×' + drone.data('count'));
 		$("div#dronebay > div#inspace > ul > li.drone_placeholder").before(clone);
 
-		osmium_drones_commit();
+		osmium_drones_commit(null, null);
 		obj.stopPropagation();
 		obj.preventDefault();
     }).on('click', "div#inspace > ul > li.drone > span.links > a.movefivedrones", function(obj) {
@@ -315,7 +308,7 @@ $(function() {
 		drone.find('strong').text('×' + drone.data('count'));
 		$("div#dronebay > div#inbay > ul > li.drone_placeholder").before(clone);
 
-		osmium_drones_commit();
+		osmium_drones_commit(null, null);
 		obj.stopPropagation();
 		obj.preventDefault();
     }).on('click', "li.drone[data-typeid] > img", function() {

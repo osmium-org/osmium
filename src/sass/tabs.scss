@@ -4,20 +4,20 @@
 	padding: 0;
 	text-align: center;
 
-	border-bottom: 1px solid #888;
+	border-bottom: 1px solid $tab-border-color;
 
 	&> li {
 		position: relative;
 		bottom: -1px;
 
 		display: inline-block;
-		border: 1px solid #888;
+		border: 1px solid $tab-border-color;
 
 		&.active {
-			border-bottom: 1px solid white;
+			border-bottom: 2px solid $main-bg-color;
 
 			&> a {
-				color: black;
+				color: $tab-active-text-color;
 				text-decoration: none;
 				font-weight: bold;
 			}

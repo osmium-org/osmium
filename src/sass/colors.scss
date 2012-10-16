@@ -1,0 +1,8 @@
+@mixin linear-gradient-lighten-top($color, $intensity: 5%) {
+	background-color: $color;
+	background: -webkit-linear-gradient(top, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -ms-linear-gradient(top, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -o-linear-gradient(top, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -moz-linear-gradient(to bottom, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: linear-gradient(to bottom, lighten($color, $intensity), $color, darken($color, $intensity));
+}

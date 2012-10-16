@@ -1,20 +1,20 @@
 @mixin error {
-	border: 1px solid #C30;
-	color: #C30;
+	border: 1px solid $error-border-color;
+	color: $error-text-color;
 	padding: 0.5em;
 	text-align: center;
 }
 
 @mixin warning {
 	@include error;
-	border-color: #880;
-	color: #880;
+	border-color: $warning-border-color;
+	color: $warning-text-color;
 }
 
 @mixin notice {
 	@include error;
 	border: none;
-	color: black;
+	color: $notice-text-color;
 	text-decoration: underline;
 }
 
@@ -31,7 +31,7 @@ p.notice_box {
 }
 
 p.placeholder {
-	color: #888;
+	color: $placeholder-text-color;
 	text-align: center;
 	padding: 0.5em;
 	font-style: italic;

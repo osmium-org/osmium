@@ -601,3 +601,23 @@ function get_mining_yield(&$fit) {
 
 	return $total;
 }
+
+/**
+ * Return the total bandwidth used by the drones currently in space.
+ *
+ * This function isn't really needed at the moment, but in the future
+ * there might be some ships or modules that have modifiers for the
+ * bandwidth of certain drone types (like a bandwidth reduction bonus
+ * for logistics drones on logistics ships, etc.).
+ */
+function get_used_drone_bandwidth($fit) {
+	$used = 0;
+
+	foreach($fit['drones'] as $drone) {
+		if(($q = $drone['quantityinspace']) == 0) continue; /* Don't calculate the attribute for nothing */
+
+		$used += $q * \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'droneBandwidthUsed');
+	}
+
+	return $used;
+}

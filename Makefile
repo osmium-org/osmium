@@ -1,6 +1,10 @@
-default: static/chrome.css
+THEMES=dark
 
-static/chrome.css: src/sass/root.scss src/sass/*.scss
+default: themes
+
+themes: $(addprefix static/, $(addsuffix .css, $(THEMES)))
+
+static/%.css: src/sass/themes/%.scss src/sass/*.scss
 	sass --unix-newlines -t compact $< | tr -s '\n' > $@
 
 tests:
@@ -32,5 +36,5 @@ clear-api-cache:
 clear-sessions:
 	rm -f cache/sess_*
 
-.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions
+.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes
 

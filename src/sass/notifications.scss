@@ -1,6 +1,6 @@
 a#ncount {
-	background-color: red;
-	color: white;
+	background-color: $notification-count-bg-color;
+	color: $notification-count-text-color;
 	font-weight: bold;
 	border-radius: 5em;
 	text-decoration: none;
@@ -29,7 +29,7 @@ div#vnotifications {
 
 		&> tbody > tr {
 			&.new {
-				background-color: #FFC;
+				background-color: $notification-new-row-bg-color;
 			}
 
 			&> td {

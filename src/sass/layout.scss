@@ -1,6 +1,5 @@
 $footer-height: 1.7em;
 $nav-height: 2.5em;
-$link-color: #1122CC;
 
 @mixin ellipsis {
 	overflow: hidden;
@@ -14,14 +13,14 @@ $link-color: #1122CC;
 
 	&> header > h2, &> section > h2, &> h2 {
 		margin: 1em 0 0.5em 0;
-		border-bottom: 1px solid black;
+		border-bottom: 1px solid $title-border-color;
 		position: relative;
 
 		&> small {
 			position: absolute;
 			right: 0;
 			bottom: 0;
-			color: #888;
+			color: $aside-text-color;
 		}
 	}
 }
@@ -30,6 +29,8 @@ html, body {
 	margin: 0;
 	padding: 0;
 	height: 100%;
+	color: $main-text-color;
+	background-color: $main-bg-color;
 }
 
 div#wrapper {
@@ -57,10 +58,12 @@ footer, div#push {
 	clear: both;
 }
 
-nav {
+div#wrapper > nav:first-child {
 	min-height: $nav-height;
 	width: 100%;
-	border-bottom: 1px dotted #CCC;
+	border-bottom: 1px solid $top-navigation-border-color;
+
+	@include linear-gradient-lighten-top($top-navigation-bg-color, 15%);
 
 	&> ul {
 		margin: 0;
@@ -75,7 +78,7 @@ nav {
 			padding-left: 1em;
 
 			&> strong > a {
-				color: black !important;
+				color: $strong-emphasis-text-color !important;
 				text-decoration: none !important;
 			}
 		}
@@ -83,11 +86,11 @@ nav {
 
 	&> div#state_box {
 		float: right;
+		padding-right: 1em;
 
 		&> p, &> form > p {
 			margin: 0;
 			line-height: $nav-height;
-			padding-right: 1em;
 			display: inline-block;
 			vertical-align: middle;
 		}
@@ -103,7 +106,7 @@ nav {
 		}
 
 		&.logout > p > a.rep {
-			color: black;
+			color: $strong-emphasis-text-color;
 			text-decoration: none;
 		}
 	}
@@ -117,7 +120,7 @@ footer > p {
 	padding-right: 0.5em;
 	
 	&, &> a {
-		color: #777;
+		color: $aside-text-color;
 	}
 }
 
@@ -131,34 +134,34 @@ img {
 
 a {
 	&, &:visited {
-		color: $link-color;
-		border-color: $link-color;
+		color: $link-text-color;
+		border-color: $link-border-color;
 	}
 
 	&:hover {
-		color: $link-color !important;
-		border-color: $link-color !important;
+		color: $link-text-color !important;
+		border-color: $link-border-color !important;
 		text-decoration: underline !important;
 	}
 
 	&:active, &:focus {
-		color: red !important;
-		border-color: red !important;
+		color: $active-link-text-color !important;
+		border-color: $active-link-border-color !important;
 	}
 
 	&.dangerous {
 		&:hover, &:focus {
-			color: #F30 !important;
-			border-color: #F30 !important;
+			color: $dangerous-link-text-color !important;
+			border-color: $dangerous-link-border-color !important;
 		}
 	}
 
 	&.profile {
-		color: black;
+		color: $emphasis-text-color;
 		text-decoration: none;
 
 		&:hover {
-			color: $link-color;
+			color: $link-text-color;
 			text-decoration: underline;
 		}
 	}
@@ -178,11 +181,11 @@ a {
 }
 
 .overflow {
-	background-color: #FCC !important;
+	background-color: $overflow-bg-color !important;
 }
 
 abbr, .mod {
-	border-bottom: 1px dotted #AAA;
+	border-bottom: 1px dotted $abbr-border-color;
 }
 
 span.normalaccount:before {
@@ -240,10 +243,10 @@ div.votes {
 		z-index: 50000;
 		width: 20em;
 		padding: 1em;
-		background-color: #FF2400;
+		background-color: $vote-error-background-color;
 		font-weight: bold;
 		font-size: 1.2em;
-		color: white;
+		color: $vote-error-text-color;
 	}
 }
 
@@ -254,18 +257,18 @@ body > div#modalbg {
 	width: 100%;
 	height: 100%;
 	z-index: 70000;
-	background-color: rgba(255, 255, 255, 0.7);
+	background-color: $modal-overlay-bg-color;
 }
 
 body > div#modal {
-	border: 1px solid black;
+	border: 1px solid $modal-border-color;
 	position: fixed;
 	top: 50%;
 	left: 50%;
 	width: 50em;
 	max-height: 30em;
 	z-index: 70001;
-	background-color: white;
+	background-color: $modal-bg-color;
 	overflow: auto;
 
 	&> a#closemodal {
@@ -273,20 +276,17 @@ body > div#modal {
 		top: 50%;
 		left: 50%;
 		z-index: 70002;
-		color: red;
-		border: 1px solid red;
+		color: $close-modal-text-color;
+		border: 1px solid $close-modal-border-color;
 		font-weight: bold;
 		width: 1.5em;
 		height: 1.5em;
 		line-height: 1.5em;
 		display: block;
 		text-align: center;
-		background-color: white;
+		background-color: $close-modal-bg-color;
 	}
 }
-
-$target-highlight-color: #FFC;
-$target-final-color: #FFF;
 $animation-duration: 15s;
 
 :target {
@@ -309,21 +309,21 @@ $animation-duration: 15s;
 }
 
 @keyframes tfade {
-	from { background-color: $target-highlight-color; }
-	to { background-color: $target-final-color; }
+	from { background-color: $anchor-target-highlight-bg-color; }
+	to { background-color: $anchor-target-final-bg-color; }
 }
 
 @-moz-keyframes tfade {
-	from { background-color: $target-highlight-color; }
-	to { background-color: $target-final-color; }
+	from { background-color: $anchor-target-highlight-bg-color; }
+	to { background-color: $anchor-target-final-bg-color; }
 }
 
 @-webkit-keyframes tfade {
-	from { background-color: $target-highlight-color; }
-	to { background-color: $target-final-color; }
+	from { background-color: $anchor-target-highlight-bg-color; }
+	to { background-color: $anchor-target-final-bg-color; }
 }
 
 @-o-keyframes tfade {
-	from { background-color: $target-highlight-color; }
-	to { background-color: $target-final-color; }
+	from { background-color: $anchor-target-highlight-bg-color; }
+	to { background-color: $anchor-target-final-bg-color; }
 }

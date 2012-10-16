@@ -22,7 +22,7 @@ div#methodselect > ul {
 			display: block;
 
 			&.selected {
-				color: black;
+				color: $strong-emphasis-text-color;
 				font-weight: bold;
 				text-decoration: none;
 			}

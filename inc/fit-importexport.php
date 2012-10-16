@@ -436,7 +436,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 				continue;
 			}
 
-			add_drone($fit, $typeid, (int)$hardware['qty'], 0);
+			add_drone_auto($fit, $typeid, (int)$hardware['qty']);
 		} else {
 			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
 			if($slottype === 'unknown') {
@@ -538,7 +538,7 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 		}
 
 		if(\CommonLoadoutFormat\check_typeof_type($moduleid, 'drone')) {
-			add_drone($fit, $moduleid, $qty, 0);
+			add_drone_auto($fit, $moduleid, $qty);
 		} else {
 			$slottype = \CommonLoadoutFormat\get_module_slottype($moduleid);
 			if($slottype === 'unknown') {
@@ -623,7 +623,7 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 		if($qty <= 0) continue;
 
 		if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {
-			add_drone($fit, $typeid, $qty, 0);
+			add_drone_auto($fit, $typeid, $qty);
 		}
 		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
 			/* The game won't generate/recognize charges, but it

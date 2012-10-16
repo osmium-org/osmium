@@ -41,6 +41,11 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 	\Osmium\Fit\use_charge_preset($fit, $_GET['cpid']);
 	\Osmium\Fit\use_drone_preset($fit, $_GET['dpid']);
 
+	if(isset($_GET['skillset'])) {
+		$a = \Osmium\State\get_state('a', null);
+		\Osmium\Fit\use_skillset_by_name($fit, $_GET['skillset'], $a);
+	}
+
 	return true;
 }
 
@@ -75,6 +80,7 @@ function get_data_step_drone_select($fit) {
 			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity'),
 			'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
 			),
+		'usedbandwidth' => \Osmium\Fit\get_used_drone_bandwidth($fit),
 		'computed_attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
 		'dronepresets' => \Osmium\Fit\get_drone_presets($fit),
 		'dpid' => $fit['dronepresetid'],

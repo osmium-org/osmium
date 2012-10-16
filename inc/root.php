@@ -152,10 +152,10 @@ function get_osmium_version() {
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 
 /** Bump this when static files (icons, JS snippets, etc.) are updated */
-const STATICVER = 2;
+const STATICVER = 3;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 2;
+const CSS_STATICVER = 3;
 
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
