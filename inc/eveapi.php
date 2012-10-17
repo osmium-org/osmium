@@ -69,6 +69,7 @@ function fetch($name, array $params) {
 	$c = curl_init(API_ROOT.$name);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($c, CURLOPT_CAINFO, \Osmium\ROOT.'/ext/ca/GeoTrustGlobalCA.pem');
 	curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($params, '', '&'));
 	$raw_xml = curl_exec($c);
 	curl_close($c);
