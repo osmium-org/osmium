@@ -28,12 +28,6 @@ Contact
 * <artefact2@gmail.com>
 * `#osmium` on `irc.coldfront.net`
 
-Caveats
--------
-
-If you are NOT using the Apache HTTP Server, you will have to adapt
-the rules in the `.htaccess` file.
-
 Running Osmium
 ==============
 
@@ -81,6 +75,25 @@ Assuming your webserver process runs with user `http` and group
    @hourly /path/to/osmium/bin/cron.hourly >/dev/null
    @daily  /path/to/osmium/bin/cron.daily  >/dev/null
    ~~~~
+
+9. Configure your HTTP server. Check the `ext/httpd-conf/` directory
+  for configuration examples of popular web servers. If yours is not
+  in the list, or you want to tweak the configuration yourself, here
+  is how Osmium assumes your web server will proceed:
+
+  - Any URL that does **not** match `^/(src/|static)` is aliased (or
+    "sent to") to `/src/dispatch.php`.
+
+  - Any URL that matches `^/static-([1-9][0-9]*)/` is aliased to
+    `/static/` (for example, '/static-2/foo/bar.png' is an alias of
+    `/static/foo/bar.png`).
+
+  - For optimal performance, it is recommended to set an expiration
+    date for static files far in the future. Static files all have
+    URIs that match `^/static(-[1-9][0-9]*)?/`.
+
+  - For pretty error pages, you can use
+    `/src/fatal.php?code=<HTTP_CODE>&message=<TEXT>`.
 
 Initial database setup
 ----------------------
