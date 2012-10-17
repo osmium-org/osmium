@@ -5,6 +5,10 @@ IMPORTANT: the configuration file has been updated. Add the
 "relative_path" line in your config.ini accordingly (see the example
 file for usage).
 
+IMPORTANT: the .htaccess file is no longer shipped, you will have to
+configure your webserver yourself. The README file explains how to do
+so, and an example configuration for Apache 2 is included.
+
 v0.6.1, released 2012-10-17
 ===========================
 
