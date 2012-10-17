@@ -1,3 +1,10 @@
+staging
+=======
+
+IMPORTANT: the configuration file has been updated. Add the
+"relative_path" line in your config.ini accordingly (see the example
+file for usage).
+
 v0.6.5, released 2013-06-04
 ===========================
 
@@ -17,6 +24,7 @@ v0.6.2, released 2012-12-04
 ===========================
 
 No big changes.
+=======
 
 v0.6.1, released 2012-10-17
 ===========================
