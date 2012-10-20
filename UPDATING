@@ -9,6 +9,13 @@ IMPORTANT: the .htaccess file is no longer shipped, you will have to
 configure your webserver yourself. The README file explains how to do
 so, and an example configuration for Apache 2 is included.
 
+The Sphinx loadout index has been updated. You must:
+
+* stop sphinx-searchd;
+* delete the sphinx/index.* files;
+* start sphinx-searchd;
+* run ./bin/reindex_loadouts.
+
 v0.6.5, released 2013-06-04
 ===========================
 
