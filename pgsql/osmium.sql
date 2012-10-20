@@ -128,7 +128,8 @@ CREATE TABLE loadouts (
     editpermission integer NOT NULL,
     visibility integer NOT NULL,
     passwordhash text,
-    allowcomments boolean DEFAULT true NOT NULL
+    allowcomments boolean DEFAULT true NOT NULL,
+    privatetoken bigint DEFAULT ((random() * ((2)::double precision ^ (63)::double precision)))::bigint NOT NULL
 );
 
 
@@ -230,6 +231,24 @@ ALTER SEQUENCE eveaccounts_eveaccountid_seq OWNED BY eveaccounts.eveaccountid;
 
 
 --
+-- Name: fittingtags; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingtags (
+    fittinghash character(40) NOT NULL,
+    tagname character varying(127) NOT NULL
+);
+
+
+--
+-- Name: fittingaggtags; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW fittingaggtags AS
+    SELECT fittingtags.fittinghash, string_agg(DISTINCT (fittingtags.tagname)::text, ' '::text) AS taglist FROM fittingtags GROUP BY fittingtags.fittinghash;
+
+
+--
 -- Name: fittingchargepresets; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -280,6 +299,39 @@ CREATE TABLE fittingdronepresets (
 
 
 --
+-- Name: fittingpresets; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingpresets (
+    fittinghash character(40) NOT NULL,
+    presetid integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text
+);
+
+
+--
+-- Name: fittings; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittings (
+    fittinghash character(40) NOT NULL,
+    name character varying(255) NOT NULL,
+    description text,
+    hullid integer NOT NULL,
+    creationdate integer NOT NULL
+);
+
+
+--
+-- Name: fittingdescriptions; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW fittingdescriptions AS
+    SELECT d.fittinghash, string_agg(d.description, ', '::text) AS descriptions FROM (((SELECT fittings.fittinghash, fittings.description FROM fittings UNION SELECT fittingpresets.fittinghash, fittingpresets.description FROM fittingpresets) UNION SELECT fittingchargepresets.fittinghash, fittingchargepresets.description FROM fittingchargepresets) UNION SELECT fittingdronepresets.fittinghash, fittingdronepresets.description FROM fittingdronepresets) d GROUP BY d.fittinghash;
+
+
+--
 -- Name: fittingdrones; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -307,38 +359,11 @@ CREATE TABLE fittingmodules (
 
 
 --
--- Name: fittingpresets; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+-- Name: fittingfittedtypes; Type: VIEW; Schema: osmium; Owner: -
 --
 
-CREATE TABLE fittingpresets (
-    fittinghash character(40) NOT NULL,
-    presetid integer NOT NULL,
-    name character varying(255) NOT NULL,
-    description text
-);
-
-
---
--- Name: fittings; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE TABLE fittings (
-    fittinghash character(40) NOT NULL,
-    name character varying(255) NOT NULL,
-    description text,
-    hullid integer NOT NULL,
-    creationdate integer NOT NULL
-);
-
-
---
--- Name: fittingtags; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE TABLE fittingtags (
-    fittinghash character(40) NOT NULL,
-    tagname character varying(127) NOT NULL
-);
+CREATE VIEW fittingfittedtypes AS
+    SELECT t.fittinghash, string_agg(DISTINCT (invtypes.typename)::text, ', '::text) AS typelist FROM (((SELECT fittingmodules.fittinghash, fittingmodules.typeid FROM fittingmodules UNION SELECT fittingcharges.fittinghash, fittingcharges.typeid FROM fittingcharges) UNION SELECT fittingdrones.fittinghash, fittingdrones.typeid FROM fittingdrones) t JOIN eve.invtypes ON ((t.typeid = invtypes.typeid))) GROUP BY t.fittinghash;
 
 
 --
@@ -594,27 +619,11 @@ CREATE VIEW loadoutslatestrevision AS
 
 
 --
--- Name: loadoutsmodulelist; Type: VIEW; Schema: osmium; Owner: -
---
-
-CREATE VIEW loadoutsmodulelist AS
-    SELECT loadoutslatestrevision.loadoutid, string_agg(DISTINCT (invtypes.typename)::text, ' '::text) AS modulelist FROM (((loadoutslatestrevision JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittingmodules ON ((fittingmodules.fittinghash = loadouthistory.fittinghash))) JOIN eve.invtypes ON ((fittingmodules.typeid = invtypes.typeid))) GROUP BY loadoutslatestrevision.loadoutid;
-
-
---
--- Name: loadoutstaglist; Type: VIEW; Schema: osmium; Owner: -
---
-
-CREATE VIEW loadoutstaglist AS
-    SELECT fittingtags.fittinghash, string_agg(DISTINCT (fittingtags.tagname)::text, ' '::text) AS taglist FROM fittingtags GROUP BY fittingtags.fittinghash;
-
-
---
 -- Name: loadoutssearchdata; Type: VIEW; Schema: osmium; Owner: -
 --
 
 CREATE VIEW loadoutssearchdata AS
-    SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE (-1) END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE (-1) END ELSE 0 END AS restrictedtoallianceid, loadoutstaglist.taglist AS tags, loadoutsmodulelist.modulelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittings.description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate, ls.upvotes, ls.downvotes, ls.score FROM (((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN loadoutscores ls ON ((ls.loadoutid = searchableloadouts.loadoutid))) LEFT JOIN loadoutstaglist ON ((loadoutstaglist.fittinghash = loadouthistory.fittinghash))) LEFT JOIN loadoutsmodulelist ON ((loadoutsmodulelist.loadoutid = loadoutslatestrevision.loadoutid))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)));
+    SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE (-1) END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE (-1) END ELSE 0 END AS restrictedtoallianceid, fittingaggtags.taglist AS tags, fittingfittedtypes.typelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittingdescriptions.descriptions AS description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate, ls.upvotes, ls.downvotes, ls.score FROM ((((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN loadoutscores ls ON ((ls.loadoutid = searchableloadouts.loadoutid))) LEFT JOIN fittingaggtags ON ((fittingaggtags.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingfittedtypes ON ((fittingfittedtypes.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingdescriptions ON ((fittingdescriptions.fittinghash = loadouthistory.fittinghash))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)));
 
 
 --
