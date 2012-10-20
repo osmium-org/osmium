@@ -66,14 +66,14 @@ $ids[] = -1;
 $q = \Osmium\Db\query(
 'SELECT l.loadoutid, l.visibility, f.name, f.hullid, stn.typename, lh.updatedate,
 a.nickname, a.charactername, a.apiverified,
-ltl.taglist, f.description, ls.upvotes, ls.downvotes, ls.score
+fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score
 FROM osmium.loadouts AS l
 JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = l.loadoutid
 JOIN osmium.loadouthistory AS lh ON lh.loadoutid = l.loadoutid AND lh.revision = llr.latestrevision
 JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
 JOIN eve.invtypes AS stn ON stn.typeid = f.hullid
 JOIN osmium.accounts AS a ON a.accountid = l.accountid
-LEFT JOIN osmium.loadoutstaglist AS ltl ON ltl.fittinghash = lh.fittinghash
+LEFT JOIN osmium.fittingaggtags AS fat ON fat.fittinghash = lh.fittinghash
 JOIN osmium.loadoutscores AS ls ON ls.loadoutid = l.loadoutid
 WHERE l.loadoutid IN ('.implode(',', $ids).')'
 );
