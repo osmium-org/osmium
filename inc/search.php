@@ -36,7 +36,7 @@ function query_select_searchdata($cond, array $params = array()) {
 	return \Osmium\Db\query_params('SELECT loadoutid,
 	restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
 	tags, modules, author, name, description, shipid,
-	upvotes, downvotes, score, ship, creationdate, updatedate
+	upvotes, downvotes, score, ship, groups, creationdate, updatedate
 	FROM osmium.loadoutssearchdata '.$cond, $params);
 }
 
@@ -61,7 +61,7 @@ function index($loadout) {
 	return query('INSERT INTO osmium_loadouts 
   (id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid, 
   shipid, upvotes, downvotes, score, creationdate, updatedate,
-  ship, author, name, description, tags, modules) 
+  ship, groups, author, name, description, tags, modules)
   VALUES ('
 	             .$loadout['loadoutid'].','
 	             .$loadout['restrictedtoaccountid'].','
@@ -74,6 +74,7 @@ function index($loadout) {
 	             .$loadout['creationdate'].','
 	             .$loadout['updatedate'].','
 	             .'\''.escape($loadout['ship']).'\','
+	             .'\''.escape($loadout['groups']).'\','
 	             .'\''.escape($loadout['author']).'\','
 	             .'\''.escape($loadout['name']).'\','
 	             .'\''.escape($loadout['description']).'\','
