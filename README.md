@@ -115,12 +115,12 @@ the `osmium_user` user, follow these steps:
     psql osmium osmium_user < pgsql/osmium.sql
     ~~~~
 
-4. Generate the module search index:
+4. Generate the type search index:
 
    ~~~~
    (stop searchd)
    cd sphinx
-   sphinx-indexer osmium_modules
+   sphinx-indexer osmium_types
    (start searchd)
    ~~~~
 
@@ -194,7 +194,7 @@ updated.)*
    ~~~~
    (stop searchd)
    cd sphinx
-   sphinx-indexer osmium_modules
+   sphinx-indexer osmium_types
    (start searchd)
    ~~~~
 
