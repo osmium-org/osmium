@@ -1,6 +1,17 @@
 staging
 =======
 
+The Sphinx module index has been replaced by a more general type index
+(that also contains ships, drones, etc.). You must:
+
+* stop sphinx-searchd;
+* delete the sphinx/modules.* files;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd.
+
+staging
+=======
+
 IMPORTANT: the configuration file has been updated. Add the
 "relative_path" line in your config.ini accordingly (see the example
 file for usage).

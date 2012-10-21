@@ -31,17 +31,19 @@ foreach($_GET as $i => $val) {
 	if($val == 0) $filters[] = $i;
 }
 
-$query = \Osmium\Search\query('SELECT id, typename2, slottype
-FROM osmium_modules
+$query = \Osmium\Search\query('SELECT id, typename, category, subcategory
+FROM osmium_types
 WHERE metagroupid NOT IN ('.implode(',', array_merge(array(-1), $filters)).')
 AND MATCH(\''.\Osmium\Search\escape($q).'\')
 LIMIT '.(MAX_MODULES + 1));
 
 $out = array();
 while($row = \Osmium\Search\fetch_assoc($query)) {
+	if($row['category'] != 'module') continue;
+
 	$out[] = array('typeid' => $row['id'],
-	               'typename' => $row['typename2'],
-	               'slottype' => $row['slottype']);
+	               'typename' => $row['typename'],
+	               'slottype' => $row['subcategory']);
 }
 
 if(count($out) == MAX_MODULES + 1) {

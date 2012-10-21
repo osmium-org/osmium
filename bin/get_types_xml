@@ -20,17 +20,8 @@
 require __DIR__.'/../inc/root.php';
 
 $q = \Osmium\Db\query(
-	'SELECT invmodules.typeid, typename, groupid, groupname, metagroupid,
-	CASE effectid
-		WHEN 11 THEN \'low\'
-		WHEN 12 THEN \'high\'
-		WHEN 13 THEN \'medium\'
-		WHEN 2663 THEN \'rig\'
-		WHEN 3772 THEN \'subsystem\'
-	END AS slottype
-	FROM osmium.invmodules
-	JOIN eve.dgmtypeeffects AS dte ON (invmodules.typeid = dte.typeid AND dte.effectid IN (11, 12, 13, 2663, 3772))
-	ORDER BY invmodules.typeid ASC'
+	'SELECT typeid, typename, category, subcategory, groupname, marketgroupname, metagroupid
+	FROM osmium.typessearchdata'
 	);
 
 $xml = new \DOMDocument('1.0', 'utf-8');
@@ -40,7 +31,7 @@ $schema = $docset->appendChild($xml->createElement('sphinx:schema'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('typename'));
+$name->appendChild($xml->createTextNode('typename2'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
@@ -48,15 +39,11 @@ $name->appendChild($xml->createTextNode('groupname'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('synonyms'));
+$name->appendChild($xml->createTextNode('marketgroupname'));
 
-$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
-$name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('groupid'));
-$type = $attr->appendChild($xml->createAttribute('type'));
-$type->appendChild($xml->createTextNode('int'));
-$bits = $attr->appendChild($xml->createAttribute('bits'));
-$bits->appendChild($xml->createTextNode('32'));
+$field = $schema->appendChild($xml->createElement('sphinx:field'));
+$name = $field->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('synonyms'));
 
 $attr = $schema->appendChild($xml->createElement('sphinx:attr'));
 $name = $attr->appendChild($xml->createAttribute('name'));
@@ -68,13 +55,19 @@ $bits->appendChild($xml->createTextNode('32'));
 
 $attr = $schema->appendChild($xml->createElement('sphinx:attr'));
 $name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('slottype'));
+$name->appendChild($xml->createTextNode('category'));
 $type = $attr->appendChild($xml->createAttribute('type'));
 $type->appendChild($xml->createTextNode('string'));
 
 $attr = $schema->appendChild($xml->createElement('sphinx:attr'));
 $name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('typename2'));
+$name->appendChild($xml->createTextNode('subcategory'));
+$type = $attr->appendChild($xml->createAttribute('type'));
+$type->appendChild($xml->createTextNode('string'));
+
+$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
+$name = $attr->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('typename'));
 $type = $attr->appendChild($xml->createAttribute('type'));
 $type->appendChild($xml->createTextNode('string'));
 
@@ -83,25 +76,28 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$id = $document->appendChild($xml->createAttribute('id'));
 	$id->appendChild($xml->createTextNode($row['typeid']));
 
-	$typename = $document->appendChild($xml->createElement('typename'));
+	$typename = $document->appendChild($xml->createElement('typename2'));
 	$typename->appendChild($xml->createTextNode($row['typename']));
 
 	$groupname = $document->appendChild($xml->createElement('groupname'));
 	$groupname->appendChild($xml->createTextNode($row['groupname']));
 
+	$groupname = $document->appendChild($xml->createElement('marketgroupname'));
+	$groupname->appendChild($xml->createTextNode($row['marketgroupname']));
+
 	$synonyms = $document->appendChild($xml->createElement('synonyms'));
 	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['typename'])));
-
-	$groupid = $document->appendChild($xml->createElement('groupid'));
-	$groupid->appendChild($xml->createTextNode($row['groupid']));
 
 	$metagroupid = $document->appendChild($xml->createElement('metagroupid'));
 	$metagroupid->appendChild($xml->createTextNode($row['metagroupid']));
 
-	$slottype = $document->appendChild($xml->createElement('slottype'));
-	$slottype->appendChild($xml->createTextNode($row['slottype']));
+	$slottype = $document->appendChild($xml->createElement('category'));
+	$slottype->appendChild($xml->createTextNode($row['category']));
 
-	$typename2 = $document->appendChild($xml->createElement('typename2'));
+	$slottype = $document->appendChild($xml->createElement('subcategory'));
+	$slottype->appendChild($xml->createTextNode($row['subcategory']));
+
+	$typename2 = $document->appendChild($xml->createElement('typename'));
 	$typename2->appendChild($xml->createTextNode($row['typename']));
 }
 
