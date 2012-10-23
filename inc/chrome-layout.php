@@ -109,8 +109,8 @@ function print_footer() {
 	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\get_osmium_version()." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
 	echo "</footer>\n";
 
-	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js'></script>\n";
-	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";
+	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>\n";
+	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";
 
 	if(count($__osmium_js_snippets) > 0) {
 		$name = 'JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
