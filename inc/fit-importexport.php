@@ -1099,15 +1099,9 @@ function export_to_eft($fit) {
  * Export a loadout to the EFT format. Use at your own risk.
  */
 function export_to_dna($fit) {
-	static $slotorder = array('high', 'medium', 'low', 'rig');
+	static $slotorder = array('high', 'medium', 'low', 'rig', 'subsystem');
 
 	$dna = $fit['ship']['typeid'];
-
-	if(isset($fit['modules']['subsystem'])) {
-		foreach($fit['modules']['subsystem'] as $s) {
-			$dna .= ':'.$s['typeid'];
-		}
-	}
 
 	$tids = array();
 
