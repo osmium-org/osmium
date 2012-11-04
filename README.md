@@ -92,6 +92,9 @@ Assuming your webserver process runs with user `http` and group
     date for static files far in the future. Static files all have
     URIs that match `^/static(-[1-9][0-9]*)?/`.
 
+  - To minimize bandwidth usage, be sure to enable gzip compression
+    (especially on all the files (except images) under static/).
+
   - For pretty error pages, you can use
     `/src/fatal.php?code=<HTTP_CODE>&message=<TEXT>`.
 
