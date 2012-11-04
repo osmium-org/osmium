@@ -1,0 +1,58 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+$q = \Osmium\Db\query(
+	'SELECT typeid, typename, category, subcategory, metagroupid,
+	mg0.marketgroupid AS mgid0, mg0.marketgroupname AS mgname0,
+	mg1.marketgroupid AS mgid1, mg1.marketgroupname AS mgname1,
+	mg2.marketgroupid AS mgid2, mg2.marketgroupname AS mgname2,
+	mg3.marketgroupid AS mgid3, mg3.marketgroupname AS mgname3,
+	mg4.marketgroupid AS mgid4, mg4.marketgroupname AS mgname4
+	FROM osmium.typessearchdata tsd
+	LEFT JOIN eve.invmarketgroups mg0 ON mg0.marketgroupid = tsd.marketgroupid
+	LEFT JOIN eve.invmarketgroups mg1 ON mg1.marketgroupid = mg0.parentgroupid
+	LEFT JOIN eve.invmarketgroups mg2 ON mg2.marketgroupid = mg1.parentgroupid
+	LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
+	LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
+	ORDER BY mgname4, mgname3, mgname2, mgname1, mgname0, metagroupid, typename'
+	);
+
+$json = array();
+
+while($row = \Osmium\Db\fetch_assoc($q)) {
+	$dest =& $json;
+	for($i = 4; $i >= 0; --$i) {
+		if($row['mgid'.$i] != null) {
+			$dest =& $dest[$row['mgname'.$i]];
+			if(!isset($dest['__mgid'])) $dest['__mgid'] = (int)$row['mgid'.$i];
+		}
+	}
+
+	$dest['__types'][] = array(
+		(int)$row['typeid'],
+		$row['typename'],
+		$row['category'],
+		$row['subcategory'],
+		(int)$row['metagroupid'],
+		);
+}
+
+file_put_contents(__DIR__.'/../static/cache/types.json', json_encode($json));

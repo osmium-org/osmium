@@ -1,11 +1,16 @@
 THEMES=dark
 
-default: themes
+default: themes staticcache
 
 themes: $(addprefix static/, $(addsuffix .css, $(THEMES)))
 
+staticcache: static/cache/types.json
+
 static/%.css: src/sass/themes/%.scss src/sass/*.scss
 	sass --unix-newlines -t compact $< | tr -s '\n' > $@
+
+static/cache/types.json:
+	./bin/make_static_types
 
 tests:
 	@make -s clear-harmless-cache
@@ -27,7 +32,7 @@ tags:
 	ctags -e -R .
 
 clear-harmless-cache:
-	rm -f cache/OsmiumCache_* static/cache/*.{js,html}
+	rm -f cache/OsmiumCache_* static/cache/*
 	rm -Rf cache/CSS cache/HTML cache/URI
 
 clear-api-cache:
@@ -36,5 +41,4 @@ clear-api-cache:
 clear-sessions:
 	rm -f cache/sess_*
 
-.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes
-
+.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache
