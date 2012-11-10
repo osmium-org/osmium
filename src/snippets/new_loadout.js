@@ -106,18 +106,18 @@ $(function() {
 		var displaymg = function(parent, mg) {
 			var ul, li, img, heading;
 
-			if("__children" in groups[mg] && groups[mg].__children.length > 0) {
+			if("children" in groups[mg] && groups[mg].children.length > 0) {
 				ul = $(document.createElement('ul'));
 				ul.addClass('children');
 
-				for(var i in groups[mg].__children) {
+				for(var i in groups[mg].children) {
 					li = $(document.createElement('li'));
 					li.addClass('uninitialized');
 					li.addClass('folded');
-					li.data('mgid', groups[mg].__children[i]);
+					li.data('mgid', groups[mg].children[i]);
 
 					heading = $(document.createElement('h4'));
-					heading.text(groups[groups[mg].__children[i]].__name);
+					heading.text(groups[groups[mg].children[i]].name);
 
 					li.append(heading);
 					ul.append(li);
@@ -126,21 +126,23 @@ $(function() {
 				parent.append(ul);
 			}
 
-			if("__types" in groups[mg] && groups[mg].__types.length > 0) {
+			if("types" in groups[mg] && groups[mg].types.length > 0) {
 				ul = $(document.createElement('ul'));
 				ul.addClass('types');
 
-				for(var i in groups[mg].__types) {
+				for(var i in groups[mg].types) {
+					var type = groups['types'][groups[mg].types[i]];
+
 					li = $(document.createElement('li'));
 					li.addClass('module');
-					li.data('typeid', groups[mg].__types[i][0]);
-					li.text(groups[mg].__types[i][1]);
-					li.data('category', groups[mg].__types[i][2]);
-					li.data('subcategory', groups[mg].__types[i][3]);
-					li.addClass('mg' + groups[mg].__types[i][4]);
+					li.data('typeid', type[0]);
+					li.text(type[1]);
+					li.data('category', type[2]);
+					li.data('subcategory', type[3]);
+					li.addClass('mg' + type[4]);
 
 					img = $(document.createElement('img'));
-					img.prop('src', '//image.eveonline.com/Type/' + groups[mg].__types[i][0] + '_64.png');
+					img.prop('src', '//image.eveonline.com/Type/' + type[0] + '_64.png');
 					img.prop('alt', '');
 					li.prepend(img);
 
@@ -175,37 +177,39 @@ $(function() {
 				t.parent().removeClass('partiallyunfolded');
 			}
 		});
-	});
 
-	$.getJSON('../src/json/shortlist_modules.php', function(shortlist) {
-		var ul, li, img, section;
+		$.getJSON('../src/json/shortlist_modules.php', function(shortlist) {
+			var ul, li, img, section;
 
-		section = $('div#nlsources > section#shortlist');
-		section.children('p.placeholder.loading').remove();
+			section = $('div#nlsources > section#shortlist');
+			section.children('p.placeholder.loading').remove();
 
-		ul = $(document.createElement('ul'));
-		ul.addClass('types');
+			ul = $(document.createElement('ul'));
+			ul.addClass('types');
 
-		for(var i in shortlist) {
-			li = $(document.createElement('li'));
-			li.addClass('module');
-			li.data('typeid', shortlist[i][0]);
-			li.data('category', shortlist[i][2]);
-			li.data('subcategory', shortlist[i][3]);
-			li.addClass('mg' + shortlist[i][4]);
-			li.text(shortlist[i][1]);
+			for(var i in shortlist) {
+				var type = groups['types'][shortlist[i]];
 
-			img = $(document.createElement('img'));
-			img.prop('alt', '');
-			img.prop('src', '//image.eveonline.com/Type/' + shortlist[i][0] + '_64.png');
-			li.prepend(img);
+				li = $(document.createElement('li'));
+				li.addClass('module');
+				li.data('typeid', type[0]);
+				li.data('category', type[2]);
+				li.data('subcategory', type[3]);
+				li.addClass('mg' + type[4]);
+				li.text(type[1]);
 
-			osmium_add_shortlist_contextmenu(li, false);
+				img = $(document.createElement('img'));
+				img.prop('alt', '');
+				img.prop('src', '//image.eveonline.com/Type/' + type[0] + '_64.png');
+				li.prepend(img);
 
-			ul.append(li);
-		}	
+				osmium_add_shortlist_contextmenu(li, false);
 
-		section.append(ul);
+				ul.append(li);
+			}
+
+			section.append(ul);
+		});
 	});
 
 	osmium_add_metagroup_style("div#nlsources > section#browse > ", "div#nlsources > section#browse > div.mgroot");

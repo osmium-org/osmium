@@ -35,14 +35,17 @@ $q = \Osmium\Db\query(
 	ORDER BY mgname4, mgname3, mgname2, mgname1, mgname0, category, metagroupid, typename'
 	);
 
-$flatgroups = array('root' => array('__children' => array()));
+$flatgroups = array(
+	'root' => array('children' => array()),
+	'types' => array(),
+);
 
 while($row = \Osmium\Db\fetch_assoc($q)) {
 	for($i = 1; $i <= 4; ++$i) {
 		if($row['mgid'.$i] === null) {
 			if(($root = $row['mgid'.($i - 1)]) !== null) {
-				if(!in_array($root, $flatgroups['root']['__children'])) {
-					$flatgroups['root']['__children'][] = (int)$root;
+				if(!in_array($root, $flatgroups['root']['children'])) {
+					$flatgroups['root']['children'][] = (int)$root;
 				}
 			}
 
@@ -54,13 +57,13 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 
 		if(!isset($flatgroups[$parent])) {
 			$flatgroups[$parent] = array(
-				'__name' => $row['mgname'.$i],
-				'__children' => array(),
+				'name' => $row['mgname'.$i],
+				'children' => array(),
 				);
 		}
 
-		if(!in_array($child, $flatgroups[$parent]['__children'])) {
-			$flatgroups[$parent]['__children'][] = $child;
+		if(!in_array($child, $flatgroups[$parent]['children'])) {
+			$flatgroups[$parent]['children'][] = $child;
 		}
 	}
 
@@ -69,12 +72,14 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 
 	if(!isset($flatgroups[$mgid])) {
 		$flatgroups[$mgid] = array(
-			'__name' => $mgname,
-			'__children' => array(),
+			'name' => $mgname,
+			'children' => array(),
 			);
 	}
 
-	$flatgroups[$mgid]['__types'][] = array(
+	$flatgroups[$mgid]['types'][] = (int)$row['typeid'];
+
+	$flatgroups['types'][(int)$row['typeid']] = array(
 		(int)$row['typeid'],
 		$row['typename'],
 		$row['category'],
@@ -83,7 +88,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		);
 }
 
-$flatgroups['root']['__children'][] = 0;
+$flatgroups['root']['children'][] = 0;
 
 ksort($flatgroups);
 

@@ -49,33 +49,8 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 	return true;
 }
 
-function get_module_shortlist($shortlist = null) {
-	if($shortlist === null) {
-		$shortlist = \Osmium\State\get_state_trypersist('shortlist_modules', array());
-	}
-
-	$out = array();
-	$rows = array();
-	$req = \Osmium\Db\query('SELECT typeid, typename, category, subcategory, metagroupid
-	FROM osmium.typessearchdata
-	WHERE typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')');
-
-	while($row = \Osmium\Db\fetch_assoc($req)) {
-		$rows[$row['typeid']] = array(
-			(int)$row['typeid'],
-			$row['typename'],
-			$row['category'],
-			$row['subcategory'],
-			(int)$row['metagroupid'],
-			);
-	}
-
-	foreach($shortlist as $typeid) {
-		if(!isset($rows[$typeid])) continue;
-		$out[] = $rows[$typeid];
-	}
-
-	return $out;
+function get_module_shortlist() {
+    return \Osmium\State\get_state_trypersist('shortlist_modules', array());
 }
 
 function get_data_step_drone_select($fit) {
