@@ -4,11 +4,13 @@
 @import "fonts.scss";
 @import "tabs.scss";
 @import "layout.scss";
+@import "animations.scss";
 @import "errors.scss";
 @import "forms.scss";
 @import "tables.scss";
 @import "loadout.scss";
 @import "search.scss";
+@import "sprites.scss";
 
 // Page-specific
 @import "main.scss";
@@ -16,6 +18,7 @@
 @import "viewloadout.scss";
 @import "viewloadouthistory.scss";
 @import "newloadout.scss";
+@import "newfitting.scss";
 @import "viewprofile.scss";
 @import "viewflagginghistory.scss";
 @import "castflag.scss";

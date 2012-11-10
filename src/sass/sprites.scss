@@ -1,0 +1,12 @@
+@mixin sprite($source, $posX, $posY, $width, $height) {
+	background-image: url($source);
+	background-repeat: no-repeat;
+	background-position: #{-$posX} #{-$posY};
+
+	overflow: hidden;
+	text-indent: -240492em;
+
+	display: inline-block;
+	width: $width;
+	height: $height;
+}

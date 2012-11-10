@@ -287,43 +287,43 @@ body > div#modal {
 		background-color: $close-modal-bg-color;
 	}
 }
-$animation-duration: 15s;
 
-:target {
-	animation-name: tfade;
-	-moz-animation-name: tfade;
-	-webkit-animation-name: tfade;
-	-o-animation-name: tfade;
-
-	animation-duration: $animation-duration;
-	-moz-animation-duration: $animation-duration;
-	-webkit-animation-duration: $animation-duration;
-	-o-animation-duration: $animation-duration;
+div#ctxbg {
+	position: absolute;
+	opacity: 0;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 24492;
 }
 
-.notarget:target {
-	animation-name: none;
-	-moz-animation-name: none;
-	-webkit-animation-name: none;
-	-o-animation-name: none;
-}
+ul#ctxmenu {
+	position: absolute;
+	z-index: 24493;
 
-@keyframes tfade {
-	from { background-color: $anchor-target-highlight-bg-color; }
-	to { background-color: $anchor-target-final-bg-color; }
-}
+	width: 10em;
+	border: 1px solid $contextmenu-border-color;
+	background-color: $contextmenu-bg-color;
 
-@-moz-keyframes tfade {
-	from { background-color: $anchor-target-highlight-bg-color; }
-	to { background-color: $anchor-target-final-bg-color; }
-}
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
 
-@-webkit-keyframes tfade {
-	from { background-color: $anchor-target-highlight-bg-color; }
-	to { background-color: $anchor-target-final-bg-color; }
-}
+	cursor: pointer;
 
-@-o-keyframes tfade {
-	from { background-color: $anchor-target-highlight-bg-color; }
-	to { background-color: $anchor-target-final-bg-color; }
+	&> li {
+		padding: 0.25em;
+
+		border-top: 1px dotted $contextmenu-entry-border-color;
+
+		&:first-child {
+			border-top: 0;
+		}
+	}
+
+	&> li:hover {
+		color: $contextmenu-entry-active-text-color;
+		background-color: $contextmenu-entry-active-bg-color;
+	}
 }

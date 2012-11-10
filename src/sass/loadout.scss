@@ -53,6 +53,23 @@ $hidden-char: '\0025B8';
 		width: 32px;
 		margin-right: 0.125em;
 	}
+
+	&.ctxmenu {
+		padding-right: 1em;
+		position: relative;
+
+		&> span.contextmenu {
+			text-align: center;
+			display: inline-block;
+			cursor: pointer;
+			position: absolute;
+			width: 1em;
+			height: 2em;
+			line-height: 2em;
+			top: 0;
+			right: 0;
+		}
+	}
 }
 
 @mixin module-top-corner-link {
@@ -220,7 +237,7 @@ span.fitname {
 	}
 }
 
-div#metadatabox {
+div#metadatabox, div#nlattribs {
 	@include column;
 
 	float: left;

@@ -1,4 +1,3 @@
-<?php
 /* Osmium
  * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
@@ -16,33 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Json\ShortlistModules;
+osmium_contextmenu = function(e, populatefunc, source) {
+	var ul, div, clickfunc, w;
 
-const SHORTLIST_MAXIMUM_LENGTH = 200;
+	ul = $(document.createElement('ul'));
+	ul.prop('id', 'ctxmenu');
 
-require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/ajax_common.php';
+	populatefunc(ul, source);
 
-$anonymous = !\Osmium\State\is_logged_in();
+	div = $(document.createElement('div'));
+	div.prop('id', 'ctxbg');
 
-if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
-	$shortlist = array();
-	$keys = array();
+	div.bind('click contextmenu', function(e2) {
+		$("ul#ctxmenu, div#ctxbg").remove();
+		$(document.elementFromPoint(e2.pageX, e2.pageY)).trigger(e2);
+		return false;
+	});
 
-	$i = 0;
-	while(isset($_GET["$i"]) && $i < SHORTLIST_MAXIMUM_LENGTH) {
-		$typeid = $_GET["$i"];
-		if(!isset($keys[$typeid])) {
-			$keys[$typeid] = true;
-			$shortlist[] = intval($typeid);
-		}
-		++$i;
-	}
+	ul.click(function() {
+		$("ul#ctxmenu, div#ctxbg").remove();
+	});
 
-	$shortlist = array_unique($shortlist);
+	$('body').append(div).append(ul);
 
-	\Osmium\State\put_state_trypersist('shortlist_modules', $shortlist);
-	die();
-}
-
-\Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_module_shortlist());
+	var x = Math.min(e.pageX, $(document).width() - ul.width() - 5);
+	var y = e.pageY;
+	ul.css('left', x);
+	ul.css('top', y);
+};

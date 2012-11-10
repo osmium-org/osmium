@@ -32,21 +32,49 @@ $q = \Osmium\Db\query(
 	LEFT JOIN eve.invmarketgroups mg2 ON mg2.marketgroupid = mg1.parentgroupid
 	LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
 	LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
-	ORDER BY mgname4, mgname3, mgname2, mgname1, mgname0, metagroupid, typename'
+	ORDER BY mgname4, mgname3, mgname2, mgname1, mgname0, category, metagroupid, typename'
 	);
 
-$json = array();
+$flatgroups = array('root' => array('__children' => array()));
 
 while($row = \Osmium\Db\fetch_assoc($q)) {
-	$dest =& $json;
-	for($i = 4; $i >= 0; --$i) {
-		if($row['mgid'.$i] != null) {
-			$dest =& $dest[$row['mgname'.$i]];
-			if(!isset($dest['__mgid'])) $dest['__mgid'] = (int)$row['mgid'.$i];
+	for($i = 1; $i <= 4; ++$i) {
+		if($row['mgid'.$i] === null) {
+			if(($root = $row['mgid'.($i - 1)]) !== null) {
+				if(!in_array($root, $flatgroups['root']['__children'])) {
+					$flatgroups['root']['__children'][] = (int)$root;
+				}
+			}
+
+			break;
+		}
+
+		$parent = (int)$row['mgid'.$i];
+		$child = (int)$row['mgid'.($i - 1)];
+
+		if(!isset($flatgroups[$parent])) {
+			$flatgroups[$parent] = array(
+				'__name' => $row['mgname'.$i],
+				'__children' => array(),
+				);
+		}
+
+		if(!in_array($child, $flatgroups[$parent]['__children'])) {
+			$flatgroups[$parent]['__children'][] = $child;
 		}
 	}
 
-	$dest['__types'][] = array(
+	$mgid = $row['mgid0'] === null ? 0 : (int)$row['mgid0'];
+	$mgname = $mgid === 0 ? 'Uncategorized types' : $row['mgname0'];
+
+	if(!isset($flatgroups[$mgid])) {
+		$flatgroups[$mgid] = array(
+			'__name' => $mgname,
+			'__children' => array(),
+			);
+	}
+
+	$flatgroups[$mgid]['__types'][] = array(
 		(int)$row['typeid'],
 		$row['typename'],
 		$row['category'],
@@ -55,4 +83,8 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		);
 }
 
-file_put_contents(__DIR__.'/../static/cache/types.json', json_encode($json));
+$flatgroups['root']['__children'][] = 0;
+
+ksort($flatgroups);
+
+file_put_contents(__DIR__.'/../static/cache/types.json', json_encode($flatgroups));

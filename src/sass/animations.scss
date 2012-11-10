@@ -1,0 +1,50 @@
+@mixin prefixize($prop, $value) {
+	#{$prop}: $value;
+	-moz-#{$prop}: $value;
+	-webkit-#{$prop}: $value;
+	-o-#{$prop}: $value;
+}
+
+@mixin keyframes($name) {
+	@keyframes $name {
+		@content;
+	}
+
+	@-moz-keyframes $name {
+		@content;
+	}
+
+	@-webkit-keyframes $name {
+		@content;
+	}
+
+	@-o-keyframes $name {
+		@content;
+	}
+}
+
+:target {
+	@include prefixize(animation-name, tfade);
+	@include prefixize(animation-duration, 15s);
+}
+
+.notarget:target {
+	@include prefixize(animation-name, none);
+}
+
+@include keyframes(tfade) {
+	from { background-color: $anchor-target-highlight-bg-color; }
+	to { background-color: $anchor-target-final-bg-color; }
+}
+
+p.placeholder.loading > span {
+	@include prefixize(animation-name, cblink);
+	@include prefixize(animation-duration, 1s);
+	@include prefixize(animation-iteration-count, infinite);
+}
+
+@include keyframes(cblink) {
+	from { opacity: 1; }
+	66% { opacity: 0; }
+	to { opacity: 1; }
+}

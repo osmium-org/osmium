@@ -50,19 +50,24 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 }
 
 function get_module_shortlist($shortlist = null) {
-	$shortlist = \Osmium\State\get_state_trypersist('shortlist_modules', array());
- 
-	$out = array();
-	$rows = array();
-	$req = \Osmium\Db\query_params('SELECT typename, invmodules.typeid FROM osmium.invmodules WHERE invmodules.typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')', array());
-	while($row = \Osmium\Db\fetch_row($req)) {
-		$rows[$row[1]] = array('typename' => $row[0], 'typeid' => $row[1]);
+	if($shortlist === null) {
+		$shortlist = \Osmium\State\get_state_trypersist('shortlist_modules', array());
 	}
 
-	$modattr = array();
-	\Osmium\Fit\get_attributes_and_effects($typeids, $modattr['cache']);
-	foreach($rows as &$row) {
-		$row['slottype'] = \Osmium\Fit\get_module_slottype($modattr, $row['typeid']);
+	$out = array();
+	$rows = array();
+	$req = \Osmium\Db\query('SELECT typeid, typename, category, subcategory, metagroupid
+	FROM osmium.typessearchdata
+	WHERE typeid IN ('.implode(',', $typeids = array_merge(array(-1), $shortlist)).')');
+
+	while($row = \Osmium\Db\fetch_assoc($req)) {
+		$rows[$row['typeid']] = array(
+			(int)$row['typeid'],
+			$row['typename'],
+			$row['category'],
+			$row['subcategory'],
+			(int)$row['metagroupid'],
+			);
 	}
 
 	foreach($shortlist as $typeid) {

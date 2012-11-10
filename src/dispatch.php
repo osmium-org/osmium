@@ -35,12 +35,14 @@ namespace Osmium\Dispatch;
 $osmium_dispatch_rules = array(
 	'%^/$%D' => '/src/main.php',
 	'%^/loadout/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_fit.php',
-	'%^/new$%D' => '/src/new_fitting.php',
+	'%^/new(/(?<token>[A-Za-z0-9:.]{27}))?$%D' => '/src/new_loadout.php',
 	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 	'%^/search$%D' => '/src/search.php',
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
 	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_fit.php',
 	'%^/export/(.+)-(?<type>clf|md|evexml|eft|dna)-(?<loadoutid>[1-9][0-9]*)-(?<revision>[1-9][0-9]*)\.(json|md|xml|txt)$%D' => '/src/export_fit.php',
+
+	'%^/old_new$%D' => '/src/new_fitting.php',
 
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
 	'%^/atom/recentlyupdated\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'recentlyupdated']],

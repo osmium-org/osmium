@@ -63,6 +63,14 @@ $diff-inserted-bg-color: hsl(120, 75%, 25%);
 $diff-removed-text-color: $emphasis-text-color;
 $diff-removed-bg-color: hsl(0, 75%, 25%);
 
+$contextmenu-border-color: $link-border-color;
+$contextmenu-bg-color: $main-bg-color;
+
+$contextmenu-entry-border-color: $aside-text-color;
+
+$contextmenu-entry-active-text-color: $strong-emphasis-text-color;
+$contextmenu-entry-active-bg-color: $subsection-active-bg-color;
+
 //
 // Errors
 //
