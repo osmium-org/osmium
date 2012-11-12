@@ -110,10 +110,10 @@ function modules_select() {
 	\Osmium\Chrome\print_js_snippet('new_fitting-step2');
 
 	$fit = \Osmium\State\get_new_fit();
-	\Osmium\Chrome\print_js_code("osmium_shortlist_load("
+	\Osmium\Chrome\print_js_code("$(function() { osmium_shortlist_load("
 	                             .json_encode(\Osmium\AjaxCommon\get_module_shortlist()).");\n"
 	                             ."osmium_loadout_load("
-	                             .json_encode(\Osmium\AjaxCommon\get_loadable_fit($fit)).");");
+	                             .json_encode(\Osmium\AjaxCommon\get_loadable_fit($fit))."); });");
 }
 
 function modules_select_pre() { return true; }

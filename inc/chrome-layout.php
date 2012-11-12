@@ -88,8 +88,8 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		}
 
 		\Osmium\Chrome\print_js_snippet('notifications');
-		\Osmium\Chrome\print_js_code('osmium_notifications("'
-		                             .str_replace('"', '\"', $relative).'");');
+		\Osmium\Chrome\print_js_code('$(function() { osmium_notifications("'
+		                             .str_replace('"', '\"', $relative).'"); });');
 	} else {
 		echo get_navigation_link($relative.'/import', "Import loadout");
 	}
@@ -141,12 +141,12 @@ function print_footer() {
 
 	if($__osmium_js_code !== '') {
 		echo "<script type='application/javascript'>\n";
-		echo "//<![CDATA[\n$(function() {\n";
+		echo "//<![CDATA[\n";
 		/* Properly "escape" (for lack of a better word) CDATA
 		 * terminators. This looks complicated but actually this is
 		 * all it requires to do it properly. */
 		echo str_replace(']]>', ']]]]><![CDATA[>', $__osmium_js_code);
-		echo "});\n//]]>\n";
+		echo "//]]>\n";
 		echo "</script>\n";
 	}
 

@@ -57,9 +57,9 @@ function drones_select() {
 	\Osmium\Chrome\print_js_snippet('modal');
 	\Osmium\Chrome\print_js_snippet('show_info');
 	\Osmium\Chrome\print_js_snippet('new_fitting-step4');
-	\Osmium\Chrome\print_js_code("osmium_load_drones("
+	\Osmium\Chrome\print_js_code("$(function() { osmium_load_drones("
 	                             .json_encode(\Osmium\AjaxCommon\get_data_step_drone_select($fit))
-	                             .");");
+	                             ."); });");
 }
 
 function drones_select_pre() { return true; }
