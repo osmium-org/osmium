@@ -55,6 +55,4 @@ if(count($out) == MAX_MODULES + 1) {
 	$warning = false;
 }
 
-\Osmium\State\put_state_trypersist('module_search_filter', $filters);
-
 \Osmium\Chrome\return_json(array('payload' => $out, 'warning' => $warning));

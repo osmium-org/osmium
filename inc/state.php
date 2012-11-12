@@ -18,6 +18,9 @@
 
 namespace Osmium\State;
 
+require __DIR__.'/state-cache.php';
+require __DIR__.'/state-fit.php';
+
 const MINIMUM_PASSWORD_ENTROPY = 40;
 
 /** Global variable that stores all Osmium-related session state.
@@ -29,12 +32,6 @@ $__osmium_state =& $_SESSION['__osmium_state'];
  *
  * FIXME: get rid of this */
 $__osmium_login_state = array();
-
-/** @internal */
-$__osmium_cache_stack = array();
-
-/** @internal */
-$__osmium_cache_enabled = true;
 
 /** Default expire duration for the token cookie. 7 days. */
 const COOKIE_AUTH_DURATION = 604800;
@@ -467,40 +464,6 @@ function get_character_info($character_id, $a) {
 }
 
 /**
- * Get a setting previously stored with put_setting().
- *
- * @param $default the value to return if $key is not found.
- */
-function get_setting($key, $default = null) {
-	if(!is_logged_in()) return $default;
-
-	global $__osmium_state;
-	$accountid = $__osmium_state['a']['accountid'];
-
-	$k = \Osmium\Db\query_params('SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
-	while($r = \Osmium\Db\fetch_row($k)) {
-		$ret = $r[0];
-	}
-
-	return isset($ret) ? unserialize($ret) : $default;
-}
-
-/**
- * Store a setting. Settings are account-bound, database-stored and
- * persistent between sessions.
- */
-function put_setting($key, $value) {
-	if(!is_logged_in()) return;
-
-	global $__osmium_state;
-	$accountid = $__osmium_state['a']['accountid'];
-	\Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
-	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, serialize($value)));
-
-	return $value;
-}
-
-/**
  * Get the session token of the current session. This is randomly
  * generated data, different than $PHPSESSID. (Mainly used for CSRF
  * tokens.)
@@ -513,237 +476,6 @@ function get_token() {
 	}
 
 	return $__osmium_state['logouttoken'];
-}
-
-/**
- * Get a state variable previously set via put_state().
- *
- * @param $default the value to return if $key is not found.
- */
-function get_state($key, $default = null) {
-	if(isset($_SESSION['__osmium_state'][$key])) {
-		return $_SESSION['__osmium_state'][$key];
-	} else return $default;
-}
-
-/**
- * Store a state variable. State variables are account-bound but do
- * not persist between sessions.
- */
-function put_state($key, $value) {
-	if(!isset($_SESSION['__osmium_state']) || !is_array($_SESSION['__osmium_state'])) {
-		$_SESSION['__osmium_state'] = array();
-	}
-
-	return $_SESSION['__osmium_state'][$key] = $value;
-}
-
-/**
- * Override current cache setting. Nested calls behave correctly as
- * expected.
- *
- * @param $enable whether to enable or disable cache.
- */
-function set_cache_enabled($enable = true) {
-	global $__osmium_cache_stack;
-	global $__osmium_cache_enabled;
-
-	$__osmium_cache_stack[] = $__osmium_cache_enabled;
-	$__osmium_cache_enabled = $enable;
-}
-
-/**
- * Undo the last override made by set_cache_enabled() and restore the
- * old setting. Supports nested calls.
- */
-function pop_cache_enabled() {
-	global $__osmium_cache_stack;
-	global $__osmium_cache_enabled;
-
-	$__osmium_cache_enabled = array_pop($__osmium_cache_stack);
-}
-
-/**
- * Get a cache variable previously set by put_cache().
- *
- * @param $default the value to return if $key is not found in the
- * cache.
- */
-function get_cache($key, $default = null, $prefix = 'OsmiumCache_') {
-	global $__osmium_cache_enabled;
-	if(!$__osmium_cache_enabled) return $default;
-
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
-	if(file_exists($f)) {
-		$mtime = filemtime($f);
-		if($mtime === 0 || $mtime > time()) {
-			return unserialize(file_get_contents($f));
-		}
-	}
-	return $default;
-}
-
-/**
- * Store a cache variable. Cache variables are not account-bound.
- *
- * @param $expires if set to zero, the cache value must never expire
- * unless explicitely invalidated. If not, *try* to keep the value in
- * cache for $expires seconds.
- */
-function put_cache($key, $value, $expires = 0, $prefix = 'OsmiumCache_') {
-	global $__osmium_cache_enabled;
-	if(!$__osmium_cache_enabled) return;
-
-	if($expires > 0) $expires = time() + $expires;
-
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
-    return file_put_contents($f, serialize($value)) && touch($f, $expires);
-}
-
-/**
- * Delete a cached variable.
- */
-function invalidate_cache($key, $prefix = 'OsmiumCache_') {
-	global $__osmium_cache_enabled;
-	if(!$__osmium_cache_enabled) return;
-
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
-	if(file_exists($f)) unlink($f);
-}
-
-/**
- * Get a state variable previously stored by put_state_trypersist().
- *
- * This is just a wrapper that uses settings for logged-in users, and
- * state vars for anonymous users.
- */
-function get_state_trypersist($key, $default = null) {
-	if(is_logged_in()) {
-		return get_setting($key, $default);
-	} else {
-		return get_state('__setting_'.$key, $default);
-	}
-}
-
-/**
- * Store a state variable, and try to persist changes as much as
- * possible.
- *
- * This is just a wrapper that uses settings for logged-in users, and
- * state vars for anonymous users.
- */
-function put_state_trypersist($key, $value) {
-	if(is_logged_in()) {
-		/* For regular users, use database-stored persistent storage */
-		return put_setting($key, $value);
-	} else {
-		/* For anonymous users, use session-based storage (not really persistent, but better than nothing) */
-		return put_state('__setting_'.$key, $value);
-	}
-}
-
-if(function_exists('apc_store')) {
-	/* Use APC-based memory cache */
-
-	/** @see get_cache() */
-	function get_cache_memory($key, $default = null) {
-		$v = apc_fetch('Osmium_'.$key, $success);
-		return $success ? $v : $default;
-	}
-
-	/** @see put_cache() */
-	function put_cache_memory($key, $value, $expires = 0) {
-		return apc_store('Osmium_'.$key, $value, $expires);
-	}
-
-	/** @see invalidate_cache() */
-	function invalidate_cache_memory($key) {
-		return apc_delete('Osmium_'.$key);
-	}
-} else {
-	/* Use disk-based cache as a fallback */
-
-	/** @see get_cache() */
-	function get_cache_memory($key, $default = null) {
-		return get_cache($key, $default, 'MemoryCache_');
-	}
-
-	/** @see put_cache() */
-	function put_cache_memory($key, $value, $expires = 0) {
-		return put_cache($key, $value, $expires, 'MemoryCache_');
-	}
-
-	/** @see invalidate_cache() */
-	function invalidate_cache_memory($key) {
-		return invalidate_cache($key, 'MemoryCache_');
-	}
-}
-
-/**
- * Checks whether a loadout can be viewed (but maybe still needing a
- * password) by the current user.
- */
-function can_view_fit($loadoutid) {
-	if(is_logged_in()) {
-		$a = get_state('a');
-		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
-	} else {
-		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
-	}
-
-	return (boolean)$count;
-}
-
-/**
- * Checks whether a loadout can be viewed by the current user, and
- * that the user has been granted access if the fit is password
- * protected.
- */
-function can_access_fit($fit) {
-	if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-		$pw = get_state('pw_fits', array());
-		$a = get_state('a', array());
-
-		/* Author of the loadout can always access his loadout */
-		if(isset($a['accountid']) && $a['accountid'] == $fit['metadata']['accountid']) {
-			return true;
-		}
-
-		/* Require password authorization */
-		if(isset($pw[$fit['metadata']['loadoutid']]) && $pw[$fit['metadata']['loadoutid']] > time()) {
-			return true;
-		}
-
-		return false;
-	}
-
-	return true;
-}
-
-/**
- * Checks whether a loadout can be edited by the current user.
- */
-function can_edit_fit($loadoutid) {
-	$can_edit = false;
-	if(is_logged_in()) {
-		$a = get_state('a');
-		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
-		$can_edit = ($c == 1);
-	}
-
-	return $can_edit;
-}
-
-/**
- * Grant permission for the current user to see a password-protected
- * fit for a given duration. This does not circumvent can_view_fit(),
- * only makes can_access_fit() return true if the fit is password
- * protected.
- */
-function grant_fit_access($fit, $duration) {
-	$pw = get_state('pw_fits', array());
-	$pw[$fit['metadata']['loadoutid']] = time() + $duration;
-	put_state('pw_fits', $pw);
 }
 
 /**
@@ -812,39 +544,4 @@ function get_eveaccount_id(&$error = null) {
 	}
 
 	return $r[0];
-}
-
-/**
- * Mark a loadout as "green", that is, this loadout has been
- * successfully accessed by the current user recently in the current
- * session.
- */
-function set_fit_green($loadoutid) {
-	$green = get_state('green_fits', array());
-	$green[$loadoutid] = true;
-	put_state('green_fits', $green);
-}
-
-/**
- * Check if a given loadout is "green".
- *
- * @see set_fit_green()
- */
-function is_fit_green($loadoutid) {
-	$green = get_state('green_fits', array());
-	return isset($green[$loadoutid]) && $green[$loadoutid] === true; 
-}
-
-/**
- * Get the fit currently being edited by the user.
- */
-function get_new_fit() {
-	return get_cache(session_id(), array(), 'NewFit_');
-}
-
-/**
- * Update the fit currently being edited by the user.
- */
-function put_new_fit($fit) {
-	return put_cache(session_id(), $fit, 86400, 'NewFit_');
 }
