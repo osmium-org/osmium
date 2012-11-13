@@ -545,3 +545,12 @@ function get_eveaccount_id(&$error = null) {
 
 	return $r[0];
 }
+
+/**
+ * Get a random large positive integer.
+ */
+function get_nonce() {
+	/* No perfect way to do this in PHP. This is sad. */
+	$q = \Osmium\Db\query('SELECT ((random() * ((2)::double precision ^ (63)::double precision)))::bigint');
+	return \Osmium\Db\fetch_row($q)[0];
+}

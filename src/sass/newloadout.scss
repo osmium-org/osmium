@@ -144,10 +144,6 @@ div#nlsources > section#search {
 		margin: 0;
 		padding: 0;
 		margin-top: 2em;
-
-		&> li {
-			@include module;
-		}
 	}
 
 	&> p.warning {
@@ -251,18 +247,68 @@ div#nlsources > section#browse > div.mgroot {
 
 	ul.types {
 		min-height: 2em;
-
-		&> li.module {
-			@include module;
-		}
 	}
 }
 
 div#nlsources > section#shortlist > ul.types {
 	margin: 0;
 	padding: 0;
+}
 
-	&> li.module {
-		@include module;
+div#nlsources > section li.module {
+	@include module;
+	cursor: pointer;
+}
+
+$render-size: 6em;
+div#nlattribs > section#ship {
+	min-height: $render-size;
+	margin-bottom: 1em;
+
+	position: relative;
+
+	&> h1 {
+		&> img:first-child, &> div.notype:first-child {
+			position: absolute;
+			top: 0;
+			left: 0.5em;
+
+			width: $render-size;
+			height: $render-size;
+
+			border: 1px dashed $subsection-border-color;
+		}
+
+		&> small, &> strong {
+			@include ellipsis;
+		}
+
+		font-size: 1em;
+		margin: 0;
+		padding: 0;
+
+		&> strong {
+			position: absolute;
+			top: $render-size * 0.2;
+			left: ($render-size + 1.5em) * 0.5;
+			right: 0;
+			bottom: 0;
+			font-size: 2em;
+		}
+
+		&> small {
+			$height: 1.25em;
+
+			color: $aside-text-color;
+
+			font-size: 1em;
+			line-height: $height;
+			height: $height;
+
+			position: absolute;
+			top: ($render-size * 0.4) - $height;
+			left: $render-size + 1.5em;
+			right: 0;
+		}
 	}
 }

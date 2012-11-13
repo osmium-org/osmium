@@ -75,6 +75,10 @@ function get_capacitor_stability(&$fit) {
 		}
 	}
 
+	if($capacity == 0 || $tau == 0) {
+		return array($usage_rate, true, 0);
+	}
+
 	$peak_rate = (sqrt(0.25) - 0.25) * 2 * $capacity / $tau; /* Recharge rate at 25% capacitor */
 	$X = max(0, $usage_rate);
 
@@ -288,8 +292,8 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 		$out[$key][1] += $fraction * $amount / $duration;
 	}
 
-	$passiverate = 2.5 * $ehp['shield']['capacity']
-		/ \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
+	$shieldrechargerate = \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
+	$passiverate = ($shieldrechargerate > 0) ? 2.5 * $ehp['shield']['capacity'] / $shieldrechargerate : 0;
 	$out['shield_passive'] = array($passiverate, $passiverate);
 
 	$sum = array_sum($damageprofile);
@@ -519,7 +523,10 @@ function get_average_price(&$fit, &$missing) {
 	$total = 0;
 
 	$types = array();
-	$types[$fit['ship']['typeid']] = array(1, $fit['ship']['typename']);
+
+	if(isset($fit['ship']['typeid'])) {
+		$types[$fit['ship']['typeid']] = array(1, $fit['ship']['typename']);
+	}
 	foreach($fit['modules'] as $a) {
 		foreach($a as $m) {
 			if(isset($types[$m['typeid']])) {

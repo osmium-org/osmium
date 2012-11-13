@@ -119,3 +119,28 @@ function get_new_fit() {
 function put_new_fit($fit) {
 	return put_cache(session_id(), $fit, 86400, 'NewFit_');
 }
+
+/**
+ * Get a loadout being currently edited (null in case of invalid token).
+ */
+function get_new_loadout($token) {
+	return get_cache_memory_fb(/* session_id(). */$token, null, 'NewLoadout_');
+}
+
+/**
+ * Update a loadout being currently edited.
+ */
+function put_new_loadout($token, $fit) {
+	return put_cache_memory_fb(/* session_id(). */$token, $fit, 86400, 'NewLoadout_');
+}
+
+/**
+ * Get a token to be used with get_new_loadout() and put_new_loadout().
+ */
+function get_unique_new_loadout_token() {
+	do {
+		$token = get_nonce();
+	} while(get_new_loadout($token) !== null);
+
+	return $token;
+}

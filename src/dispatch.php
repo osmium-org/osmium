@@ -35,7 +35,7 @@ namespace Osmium\Dispatch;
 $osmium_dispatch_rules = array(
 	'%^/$%D' => '/src/main.php',
 	'%^/loadout/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_fit.php',
-	'%^/new(/(?<token>[A-Za-z0-9:.]{27}))?$%D' => '/src/new_loadout.php',
+	'%^/new(/(?<token>0|[1-9][0-9]*))?$%D' => '/src/new_loadout.php',
 	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 	'%^/search$%D' => '/src/search.php',
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',

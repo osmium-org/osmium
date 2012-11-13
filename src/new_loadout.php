@@ -19,21 +19,27 @@
 namespace Osmium\Page\NewLoadout;
 
 require __DIR__.'/../inc/root.php';
+require __DIR__.'/../inc/ajax_common.php';
 
 const RELATIVE = '..';
 
-function gen_new_loadout_token() {
-	$tok = sha1(uniqid('Osmium_New_Loadout_', true));
-	$tok = base64_encode(pack('H*', $tok));
-
-	/* Remove the padding (useless) and use .: instead of +/ for
-	 * URI-friendliness. */
-	return str_replace(array('+', '/', '='), array('.', ':', ''), $tok);
-}
-
 if(!isset($_GET['token'])) {
-	header('Location: ./new/'.gen_new_loadout_token());
+	$tok = \Osmium\State\get_unique_new_loadout_token();
+
+	\Osmium\Fit\create($fit);
+	\Osmium\State\put_new_loadout($tok, $fit);
+
+	header('Location: ./new/'.$tok);
 	die();
+} else {
+	$tok = $_GET['token'];
+	$fit = \Osmium\State\get_new_loadout($tok);
+
+	if(!is_array($fit)) {
+		/* Invalid token? */
+		header('Location: ../new');
+		die();
+	}
 }
 
 \Osmium\Chrome\print_header('Create a new loadout', RELATIVE);
@@ -41,8 +47,14 @@ if(!isset($_GET['token'])) {
 echo "<h1>Create a new loadout</h1>\n";
 
 echo "<div id='nlattribs'>
-<h2>Attributes</h2>
-<div class='compact' id='computed_attributes'></div>
+<section id='ship'></section>
+<section id='attributes'>
+<div class='compact' id='computed_attributes'>
+<p class='placeholder loading'>
+Loading attributes<span>…</span>
+</p>
+</div>
+</section>
 </div>\n";
 
 echo "<div id='nlsources'>
@@ -104,13 +116,18 @@ if($meta === null) {
 	$meta = json_encode($meta);
 	\Osmium\State\put_cache_memory('new_loadout_metagroups_json', $meta);
 }
-echo "<script>
-osmium_staticver = ".\Osmium\STATICVER.";
+
+\Osmium\Chrome\print_js_code(
+"osmium_staticver = ".\Osmium\STATICVER.";
 osmium_token = '".\Osmium\State\get_token()."';
+osmium_clftoken = '".$tok."';
 osmium_metagroups = ".$meta.";
-</script>\n";
+osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";
+osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true)).";"
+);
 
 \Osmium\Chrome\print_js_snippet('tabs');
 \Osmium\Chrome\print_js_snippet('context_menu');
 \Osmium\Chrome\print_js_snippet('new_loadout');
+\Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();

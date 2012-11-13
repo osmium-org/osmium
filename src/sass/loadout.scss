@@ -70,6 +70,12 @@ $hidden-char: '\0025B8';
 			right: 0;
 		}
 	}
+
+	-moz-user-select: -moz-none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 @mixin module-top-corner-link {

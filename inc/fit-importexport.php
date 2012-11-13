@@ -673,16 +673,26 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 }
 
 /**
- * Export a fit to the common loadout format (CLF).
+ * Export a fit to the common loadout format (CLF), latest supported
+ * version.
  *
- * @returns a string containing the JSON object.
+ * @returns a string containing the JSON data.
+ */
+function export_to_common_loadout_format($fit, $minify = false, $extraprops = true) {
+	return json_encode(
+		export_to_common_loadout_format_1($fit, $minify, $extraprops),
+		$minify ? 0 : JSON_PRETTY_PRINT
+		);
+}
+
+/**
+ * Export a fit to the common loadout format (CLF) version 1.
  *
- * @warning EXPERIMENTAL, the CLF is still a draft! Use for testing
- * purposes only!
+ * @returns the array to be serialized to JSON with json_encode().
  *
  * @todo fetch TQ version
  */
-function export_to_common_loadout_format($fit, $minify = false, $extraprops = true) {
+function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = true) {
 	static $statenames = null;
 	if($statenames === null) $statenames = get_state_names();
 
@@ -709,9 +719,12 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 		$json['metadata']['X-tags'] = array_values($fit['metadata']['tags']);
 	}
 
-	$json['ship']['typeid'] = (int)$fit['ship']['typeid'];
-	if(!$minify) {
-		$json['ship']['typename'] = $fit['ship']['typename'];
+	if(isset($fit['ship']['typeid'])) {
+		/* Allow exporting incomplete loadouts (for internal use), even though it is forbidden by the spec*/
+		$json['ship']['typeid'] = (int)$fit['ship']['typeid'];
+		if(!$minify) {
+			$json['ship']['typename'] = $fit['ship']['typename'];
+		}
 	}
 
 	foreach($fit['presets'] as $pid => $preset) {
@@ -803,8 +816,7 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
 		$json['drones'][] = $jsondp;
 	}
 
-	$flags = $minify ? 0 : JSON_PRETTY_PRINT;
-	return json_encode($json, $flags);
+	return $json;
 }
 
 /**
@@ -1150,4 +1162,24 @@ function export_to_dna($fit) {
 	$dna .= ':'.implode(':', $ftids);
 
 	return $dna.'::';
+}
+
+/**
+ * Imports the loadout in $clfstring to $fit. This is usually faster
+ * than calling try_parse_fit_from_common_loadout_format if $fit is
+ * already a fitting somewhat close to the result.
+ */
+function synchronize_from_clf_1(&$fit, $clfstring) {
+	/* TODO */
+
+	$clf = json_decode($clfstring, true);
+	if(json_last_error() !== JSON_ERROR_NONE) return false;
+
+	if(isset($clf['ship']['typeid'])
+	   && (!isset($fit['ship']['typeid'])
+	       || $clf['ship']['typeid'] != $fit['ship']['typeid'])) {
+		if(!select_ship($fit, $clf['ship']['typeid'])) return false;
+	}
+
+	return true;
 }
