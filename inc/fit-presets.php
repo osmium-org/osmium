@@ -116,22 +116,42 @@ function use_drone_preset(&$fit, $dpid) {
 	$fit['drones'] =& $fit['dronepresets'][$dpid]['drones'];
 }
 
+/** @internal */
+function create_preset_generic(&$fit, $presettype, $preset, $newid = null) {
+	foreach($fit[$presettype] as $presetid => $p) {
+		if($p['name'] == $preset['name']) {
+			// @codeCoverageIgnoreStart
+			trigger_error(__FUNCTION__.'(): another preset with the same name already exists', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	if($newid === null) {
+		$fit[$presettype][] = $preset;
+		end($fit[$presettype]);
+		$newid = key($fit[$presettype]);
+	} else {
+		if(isset($fit[$presettype][$newid])) {
+			// @codeCoverageIgnoreStart
+			trigger_error(__FUNCTION__.'(): there is already a preset with given new id', E_USER_WARNING);
+			return false;
+			// @codeCoverageIgnoreEnd
+		} else {
+			$fit[$presettype][$newid] = $preset;
+		}
+	}
+
+	return $newid;
+}
+
 /**
  * Create a new preset. The name must not coincide with another
  * preset.
  *
  * @returns the preset id of the new preset.
  */
-function create_preset(&$fit, $name, $description) {
-	foreach($fit['presets'] as $presetid => $preset) {
-		if($preset['name'] === $name) {
-			// @codeCoverageIgnoreStart
-			trigger_error('create_preset(): another preset with the same name already exists', E_USER_WARNING);
-			return false;
-			// @codeCoverageIgnoreEnd
-		}
-	}
-
+function create_preset(&$fit, $name, $description, $newid = null) {
 	$preset = array(
 		'name' => $name,
 		'description' => $description,
@@ -139,9 +159,7 @@ function create_preset(&$fit, $name, $description) {
 		'chargepresets' => array()
 		);
 
-	$fit['presets'][] = $preset;
-	end($fit['presets']);
-	return key($fit['presets']);
+	return create_preset_generic($fit, 'presets', $preset, $newid);
 }
 
 /**
@@ -150,46 +168,30 @@ function create_preset(&$fit, $name, $description) {
  *
  * @returns the charge preset id (cpid) of the new charge preset.
  */
-function create_charge_preset(&$fit, $name, $description) {
-	foreach($fit['chargepresets'] as $cpid => $chargepreset) {
-		if($chargepreset['name'] === $name) {
-			// @codeCoverageIgnoreStart
-			trigger_error('create_charge_preset(): another charge preset with the same name already exists in the current preset', E_USER_WARNING);
-			return false;
-			// @codeCoverageIgnoreEnd
-		}
-	}
-
+function create_charge_preset(&$fit, $name, $description, $newid = null) {
 	$chargepreset = array(
 		'name' => $name,
 		'description' => $description,
 		'charges' => array()
 		);
 
-	$fit['chargepresets'][] = $chargepreset;
-	end($fit['chargepresets']);
-	return key($fit['chargepresets']);
+	return create_preset_generic($fit, 'chargepresets', $chargepreset, $newid);
 }
 
-function create_drone_preset(&$fit, $name, $description) {
-	foreach($fit['dronepresets'] as $dpid => $dronepreset) {
-		if($dronepreset['name'] === $name) {
-			// @codeCoverageIgnoreStart
-			trigger_error('create_drone_preset(): another drone preset with the same name already exists', E_USER_WARNING);
-			return false;
-			// @codeCoverageIgnoreEnd
-		}
-	}
-
+/**
+ * Create a new drone preset. The name must not coincide with another
+ * drone preset.
+ *
+ * @returns the preset id of the new drone preset.
+ */
+function create_drone_preset(&$fit, $name, $description, $newid = null) {
 	$dronepreset = array(
 		'name' => $name,
 		'description' => $description,
 		'drones' => array()
 		);
 
-	$fit['dronepresets'][] = $dronepreset;
-	end($fit['dronepresets']);
-	return key($fit['dronepresets']);
+	return create_preset_generic($fit, 'dronepresets', $dronepreset, $newid);
 }
 
 /**

@@ -82,7 +82,7 @@ class FitImportExport extends PHPUnit_Framework_TestCase {
 		$this->assertSlotsAre($fit, 'charges', 'high', array());
 		$this->assertSlotsAre($fit, 'charges', 'medium', array());
 		$this->assertSlotsAre($fit, 'charges', 'low', array());
-		$this->assertDronesAre($fit, array(2185 => array(5, 0), 2488 => array(5, 0)));
+		$this->assertDronesAre($fit, array(2185 => array(0, 5), 2488 => array(5, 0)));
 	}
 
 	/**
