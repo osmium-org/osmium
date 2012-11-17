@@ -87,7 +87,7 @@ function add_field_error($name, $error) {
 	$__osmium_form_errors[$name][] = $error;
 }
 
-function print_generic_row($name, $td1, $td2) {
+function print_generic_row($name, $td1, $td2, $id = '') {
 	$class = '';
 
 	global $__osmium_form_errors;
@@ -99,10 +99,14 @@ function print_generic_row($name, $td1, $td2) {
 	}
 
 	if($class !== '') {
-		$class = " class='$class' ";
+		$class = " class='$class'";
 	}
 
-	echo "<tr$class>\n";
+	if($id !== '') {
+		$id = " id='$id'";
+	}
+
+	echo "<tr$id$class>\n";
 	echo "<th>$td1</th>\n";
 	echo "<td>$td2</td>\n";
 	echo "</tr>\n";
@@ -188,7 +192,7 @@ function print_select($label, $name, $options, $size = null, $id = null, $flags 
 		$name = $name.'[]';
 	}
 
-	print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'{$size}{$multiselect}{$disabled}>\n$fOptions\n</select>\n");
+	print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'{$size}{$multiselect}{$disabled}>\n$fOptions</select>\n");
 }
 
 function format_optgroup($name, $options, $flags) {

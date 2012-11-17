@@ -57,7 +57,5 @@ foreach($current_charges as $type => $a) {
 	}
 }
 
-\Osmium\fprintr($new_charges);
-
 \Osmium\State\put_new_fit($fit);
 \Osmium\Chrome\return_json(\Osmium\AjaxCommon\get_loadable_charges($fit));

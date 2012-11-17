@@ -21,7 +21,7 @@ namespace Osmium\Fit;
 /**
  * Switch to a specific preset.
  */
-function use_preset(&$fit, $presetid) {
+function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 	if(!isset($fit['presets'][$presetid])) {
 		// @codeCoverageIgnoreStart
 		trigger_error('use_preset(): no such preset', E_USER_WARNING);
@@ -47,7 +47,7 @@ function use_preset(&$fit, $presetid) {
 	$fit['modules'] =& $fit['presets'][$presetid]['modules'];
 	$fit['chargepresets'] =& $fit['presets'][$presetid]['chargepresets'];
 
-	if(count($fit['chargepresets']) == 0) {
+	if(count($fit['chargepresets']) == 0 && $createdefaultchargepreset) {
 		/* Add an empty preset */
 		create_charge_preset($fit, 'Default charge preset', '');
 	}
@@ -58,10 +58,12 @@ function use_preset(&$fit, $presetid) {
 		}
 	}
 
-	/* The backslash here is important, because \Osmium\Fit\reset() is
-	 * a totally different function! */
-	\reset($fit['chargepresets']);
-	use_charge_preset($fit, key($fit['chargepresets']));
+	if($createdefaultchargepreset) {
+		/* The backslash here is important, because
+		 * \Osmium\Fit\reset() is a totally different function! */
+		\reset($fit['chargepresets']);
+		use_charge_preset($fit, key($fit['chargepresets']));
+	}
 }
 
 /**

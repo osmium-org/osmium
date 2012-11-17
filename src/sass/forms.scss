@@ -44,6 +44,18 @@ input[type='submit'], input[type='button'], button {
 		border-color: $dangerous-button-border-color !important;
 		background-color: $dangerous-button-bg-color !important;
 	}
+
+	&:active {
+		color: $input-active-text-color;
+		border-color: $input-active-border-color;
+		@include linear-gradient-lighten-top($input-active-bg-color);
+	}
+
+	&:disabled, &:disabled:active {
+		color: $input-disabled-text-color;
+		border-color: $input-disabled-border-color;
+		@include linear-gradient-lighten-top($input-disabled-bg-color);
+	}
 }
 
 input[type='search'] {
@@ -104,7 +116,7 @@ form > table {
 			@include layout-type(extrasmall) { min-width: 10em; }
 		}
 
-		input[type='submit'] {
+		input[type='submit'], input[type='button'], button {
 			min-width: 0;
 			width: auto;
 		}

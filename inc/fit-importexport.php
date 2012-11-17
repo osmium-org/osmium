@@ -678,7 +678,7 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
  *
  * @returns a string containing the JSON data.
  */
-function export_to_common_loadout_format($fit, $minify = false, $extraprops = true) {
+function export_to_common_loadout_format($fit, $minify = false, $extraprops = true, $osmiumextraprops = false) {
 	return json_encode(
 		export_to_common_loadout_format_1($fit, $minify, $extraprops),
 		$minify ? 0 : JSON_PRETTY_PRINT
@@ -692,7 +692,7 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
  *
  * @todo fetch TQ version
  */
-function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = true) {
+function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = true, $osmiumextraprops = false) {
 	static $statenames = null;
 	if($statenames === null) $statenames = get_state_names();
 
@@ -717,6 +717,49 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 	   && is_array($fit['metadata']['tags']) && count($fit['metadata']['tags']) > 0) {
 		/* Always force [...] array even if tags array is associative */
 		$json['metadata']['X-tags'] = array_values($fit['metadata']['tags']);
+	}
+
+	if($osmiumextraprops) {
+		if(isset($fit['metadata']['hash'])) {
+			$json['metadata']['X-Osmium-loadouthash'] = $fit['metadata']['hash'];
+		}
+		if(isset($fit['metadata']['loadoutid'])) {
+			$json['metadata']['X-Osmium-loadoutid'] = (int)$fit['metadata']['loadoutid'];
+		}
+		if(isset($fit['metadata']['revision'])) {
+			$json['metadata']['X-Osmium-revision'] = (int)$fit['metadata']['revision'];
+		}
+
+		$json['metadata']['X-Osmium-view-permission'] = (int)$fit['metadata']['view_permission'];
+		$json['metadata']['X-Osmium-edit-permission'] = (int)$fit['metadata']['edit_permission'];
+		$json['metadata']['X-Osmium-visibility'] = (int)$fit['metadata']['visibility'];
+
+		if($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) {
+			$json['metadata']['X-Osmium-hashed-password'] = $fit['metadata']['password'];
+		}
+
+		if(isset($fit['modulepresetid'])) {
+			/* Map between $fit IDs (not necessarily linear) and indices in the JSON array */
+
+			$i = 0;
+			foreach($fit['presets'] as $id => $p) {
+				if($id === $fit['modulepresetid']) break;
+				++$i;
+			}
+			$json['X-Osmium-current-presetid'] = $i;
+		}
+		if(isset($fit['chargepresetid'])) {
+			/* Mapping is not needed here, as the ID is stored in the JSON array itself */
+			$json['X-Osmium-current-chargepresetid'] = (int)$fit['chargepresetid'];
+		}
+		if(isset($fit['dronepresetid'])) {
+			$i = 0;
+			foreach($fit['dronepresets'] as $id => $p) {
+				if($id === $fit['dronepresetid']) break;
+				++$i;
+			}
+			$json['X-Osmium-current-dronepresetid'] = $i;
+		}
 	}
 
 	if(isset($fit['ship']['typeid'])) {
@@ -1175,11 +1218,193 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 	$clf = json_decode($clfstring, true);
 	if(json_last_error() !== JSON_ERROR_NONE) return false;
 
+	if(!isset($clf['clf-version']) || (int)$clf['clf-version'] !== 1) {
+		// @codeCoverageIgnoreStart
+		trigger_error(__FUNCTION__.'(): expected CLF version 1, got '
+		              .((int)(@$clf['clf-version'])), E_USER_WARNING);
+		return false;
+		// @codeCoverageIgnoreEnd
+	}
+
 	if(isset($clf['ship']['typeid'])
 	   && (!isset($fit['ship']['typeid'])
 	       || $clf['ship']['typeid'] != $fit['ship']['typeid'])) {
 		if(!select_ship($fit, $clf['ship']['typeid'])) return false;
 	}
 
+	if(isset($clf['metadata'])) {
+		$meta = $clf['metadata'];
+
+		if(isset($meta['title'])) {
+			$fit['metadata']['name'] = $meta['title'];
+		}
+
+		if(isset($meta['description'])) {
+			$fit['metadata']['description'] = $meta['description'];
+		}
+
+		if(isset($meta['X-tags']) && is_array($meta['X-tags'])) {
+			/* Expansive checks are done in sanitize(). */
+			$fit['metadata']['tags'] = $meta['X-tags'];
+		}
+
+		if(isset($meta['X-Osmium-view-permission'])) {
+			$fit['metadata']['view_permission'] = $meta['X-Osmium-view-permission'];
+		}
+
+		if(isset($meta['X-Osmium-edit-permission'])) {
+			$fit['metadata']['edit_permission'] = $meta['X-Osmium-edit-permission'];
+		}
+
+		if(isset($meta['X-Osmium-visibility'])) {
+			$fit['metadata']['visibility'] = $meta['X-Osmium-visibility'];
+		}
+
+		if(isset($meta['X-Osmium-clear-password'])
+		   && strlen($meta['X-Osmium-clear-password']) > 0
+		   && (!isset($fit['metadata']['__clear_pw'])
+		       || $fit['metadata']['__clear_pw'] !== $meta['X-Osmium-clear-password']
+			   )) {
+			$fit['metadata']['__clear_pw'] = $meta['X-Osmium-clear-password'];
+			$fit['metadata']['password'] = \Osmium\State\hash_password($meta['X-Osmium-clear-password']);
+		}
+	}
+
+	if(isset($clf['presets'])) {
+		$clfnames = array();
+		$cpclfnames = array();
+		$fitnames = array();
+		$cpfitnames = array();
+
+		foreach($clf['presets'] as $id => $p) {
+			$clfnames[$p['presetname']] = $id;
+			foreach($p['chargepresets'] as $cp) {
+				$cpclfnames[$p['presetname']][$cp['name']] = $cp['id'];
+			}
+		}
+		foreach($fit['presets'] as $id => $p) {
+			$fitnames[$p['name']] = $id;
+			foreach($p['chargepresets'] as $cpid => $cp) {
+				$cpfitnames[$p['name']][$cp['name']] = $cpid;
+			}
+		}
+
+		foreach($clfnames as $name => $id) {
+			$pdesc = isset($clf['presets'][$id]['presetdescription']) ?
+				$clf['presets'][$id]['presetdescription'] : '';
+
+			if(!isset($fitnames[$name])) {
+				$fitid = create_preset($fit, $name, $pdesc);
+				$fitnames[$name] = $fitid;
+				foreach($fit['presets'][$fitid]['chargepresets'] as $cpid => $cp) {
+					$cpfitnames[$name][$cp['name']] = $cpid;
+				}
+
+				use_preset($fit, $fitid, false);
+				synchronize_preset_from_clf_1($fit, $clf['presets'][$id]);
+			} else {
+				$fitid = $fitnames[$name];
+				$fit['presets'][$fitid]['description'] = $pdesc;
+			}
+
+			foreach($cpclfnames[$name] as $cpname => $cpid) {
+				$cpdesc = '';
+				foreach($clf['presets'][$id]['chargepresets'] as $cp) {
+					if($cp['id'] == $cpid) {
+						if(isset($cp['description'])) {
+							$cpdesc = $cp['description'];
+						}
+						break;
+					}
+				}
+
+				if(!isset($cpfitnames[$name][$cpname])) {
+					use_preset($fit, $fitid, false);
+					$fitcpid = create_charge_preset($fit, $cpname, $cpdesc);
+					$cpfitnames[$name][$cpname] = $fitcpid;
+				} else {
+					$fitcpid = $cpfitnames[$name][$cpname];
+					$fit['presets'][$fitid]['chargepresets'][$fitcpid]['description'] = $cpdesc;
+				}
+			}
+		}
+		foreach($fitnames as $name => $id) {
+			if(isset($clfnames[$name])) {
+				foreach($cpfitnames[$name] as $cpname => $cpid) {
+					if(!isset($cpclfnames[$name][$cpname])) {
+						use_preset($fit, $id, false);
+						remove_charge_preset($fit, $cpid);
+					}
+				}
+			} else {
+				remove_preset($fit, $id);
+			}
+		}
+
+		if(isset($clf['X-Osmium-current-presetid'])) {
+			$presetname = $clf['presets'][$clf['X-Osmium-current-presetid']]['presetname'];
+			use_preset($fit, $fitnames[$presetname]);
+
+			if(isset($clf['X-Osmium-current-chargepresetid'])) {
+				foreach($clf['presets'][$clf['X-Osmium-current-presetid']]['chargepresets'] as $cp) {
+					if($cp['id'] == $clf['X-Osmium-current-chargepresetid']) {
+						use_charge_preset($fit, $cpfitnames[$presetname][$cp['name']]);
+						break;
+					}
+				}
+			}
+
+			synchronize_preset_from_clf_1($fit, $clf['presets'][$clf['X-Osmium-current-presetid']]);
+		}
+	}
+
+	if(isset($clf['drones'])) {
+		$clfnames = array();
+		$fitnames = array();
+
+		foreach($clf['drones'] as $id => $p) {
+			$clfnames[$p['presetname']] = $id;
+		}
+		foreach($fit['dronepresets'] as $id => $p) {
+			$fitnames[$p['name']] = $id;
+		}
+
+		foreach($clfnames as $name => $id) {
+			$pdesc = isset($clf['drones'][$id]['presetdescription']) ?
+				$clf['drones'][$id]['presetdescription'] : '';
+
+			if(!isset($fitnames[$name])) {
+				$fitid = create_drone_preset($fit, $name, $pdesc);
+				$fitnames[$name] = $fitid;
+				use_drone_preset($fit, $fitid);
+				synchronize_drone_preset_from_clf_1($fit, $clf['drones'][$id]);
+			} else {
+				$fitid = $fitnames[$name];
+				$fit['dronepresets'][$fitid]['description'] = $pdesc;
+			}
+		}
+		foreach($fitnames as $name => $id) {
+			if(!isset($clfnames[$name])) {
+				remove_drone_preset($fit, $id);
+			}
+		}
+
+		if(isset($clf['X-Osmium-current-dronepresetid'])) {
+			$name = $clf['drones'][$clf['X-Osmium-current-dronepresetid']]['presetname'];
+			use_drone_preset($fit, $fitnames[$name]);
+			synchronize_drone_preset_from_clf_1($fit, $clf['drones'][$clf['X-Osmium-current-dronepresetid']]);
+		}
+	}
+
 	return true;
+}
+
+/** @internal */
+function synchronize_preset_from_clf_1(&$fit, $clfp) {
+
+}
+
+/** @internal */
+function synchronize_drone_preset_from_clf_1(&$fit, $clfp) {
+
 }

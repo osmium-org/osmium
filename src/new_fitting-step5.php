@@ -30,7 +30,7 @@ function final_settings() {
 
 		echo "<p class='warning_box' style='max-width: 100%;'>You are not logged in. You can still login now (or register) and save your fitting to your account, as long as you don't close your browser window. If you don't want to, you can still export your new loadout in one of the supported export formats.</p>";
 	}
-
+ 
 	\Osmium\Forms\print_form_begin(null, 'prevnext');
 	\Osmium\Forms\print_text('<h2>Metadata</h2>');
 

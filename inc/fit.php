@@ -1158,6 +1158,37 @@ function sanitize(&$fit) {
 		}, $tags);
 	$tags = array_filter($tags, function($tag) { return $tag !== ''; });
 	$tags = array_unique($tags);
+
+	/* Enforce permissions consistency */
+	if(!in_array($fit['metadata']['view_permission'], array(
+		             VIEW_EVERYONE,
+		             VIEW_PASSWORD_PROTECTED,
+		             VIEW_ALLIANCE_ONLY,
+		             VIEW_OWNER_ONLY,
+		             ))) {
+		$fit['metadata']['view_permission'] = VIEW_EVERYONE;
+	}
+	if(!in_array($fit['metadata']['edit_permission'], array(
+		             EDIT_OWNER_ONLY,
+		             EDIT_OWNER_AND_FITTING_MANAGER_ONLY,
+		             EDIT_CORPORATION_ONLY,
+		             EDIT_ALLIANCE_ONLY,
+		             ))) {
+		$fit['metadata']['edit_permission'] = EDIT_OWNER_ONLY;
+	}
+	if(!in_array($fit['metadata']['visibility'], array(
+		             VISIBILITY_PUBLIC,
+		             VISIBILITY_PRIVATE,
+		             ))) {
+		$fit['metadata']['visibility'] = VISIBILITY_PUBLIC;
+	}
+	if($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) {
+		$fit['metadata']['visibility'] = VISIBILITY_PRIVATE;
+
+		if(!isset($fit['metadata']['password']) || !$fit['metadata']['password']) {
+			$fit['metadata']['view_permission'] = VIEW_EVERYONE;
+		}
+	}
 }
 
 /**

@@ -101,6 +101,59 @@ echo "<div id='nlmain'>
 <li><a href='#metadata'>Metadata</a></li>
 </ul>\n";
 
+echo "<section id='presets'>\n";
+$presetactions = "<input type='button' class='createpreset' value='Create preset' />\n<input type='button' class='renamepreset' value='Rename preset' />\n<input type='button' class='clonepreset' value='Clone preset' />\n<input type='button' class='deletepreset' value='Delete preset' />";
+\Osmium\Forms\print_form_begin();
+\Osmium\Forms\print_generic_row('spreset', "<label for='spreset'>Preset</label>", "<select id='spreset' name='spreset'></select><br />\n".$presetactions."\n", 'rpresets');
+\Osmium\Forms\print_textarea('Preset description', 'tpresetdesc');
+\Osmium\Forms\print_separator();
+\Osmium\Forms\print_generic_row('scpreset', "<label for='scpreset'>Charge preset</label>", "<select id='scpreset' name='scpreset'></select><br />\n".$presetactions."\n", 'rchargepresets');
+\Osmium\Forms\print_textarea('Charge preset description', 'tcpresetdesc');
+\Osmium\Forms\print_separator();
+\Osmium\Forms\print_generic_row('sdpreset', "<label for='sdpreset'>Drone preset</label>", "<select id='sdpreset' name='sdpreset'></select><br />\n".$presetactions."\n", 'rdronepresets');
+\Osmium\Forms\print_textarea('Drone preset description', 'tdpresetdesc');
+\Osmium\Forms\print_form_end();
+echo "</section>\n";
+
+echo "<section id='metadata'>\n";
+\Osmium\Forms\print_form_begin();
+\Osmium\Forms\print_generic_field('Loadout title', 'text', 'name', 'name');
+\Osmium\Forms\print_textarea('Description<br /><small>(optional)</small>', 'description', 'description');
+\Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated, '.\Osmium\Fit\MAXIMUM_TAGS.' maximum)</small>', 'text', 'tags', 'tags');
+if(\Osmium\State\is_logged_in()) {
+	\Osmium\Forms\print_separator();
+
+	\Osmium\Forms\print_select(
+		'Can be seen by', 'view_perms', 
+		array(
+			\Osmium\Fit\VIEW_EVERYONE => 'everyone',
+			\Osmium\Fit\VIEW_PASSWORD_PROTECTED => 'everyone but require a password',
+			\Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
+			\Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
+			\Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
+			), null, 'view_perms');
+
+	\Osmium\Forms\print_select(
+		'Can be edited by', 'edit_perms', 
+		array(
+			\Osmium\Fit\EDIT_OWNER_ONLY => 'only me',
+			\Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY => 'me and anyone in my corporation with the Fitting Manager role',
+			\Osmium\Fit\EDIT_CORPORATION_ONLY => 'anyone in my corporation',
+			\Osmium\Fit\EDIT_ALLIANCE_ONLY => 'anyone in my alliance',
+			), null, 'edit_perms');
+
+	\Osmium\Forms\print_select(
+		'Visibility', 'visibility', 
+		array(
+			\Osmium\Fit\VISIBILITY_PUBLIC => 'public (this fit can appear in search results when appropriate)',
+			\Osmium\Fit\VISIBILITY_PRIVATE => 'private (you will have to give the URL manually)',
+			), null, 'visibility');
+
+	\Osmium\Forms\print_generic_field('Password', 'password', 'pw', 'pw');
+}
+\Osmium\Forms\print_form_end();
+echo "</section>\n";
+
 echo "</div>\n";
 
 $meta = \Osmium\State\get_cache_memory('new_loadout_metagroups_json', null);
@@ -123,11 +176,15 @@ osmium_token = '".\Osmium\State\get_token()."';
 osmium_clftoken = '".$tok."';
 osmium_metagroups = ".$meta.";
 osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";
-osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true)).";"
+osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";"
 );
 
 \Osmium\Chrome\print_js_snippet('tabs');
 \Osmium\Chrome\print_js_snippet('context_menu');
 \Osmium\Chrome\print_js_snippet('new_loadout');
+\Osmium\Chrome\print_js_snippet('new_loadout-sources');
+\Osmium\Chrome\print_js_snippet('new_loadout-ship');
+\Osmium\Chrome\print_js_snippet('new_loadout-presets');
+\Osmium\Chrome\print_js_snippet('new_loadout-metadata');
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();
