@@ -114,7 +114,7 @@ $structure = array(
 		'metaGroupID' => 'metagroupid'
 		),
 
-	'averagemarketprices', 'config_GetAverageMarketPrices.json',
+	'averagemarketprices', 'config_GetAverageMarketPricesForClient.json',
 	array(
 		'typeID' => 'typeid',
 		'averagePrice' => 'averageprice'
@@ -158,10 +158,13 @@ for($i = 0; $i < $count; $i += 3) {
 		$values = array();
 
 		foreach($cols as $jsoncol => $sqlcol) {
-			/* XXX: Dirty dirty hack: ignore DUST stuff since it
-			 * breaks FK constraints */
-			if($sqlcol == 'typeid' && $row[$jsoncol] >= 350000) {
+			/* XXX: dirty hack for fixing FK constraints */
+			if(in_array($sqlcol, array('typeid', 'marketgroupid')) && $row[$jsoncol] >= 350000) {
+				/* DUST items */
 				continue 2;
+			}
+			if($sqlcol === 'unitid' && $row[$jsoncol] === 0) {
+				$row[$jsoncol] = null;
 			}
 
 			$values[] = to_postgres($row[$jsoncol]);
