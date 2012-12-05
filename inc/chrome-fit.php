@@ -71,7 +71,7 @@ function print_loadout_title($name, $viewpermission, $visibility, $author, $rela
 		$pic .= "<a href='$relative/favorite/$loadoutid?tok=$tok' title='$title'><img src='$relative/static-".\Osmium\STATICVER."/icons/favorited$favimg.png' alt='Favorite status' /></a>";
 	}
   
-	echo "<span class='fitname'>".htmlentities($name).$pic."</span>";
+	echo "<span class='fitname'>".htmlspecialchars($name).$pic."</span>";
 }
 
 function print_formatted_attribute_category($identifier, $title, $titledata, $titleclass, $contents) {
