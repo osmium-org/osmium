@@ -20,9 +20,10 @@ $(function() {
 		osmium_tabify($(this), 0);
 	});
 
-	$.getJSON('../static-' + osmium_staticver + '/cache/types.json', function(groups) {
-		osmium_groups = groups;
-		osmium_types = groups.types;
+	$.getJSON('../static-' + osmium_staticver + '/cache/clientdata.json', function(cdata) {
+		osmium_groups = cdata.groups;
+		osmium_types = cdata.groups.types;
+		osmium_charges = cdata.charges;
 
 		/* Generate all the missing DOM elements from the CLF */
 		osmium_gen_ship();

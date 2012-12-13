@@ -1,16 +1,14 @@
 THEMES=dark
 
-default: themes staticcache
+default: themes static/cache/clientdata.json
 
 themes: $(addprefix static/, $(addsuffix .css, $(THEMES)))
-
-staticcache: static/cache/types.json
 
 static/%.css: src/sass/themes/%.scss src/sass/*.scss
 	sass --unix-newlines -t compact $< | tr -s '\n' > $@
 
-static/cache/types.json:
-	./bin/make_static_types
+static/cache/clientdata.json:
+	./bin/make_static_client_data
 
 tests:
 	@make -s clear-harmless-cache

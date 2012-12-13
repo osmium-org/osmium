@@ -19,6 +19,10 @@
 
 require __DIR__.'/../inc/root.php';
 
+$static = array();
+
+/* ---------------------------------------------------------- */
+
 $q = \Osmium\Db\query(
 	'SELECT typeid, typename, category, subcategory, metagroupid,
 	mg0.marketgroupid AS mgid0, mg0.marketgroupname AS mgname0,
@@ -91,5 +95,19 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 $flatgroups['root']['children'][] = 0;
 
 ksort($flatgroups);
+$static['groups'] = $flatgroups;
 
-file_put_contents(__DIR__.'/../static/cache/types.json', json_encode($flatgroups));
+/* ---------------------------------------------------------- */
+
+$q = \Osmium\Db\query(
+	'SELECT moduleid, chargeid FROM osmium.invcharges
+	ORDER BY moduleid ASC, chargeid ASC'
+	);
+
+while($row = \Osmium\Db\fetch_assoc($q)) {
+	$static['charges'][$row['moduleid']][] = (int)$row['chargeid'];
+}
+
+/* ---------------------------------------------------------- */
+
+file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));
