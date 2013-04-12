@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -735,7 +735,8 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 		$json['metadata']['X-Osmium-visibility'] = (int)$fit['metadata']['visibility'];
 
 		if($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) {
-			$json['metadata']['X-Osmium-hashed-password'] = $fit['metadata']['password'];
+			$json['metadata']['X-Osmium-hashed-password'] = 
+            isset($fit['metadata']['password']) ? $fit['metadata']['password'] : '*';
 		}
 
 		if(isset($fit['modulepresetid'])) {
