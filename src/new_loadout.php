@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -42,7 +42,7 @@ if(!isset($_GET['token'])) {
 	}
 }
 
-\Osmium\Chrome\print_header('Create a new loadout', RELATIVE);
+\Osmium\Chrome\print_header('Create a new loadout', RELATIVE, false);
 
 echo "<h1>Create a new loadout</h1>\n";
 
@@ -93,8 +93,7 @@ echo "</div>\n";
 
 echo "<div id='nlmain'>
 <ul class='tabs'>
-<li><a href='#modules'>Modules</a></li>
-<li><a href='#charges'>Charges</a></li>
+<li><a href='#modules'>Modules &amp; Charges</a></li>
 <li><a href='#drones'>Drones</a></li>
 <li><a href='#implantsboosters'>Implants, boosters</a></li>
 <li><a href='#presets'>Presets</a></li>
@@ -145,8 +144,8 @@ if(\Osmium\State\is_logged_in()) {
 	\Osmium\Forms\print_select(
 		'Visibility', 'visibility', 
 		array(
-			\Osmium\Fit\VISIBILITY_PUBLIC => 'public (this fit can appear in search results when appropriate)',
-			\Osmium\Fit\VISIBILITY_PRIVATE => 'private (you will have to give the URL manually)',
+			\Osmium\Fit\VISIBILITY_PUBLIC => 'public (will appear on the homepage and in search results)',
+			\Osmium\Fit\VISIBILITY_PRIVATE => 'private (will not appear in search results)',
 			), null, 'visibility');
 
 	\Osmium\Forms\print_generic_field('Password', 'password', 'pw', 'pw');
@@ -154,37 +153,35 @@ if(\Osmium\State\is_logged_in()) {
 \Osmium\Forms\print_form_end();
 echo "</section>\n";
 
+echo "<section id='modules'>\n";
+$stypes = \Osmium\Fit\get_slottypes_names();
+foreach($stypes as $type => $fname) {
+	echo "<div class='slots $type'>\n<h3>".htmlspecialchars($fname)
+		." <span><small></small></span></h3>\n";
+	echo "<ul></ul>\n";
+	echo "</div>\n";
+}
+echo "</section>\n";
+
 echo "</div>\n";
 
-$meta = \Osmium\State\get_cache_memory('new_loadout_metagroups_json', null);
-if($meta === null) {
-	$meta = array();
-	$metaq = \Osmium\Db\query('SELECT metagroupid, metagroupname
-	FROM osmium.invmetagroups
-	ORDER BY metagroupname ASC');
-
-	while($r = \Osmium\Db\fetch_row($metaq)) {
-		$meta[$r[0]] = $r[1];
-	}
-	$meta = json_encode($meta);
-	\Osmium\State\put_cache_memory('new_loadout_metagroups_json', $meta);
-}
-
 \Osmium\Chrome\print_js_code(
-"osmium_staticver = ".\Osmium\STATICVER.";
+"osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
+osmium_staticver = ".\Osmium\STATICVER.";
 osmium_token = '".\Osmium\State\get_token()."';
 osmium_clftoken = '".$tok."';
-osmium_metagroups = ".$meta.";
 osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";
 osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";"
 );
 
 \Osmium\Chrome\print_js_snippet('tabs');
 \Osmium\Chrome\print_js_snippet('context_menu');
+\Osmium\Chrome\print_js_snippet('loadout_common');
 \Osmium\Chrome\print_js_snippet('new_loadout');
 \Osmium\Chrome\print_js_snippet('new_loadout-sources');
 \Osmium\Chrome\print_js_snippet('new_loadout-ship');
 \Osmium\Chrome\print_js_snippet('new_loadout-presets');
 \Osmium\Chrome\print_js_snippet('new_loadout-metadata');
+\Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();

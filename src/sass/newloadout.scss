@@ -271,7 +271,7 @@ div#nlattribs > section#ship {
 		&> img:first-child, &> div.notype:first-child {
 			position: absolute;
 			top: 0;
-			left: 0.5em;
+			left: 1em;
 
 			width: $render-size;
 			height: $render-size;
@@ -290,7 +290,7 @@ div#nlattribs > section#ship {
 		&> strong {
 			position: absolute;
 			top: $render-size * 0.2;
-			left: ($render-size + 1.5em) * 0.5;
+			left: ($render-size + 2em) * 0.5;
 			right: 0;
 			bottom: 0;
 			font-size: 2em;
@@ -307,7 +307,7 @@ div#nlattribs > section#ship {
 
 			position: absolute;
 			top: ($render-size * 0.4) - $height;
-			left: $render-size + 1.5em;
+			left: $render-size + 2em;
 			right: 0;
 		}
 	}
@@ -345,5 +345,11 @@ div#nlmain > section#metadata {
 			font-size: 2em;
 			font-family: $serif-font;
 		}
+	}
+}
+
+div#nlmain > section#modules {
+	&> div.slots {
+		@include module-list;
 	}
 }

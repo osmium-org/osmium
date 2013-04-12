@@ -71,11 +71,8 @@ function get_data_step_drone_select($fit) {
 function get_slot_usage(&$fit) {
 	$usage = array();
 
-	$modules = \Osmium\Fit\get_modules($fit);
-	$aslots = \Osmium\Fit\get_attr_slottypes();
-	foreach(\Osmium\Fit\get_slottypes() as $type) {
-		$usage[$type]['total'] = \Osmium\Dogma\get_ship_attribute($fit, $aslots[$type], false);
-		$usage[$type]['used'] = isset($modules[$type]) ? count($modules[$type]) : 0;
+	foreach(\Osmium\Fit\get_attr_slottypes() as $type => $attr) {
+		$usage[$type] = (int)\Osmium\Dogma\get_ship_attribute($fit, $attr, false);
 	}
 
 	return $usage;

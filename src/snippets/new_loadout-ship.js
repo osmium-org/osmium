@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -40,4 +40,13 @@ osmium_gen_ship = function() {
 
 	section.empty();
 	section.append(h);
+
+	if(osmium_user_initiated) {
+		/* XXX: this is needed to restart the animation. Get rid of
+		 * this asap! */
+		var newsection = section.clone(true);
+		newsection.addClass('added_to_loadout');
+		section.after(newsection);
+		section.remove();
+	}
 };

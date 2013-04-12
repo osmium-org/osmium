@@ -30,6 +30,9 @@ const STATICVER = 3;
 /** Bump this when CSS files are updated */
 const CSS_STATICVER = 3;
 
+/** Bump this when clientdata.json is updated */
+const CLIENT_DATA_STATICVER = 7;
+
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {

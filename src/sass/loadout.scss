@@ -54,19 +54,18 @@ $hidden-char: '\0025B8';
 		margin-right: 0.125em;
 	}
 
-	&.ctxmenu {
+	&.hascontextmenu {
 		padding-right: 1em;
 		position: relative;
 
-		&> span.contextmenu {
+		&> span.contextmenuindicator {
+			font-size: 1.5em;
 			text-align: center;
 			display: inline-block;
 			cursor: pointer;
 			position: absolute;
 			width: 1em;
-			height: 2em;
-			line-height: 2em;
-			top: 0;
+			top: 0.1em;
 			right: 0;
 		}
 	}
@@ -165,6 +164,42 @@ $hidden-char: '\0025B8';
 					margin-right: 0.25em;
 				}
 			}
+		}
+	}
+}
+
+@mixin module-list {
+	@include prop-module-width(width);
+	display: inline-block;
+	vertical-align: top;
+	margin: 0 2em 2em 0;
+
+	&> ul {
+		list-style-type: none;
+		padding: 0;
+		margin-top: 0.125em;
+
+		&> li {
+			@include module;
+
+			&.placeholder {
+				color: $unused-module-text-color;
+			}
+		}
+	}
+
+	&> h3 {
+		border-bottom: 1px solid $section-border-color;
+		padding-left: 0.25em;
+		margin: 0;
+		margin-top: 0.5em;
+		position: relative;
+
+		&> span {
+			position: absolute;
+			right: 0.125em;
+			bottom: 0;
+			color: $aside-text-color;
 		}
 	}
 }

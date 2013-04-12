@@ -110,4 +110,50 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 
 /* ---------------------------------------------------------- */
 
+$q = \Osmium\Db\query(
+	'SELECT metagroupid, metagroupname FROM osmium.invmetagroups
+	ORDER BY metagroupname ASC'
+);
+
+while($row = \Osmium\Db\fetch_row($q)) {
+	$static['metagroups'][$row[0]] = $row[1];
+}
+
+/* ---------------------------------------------------------- */
+
+$q = \Osmium\Db\query(
+	'SELECT typeid, offlinable, onlinable, activable, overloadable
+	FROM osmium.invmodulestates
+	ORDER BY typeid ASC'
+);
+
+while($row = \Osmium\Db\fetch_row($q)) {
+	$static['modulestates'][$row[0]] = array(
+		(int)($row[1] === 't'),
+		(int)($row[2] === 't'),
+		(int)($row[3] === 't'),
+		(int)($row[4] === 't'),
+		);
+}
+
+/* ---------------------------------------------------------- */
+
+$q = \Osmium\Db\query(
+	'SELECT typeid, highslots, medslots, lowslots, rigslots, subsystemslots
+	FROM osmium.invshipslots
+	ORDER BY typeid ASC'
+);
+
+while($row = \Osmium\Db\fetch_row($q)) {
+	$static['shipslots'][$row[0]] = array(
+		(int)$row[1],
+		(int)$row[2],
+		(int)$row[3],
+		(int)$row[4],
+		(int)$row[5],
+		);
+}
+
+/* ---------------------------------------------------------- */
+
 file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));

@@ -253,7 +253,7 @@ it's often lags behind the official patch), so you'll have to dump the
 database from the client yourself then do some minor transformations
 to make it PostgreSQL-friendly.
 
-Use the [`phobos`](http://jira.dev.evefit.org/browse/PHOBOS) dumper to
+Use the [`phobos`](http://jira.evefit.org/browse/PHOBOS) dumper to
 dump the EVE database as JSON files:
 
 ~~~~

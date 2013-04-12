@@ -103,6 +103,17 @@ function get_slottypes() {
 	return array('high', 'medium', 'low', 'rig', 'subsystem');
 }
 
+/** Get the names of the module slot categories. */
+function get_slottypes_names() {
+	return array(
+		'high' => 'High slots',
+		'medium' => 'Medium slots',
+		'low' => 'Low slots',
+		'rig' => 'Rig slots',
+		'subsystem' => 'Subsystems',
+		);
+}
+
 /**
  * Get all the module slot categories which contain stateful modules,
  * ie modules that can be activated, overloaded, offlined etc.

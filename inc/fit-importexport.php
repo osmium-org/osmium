@@ -784,13 +784,17 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 				if(!$minify) {
 					$jsonmodule['typename'] = $module['typename'];
 					$jsonmodule['slottype'] = $type;
+				}
+
+				if($osmiumextraprops || !$minify) {
 					$jsonmodule['index'] = $index;
 				}
 
 				/* Only put state if it is not the default state */
 				list($isactivable, ) = get_module_states($fit, $module['typeid']);
 				$state = $module['state'] === null ? $module['old_state'] : $module['state'];
-				if(($isactivable && $state != STATE_ACTIVE)
+				if($osmiumextraprops
+				   || ($isactivable && $state != STATE_ACTIVE)
 				   || (!$isactivable && $state != STATE_ONLINE)) {
 					$jsonmodule['state'] = lcfirst($statenames[$state][0]);
 				}
@@ -1401,7 +1405,29 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 
 /** @internal */
 function synchronize_preset_from_clf_1(&$fit, $clfp) {
+	static $clfstates = array(
+		'offline' => STATE_OFFLINE,
+		'online' => STATE_ONLINE,
+		'active' => STATE_ACTIVE,
+		'overloaded' => STATE_OVERLOADED,
+		);
 
+	$clfmods = array();
+
+	foreach(isset($clfp['modules']) ? $clfp['modules'] : array() as $m) {
+		/* add_module() is lazy, it's okay to blindly call it here */
+		add_module($fit, $m['index'], $m['typeid'], $clfstates[$m['state']]);
+
+		$type = get_module_slottype($fit, $m['typeid']);
+		$clfmods[$type][$m['index']] = $m['typeid'];
+	}
+
+	foreach($fit['modules'] as $type => $mods) {
+		foreach($mods as $index => $m) {
+			if(isset($clfmods[$type][$index])) continue;
+			remove_module($fit, $index, $m['typeid']);
+		}
+	}
 }
 
 /** @internal */

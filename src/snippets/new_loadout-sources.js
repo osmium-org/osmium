@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -90,10 +90,6 @@ osmium_init_sources = function() {
 		});
 
 		return false;
-	});
-
-	$('div#nlsources').on('dblclick', 'li.module', function() {
-		osmium_add_to_clf($(this));
 	});
 
 	osmium_add_metagroup_style("div#nlsources > section#browse > ", "div#nlsources > section#browse > div.mgroot");
@@ -211,7 +207,7 @@ osmium_init_shortlist = function() {
 		img.prop('src', '//image.eveonline.com/Type/' + type[0] + '_64.png');
 		li.prepend(img);
 
-		osmium_add_shortlist_contextmenu(li, false);
+		osmium_add_shortlist_contextmenu(li);
 
 		ul.append(li);
 	}
@@ -237,96 +233,54 @@ osmium_add_metagroup_style = function(aselector, liselector) {
 	});
 };
 
-osmium_add_add_to_fit_option = function(source) {
-	var li = $(document.createElement('li'));
+osmium_add_add_to_fit_option = function(menu, source, opts) {
+	var name;
 	var cat = source.data('category');
 
-	if(cat === 'ship') li.text('Use ship');
-	else if(cat === 'module') li.text('Fit module');
-	else li.text('Add ' + cat);
+	if(cat === 'ship') name = 'Use ship';
+	else if(cat === 'module') name = 'Fit module';
+	else name = 'Add ' + cat;
 
-	li.click(function() {
+	osmium_ctxmenu_add_option(menu, name, function() {
 		osmium_add_to_clf(source);
-	});
-
-	return li;
+	}, opts);
 };
 
 osmium_add_non_shortlist_contextmenu = function(li) {
-	var span = $(document.createElement('span'));
-	span.text('≡');
-	span.addClass('contextmenu');
+	osmium_ctxmenu_bind(li, function() {
+		var menu = osmium_ctxmenu_create();
 
-	li.addClass('ctxmenu');
-	li.prepend(span);
-
-	var makectxmenu = function(ul, source) {
-		var mli;
-
-		ul.append(osmium_add_add_to_fit_option(source));
-
-		mli = $(document.createElement('li'));
-		mli.text('Add to shortlist');
-		mli.click(function() {
+		osmium_add_add_to_fit_option(menu, li, { default: true });
+		osmium_ctxmenu_add_option(menu, "Add to shortlist", function() {
 			if($('div#nlsources > section#shortlist > ul.types > li.module').filter(function() {
-				return $(this).data('typeid') === source.data('typeid');
+				return $(this).data('typeid') === li.data('typeid');
 			}).length >= 1) {
 				return;
 			}
 
-			var n = source.clone(true).unbind();
-			osmium_add_shortlist_contextmenu(n, true);
+			var n = li.clone(true).unbind();
+			osmium_add_shortlist_contextmenu(n);
 
 			$('div#nlsources > section#shortlist > ul.types').append(n);
 			osmium_commit_shortlist();
-		});
-		ul.append(mli);
-	};
+		}, {});
 
-	span.click(function(e) {
-		osmium_contextmenu(e, makectxmenu, li);
-	});
-	li.bind('contextmenu', function(e) {
-		osmium_contextmenu(e, makectxmenu, li);
-		return false;
+		return menu;
 	});
 };
 
-osmium_add_shortlist_contextmenu = function(li, spanexists) {
-	var span;
+osmium_add_shortlist_contextmenu = function(li) {
+	osmium_ctxmenu_bind(li, function() {
+		var menu = osmium_ctxmenu_create();
 
-	if(!spanexists) {
-		span = $(document.createElement('span'));
-		span.text('≡');
-		span.addClass('contextmenu');
-
-		li.addClass('ctxmenu');
-		li.prepend(span);
-	} else {
-		span = li.children('span:first-child');
-	}
-	var makectxmenu = function(ul, source) {
-		var mli;
-
-		ul.append(osmium_add_add_to_fit_option(source));
-
-		mli = $(document.createElement('li'));
-		mli.text('Remove from shortlist');
-		mli.click(function() {
-			source.remove();
+		osmium_add_add_to_fit_option(menu, li, { default: true });
+		osmium_ctxmenu_add_option(menu, "Remove from shortlist", function() {
+			li.remove();
 			osmium_commit_shortlist();
-		});
-		ul.append(mli);
-	};
+		}, {});
 
-	span.click(function(e) {
-		osmium_contextmenu(e, makectxmenu, li);
+		return menu;
 	});
-	li.bind('contextmenu', function(e) {
-		osmium_contextmenu(e, makectxmenu, li);
-		return false;
-	});
-
 };
 
 osmium_commit_shortlist = function() {
