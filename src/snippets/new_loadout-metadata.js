@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,7 +30,7 @@ osmium_init_metadata = function() {
 			pw.prop('disabled', true);
 			vis.prop('disabled', false);
 		}
-	});
+	}).change();
 
 	$('div#nlmain > section#metadata input, div#nlmain > section#metadata textarea, div#nlmain > section#metadata select').change(function() {
 		if(!("metadata" in osmium_clf)) {
@@ -70,5 +70,5 @@ osmium_gen_metadata = function() {
 
 	section.find('select#edit_perms').val(osmium_clf.metadata['X-Osmium-edit-permission']);
 	section.find('select#visibility').val(osmium_clf.metadata['X-Osmium-visibility']);
-	section.find('select#view_perms').val(osmium_clf.metadata['X-Osmium-view-permission']).change();
+	section.find('select#view_perms').val(osmium_clf.metadata['X-Osmium-view-permission']);
 };
