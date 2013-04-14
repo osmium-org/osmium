@@ -215,7 +215,7 @@ osmium_add_module = function(typeid, index, state) {
 		osmium_ctxmenu_add_option(menu, "Unfit module", function() {
 			var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
 			for(var i = 0; i < modules.length; ++i) {
-				if(modules[i].index === index) {
+				if(modules[i].index === index && modules[i].typeid === typeid) {
 					osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
 					break;
 				}
@@ -306,12 +306,13 @@ osmium_post_update_module = function(slotsdiv) {
 
 osmium_set_module_state = function(li, newstate) {
 	var index = li.data('index');
+	var typeid = li.data('typeid');
 
 	li.data('state', newstate);
 
 	var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
 	for(var i = 0; i < modules.length; ++i) {
-		if(modules[i].index === index) {
+		if(modules[i].index === index && modules[i].typeid === typeid) {
 			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
 				.modules[i].state = newstate;
 			break;
