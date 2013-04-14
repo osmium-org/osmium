@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -42,6 +42,7 @@ $osmium_dispatch_rules = array(
 	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_fit.php',
 	'%^/export/(.+)-(?<type>clf|md|evexml|eft|dna)-(?<loadoutid>[1-9][0-9]*)-(?<revision>[1-9][0-9]*)\.(json|md|xml|txt)$%D' => '/src/export_fit.php',
 
+    '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
 	'%^/old_new$%D' => '/src/new_fitting.php',
 
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],

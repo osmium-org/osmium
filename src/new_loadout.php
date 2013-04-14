@@ -23,6 +23,23 @@ require __DIR__.'/../inc/ajax_common.php';
 
 const RELATIVE = '..';
 
+if(isset($_GET['import']) && $_GET['import'] === 'dna') {
+    $dna = $_GET['dna'];
+
+    /* XXX: maybe this needs to be cached, this can be quite expansive */
+    $fit = \Osmium\Fit\try_parse_fit_from_shipdna($dna, 'New DNA-imported loadout', $errors);
+
+    if($fit === false) {
+        \Osmium\Fatal(404, "Nonsensical DNA string");
+    } else {
+        $tok = \Osmium\State\get_unique_new_loadout_token();
+        \Osmium\State\put_new_loadout($tok, $fit);
+
+        header('Location: ../'.$tok);
+        die();
+    }
+}
+
 if(!isset($_GET['token'])) {
 	$tok = \Osmium\State\get_unique_new_loadout_token();
 
