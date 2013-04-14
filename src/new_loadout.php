@@ -168,6 +168,7 @@ echo "</div>\n";
 \Osmium\Chrome\print_js_code(
 "osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
 osmium_staticver = ".\Osmium\STATICVER.";
+osmium_relative = '".RELATIVE."';
 osmium_token = '".\Osmium\State\get_token()."';
 osmium_clftoken = '".$tok."';
 osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";

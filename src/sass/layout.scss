@@ -302,9 +302,10 @@ ul#ctxmenu {
 	position: absolute;
 	z-index: 24493;
 
-	width: 10em;
+	min-width: 10em;
+	max-width: 15em;
 	border: 1px solid $contextmenu-border-color;
-	background-color: $contextmenu-bg-color;
+	background-color: rgba($contextmenu-bg-color, 0.8);
 
 	margin: 0;
 	padding: 0;
@@ -313,17 +314,39 @@ ul#ctxmenu {
 	cursor: pointer;
 
 	&> li {
-		padding: 0.25em;
-
+		position: relative;
+		padding: 0.25em 0.5em 0.25em 1.5em;
 		border-top: 1px dotted $contextmenu-entry-border-color;
 
 		&:first-child {
 			border-top: 0;
 		}
+
+		&> img.icon {
+			position: absolute;
+			left: 0.25em;
+			height: 1em;
+			line-height: 1em;
+			width: 1em;
+		}
+
+		&.separator {
+			height: 0.1em;
+			border-top: 1px solid $contextmenu-entry-border-color;
+			border-bottom: 1px solid $contextmenu-entry-border-color;
+
+			& + li {
+				border-top: 0;
+			}
+		}
 	}
 
 	&> li:hover {
 		color: $contextmenu-entry-active-text-color;
-		background-color: $contextmenu-entry-active-bg-color;
+		background-color: rgba($contextmenu-entry-active-bg-color, 0.8);
+
+		&.separator {
+			background-color: rgba($contextmenu-bg-color, 0.8);
+		}
 	}
 }

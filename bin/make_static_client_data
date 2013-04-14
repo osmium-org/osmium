@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -135,6 +135,17 @@ while($row = \Osmium\Db\fetch_row($q)) {
 		(int)($row[4] === 't'),
 		);
 }
+
+/** CLF state name => [Pretty name, Image name]
+ * Order must be consistent with $static['modulestates'] */
+$static['modulestatenames'] = array(
+    'offline' => array('Offline', 'offline.png'),
+    'online' => array('Online', 'online.png'),
+    'active' => array('Active', 'active.png'),
+    'overloaded' => array('Overloaded', 'overloaded.png'),
+);
+
+$static['statefulslottypes'] = \Osmium\Fit\get_stateful_slottypes();
 
 /* ---------------------------------------------------------- */
 

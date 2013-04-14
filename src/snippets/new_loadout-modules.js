@@ -94,15 +94,19 @@ osmium_add_module = function(typeid, index, state) {
 	var div = $('section#modules > div.' + m[3]);
 	var ul = div.children('ul');
 	var placeholders = ul.children('li.placeholder');
-	var li, img;
+	var li, img, a, stateimg;
+	var stateful;
 
 	if(state === null) {
 		if(osmium_module_states[typeid][2]) {
 			/* Active state, if possible */
 			state = osmium_states[2];
-		} else {
+		} else if(osmium_module_states[typeid][1]) {
 			/* Online state */
 			state = osmium_states[1];
+		} else {
+			/* Offline state */
+			state = osmium_states[0];
 		}
 	}
 
@@ -118,6 +122,82 @@ osmium_add_module = function(typeid, index, state) {
 
 	li.prepend(img);
 
+	if(stateful = ($.inArray(m[3], osmium_stateful_slot_types) !== -1)) {
+		a = $(document.createElement('a'));
+		stateimg = $(document.createElement('img'));
+		a.addClass('toggle_state');
+		a.prop('href', 'javascript:void(0);');
+		stateimg.prop('alt', '');
+		a.append(stateimg);
+		li.append(a);
+
+		li.on('state_changed', function() {
+			var a = li.children('a.toggle_state');
+			var stateimg = a.children('img');
+			var state = li.data('state');
+
+			a.prop('title', osmium_module_state_names[state][0]);
+			stateimg.prop('alt', a.prop('title'));
+			stateimg.prop('src', osmium_relative + '/static-' + osmium_staticver
+						  + '/icons/' + osmium_module_state_names[state][1]);
+		}).trigger('state_changed');
+
+		a.on('click', function() {
+			var a = $(this);
+			var li = a.parent();
+			var state = li.data('state');
+			var nextstate;
+
+			a.blur();
+
+			if(state === 'offline') {
+				nextstate = (osmium_module_states[typeid][1] ? 'online' : 'offline');
+			} else if(state === 'online') {
+				nextstate = (osmium_module_states[typeid][2] ? 'active' : 'offline');
+			} else if(state === 'active') {
+				nextstate = (osmium_module_states[typeid][3] ? 'overloaded' : 'offline');
+			} else if(state === 'overloaded') {
+				nextstate = 'offline';
+			}
+
+			osmium_set_module_state(li, nextstate);
+			return false;
+		}).on('contextmenu', function() {
+			var a = $(this);
+			var li = a.parent();
+			var state = li.data('state');
+			var prevstate;
+
+			a.blur();
+
+			if(state === 'offline') {
+				if(osmium_module_states[typeid][3]) {
+					prevstate = 'overloaded';
+				} else if(osmium_module_states[typeid][2]) {
+					prevstate = 'active';
+				} else if(osmium_module_states[typeid][1]) {
+					prevstate = 'online';
+				} else {
+					prevstate = 'offline';
+				}
+			} else if(state === 'online') {
+				prevstate = 'offline';
+			} else if(state === 'active') {
+				prevstate = 'online';
+			} else if(state === 'overloaded') {
+				prevstate = 'active';
+			}
+
+			osmium_set_module_state(li, prevstate);
+			return false;
+		}).on('dblclick', function(e) {
+			/* Prevent dblclick fire on the <li> itself */
+
+			e.stopPropagation();
+			return false;
+		});
+	}
+
 	if(placeholders.length > 0) {
 		placeholders.first().before(li);
 	} else {
@@ -132,7 +212,7 @@ osmium_add_module = function(typeid, index, state) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
 
-		osmium_ctxmenu_add_option(menu, "Remove module", function() {
+		osmium_ctxmenu_add_option(menu, "Unfit module", function() {
 			var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
 			for(var i = 0; i < modules.length; ++i) {
 				if(modules[i].index === index) {
@@ -145,6 +225,57 @@ osmium_add_module = function(typeid, index, state) {
 			osmium_commit_clf();
 			osmium_post_update_module(div);
 		}, { default: true });
+
+		osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
+			var typeid = li.data('typeid');
+
+			for(var i = 0;
+				i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.length;
+				++i) {
+
+				if(osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules[i].typeid
+				   === typeid) {
+					osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
+					--i;
+				}
+			}
+
+			ul.find('li').filter(function() {
+				return $(this).data('typeid') === typeid;
+			}).remove();
+
+			osmium_commit_clf();
+			osmium_post_update_module(div);
+		}, {});
+
+		if(stateful) {
+			osmium_ctxmenu_add_separator(menu);
+
+			if(osmium_module_states[typeid][0]) {
+				osmium_ctxmenu_add_option(menu, "Offline module", function() {
+					osmium_set_module_state(li, "offline");
+				}, { icon: osmium_module_state_names['offline'][1] });
+			}
+			if(osmium_module_states[typeid][1]) {
+				osmium_ctxmenu_add_option(menu, "Online module", function() {
+					osmium_set_module_state(li, "online");
+				}, { icon: osmium_module_state_names['online'][1] });
+			}
+			if(osmium_module_states[typeid][2]) {
+				osmium_ctxmenu_add_option(menu, "Activate module", function() {
+					osmium_set_module_state(li, "active");
+				}, { icon: osmium_module_state_names['active'][1] });
+			}
+			if(osmium_module_states[typeid][3]) {
+				osmium_ctxmenu_add_option(menu, "Toggle overload", function() {
+					if(li.data('state') !== "overloaded") {
+						osmium_set_module_state(li, "overloaded");
+					} else {
+						osmium_set_module_state(li, "active");
+					}
+				}, { icon: osmium_module_state_names['overloaded'][1] });
+			}
+		}
 
 		return menu;
 	});
@@ -171,4 +302,22 @@ osmium_add_placeholder_module = function(slotsdiv) {
 osmium_post_update_module = function(slotsdiv) {
 	osmium_update_overflow(slotsdiv);
 	osmium_maybe_hide_slot_type(slotsdiv);
+};
+
+osmium_set_module_state = function(li, newstate) {
+	var index = li.data('index');
+
+	li.data('state', newstate);
+
+	var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
+	for(var i = 0; i < modules.length; ++i) {
+		if(modules[i].index === index) {
+			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[i].state = newstate;
+			break;
+		}
+	}
+
+	osmium_commit_clf();
+	li.trigger('state_changed');
 };

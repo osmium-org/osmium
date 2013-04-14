@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -366,7 +366,12 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 
 	if(isset($fit['modules'][$type][$index])) {
 		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
-			return; /* Job already done */
+            if($state !== null) {
+                /* Module is already installed, but state still needs an update */
+                change_module_state_by_location($fit, $type, $index, $state);
+            }
+
+			return;
 		}
 
 		remove_module($fit, $index, $fit['modules'][$type][$index]['typeid']);
@@ -501,9 +506,13 @@ function sort_modules(&$fit, $order) {
  * @param $state one of the STATE_* constants.
  */
 function change_module_state_by_location(&$fit, $type, $index, $state) {
-	$categories = get_state_categories();
-
 	$previous_state = get_module_state_by_location($fit, $type, $index);
+    if($previous_state === $state) {
+        /* Be lazy */
+        return;
+    }
+
+	$categories = get_state_categories();
 
 	$added_groups = array_diff($categories[$state], $categories[$previous_state]);
 	$removed_groups = array_diff($categories[$previous_state], $categories[$state]);

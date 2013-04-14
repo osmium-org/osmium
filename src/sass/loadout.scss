@@ -43,6 +43,7 @@ $hidden-char: '\0025B8';
 	padding: 0.125em 0;
 	border-top: 1px dashed $module-border-color;
 	line-height: 2em;
+	position: relative;
 
 	&:first-child {
 		border-top: none;
@@ -55,8 +56,7 @@ $hidden-char: '\0025B8';
 	}
 
 	&.hascontextmenu {
-		padding-right: 1em;
-		position: relative;
+		padding-right: 1.5em;
 
 		&> span.contextmenuindicator {
 			font-size: 1.5em;
@@ -68,6 +68,18 @@ $hidden-char: '\0025B8';
 			top: 0.1em;
 			right: 0;
 		}
+	}
+
+	&> a.toggle_state {
+		position: absolute;
+		top: 16px;
+		left: 16px;
+	}
+
+	&> a.toggle_state, &> a.toggle_state > img {
+		width: 16px;
+		height: 16px;
+		line-height: 16px;
 	}
 
 	-moz-user-select: -moz-none;

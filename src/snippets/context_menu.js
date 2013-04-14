@@ -86,7 +86,7 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 	if("icon" in opts) {
 		var img = $(document.createElement('img'));
 		img.prop('alt', '');
-		img.prop('src', opts.icon);
+		img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
 		img.addClass('icon');
 		li.prepend(img);
 	}
@@ -107,3 +107,10 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 
 	menu.append(li);
 };
+
+osmium_ctxmenu_add_separator = function(menu) {
+	var li = $(document.createElement('li'));
+	li.addClass('separator');
+	li.text(' ');
+	menu.append(li);
+}
