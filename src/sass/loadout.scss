@@ -39,17 +39,20 @@ $hidden-char: '\0025B8';
 }
 
 @mixin module {
-	@include ellipsis;
 	padding: 0.125em 0;
 	border-top: 1px dashed $module-border-color;
 	line-height: 2em;
 	position: relative;
 
+	&, &.hascharge > span.charge {
+		@include ellipsis;
+	}
+
 	&:first-child {
 		border-top: none;
 	}
 	
-	&> img, &> span.charge > img {
+	&> img, &.hascharge > span.charge > img {
 		height: 32px;
 		width: 32px;
 		margin-right: 0.125em;

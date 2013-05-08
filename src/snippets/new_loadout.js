@@ -118,7 +118,111 @@ osmium_add_to_clf = function(item) {
 			index: index
 		});
 
-		osmium_post_update_module(osmium_add_module(typeid, index, state));
+		osmium_post_update_module(osmium_add_module(typeid, index, state, null));
+	} else if(cat === 'charge') {
+		/* Try to find a suitable location for the charge */
+		var location = null;
+		var candidatelevel;
+
+		for(var i = 0; i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+			.modules.length; ++i) {
+			m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules[i];
+
+			var validcharge = false, currentchargeid = null;
+			if(!(m.typeid in osmium_charges)) {
+				/* Module can't accept charges */
+				continue;
+			}
+			for(var j = 0; j < osmium_charges[m.typeid].length; ++j) {
+				if(osmium_charges[m.typeid][j] === typeid) {
+					validcharge = true;
+					break;
+				}
+			}
+			if(!validcharge) continue;
+
+			if(location === null) {
+				/* As a fallback, fit the charge to the first suitable location */
+				location = i;
+				candidatelevel = 0; /* This candidate is not very good */
+			}
+
+			if(!("charges" in m)) {
+				/* The module has no charges and can accept the charge, perfect */
+				location = i;
+				break;
+			}
+
+			var charges = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[i].charges;
+			var cpid;
+
+			/* Check if charge already present */
+			for(var j = 0; j < charges.length; ++j) {
+				if("cpid" in charges[j]) {
+					cpid = charges[j].cpid;
+				} else {
+					cpid = 0;
+				}
+
+				if(cpid == osmium_clf['X-Osmium-current-chargepresetid']) {
+					currentchargeid = charges[j].typeid;
+					break;
+				}
+			}
+			if(currentchargeid === null) {
+				/* The module has no charge in this preset and can accept the charge */
+				location = i;
+				break;
+			} else if(currentchargeid !== typeid && candidatelevel < 1) {
+				/* The module has a different charge, but it's still a
+				 * better candidate than the fallback */
+				location = i;
+				candidatelevel = 1;
+			}
+		}
+
+		if(location !== null) {
+			var m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[location];
+
+			if(!("charges" in m)) {
+				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+					.modules[location].charges = [];
+			}
+
+			var charges = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[location].charges;
+			var cpid;
+
+			/* Remove previous charge (if there is one) */
+			for(var j = 0; j < charges.length; ++j) {
+				if("cpid" in charges[j]) {
+					cpid = charges[j].cpid;
+				} else {
+					cpid = 0;
+				}
+
+				if(cpid !== osmium_clf['X-Osmium-current-chargepresetid']) {
+					continue;
+				}
+
+				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+					.modules[location].charges.splice(j, 1);
+				break;
+			}
+
+			/* Finally, add the new charge */
+			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[location].charges.push({
+					typeid: typeid,
+					cpid: osmium_clf['X-Osmium-current-chargepresetid']
+				});
+
+			osmium_add_charge_by_location(m.typeid, m.index, typeid);
+		} else {
+			alert("This charge cannot be used with any fitted type.");
+		}
 	}
 
 	osmium_commit_clf();

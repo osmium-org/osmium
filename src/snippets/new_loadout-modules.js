@@ -18,7 +18,8 @@
 osmium_gen_modules = function() {
 	var availslots = ("ship" in osmium_clf) ? osmium_ship_slots[osmium_clf.ship.typeid] : [0, 0, 0, 0, 0];
 	var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
-	var m, i, z, type;
+	var cpid = osmium_clf['X-Osmium-current-chargepresetid'];
+	var m, i, j, z, type, c, chargeid;
 
 	availslots = {
 		high: availslots[0],
@@ -35,7 +36,21 @@ osmium_gen_modules = function() {
 	for(i = 0; i < p.modules.length; ++i) {
 		m = p.modules[i];
 		availslots[osmium_types[m.typeid][3]]--;
-		osmium_add_module(m.typeid, m.index, m.state);
+		chargeid = null;
+		if("charges" in m) {
+			for(j = 0; j < m.charges.length; ++j) {
+				if(!("cpid" in m.charges[j])) {
+					m.charges[j].cpid = 0;
+				}
+
+				if(m.charges[j].cpid == cpid) {
+					chargeid = m.charges[j].typeid;
+					break;
+				}
+			}
+		}
+
+		osmium_add_module(m.typeid, m.index, m.state, chargeid);
 	}
 
 	z = 0;
@@ -89,13 +104,13 @@ osmium_update_overflow = function(slotsdiv) {
 	}
 };
 
-osmium_add_module = function(typeid, index, state) {
+osmium_add_module = function(typeid, index, state, chargeid) {
 	var m = osmium_types[typeid];
 	var div = $('section#modules > div.' + m[3]);
 	var ul = div.children('ul');
 	var placeholders = ul.children('li.placeholder');
 	var li, img, a, stateimg;
-	var stateful;
+	var stateful, hascharges;
 
 	if(state === null) {
 		if(osmium_module_states[typeid][2]) {
@@ -121,6 +136,68 @@ osmium_add_module = function(typeid, index, state) {
 	img.prop('src', '//image.eveonline.com/Type/' + typeid + '_64.png');
 
 	li.prepend(img);
+
+	if(hascharges = (typeid in osmium_charges)) {
+		li.on('remove_charge', function() {
+			var span = li.children('span.charge');
+			var chargeimg = span.children('img');
+			var charge = span.children('span.name');
+
+			chargeimg.prop('src', osmium_relative + '/static-' + osmium_staticver
+						   + '/icons/no_charge.png');
+			charge.empty();
+			charge.append($(document.createElement('em')).text('(No charge)'));
+
+			var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
+			for(var i = 0; i < modules.length; ++i) {
+				if(modules[i].index === index && modules[i].typeid === typeid) {
+					/* Removing nonexistent charge */
+					if(!("charges" in modules[i])) break;
+
+					var charges = modules[i].charges;
+					var curcpid = osmium_clf['X-Osmium-current-chargepresetid'];
+					var cpid;
+					for(var j = 0; j < charges.length; ++j) {
+						if(!("cpid" in charges[j])) {
+							cpid = 0; /* The spec says a value of 0 must be assumed */
+						} else {
+							cpid = charges[j].cpid;
+						}
+
+						if(curcpid == cpid) {
+							osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+								.modules[i].charges.splice(j, 1);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		});
+
+		var charge = $(document.createElement('span'));
+		charge.addClass('charge');
+		charge.text(',').append($(document.createElement('br')));
+		charge.append($(document.createElement('img')).prop('alt', ''));
+		charge.append($(document.createElement('span')).addClass('name'));
+
+		li.append(charge);
+		li.addClass('hascharge');
+
+		if(chargeid === null) {
+			li.trigger('remove_charge');
+		} else {
+			osmium_add_charge(li, chargeid);
+		}
+
+		charge.on('dblclick', function(e) {
+			/* When dblclicking the charge, remove the charge but not the module */
+			li.trigger('remove_charge');
+			osmium_commit_clf();
+			e.stopPropagation();
+			return false;
+		});
+	}
 
 	if(stateful = ($.inArray(m[3], osmium_stateful_slot_types) !== -1)) {
 		a = $(document.createElement('a'));
@@ -209,44 +286,43 @@ osmium_add_module = function(typeid, index, state) {
 		li.addClass('added_to_loadout');
 	}
 
+	li.on('remove_module', function() {
+		var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
+		for(var i = 0; i < modules.length; ++i) {
+			if(modules[i].index === index && modules[i].typeid === typeid) {
+				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
+				break;
+			}
+		}
+
+		li.remove();
+	});
+
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
 
 		osmium_ctxmenu_add_option(menu, "Unfit module", function() {
-			var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
-			for(var i = 0; i < modules.length; ++i) {
-				if(modules[i].index === index && modules[i].typeid === typeid) {
-					osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
-					break;
-				}
-			}
+			li.trigger('remove_module');
 
-			li.remove();
 			osmium_commit_clf();
 			osmium_post_update_module(div);
 		}, { default: true });
 
 		osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
-			var typeid = li.data('typeid');
-
-			for(var i = 0;
-				i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.length;
-				++i) {
-
-				if(osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules[i].typeid
-				   === typeid) {
-					osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
-					--i;
-				}
-			}
-
-			ul.find('li').filter(function() {
-				return $(this).data('typeid') === typeid;
-			}).remove();
+			li.parent().find('li').filter(function() {
+				return $(this).data('typeid') === typeid
+			}).trigger('remove_module');
 
 			osmium_commit_clf();
 			osmium_post_update_module(div);
 		}, {});
+
+		if(hascharges) {
+			osmium_ctxmenu_add_option(menu, "Remove charge", function() {
+				li.trigger('remove_charge');
+				osmium_commit_clf();
+			}, { icon: "no_charge.png" });
+		}
 
 		if(stateful) {
 			osmium_ctxmenu_add_separator(menu);
@@ -321,4 +397,23 @@ osmium_set_module_state = function(li, newstate) {
 
 	osmium_commit_clf();
 	li.trigger('state_changed');
+};
+
+osmium_add_charge = function(li, chargetypeid) {
+	var span = li.children('span.charge');
+	var chargeimg = span.children('img');
+	var charge = span.children('span.name');
+
+	chargeimg.prop('src', '//image.eveonline.com/Type/' + chargetypeid + '_64.png');
+	charge.empty();
+	charge.text(osmium_types[chargetypeid][1]);
+};
+
+osmium_add_charge_by_location = function(locationtypeid, locationindex, chargetypeid) {
+	var li = $('section#modules > div.slots li.hascharge').filter(function() {
+		var t = $(this);
+		return t.data('typeid') === locationtypeid && t.data('index') === locationindex;
+	}).first();
+
+	return osmium_add_charge(li, chargetypeid);
 };

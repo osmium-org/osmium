@@ -1306,7 +1306,7 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 				}
 
 				use_preset($fit, $fitid, false);
-				synchronize_preset_from_clf_1($fit, $clf['presets'][$id]);
+				synchronize_preset_from_clf_1($fit, $clf['presets'][$id], $cpid);
 			} else {
 				$fitid = $fitnames[$name];
 				$fit['presets'][$fitid]['description'] = $pdesc;
@@ -1359,7 +1359,9 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 				}
 			}
 
-			synchronize_preset_from_clf_1($fit, $clf['presets'][$clf['X-Osmium-current-presetid']]);
+			synchronize_preset_from_clf_1($fit,
+                                          $clf['presets'][$clf['X-Osmium-current-presetid']],
+                                          $clf['X-Osmium-current-chargepresetid']);
 		}
 	}
 
@@ -1405,7 +1407,7 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 }
 
 /** @internal */
-function synchronize_preset_from_clf_1(&$fit, $clfp) {
+function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 	static $clfstates = array(
 		'offline' => STATE_OFFLINE,
 		'online' => STATE_ONLINE,
@@ -1414,14 +1416,45 @@ function synchronize_preset_from_clf_1(&$fit, $clfp) {
 		);
 
 	$clfmods = array();
+    $clfcharges = array();
 
 	foreach(isset($clfp['modules']) ? $clfp['modules'] : array() as $m) {
 		/* add_module() is lazy, it's okay to blindly call it here */
 		add_module($fit, $m['index'], $m['typeid'], $clfstates[$m['state']]);
 
 		$type = get_module_slottype($fit, $m['typeid']);
+
+        if(isset($m['charges'])) {
+            foreach($m['charges'] as $c) {
+                if(!isset($c['cpid'])) {
+                    $c['cpid'] = 0;
+                }
+
+                if($c['cpid'] != $cpid) {
+                    continue;
+                }
+
+                add_charge($fit, $type, $m['index'], $c['typeid']);
+                $clfcharges[$type][$m['index']] = $c['typeid'];
+                break;
+            }
+        }
+
 		$clfmods[$type][$m['index']] = $m['typeid'];
 	}
+
+    foreach($fit['charges'] as $type => $charges) {
+        foreach($charges as $index => $c) {
+            if(isset($clfcharges[$type][$index])) continue;
+
+            /* Also check if the module was deleted, in this case the
+             * charge will be deleted automatically when the module is
+             * deleted */
+            if(!isset($clfmods[$type][$index])) continue;
+
+            remove_charge($fit, $type, $index);
+        }
+    }
 
 	foreach($fit['modules'] as $type => $mods) {
 		foreach($mods as $index => $m) {
