@@ -112,7 +112,6 @@ echo "<div id='nlmain'>
 <ul class='tabs'>
 <li><a href='#modules'>Modules &amp; Charges</a></li>
 <li><a href='#drones'>Drones</a></li>
-<li><a href='#implantsboosters'>Implants, boosters</a></li>
 <li><a href='#presets'>Presets</a></li>
 <li><a href='#metadata'>Metadata</a></li>
 </ul>\n";
@@ -173,8 +172,16 @@ echo "</section>\n";
 echo "<section id='modules'>\n";
 $stypes = \Osmium\Fit\get_slottypes_names();
 foreach($stypes as $type => $fname) {
-	echo "<div class='slots $type'>\n<h3>".htmlspecialchars($fname)
-		." <span><small></small></span></h3>\n";
+    if($type === "high" || $type === "medium") {
+        $groupstatus = "grouped";
+        $groupedcharges = "<small class='groupcharges'>Charges are grouped</small>";
+    } else {
+        $groupstatus = "ungrouped";
+        $groupedcharges = "";
+    }
+
+	echo "<div class='slots $type $groupstatus'>\n<h3>".htmlspecialchars($fname)
+		." <span>$groupedcharges<small class='counts'></small></span></h3>\n";
 	echo "<ul></ul>\n";
 	echo "</div>\n";
 }

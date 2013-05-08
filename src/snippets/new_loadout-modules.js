@@ -65,7 +65,23 @@ osmium_gen_modules = function() {
 };
 
 osmium_init_modules = function() {
+	$("section#modules > div.slots > h3 > span > small.groupcharges").on('click', function() {
+		var t = $(this);
+		var slotsdiv = t.parents("div.slots");
 
+		if(slotsdiv.hasClass('grouped')) {
+			slotsdiv.removeClass('grouped').addClass('ungrouped');
+			t.text('Charges are not grouped');
+		} else {
+			slotsdiv.removeClass('ungrouped').addClass('grouped');
+			t.text('Charges are grouped');
+		}
+
+		t.prop('title', t.text());
+	}).each(function() {
+		var t = $(this);
+		t.prop('title', t.text());
+	});
 };
 
 osmium_maybe_hide_slot_type = function(slotsdiv) {
@@ -77,7 +93,7 @@ osmium_maybe_hide_slot_type = function(slotsdiv) {
 };
 
 osmium_update_overflow = function(slotsdiv) {
-	var smallcount = slotsdiv.find('h3 > span > small');
+	var smallcount = slotsdiv.find('h3 > span > small.counts');
 	var used = slotsdiv.children('ul').children('li').not('.placeholder').length;
 	var total = ("ship" in osmium_clf) ?
 		osmium_ship_slots[osmium_clf.ship.typeid][slotsdiv.data('type-index')]
@@ -138,11 +154,12 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 	li.prepend(img);
 
 	if(hascharges = (typeid in osmium_charges)) {
-		li.on('remove_charge', function() {
+		li.on('remove_charge_nogroupcheck', function() {
 			var span = li.children('span.charge');
 			var chargeimg = span.children('img');
 			var charge = span.children('span.name');
 
+			li.data('chargetypeid', null);
 			chargeimg.prop('src', osmium_relative + '/static-' + osmium_staticver
 						   + '/icons/no_charge.png');
 			charge.empty();
@@ -173,6 +190,16 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 					break;
 				}
 			}
+		}).on('remove_charge', function() {
+			if(li.parents('div.slots').hasClass('grouped')) {
+				li.parents('div.slots').find('li.hascharge').filter(function() {
+					var t = $(this);
+					return t.data('typeid') === li.data('typeid') 
+						&& t.data('chargetypeid') === li.data('chargetypeid');
+				}).trigger('remove_charge_nogroupcheck');
+			} else {
+				li.trigger('remove_charge_nogroupcheck');
+			}
 		});
 
 		var charge = $(document.createElement('span'));
@@ -185,7 +212,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		li.addClass('hascharge');
 
 		if(chargeid === null) {
-			li.trigger('remove_charge');
+			li.trigger('remove_charge_nogroupcheck');
 		} else {
 			osmium_add_charge(li, chargeid);
 		}
@@ -403,6 +430,8 @@ osmium_add_charge = function(li, chargetypeid) {
 	var span = li.children('span.charge');
 	var chargeimg = span.children('img');
 	var charge = span.children('span.name');
+
+	li.data('chargetypeid', chargetypeid);
 
 	chargeimg.prop('src', '//image.eveonline.com/Type/' + chargetypeid + '_64.png');
 	charge.empty();

@@ -339,6 +339,10 @@ ul#ctxmenu {
 				border-top: 0;
 			}
 		}
+
+		&.default {
+			font-weight: bold;
+		}
 	}
 
 	&> li:hover {

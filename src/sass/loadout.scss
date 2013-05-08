@@ -215,7 +215,27 @@ $hidden-char: '\0025B8';
 			right: 0.125em;
 			bottom: 0;
 			color: $aside-text-color;
+
+			&> small.groupcharges {
+				background-size: 1em;
+				cursor: pointer;
+				opacity: 0.5;
+
+				&:hover {
+					opacity: 1.0;
+				}
+
+				padding-right: 0.25em;
+			}
 		}
+	}
+
+	&.grouped > h3 > span > small.groupcharges {
+		@include sprite('./icons/modulegroup.png', 0, 0, 1em, 1em);
+	}
+
+	&.ungrouped > h3 > span > small.groupcharges {
+		@include sprite('./icons/modulegroup.png', 0, 1em, 1em, 1em);
 	}
 }
 

@@ -185,6 +185,10 @@ osmium_add_to_clf = function(item) {
 		if(location !== null) {
 			var m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
 				.modules[location];
+			var moduletypeid = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[location].typeid;
+			var moduletype = osmium_types[moduletypeid][3];
+			var previouschargeid = null;
 
 			if(!("charges" in m)) {
 				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
@@ -207,6 +211,8 @@ osmium_add_to_clf = function(item) {
 					continue;
 				}
 
+				previouschargeid = charges[j].typeid;
+
 				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
 					.modules[location].charges.splice(j, 1);
 				break;
@@ -220,6 +226,62 @@ osmium_add_to_clf = function(item) {
 				});
 
 			osmium_add_charge_by_location(m.typeid, m.index, typeid);
+
+			if($("section#modules > div.slots." + moduletype).hasClass('grouped')) {
+				/* Also add this charge to identical modules with identical charges */
+
+				var curchargeid;
+				var curchargeidx;
+				for(var i = 0; i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+					.modules.length; ++i) {
+					curchargeid = null;
+					curchargeidx = 0;
+
+					m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules[i];
+					if(m.typeid !== moduletypeid) {
+						continue;
+					}
+
+					if(!("charges" in m)) {
+						osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+							.modules[i].charges = [];
+					}
+
+					charges = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+						.modules[i].charges;
+
+					for(var j = 0; j < charges.length; ++j) {
+						if("cpid" in charges[j]) {
+							cpid = charges[j].cpid;
+						} else {
+							cpid = 0;
+						}
+
+						if(cpid !== osmium_clf['X-Osmium-current-chargepresetid']) {
+							continue;
+						}
+
+						curchargeid = charges[j].typeid;
+						curchargeidx = j;
+						break;
+					}
+
+					if(curchargeid !== previouschargeid) {
+						continue;
+					}
+
+					osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+						.modules[i].charges.splice(curchargeidx, 1);
+
+					osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+						.modules[i].charges.push({
+							typeid: typeid,
+							cpid: osmium_clf['X-Osmium-current-chargepresetid']
+						});
+
+					osmium_add_charge_by_location(m.typeid, m.index, typeid);
+				}
+			}
 		} else {
 			alert("This charge cannot be used with any fitted type.");
 		}
