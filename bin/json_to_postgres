@@ -145,6 +145,8 @@ $fout = fopen('./osmium-eve-data.sql', 'w');
 
 fwrite($fout, "BEGIN;\n\n");
 
+$typeids = array();
+
 $count = count($structure);
 for($i = 0; $i < $count; $i += 3) {
 	$tablename = $structure[$i];
@@ -157,9 +159,14 @@ for($i = 0; $i < $count; $i += 3) {
 	foreach($rows as $row) {
 		$values = array();
 
+        if($tablename === 'invtypes') {
+            $typeids[$row['typeID']] = true;
+        }
+
 		foreach($cols as $jsoncol => $sqlcol) {
 			/* XXX: prune null market prices */
-			if($tablename == 'averagemarketprices' && $sqlcol == 'averageprice' && $row[$jsoncol] === null) {
+			if($tablename == 'averagemarketprices' && $sqlcol == 'averageprice'
+               && $row[$jsoncol] === null) {
 				continue 2;
 			}
 
@@ -168,6 +175,12 @@ for($i = 0; $i < $count; $i += 3) {
 				/* DUST items */
 				continue 2;
 			}
+            if($tablename === 'averagemarketprices' && $sqlcol == 'typeid'
+               && !isset($typeids[$row[$jsoncol]])) {
+                /* Price of non-existent types */
+                continue 2;
+            }
+
 			if($sqlcol === 'unitid' && $row[$jsoncol] === 0) {
 				$row[$jsoncol] = null;
 			}
