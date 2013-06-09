@@ -16,6 +16,34 @@ The Sphinx loadout index has been updated. You must:
 * start sphinx-searchd;
 * run ./bin/reindex_loadouts.
 
+The Sphinx module index has been replaced by a more general type index
+(that also contains ships, drones, etc.). You must:
+
+* stop sphinx-searchd;
+* delete the sphinx/modules.* files;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd.
+
+v0.6.5, released 2013-06-04
+===========================
+
+Updated for Odyssey 1.0.
+
+v0.6.4, released 2013-02-22
+===========================
+
+The Ancillary Armor Repairer is now working as advertised.
+
+v0.6.3, released 2013-02-21
+===========================
+
+Updated for Retribution 1.1.
+
+v0.6.2, released 2012-12-04
+===========================
+
+No big changes.
+
 v0.6.1, released 2012-10-17
 ===========================
 

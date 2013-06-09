@@ -115,12 +115,12 @@ the `osmium_user` user, follow these steps:
     psql osmium osmium_user < pgsql/osmium.sql
     ~~~~
 
-4. Generate the module search index:
+4. Generate the type search index:
 
    ~~~~
    (stop searchd)
    cd sphinx
-   sphinx-indexer osmium_modules
+   sphinx-indexer osmium_types
    (start searchd)
    ~~~~
 
@@ -194,7 +194,7 @@ updated.)*
    ~~~~
    (stop searchd)
    cd sphinx
-   sphinx-indexer osmium_modules
+   sphinx-indexer osmium_types
    (start searchd)
    ~~~~
 
@@ -258,7 +258,7 @@ git clone git://dev.evefit.org/phobos.git
 cd phobos
 python2.7 setup.py build
 
-PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPrices,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
+PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
 ~~~~
 
 Then convert the JSON files to SQL statements using the

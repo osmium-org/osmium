@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -71,7 +71,7 @@ function print_loadout_title($name, $viewpermission, $visibility, $author, $rela
 		$pic .= "<a href='$relative/favorite/$loadoutid?tok=$tok' title='$title'><img src='$relative/static-".\Osmium\STATICVER."/icons/favorited$favimg.png' alt='Favorite status' /></a>";
 	}
   
-	echo "<span class='fitname'>".htmlentities($name).$pic."</span>";
+	echo "<span class='fitname'>".htmlspecialchars($name).$pic."</span>";
 }
 
 function print_formatted_attribute_category($identifier, $title, $titledata, $titleclass, $contents) {
@@ -179,6 +179,8 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile) {
 		                       'Hull EHP repaired per second', true),
 		'armor_repair' => array('armorrepair.png', 'Armor repairs',
 		                        'Armor EHP repaired per second', true),
+		'armor_repair_fueled' => array('fueledarmorrepair.png', 'Fueled armor repairs',
+		                               'Armor EHP repaired per second', true),
 		'shield_boost' => array('shieldboost.png', 'Shield boost',
 		                        'Shield EHP boost per second', true),
 		'shield_boost_fueled' => array('fueledshieldboost.png', 'Fueled shield boost',

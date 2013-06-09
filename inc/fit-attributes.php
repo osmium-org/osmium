@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -209,6 +209,7 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 	static $effects = array(
 		'hull_repair' => array('structureRepair', 'structureDamageAmount', 'hull'),
 		'armor_repair' => array('armorRepair', 'armorDamageAmount', 'armor'),
+		'armor_repair_fueled' => array('fueledArmorRepair', 'armorDamageAmount', 'armor'),
 		'shield_boost' =>  array('shieldBoosting', 'shieldBonus', 'shield'),
 		'shield_boost_fueled' => array('fueledShieldBoosting', 'shieldBonus', 'shield'),
 		'shield_passive' => array(null, null, 'shield'),
@@ -245,6 +246,15 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 				}
 
 				$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
+				if($key === 'armor_repair_fueled' && isset($fit['charges'][$type][$index]['typeid'])
+				   && $fit['charges'][$type][$index]['typeid'] == 28668) {
+					/* XXX: ugly exception for the Ancillary Armor
+					 * Repairer. Proper effect override will be in
+					 * libdogma. */
+					$amount *= \Osmium\Dogma\get_module_attribute($fit, $type, $index,
+					                                              'chargedArmorDamageMultiplier');
+				}
+
 				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
 				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
 
