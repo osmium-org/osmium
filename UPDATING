@@ -1,5 +1,5 @@
-staging
-=======
+v0.7.0, released 2013-06-09
+===========================
 
 IMPORTANT: the configuration file has been updated. Add the
 "relative_path" line in your config.ini accordingly (see the example
@@ -8,6 +8,9 @@ file for usage).
 IMPORTANT: the .htaccess file is no longer shipped, you will have to
 configure your webserver yourself. The README file explains how to do
 so, and an example configuration for Apache 2 is included.
+
+The osmium schema has been updated. If you get a warning about
+loadoutstaglist not existing, this is fine.
 
 The Sphinx loadout index has been updated. You must:
 
