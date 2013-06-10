@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,6 +28,7 @@ namespace Osmium\Fit;
 require __DIR__.'/fit-presets.php';
 require __DIR__.'/fit-attributes.php';
 require __DIR__.'/fit-db.php';
+require __DIR__.'/fit-db-versions.php';
 require __DIR__.'/fit-importexport.php';
 
 
@@ -209,8 +210,10 @@ function get_state_categories() {
  *                                      array(<effectname> =>
  *                                          array(effectid, effectname, preexp, postexp)))
  *
- * metadata => array(name, description, tags, view_permission, edit_permission, visibility, password,
- *                   loadoutid, hash, revision, privatetoken)
+ * metadata => array(name, description, tags, evebuildnumber,
+ *					 view_permission, edit_permission, visibility,
+ *					 password, loadoutid, hash, revision,
+ *					 privatetoken)
  */
 function create(&$fit) {
 	$fit = array(
@@ -223,6 +226,7 @@ function create(&$fit) {
 			'name' => 'Unnamed loadout',
 			'description' => '',
 			'tags' => array(),
+			'evebuildnumber' => get_latest_eve_db_version()['build'],
 			'view_permission' => VIEW_EVERYONE,
 			'edit_permission' => EDIT_OWNER_ONLY,
 			'visibility' => VISIBILITY_PUBLIC

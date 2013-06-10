@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -845,6 +845,9 @@ function export_to_markdown($fit, $embedclf = true) {
 		$q = $quote($fit['metadata']['description']);
 		if($q !== "") $md .= $q."\n\n";
 	}
+
+	$ver = get_closest_version_by_build($fit['metadata']['evebuildnumber']);
+	$md .= "Designed for: ".$ver['name']." (".$ver['tag']."; build ".$fit['metadata']['evebuildnumber'].")\n\n";
 
 	if(isset($fit['metadata']['tags']) && count($fit['metadata']['tags']) > 0) {
 		$md .= "Tags: ".implode(", ", $fit['metadata']['tags'])."\n\n";

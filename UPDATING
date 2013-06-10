@@ -1,3 +1,11 @@
+staging
+=======
+
+The osmium schema has been updated:
+
+* Added evebuildnumber column in fittings, auto-filling it using
+  creationdate.
+
 v0.7.0, released 2013-06-09
 ===========================
 
