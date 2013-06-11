@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -40,6 +40,13 @@ function final_settings() {
 	\Osmium\Forms\print_textarea('Description<br /><small>(optional)</small>', 
 	                             'description', 'description',
 	                             \Osmium\Forms\FIELD_REMEMBER_VALUE);
+
+	$versions = \Osmium\Fit\get_eve_db_versions();
+	foreach($versions as &$v) {
+		$v = $v['name']." (".$v['tag'].", build ".$v['build'].")";
+	}
+	\Osmium\Forms\print_select('Expansion<br /><small>(for experts only)</small>', 'evebuildnumber', $versions,
+							   null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
 	\Osmium\Forms\print_generic_field(
 		'Tags<br /><small>(space-separated,<br />'
@@ -127,6 +134,13 @@ function load_metadata(&$fit) {
 	isset($fit['metadata']['description']) && $_POST['description'] = $fit['metadata']['description'];
 	isset($fit['metadata']['tags']) && $_POST['tags'] = implode(' ', $fit['metadata']['tags']);
 
+	if(isset($fit['metadata']['evebuildnumber'])) {
+		$_POST['evebuildnumber'] =
+			\Osmium\Fit\get_closest_version_by_build(
+				$fit['metadata']['evebuildnumber']
+			)['build'];
+	}
+
 	if(!$anonymous) {
 		isset($fit['metadata']['view_permission']) && $_POST['view_perms'] = $fit['metadata']['view_permission'];
 		isset($fit['metadata']['edit_permission']) && $_POST['edit_perms'] = $fit['metadata']['edit_permission'];
@@ -155,6 +169,9 @@ function update_metadata() {
 	$fit['metadata']['name'] = trim($_POST['name']);
 	$fit['metadata']['description'] = $fdesc;
 	$fit['metadata']['tags'] = $tags;
+
+	$buildnumber = (int)$_POST['evebuildnumber'];
+	$fit['metadata']['evebuildnumber'] = \Osmium\Fit\get_closest_version_by_build($buildnumber)['build'];
  
 	if(!$anonymous) {
 		$view_perm = $_POST['view_perms'];

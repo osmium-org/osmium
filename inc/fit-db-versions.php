@@ -83,7 +83,7 @@ function get_latest_eve_db_version() {
 	if($v === null) {
 		$vers = get_eve_db_versions();
 		\reset($vers);
-		$v = current($v);
+		$v = current($vers);
 	}
 
 	return $v;
