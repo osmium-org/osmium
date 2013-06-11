@@ -74,7 +74,7 @@ function try_parse_fit_from_common_loadout_format($jsonstring, &$errors) {
 	$json = json_decode($jsonstring, true);
 	$version =  $json['clf-version'];
 	if(!function_exists($parse = 'Osmium\Fit\clf_parse_'.$version)) {
-		$errors[] = "Fatal: unsupported CLF version.";
+		$errors[] = "Fatal: unsupported CLF version.";
 		return false;
 	}
 
@@ -106,6 +106,10 @@ function clf_parse_1(array $json, &$errors) {
 
 	if(isset($json['metadata']) && is_array($json['metadata'])) {
 		clf_parse_meta_1($fit, $json['metadata'], $errors);
+	}
+
+	if(isset($json['client-version']) && is_int($json['client-version'])) {
+		$fit['metadata']['evebuildnumber'] = get_closest_version_by_build($json['client-version'])['build'];
 	}
 
 	return $fit;
@@ -349,7 +353,15 @@ function clf_parse_meta_1(&$fit, &$metadata, &$errors) {
 		$fit['metadata']['description'] = $metadata['description'];
 	}
 
-	/* Ignore creation date */
+	/* Use creation date to guess EVE database version, if
+	 * client-version is present in the root object, this will be
+	 * overwritten later */
+	if(isset($metadata['creationdate'])) {
+		$datetime = date_create_from_format(\DateTime::RFC2822, $metadata['creationdate']);
+		if($datetime !== false && ($ts = date_timestamp_get($datetime)) > 0) {
+			$fit['metadata']['evebuildnumber'] = get_closest_version_by_time($ts)['build'];
+		}
+	}
 
 	$fit['metadata']['tags'] = array();
 	if(isset($metadata['X-tags']) && is_array($metadata['X-tags'])) {
@@ -676,17 +688,16 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
  * Export a fit to the common loadout format (CLF).
  *
  * @returns a string containing the JSON object.
- *
- * @warning EXPERIMENTAL, the CLF is still a draft! Use for testing
- * purposes only!
- *
- * @todo fetch TQ version
  */
 function export_to_common_loadout_format($fit, $minify = false, $extraprops = true) {
 	static $statenames = null;
 	if($statenames === null) $statenames = get_state_names();
 
-	$json = array('clf-version' => 1);
+	$json = array(
+		'clf-version' => 1,
+		'client-version' => (int)$fit['metadata']['evebuildnumber'],
+	);
+
 	if($extraprops) {
 		$json['X-generatedby'] = 'Osmium-'.\Osmium\get_osmium_version();
 	}

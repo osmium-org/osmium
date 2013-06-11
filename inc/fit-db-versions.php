@@ -123,3 +123,8 @@ function get_closest_version_by_build($b) {
 	if(isset($versions[$b])) return $versions[$b];
 	return get_closest_version_by_key('build', $b);
 }
+
+/** Get the closest EVE db version of a given timestamp. */
+function get_closest_version_by_time($t) {
+	return get_closest_version_by_key('reldate', $t);
+}
