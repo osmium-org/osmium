@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -1211,4 +1211,17 @@ function get_fit_uri($loadoutid, $visibility, $privatetoken) {
 	}
 
 	return 'loadout/'.$loadoutid;
+}
+
+/**
+ * Get the path needed to go back the root from this loadout's URI.
+ */
+function get_fit_relative($loadoutid, $visibility) {
+	if($visibility == VISIBILITY_PRIVATE) {
+		/* Loadout URI looks like /loadout/private/id/tok */
+		return '../../../';
+	} else {
+		/* Loadout URI looks like /loadout/id */
+		return '../';
+	}
 }

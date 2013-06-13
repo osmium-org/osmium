@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -65,7 +65,10 @@ $array =
 		'drones' => array_values($fit['drones']),
 		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
 		'usedbandwidth' => \Osmium\Fit\get_used_drone_bandwidth($fit),
-		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit, '..'),
+		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes(
+			$fit,
+			\Osmium\Fit\get_fit_relative($fit['metadata']['loadoutid'], $fit['metadata']['visibility'])
+		),
 		'states' => \Osmium\AjaxCommon\get_module_states($fit),
 		'ranges' => \Osmium\AjaxCommon\get_module_ranges($fit),
 		);
