@@ -292,6 +292,7 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 
 		$moduleusage = $discharge / $duration;
 		if($moduleusage == 0) $fraction = 1;
+		else if($usage > 0) continue;
 		else $fraction = min(1, -$usage / $moduleusage);
 
 		$usage += $fraction * $moduleusage;
