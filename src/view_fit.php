@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -386,6 +386,8 @@ if(count($fit['metadata']['tags']) > 0) {
 	echo "<em>(no tags)</em>";
 }
 echo "</div>\n";
+$fitvers = \Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber']);
+echo "<p class='evebuild'><small>".$fitvers['name']."</small></p>";
 echo "<div class='votes' data-targettype='loadout'>\n";
 echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote".($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
 echo "<strong title='".$totalupvotes." upvote(s), ".$totaldownvotes." downvote(s)'>".$totalvotes."</strong>\n";

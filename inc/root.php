@@ -28,7 +28,7 @@ const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 const STATICVER = 5;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 5;
+const CSS_STATICVER = 6;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

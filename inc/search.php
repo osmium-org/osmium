@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -36,7 +36,7 @@ function query_select_searchdata($cond, array $params = array()) {
 	return \Osmium\Db\query_params('SELECT loadoutid,
 	restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
 	tags, modules, author, name, description, shipid,
-	upvotes, downvotes, score, ship, groups, creationdate, updatedate
+	upvotes, downvotes, score, ship, groups, creationdate, updatedate, evebuildnumber
 	FROM osmium.loadoutssearchdata '.$cond, $params);
 }
 
@@ -58,29 +58,32 @@ function unindex($loadoutid) {
 function index($loadout) {
 	unindex($loadout['loadoutid']);
 	
-	return query('INSERT INTO osmium_loadouts 
-  (id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid, 
-  shipid, upvotes, downvotes, score, creationdate, updatedate,
-  ship, groups, author, name, description, tags, modules)
-  VALUES ('
-	             .$loadout['loadoutid'].','
-	             .$loadout['restrictedtoaccountid'].','
-	             .$loadout['restrictedtocorporationid'].','
-	             .$loadout['restrictedtoallianceid'].','
-	             .$loadout['shipid'].','
-	             .$loadout['upvotes'].','
-	             .$loadout['downvotes'].','
-	             .$loadout['score'].','
-	             .$loadout['creationdate'].','
-	             .$loadout['updatedate'].','
-	             .'\''.escape($loadout['ship']).'\','
-	             .'\''.escape($loadout['groups']).'\','
-	             .'\''.escape($loadout['author']).'\','
-	             .'\''.escape($loadout['name']).'\','
-	             .'\''.escape($loadout['description']).'\','
-	             .'\''.escape($loadout['tags']).'\','
-	             .'\''.escape($loadout['modules']).'\''
-	             .')');
+	return query(
+		'INSERT INTO osmium_loadouts
+(id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
+shipid, upvotes, downvotes, score, creationdate, updatedate, build,
+ship, groups, author, name, description, tags, modules)
+VALUES ('
+		.$loadout['loadoutid'].','
+		.$loadout['restrictedtoaccountid'].','
+		.$loadout['restrictedtocorporationid'].','
+		.$loadout['restrictedtoallianceid'].','
+		.$loadout['shipid'].','
+		.$loadout['upvotes'].','
+		.$loadout['downvotes'].','
+		.$loadout['score'].','
+		.$loadout['creationdate'].','
+		.$loadout['updatedate'].','
+		.$loadout['evebuildnumber'].','
+		.'\''.escape($loadout['ship']).'\','
+		.'\''.escape($loadout['groups']).'\','
+		.'\''.escape($loadout['author']).'\','
+		.'\''.escape($loadout['name']).'\','
+		.'\''.escape($loadout['description']).'\','
+		.'\''.escape($loadout['tags']).'\','
+		.'\''.escape($loadout['modules']).'\''
+		.')'
+	);
 }
 
 function get_search_query($search_query) {
@@ -172,7 +175,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.description, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -205,7 +208,9 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		echo " — ".\Osmium\Chrome\format_character_name($loadout, $relative);
 		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")";
 		echo " — revision #".$loadout['latestrevision'];
-		echo " — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
+		echo " — ".date('Y-m-d', $loadout['updatedate'])." ("
+			.\Osmium\Fit\get_closest_version_by_build($loadout['evebuildnumber'])['name']
+			.")</small><br />\n";
       
 		$tags = array_filter(explode(' ', $loadout['taglist']), function($tag) { return trim($tag) != ''; });
 		if(count($tags) == 0) {
