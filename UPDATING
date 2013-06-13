@@ -5,6 +5,14 @@ The osmium schema has been updated:
 
 * Added evebuildnumber column in fittings, auto-filling it using
   creationdate.
+* Added evebuildnumber in loadoutssearchdata.
+
+The Sphinx loadout index has been updated. You must:
+
+* stop sphinx-searchd;
+* delete the sphinx/index.* files;
+* start sphinx-searchd;
+* run ./bin/reindex_loadouts.
 
 v0.7.0, released 2013-06-09
 ===========================

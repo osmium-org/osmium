@@ -22,19 +22,62 @@ require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
 
 /**
- * Print a basic seach form. Pre-fills the search form with global
- * variable $query if non-false.
+ * Print a basic seach form. Pre-fills the search form from $_GET data
+ * if present.
  */
-function print_search_form() {
-	global $query;
+function print_search_form($advanced = false) {
+	static $operands = array(
+		"gt" => "or newer",
+		"eq" => "exactly",
+		"lt" => "or older",
+	);
 
 	$val = '';
-	if($query !== false) {
-		$val = "value='".htmlspecialchars($query, ENT_QUOTES)."' ";
+	if(isset($_GET['q']) && strlen($_GET['q']) > 0) {
+		$val = "value='".htmlspecialchars($_GET['q'], ENT_QUOTES)."' ";
 	}
 
 	echo "<form method='get' action='./search'>\n";
-	echo "<h1><label for='search'><img src='./static-".\Osmium\STATICVER."/icons/search.png' alt='' />Search loadouts</label></h1>\n<p>\n<input id='search' type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' />\n</p>\n";
+	echo "<h1><label for='search'><img src='./static-".\Osmium\STATICVER."/icons/search.png' alt='' />Search loadouts</label></h1>\n";
+
+	echo "<p>\n<input id='search' type='search' autofocus='autofocus' placeholder='Search by name, description, ship, modules or tags…' name='q' $val/> <input type='submit' value='Go!' /><br />\n";
+
+	if($advanced) {
+		echo "for \n";
+
+		echo "<select name='build' id='build'>\n";
+		foreach(\Osmium\Fit\get_eve_db_versions() as $v) {
+			echo "<option value='".$v['build']."'";
+
+			if(isset($_GET['build']) && (int)$_GET['build'] === $v['build']) {
+				echo " selected='selected'";
+			}
+
+			echo ">".htmlspecialchars($v['name'])."</option>\n";
+		}
+		echo "</select>\n";
+
+		echo "<select name='op' id='op'>\n";
+		foreach($operands as $op => $label) {
+			echo "<option value='$op'";
+
+			if(isset($_GET['op']) && $_GET['op'] === $op) {
+				echo " selected='selected'";
+			}
+
+			echo ">$label</option>\n";
+		}
+		echo "</select>\n";
+		echo "<input type='hidden' name='ad' value='1' />\n";
+	} else {
+		$get = 'ad=1';
+		foreach($_GET as $k => $v) {
+			$get .= "&amp;".htmlspecialchars($k, ENT_QUOTES)."=".htmlspecialchars($v, ENT_QUOTES);
+		}
+		echo "<a href='./search?$get'><small>Advanced search</small></a>";
+	}
+
+	echo"</p>\n";
 	echo "</form>\n";
 }
 
