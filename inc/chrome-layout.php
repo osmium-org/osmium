@@ -65,7 +65,18 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	if(!$xhtml) echo "<meta charset='UTF-8' />\n";
 	if(!$index) echo "<meta name='robots' content='noindex' />\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
-	echo "<link rel='stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/dark.css' title='Dark' type='text/css' />\n";
+
+	/* Guess the current theme and put it first (to avoid blinking). */
+	static $themes = array('Dark' => 'dark.css', 'Light' => 'light.css');
+	$curtheme = isset($_COOKIE['t']) && isset($themes[$_COOKIE['t']]) ? $_COOKIE['t'] : 'Dark';
+
+	echo "<link rel='stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/".$themes[$curtheme]."' title='".$curtheme."' type='text/css' />\n";
+	foreach($themes as $t => $f) {
+		if($curtheme === $t) continue;
+
+		echo "<link rel='alternate stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/$f' title='$t' type='text/css' />\n";
+	}
+
 	echo "<link rel='icon' type='image/png' href='$relative/static-".\Osmium\STATICVER."/favicon.png' />\n";
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
@@ -96,6 +107,8 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	echo "</ul>\n";
 
 	echo "</nav>\n";
+
+	\Osmium\Chrome\print_js_snippet('persistent_theme');
 }
 
 /**
@@ -109,8 +122,8 @@ function print_footer() {
 	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\get_osmium_version()." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
 	echo "</footer>\n";
 
-	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js'></script>\n";
-	echo "<script type='application/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";
+	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>\n";
+	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";
 
 	if(count($__osmium_js_snippets) > 0) {
 		$name = 'JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';

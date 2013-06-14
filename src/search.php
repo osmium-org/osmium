@@ -26,23 +26,36 @@ if(isset($_GET['q']) && !empty($_GET['q'])) {
 	$query = false;
 }
 
+$advanced = isset($_GET['ad']) ? (bool)$_GET['ad'] : false;
+
 if($query === false) {
 	\Osmium\Chrome\print_header('Search loadouts', '.');
 	echo "<div id='search_full'>\n";
-	\Osmium\Chrome\print_search_form();
+	\Osmium\Chrome\print_search_form($advanced);
 	echo "</div>\n";
 	\Osmium\Chrome\print_footer();
 	die();
 } else {
+	$operators = array(
+		'eq' => '=',
+		'lt' => '<=',
+		'gt' => '>=',
+	);
+
+	$cond = '';
+	if(isset($_GET['op']) && isset($_GET['build']) && isset($operators[$_GET['op']])) {
+		$cond .= " AND build ".$operators[$_GET['op']]." ".((int)$_GET['build']);
+	}
+
 	$title = 'Search results';
 	if($query !== false && strlen($query) > 0) {
 		$title .= ' / '.htmlspecialchars($query);
 	}
 	\Osmium\Chrome\print_header($title, '.', false);
 	echo "<div id='search_mini'>\n";
-	\Osmium\Chrome\print_search_form();
+	\Osmium\Chrome\print_search_form($advanced);
 	echo "</div>\n";
 
-	\Osmium\Search\print_pretty_results('.', $query, '', true, 15);
+	\Osmium\Search\print_pretty_results('.', $query, $cond, true, 15);
 	\Osmium\Chrome\print_footer();
 }

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,6 +30,7 @@ function get_unique($fit) {
 	$unique['metadata'] = array(
 		'name' => $fit['metadata']['name'],
 		'description' => $fit['metadata']['description'],
+		'evebuildnumber' => $fit['metadata']['evebuildnumber'],
 		'tags' => $fit['metadata']['tags'],
 		);
 
@@ -144,10 +145,23 @@ function commit_fitting(&$fit) {
 
 	/* Insert the new fitting */
 	\Osmium\Db\query('BEGIN;');
-	\Osmium\Db\query_params('INSERT INTO osmium.fittings (fittinghash, name, description, hullid, creationdate) VALUES ($1, $2, $3, $4, $5)', array($fittinghash, $fit['metadata']['name'], $fit['metadata']['description'], $fit['ship']['typeid'], time()));
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.fittings (fittinghash, name, description, evebuildnumber, hullid, creationdate) VALUES ($1, $2, $3, $4, $5, $6)',
+		array(
+			$fittinghash,
+			$fit['metadata']['name'],
+			$fit['metadata']['description'],
+			$fit['metadata']['evebuildnumber'],
+			$fit['ship']['typeid'],
+			time(),
+		)
+	);
   
 	foreach($fit['metadata']['tags'] as $tag) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)', array($fittinghash, $tag));
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)',
+			array($fittinghash, $tag)
+		);
 	}
   
 	$presetid = 0;
@@ -303,7 +317,7 @@ function get_fit($loadoutid, $revision = null) {
 
 	if($loadout === false) return false;
 
-	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT fittings.fittinghash AS hash, name, description, hullid, creationdate, revision FROM osmium.loadouthistory JOIN osmium.fittings ON loadouthistory.fittinghash = fittings.fittinghash WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $revision)));
+	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT fittings.fittinghash AS hash, name, description, evebuildnumber, hullid, creationdate, revision FROM osmium.loadouthistory JOIN osmium.fittings ON loadouthistory.fittinghash = fittings.fittinghash WHERE loadoutid = $1 AND revision = $2', array($loadoutid, $revision)));
 
 	if($fitting === false) return false;
 
@@ -315,6 +329,7 @@ function get_fit($loadoutid, $revision = null) {
 	$fit['metadata']['hash'] = $fitting['hash'];
 	$fit['metadata']['name'] = $fitting['name'];
 	$fit['metadata']['description'] = $fitting['description'];
+	$fit['metadata']['evebuildnumber'] = $fitting['evebuildnumber'];
 	$fit['metadata']['view_permission'] = $loadout['viewpermission'];
 	$fit['metadata']['edit_permission'] = $loadout['editpermission'];
 	$fit['metadata']['visibility'] = $loadout['visibility'];

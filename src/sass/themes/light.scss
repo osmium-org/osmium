@@ -1,0 +1,216 @@
+//
+// General
+//
+
+$main-text-color: hsl(0, 0%, 10%);
+$main-bg-color: hsl(200, 10%, 95%);
+
+$aside-text-color: hsl(0, 0%, 40%);
+$emphasis-text-color: hsl(0, 0%, 5%);
+$strong-emphasis-text-color: hsl(0, 0%, 0%);
+
+$link-text-color: hsl(0, 0%, 10%);
+$link-border-color: $link-text-color;
+
+$active-link-text-color: $strong-emphasis-text-color;
+$active-link-border-color: $active-link-text-color;
+
+$dangerous-link-text-color: hsl(0, 100%, 30%);
+$dangerous-link-border-color: $dangerous-link-text-color;
+
+$title-border-color: $main-text-color;
+
+$section-border-color: hsl(0, 0%, 50%);
+
+$subsection-border-color: hsl(0, 0%, 75%);
+$subsection-bg-color: hsl(200, 10%, 90%);
+
+$subsection-active-bg-color: lighten($subsection-bg-color, 10%);
+
+$tab-border-color: $section-border-color;
+
+$tab-active-text-color: $strong-emphasis-text-color;
+
+$placeholder-text-color: hsl(0, 0%, 50%);
+
+$overflow-bg-color: hsla(0, 100%, 50%, 0.5);
+$overflow-alpha-bg-color: hsl(0%, 100%, 50%);
+
+$anchor-target-highlight-bg-color: hsl(200, 100%, 90%);
+$anchor-target-final-bg-color: $main-bg-color;
+
+$modal-border-color: $main-text-color;
+$modal-bg-color: $main-bg-color;
+$modal-overlay-bg-color: hsla(0, 0%, 100%, 0.8);
+
+$close-modal-text-color: $dangerous-link-text-color;
+$close-modal-border-color: $close-modal-text-color;
+$close-modal-bg-color: $modal-bg-color;
+
+$top-navigation-border-color: hsl(0, 0%, 75%);
+$top-navigation-bg-color: lighten($main-bg-color, 30%);
+
+$abbr-border-color: $main-text-color;
+
+$pagination-meta-text-color: $aside-text-color;
+
+$diff-main-text-color: $aside-text-color;
+$diff-main-bg-color: $subsection-bg-color;
+
+$diff-inserted-text-color: $emphasis-text-color;
+$diff-inserted-bg-color: hsl(120, 75%, 75%);
+
+$diff-removed-text-color: $emphasis-text-color;
+$diff-removed-bg-color: hsl(0, 75%, 75%);
+
+$contextmenu-border-color: $link-border-color;
+$contextmenu-bg-color: $main-bg-color;
+
+$contextmenu-entry-border-color: $aside-text-color;
+
+$contextmenu-entry-active-text-color: $strong-emphasis-text-color;
+$contextmenu-entry-active-bg-color: $subsection-active-bg-color;
+
+//
+// Errors
+//
+
+$error-text-color: hsl(0, 100%, 40%);
+$error-border-color: $error-text-color;
+
+$warning-text-color: hsl(60, 100%, 40%);
+$warning-border-color: $warning-text-color;
+
+$notice-text-color: $main-text-color;
+
+$vote-error-text-color: hsl(0, 0%, 0%);
+$vote-error-background-color: hsl(10, 100%, 60%);
+
+//
+// Forms
+//
+
+$input-text-color: $main-text-color;
+$input-border-color: hsl(0, 0%, 50%);
+$input-bg-color: $main-bg-color;
+
+$input-active-text-color: $input-text-color;
+$input-active-border-color: hsl(200, 30%, 40%);
+$input-active-bg-color: lighten($input-bg-color, 5%);
+
+$input-focus-text-color: $input-text-color;
+$input-focus-border-color: $input-active-border-color;
+$input-focus-bg-color: lighten($input-bg-color, 5%);
+
+$input-disabled-text-color: hsl(0, 0%, 40%);
+$input-disabled-border-color: hsl(0%, 0%, 85%);
+$input-disabled-bg-color: hsl(0%, 0%, 70%);
+
+$button-text-color: $input-text-color;
+$button-border-color: $input-border-color;
+$button-bg-color: lighten($main-bg-color, 15%);
+
+$dangerous-button-text-color: $button-text-color;
+$dangerous-button-border-color: hsl(0, 100%, 50%);
+$dangerous-button-bg-color: hsl(0, 50%, 90%);
+
+$input-error-text-color: $input-text-color;
+$input-error-border-color: $error-border-color;
+$input-error-bg-color: $input-bg-color;
+
+$input-separator-color: hsl(0, 0%, 25%);
+
+$form-row-border-color: hsl(0, 0%, 75%);
+
+$optgroup-bg-color: $input-focus-bg-color;
+
+//
+// Loadout
+//
+
+$module-border-color: hsl(0, 0%, 60%);
+
+$module-active-bg-color: lighten($main-bg-color, 5%);
+
+$module-selected-bg-color: lighten($main-bg-color, 15%);
+
+$unused-module-text-color: $placeholder-text-color;
+
+$tag-border-color: darken($main-bg-color, 20%);
+$tag-bg-color: darken($main-bg-color, 5%);
+
+$em-bg-color: rgb(38, 133, 198);
+$thermal-bg-color: rgb(198, 38, 38);
+$kinetic-bg-color: rgb(163, 163, 163);
+$explosive-bg-color: rgb(198, 133, 38);
+
+$attribute-separator-border-color: hsl(0, 0%, 50%);
+
+$loadout-column-border-color: hsl(0, 0%, 75%);
+
+$loadout-next-step-border-color: hsl(120, 100%, 60%);
+$loadout-next-step-bg-color: hsl(120, 100%, 90%);
+
+$chargegroup-selecting-bg-color: lighten($main-bg-color, 10%);
+
+$chargegroup-selected-bg-color: lighten($main-bg-color, 20%);
+
+$loadout-breadcrumbs-border-color: hsl(0, 0%, 50%);
+
+// Also hardcoded in bcseparator.svg
+$loadout-breadcrumbs-done-bg-color: hsl(0, 0%, 25%);
+
+$loadout-search-metadata-text-color: hsl(80, 75%, 25%);
+
+$loadout-input-pw-border-color: hsl(0, 0%, 50%);
+$loadout-input-pw-bg-color: hsl(0, 0%, 80%);
+
+$loadout-comment-border-color: $section-border-color;
+
+$loadout-comment-meta-text-color: $loadout-comment-border-color;
+
+$loadout-comment-reply-border-color: $subsection-border-color;
+
+$loadout-comment-reply-meta-text-color: $loadout-comment-reply-border-color;
+
+$loadout-comment-reply-active-meta-text-color: $loadout-comment-meta-text-color;
+
+$loadout-list-odd-bg-color: lighten($main-bg-color, 3%);
+
+//
+// Notifications
+//
+
+$notification-count-text-color: $strong-emphasis-text-color;
+$notification-count-bg-color: hsl(0, 100%, 50%);
+
+$notification-new-row-bg-color: hsl(70, 75%, 85%);
+
+//
+// Tables
+//
+
+$table-header-border-color: $section-border-color;
+$table-header-bg-color: lighten($subsection-bg-color, 15%);
+
+$table-row-even-bg-color: hsla(0, 0%, 100%, 0.04);
+$table-row-odd-bg-color: rgba($main-bg-color, 0.04);
+
+//
+// Flags
+//
+
+$flag-new-bg-color: hsla(0, 0%, 100%, 0);
+$flag-helpful-bg-color: hsl(120, 100%, 80%);
+$flag-abusive-bg-color: hsl(0, 100%, 80%);
+
+//
+// Reputation
+//
+
+$reputation-gain-text-color: hsl(120, 100%, 50%);
+$reputation-loss-text-color: hsl(0, 100%, 50%);
+
+/////////////////////////////////////
+
+@import "../root.scss";

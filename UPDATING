@@ -1,16 +1,28 @@
 staging
 =======
 
-The Sphinx module index has been replaced by a more general type index
-(that also contains ships, drones, etc.). You must:
+The osmium schema has been updated:
+
+* Added evebuildnumber column in fittings, auto-filling it using
+  creationdate.
+* Added evebuildnumber in loadoutssearchdata.
+
+The Sphinx loadout index has been updated. You must:
 
 * stop sphinx-searchd;
-* delete the sphinx/modules.* files;
+* delete the sphinx/index.* files;
+* start sphinx-searchd;
+* run ./bin/reindex_loadouts.
+
+The view used to generate the Sphinx type index has been updated. You
+must:
+
+* stop sphinx-searchd;
 * run `sphinx-indexer osmium_types`;
 * start sphinx-searchd.
 
-staging
-=======
+v0.7.0, released 2013-06-09
+===========================
 
 IMPORTANT: the configuration file has been updated. Add the
 "relative_path" line in your config.ini accordingly (see the example
@@ -20,12 +32,43 @@ IMPORTANT: the .htaccess file is no longer shipped, you will have to
 configure your webserver yourself. The README file explains how to do
 so, and an example configuration for Apache 2 is included.
 
+The osmium schema has been updated. If you get a warning about
+loadoutstaglist not existing, this is fine.
+
 The Sphinx loadout index has been updated. You must:
 
 * stop sphinx-searchd;
 * delete the sphinx/index.* files;
 * start sphinx-searchd;
 * run ./bin/reindex_loadouts.
+
+The Sphinx module index has been replaced by a more general type index
+(that also contains ships, drones, etc.). You must:
+
+* stop sphinx-searchd;
+* delete the sphinx/modules.* files;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd.
+
+v0.6.5, released 2013-06-04
+===========================
+
+Updated for Odyssey 1.0.
+
+v0.6.4, released 2013-02-22
+===========================
+
+The Ancillary Armor Repairer is now working as advertised.
+
+v0.6.3, released 2013-02-21
+===========================
+
+Updated for Retribution 1.1.
+
+v0.6.2, released 2012-12-04
+===========================
+
+No big changes.
 
 v0.6.1, released 2012-10-17
 ===========================

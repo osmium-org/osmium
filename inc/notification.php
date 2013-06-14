@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -81,7 +81,7 @@ function get_notifications($callback, $newonly = false) {
 		l.visibility, l.privatetoken
 		FROM osmium.notifications AS n
 		JOIN osmium.accounts AS a ON n.fromaccountid = a.accountid
-		LEFT JOIN osmium.loadouts l ON (n.type = $5 AND n.targetid1 = l.loadoutid) OR (n.type = $6 AND n.targetid2 = l.loadoutid) OR (n.type = $7 AND n.targetdid3 = l.loadoutid)
+		LEFT JOIN osmium.loadouts l ON (n.type = $5 AND n.targetid1 = l.loadoutid) OR (n.type = $6 AND n.targetid2 = l.loadoutid) OR (n.type = $7 AND n.targetid3 = l.loadoutid)
 		WHERE (n.creationdate >= $1 OR ($2 AND n.creationdate >= $3))
 		AND n.accountid = $4
 		ORDER BY n.creationdate DESC',
@@ -120,7 +120,7 @@ function get_notification_body($row) {
 	} else if($type == NOTIFICATION_TYPE_LOADOUT_COMMENTED) {
 		$commentid = $row['targetid1'];
 		$loadoutid = $row['targetid2'];
-		$uri = \Osmium\Fit\get_fit_uri($loadout, $vis, $ptok);
+		$uri = \Osmium\Fit\get_fit_uri($loadoutid, $vis, $ptok);
 
 		return \Osmium\Chrome\format_character_name($row)
 			." has commented on loadout <a href='./".$uri."'>#"
@@ -130,7 +130,7 @@ function get_notification_body($row) {
 		$replyid = $row['targetid1'];
 		$commentid = $row['targetid2'];
 		$loadoutid = $row['targetid3'];
-		$uri = \Osmium\Fit\get_fit_uri($loadout, $vis, $ptok);
+		$uri = \Osmium\Fit\get_fit_uri($loadoutid, $vis, $ptok);
 
 		return \Osmium\Chrome\format_character_name($row)
 			." has replied to one of your comments on loadout <a href='./"

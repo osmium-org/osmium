@@ -1,4 +1,4 @@
-THEMES=dark
+THEMES=dark light
 
 default: themes static/cache/clientdata.json
 

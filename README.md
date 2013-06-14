@@ -261,7 +261,7 @@ git clone git://dev.evefit.org/phobos.git
 cd phobos
 python2.7 setup.py build
 
-PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPrices,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
+PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
 ~~~~
 
 Then convert the JSON files to SQL statements using the

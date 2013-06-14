@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -114,7 +114,7 @@ $structure = array(
 		'metaGroupID' => 'metagroupid'
 		),
 
-	'averagemarketprices', 'config_GetAverageMarketPrices.json',
+	'averagemarketprices', 'config_GetAverageMarketPricesForClient.json',
 	array(
 		'typeID' => 'typeid',
 		'averagePrice' => 'averageprice'
@@ -145,6 +145,8 @@ $fout = fopen('./osmium-eve-data.sql', 'w');
 
 fwrite($fout, "BEGIN;\n\n");
 
+$typeids = array();
+
 $count = count($structure);
 for($i = 0; $i < $count; $i += 3) {
 	$tablename = $structure[$i];
@@ -157,11 +159,30 @@ for($i = 0; $i < $count; $i += 3) {
 	foreach($rows as $row) {
 		$values = array();
 
+        if($tablename === 'invtypes') {
+            $typeids[$row['typeID']] = true;
+        }
+
 		foreach($cols as $jsoncol => $sqlcol) {
-			/* XXX: Dirty dirty hack: ignore DUST stuff since it
-			 * breaks FK constraints */
-			if($sqlcol == 'typeid' && $row[$jsoncol] >= 350000) {
+			/* XXX: prune null market prices */
+			if($tablename == 'averagemarketprices' && $sqlcol == 'averageprice'
+               && $row[$jsoncol] === null) {
 				continue 2;
+			}
+
+			/* XXX: dirty hack for fixing FK constraints */
+			if(in_array($sqlcol, array('typeid', 'marketgroupid')) && $row[$jsoncol] >= 350000) {
+				/* DUST items */
+				continue 2;
+			}
+            if($tablename === 'averagemarketprices' && $sqlcol == 'typeid'
+               && !isset($typeids[$row[$jsoncol]])) {
+                /* Price of non-existent types */
+                continue 2;
+            }
+
+			if($sqlcol === 'unitid' && $row[$jsoncol] === 0) {
+				$row[$jsoncol] = null;
 			}
 
 			$values[] = to_postgres($row[$jsoncol]);
