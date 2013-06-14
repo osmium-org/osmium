@@ -183,6 +183,13 @@ echo "<section id='metadata'>\n";
 \Osmium\Forms\print_generic_field('Loadout title', 'text', 'name', 'name');
 \Osmium\Forms\print_textarea('Description<br /><small>(optional)</small>', 'description', 'description');
 \Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated, '.\Osmium\Fit\MAXIMUM_TAGS.' maximum)</small>', 'text', 'tags', 'tags');
+
+$versions = \Osmium\Fit\get_eve_db_versions();
+foreach($versions as &$v) {
+	$v = $v['name']." (".$v['tag'].", build ".$v['build'].")";
+}
+\Osmium\Forms\print_select('Expansion<br /><small>(for experts only)</small>', 'evebuildnumber', $versions);
+
 if(\Osmium\State\is_logged_in()) {
 	\Osmium\Forms\print_separator();
 

@@ -39,6 +39,7 @@ osmium_init_metadata = function() {
 
 		osmium_clf.metadata.title = $("section#metadata input#name").val();
 		osmium_clf.metadata.description = $("section#metadata textarea#description").val();
+		osmium_clf['client-version'] = $("section#metadata select#evebuildnumber").val();
 		osmium_clf.metadata['X-tags'] = $("section#metadata input#tags").val().split(/\s+/);
 		osmium_clf.metadata['X-Osmium-view-permission'] = $("section#metadata select#view_perms").val();
 		osmium_clf.metadata['X-Osmium-edit-permission'] = $("section#metadata select#edit_perms").val();
@@ -52,9 +53,13 @@ osmium_init_metadata = function() {
 };
 
 osmium_gen_metadata = function() {
-	if(!("metadata" in osmium_clf)) return;
-
 	var section = $('div#nlmain > section#metadata');
+
+	if("client-version" in osmium_clf) {
+		section.find("select#evebuildnumber").val(osmium_clf['client-version']);
+	}
+
+	if(!("metadata" in osmium_clf)) return;
 
 	if("title" in osmium_clf.metadata) {
 		section.find('input#name').val(osmium_clf.metadata.title);

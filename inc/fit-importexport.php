@@ -1248,6 +1248,11 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 		if(!select_ship($fit, $clf['ship']['typeid'])) return false;
 	}
 
+	if(isset($clf['client-version']) && $clf['client-version'] != $fit['metadata']['evebuildnumber']) {
+		$fit['metadata']['evebuildnumber'] =
+			get_closest_version_by_build((int)$clf['client-version'])['build'];
+	}
+
 	if(isset($clf['metadata'])) {
 		$meta = $clf['metadata'];
 
