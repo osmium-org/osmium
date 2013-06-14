@@ -320,9 +320,15 @@ div#nlattribs > section#control {
 	&> form > input {
 		padding: 1em;
 		margin: 0.5em;
+		font-weight: bold;
 
-		&#submit_loadout {
-			font-weight: bold;
+		&#reset_loadout {
+			font-weight: normal;
+			opacity: 0.5;
+
+			&:hover {
+				opacity: 0.8;
+			}
 		}
 	}
 }

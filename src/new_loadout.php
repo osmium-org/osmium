@@ -40,6 +40,26 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
     }
 }
 
+if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
+   && \Osmium\State\is_logged_in() && $_GET['tok'] == \Osmium\State\get_token()) {
+	$loadoutid = (int)$_GET['loadoutid'];
+	$accountid = \Osmium\State\get_state('a')['accountid'];
+
+	list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2',
+		array($loadoutid, $accountid)
+	));
+
+	if($c == 1) {
+		$fit = \Osmium\Fit\get_fit($loadoutid);
+		$tok = \Osmium\State\get_unique_new_loadout_token();
+		\Osmium\State\put_new_loadout($tok, $fit);
+
+		header('Location: ../new/'.$tok);
+		die();
+	}
+}
+
 if(!isset($_GET['token'])) {
 	$tok = \Osmium\State\get_unique_new_loadout_token();
 
@@ -59,9 +79,20 @@ if(!isset($_GET['token'])) {
 	}
 }
 
-\Osmium\Chrome\print_header('Create a new loadout', RELATIVE, false);
+if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid'] > 0) {
+	$basetitle = 'Editing loadout #'.$fit['metadata']['loadoutid'];
+	$title = "Editing loadout <a href='../".\Osmium\Fit\get_fit_uri(
+		$fit['metadata']['loadoutid'],
+		$fit['metadata']['visibility'],
+		$fit['metadata']['privatetoken']
+	)."'>#".$fit['metadata']['loadoutid']."</a>";
+} else {
+	$title = $basetitle = 'Creating a new loadout';
+}
 
-echo "<h1>Create a new loadout</h1>\n";
+\Osmium\Chrome\print_header($basetitle, RELATIVE, false);
+
+echo "<h1>".$title."</h1>\n";
 
 echo "<div id='nlattribs'>
 <section id='ship'></section>

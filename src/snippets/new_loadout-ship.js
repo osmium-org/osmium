@@ -27,12 +27,29 @@ osmium_gen_ship = function() {
 		img.prop('src', '//image.eveonline.com/Render/' + osmium_clf.ship.typeid + '_256.png');
 
 		osmium_loadout_can_be_submitted();
+
+		var availslots = osmium_ship_slots[osmium_clf.ship.typeid];
+		osmium_clf['X-Osmium-slots'] = {
+			high: availslots[0],
+			medium: availslots[1],
+			low: availslots[2],
+			rig: availslots[3],
+			subsystem: availslots[4]
+		};
 	} else {
 		groupname = '';
 		shipname = '(No ship selected)';
 
 		img = $(document.createElement('div'));
 		img.addClass('notype');
+
+		osmium_clf['X-Osmium-slots'] = {
+			high: 0,
+			medium: 0,
+			low: 0,
+			rig: 0,
+			subsystem: 0
+		};
 	}
 
 	h = $(document.createElement('h1'));

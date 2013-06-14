@@ -16,18 +16,9 @@
  */
 
 osmium_gen_modules = function() {
-	var availslots = ("ship" in osmium_clf) ? osmium_ship_slots[osmium_clf.ship.typeid] : [0, 0, 0, 0, 0];
 	var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
 	var cpid = osmium_clf['X-Osmium-current-chargepresetid'];
-	var m, i, j, z, type, c, chargeid;
-
-	availslots = {
-		high: availslots[0],
-		medium: availslots[1],
-		low: availslots[2],
-		rig: availslots[3],
-		subsystem: availslots[4]
-	};
+	var m, i, j, type, c, chargeid;
 
 	$('section#modules > div.slots > ul').empty();
 
@@ -35,7 +26,6 @@ osmium_gen_modules = function() {
 
 	for(i = 0; i < p.modules.length; ++i) {
 		m = p.modules[i];
-		availslots[osmium_types[m.typeid][3]]--;
 		chargeid = null;
 		if("charges" in m) {
 			for(j = 0; j < m.charges.length; ++j) {
@@ -53,15 +43,11 @@ osmium_gen_modules = function() {
 		osmium_add_module(m.typeid, m.index, m.state, chargeid);
 	}
 
-	z = 0;
-
-	for(type in availslots) {
-		$('section#modules > div.slots.' + type).data('type', type).data('type-index', z++);
+	for(type in osmium_clf['X-Osmium-slots']) {
+		$('section#modules > div.slots.' + type).data('type', type);
 	}
 
-	$('section#modules > div.slots').each(function() {
-		osmium_post_update_module($(this));
-	});
+	osmium_update_slotcounts();
 };
 
 osmium_init_modules = function() {
@@ -84,6 +70,14 @@ osmium_init_modules = function() {
 	});
 };
 
+osmium_update_slotcounts = function() {
+	$('section#modules > div.slots').each(function() {
+		var t = $(this);
+		osmium_update_overflow(t);
+		osmium_maybe_hide_slot_type(t);
+	});
+};
+
 osmium_maybe_hide_slot_type = function(slotsdiv) {
 	if(slotsdiv.children('ul').find('li').length > 0) {
 		slotsdiv.show();
@@ -95,9 +89,7 @@ osmium_maybe_hide_slot_type = function(slotsdiv) {
 osmium_update_overflow = function(slotsdiv) {
 	var smallcount = slotsdiv.find('h3 > span > small.counts');
 	var used = slotsdiv.children('ul').children('li').not('.placeholder').length;
-	var total = ("ship" in osmium_clf) ?
-		osmium_ship_slots[osmium_clf.ship.typeid][slotsdiv.data('type-index')]
-		: 0;
+	var total = osmium_clf['X-Osmium-slots'][slotsdiv.data('type')];
 
 	smallcount.text(used + '/' + total);
 
@@ -117,6 +109,7 @@ osmium_update_overflow = function(slotsdiv) {
 		slotsdiv.children('ul').children('li').slice(total - used).addClass('overflow');
 	} else {
 		smallcount.removeClass('overflow');
+		slotsdiv.children('ul').children('li.overflow').removeClass('overflow');
 	}
 };
 
@@ -332,7 +325,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			li.trigger('remove_module');
 
 			osmium_commit_clf();
-			osmium_post_update_module(div);
 		}, { default: true });
 
 		osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
@@ -341,7 +333,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}).trigger('remove_module');
 
 			osmium_commit_clf();
-			osmium_post_update_module(div);
+			osmium_update_slotcounts();
 		}, {});
 
 		if(hascharges) {
@@ -400,11 +392,6 @@ osmium_add_placeholder_module = function(slotsdiv) {
 
 	li.prepend(img);
 	ul.append(li);
-};
-
-osmium_post_update_module = function(slotsdiv) {
-	osmium_update_overflow(slotsdiv);
-	osmium_maybe_hide_slot_type(slotsdiv);
 };
 
 osmium_set_module_state = function(li, newstate) {

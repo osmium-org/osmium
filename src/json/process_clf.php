@@ -50,6 +50,7 @@ if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
 
 $payload = array(
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative),
+	'slots' => \Osmium\AjaxCommon\get_slot_usage($local),
 );
 
 if($type === 'new') {
@@ -81,10 +82,7 @@ if($type === 'new') {
 			\Osmium\Fit\commit_loadout($local, $ownerid, $accountid);
 
 			$payload['submit-loadout-uri'] =
-				\Osmium\Fit\get_fit_relative(
-					$local['metadata']['loadoutid'],
-					$local['metadata']['visibility']
-				).'/'.\Osmium\Fit\get_fit_uri(
+				'../'.\Osmium\Fit\get_fit_uri(
 					$local['metadata']['loadoutid'],
 					$local['metadata']['visibility'],
 					$local['metadata']['privatetoken']

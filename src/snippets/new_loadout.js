@@ -68,6 +68,8 @@ osmium_send_clf = function() {
 
 	$.post('../src/json/process_clf.php?' + $.param(getopts), postopts, function(payload) {
 		$('div#computed_attributes').html(payload.attributes);
+		osmium_clf['X-Osmium-slots'] = payload.slots;
+		osmium_update_slotcounts();
 		setTimeout(osmium_send_clf, 500);
 	}, 'json');
 };
@@ -126,7 +128,8 @@ osmium_add_to_clf = function(item) {
 			index: index
 		});
 
-		osmium_post_update_module(osmium_add_module(typeid, index, state, null));
+		osmium_add_module(typeid, index, state, null);
+		osmium_update_slotcounts();
 	} else if(cat === 'charge') {
 		/* Try to find a suitable location for the charge */
 		var location = null;

@@ -49,7 +49,7 @@ $osmium_dispatch_rules = array(
 
 	/* Loadout-related operations */
 	'%^/import$%D' => '/src/import_loadouts.php',
-	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/edit_fit.php',
+	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
 	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 
 	/* API calls */
