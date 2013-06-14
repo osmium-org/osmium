@@ -274,6 +274,28 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 				\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', 
 				                                       array($loadoutid))));
 	}
+
+	$revision = $fit['metadata']['revision'];
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);
+	\Osmium\State\invalidate_cache_memory('main_popular_tags');
+	\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
+
+	$type = ($revision == 1) ? \Osmium\Log\LOG_TYPE_CREATE_LOADOUT : \Osmium\Log\LOG_TYPE_UPDATE_LOADOUT;
+	\Osmium\Log\add_log_entry($type, null, $loadoutid, $revision);
+
+	if($revision > 1 && $ownerid != $accountid) {
+		\Osmium\Notification\add_notification(
+			\Osmium\Notification\NOTIFICATION_TYPE_LOADOUT_EDITED,
+			$accountid, $ownerid, $loadoutid, $revision);
+	}
+
+	if($revision > 1) {
+		\Osmium\Db\query_params(
+			'UPDATE osmium.votes SET cancellableuntil = NULL WHERE targettype = $1 AND targetid1 = $2 AND targetid2 IS NULL AND targetid3 IS NULL',
+			array(\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT, $loadoutid)
+		);
+	}
 }
 
 /**
