@@ -21,17 +21,9 @@ $(function() {
 	});
 
 	osmium_load_static_client_data('..', osmium_cdatastaticver, function(cdata) {
-		/* Generate all the missing DOM elements from the CLF */
-		osmium_gen_ship();
-		osmium_gen_metadata();
-		osmium_gen_presets();
-		osmium_gen_modules();
 
-		/* Set up event listeners that alter the CLF appropriately */
-		osmium_init_sources();
-		osmium_init_metadata();
-		osmium_init_presets();
-		osmium_init_modules();
+		osmium_gen();
+		osmium_init();
 
 		/* Fetch computed attributes, etc. */
 		osmium_commit_clf();
@@ -80,6 +72,24 @@ osmium_send_clf = function() {
 	}, 'json');
 };
 
+/* Generate all the missing DOM elements from the CLF */
+osmium_gen = function() {
+	osmium_gen_control();
+	osmium_gen_ship();
+	osmium_gen_metadata();
+	osmium_gen_presets();
+	osmium_gen_modules();
+};
+
+/* Set up event listeners that alter the CLF appropriately */
+osmium_init = function() {
+	osmium_init_control();
+	osmium_init_sources();
+	osmium_init_metadata();
+	osmium_init_presets();
+	osmium_init_modules();
+};
+
 osmium_add_to_clf = function(item) {
 	var cat = item.data('category');
 	var sub = item.data('subcategory');
@@ -88,12 +98,10 @@ osmium_add_to_clf = function(item) {
 	if(cat === 'ship') {
 		osmium_clf.ship = { typeid: typeid };
 
-		osmium_gen_ship();
-
-		/* Regen all modules as the number of available slots has
-		 * likely changed. */
+		/* Regen everything as changing a ship changes pretty much
+		 * everything. */
 		osmium_user_initiated_push(false);
-		osmium_gen_modules();
+		osmium_gen();
 		osmium_user_initiated_pop();
 	} else if(cat === 'module') {
 		var state, index, m;

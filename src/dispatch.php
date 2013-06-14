@@ -33,6 +33,7 @@ namespace Osmium\Dispatch;
  * case being 404 errors, where all the rules have to be checked).
  */
 $osmium_dispatch_rules = array(
+	/* Very common pages */
 	'%^/$%D' => '/src/main.php',
 	'%^/loadout/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_fit.php',
 	'%^/new(/(?<token>0|[1-9][0-9]*))?$%D' => '/src/new_loadout.php',
@@ -42,15 +43,21 @@ $osmium_dispatch_rules = array(
 	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_fit.php',
 	'%^/export/(.+)-(?<type>clf|md|evexml|eft|dna)-(?<loadoutid>[1-9][0-9]*)-(?<revision>[1-9][0-9]*)\.(json|md|xml|txt)$%D' => '/src/export_fit.php',
 
-    '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
-	'%^/old_new$%D' => '/src/new_fitting.php',
-
+	/* Atom feeds */
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
 	'%^/atom/recentlyupdated\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'recentlyupdated']],
 
+	/* Loadout-related operations */
+	'%^/import$%D' => '/src/import_loadouts.php',
+	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/edit_fit.php',
+	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
+
+	/* API calls */
 	'%^/api/$%D' => ['/src/mdstatic.php', ['relative' => '..', 'title' => 'Osmium API', 'f' => 'api.md']],
 	'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
+    '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
 
+	/* Less common pages */
 	'%^/register$%D' => '/src/register.php',
 	'%^/logout$%D' => '/src/logout.php',
 	'%^/settings$%D' => '/src/settings.php',
@@ -63,10 +70,7 @@ $osmium_dispatch_rules = array(
 	'%^/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
 	'%^/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
 
-	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/edit_fit.php',
-	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 	'%^/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
-	'%^/import$%D' => '/src/import_loadouts.php',
 
 	'%^/loadouthistory/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_loadout_history.php',
 	'%^/flagginghistory/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_flagging_history.php',

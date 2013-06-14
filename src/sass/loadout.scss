@@ -44,7 +44,7 @@ $hidden-char: '\0025B8';
 	line-height: 2em;
 	position: relative;
 
-	&, &.hascharge > span.charge {
+	&, &> span.charge {
 		@include ellipsis;
 	}
 
@@ -52,7 +52,7 @@ $hidden-char: '\0025B8';
 		border-top: none;
 	}
 	
-	&> img, &.hascharge > span.charge > img {
+	&> img, &> span.charge > img {
 		height: 32px;
 		width: 32px;
 		margin-right: 0.125em;

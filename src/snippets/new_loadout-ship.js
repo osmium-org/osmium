@@ -25,6 +25,8 @@ osmium_gen_ship = function() {
 
 		img = $(document.createElement('img'));
 		img.prop('src', '//image.eveonline.com/Render/' + osmium_clf.ship.typeid + '_256.png');
+
+		osmium_loadout_can_be_submitted();
 	} else {
 		groupname = '';
 		shipname = '(No ship selected)';

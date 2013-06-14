@@ -313,6 +313,20 @@ div#nlattribs > section#ship {
 	}
 }
 
+div#nlattribs > section#control {
+	text-align: center;
+	margin: 1em;
+
+	&> form > input {
+		padding: 1em;
+		margin: 0.5em;
+
+		&#submit_loadout {
+			font-weight: bold;
+		}
+	}
+}
+
 div#nlmain > section#metadata, div#nlmain > section#presets {
 	&> form > table {
 		width: 100%;

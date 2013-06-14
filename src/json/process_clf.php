@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -54,6 +54,53 @@ $payload = array(
 
 if($type === 'new') {
 	\Osmium\State\put_new_loadout($token, $local);
+
+	if(isset($_GET['submit']) && $_GET['submit']) {
+		if(!\Osmium\State\is_logged_in()) {
+			header('HTTP/1.1 400 Bad Request', true, 400);
+			\Osmium\Chrome\return_json(array());
+		}
+
+		if(!isset($local['ship']) || !isset($local['ship']['typeid']) || !$local['ship']['typeid']) {
+			$payload['submit-error'] = 'You must select a ship first.';
+		} else if(in_array($local['metadata']['name'], array(
+			'Unnamed loadout', 'New DNA-imported loadout',
+		))) {
+			$payload['submit-error'] = 'Please enter a name for your loadout.';
+			$payload['submit-tab'] = 'metadata';
+		} else {
+			/* Looks good, commit the loadout */
+
+			$accountid = \Osmium\State\get_state('a')['accountid'];
+			if(isset($fit['metadata']['accountid'])) {
+				$ownerid = $fit['metadata']['accountid'];
+			} else {
+				$ownerid = $accountid;
+			}
+
+			\Osmium\Fit\commit_loadout($local, $ownerid, $accountid);
+
+			$payload['submit-loadout-uri'] =
+				\Osmium\Fit\get_fit_relative(
+					$local['metadata']['loadoutid'],
+					$local['metadata']['visibility']
+				).'/'.\Osmium\Fit\get_fit_uri(
+					$local['metadata']['loadoutid'],
+					$local['metadata']['visibility'],
+					$local['metadata']['privatetoken']
+				);
+		}
+	} else if(isset($_GET['export']) && $_GET['export'] && isset($_GET['exportfmt'])) {
+		$formats = \Osmium\Fit\get_export_formats();
+		if(!isset($formats[$_GET['exportfmt']])) {
+			header('HTTP/1.1 400 Bad Request', true, 400);
+			\Osmium\Chrome\return_json(array());
+		}
+
+		$format = $formats[$_GET['exportfmt']];
+		$payload['export-type'] = $format[1];
+		$payload['export-payload'] = $format[2]($local);
+	}
 }
 
 \Osmium\Chrome\return_json($payload);

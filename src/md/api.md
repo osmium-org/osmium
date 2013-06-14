@@ -15,6 +15,10 @@ you follow the following simple rules:
 * If you can, send a "Accept-Encoding: gzip" header to help save
   bandwidth.
 
+## `/new/dna/<dna_string>`
+
+Create a new loadout from a baseline DNA.
+
 ## `/api/json/query_loadouts.json`
 
 ### Synopsis

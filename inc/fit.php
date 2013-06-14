@@ -1274,9 +1274,9 @@ function get_fit_uri($loadoutid, $visibility, $privatetoken) {
 function get_fit_relative($loadoutid, $visibility) {
 	if($visibility == VISIBILITY_PRIVATE) {
 		/* Loadout URI looks like /loadout/private/id/tok */
-		return '../../../';
+		return '../../..';
 	} else {
 		/* Loadout URI looks like /loadout/id */
-		return '../';
+		return '..';
 	}
 }

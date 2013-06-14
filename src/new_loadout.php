@@ -65,6 +65,23 @@ echo "<h1>Create a new loadout</h1>\n";
 
 echo "<div id='nlattribs'>
 <section id='ship'></section>
+<section id='control'>
+<form method='GET' action='./".$tok."'>
+<input type='button' name='reset_loadout' id='reset_loadout' value='Reset loadout' />\n";
+
+if(\Osmium\State\is_logged_in()) {
+	echo "<input type='button' name='submit_loadout' id='submit_loadout' value='Save loadout' />\n";
+} else {
+	echo "<input type='button' name='export_loadout' id='export_loadout' value='Export loadout' /><br />\n";
+	echo "Export format: <select name='export_type' id='export_type'>\n";
+	foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
+		echo "<option value='".htmlspecialchars($k, ENT_QUOTES)."'>".htmlspecialchars($f[0])."</option>\n";
+	}
+	echo "</select>\n";
+}
+
+echo "</form>
+</section>
 <section id='attributes'>
 <div class='compact' id='computed_attributes'>
 <p class='placeholder loading'>
@@ -200,9 +217,11 @@ osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, t
 );
 
 \Osmium\Chrome\print_js_snippet('tabs');
+\Osmium\Chrome\print_js_snippet('modal');
 \Osmium\Chrome\print_js_snippet('context_menu');
 \Osmium\Chrome\print_js_snippet('loadout_common');
 \Osmium\Chrome\print_js_snippet('new_loadout');
+\Osmium\Chrome\print_js_snippet('new_loadout-control');
 \Osmium\Chrome\print_js_snippet('new_loadout-sources');
 \Osmium\Chrome\print_js_snippet('new_loadout-ship');
 \Osmium\Chrome\print_js_snippet('new_loadout-presets');
