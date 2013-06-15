@@ -51,6 +51,7 @@ $osmium_dispatch_rules = array(
 	'%^/import$%D' => '/src/import_loadouts.php',
 	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
 	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
+	'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
 	/* API calls */
 	'%^/api/$%D' => ['/src/mdstatic.php', ['relative' => '..', 'title' => 'Osmium API', 'f' => 'api.md']],

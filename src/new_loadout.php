@@ -43,21 +43,77 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
 if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
    && \Osmium\State\is_logged_in() && $_GET['tok'] == \Osmium\State\get_token()) {
 	$loadoutid = (int)$_GET['loadoutid'];
-	$accountid = \Osmium\State\get_state('a')['accountid'];
+	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
 
-	list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2',
-		array($loadoutid, $accountid)
-	));
-
-	if($c == 1) {
-		$fit = \Osmium\Fit\get_fit($loadoutid);
-		$tok = \Osmium\State\get_unique_new_loadout_token();
-		\Osmium\State\put_new_loadout($tok, $fit);
-
-		header('Location: ../new/'.$tok);
-		die();
+	if(!\Osmium\State\can_view_fit($loadoutid)) {
+		\Osmium\Fatal(404, "Loadout not found");
 	}
+	if(!\Osmium\State\can_access_fit($loadoutid)) {
+		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
+	}
+	if(!\Osmium\State\can_edit_fit($loadoutid)) {
+		\Osmium\Fatal(403, "Permission is required to edit this loadout");
+	}
+
+	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
+	$tok = \Osmium\State\get_unique_new_loadout_token();
+	\Osmium\State\put_new_loadout($tok, $fit);
+
+	header('Location: ../new/'.$tok);
+	die();
+}
+
+if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
+	$loadoutid = (int)$_GET['loadoutid'];
+	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
+
+	if(!\Osmium\State\can_view_fit($loadoutid)) {
+		\Osmium\Fatal(404, "Loadout not found");
+	}
+	if(!\Osmium\State\can_access_fit($loadoutid)) {
+		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
+	}
+
+	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
+	$fork = $fit; /* Since $fit is an array, this makes a copy */
+
+	/* Make $fork look like a new loadout */
+	unset($fork['metadata']['loadoutid']);
+	unset($fork['metadata']['revision']);
+	unset($fork['metadata']['accountid']);
+
+	/* Make a few adjustments */
+	$fork['metadata']['visibility'] = \Osmium\Fit\VISIBILITY_PRIVATE;
+	if(preg_match(
+		'%^(?<title>.+?) \(fork( (?<forknumber>[1-9][0-9]*))?\)$%D',
+		$fork['metadata']['name'],
+		$matches)
+	) {
+		$fork['metadata']['name'] = $matches['title'];
+		$forknum = isset($matches['forknumber']) ? (int)$matches['forknumber'] : 1;
+		$fork['metadata']['name'] .= ' (fork '.($forknum + 1).')';
+	} else {
+		$fork['metadata']['name'] .= ' (fork)';
+	}
+
+	if($fit['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$fork['metadata']['description'] = trim(
+			"*This loadout is a fork of loadout [#".(int)$fit['metadata']['loadoutid']
+			."](".\Osmium\get_ini_setting('relative_path').\Osmium\Fit\get_fit_uri(
+				$fit['metadata']['loadoutid'],
+				$fit['metadata']['visibility'],
+				0 /* No need to risk showing the real private token here */
+			)."?revision=".(int)$fit['metadata']['revision'].") (revision "
+			.(int)$fit['metadata']['revision'].").*\n\n"
+			.$fork['metadata']['description']
+		);
+	}
+
+	$tok = \Osmium\State\get_unique_new_loadout_token();
+	\Osmium\State\put_new_loadout($tok, $fork);
+
+	header('Location: ../new/'.$tok);
+	die();
 }
 
 if(!isset($_GET['token'])) {
