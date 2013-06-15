@@ -466,13 +466,13 @@ function get_damage_from_drones(&$fit) {
 }
 
 /**
- * Get the optimal range, falloff and tracking speed of a module (in
- * the current preset).
+ * Get "interesting" attributes of a module.
  *
- * @returns an array with any of the three keys: trackingspeed, range,
- * falloff.
+ * @returns an array which can contain any of the following keys:
+ * trackingspeed, range (optimal range), falloff, maxrange (precise
+ * missile range)
  */
-function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
+function get_module_interesting_attributes($fit, $type, $index) {
 	$categories = get_state_categories();
 
 	$attributes = array();

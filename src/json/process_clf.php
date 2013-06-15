@@ -50,11 +50,13 @@ if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
 
 $payload = array(
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative),
-	'slots' => \Osmium\AjaxCommon\get_slot_usage($local),
+	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
 );
 
 if($type === 'new') {
 	\Osmium\State\put_new_loadout($token, $local);
+
+	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);
 
 	if(isset($_GET['submit']) && $_GET['submit']) {
 		if(!\Osmium\State\is_logged_in()) {

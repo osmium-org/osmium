@@ -413,7 +413,7 @@ foreach(\Osmium\Fit\get_slottypes() as $type) {
 
 	foreach($modules as $index => $mod) {
 		$state = \Osmium\Fit\get_module_state_by_location($fit, $type, $index);
-		$ranges = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, $type, $index);
+		$ranges = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
 
 		$charge = '';
 		if(isset($fit['charges'][$type][$index])) {

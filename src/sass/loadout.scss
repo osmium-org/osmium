@@ -43,6 +43,7 @@ $hidden-char: '\0025B8';
 	border-top: 1px dashed $module-border-color;
 	line-height: 2em;
 	position: relative;
+	cursor: default;
 
 	&, &> span.charge {
 		@include ellipsis;
@@ -65,11 +66,19 @@ $hidden-char: '\0025B8';
 			font-size: 1.5em;
 			text-align: center;
 			display: inline-block;
-			cursor: pointer;
+			cursor: context-menu;
 			position: absolute;
 			width: 1em;
 			top: 0.1em;
 			right: 0;
+		}
+
+		&.hasattribs > span.contextmenuindicator {
+			top: -0.1em;
+		}
+
+		&.hasattribs.hascharge > span.contextmenuindicator {
+			top: 0.1em;
 		}
 	}
 
@@ -83,6 +92,17 @@ $hidden-char: '\0025B8';
 		width: 16px;
 		height: 16px;
 		line-height: 16px;
+	}
+
+	&> small.attribs {
+		display: inline;
+		position: absolute;
+		right: 0.2em;
+		bottom: 0;
+		font-size: 0.7em;
+		line-height: 1em;
+		height: 1em;
+		opacity: 0.8;
 	}
 
 	-moz-user-select: -moz-none;

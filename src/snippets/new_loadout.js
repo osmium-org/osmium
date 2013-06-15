@@ -66,12 +66,36 @@ osmium_send_clf = function() {
 		clftoken: osmium_clftoken
 	};
 
-	$.post('../src/json/process_clf.php?' + $.param(getopts), postopts, function(payload) {
-		$('div#computed_attributes').html(payload.attributes);
-		osmium_clf['X-Osmium-slots'] = payload.slots;
-		osmium_update_slotcounts();
-		setTimeout(osmium_send_clf, 500);
-	}, 'json');
+	$.ajax({
+		type: 'POST',
+		url: '../src/json/process_clf.php?' + $.param(getopts),
+		data: postopts,
+		dataType: 'json',
+		error: function(xhr, error, httperror) {
+			alert('Could not sync loadout with remote: ' + error + ' (' + httperror 
+				  + '). This shouldn\'t normally happen, try again or refresh the page.');
+			setTimeout(osmium_send_clf, 500);
+		},
+		success: function(payload) {
+			$('div#computed_attributes').html(payload.attributes);
+			osmium_clf['X-Osmium-slots'] = payload.slots;
+			osmium_update_slotcounts();
+
+			$("section#modules div.slots li > small.attribs").remove();
+			$("section#modules div.slots li.hasattribs").removeClass('hasattribs');
+			for(var i = 0; i < payload.mia.length; ++i) {
+				var s = $(document.createElement('small'));
+				s.text(payload.mia[i][2]);
+				s.prop('title', payload.mia[i][3]);
+				s.addClass('attribs');
+
+				$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
+					return $(this).data('index') == payload.mia[i][1];
+				}).addClass('hasattribs').append(s);
+			}
+			setTimeout(osmium_send_clf, 500);
+		}
+	});
 };
 
 /* Generate all the missing DOM elements from the CLF */

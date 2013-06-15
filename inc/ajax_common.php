@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -191,11 +191,12 @@ function get_loadable_charges(&$fit) {
 		);
 }
 
+/** @deprecated */
 function get_module_ranges($fit) {
 	$ranges = array();
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $m) {
-			$r = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, $type, $index);
+			$r = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
 			if($r === array()) {
 				$ranges[$type][$index] = array('', '');
 				continue;
@@ -209,4 +210,31 @@ function get_module_ranges($fit) {
 	}
 
 	return $ranges;
+}
+
+/**
+ * Generate formatted interesting attributes for all the modules in
+ * the fit.
+ *
+ * @returns an array of array(slottype, index, shortformat,
+ * longformat).
+ */
+function get_modules_interesting_attributes(&$fit) {
+	$attrs = array();
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
+		foreach($a as $index => $m) {
+			$a = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
+			$fashort = \Osmium\Chrome\format_short_range($a);
+
+			if(empty($fashort)) continue;
+			$falong = \Osmium\Chrome\format_long_range($a);
+
+			$attrs[] = array(
+				$type, $index,
+				$fashort, $falong,
+			);
+		}
+	}
+
+	return $attrs;
 }

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -490,7 +490,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 0, 26038); /* Large Projectile Ambit Extension I */
 
 		/* Pyfa 1.1.8 */
-		$a = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, 'high', 0);
+		$a = \Osmium\Fit\get_module_interesting_attributes($fit, 'high', 0);
 		$this->assertEquals(4.27, $a['range'] / 1000, '', 0.005);
 		$this->assertEquals(73.1, $a['falloff'] / 1000, '', 0.05);
 		$this->assertEquals(0.0888, $a['trackingspeed'], '', 0.00005);
@@ -507,7 +507,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_charge($fit, 'high', 0, 2516); /* Nova Rocket */
 
 		/* Pyfa 1.1.8, the range is only an approximation and is actually slightly wrong */
-		$a = \Osmium\Fit\get_optimal_falloff_tracking_of_module($fit, 'high', 0);
+		$a = \Osmium\Fit\get_module_interesting_attributes($fit, 'high', 0);
 		$this->assertEquals(9960, $a['maxrange'], '', 250);
 	}
 
