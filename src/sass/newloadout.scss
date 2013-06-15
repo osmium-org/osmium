@@ -311,6 +311,13 @@ div#nlattribs > section#ship {
 			right: 0;
 		}
 	}
+
+	&> span.contextmenuindicator {
+		position: absolute;
+		top: 0;
+		right: 0;
+		font-size: 2em;
+	}
 }
 
 div#nlattribs > section#control {

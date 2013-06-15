@@ -69,3 +69,22 @@ osmium_gen_ship = function() {
 		section.remove();
 	}
 };
+
+osmium_init_ship = function() {
+	osmium_ctxmenu_bind($("section#ship"), function() {
+		var menu = osmium_ctxmenu_create();
+
+		osmium_ctxmenu_add_option(menu, "Show ship info", function() {
+			if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
+				osmium_showinfo({
+					new: osmium_clftoken,
+					type: "ship"
+				}, "..");
+			} else {
+				alert("No ship is selected. What are you expecting?");
+			}
+		}, { icon: "showinfo.png" });
+
+		return menu;
+	});
+};

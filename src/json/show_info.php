@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,13 +23,18 @@ require __DIR__.'/../../inc/ajax_common.php';
 
 if(isset($_GET['loadoutid'])) {
 	if(!\Osmium\AjaxCommon\get_green_fit($fit, $cachename, $loadoutid, $revision)) {
+		header('HTTP/1.1 400 Bad Request', true, 400);
 		\Osmium\Chrome\return_json(array());
 	}
+} else if(isset($_GET['new'])) {
+	$fit = \Osmium\State\get_new_loadout($_GET['new']);
 } else {
-	$fit = \Osmium\State\get_new_fit();
+	header('HTTP/1.1 400 Bad Request', true, 400);
+	\Osmium\Chrome\return_json(array());
 }
 
 if(!isset($_GET['type'])) {
+	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }
 

@@ -110,6 +110,7 @@ osmium_gen = function() {
 /* Set up event listeners that alter the CLF appropriately */
 osmium_init = function() {
 	osmium_init_control();
+	osmium_init_ship();
 	osmium_init_sources();
 	osmium_init_metadata();
 	osmium_init_presets();

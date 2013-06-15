@@ -354,3 +354,11 @@ ul#ctxmenu {
 		}
 	}
 }
+
+.hascontextmenu {
+	cursor: default;
+
+	&> span.contextmenuindicator {
+		cursor: context-menu;
+	}
+}

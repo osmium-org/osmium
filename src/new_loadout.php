@@ -258,6 +258,7 @@ osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, t
 \Osmium\Chrome\print_js_snippet('modal');
 \Osmium\Chrome\print_js_snippet('context_menu');
 \Osmium\Chrome\print_js_snippet('loadout_common');
+\Osmium\Chrome\print_js_snippet('show_info');
 \Osmium\Chrome\print_js_snippet('new_loadout');
 \Osmium\Chrome\print_js_snippet('new_loadout-control');
 \Osmium\Chrome\print_js_snippet('new_loadout-sources');
