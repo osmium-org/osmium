@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -272,10 +272,10 @@ function post_import(&$fit, &$ids, $a) {
 	$fit['metadata']['visibility'] = DEFAULT_VIS;
 
 	if(isset($_POST['editimport']) && $_POST['editimport']) {
-		/* Do not commit the loadout, but overwrite $new_fit */
-		\Osmium\State\put_new_fit($fit);
-		\Osmium\State\put_state('create_fit_step', 2);
-		header('Location: ./new');
+		/* Do not commit the loadout */
+		$tok = \Osmium\State\get_unique_new_loadout_token();
+		\Osmium\State\put_new_loadout($tok, $fit);
+		header('Location: ./new/'.$tok);
 		die();
 	}
 
