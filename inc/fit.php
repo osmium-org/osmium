@@ -92,9 +92,11 @@ const STATE_OVERLOADED = 3;
 
 /** Maximum number of tags allowed on a fit.
  *
+ * XXX: put this in config.ini.
+ *
  * WARNING: when changing this, also change the hardcoded value in
  * new_fitting-step5.js. */
-const MAXIMUM_TAGS = 5;
+const MAXIMUM_TAGS = 8;
 
 /* ----------------------------------------------------- */
 
