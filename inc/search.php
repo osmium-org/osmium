@@ -23,7 +23,7 @@ const SPHINXQL_PORT = 24492;
 function get_link() {
 	static $link = null;
 	if($link === null) {
-		$link = mysqli_connect('127.0.0.1:'.SPHINXQL_PORT);
+		$link = mysqli_connect('127.0.0.1', 'root', '', '', SPHINXQL_PORT);
 		if(!$link) {
 			\Osmium\fatal(500, 'Could not connect to Sphinx.');
 		}
