@@ -1472,11 +1472,13 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
         }
     }
 
-	foreach($fit['modules'] as $type => $mods) {
+	foreach($fit['modules'] as $type => &$mods) {
 		foreach($mods as $index => $m) {
 			if(isset($clfmods[$type][$index])) continue;
 			remove_module($fit, $index, $m['typeid']);
 		}
+
+		ksort($mods);
 	}
 }
 

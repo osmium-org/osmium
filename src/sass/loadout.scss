@@ -43,6 +43,7 @@ $hidden-char: '\0025B8';
 	border-top: 1px dashed $module-border-color;
 	line-height: 2em;
 	position: relative;
+	background-color: $main-bg-color;
 
 	&, &> span.charge {
 		@include ellipsis;

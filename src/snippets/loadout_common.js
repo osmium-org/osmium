@@ -23,7 +23,6 @@ osmium_undo_stack_position = 0;
 
 osmium_load_static_client_data = function(relative, staticver, onsuccess) {
 	var idx = 'osmium_static_client_data_' + staticver;
-	var cdata = localStorage.getItem(idx);
 
 	var onsuccess2 = function(json) {
 		osmium_groups = json.groups;
@@ -41,16 +40,20 @@ osmium_load_static_client_data = function(relative, staticver, onsuccess) {
 		return onsuccess(json);
 	};
 
-	for(var i = 0; i < staticver; ++i) {
-		localStorage.removeItem('osmium_static_client_data_' + i);
-	}
+	try {
+		for(var i = 0; i < staticver; ++i) {
+			localStorage.removeItem('osmium_static_client_data_' + i);
+		}
 
-	if(cdata !== null) {
-		return onsuccess2(JSON.parse(cdata));
-	}
+		var cdata = localStorage.getItem(idx);
+		if(cdata !== null) {
+			return onsuccess2(JSON.parse(cdata));
+		}
+	} catch(e) { /* Incognito mode probably */ }
 
 	$.getJSON(relative + '/static-' + staticver + '/cache/clientdata.json', function(json) {
-		localStorage.setItem(idx, JSON.stringify(json));
+		try { localStorage.setItem(idx, JSON.stringify(json)); }
+		catch(e) { /* Incognito mode probably */ }
 		return onsuccess2(json);
 	});
 };

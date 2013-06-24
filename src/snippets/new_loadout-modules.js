@@ -68,6 +68,47 @@ osmium_init_modules = function() {
 		var t = $(this);
 		t.prop('title', t.text());
 	});
+
+	$("section#modules > div.slots > ul").sortable({
+		items: "li:not(.placeholder)",
+		placeholder: "sortable-placeholder",
+		start: function() {
+			$("section#modules > div.slots").css('opacity', 0.5);
+			$(this).addClass('sorting').parent().css('opacity', 1.0);
+		},
+		stop: function() {
+			$("section#modules > div.slots").css('opacity', 1.0);
+			$(this).removeClass('sorting');
+		},
+		update: function() {
+			var z = 0;
+			var mp = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
+			var map = {};
+
+			$("section#modules > div.slots").find('li').each(function() {
+				var t = $(this).data('typeid');
+				var i = $(this).data('index');
+
+				if(!t) return;
+				if(!(t in map)) map[t] = {};
+
+				map[t][i] = z;
+				$(this).data('index', z);
+				++z;
+			});
+
+			for(var i = 0; i < mp.length; ++i) {
+				mp[i].index = map[mp[i].typeid][mp[i].index];
+			}
+
+			mp.sort(function(x, y) {
+				return x.index - y.index;
+			});
+
+			osmium_commit_clf();
+			osmium_undo_push();
+		}
+	});
 };
 
 osmium_update_slotcounts = function() {
