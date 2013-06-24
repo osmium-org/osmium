@@ -89,13 +89,28 @@ osmium_init_ship = function() {
 		return menu;
 	});
 
-	$("body").keypress('_', function(e) {
-		if(!e.ctrlKey) return;
+	/* This isn't pretty */
+	$(document).keydown(function(e) {
+		/* Chromium doesn't issue a keypress event */
+		if(!e.ctrlKey || e.which != 189) return true;
 
 		osmium_undo_pop();
 		osmium_commit_clf();
 		osmium_user_initiated_push(false);
 		osmium_gen();
 		osmium_user_initiated_pop();
+
+		return false;
+	}).keypress(function(e) {
+		/* Firefox behaves as expected */
+		if(!e.ctrlKey || e.which != 95) return true;
+
+		osmium_undo_pop();
+		osmium_commit_clf();
+		osmium_user_initiated_push(false);
+		osmium_gen();
+		osmium_user_initiated_pop();
+
+		return false;
 	});
 };
