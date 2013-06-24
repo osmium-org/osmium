@@ -40,6 +40,7 @@ osmium_ctxmenu_bind = function(element, menu_constructor) {
 			$("ul#ctxmenu, div#ctxbg").remove();
 		});
 
+		$('ul#ctxmenu, div#ctxbg').remove();
 		$('body').append(div).append(menu);
 
 		var x = Math.min(e.pageX, $(document).width() - menu.width() - 5);

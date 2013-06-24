@@ -22,6 +22,9 @@ Osmium uses the Common Loadout Format PHP validator, released under
 the WTFPL license, version 2.
 <https://github.com/Artefact2/common-loadout-format/blob/master/COPYING>
 
+Osmium uses jQuery, released under the MIT license.
+<https://jquery.org/license/>
+
 Contact
 -------
 

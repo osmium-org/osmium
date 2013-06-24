@@ -57,17 +57,8 @@ osmium_gen_ship = function() {
 	h.append($(document.createElement('small')).text(groupname));
 	h.append($(document.createElement('strong')).text(shipname));
 
-	section.empty();
+	section.children('h1').remove();
 	section.append(h);
-
-	if(osmium_user_initiated) {
-		/* XXX: this is needed to restart the animation. Get rid of
-		 * this asap! */
-		var newsection = section.clone(true);
-		newsection.addClass('added_to_loadout');
-		section.after(newsection);
-		section.remove();
-	}
 };
 
 osmium_init_ship = function() {
@@ -85,6 +76,26 @@ osmium_init_ship = function() {
 			}
 		}, { icon: "showinfo.png" });
 
+		osmium_ctxmenu_add_separator(menu);
+
+		osmium_ctxmenu_add_option(menu, "Undo (Ctrl+_)", function() {
+			osmium_undo_pop();
+			osmium_commit_clf();
+			osmium_user_initiated_push(false);
+			osmium_gen();
+			osmium_user_initiated_pop();
+		}, {});
+
 		return menu;
+	});
+
+	$("body").keypress('_', function(e) {
+		if(!e.ctrlKey) return;
+
+		osmium_undo_pop();
+		osmium_commit_clf();
+		osmium_user_initiated_push(false);
+		osmium_gen();
+		osmium_user_initiated_pop();
 	});
 };

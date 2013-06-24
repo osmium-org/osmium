@@ -30,6 +30,8 @@ $(function() {
 
 		/* Everything done from now on is user initiated */
 		osmium_user_initiated_push(true);
+
+		osmium_undo_push();
 	});
 });
 
@@ -130,6 +132,8 @@ osmium_add_to_clf = function(item) {
 		osmium_user_initiated_push(false);
 		osmium_gen();
 		osmium_user_initiated_pop();
+
+		osmium_undo_push();
 	} else if(cat === 'module') {
 		var state, index, m;
 
@@ -155,6 +159,7 @@ osmium_add_to_clf = function(item) {
 
 		osmium_add_module(typeid, index, state, null);
 		osmium_update_slotcounts();
+		osmium_undo_push();
 	} else if(cat === 'charge') {
 		/* Try to find a suitable location for the charge */
 		var location = null;
@@ -318,6 +323,8 @@ osmium_add_to_clf = function(item) {
 					osmium_add_charge_by_location(m.typeid, m.index, typeid);
 				}
 			}
+
+			osmium_undo_push();
 		} else {
 			alert("This charge cannot be used with any fitted type.");
 		}

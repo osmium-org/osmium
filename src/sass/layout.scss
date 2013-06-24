@@ -295,17 +295,17 @@ div#ctxbg {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 24492;
+	z-index: 80000;
 }
 
 ul#ctxmenu {
 	position: absolute;
-	z-index: 24493;
+	z-index: 80001;
 
 	min-width: 10em;
 	max-width: 15em;
 	border: 1px solid $contextmenu-border-color;
-	background-color: rgba($contextmenu-bg-color, 0.8);
+	background-color: rgba($contextmenu-bg-color, 0.9);
 
 	margin: 0;
 	padding: 0;
@@ -360,5 +360,6 @@ ul#ctxmenu {
 
 	&> span.contextmenuindicator {
 		cursor: context-menu;
+		z-index: 10;
 	}
 }

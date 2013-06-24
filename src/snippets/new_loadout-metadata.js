@@ -47,8 +47,9 @@ osmium_init_metadata = function() {
 		osmium_clf.metadata['X-Osmium-clear-password'] = $("section#metadata input#pw").val();
 
 		osmium_commit_clf();
+		osmium_undo_push();
 	}).keyup(function() {
-		//$(this).change();
+		//$(this).change(); /* XXX too much request spam? */
 	});
 };
 

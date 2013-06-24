@@ -258,6 +258,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}
 
 			osmium_set_module_state(li, nextstate);
+			osmium_undo_push();
 			return false;
 		}).on('contextmenu', function() {
 			var a = $(this);
@@ -286,6 +287,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}
 
 			osmium_set_module_state(li, prevstate);
+			osmium_undo_push();
 			return false;
 		}).on('dblclick', function(e) {
 			/* Prevent dblclick fire on the <li> itself */
@@ -303,7 +305,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 	if(osmium_user_initiated) {
 		$('a[href="#modules"]').parent().click();
-		li.addClass('added_to_loadout');
 	}
 
 	li.on('remove_module', function() {
@@ -316,6 +317,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		}
 
 		li.remove();
+		osmium_undo_push();
 	});
 
 	osmium_ctxmenu_bind(li, function() {
@@ -349,16 +351,19 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			if(osmium_module_states[typeid][0]) {
 				osmium_ctxmenu_add_option(menu, "Offline module", function() {
 					osmium_set_module_state(li, "offline");
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['offline'][1] });
 			}
 			if(osmium_module_states[typeid][1]) {
 				osmium_ctxmenu_add_option(menu, "Online module", function() {
 					osmium_set_module_state(li, "online");
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['online'][1] });
 			}
 			if(osmium_module_states[typeid][2]) {
 				osmium_ctxmenu_add_option(menu, "Activate module", function() {
 					osmium_set_module_state(li, "active");
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['active'][1] });
 			}
 			if(osmium_module_states[typeid][3]) {
@@ -368,6 +373,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 					} else {
 						osmium_set_module_state(li, "active");
 					}
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['overloaded'][1] });
 			}
 		}

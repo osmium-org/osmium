@@ -19,6 +19,7 @@ osmium_init_presets = function() {
 	$('section#presets textarea#tpresetdesc').change(function() {
 		osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].presetdescription = $(this).val();
 		osmium_commit_clf();
+		osmium_undo_push();
 	});
 	$('section#presets textarea#tcpresetdesc').change(function() {
 		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
@@ -29,10 +30,12 @@ osmium_init_presets = function() {
 			break;
 		}
 		osmium_commit_clf();
+		osmium_undo_push();
 	});
 	$('section#presets textarea#tdpresetdesc').change(function() {
 		osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetdescription = $(this).val();
 		osmium_commit_clf();
+		osmium_undo_push();
 	});
 
 	$('section#presets tr#rpresets select#spreset').change(function() {
@@ -47,6 +50,7 @@ osmium_init_presets = function() {
 		osmium_gen_charge_presets_only();
 		osmium_commit_clf();
 		osmium_post_preset_change();
+		osmium_undo_push();
 	});
 	$('section#presets tr#rchargepresets select#scpreset').change(function() {
 		osmium_clf['X-Osmium-current-chargepresetid'] = $(this).val();
@@ -61,6 +65,7 @@ osmium_init_presets = function() {
 
 		osmium_commit_clf();
 		osmium_post_preset_change();
+		osmium_undo_push();
 	});
 	$('section#presets tr#rdronepresets select#sdpreset').change(function() {
 		osmium_clf['X-Osmium-current-dronepresetid'] = $(this).val();
@@ -68,6 +73,7 @@ osmium_init_presets = function() {
 			osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetdescription
 		);
 		osmium_commit_clf();
+		osmium_undo_push();
 	});
 
 	var preset_name_exists = function(name) {
@@ -97,6 +103,7 @@ osmium_init_presets = function() {
 			osmium_gen_presets_only();
 			osmium_commit_clf();
 			osmium_post_preset_change();
+			osmium_undo_push();
 		}
 	});
 	$('section#presets tr#rpresets input.renamepreset').click(function() {
@@ -107,6 +114,7 @@ osmium_init_presets = function() {
 			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].presetname = name;
 			osmium_gen_presets_only();
 			osmium_commit_clf();
+			osmium_undo_push();
 		}
 	});
 	$('section#presets tr#rpresets input.clonepreset').click(function() {
@@ -120,6 +128,7 @@ osmium_init_presets = function() {
 		osmium_gen_presets_only();
 		osmium_commit_clf();
 		osmium_post_preset_change();
+		osmium_undo_push();
 	});
 	$('section#presets tr#rpresets input.deletepreset').click(function() {
 		osmium_clf.presets.splice(osmium_clf['X-Osmium-current-presetid'], 1);
@@ -131,6 +140,7 @@ osmium_init_presets = function() {
 		osmium_gen_presets_only();
 		osmium_commit_clf();
 		osmium_post_preset_change();
+		osmium_undo_push();
 	});
 
 	var charge_preset_name_exists = function(name) {
@@ -161,6 +171,7 @@ osmium_init_presets = function() {
 			osmium_gen_charge_presets_only();
 			osmium_commit_clf();
 			osmium_post_preset_change();
+			osmium_undo_push();
 		}
 	});
 	$('section#presets tr#rchargepresets input.renamepreset').click(function() {
@@ -178,6 +189,7 @@ osmium_init_presets = function() {
 			cps[i].name = name;
 			osmium_gen_charge_presets_only();
 			osmium_commit_clf();
+			osmium_undo_push();
 		}
 	});
 	$('section#presets tr#rchargepresets input.clonepreset').click(function() {
@@ -219,6 +231,7 @@ osmium_init_presets = function() {
 		osmium_gen_charge_presets_only();
 		osmium_commit_clf();
 		osmium_post_preset_change();
+		osmium_undo_push();
 	});
 	$('section#presets tr#rchargepresets input.deletepreset').click(function() {
 		var cps = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
@@ -234,6 +247,7 @@ osmium_init_presets = function() {
 		osmium_gen_charge_presets_only();
 		osmium_commit_clf();
 		osmium_post_preset_change();
+		osmium_undo_push();
 	});
 
 
@@ -257,6 +271,7 @@ osmium_init_presets = function() {
 			osmium_clf['X-Osmium-current-dronepresetid'] = id;
 			osmium_gen_drone_presets_only();
 			osmium_commit_clf();
+			osmium_undo_push();
 		}
 	});
 	$('section#presets tr#rdronepresets input.renamepreset').click(function() {
@@ -267,6 +282,7 @@ osmium_init_presets = function() {
 			osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetname = name;
 			osmium_gen_drone_presets_only();
 			osmium_commit_clf();
+			osmium_undo_push();
 		}
 	});
 	$('section#presets tr#rdronepresets input.clonepreset').click(function() {
@@ -279,6 +295,7 @@ osmium_init_presets = function() {
 		osmium_clf['X-Osmium-current-dronepresetid'] = id;
 		osmium_gen_drone_presets_only();
 		osmium_commit_clf();
+		osmium_undo_push();
 	});
 	$('section#presets tr#rdronepresets input.deletepreset').click(function() {
 		osmium_clf.drones.splice(osmium_clf['X-Osmium-current-dronepresetid'], 1);
@@ -287,6 +304,7 @@ osmium_init_presets = function() {
 		}
 		osmium_gen_drone_presets_only();
 		osmium_commit_clf();
+		osmium_undo_push();
 	});
 };
 

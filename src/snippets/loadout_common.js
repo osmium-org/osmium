@@ -18,6 +18,9 @@
 osmium_user_initiated = false;
 osmium_user_initiated_stack = [];
 
+osmium_undo_stack = [];
+osmium_undo_stack_position = 0;
+
 osmium_load_static_client_data = function(relative, staticver, onsuccess) {
 	var idx = 'osmium_static_client_data_' + staticver;
 	var cdata = localStorage.getItem(idx);
@@ -60,3 +63,28 @@ osmium_user_initiated_push = function(value) {
 osmium_user_initiated_pop = function() {
 	osmium_user_initiated = osmium_user_initiated_stack.pop();
 };
+
+osmium_undo_trim = function() {
+	while(osmium_undo_stack.length > 512) {
+		osmium_undo_stack.shift();
+		--osmium_undo_stack_position;
+	}
+}
+
+osmium_undo_push = function() {
+	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
+	osmium_undo_stack_position = osmium_undo_stack.length - 1;
+	osmium_undo_trim();
+};
+
+osmium_undo_pop = function() {
+	if(osmium_undo_stack_position < 1) {
+		alert("No more history for undoing.");
+		return;
+	}
+
+	--osmium_undo_stack_position;
+	osmium_clf = $.extend(true, {}, osmium_undo_stack[osmium_undo_stack_position]);
+	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
+	osmium_undo_trim();
+}
