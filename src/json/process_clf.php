@@ -76,7 +76,7 @@ if($type === 'new') {
 
 			$accountid = \Osmium\State\get_state('a')['accountid'];
 			if(isset($local['metadata']['accountid'])) {
-				$ownerid = $fit['metadata']['accountid'];
+				$ownerid = $local['metadata']['accountid'];
 			} else {
 				$ownerid = $accountid;
 			}
