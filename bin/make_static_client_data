@@ -24,7 +24,7 @@ $static = array();
 /* ---------------------------------------------------------- */
 
 $q = \Osmium\Db\query(
-	'SELECT typeid, typename, category, subcategory, metagroupid,
+	'SELECT typeid, typename, category, subcategory, metagroupid, groupname,
 	mg0.marketgroupid AS mgid0, mg0.marketgroupname AS mgname0,
 	mg1.marketgroupid AS mgid1, mg1.marketgroupname AS mgname1,
 	mg2.marketgroupid AS mgid2, mg2.marketgroupname AS mgname2,
@@ -89,7 +89,8 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		$row['category'],
 		$row['subcategory'],
 		(int)$row['metagroupid'],
-		);
+		$row['groupname'],
+	);
 }
 
 $flatgroups['root']['children'][] = 0;

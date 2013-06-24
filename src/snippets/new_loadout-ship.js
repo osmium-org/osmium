@@ -20,7 +20,7 @@ osmium_gen_ship = function() {
 	var img, h, shipname, groupname;
 
 	if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
-		groupname = osmium_types[osmium_clf.ship.typeid][3];
+		groupname = osmium_types[osmium_clf.ship.typeid][5];
 		shipname = osmium_types[osmium_clf.ship.typeid][1];
 
 		img = $(document.createElement('img'));
