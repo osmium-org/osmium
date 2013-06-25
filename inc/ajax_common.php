@@ -53,21 +53,6 @@ function get_module_shortlist() {
     return \Osmium\State\get_state_trypersist('shortlist_modules', array());
 }
 
-function get_data_step_drone_select($fit) {
-	return array(
-		'drones' => array_values($fit['drones']),
-		'attributes' => array(
-			'dronecapacity' => \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity'),
-			'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth'),
-			),
-		'usedbandwidth' => \Osmium\Fit\get_used_drone_bandwidth($fit),
-		'computed_attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
-		'dronepresets' => \Osmium\Fit\get_drone_presets($fit),
-		'dpid' => $fit['dronepresetid'],
-		'dronepresetdesc' => $fit['dronepresetdesc']
-		);
-}
-
 function get_slot_usage(&$fit) {
 	$usage = array();
 
@@ -78,20 +63,7 @@ function get_slot_usage(&$fit) {
 	return $usage;
 }
 
-function get_loadable_fit(&$fit) {
-	return array(
-		'ship' => $fit['ship'],
-		'modules' => \Osmium\Fit\get_modules($fit),
-		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
-		'slots' => get_slot_usage($fit),
-		'states' => get_module_states($fit),
-		'ranges' => get_module_ranges($fit),
-		'presetid' => $fit['modulepresetid'],
-		'presets' => \Osmium\Fit\get_presets($fit),
-		'presetdesc' => $fit['modulepresetdesc']
-		);
-}
-
+/** @deprecated */
 function get_module_states(&$fit) {
 	$astates = \Osmium\Fit\get_state_names();
 	$states = array();
@@ -104,91 +76,6 @@ function get_module_states(&$fit) {
 	}
 
 	return $states;
-}
-
-function get_fittable_charges(&$fit) {
-	$out = array();
-	$allowed = array();
-	$typeids = array();
-
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $module) {
-			$chargeid = isset($fit['charges'][$type][$index]) ?
-				$fit['charges'][$type][$index]['typeid'] : 0;
-
-			$typeids[$module['typeid']][] = array('type' => $type,
-			                                      'index' => $index,
-			                                      'typename' => $module['typename'],
-			                                      'typeid' => $module['typeid'],
-			                                      'chargeid' => $chargeid);
-		}
-	}
-
-	$in = implode(',', array_keys($typeids));
-	if(empty($in)) $in = '-1';
-	$chargesq = \Osmium\Db\query(
-		'SELECT moduleid, chargeid, chargename, metagroupname,
-		thdmg.value AS th, kidmg.value AS ki, exdmg.value AS ex, emdmg.value AS em
-		FROM osmium.invcharges
-		LEFT JOIN eve.dgmtypeattribs thdmg ON thdmg.typeid = chargeid AND thdmg.attributeid = 118
-		LEFT JOIN eve.dgmtypeattribs kidmg ON kidmg.typeid = chargeid AND kidmg.attributeid = 117
-		LEFT JOIN eve.dgmtypeattribs exdmg ON exdmg.typeid = chargeid AND exdmg.attributeid = 116
-		LEFT JOIN eve.dgmtypeattribs emdmg ON emdmg.typeid = chargeid AND emdmg.attributeid = 114
-		LEFT JOIN eve.invmetatypes ON invmetatypes.typeid = chargeid
-		LEFT JOIN eve.invmetagroups ON invmetagroups.metagroupid = COALESCE(invmetatypes.metagroupid, 1)
-		WHERE moduleid IN ('.$in.')
-		ORDER BY moduleid ASC, COALESCE(invmetatypes.metagroupid, 1) ASC,
-		(COALESCE(thdmg.value, 0) + COALESCE(kidmg.value, 0) + COALESCE(exdmg.value, 0)
-			+ COALESCE(emdmg.value, 0)) DESC,
-		chargename ASC');
-	while($row = \Osmium\Db\fetch_assoc($chargesq)) {
-		$damage = array_filter(array('Th' => $row['th'],
-		                             'Kin' => $row['ki'],
-		                             'Exp' => $row['ex'],
-		                             'EM' => $row['em']));
-		arsort($damage);
-		$fdamage = implode('/', array_keys($damage));
-
-		$allowed[$row['moduleid']][$row['metagroupname']][] =
-			array('typeid' => $row['chargeid'],
-			      'typename' => $row['chargename'],
-			      'damagetypes' => $fdamage,
-			      );
-	}
-
-	$groups = array();
-	$z = 0;
-	foreach($allowed as $moduleid => $a) {
-		$key = serialize($a);
-		if(!isset($groups[$key])) {
-			$groups[$key] = $z;
-			$index = $z;
-			++$z;
-
-			$out[$index]['charges'] = $a;
-		} else {
-			$index = $groups[$key];
-		}
-
-		foreach($typeids[$moduleid] as $moduleattrs) {
-			$out[$index]['modules'][] = $moduleattrs;
-			
-		}
-	}
-
-	return $out;
-}
-
-function get_loadable_charges(&$fit) {
-	return array(
-		'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($fit),
-		'presetid' => $fit['modulepresetid'],
-		'presets' => \Osmium\Fit\get_presets($fit),
-		'cpid' => $fit['chargepresetid'],
-		'chargepresets' => \Osmium\Fit\get_charge_presets($fit),
-		'chargepresetdesc' => $fit['chargepresetdesc'],
-		'charges' => get_fittable_charges($fit)
-		);
 }
 
 /** @deprecated */
