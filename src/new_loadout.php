@@ -238,7 +238,42 @@ echo "<section id='metadata'>\n";
 \Osmium\Forms\print_form_begin();
 \Osmium\Forms\print_generic_field('Loadout title', 'text', 'name', 'name');
 \Osmium\Forms\print_textarea('Description<br /><small>(optional)</small>', 'description', 'description');
-\Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated, '.\Osmium\Fit\MAXIMUM_TAGS.' maximum)</small>', 'text', 'tags', 'tags');
+\Osmium\Forms\print_generic_field('Tags (space-separated)<br /><small>(between '
+                                  .(int)\Osmium\get_ini_setting('min_tags').' and '
+                                  .(int)\Osmium\get_ini_setting('max_tags').')</small>',
+                                  'text', 'tags', 'tags');
+$commontags = array(
+	/* General usage */
+	'pve', 'pvp',
+	'solo', 'fleet',
+	'small-gang',
+
+	/* Defense related */
+	'shield-tank', 'armor-tank', 
+	'buffer-tank', 'active-tank', 
+	'passive-tank',
+
+	/* Offense related */
+	'gun-boat', 'missile-boat',
+	'drone-boat', 'support',
+	'short-range', 'long-range',
+
+	/* ISK/SP */
+	'cheap', 'expensive',
+	'low-sp', 'high-sp',
+);
+\Osmium\Forms\print_generic_row(
+	'common_tags', '',
+	'Common tags:<ul class="tags">'
+	.implode(
+		' ',
+		array_map(
+			function($tag) { return '<li><a href="javascript:void(0);" title="Add this tag">'.$tag.'</a></li>'; },
+			$commontags
+		)
+	).'</ul>',
+	'common_tags'
+);
 
 $versions = \Osmium\Fit\get_eve_db_versions();
 foreach($versions as &$v) {

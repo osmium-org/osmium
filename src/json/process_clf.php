@@ -57,6 +57,7 @@ if($type === 'new') {
 	\Osmium\State\put_new_loadout($token, $local);
 
 	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);
+	$payload['rectags'] = \Osmium\Fit\get_recommended_tags($local);
 
 	if(isset($_GET['submit']) && $_GET['submit']) {
 		if(!\Osmium\State\is_logged_in()) {
@@ -64,7 +65,8 @@ if($type === 'new') {
 			\Osmium\Chrome\return_json(array());
 		}
 
-		\Osmium\Fit\sanitize($local);
+		\Osmium\Fit\sanitize_tags($local, $tag_errors, true);
+		\Osmium\Fit\sanitize($local, $sanitize_errors, true);
 
 		if(!isset($local['ship']) || !isset($local['ship']['typeid']) || !$local['ship']['typeid']) {
 			$payload['submit-error'] = 'You must select a ship first.';
@@ -84,10 +86,17 @@ if($type === 'new') {
 			$payload['submit-error'] = 'You cannot have a public password-protected fit. Make it private.';
 			$payload['submit-tab'] = 'metadata';
 			$payload['submit-form-error'] = 'input#visibility';
+		} else if(count($tag_errors) > 0) {
+			$payload['submit-error'] = array_pop($tag_errors);
+			$payload['submit-tab'] = 'metadata';
+			$payload['submit-form-error'] = 'input#tags';
 		}
 
 		else {
 			/* Looks good, commit the loadout */
+
+			/* Sanitize the loadout, even if it is destructive */
+			\Osmium\Fit\sanitize($local, $sanitize_errors, false);
 
 			$accountid = \Osmium\State\get_state('a')['accountid'];
 			if(isset($local['metadata']['accountid'])) {

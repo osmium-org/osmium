@@ -27,9 +27,11 @@ namespace Osmium\Fit;
 
 require __DIR__.'/fit-presets.php';
 require __DIR__.'/fit-attributes.php';
+require __DIR__.'/fit-tags.php';
 require __DIR__.'/fit-db.php';
 require __DIR__.'/fit-db-versions.php';
 require __DIR__.'/fit-importexport.php';
+
 
 
 /** The loadout can be viewed by everyone. */
@@ -51,6 +53,7 @@ const VIEW_CORPORATION_ONLY = 3;
 const VIEW_OWNER_ONLY = 4;
 
 
+
 /** The loadout can only be edited by its author. */
 const EDIT_OWNER_ONLY = 0;
 
@@ -67,6 +70,7 @@ const EDIT_CORPORATION_ONLY = 2;
 const EDIT_ALLIANCE_ONLY = 3;
 
 
+
 /** The loadout can be indexed by the Osmium search engine and other
  * search engines, and will appear on search results when appropriate
  * (conforming with the view permission). */
@@ -76,6 +80,7 @@ const VISIBILITY_PUBLIC = 0;
  * be indexed. It is still accessible to anyone (conforming with the
  * view permission) provided they have manually been given the URI. */
 const VISIBILITY_PRIVATE = 1;
+
 
 
 /** Offline module. (Such modules do not use CPU/Power.) */
@@ -91,11 +96,6 @@ const STATE_ACTIVE = 2;
 const STATE_OVERLOADED = 3;
 
 
-/** Maximum number of tags allowed on a fit.
- *
- * WARNING: when changing this, also change the hardcoded value in
- * new_fitting-step5.js. */
-const MAXIMUM_TAGS = 5;
 
 /* ----------------------------------------------------- */
 
@@ -1149,14 +1149,20 @@ function get_attributes_and_effects($typeids, &$out) {
  * Try to auto-magically fix issues of a loadout.
  *
  * Potentially destructive operation! Use with caution.
+ *
+ * @param $errors an array of errors which were corrected
+ * 
+ * @param $interactive If true, some destructive operations will not
+ * be performed, instead an error will be added.
  */
-function sanitize(&$fit) {
+function sanitize(&$fit, &$errors = null, $interactive = false) {
 	/* Unset any extra charges of nonexistent modules. */
 	foreach($fit['presets'] as &$p) {
 		foreach($p['chargepresets'] as &$cp) {
 			foreach($cp['charges'] as $type => &$a) {
 				foreach($a as $index => &$charge) {
 					if(!isset($p['modules'][$type][$index])) {
+						$errors[] = 'Removed charge '.$charge['typeid'].' from '.$type.' module '.$index;
 						unset($a[$index]);
 					}
 				}
@@ -1165,23 +1171,7 @@ function sanitize(&$fit) {
 	}
 
 	/* Enforce tag consistency */
-	if(!isset($fit['metadata']['tags'])) {
-		$fit['metadata']['tags'] = array();
-	}
-	$tags =& $fit['metadata']['tags'];
-	$tags = array_slice($tags, 0, MAXIMUM_TAGS);
-	$tags = array_map(function($tag) {
-			if(class_exists('Normalizer')) {
-				$tag = \Normalizer::normalize($tag, \Normalizer::FORM_KD);
-			}
-			if(function_exists('iconv')) {
-				$tag = iconv("UTF-8", 'US-ASCII//TRANSLIT//IGNORE', $tag);
-			}
-			$tag = strtolower(str_replace('_', '-', $tag));
-			return preg_replace('%[^a-z0-9-]+%', '', $tag);
-		}, $tags);
-	$tags = array_filter($tags, function($tag) { return $tag !== ''; });
-	$tags = array_unique($tags);
+	sanitize_tags($fit, $errors, $interactive);
 
 	/* Enforce permissions consistency */
 	if(!in_array($fit['metadata']['view_permission'], array(
@@ -1190,6 +1180,7 @@ function sanitize(&$fit) {
 		             VIEW_ALLIANCE_ONLY,
 		             VIEW_OWNER_ONLY,
 		             ))) {
+		$errors[] = 'Incorrect view permission, reset to viewable by everyone.';
 		$fit['metadata']['view_permission'] = VIEW_EVERYONE;
 	}
 	if(!in_array($fit['metadata']['edit_permission'], array(
@@ -1198,26 +1189,33 @@ function sanitize(&$fit) {
 		             EDIT_CORPORATION_ONLY,
 		             EDIT_ALLIANCE_ONLY,
 		             ))) {
+		$errors[] = 'Incorrect edit permission, reset to editable by owner only.';
 		$fit['metadata']['edit_permission'] = EDIT_OWNER_ONLY;
 	}
 	if(!in_array($fit['metadata']['visibility'], array(
 		             VISIBILITY_PUBLIC,
 		             VISIBILITY_PRIVATE,
 		             ))) {
+		$errors[] = 'Incorrect visibility, reset to public visibility.';
 		$fit['metadata']['visibility'] = VISIBILITY_PUBLIC;
 	}
 	if($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) {
 		$fit['metadata']['visibility'] = VISIBILITY_PRIVATE;
 
 		if(!isset($fit['metadata']['password']) || !$fit['metadata']['password']) {
+			$errors[] = 'Loadout is password-protected but does not have a password, view permission reset to viewable by everyone.';
 			$fit['metadata']['view_permission'] = VIEW_EVERYONE;
 		}
 	}
 
 	/* Sanitize title */
+	$origtitle = $fit['metadata']['name'];
 	$title =& $fit['metadata']['name'];
 	$title = preg_replace('%\p{C}%u', '', $title); /* Remove control chars and other unused codes */
 	$title = preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $title); /* Trim title */
+	if($title !== $origtitle) {
+		$errors[] = 'Removed blanks and control characters from title.';
+	}
 }
 
 /**

@@ -42,6 +42,9 @@ function get_ini_setting($key) {
 		if(!file_exists(INI_CONFIGURATION_FILE) || !is_readable(INI_CONFIGURATION_FILE)) {
 			fatal(500, "Configuration file '".INI_CONFIGURATION_FILE."' not found or not readable.");
 		}
+		/* Maybe cache this in memory? Parsing ini files is pretty
+		 * much as fast as deserialization and the file will be in
+		 * filesystem cache anyway */
 		$cnf = parse_ini_file(INI_CONFIGURATION_FILE);
 	}
 

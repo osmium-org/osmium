@@ -372,6 +372,12 @@ div#nlmain > section#metadata {
 			font-size: 2em;
 			font-family: $serif-font;
 		}
+
+		&> tbody {
+			&> tr#common_tags, &> tr#recommended_tags {
+				&> th, &> td { border: 0; }
+			}
+		}
 	}
 }
 

@@ -51,6 +51,18 @@ osmium_init_metadata = function() {
 	}).keyup(function() {
 		//$(this).change(); /* XXX too much request spam? */
 	});
+
+	$("section#metadata").on('click', 'ul.tags > li > a', function() {
+		var t = $(this);
+		var tags = $("section#metadata input#tags");
+
+		if(tags.val().match(new RegExp("(^|\\s)" + t.text() + "(\\s|$)")) === null) {
+			tags.val(tags.val() + " " + t.text());
+		}
+
+		t.blur();
+		tags.trigger('change');
+	});
 };
 
 osmium_gen_metadata = function() {

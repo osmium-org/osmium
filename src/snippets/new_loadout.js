@@ -95,6 +95,32 @@ osmium_send_clf = function() {
 					return $(this).data('index') == payload.mia[i][1];
 				}).addClass('hasattribs').append(s);
 			}
+
+			$("section#metadata tr#recommended_tags").remove();
+			if(payload.rectags.length > 0) {
+				var tr = $(document.createElement('tr'));
+				tr.append(document.createElement('th'));
+				tr.prop('id', 'recommended_tags');
+				var td = $(document.createElement('td'));
+				tr.append(td);
+				td.append('Recommended tags: ');
+				var ul = $(document.createElement('ul'));
+				ul.addClass('tags');
+				for(var i = 0; i < payload.rectags.length; ++i) {
+					var li = $(document.createElement('li'));
+					var a = $(document.createElement('a'));
+					a.prop('href', 'javascript:void(0);');
+					a.prop('title', 'Add this tag');
+					a.text(payload.rectags[i]);
+					li.append(a);
+					ul.append(li);
+					ul.append(' ');
+				}
+				td.append(ul);
+
+				$("input#tags").closest('tr').after(tr);
+			}
+
 			setTimeout(osmium_send_clf, 500);
 		}
 	});

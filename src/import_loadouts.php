@@ -279,9 +279,10 @@ function post_import(&$fit, &$ids, $a, &$errors) {
 		die();
 	}
 
-	\Osmium\Fit\sanitize($fit);
+	\Osmium\Fit\sanitize($fit, $errors);
 	if(empty($fit['metadata']['name'])) {
 		$fit['metadata']['name'] = 'Nameless imported loadout';
+		$errors[] = 'Using placeholder name for nameless loadout';
 	}
 	$ret = \Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid'], $err);
 	if($ret === false) {
