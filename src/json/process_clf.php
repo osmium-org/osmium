@@ -64,14 +64,29 @@ if($type === 'new') {
 			\Osmium\Chrome\return_json(array());
 		}
 
+		\Osmium\Fit\sanitize($local);
+
 		if(!isset($local['ship']) || !isset($local['ship']['typeid']) || !$local['ship']['typeid']) {
 			$payload['submit-error'] = 'You must select a ship first.';
 		} else if(in_array($local['metadata']['name'], array(
-			'Unnamed loadout', 'New DNA-imported loadout',
+			'', 'Unnamed loadout', 'New DNA-imported loadout',
 		))) {
 			$payload['submit-error'] = 'Please enter a name for your loadout.';
 			$payload['submit-tab'] = 'metadata';
-		} else {
+			$payload['submit-form-error'] = 'input#name';
+		} else if($local['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
+		          && empty($local['metadata']['password'])) {
+			$payload['submit-error'] = 'If you want your fit to be password-protected, please enter a non-empty password.';
+			$payload['submit-tab'] = 'metadata';
+			$payload['submit-form-error'] = 'input#pw';
+		} else if($local['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
+		          && $local['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PRIVATE) {
+			$payload['submit-error'] = 'You cannot have a public password-protected fit. Make it private.';
+			$payload['submit-tab'] = 'metadata';
+			$payload['submit-form-error'] = 'input#visibility';
+		}
+
+		else {
 			/* Looks good, commit the loadout */
 
 			$accountid = \Osmium\State\get_state('a')['accountid'];
@@ -81,14 +96,17 @@ if($type === 'new') {
 				$ownerid = $accountid;
 			}
 
-			\Osmium\Fit\commit_loadout($local, $ownerid, $accountid);
-
-			$payload['submit-loadout-uri'] =
-				'../'.\Osmium\Fit\get_fit_uri(
-					$local['metadata']['loadoutid'],
-					$local['metadata']['visibility'],
-					$local['metadata']['privatetoken']
-				);
+			$ret = \Osmium\Fit\commit_loadout($local, $ownerid, $accountid, $error);
+			if($ret === false) {
+				$payload['submit-error'] = 'An error occured while committing the loadout. Sorry. Please report! ('.$error.')';
+			} else {
+				$payload['submit-loadout-uri'] =
+					'../'.\Osmium\Fit\get_fit_uri(
+						$local['metadata']['loadoutid'],
+						$local['metadata']['visibility'],
+						$local['metadata']['privatetoken']
+					);
+			}
 		}
 	} else if(isset($_GET['export']) && $_GET['export'] && isset($_GET['exportfmt'])) {
 		$formats = \Osmium\Fit\get_export_formats();

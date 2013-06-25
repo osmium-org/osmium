@@ -129,12 +129,11 @@ function get_hash($fit) {
  *
  * The process is atomic, that is, all the fit gets inserted or
  * nothing is inserted at all, so integrity is always enforced.
+ *
+ * @returns false on failure
  */
-function commit_fitting(&$fit) {
-	sanitize($fit);
-
+function commit_fitting(&$fit, &$error = null) {
 	$fittinghash = get_hash($fit);
-
 	$fit['metadata']['hash'] = $fittinghash;
   
 	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(fittinghash) FROM osmium.fittings WHERE fittinghash = $1', array($fittinghash)));
@@ -145,7 +144,7 @@ function commit_fitting(&$fit) {
 
 	/* Insert the new fitting */
 	\Osmium\Db\query('BEGIN;');
-	\Osmium\Db\query_params(
+	$ret = \Osmium\Db\query_params(
 		'INSERT INTO osmium.fittings (fittinghash, name, description, evebuildnumber, hullid, creationdate) VALUES ($1, $2, $3, $4, $5, $6)',
 		array(
 			$fittinghash,
@@ -156,17 +155,41 @@ function commit_fitting(&$fit) {
 			time(),
 		)
 	);
+	if($ret === false) {
+		$error = \Osmium\Db\last_error();
+		\Osmium\Db\query('ROLLBACK;');
+		return false;
+	}
   
 	foreach($fit['metadata']['tags'] as $tag) {
-		\Osmium\Db\query_params(
+		$ret = \Osmium\Db\query_params(
 			'INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)',
 			array($fittinghash, $tag)
 		);
+		if($ret === false) {
+			$error = \Osmium\Db\last_error();
+			\Osmium\Db\query('ROLLBACK;');
+			return false;
+		}
 	}
   
 	$presetid = 0;
 	foreach($fit['presets'] as $presetid => $preset) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)', array($fittinghash, $presetid, $preset['name'], $preset['description']));
+		$ret = \Osmium\Db\query_params(
+			'INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)',
+			array(
+				$fittinghash,
+				$presetid,
+				$preset['name'],
+				$preset['description']
+			)
+		);
+
+		if($ret === false) {
+			$error = \Osmium\Db\last_error();
+			\Osmium\Db\query('ROLLBACK;');
+			return false;
+		}
 
 		$normalizedindexes = array();
 		foreach($preset['modules'] as $type => $data) {
@@ -179,21 +202,69 @@ function commit_fitting(&$fit) {
 					$state = $module['old_state'];
 				}
 
-				\Osmium\Db\query_params('INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $type, $z, $module['typeid'], $state));
+				$ret = \Osmium\Db\query_params(
+					'INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)',
+					array(
+						$fittinghash,
+						$presetid,
+						$type,
+						$z,
+						$module['typeid'],
+						$state
+					)
+				);
+
+				if($ret === false) {
+					$error = \Osmium\Db\last_error();
+					\Osmium\Db\query('ROLLBACK;');
+					return false;
+				}
+
 				++$z;
 			}
 		}
   
 		$cpid = 0;
 		foreach($preset['chargepresets'] as $chargepreset) {
-			\Osmium\Db\query_params('INSERT INTO osmium.fittingchargepresets (fittinghash, presetid, chargepresetid, name, description) VALUES ($1, $2, $3, $4, $5)', array($fittinghash, $presetid, $cpid, $chargepreset['name'], $chargepreset['description']));
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingchargepresets (fittinghash, presetid, chargepresetid, name, description) VALUES ($1, $2, $3, $4, $5)',
+				array(
+					$fittinghash,
+					$presetid,
+					$cpid,
+					$chargepreset['name'],
+					$chargepreset['description']
+				)
+			);
+
+			if($ret === false) {
+				$error = \Osmium\Db\last_error();
+				\Osmium\Db\query('ROLLBACK;');
+				return false;
+			}
 
 			foreach($chargepreset['charges'] as $type => $d) {
 				foreach($d as $index => $charge) {
 					if(!isset($normalizedindexes[$type][$index])) continue;
 					$z = $normalizedindexes[$type][$index];
 
-					\Osmium\Db\query_params('INSERT INTO osmium.fittingcharges (fittinghash, presetid, chargepresetid, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5, $6)', array($fittinghash, $presetid, $cpid, $type, $z, $charge['typeid']));
+					$ret = \Osmium\Db\query_params(
+						'INSERT INTO osmium.fittingcharges (fittinghash, presetid, chargepresetid, slottype, index, typeid) VALUES ($1, $2, $3, $4, $5, $6)',
+						array(
+							$fittinghash,
+							$presetid,
+							$cpid,
+							$type,
+							$z,
+							$charge['typeid']
+						)
+					);
+
+					if($ret === false) {
+						$error = \Osmium\Db\last_error();
+						\Osmium\Db\query('ROLLBACK;');
+						return false;
+					}
 				}
 			}
 
@@ -205,16 +276,45 @@ function commit_fitting(&$fit) {
   
 	$dpid = 0;
 	foreach($fit['dronepresets'] as $dronepreset) {
-		\Osmium\Db\query_params('INSERT INTO osmium.fittingdronepresets (fittinghash, dronepresetid, name, description) VALUES ($1, $2, $3, $4)', array($fittinghash, $dpid, $dronepreset['name'], $dronepreset['description']));
+		$ret = \Osmium\Db\query_params(
+			'INSERT INTO osmium.fittingdronepresets (fittinghash, dronepresetid, name, description) VALUES ($1, $2, $3, $4)',
+			array(
+				$fittinghash,
+				$dpid,
+				$dronepreset['name'],
+				$dronepreset['description']
+			)
+		);
+
+		if($ret === false) {
+			$error = \Osmium\Db\last_error();
+			\Osmium\Db\query('ROLLBACK;');
+			return false;
+		}
 
 		foreach($dronepreset['drones'] as $drone) {
-			\Osmium\Db\query_params('INSERT INTO osmium.fittingdrones (fittinghash, dronepresetid, typeid, quantityinbay, quantityinspace) VALUES ($1, $2, $3, $4, $5)', array($fittinghash, $dpid, $drone['typeid'], $drone['quantityinbay'], $drone['quantityinspace']));
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingdrones (fittinghash, dronepresetid, typeid, quantityinbay, quantityinspace) VALUES ($1, $2, $3, $4, $5)',
+				array(
+					$fittinghash,
+					$dpid,
+					$drone['typeid'],
+					$drone['quantityinbay'],
+					$drone['quantityinspace']
+				)
+			);
+
+			if($ret === false) {
+				$error = \Osmium\Db\last_error();
+				\Osmium\Db\query('ROLLBACK;');
+				return false;
+			}
 		}
 
 		++$dpid;
 	}
   
-	\Osmium\Db\query('COMMIT;');
+	return \Osmium\Db\query('COMMIT;');
 }
 
 /**
@@ -227,16 +327,41 @@ function commit_fitting(&$fit) {
  * @param $ownerid The accountid of the owner of the loadout
  * 
  * @param $accountid The accountid of the person updating the loadout
+ *
+ * @returns false on failure
  */
-function commit_loadout(&$fit, $ownerid, $accountid) {
-	commit_fitting($fit);
+function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
+	$ret = commit_fitting($fit, $error);
+	if($ret === false) {
+		return false;
+	}
+
+	\Osmium\Db\query('BEGIN;');
 
 	$loadoutid = null;
-	$password = ($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) ? $fit['metadata']['password'] : '';
+	$password = ($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) ?
+		$fit['metadata']['password'] : '';
 
 	if(!isset($fit['metadata']['loadoutid'])) {
 		/* Insert a new loadout */
-		list($loadoutid, $privatetoken) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid, privatetoken', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password)));
+		$ret = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid, privatetoken',
+			array(
+				$ownerid,
+				$fit['metadata']['view_permission'],
+				$fit['metadata']['edit_permission'],
+				$fit['metadata']['visibility'],
+				$password
+			)
+		));
+
+		if($ret === false) {
+			$error = \Osmium\Db\last_error();
+			\Osmium\Db\query('ROLLBACK;');
+			return false;
+		}
+
+		list($loadoutid, $privatetoken) = $ret;
 
 		$fit['metadata']['loadoutid'] = $loadoutid;
 		$fit['metadata']['privatetoken'] = $privatetoken;
@@ -244,20 +369,58 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 		/* Update a loadout */
 		$loadoutid = $fit['metadata']['loadoutid'];
 
-		\Osmium\Db\query_params('UPDATE osmium.loadouts SET accountid = $1, viewpermission = $2, editpermission = $3, visibility = $4, passwordhash = $5 WHERE loadoutid = $6', array($ownerid, $fit['metadata']['view_permission'], $fit['metadata']['edit_permission'], $fit['metadata']['visibility'], $password, $loadoutid));
+		$ret = \Osmium\Db\query_params(
+			'UPDATE osmium.loadouts SET accountid = $1, viewpermission = $2, editpermission = $3, visibility = $4, passwordhash = $5 WHERE loadoutid = $6',
+			array(
+				$ownerid,
+				$fit['metadata']['view_permission'],
+				$fit['metadata']['edit_permission'],
+				$fit['metadata']['visibility'],
+				$password,
+				$loadoutid
+			)
+		);
+
+		if($ret === false) {
+			$error = \Osmium\Db\last_error();
+			\Osmium\Db\query('ROLLBACK;');
+			return false;
+		}
 	}
 
 	/* If necessary, insert the appropriate history entry */
-	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT fittinghash, loadoutslatestrevision.latestrevision 
-  FROM osmium.loadoutslatestrevision 
-  JOIN osmium.loadouthistory ON (loadoutslatestrevision.loadoutid = loadouthistory.loadoutid 
-                             AND loadoutslatestrevision.latestrevision = loadouthistory.revision) 
-  WHERE loadoutslatestrevision.loadoutid = $1', array($loadoutid)));
+	$ret = \Osmium\Db\query_params('SELECT fittinghash, loadoutslatestrevision.latestrevision 
+	  FROM osmium.loadoutslatestrevision 
+	  JOIN osmium.loadouthistory ON (loadoutslatestrevision.loadoutid = loadouthistory.loadoutid 
+	                             AND loadoutslatestrevision.latestrevision = loadouthistory.revision) 
+	  WHERE loadoutslatestrevision.loadoutid = $1', array($loadoutid));
+
+	if($ret === false) {
+		$error = \Osmium\Db\last_error();
+		\Osmium\Db\query('ROLLBACK;');
+		return false;
+	}
+
+	$row = \Osmium\Db\fetch_row($ret);
+
 	if($row === false || $row[0] != $fit['metadata']['hash']) {
 		$nextrev = ($row === false) ? 1 : ($row[1] + 1);
-		\Osmium\Db\query_params('INSERT INTO osmium.loadouthistory 
-    (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) 
-    VALUES ($1, $2, $3, $4, $5)', array($loadoutid, $nextrev, $fit['metadata']['hash'], $accountid, time()));
+		$ret = \Osmium\Db\query_params(
+			'INSERT INTO osmium.loadouthistory (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) VALUES ($1, $2, $3, $4, $5)',
+			array(
+				$loadoutid,
+				$nextrev,
+				$fit['metadata']['hash'],
+				$accountid,
+				time()
+			)
+		);
+
+		if($ret === false) {
+			$error = \Osmium\Db\last_error();
+			\Osmium\Db\query('ROLLBACK;');
+			return false;
+		}
 
 		$fit['metadata']['revision'] = $nextrev;
 	} else {
@@ -266,13 +429,23 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 
 	$fit['metadata']['accountid'] = $ownerid;
 
+	$ret = \Osmium\Db\query('COMMIT;');
+	if($ret === false) return false;
+
+	/* Assume commit_loadout() was successful, do the post-commit
+	 * stuff */
+
 	if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE) {
 		\Osmium\Search\unindex($loadoutid);
 	} else {
 		\Osmium\Search\index(
 			\Osmium\Db\fetch_assoc(
-				\Osmium\Search\query_select_searchdata('WHERE loadoutid = $1', 
-				                                       array($loadoutid))));
+				\Osmium\Search\query_select_searchdata(
+					'WHERE loadoutid = $1',
+					array($loadoutid)
+				)
+			)
+		);
 	}
 
 	$revision = $fit['metadata']['revision'];
@@ -287,7 +460,8 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 	if($revision > 1 && $ownerid != $accountid) {
 		\Osmium\Notification\add_notification(
 			\Osmium\Notification\NOTIFICATION_TYPE_LOADOUT_EDITED,
-			$accountid, $ownerid, $loadoutid, $revision);
+			$accountid, $ownerid, $loadoutid, $revision
+		);
 	}
 
 	if($revision > 1) {
@@ -296,6 +470,8 @@ function commit_loadout(&$fit, $ownerid, $accountid) {
 			array(\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT, $loadoutid)
 		);
 	}
+
+	return $ret;
 }
 
 /**

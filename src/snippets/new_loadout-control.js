@@ -110,6 +110,26 @@ osmium_init_control = function() {
 
 					if("submit-tab" in payload) {
 						$("a[href='#"  + payload['submit-tab'] +  "']").click();
+					}
+
+					$("section#metadata tr.error").removeClass('error');
+					$("section#metadata tr.error_message").remove();
+					if("submit-form-error" in payload) {
+						/* Use fancy error messages */
+
+						var tr = $(document.createElement('tr'));
+						var td = $(document.createElement('td'));
+						var p = $(document.createElement('p'));
+
+						tr.addClass('error_message');
+						td.attr('colspan', '2');
+						p.text(payload["submit-error"]);
+						td.append(p);
+						tr.append(td);
+
+						$(payload["submit-form-error"]).closest('tr').addClass('error').before(tr);
+					} else {
+						/* Alert the error as a backup */
 						alert(payload['submit-error']);
 					}
 				} else if("submit-loadout-uri" in payload) {

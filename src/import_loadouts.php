@@ -264,7 +264,7 @@ function truncate($text) {
 	return substr($text, 0, MAX_FILESIZE);
 }
 
-function post_import(&$fit, &$ids, $a) {
+function post_import(&$fit, &$ids, $a, &$errors) {
 	if($fit == false) return;
 
 	$fit['metadata']['view_permission'] = DEFAULT_VP;
@@ -279,29 +279,36 @@ function post_import(&$fit, &$ids, $a) {
 		die();
 	}
 
-	\Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid']);
+	\Osmium\Fit\sanitize($fit);
+	if(empty($fit['metadata']['name'])) {
+		$fit['metadata']['name'] = 'Nameless imported loadout';
+	}
+	$ret = \Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid'], $err);
+	if($ret === false) {
+		$errors[] = 'Error while committing loadout, please report: '.$err;
+	}
 
 	$ids[] = $fit['metadata']['loadoutid'];
 }
 
 function import_clf($jsonstring, &$errors, &$ids, $a) {
 	$fit = \Osmium\Fit\try_parse_fit_from_common_loadout_format($jsonstring, $errors);
-	post_import($fit, $ids, $a);
+	post_import($fit, $ids, $a, $errors);
 }
 
 function import_xml(\SimpleXMLElement $e, &$errors, &$ids, $a) {
 	$fit = \Osmium\Fit\try_parse_fit_from_eve_xml($e, $errors);
-	post_import($fit, $ids, $a);
+	post_import($fit, $ids, $a, $errors);
 }
 
 function import_eft($eftstring, &$errors, &$ids, $a) {
 	$fit = \Osmium\Fit\try_parse_fit_from_eft_format($eftstring, $errors);
-	post_import($fit, $ids, $a);
+	post_import($fit, $ids, $a, $errors);
 }
 
 function import_dna($dnastring, $name, &$errors, &$ids, $a) {
 	$fit = \Osmium\Fit\try_parse_fit_from_shipdna($dnastring, $name, $errors);
-	post_import($fit, $ids, $a);
+	post_import($fit, $ids, $a, $errors);
 }
 
 function autodetect($source) {

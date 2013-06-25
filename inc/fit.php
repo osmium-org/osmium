@@ -1213,6 +1213,11 @@ function sanitize(&$fit) {
 			$fit['metadata']['view_permission'] = VIEW_EVERYONE;
 		}
 	}
+
+	/* Sanitize title */
+	$title =& $fit['metadata']['name'];
+	$title = preg_replace('%\p{C}%u', '', $title); /* Remove control chars and other unused codes */
+	$title = preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $title); /* Trim title */
 }
 
 /**
