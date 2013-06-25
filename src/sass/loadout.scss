@@ -104,11 +104,7 @@ $hidden-char: '\0025B8';
 		opacity: 0.8;
 	}
 
-	-moz-user-select: -moz-none;
-	-khtml-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+	@include no-user-select;
 }
 
 @mixin module-top-corner-link {

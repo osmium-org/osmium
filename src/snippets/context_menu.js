@@ -76,7 +76,7 @@ osmium_ctxmenu_create = function() {
 osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 	var li = $(document.createElement('li'));
 
-	li.text(name);
+	li.append($(document.createElement('span')).text(name));
 
 	if("title" in opts) {
 		li.prop('title', opts.title);
@@ -126,7 +126,7 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 	var timeout_in, timeout_out;
 	var show_submenu;
 
-	li.text(name);
+	li.append($(document.createElement('span')).text(name));
 
 	if("title" in opts) {
 		li.prop('title', opts.title);

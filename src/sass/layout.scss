@@ -25,6 +25,14 @@ $nav-height: 2.5em;
 	}
 }
 
+@mixin no-user-select {
+	-moz-user-select: -moz-none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
 html, body {
 	margin: 0;
 	padding: 0;
@@ -315,9 +323,16 @@ ul#ctxmenu, ul.subctxmenu {
 
 	&> li {
 		position: relative;
-		padding: 0.25em 0.5em 0.25em 1.5em;
 		border-top: 1px dotted $contextmenu-entry-border-color;
-		@include ellipsis;
+
+		@include no-user-select;
+
+		&> span {
+			display: block;
+			padding: 0.25em 0.5em 0.25em 1.5em;
+
+			@include ellipsis;
+		}
 
 		&:first-child {
 			border-top: 0;
@@ -326,6 +341,7 @@ ul#ctxmenu, ul.subctxmenu {
 		&> img.icon {
 			position: absolute;
 			left: 0.25em;
+			top: 0.25em;
 			height: 1em;
 			line-height: 1em;
 			width: 1em;
@@ -345,9 +361,9 @@ ul#ctxmenu, ul.subctxmenu {
 			font-weight: bold;
 		}
 
-		&.hassubcontextmenu {
-			overflow: visible;
-			padding-right: 2em;
+		&.hassubcontextmenu > span {
+			padding-right: 1.5em;
+
 			&:after {
 				position: absolute;
 				right: 0.5em;

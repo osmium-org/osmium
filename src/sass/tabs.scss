@@ -12,15 +12,20 @@
 
 		display: inline-block;
 		border: 1px solid $tab-border-color;
+		border-bottom: 1px solid rgba(0, 0, 0, 0);
+		opacity: 0.7;
 
 		&.active {
 			border-bottom: 2px solid $main-bg-color;
 
 			&> a {
+				padding-top: 0.4em;
 				color: $tab-active-text-color;
 				text-decoration: none;
 				font-weight: bold;
 			}
+
+			opacity: 1.0;
 		}
 
 		&> a {

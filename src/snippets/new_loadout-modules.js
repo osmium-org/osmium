@@ -255,6 +255,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			/* When dblclicking the charge, remove the charge but not the module */
 			li.trigger('remove_charge');
 			osmium_commit_clf();
+			osmium_undo_push();
 			e.stopPropagation();
 			return false;
 		});
@@ -299,7 +300,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}
 
 			osmium_set_module_state(li, nextstate);
-			osmium_undo_push();
 			return false;
 		}).on('contextmenu', function() {
 			var a = $(this);
@@ -328,7 +328,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}
 
 			osmium_set_module_state(li, prevstate);
-			osmium_undo_push();
 			return false;
 		}).on('dblclick', function(e) {
 			/* Prevent dblclick fire on the <li> itself */
@@ -358,7 +357,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		}
 
 		li.remove();
-		osmium_undo_push();
 	});
 
 	osmium_ctxmenu_bind(li, function() {
@@ -366,8 +364,8 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 		osmium_ctxmenu_add_option(menu, "Unfit module", function() {
 			li.trigger('remove_module');
-
 			osmium_commit_clf();
+			osmium_undo_push();
 		}, { default: true });
 
 		osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
@@ -376,13 +374,77 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}).trigger('remove_module');
 
 			osmium_commit_clf();
+			osmium_undo_push();
 			osmium_update_slotcounts();
 		}, {});
 
 		if(hascharges) {
+			osmium_ctxmenu_add_separator(menu);
+
+			osmium_ctxmenu_add_subctxmenu(menu, "Charges", function() {
+				var chargemenu = osmium_ctxmenu_create();
+				var cgroups = {};
+				var ngroups = 0;
+				var pgroup = function(menu, group) {
+					for(var i = 0; i < group.length; ++i) {
+						osmium_ctxmenu_add_option(
+							menu,
+							osmium_types[group[i]][1],
+							(function(chargeid) {
+								return function() {
+									var modules = osmium_clf.presets[
+										osmium_clf['X-Osmium-current-presetid']
+									].modules;
+
+									for(var i = 0; i < modules.length; ++i) {
+										if(modules[i].typeid === typeid && modules[i].index === index) {
+											osmium_auto_add_charge_to_location(i, chargeid);
+											osmium_commit_clf();
+											osmium_undo_push();
+											return;
+										}
+									}
+								};
+							})(group[i]),
+							{ icon: "//image.eveonline.com/Type/" + group[i] + "_64.png" }
+						);
+					}
+				};
+
+				for(var i = 0; i < osmium_charges[typeid].length; ++i) {
+					var t = osmium_types[osmium_charges[typeid][i]];
+					if(!(t[4] in cgroups)) {
+						cgroups[t[4]] = [];
+						++ngroups;
+					}
+					cgroups[t[4]].push(t[0]);
+				}
+
+				if(ngroups === 1) {
+					for(var g in cgroups) {
+						pgroup(chargemenu, cgroups[g]);
+					}
+				} else {
+					for(var g in cgroups) {
+						/* Does not work like you expect it to without
+						 * the wrapper "generator function". */
+						osmium_ctxmenu_add_subctxmenu(chargemenu, osmium_metagroups[g], (function(group) {
+							return function() {
+								var submenu = osmium_ctxmenu_create();
+								pgroup(submenu, group);
+								return submenu;
+							};
+						})(cgroups[g]), { icon: "//image.eveonline.com/Type/" + cgroups[g][0] + "_64.png" });
+					}
+				}
+
+				return chargemenu;
+			}, { icon: "//image.eveonline.com/Type/" + osmium_charges[typeid][0] + "_64.png" });
+
 			osmium_ctxmenu_add_option(menu, "Remove charge", function() {
 				li.trigger('remove_charge');
 				osmium_commit_clf();
+				osmium_undo_push();
 			}, { icon: "no_charge.png" });
 		}
 
@@ -392,19 +454,16 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			if(osmium_module_states[typeid][0]) {
 				osmium_ctxmenu_add_option(menu, "Offline module", function() {
 					osmium_set_module_state(li, "offline");
-					osmium_undo_push();
 				}, { icon: osmium_module_state_names['offline'][1] });
 			}
 			if(osmium_module_states[typeid][1]) {
 				osmium_ctxmenu_add_option(menu, "Online module", function() {
 					osmium_set_module_state(li, "online");
-					osmium_undo_push();
 				}, { icon: osmium_module_state_names['online'][1] });
 			}
 			if(osmium_module_states[typeid][2]) {
 				osmium_ctxmenu_add_option(menu, "Activate module", function() {
 					osmium_set_module_state(li, "active");
-					osmium_undo_push();
 				}, { icon: osmium_module_state_names['active'][1] });
 			}
 			if(osmium_module_states[typeid][3]) {
@@ -414,7 +473,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 					} else {
 						osmium_set_module_state(li, "active");
 					}
-					osmium_undo_push();
 				}, { icon: osmium_module_state_names['overloaded'][1] });
 			}
 		}
@@ -479,6 +537,7 @@ osmium_set_module_state = function(li, newstate) {
 	}
 
 	osmium_commit_clf();
+	osmium_undo_push();
 	li.trigger('state_changed');
 };
 
@@ -501,4 +560,171 @@ osmium_add_charge_by_location = function(locationtypeid, locationindex, chargety
 	}).first();
 
 	return osmium_add_charge(li, chargetypeid);
+};
+
+osmium_get_best_location_for_charge = function(typeid) {
+	var location = null;
+	var candidatelevel;
+
+	for(var i = 0; i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+		.modules.length; ++i) {
+		m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules[i];
+
+		var validcharge = false, currentchargeid = null;
+		if(!(m.typeid in osmium_charges)) {
+			/* Module can't accept charges */
+			continue;
+		}
+		for(var j = 0; j < osmium_charges[m.typeid].length; ++j) {
+			if(osmium_charges[m.typeid][j] === typeid) {
+				validcharge = true;
+				break;
+			}
+		}
+		if(!validcharge) continue;
+
+		if(location === null) {
+			/* As a fallback, fit the charge to the first suitable location */
+			location = i;
+			candidatelevel = 0; /* This candidate is not very good */
+		}
+
+		if(!("charges" in m)) {
+			/* The module has no charges and can accept the charge, perfect */
+			location = i;
+			break;
+		}
+
+		var charges = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+			.modules[i].charges;
+		var cpid;
+
+		/* Check if charge already present */
+		for(var j = 0; j < charges.length; ++j) {
+			if("cpid" in charges[j]) {
+				cpid = charges[j].cpid;
+			} else {
+				cpid = 0;
+			}
+
+			if(cpid == osmium_clf['X-Osmium-current-chargepresetid']) {
+				currentchargeid = charges[j].typeid;
+				break;
+			}
+		}
+		if(currentchargeid === null) {
+			/* The module has no charge in this preset and can accept the charge */
+			location = i;
+			break;
+		} else if(currentchargeid !== typeid && candidatelevel < 1) {
+			/* The module has a different charge, but it's still a
+			 * better candidate than the fallback */
+			location = i;
+			candidatelevel = 1;
+		}
+	}
+
+	return location;
+};
+
+osmium_auto_add_charge_to_location = function(location, typeid) {
+	var m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+		.modules[location];
+	var moduletypeid = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+		.modules[location].typeid;
+	var moduletype = osmium_types[moduletypeid][3];
+	var previouschargeid = null;
+
+	if(!("charges" in m)) {
+		osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+			.modules[location].charges = [];
+	}
+
+	var charges = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+		.modules[location].charges;
+	var cpid;
+
+	/* Remove previous charge (if there is one) */
+	for(var j = 0; j < charges.length; ++j) {
+		if("cpid" in charges[j]) {
+			cpid = charges[j].cpid;
+		} else {
+			cpid = 0;
+		}
+
+		if(cpid !== osmium_clf['X-Osmium-current-chargepresetid']) {
+			continue;
+		}
+
+		previouschargeid = charges[j].typeid;
+
+		osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+			.modules[location].charges.splice(j, 1);
+		break;
+	}
+
+	/* Finally, add the new charge */
+	osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+		.modules[location].charges.push({
+			typeid: typeid,
+			cpid: osmium_clf['X-Osmium-current-chargepresetid']
+		});
+
+	osmium_add_charge_by_location(m.typeid, m.index, typeid);
+
+	if($("section#modules > div.slots." + moduletype).hasClass('grouped')) {
+		/* Also add this charge to identical modules with identical charges */
+
+		var curchargeid;
+		var curchargeidx;
+		for(var i = 0; i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+			.modules.length; ++i) {
+			curchargeid = null;
+			curchargeidx = 0;
+
+			m = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules[i];
+			if(m.typeid !== moduletypeid) {
+				continue;
+			}
+
+			if(!("charges" in m)) {
+				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+					.modules[i].charges = [];
+			}
+
+			charges = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[i].charges;
+
+			for(var j = 0; j < charges.length; ++j) {
+				if("cpid" in charges[j]) {
+					cpid = charges[j].cpid;
+				} else {
+					cpid = 0;
+				}
+
+				if(cpid !== osmium_clf['X-Osmium-current-chargepresetid']) {
+					continue;
+				}
+
+				curchargeid = charges[j].typeid;
+				curchargeidx = j;
+				break;
+			}
+
+			if(curchargeid !== previouschargeid) {
+				continue;
+			}
+
+			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[i].charges.splice(curchargeidx, 1);
+
+			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+				.modules[i].charges.push({
+					typeid: typeid,
+					cpid: osmium_clf['X-Osmium-current-chargepresetid']
+				});
+
+			osmium_add_charge_by_location(m.typeid, m.index, typeid);
+		}
+	}
 };
