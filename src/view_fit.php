@@ -336,7 +336,7 @@ echo"</form>\n";
 echo "<div id='computed_attributes'>\n";
 
 echo "<section id='vmeta'>\n<h4>Meta</h4>\n<div>\n<ul>\n";
-echo "<li><a title='Privately edit a copy of the loadout' href='".RELATIVE."/fork/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."'><strong>Fork this loadout</strong></a></li>\n";
+echo "<li><a title='Privately edit a copy of the loadout' href='".RELATIVE."/fork/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'><strong>Fork this loadout</strong></a></li>\n";
 if($can_edit) {
 	echo "<li><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."'><strong>Edit this loadout</strong></a></li>\n";
 	echo "<li><a href='".RELATIVE."/delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Are you sure you want to continue?\");'><strong>Delete this loadout</strong></a></li>\n";
