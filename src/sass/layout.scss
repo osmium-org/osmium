@@ -298,7 +298,7 @@ div#ctxbg {
 	z-index: 80000;
 }
 
-ul#ctxmenu {
+ul#ctxmenu, ul.subctxmenu {
 	position: absolute;
 	z-index: 80001;
 
@@ -317,6 +317,7 @@ ul#ctxmenu {
 		position: relative;
 		padding: 0.25em 0.5em 0.25em 1.5em;
 		border-top: 1px dotted $contextmenu-entry-border-color;
+		@include ellipsis;
 
 		&:first-child {
 			border-top: 0;
@@ -343,6 +344,18 @@ ul#ctxmenu {
 		&.default {
 			font-weight: bold;
 		}
+
+		&.hassubcontextmenu {
+			overflow: visible;
+			padding-right: 2em;
+			&:after {
+				position: absolute;
+				right: 0.5em;
+				height: 1em;
+				line-height: 1em;
+				content: "▸";
+			}
+		}
 	}
 
 	&> li:hover {
@@ -351,6 +364,10 @@ ul#ctxmenu {
 
 		&.separator {
 			background-color: rgba($contextmenu-bg-color, 0.8);
+		}
+
+		&> ul > li {
+			color: $main-text-color;
 		}
 	}
 }

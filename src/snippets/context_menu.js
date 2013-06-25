@@ -26,18 +26,19 @@ osmium_ctxmenu_bind = function(element, menu_constructor) {
 
 	var showmenu = function(e) {
 		var menu = menu_constructor();
+		menu.prop('id', 'ctxmenu');
 
 		div = $(document.createElement('div'));
 		div.prop('id', 'ctxbg');
 
 		div.bind('click contextmenu', function(e2) {
-			$("ul#ctxmenu, div#ctxbg").remove();
+			menu.click();
 			$(document.elementFromPoint(e2.pageX, e2.pageY)).trigger(e2);
 			return false;
 		});
 
 		menu.click(function() {
-			$("ul#ctxmenu, div#ctxbg").remove();
+			$("ul#ctxmenu, div#ctxbg, ul.subctxmenu").remove();
 		});
 
 		$('ul#ctxmenu, div#ctxbg').remove();
@@ -63,10 +64,7 @@ osmium_ctxmenu_bind = function(element, menu_constructor) {
 };
 
 osmium_ctxmenu_create = function() {
-	var ul = $(document.createElement('ul'));
-	ul.prop('id', 'ctxmenu');
-
-	return ul;
+	return $(document.createElement('ul'));
 };
 
 /* opts is a Hashtable that can accept the properties:
@@ -87,7 +85,13 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 	if("icon" in opts) {
 		var img = $(document.createElement('img'));
 		img.prop('alt', '');
-		img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
+		if(opts.icon.substring(0, 2) === '//') {
+			/* Absolute URI of type //foo.tld/path.png */
+			img.prop('src', opts.icon);
+		} else {
+			/* Relative URI */
+			img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
+		}
 		img.addClass('icon');
 		li.prepend(img);
 	}
@@ -95,10 +99,9 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 	if(("enabled" in opts) && !opts.enabled) {
 		li.addClass('disabled');
 	} else {
-		li.on('do_action', function() {
+		li.on('do_action click', function() {
 			action();
-		}).on('click', function() {
-			$(this).trigger('do_action');
+			li.closest('ul#ctxmenu').click();
 		});
 	}
 
@@ -114,4 +117,81 @@ osmium_ctxmenu_add_separator = function(menu) {
 	li.addClass('separator');
 	li.text(' ');
 	menu.append(li);
-}
+};
+
+/* Same parameters as osmium_ctxmenu_add_option(), but the action is
+ * replaced by a submenu constructor function. */
+osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
+	var li = $(document.createElement('li'));
+	var timeout_in, timeout_out;
+	var show_submenu;
+
+	li.text(name);
+
+	if("title" in opts) {
+		li.prop('title', opts.title);
+	}
+
+	if("icon" in opts) {
+		var img = $(document.createElement('img'));
+		img.prop('alt', '');
+		if(opts.icon.substring(0, 2) === '//') {
+			/* Absolute URI of type //foo.tld/path.png */
+			img.prop('src', opts.icon);
+		} else {
+			/* Relative URI */
+			img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
+		}
+		img.addClass('icon');
+		li.prepend(img);
+	}
+
+	show_submenu = function() {
+		var submenu = submenu_ctor();
+
+		submenu.addClass('subctxmenu');
+		li.parent().find('ul.subctxmenu').remove();
+		li.append(submenu);
+
+		var offset = li.offset();
+		submenu.offset({
+			top: offset.top,
+			left: offset.left + li.outerWidth()
+		});
+	};
+
+	if(("enabled" in opts) && !opts.enabled) {
+		li.addClass('disabled');
+	} else {
+		li.on('show_submenu', function(e) {
+			show_submenu();
+			e.stopPropagation();
+			return false;
+		}).on('hide_submenu', function(e) {
+			li.children('ul.subctxmenu').remove();
+			e.stopPropagation();
+			return false;
+		}).on('click', function(e) {
+			li.trigger('show_submenu');
+			e.stopPropagation();
+			return false;
+		}).on('mouseenter', function(e) {
+			clearTimeout(timeout_out);
+			timeout_in = setTimeout(function() {
+				li.trigger('show_submenu');
+			}, 100);
+			e.stopPropagation();
+			return false;
+		}).on('mouseleave', function(e) {
+			clearTimeout(timeout_in);
+			timeout_out = setTimeout(function() {
+				li.trigger('hide_submenu');
+			}, 250);
+			e.stopPropagation();
+			return false;
+		});
+	}
+
+	li.addClass('hassubcontextmenu');
+	menu.append(li);
+};
