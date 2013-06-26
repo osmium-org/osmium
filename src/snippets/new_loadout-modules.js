@@ -349,6 +349,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 	li.on('remove_module', function() {
 		var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
+		var slotsdiv = li.closest('div.slots');
 		for(var i = 0; i < modules.length; ++i) {
 			if(modules[i].index === index && modules[i].typeid === typeid) {
 				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
@@ -357,6 +358,12 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		}
 
 		li.remove();
+
+		if(slotsdiv.find('li.overflow').length > 0) {
+			slotsdiv.find('li.overflow').first().removeClass('overflow');
+		} else {
+			osmium_add_placeholder_module(slotsdiv);
+		}
 	});
 
 	osmium_ctxmenu_bind(li, function() {

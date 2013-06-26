@@ -57,6 +57,11 @@ if($type === 'new') {
 	\Osmium\State\put_new_loadout($token, $local);
 
 	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);
+	$payload['hardpoints'] = array(
+		'turret' => \Osmium\Dogma\get_ship_attribute($local, 'turretSlotsLeft'),
+		'launcher' => \Osmium\Dogma\get_ship_attribute($local, 'launcherSlotsLeft'),
+	);
+
 	$payload['rectags'] = \Osmium\Fit\get_recommended_tags($local);
 
 	if(isset($_GET['submit']) && $_GET['submit']) {

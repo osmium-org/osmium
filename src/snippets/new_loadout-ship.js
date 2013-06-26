@@ -36,6 +36,10 @@ osmium_gen_ship = function() {
 			rig: availslots[3],
 			subsystem: availslots[4]
 		};
+		osmium_clf['X-Osmium-hardpoints'] = {
+			turret: 0,
+			launcher: 0
+		};
 	} else {
 		groupname = '';
 		shipname = '(No ship selected)';
@@ -49,6 +53,10 @@ osmium_gen_ship = function() {
 			low: 0,
 			rig: 0,
 			subsystem: 0
+		};
+		osmium_clf['X-Osmium-hardpoints'] = {
+			turret: 0,
+			launcher: 0
 		};
 	}
 

@@ -81,6 +81,7 @@ osmium_send_clf = function() {
 		success: function(payload) {
 			$('div#computed_attributes').html(payload.attributes);
 			osmium_clf['X-Osmium-slots'] = payload.slots;
+			osmium_clf['X-Osmium-hardpoints'] = payload.hardpoints;
 			osmium_update_slotcounts();
 
 			$("section#modules div.slots li > small.attribs").remove();
@@ -162,6 +163,21 @@ osmium_add_to_clf = function(item) {
 		osmium_undo_push();
 	} else if(cat === 'module') {
 		var state, index, m;
+		var slotsdiv = $("section#modules > div.slots." + sub);
+		var grouped = slotsdiv.hasClass('grouped');
+		var other = osmium_types[typeid][6];
+		var addcount = 1;
+		var remaining = osmium_clf['X-Osmium-slots'][sub]
+			- slotsdiv.children('ul').children('li:not(.placeholder)').length;
+
+		if(grouped && (other === 'turret' || other === 'launcher')) {
+			addcount = osmium_clf['X-Osmium-hardpoints'][other];
+			osmium_clf['X-Osmium-hardpoints'][other] = 0;
+		}
+
+		if(addcount > remaining) {
+			addcount = remaining;
+		}
 
 		index = 0;
 		for(var i = 0; i < osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.length; ++i) {
@@ -177,13 +193,18 @@ osmium_add_to_clf = function(item) {
 			state = osmium_states[1];
 		}
 
-		osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.push({
-			typeid: typeid,
-			state: state,
-			index: index
-		});
+		if(addcount < 1) addcount = 1;
+		for(var i = 0; i < addcount; ++i) {
+			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.push({
+				typeid: typeid,
+				state: state,
+				index: index
+			});
 
-		osmium_add_module(typeid, index, state, null);
+			osmium_add_module(typeid, index, state, null);
+			++index;
+		}
+
 		osmium_update_slotcounts();
 		osmium_undo_push();
 	} else if(cat === 'charge') {
