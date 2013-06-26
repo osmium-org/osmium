@@ -56,6 +56,11 @@ if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 
 	define('RELATIVE', '../../..');
 } else {
+	if(isset($_GET['privatetoken'])) {
+		header('Location: ../../'.$loadoutid);
+		die();
+	}
+
 	define('RELATIVE', '..');
 }
 
