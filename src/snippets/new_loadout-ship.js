@@ -48,11 +48,11 @@ osmium_gen_ship = function() {
 		img.addClass('notype');
 
 		osmium_clf_slots = {
-			high: 0,
-			medium: 0,
-			low: 0,
-			rig: 0,
-			subsystem: 0
+			high: 8,
+			medium: 8,
+			low: 8,
+			rig: 3,
+			subsystem: 5
 		};
 		osmium_clf_hardpoints = {
 			turret: 0,

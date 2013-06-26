@@ -80,8 +80,10 @@ osmium_send_clf = function() {
 		},
 		success: function(payload) {
 			$('div#computed_attributes').html(payload.attributes);
-			osmium_clf_slots = payload.slots;
-			osmium_clf_hardpoints = payload.hardpoints;
+			if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
+				osmium_clf_slots = payload.slots;
+				osmium_clf_hardpoints = payload.hardpoints;
+			}
 			osmium_clf_rawattribs = payload.rawattribs;
 
 			osmium_update_slotcounts();
