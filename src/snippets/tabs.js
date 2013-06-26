@@ -16,6 +16,15 @@
  */
 
 osmium_tabify = function(ul, selected) {
+	var targets = [];
+
+	ul.find('li > a').each(function() {
+		var href = $(this).attr('href');
+		if(href.substring(0, 1) != '#') return;
+		targets.push(href.substring(1));
+		$(href).addClass('notarget');
+	});
+
 	ul.on('osmium_select_tab', 'li', function(event) {
 		var li = $(this);
 		var a = li.children('a');
@@ -39,37 +48,57 @@ osmium_tabify = function(ul, selected) {
 		return false;
 	}).on('click', 'li', function() {
 		var li = $(this);
+		var selectedid = li.children('a').attr('href').substring(1);
 		li.trigger('osmium_select_tab');
 
-		var hash = window.location.hash;
-		var href = window.location.href;
+		var cur_tabs;
+		var found = false;
+
+		if(window.location.hash) {
+			cur_tabs = window.location.hash.substring(1).split(',');
+		} else {
+			cur_tabs = [];
+		}
+
+		for(var i = 0; i < cur_tabs.length; ++i) {
+			var j = targets.indexOf(cur_tabs[i]);
+			if(j == -1) continue;
+
+			cur_tabs[i] = selectedid;
+			found = true;
+			break;
+		}
+
+		if(!found) {
+			cur_tabs.push(selectedid);
+		}
+
 		if(window.history && window.history.replaceState) {
 			window.history.replaceState(
-				null,
-				null,
-				href.substring(0, hash.length - href.length) + li.children('a').attr('href')
-			);
+				null, null,
+				window.location.href.substring(0, -window.location.hash) + '#' + cur_tabs.join(','));
+		} else {
+			var s_top = document.body.scrollTop;
+			window.location.hash = '#' + cur_tabs.join(',');
+			document.body.scrollTop = s_top;
 		}
 		return false;
 	});
 
-	var tab_anchor_update = function() {
-		if(window.location.hash) {
-			var a = ul.find('a').filter(function() {
-				return $(this).attr('href') === window.location.hash;
-			});
+	var cur_tabs;
+	if(window.location.hash) {
+		cur_tabs = window.location.hash.substring(1).split(',');
+	} else {
+		cur_tabs = [];
+	}
 
-			if(a.length >= 1) {
-				$(window.location.hash).addClass('notarget');
-				a.first().parent().trigger('osmium_select_tab');
-				return true;
-			}
-		}
-	};
+	for(var i = 0; i < cur_tabs.length; ++i) {
+		var j = targets.indexOf(cur_tabs[i]);
+		if(j == -1) continue;
 
-	if(tab_anchor_update() === true) {
+		$('a[href="#' + cur_tabs[i] + '"]').closest('li').click();
 		return;
 	}
 
-	ul.children('li').eq(selected).trigger('osmium_select_tab');
+	ul.children('li').eq(selected).click();
 };
