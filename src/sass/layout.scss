@@ -307,13 +307,15 @@ div#ctxbg {
 }
 
 ul#ctxmenu, ul.subctxmenu {
+	$ctxmenu-opacity: 0.9;
+
 	position: absolute;
 	z-index: 80001;
 
 	min-width: 10em;
 	max-width: 15em;
 	border: 1px solid $contextmenu-border-color;
-	background-color: rgba($contextmenu-bg-color, 0.9);
+	background-color: rgba($contextmenu-bg-color, $ctxmenu-opacity);
 
 	margin: 0;
 	padding: 0;
@@ -361,6 +363,10 @@ ul#ctxmenu, ul.subctxmenu {
 			font-weight: bold;
 		}
 
+		&.disabled {
+			color: $aside-text-color !important;
+		}
+
 		&.hassubcontextmenu > span {
 			padding-right: 1.5em;
 
@@ -376,10 +382,10 @@ ul#ctxmenu, ul.subctxmenu {
 
 	&> li:hover {
 		color: $contextmenu-entry-active-text-color;
-		background-color: rgba($contextmenu-entry-active-bg-color, 0.8);
+		background-color: rgba($contextmenu-entry-active-bg-color, $ctxmenu-opacity);
 
-		&.separator {
-			background-color: rgba($contextmenu-bg-color, 0.8);
+		&.separator, &.disabled {
+			background-color: rgba($contextmenu-bg-color, $ctxmenu-opacity);
 		}
 
 		&> ul > li {

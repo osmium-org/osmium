@@ -33,6 +33,7 @@ osmium_load_static_client_data = function(relative, staticver, onsuccess) {
 		osmium_module_state_names = json.modulestatenames;
 		osmium_stateful_slot_types = json.statefulslottypes;
 		osmium_ship_slots = json.shipslots;
+		osmium_chargedmg = json.chargedmg;
 
 		/* Module states as they are defined in the CLF specification */
 		osmium_states = ['offline', 'online', 'active', 'overloaded'];

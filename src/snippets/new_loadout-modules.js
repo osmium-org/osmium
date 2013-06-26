@@ -386,6 +386,19 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				var cgroups = {};
 				var ngroups = 0;
 				var pgroup = function(menu, group) {
+					var sortcharges = (group.length >= 2 && (group[0] in osmium_chargedmg)
+									   && osmium_chargedmg[group[0]] > 0);
+					if(sortcharges) {
+						group.sort(function(a, b) {
+							var x = (a in osmium_chargedmg) ? osmium_chargedmg[a] : 0;
+							var y = (b in osmium_chargedmg) ? osmium_chargedmg[b] : 0;
+							return y < x ? -1 : (y > x ? 1 : (a - b));
+						});
+
+						osmium_ctxmenu_add_option(menu, "More damage", function() {}, { enabled: false });
+						osmium_ctxmenu_add_separator(menu);
+					}
+
 					for(var i = 0; i < group.length; ++i) {
 						osmium_ctxmenu_add_option(
 							menu,
@@ -408,6 +421,11 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 							})(group[i]),
 							{ icon: "//image.eveonline.com/Type/" + group[i] + "_64.png" }
 						);
+					}
+
+					if(sortcharges) {
+						osmium_ctxmenu_add_separator(menu);
+						osmium_ctxmenu_add_option(menu, "Less damage", function() {}, { enabled: false });
 					}
 				};
 

@@ -168,4 +168,23 @@ while($row = \Osmium\Db\fetch_row($q)) {
 
 /* ---------------------------------------------------------- */
 
+$q = \Osmium\Db\query(
+	'SELECT DISTINCT chargeid,
+	(COALESCE(em.value, 0) + COALESCE(explosive.value, 0)
+	+ COALESCE(kinetic.value, 0) + COALESCE(thermal.value, 0)) AS dmg
+	FROM osmium.invcharges
+	LEFT JOIN eve.dgmtypeattribs em ON em.typeid = chargeid AND em.attributeid = 114
+	LEFT JOIN eve.dgmtypeattribs explosive ON explosive.typeid = chargeid AND explosive.attributeid = 116
+	LEFT JOIN eve.dgmtypeattribs kinetic ON kinetic.typeid = chargeid AND kinetic.attributeid = 117
+	LEFT JOIN eve.dgmtypeattribs thermal ON thermal.typeid = chargeid AND thermal.attributeid = 118
+	ORDER BY chargeid ASC'
+);
+
+while($row = \Osmium\Db\fetch_row($q)) {
+	if($row[1] == 0) continue;
+	$static['chargedmg'][$row[0]] = (double)$row[1];
+}
+
+/* ---------------------------------------------------------- */
+
 file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));
