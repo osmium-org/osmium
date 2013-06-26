@@ -208,7 +208,7 @@ $hidden-char: '\0025B8';
 	@include prop-module-width(width);
 	display: inline-block;
 	vertical-align: top;
-	margin: 0 2em 2em 0;
+	margin: 0 1.5em 2em 0;
 
 	&> ul {
 		list-style-type: none;
@@ -334,7 +334,7 @@ span.fitname {
 	}
 }
 
-div#metadatabox, div#nlattribs {
+div#metadatabox {
 	@include column;
 
 	float: left;
@@ -349,6 +349,24 @@ div#metadatabox, div#nlattribs {
 
 		&:focus {
 			outline: 0;
+		}
+	}
+
+	&> form.presets {
+		text-align: center;
+
+		&> select, &> textarea {
+			font-size: 1em;
+			@include prop-metadata-width(min-width, -5em);
+			margin: 0.25em 0;
+		}
+
+		&> textarea {
+			min-height: 3em;
+		}
+
+		&> button[disabled] {
+			opacity: 0.2;
 		}
 	}
 }

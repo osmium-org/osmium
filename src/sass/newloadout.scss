@@ -1,38 +1,20 @@
 div#nlmain {
-	@include column;
-
-	@include prop-metadata-width(margin-left, 1em);
-	@include prop-module-width(margin-right, 1.5em);
+	margin-left: $metadata-width + 1em;
+	margin-right: $module-width + 2.5em;
+	padding: 0 1em;
 	border-left: 1px dotted $loadout-column-border-color;
 	border-right: 1px dotted $loadout-column-border-color;
-	padding: 0 0.5em;
-
-	&> ul.tabs {
-		@include tabs;
-	}
 }
 
 div#nlsources {
-	@include column;
-	@include prop-metadata-width(margin-left, 1em);
-	border-left: 1px dotted $loadout-column-border-color;
-	margin-right: 1em;
-	padding-left: 1em;
-	text-align: center;
+	float: right;
+	width: $module-width + 0.5em;
+	padding: 0 1em;
+}
 
-	@include layout-type(normal) {
-		float: right;
-		width: $module-width + 0.5em;
-		padding-right: 0.5em;
-
-		text-align: left;
-		border: 0;
-		margin: 0;
-	}
-
-	&> ul.tabs {
-		@include tabs;
-	}
+div#nlattribs {
+	float: left;
+	width: $metadata-width;
 }
 
 $mg-width: 32px;
@@ -41,6 +23,14 @@ $mg-file: "./icons/metagroups.svg";
 
 @mixin metagroup-sprite($x, $y) {
 	@include sprite($mg-file, $x * $mg-width, $y * $mg-height, $mg-width, $mg-height);
+}
+
+div#nlsources, div#nlmain, div#nlattribs {
+	@include column;
+
+	&> ul.tabs {
+		@include tabs;
+	}
 }
 
 div#nlsources {
@@ -58,62 +48,22 @@ div#nlsources {
 			&> input[value="0"] + a {
 				opacity: 0.5;
 
-				&.mg1 {
-					@include metagroup-sprite(0, 1);
-				}
-
-				&.mg2 {
-					@include metagroup-sprite(1, 1);
-				}
-
-				&.mg14 {
-					@include metagroup-sprite(2, 1);
-				}
-
-				&.mg3 {
-					@include metagroup-sprite(3, 1);
-				}
-
-				&.mg4 {
-					@include metagroup-sprite(4, 1);
-				}
-
-				&.mg5 {
-					@include metagroup-sprite(5, 1);
-				}
-
-				&.mg6 {
-					@include metagroup-sprite(6, 1);
-				}
+				&.mg1 { @include metagroup-sprite(0, 1); }
+				&.mg2 { @include metagroup-sprite(1, 1); }
+				&.mg14 { @include metagroup-sprite(2, 1); }
+				&.mg3 { @include metagroup-sprite(3, 1); }
+				&.mg4 { @include metagroup-sprite(4, 1); }
+				&.mg5 { @include metagroup-sprite(5, 1); }
+				&.mg6 { @include metagroup-sprite(6, 1); }
 			}
 
-			&> a.mg1 {
-				@include metagroup-sprite(0, 0);
-			}
-
-			&> a.mg2 {
-				@include metagroup-sprite(1, 0);
-			}
-
-			&> a.mg14 {
-				@include metagroup-sprite(2, 0);
-			}
-
-			&> a.mg3 {
-				@include metagroup-sprite(3, 0);
-			}
-
-			&> a.mg4 {
-				@include metagroup-sprite(4, 0);
-			}
-
-			&> a.mg5 {
-				@include metagroup-sprite(5, 0);
-			}
-
-			&> a.mg6 {
-				@include metagroup-sprite(6, 0);
-			}
+			&> a.mg1 { @include metagroup-sprite(0, 0); }
+			&> a.mg2 { @include metagroup-sprite(1, 0); }
+			&> a.mg14 { @include metagroup-sprite(2, 0); }
+			&> a.mg3 { @include metagroup-sprite(3, 0); }
+			&> a.mg4 { @include metagroup-sprite(4, 0); }
+			&> a.mg5 { @include metagroup-sprite(5, 0); }
+			&> a.mg6 { @include metagroup-sprite(6, 0); }
 		}
 	}
 }
@@ -143,7 +93,7 @@ div#nlsources > section#search {
 	&> ul.results {
 		margin: 0;
 		padding: 0;
-		margin-top: 2em;
+		margin-top: 2.5em;
 	}
 
 	&> p.warning {
@@ -210,34 +160,22 @@ div#nlsources > section#browse > div.mgroot {
 	}
 
 	&> ul.children > li {
-		&> h4 {
-			padding-left: 0 * $padding + $base-padding;
-		}
+		&> h4 { padding-left: 0 * $padding + $base-padding; }
 
 		&> ul.children > li {
-			&> h4 {
-				padding-left: 1 * $padding + $base-padding;
-			}
+			&> h4 { padding-left: 1 * $padding + $base-padding; }
 
 			&> ul.children > li {
-				&> h4 {
-					padding-left: 2 * $padding + $base-padding;
-				}
+				&> h4 { padding-left: 2 * $padding + $base-padding; }
 
 				&> ul.children > li {
-					&> h4 {
-						padding-left: 3 * $padding + $base-padding;
-					}
+					&> h4 { padding-left: 3 * $padding + $base-padding; }
 
 					&> ul.children > li {
-						&> h4 {
-							padding-left: 4 * $padding + $base-padding;
-						}
+						&> h4 { padding-left: 4 * $padding + $base-padding; }
 
 						&> ul.children > li {
-							&> h4 {
-								padding-left: 5 * $padding + $base-padding;
-							}
+							&> h4 { padding-left: 5 * $padding + $base-padding; }
 						}
 					}
 				}
