@@ -242,8 +242,35 @@ osmium_add_add_to_fit_option = function(menu, source, opts) {
 	else name = 'Add ' + cat;
 
 	osmium_ctxmenu_add_option(menu, name, function() {
+		source.data({ qty: null, dest: null });
 		osmium_add_to_clf(source);
 	}, opts);
+
+	if(cat === 'drone') {
+		osmium_ctxmenu_add_separator(menu);
+
+		osmium_ctxmenu_add_option(menu, 'Add 1 to bay', function() {
+			source.data({ qty: 1, dest: 'bay' });
+			osmium_add_to_clf(source);
+		}, { });
+
+		osmium_ctxmenu_add_option(menu, 'Add 5 to bay', function() {
+			source.data({ qty: 5, dest: 'bay' });
+			osmium_add_to_clf(source);
+		}, { });
+
+		osmium_ctxmenu_add_option(menu, 'Add 1 to space', function() {
+			source.data({ qty: 1, dest: 'space' });
+			osmium_add_to_clf(source);
+		}, { });
+
+		osmium_ctxmenu_add_option(menu, 'Add 5 to space', function() {
+			source.data({ qty: 5, dest: 'space' });
+			osmium_add_to_clf(source);
+		}, { });
+	}
+
+	osmium_ctxmenu_add_separator(menu);
 };
 
 osmium_add_non_shortlist_contextmenu = function(li) {

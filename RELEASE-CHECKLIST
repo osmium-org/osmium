@@ -20,6 +20,8 @@ The list
 
 * Move used patches from pgsql/patches/current/ to pgsql/patches/<current_version>/
 
+* `./bin/backup_osmium_schema` and `./bin/backup_eve_schema`
+
 * Bump STATICVER if needed in inc/root.php
 
 * Put relevant info in UPDATING

@@ -52,6 +52,12 @@ $hidden-char: '\0025B8';
 	&:first-child {
 		border-top: none;
 	}
+
+	&> strong.qty {
+		padding-left: 0.1em;
+		padding-right: 0.1em;
+		display: inline-block;
+	}
 	
 	&> img, &> span.charge > img {
 		height: 32px;

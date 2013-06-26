@@ -333,6 +333,19 @@ foreach($stypes as $type => $fname) {
 }
 echo "</section>\n";
 
+echo "<section id='drones'>\n";
+foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
+	echo "<div class='drones $type'>\n<h3>".htmlspecialchars($fname)." <span>";
+	if($type === 'space') {
+		echo "<small class='maxdrones'></small>";
+		echo "<small class='bandwidth'></small>";
+	} else if($type === 'bay') {
+		echo "<small class='bayusage'></small>";
+	}
+	echo "</span></h3>\n<ul></ul>\n</div>\n";
+}
+echo "</section>\n";
+
 echo "</div>\n";
 
 \Osmium\Chrome\print_js_code(
@@ -357,5 +370,6 @@ osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, t
 \Osmium\Chrome\print_js_snippet('new_loadout-presets');
 \Osmium\Chrome\print_js_snippet('new_loadout-metadata');
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
+\Osmium\Chrome\print_js_snippet('new_loadout-drones');
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();

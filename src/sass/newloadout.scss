@@ -381,8 +381,8 @@ div#nlmain > section#metadata {
 	}
 }
 
-div#nlmain > section#modules {
-	&> div.slots {
+div#nlmain {
+	&> section#modules div.slots, &> section#drones div.drones {
 		@include module-list;
 
 		&> ul.ui-sortable {

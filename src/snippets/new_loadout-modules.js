@@ -540,7 +540,7 @@ osmium_add_placeholder_module = function(slotsdiv) {
 	li.text('Unused ' + type + ' slot');
 
 	img = $(document.createElement('img'));
-	img.prop('src', '../static-' + osmium_staticver + '/icons/slot_' + type + '.png');
+	img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/slot_' + type + '.png');
 
 	li.prepend(img);
 	ul.append(li);

@@ -134,6 +134,7 @@ osmium_gen = function() {
 	osmium_gen_metadata();
 	osmium_gen_presets();
 	osmium_gen_modules();
+	osmium_gen_drones();
 };
 
 /* Set up event listeners that alter the CLF appropriately */
@@ -144,6 +145,7 @@ osmium_init = function() {
 	osmium_init_metadata();
 	osmium_init_presets();
 	osmium_init_modules();
+	osmium_init_drones();
 };
 
 osmium_add_to_clf = function(item) {
@@ -216,6 +218,17 @@ osmium_add_to_clf = function(item) {
 		} else {
 			alert("This charge cannot be used with any fitted type.");
 		}
+	} else if(cat === 'drone') {
+		var qty = item.data('qty');
+		var dest = item.data('dest');
+		if(qty < 1 || qty === undefined) qty = 1;
+		if(dest !== 'bay' && dest !== 'space') {
+			/* TODO: Auto-guess */
+			dest = 'bay';
+		}
+		osmium_add_drone_to_clf(typeid, qty, dest);
+		osmium_gen_drones();
+		osmium_undo_push();
 	}
 
 	osmium_commit_clf();
