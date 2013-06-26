@@ -151,6 +151,7 @@ osmium_send_clf = function() {
 				'overflow',
 				ndrones > osmium_clf_rawattribs.maxactivedrones
 			);
+			osmium_clf_rawattribs.activedrones = ndrones;
 
 			setTimeout(osmium_send_clf, 500);
 		}
@@ -252,9 +253,25 @@ osmium_add_to_clf = function(item) {
 		var qty = item.data('qty');
 		var dest = item.data('dest');
 		if(qty < 1 || qty === undefined) qty = 1;
+		var bw = parseInt(osmium_types[typeid][6], 10);
 		if(dest !== 'bay' && dest !== 'space') {
-			/* TODO: Auto-guess */
-			dest = 'bay';
+			if(!("dronebandwidth" in osmium_clf_rawattribs)) {
+				dest = 'space';
+			} else {
+				if(osmium_clf_rawattribs.dronebandwidthused + bw <= osmium_clf_rawattribs.dronebandwidth
+				  && osmium_clf_rawattribs.activedrones < osmium_clf_rawattribs.maxactivedrones) {
+					dest = 'space';
+					qty = Math.min(
+						Math.floor(
+							(osmium_clf_rawattribs.dronebandwidth
+							 - osmium_clf_rawattribs.dronebandwidthused) / bw
+						),
+						osmium_clf_rawattribs.maxactivedrones - osmium_clf_rawattribs.activedrones
+					);
+				} else {
+					dest = 'bay';
+				}
+			}
 		}
 		osmium_add_drone_to_clf(typeid, qty, dest);
 		osmium_gen_drones();
