@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -104,20 +104,6 @@ function set_fit_green($loadoutid) {
 function is_fit_green($loadoutid) {
 	$green = get_state('green_fits', array());
 	return isset($green[$loadoutid]) && $green[$loadoutid] === true; 
-}
-
-/**
- * Get the fit currently being edited by the user.
- */
-function get_new_fit() {
-	return get_cache(session_id(), array(), 'NewFit_');
-}
-
-/**
- * Update the fit currently being edited by the user.
- */
-function put_new_fit($fit) {
-	return put_cache(session_id(), $fit, 86400, 'NewFit_');
 }
 
 /**

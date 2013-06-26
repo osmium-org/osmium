@@ -639,3 +639,14 @@ function get_used_drone_bandwidth($fit) {
 
 	return $used;
 }
+
+/** Return the total volume used by drones. */
+function get_used_drone_capacity($fit) {
+	$used = 0;
+
+	foreach($fit['drones'] as $drone) {
+		$used += $drone['volume'] * ($drone['quantityinspace'] + $drone['quantityinbay']);
+	}
+
+	return $used;
+}

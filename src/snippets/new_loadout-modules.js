@@ -43,7 +43,7 @@ osmium_gen_modules = function() {
 		osmium_add_module(m.typeid, m.index, m.state, chargeid);
 	}
 
-	for(type in osmium_clf['X-Osmium-slots']) {
+	for(type in osmium_clf_slots) {
 		$('section#modules > div.slots.' + type).data('type', type);
 	}
 
@@ -130,7 +130,7 @@ osmium_maybe_hide_slot_type = function(slotsdiv) {
 osmium_update_overflow = function(slotsdiv) {
 	var smallcount = slotsdiv.find('h3 > span > small.counts');
 	var used = slotsdiv.children('ul').children('li').not('.placeholder').length;
-	var total = osmium_clf['X-Osmium-slots'][slotsdiv.data('type')];
+	var total = osmium_clf_slots[slotsdiv.data('type')];
 
 	smallcount.text(used + '/' + total);
 

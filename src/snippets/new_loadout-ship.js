@@ -29,14 +29,14 @@ osmium_gen_ship = function() {
 		osmium_loadout_can_be_submitted();
 
 		var availslots = osmium_ship_slots[osmium_clf.ship.typeid];
-		osmium_clf['X-Osmium-slots'] = {
+		osmium_clf_slots = {
 			high: availslots[0],
 			medium: availslots[1],
 			low: availslots[2],
 			rig: availslots[3],
 			subsystem: availslots[4]
 		};
-		osmium_clf['X-Osmium-hardpoints'] = {
+		osmium_clf_hardpoints = {
 			turret: 0,
 			launcher: 0
 		};
@@ -47,14 +47,14 @@ osmium_gen_ship = function() {
 		img = $(document.createElement('div'));
 		img.addClass('notype');
 
-		osmium_clf['X-Osmium-slots'] = {
+		osmium_clf_slots = {
 			high: 0,
 			medium: 0,
 			low: 0,
 			rig: 0,
 			subsystem: 0
 		};
-		osmium_clf['X-Osmium-hardpoints'] = {
+		osmium_clf_hardpoints = {
 			turret: 0,
 			launcher: 0
 		};

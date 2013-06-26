@@ -80,8 +80,10 @@ osmium_send_clf = function() {
 		},
 		success: function(payload) {
 			$('div#computed_attributes').html(payload.attributes);
-			osmium_clf['X-Osmium-slots'] = payload.slots;
-			osmium_clf['X-Osmium-hardpoints'] = payload.hardpoints;
+			osmium_clf_slots = payload.slots;
+			osmium_clf_hardpoints = payload.hardpoints;
+			osmium_clf_rawattribs = payload.rawattribs;
+
 			osmium_update_slotcounts();
 
 			$("section#modules div.slots li > small.attribs").remove();
@@ -121,6 +123,34 @@ osmium_send_clf = function() {
 
 				$("input#tags").closest('tr').after(tr);
 			}
+
+			$("section#drones small.bayusage").text(
+				osmium_clf_rawattribs.dronecapacityused
+					+ ' / ' + osmium_clf_rawattribs.dronecapacity + ' m³'
+			).toggleClass(
+				'overflow',
+				osmium_clf_rawattribs.dronecapacityused > osmium_clf_rawattribs.dronecapacity
+			);
+			$("section#drones small.bandwidth").text(
+				osmium_clf_rawattribs.dronebandwidthused
+					+ ' / ' + osmium_clf_rawattribs.dronebandwidth + ' Mbps'
+			).toggleClass(
+				'overflow',
+				osmium_clf_rawattribs.dronebandwidthused > osmium_clf_rawattribs.dronebandwidth
+			);
+			var ndrones = 0;
+			var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
+			if("inspace" in dp) {
+				for(var i = 0; i < dp.inspace.length; ++i) {
+					ndrones += dp.inspace[i].quantity;
+				}
+			}
+			$("section#drones small.maxdrones").text(
+				ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
+			).toggleClass(
+				'overflow',
+				ndrones > osmium_clf_rawattribs.maxactivedrones
+			);
 
 			setTimeout(osmium_send_clf, 500);
 		}
@@ -169,12 +199,12 @@ osmium_add_to_clf = function(item) {
 		var grouped = slotsdiv.hasClass('grouped');
 		var other = osmium_types[typeid][6];
 		var addcount = 1;
-		var remaining = osmium_clf['X-Osmium-slots'][sub]
+		var remaining = osmium_clf_slots[sub]
 			- slotsdiv.children('ul').children('li:not(.placeholder)').length;
 
 		if(grouped && (other === 'turret' || other === 'launcher')) {
-			addcount = osmium_clf['X-Osmium-hardpoints'][other];
-			osmium_clf['X-Osmium-hardpoints'][other] = 0;
+			addcount = osmium_clf_hardpoints[other];
+			osmium_clf_hardpoints[other] = 0;
 		}
 
 		if(addcount > remaining) {

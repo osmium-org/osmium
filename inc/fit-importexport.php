@@ -1507,17 +1507,32 @@ function synchronize_drone_preset_from_clf_1(&$fit, $clfp) {
 		}
 
 		if(isset($fit['drones'][$typeid])) {
-			$fit['drones'][$typeid]['quantityinbay'] = $q['inbay'];
-			$fit['drones'][$typeid]['quantityinspace'] = $q['inspace'];
+			$inbay = $fit['drones'][$typeid]['quantityinbay'];
+			$inspace = $fit['drones'][$typeid]['quantityinspace'];
 		} else {
-			add_drone($fit, $typeid, $q['inbay'], $q['inspace']);
+			$inbay = 0;
+			$inspace = 0;
+		}
+
+		if($q['inbay'] > $inbay) {
+			add_drone($fit, $typeid, $q['inbay'] - $inbay, 0);
+		} else if($q['inbay'] < $inbay) {
+			remove_drone($fit, $typeid, 'bay', $inbay - $q['inbay']);
+		}
+
+		if($q['inspace'] > $inspace) {
+			add_drone($fit, $typeid, 0, $q['inspace'] - $inspace);
+		} else if($q['inspace'] < $inspace) {
+			remove_drone($fit, $typeid, 'space', $inspace - $q['inspace']);
 		}
 	}
 
 	foreach($fit['drones'] as $typeid => $d) {
 		if(!isset($clfd[$typeid])) {
 			remove_drone($fit, $typeid, 'bay', $d['quantityinbay']);
-			remove_drone($fit, $typeid, 'space', $d['quantityinspace']);
+			if(isset($fit['drones'][$typeid])) {
+				remove_drone($fit, $typeid, 'space', $d['quantityinspace']);
+			}
 		}
 	}
 }

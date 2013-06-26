@@ -337,10 +337,10 @@ echo "<section id='drones'>\n";
 foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
 	echo "<div class='drones $type'>\n<h3>".htmlspecialchars($fname)." <span>";
 	if($type === 'space') {
-		echo "<small class='maxdrones'></small>";
-		echo "<small class='bandwidth'></small>";
+		echo "<small title='Maximum number of drones in space' class='maxdrones'></small>";
+		echo "<small title='Drone bandwidth usage' class='bandwidth'></small>";
 	} else if($type === 'bay') {
-		echo "<small class='bayusage'></small>";
+		echo "<small title='Drone bay usage' class='bayusage'></small>";
 	}
 	echo "</span></h3>\n<ul></ul>\n</div>\n";
 }

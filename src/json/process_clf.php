@@ -51,6 +51,13 @@ if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
 $payload = array(
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative),
 	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
+	'rawattribs' => array(
+		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($local, 'droneBandwidth'),
+		'dronebandwidthused' => \Osmium\Fit\get_used_drone_bandwidth($local),
+		'dronecapacity' => \Osmium\Dogma\get_ship_attribute($local, 'droneCapacity'),
+		'dronecapacityused' => \Osmium\Fit\get_used_drone_capacity($local),
+		'maxactivedrones' => \Osmium\Dogma\get_char_attribute($local, 'maxActiveDrones'),
+	),
 );
 
 if($type === 'new') {
@@ -61,7 +68,6 @@ if($type === 'new') {
 		'turret' => \Osmium\Dogma\get_ship_attribute($local, 'turretSlotsLeft'),
 		'launcher' => \Osmium\Dogma\get_ship_attribute($local, 'launcherSlotsLeft'),
 	);
-
 	$payload['rectags'] = \Osmium\Fit\get_recommended_tags($local);
 
 	if(isset($_GET['submit']) && $_GET['submit']) {
