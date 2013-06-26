@@ -300,6 +300,8 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}
 
 			osmium_set_module_state(li, nextstate);
+			osmium_commit_clf();
+			osmium_undo_push();
 			return false;
 		}).on('contextmenu', function() {
 			var a = $(this);
@@ -328,6 +330,8 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			}
 
 			osmium_set_module_state(li, prevstate);
+			osmium_commit_clf();
+			osmium_undo_push();
 			return false;
 		}).on('dblclick', function(e) {
 			/* Prevent dblclick fire on the <li> itself */
@@ -479,16 +483,22 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			if(osmium_module_states[typeid][0]) {
 				osmium_ctxmenu_add_option(menu, "Offline module", function() {
 					osmium_set_module_state(li, "offline");
+					osmium_commit_clf();
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['offline'][1] });
 			}
 			if(osmium_module_states[typeid][1]) {
 				osmium_ctxmenu_add_option(menu, "Online module", function() {
 					osmium_set_module_state(li, "online");
+					osmium_commit_clf();
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['online'][1] });
 			}
 			if(osmium_module_states[typeid][2]) {
 				osmium_ctxmenu_add_option(menu, "Activate module", function() {
 					osmium_set_module_state(li, "active");
+					osmium_commit_clf();
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['active'][1] });
 			}
 			if(osmium_module_states[typeid][3]) {
@@ -498,8 +508,35 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 					} else {
 						osmium_set_module_state(li, "active");
 					}
+					osmium_commit_clf();
+					osmium_undo_push();
 				}, { icon: osmium_module_state_names['overloaded'][1] });
 			}
+
+			osmium_ctxmenu_add_separator(menu);
+
+			osmium_ctxmenu_add_option(menu, "Overload rack", function() {
+				if(li.data('state') !== "overloaded") {
+					li.closest('div.slots').find('li').each(function() {
+						var t = $(this);
+						var typeid = t.data('typeid');
+						if(!(typeid in osmium_module_states)) return;
+
+						if(osmium_module_states[typeid][3]) {
+							osmium_set_module_state(t, "overloaded");
+						}
+					});
+				} else {
+					li.closest('div.slots').find('li').each(function() {
+						var t = $(this);
+						if(t.data('state') !== 'overloaded') return;
+						osmium_set_module_state(t, "active");
+					});
+				}
+
+				osmium_commit_clf();
+				osmium_undo_push();
+			}, { icon: osmium_module_state_names['overloaded'][1] });
 		}
 
 		osmium_ctxmenu_add_separator(menu);
@@ -561,8 +598,6 @@ osmium_set_module_state = function(li, newstate) {
 		}
 	}
 
-	osmium_commit_clf();
-	osmium_undo_push();
 	li.trigger('state_changed');
 };
 
