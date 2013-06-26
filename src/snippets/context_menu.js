@@ -150,6 +150,8 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 		var submenu = submenu_ctor();
 
 		submenu.addClass('subctxmenu');
+		if(li.children('ul.subctxmenu').length == 1) return;
+
 		li.parent().find('ul.subctxmenu').remove();
 		li.append(submenu);
 
@@ -180,15 +182,11 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 			timeout_in = setTimeout(function() {
 				li.trigger('show_submenu');
 			}, 100);
-			e.stopPropagation();
-			return false;
 		}).on('mouseleave', function(e) {
 			clearTimeout(timeout_in);
 			timeout_out = setTimeout(function() {
 				li.trigger('hide_submenu');
 			}, 250);
-			e.stopPropagation();
-			return false;
 		});
 	}
 
