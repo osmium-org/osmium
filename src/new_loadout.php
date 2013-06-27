@@ -355,7 +355,8 @@ osmium_relative = '".RELATIVE."';
 osmium_token = '".\Osmium\State\get_token()."';
 osmium_clftoken = '".$tok."';
 osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";
-osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";"
+osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
+osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 );
 
 \Osmium\Chrome\print_js_snippet('tabs');

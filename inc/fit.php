@@ -224,7 +224,7 @@ function get_state_categories() {
  * metadata => array(name, description, tags, evebuildnumber,
  *					 view_permission, edit_permission, visibility,
  *					 password, loadoutid, hash, revision,
- *					 privatetoken)
+ *					 privatetoken, skillset)
  */
 function create(&$fit) {
 	$fit = array(
@@ -240,7 +240,8 @@ function create(&$fit) {
 			'evebuildnumber' => get_latest_eve_db_version()['build'],
 			'view_permission' => VIEW_EVERYONE,
 			'edit_permission' => EDIT_OWNER_ONLY,
-			'visibility' => VISIBILITY_PUBLIC
+			'visibility' => VISIBILITY_PUBLIC,
+			'skillset' => 'All V',
 			)
 		);
 

@@ -42,7 +42,7 @@ osmium_gen_ship = function() {
 		};
 	} else {
 		groupname = '';
-		shipname = '(No ship selected)';
+		shipname = '｢No ship selected｣';
 
 		img = $(document.createElement('div'));
 		img.addClass('notype');
@@ -73,6 +73,37 @@ osmium_init_ship = function() {
 	osmium_ctxmenu_bind($("section#ship"), function() {
 		var menu = osmium_ctxmenu_create();
 
+		osmium_ctxmenu_add_option(menu, "Undo (Ctrl+_)", function() {
+			osmium_undo_pop();
+			osmium_commit_clf();
+			osmium_user_initiated_push(false);
+			osmium_gen();
+			osmium_user_initiated_pop();
+		}, {});
+
+		osmium_ctxmenu_add_separator(menu);
+
+		osmium_ctxmenu_add_subctxmenu(menu, "Use skills", function() {
+			var smenu = osmium_ctxmenu_create();
+
+			for(var i = 0; i < osmium_skillsets.length; ++i) {
+				osmium_ctxmenu_add_option(smenu, osmium_skillsets[i], (function(sname) {
+					return function() {
+						osmium_clf.metadata['X-Osmium-skillset'] = sname;
+						osmium_undo_push();
+						osmium_commit_clf();
+					};
+				})(osmium_skillsets[i]), {
+					"default": osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i],
+					icon: "//image.eveonline.com/Type/3327_64.png"
+				});
+			}
+
+			return smenu;
+		}, { icon: "//image.eveonline.com/Type/3327_64.png" });
+
+		osmium_ctxmenu_add_separator(menu);
+
 		osmium_ctxmenu_add_option(menu, "Show ship info", function() {
 			if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
 				osmium_showinfo({
@@ -83,16 +114,6 @@ osmium_init_ship = function() {
 				alert("No ship is selected. What are you expecting?");
 			}
 		}, { icon: "showinfo.png" });
-
-		osmium_ctxmenu_add_separator(menu);
-
-		osmium_ctxmenu_add_option(menu, "Undo (Ctrl+_)", function() {
-			osmium_undo_pop();
-			osmium_commit_clf();
-			osmium_user_initiated_push(false);
-			osmium_gen();
-			osmium_user_initiated_pop();
-		}, {});
 
 		return menu;
 	});

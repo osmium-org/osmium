@@ -670,6 +670,8 @@ function fetch_fit_uri($loadoutid) {
  * @see use_skillset()
  */
 function use_skillset_by_name(&$fit, $ssname, $a = null) {
+	if($fit['metadata']['skillset'] === $ssname) return;
+
 	if($ssname == 'All V') {
 		use_skillset($fit, array(), 5);
 	} else if($ssname == 'All 0') {
@@ -677,19 +679,40 @@ function use_skillset_by_name(&$fit, $ssname, $a = null) {
 	} else if(isset($a['accountid'])) {
 		$row = \Osmium\Db\fetch_assoc(
 			\Osmium\Db\query_params(
-				'SELECT importedskillset, overriddenskillset FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2',
+				'SELECT importedskillset, overriddenskillset FROM osmium.accountcharacters
+				WHERE accountid = $1 AND name = $2',
 				array($a['accountid'], $ssname)
-				));
-		if($row !== false) {
-			$skillset = json_decode($row['importedskillset'], true);
-			$overridden = json_decode($row['overriddenskillset'], true);
-			if(!is_array($overridden)) $overridden = array();
-			foreach($overridden as $typeid => $l) {
-				$skillset[$typeid] = $l;
-			}
-			use_skillset($fit, $skillset, 0);
-		} else return false;
+			));
+		if($row === false) return false; /* Incorrect skillset name */
+
+		$skillset = json_decode($row['importedskillset'], true);
+		$overridden = json_decode($row['overriddenskillset'], true);
+		if(!is_array($overridden)) $overridden = array();
+		foreach($overridden as $typeid => $l) {
+			$skillset[$typeid] = $l;
+		}
+		use_skillset($fit, $skillset, 0);
+	} else {
+		return false; /* Nonstandard skillset name, but not logged in */
 	}
 
-	return $ssname;
+	return $fit['metadata']['skillset'] = $ssname;
+}
+
+function get_available_skillset_names_for_account() {
+	$names = array('All V', 'All 0');
+
+	if(\Osmium\State\is_logged_in()) {
+		$a = \Osmium\State\get_state('a', array());
+		$ssq = \Osmium\Db\query_params(
+			'SELECT name FROM osmium.accountcharacters WHERE accountid = $1
+			ORDER BY name ASC',
+			array($a['accountid'])
+		);
+		while($r = \Osmium\Db\fetch_row($ssq)) {
+			$names[] = $r[0];
+		}
+	}
+
+	return $names;
 }

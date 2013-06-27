@@ -775,6 +775,8 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 			}
 			$json['X-Osmium-current-dronepresetid'] = $i;
 		}
+
+		$json['metadata']['X-Osmium-skillset'] = $fit['metadata']['skillset'];
 	}
 
 	if(isset($fit['ship']['typeid'])) {
@@ -1229,8 +1231,6 @@ function export_to_dna($fit) {
  * already a fitting somewhat close to the result.
  */
 function synchronize_from_clf_1(&$fit, $clfstring) {
-	/* TODO */
-
 	$clf = json_decode($clfstring, true);
 	if(json_last_error() !== JSON_ERROR_NONE) return false;
 
@@ -1288,6 +1288,11 @@ function synchronize_from_clf_1(&$fit, $clfstring) {
 			   )) {
 			$fit['metadata']['__clear_pw'] = $meta['X-Osmium-clear-password'];
 			$fit['metadata']['password'] = \Osmium\State\hash_password($meta['X-Osmium-clear-password']);
+		}
+
+		if(isset($meta['X-Osmium-skillset'])) {
+			$a = \Osmium\State\get_state('a', null);
+			use_skillset_by_name($fit, $meta['X-Osmium-skillset'], $a); /* Lazy function */
 		}
 	}
 
