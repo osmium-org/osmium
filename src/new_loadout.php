@@ -25,19 +25,24 @@ const RELATIVE = '..';
 
 if(isset($_GET['import']) && $_GET['import'] === 'dna') {
     $dna = $_GET['dna'];
+    $ckey = 'dnafit_'.$dna;
 
-    /* XXX: maybe this needs to be cached, this can be quite expansive */
-    $fit = \Osmium\Fit\try_parse_fit_from_shipdna($dna, 'New DNA-imported loadout', $errors);
+    $fit = \Osmium\State\get_cache_memory_fb($ckey, null);
+    if($fit === null) {
+	    $fit = \Osmium\Fit\try_parse_fit_from_shipdna($dna, 'New DNA-imported loadout', $errors);
 
-    if($fit === false) {
-        \Osmium\Fatal(404, "Nonsensical DNA string");
-    } else {
-        $tok = \Osmium\State\get_unique_new_loadout_token();
-        \Osmium\State\put_new_loadout($tok, $fit);
+	    if($fit === false) {
+		    \Osmium\Fatal(400, "Nonsensical DNA string");
+	    }
 
-        header('Location: ../'.$tok);
-        die();
+	    \Osmium\State\put_cache_memory_fb($ckey, $fit, 7200);
     }
+
+    $tok = \Osmium\State\get_unique_new_loadout_token();
+    \Osmium\State\put_new_loadout($tok, $fit);
+
+    header('Location: ../'.$tok);
+    die();
 }
 
 if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])

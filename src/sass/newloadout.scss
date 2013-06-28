@@ -195,67 +195,6 @@ div#nlsources > section#shortlist > ul.types {
 
 div#nlsources > section li.module {
 	@include module;
-	cursor: pointer;
-}
-
-$render-size: 6em;
-div#nlattribs > section#ship {
-	min-height: $render-size;
-	margin-bottom: 1em;
-
-	position: relative;
-
-	&> h1 {
-		&> img:first-child, &> div.notype:first-child {
-			position: absolute;
-			top: 0;
-			left: 1em;
-
-			width: $render-size;
-			height: $render-size;
-
-			border: 1px dashed $subsection-border-color;
-		}
-
-		&> small, &> strong {
-			@include ellipsis;
-		}
-
-		font-size: 1em;
-		margin: 0;
-		padding: 0;
-
-		&> strong {
-			position: absolute;
-			top: $render-size * 0.2;
-			left: ($render-size + 2em) * 0.5;
-			right: 0;
-			bottom: 0;
-			font-size: 2em;
-		}
-
-		&> small {
-			$height: 1.25em;
-
-			color: $aside-text-color;
-
-			font-size: 1em;
-			line-height: $height;
-			height: $height;
-
-			position: absolute;
-			top: ($render-size * 0.4) - $height;
-			left: $render-size + 2em;
-			right: 0;
-		}
-	}
-
-	&> span.contextmenuindicator {
-		position: absolute;
-		top: 0;
-		right: 0;
-		font-size: 2em;
-	}
 }
 
 div#nlattribs > section#control {
@@ -319,16 +258,15 @@ div#nlmain > section#metadata {
 	}
 }
 
-div#nlmain {
-	&> section#modules div.slots, &> section#drones div.drones {
-		@include module-list;
+section#modules div.slots, section#drones div.drones {
+	@include module-list;
 
-		&> ul.ui-sortable {
-			&> li.sortable-placeholder {
-				height: 2em;
-				background-color: $module-border-color;
-				opacity: 0.5;
-			}
+	&> ul.ui-sortable {
+		&> li.sortable-placeholder {
+			height: 2em;
+			background-color: $module-border-color;
+			opacity: 0.5;
 		}
 	}
 }
+

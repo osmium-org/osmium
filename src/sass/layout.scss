@@ -179,13 +179,8 @@ a {
 	}
 }
 
-.has_spinner {
-	position: relative;
-
-	&> img.spinner {
-		position: absolute;
-		right: 0;
-	}
+ul {
+	list-style-type: square;
 }
 
 .overflow {
@@ -403,18 +398,29 @@ ul#ctxmenu, ul.subctxmenu {
 	}
 }
 
-div#mdstatic {
+@mixin readable {
 	max-width: 70em;
-	margin: 0 1em;
 	line-height: 1.5em;
 
 	&> h2 {
-		margin-top: 3em;
 		border-bottom: 1px solid $section-border-color;
 		padding-left: 0.25em;
 	}
 
 	&> h3 {
 		border-bottom: 1px dotted $subsection-border-color;
+	}
+
+	p, li {
+		text-align: justify;
+	}
+}
+
+div#mdstatic {
+	@include readable;
+	margin: 0 1em;
+
+	&> h2 {
+		margin-top: 3em;
 	}
 }

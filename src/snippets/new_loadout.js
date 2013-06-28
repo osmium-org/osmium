@@ -35,129 +35,85 @@ $(function() {
 	});
 });
 
-osmium_must_send_clf = false;
-osmium_sending_clf = false;
-
-/* Synchronize the CLF with the server and update the attribute list,
- * etc. It is safe to call this function repeatedly in a short amount
- * of time, it has built-in rate limiting. */
-osmium_commit_clf = function() {
-	osmium_must_send_clf = true;
-
-	if(osmium_sending_clf) return;
-	osmium_sending_clf = true;
-
-	osmium_send_clf();
-};
-
-/** @internal */
-osmium_send_clf = function() {
-	if(!osmium_must_send_clf) {
-		osmium_sending_clf = false;
-		return;
+osmium_clftype = 'new';
+osmium_on_clf_payload = function(payload) {
+	$('div#computed_attributes').html(payload.attributes);
+	if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
+		osmium_clf_slots = payload.slots;
+		osmium_clf_hardpoints = payload.hardpoints;
 	}
-	osmium_must_send_clf = false;
+	osmium_clf_rawattribs = payload.rawattribs;
 
-	var postopts = {
-		clf: JSON.stringify(osmium_clf)
-	};
+	osmium_update_slotcounts();
 
-	var getopts = {
-		type: 'new',
-		token: osmium_token,
-		clftoken: osmium_clftoken
-	};
+	$("section#modules div.slots li > small.attribs").remove();
+	$("section#modules div.slots li.hasattribs").removeClass('hasattribs');
+	for(var i = 0; i < payload.mia.length; ++i) {
+		var s = $(document.createElement('small'));
+		s.text(payload.mia[i][2]);
+		s.prop('title', payload.mia[i][3]);
+		s.addClass('attribs');
 
-	$.ajax({
-		type: 'POST',
-		url: '../src/json/process_clf.php?' + $.param(getopts),
-		data: postopts,
-		dataType: 'json',
-		error: function(xhr, error, httperror) {
-			alert('Could not sync loadout with remote: ' + error + ' (' + httperror 
-				  + '). This shouldn\'t normally happen, try again or refresh the page.');
-			setTimeout(osmium_send_clf, 500);
-		},
-		success: function(payload) {
-			$('div#computed_attributes').html(payload.attributes);
-			if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
-				osmium_clf_slots = payload.slots;
-				osmium_clf_hardpoints = payload.hardpoints;
-			}
-			osmium_clf_rawattribs = payload.rawattribs;
+		$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
+			return $(this).data('index') == payload.mia[i][1];
+		}).addClass('hasattribs').append(s);
+	}
 
-			osmium_update_slotcounts();
-
-			$("section#modules div.slots li > small.attribs").remove();
-			$("section#modules div.slots li.hasattribs").removeClass('hasattribs');
-			for(var i = 0; i < payload.mia.length; ++i) {
-				var s = $(document.createElement('small'));
-				s.text(payload.mia[i][2]);
-				s.prop('title', payload.mia[i][3]);
-				s.addClass('attribs');
-
-				$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
-					return $(this).data('index') == payload.mia[i][1];
-				}).addClass('hasattribs').append(s);
-			}
-
-			$("section#metadata tr#recommended_tags").remove();
-			if(payload.rectags.length > 0) {
-				var tr = $(document.createElement('tr'));
-				tr.append(document.createElement('th'));
-				tr.prop('id', 'recommended_tags');
-				var td = $(document.createElement('td'));
-				tr.append(td);
-				td.append('Recommended tags: ');
-				var ul = $(document.createElement('ul'));
-				ul.addClass('tags');
-				for(var i = 0; i < payload.rectags.length; ++i) {
-					var li = $(document.createElement('li'));
-					var a = $(document.createElement('a'));
-					a.prop('href', 'javascript:void(0);');
-					a.prop('title', 'Add this tag');
-					a.text(payload.rectags[i]);
-					li.append(a);
-					ul.append(li);
-					ul.append(' ');
-				}
-				td.append(ul);
-
-				$("input#tags").closest('tr').after(tr);
-			}
-
-			$("section#drones small.bayusage").text(
-				osmium_clf_rawattribs.dronecapacityused
-					+ ' / ' + osmium_clf_rawattribs.dronecapacity + ' m³'
-			).toggleClass(
-				'overflow',
-				osmium_clf_rawattribs.dronecapacityused > osmium_clf_rawattribs.dronecapacity
-			);
-			$("section#drones small.bandwidth").text(
-				osmium_clf_rawattribs.dronebandwidthused
-					+ ' / ' + osmium_clf_rawattribs.dronebandwidth + ' Mbps'
-			).toggleClass(
-				'overflow',
-				osmium_clf_rawattribs.dronebandwidthused > osmium_clf_rawattribs.dronebandwidth
-			);
-			var ndrones = 0;
-			var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
-			if("inspace" in dp) {
-				for(var i = 0; i < dp.inspace.length; ++i) {
-					ndrones += dp.inspace[i].quantity;
-				}
-			}
-			$("section#drones small.maxdrones").text(
-				ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
-			).toggleClass(
-				'overflow',
-				ndrones > osmium_clf_rawattribs.maxactivedrones
-			);
-			osmium_clf_rawattribs.activedrones = ndrones;
-
-			setTimeout(osmium_send_clf, 500);
+	$("section#metadata tr#recommended_tags").remove();
+	if(payload.rectags.length > 0) {
+		var tr = $(document.createElement('tr'));
+		tr.append(document.createElement('th'));
+		tr.prop('id', 'recommended_tags');
+		var td = $(document.createElement('td'));
+		tr.append(td);
+		td.append('Recommended tags: ');
+		var ul = $(document.createElement('ul'));
+		ul.addClass('tags');
+		for(var i = 0; i < payload.rectags.length; ++i) {
+			var li = $(document.createElement('li'));
+			var a = $(document.createElement('a'));
+			a.prop('href', 'javascript:void(0);');
+			a.prop('title', 'Add this tag');
+			a.text(payload.rectags[i]);
+			li.append(a);
+			ul.append(li);
+			ul.append(' ');
 		}
-	});
+		td.append(ul);
+
+		$("input#tags").closest('tr').after(tr);
+	}
+
+	$("section#drones small.bayusage").text(
+		osmium_clf_rawattribs.dronecapacityused
+			+ ' / ' + osmium_clf_rawattribs.dronecapacity + ' m³'
+	).toggleClass(
+		'overflow',
+		osmium_clf_rawattribs.dronecapacityused > osmium_clf_rawattribs.dronecapacity
+	);
+	$("section#drones small.bandwidth").text(
+		osmium_clf_rawattribs.dronebandwidthused
+			+ ' / ' + osmium_clf_rawattribs.dronebandwidth + ' Mbps'
+	).toggleClass(
+		'overflow',
+		osmium_clf_rawattribs.dronebandwidthused > osmium_clf_rawattribs.dronebandwidth
+	);
+	var ndrones = 0;
+	var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
+	if("inspace" in dp) {
+		for(var i = 0; i < dp.inspace.length; ++i) {
+			ndrones += dp.inspace[i].quantity;
+		}
+	}
+	$("section#drones small.maxdrones").text(
+		ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
+	).toggleClass(
+		'overflow',
+		ndrones > osmium_clf_rawattribs.maxactivedrones
+	);
+	osmium_clf_rawattribs.activedrones = ndrones;
+
+	
 };
 
 /* Generate all the missing DOM elements from the CLF */

@@ -1,22 +1,8 @@
 $module-width: 22.5em;
-$module-width-small: 19em;
-$module-width-extrasmall: 16em;
 $metadata-width: 30em;
-$metadata-width-small: 20em;
 
 $developed-char: '\0025BE';
 $hidden-char: '\0025B8';
-
-@mixin prop-metadata-width($prop, $add:0) {
-	@include layout-type(small) { #{$prop}: $metadata-width-small + $add; }
-	@include layout-type(normal) { #{$prop}: $metadata-width + $add; }
-}
-
-@mixin prop-module-width($prop, $add:0) {
-	@include layout-type(extrasmall) { #{$prop}: $module-width-extrasmall + $add; }
-	@include layout-type(small) { #{$prop}: $module-width-small + $add; }
-	@include layout-type(normal) { #{$prop}: $module-width + $add; }
-}
 
 @mixin column {
 	&> h2 {
@@ -113,99 +99,8 @@ $hidden-char: '\0025B8';
 	@include no-user-select;
 }
 
-@mixin module-top-corner-link {
-	display: inline;
-	position: absolute;
-	right: 0;
-	top: 0;
-	height: 1em;
-	line-height: 1em;
-	
-	&:active, &:focus {
-		outline: 0;
-	}
-	
-	&> img {
-		height: 1em;
-	}
-}
-
-@mixin module-bottom-corner-info {
-	display: inline;
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	font-size: 0.8em;
-	line-height: 1em;
-	height: 1em;
-	opacity: 0.8;
-}
-
-@mixin module-list-togglable {
-	@include prop-module-width(width);
-	display: inline-block;
-	vertical-align: top;
-	margin: 0 2em 2em 0;
-
-	&> ul {
-		list-style-type: none;
-		padding: 0;
-		margin-top: 0.125em;
-
-		&> li {
-			@include module;
-
-			&.unused {
-				color: $unused-module-text-color;
-			}
-
-			&> a.toggle {
-				display: none;
-			}
-
-			&> span.range {
-				@include module-bottom-corner-info;
-			}
-		}
-	}
-
-	&.stateful > ul > li {
-		padding-right: 1em;
-		position: relative;
-
-		&> a.toggle {
-			@include module-top-corner-link;
-		}
-	}
-
-	&> h3 {
-		border-bottom: 1px solid $section-border-color;
-		padding-left: 0.25em;
-		margin-bottom: 0;
-		position: relative;
-
-		&> small.capacity, &> strong {
-			position: absolute;
-			right: 0.125em;
-			bottom: 0;
-			color: $aside-text-color;
-
-			&> span {
-				display: inline-block;
-				margin-left: 2em;
-
-				&> img:first-child {
-					vertical-align: bottom;
-					height: 1.5em;
-					margin-right: 0.25em;
-				}
-			}
-		}
-	}
-}
-
 @mixin module-list {
-	@include prop-module-width(width);
+	width: $module-width;
 	display: inline-block;
 	vertical-align: top;
 	margin: 0 1.5em 2em 0;
@@ -257,117 +152,6 @@ $hidden-char: '\0025B8';
 
 	&.ungrouped > h3 > span > small.groupcharges {
 		@include sprite('./icons/modulegroup.png', 0, 1em, 1em, 1em);
-	}
-}
-
-@mixin drone-list {
-	width: auto;
-	display: block;
-	overflow: hidden;
-	
-	&> div#inspace, &> div#inbay {
-		width: 50%;
-
-		&#inbay {
-			float: left;
-			padding-right: 1em;
-		}
-
-		&#inspace {
-			margin-left: 50%;
-			padding-left: 1em;
-		}
-
-		&> h4 {
-			margin: 0.5em 0 0.25em 0;
-			padding-left: 0.25em;
-			border-bottom: 1px solid $subsection-border-color;
-		}
-
-		&> ul {
-			margin: 0;
-			padding: 0;
-			list-style-type: none;
-		}
-
-		&> ul > li {
-			@include module;
-
-			display: inline-block;
-			border: none;
-			width: auto;
-			margin-right: 2em;
-
-			&> img:first-child {
-				margin-right: 0.5em;
-			}
-
-			&[data-count] {
-				cursor: move;
-			}
-		}
-	}
-}
-
-div#fittags > ul, ul.tags {
-    margin: 0;
-	padding: 0;
-	list-style-type: none;
-
-	&> li {
-		display: inline-block;
-		border: 1px solid $tag-border-color;
-		border-radius: 0.5em;
-		font-size: 0.8em;
-		padding: 0.1em 0.5em;
-		background-color: $tag-bg-color;
-		margin: 0.25em 0.05em;
-	}
-}
-
-span.fitname {
-	text-decoration: underline;
-	font-weight: bold;
-
-	&> img {
-		height: 1em;
-	}
-}
-
-div#metadatabox {
-	@include column;
-
-	float: left;
-	@include prop-metadata-width(width);
-
-	&> ul > li > ul > li > a {
-		&.active {
-			text-decoration: none;
-			color: $strong-emphasis-text-color;
-			font-weight: bold;
-		}
-
-		&:focus {
-			outline: 0;
-		}
-	}
-
-	&> form.presets {
-		text-align: center;
-
-		&> select, &> textarea {
-			font-size: 1em;
-			@include prop-metadata-width(min-width, -5em);
-			margin: 0.25em 0;
-		}
-
-		&> textarea {
-			min-height: 3em;
-		}
-
-		&> button[disabled] {
-			opacity: 0.2;
-		}
 	}
 }
 
@@ -561,18 +345,108 @@ section#siaffectedby {
 	}
 }
 
-div#showinfoicon {
-	background-image: url('./icons/showinfo.png');
-	background-size: 100%;
-	width: 16px;
-	height: 16px;
-	display: none;
-	position: absolute;
-}
-
 .overflow6 { @include error-background-opacity(0.30); }
 .overflow5 { @include error-background-opacity(0.25); }
 .overflow4 { @include error-background-opacity(0.20); }
 .overflow3 { @include error-background-opacity(0.15); }
 .overflow2 { @include error-background-opacity(0.10); }
 .overflow1 { @include error-background-opacity(0.05); }
+
+
+
+$render-size: 6em;
+section#ship {
+	min-height: $render-size;
+	margin-bottom: 1em;
+
+	position: relative;
+
+	&> h1 {
+		&> img:first-child, &> div.notype:first-child {
+			position: absolute;
+			top: 0;
+			left: 1em;
+
+			width: $render-size;
+			height: $render-size;
+		}
+
+		&> img:first-child {
+			border-radius: 1em;
+			overflow: hidden;
+		}
+
+		&> div.notype:first-child {
+			border: 1px dashed $subsection-border-color;
+		}
+
+		&> small, &> strong {
+			@include ellipsis;
+		}
+
+		font-size: 1em;
+		margin: 0;
+		padding: 0;
+
+		&> strong {
+			position: absolute;
+			top: ($render-size * 0.5 - 1em) * 0.5;
+			left: ($render-size + 2em) * 0.5;
+			right: 0;
+			font-size: 2em;
+		}
+
+		&> small {
+			$height: 1.25em;
+
+			color: $aside-text-color;
+			opacity: 0.7;
+
+			font-size: 1em;
+			line-height: $height;
+			height: $height;
+
+			position: absolute;
+			left: $render-size + 2em;
+			right: 0;
+
+			&.groupname {
+				top: $render-size * 0.5 - 2.5em;
+			}
+
+			&.dbver {
+				top: $render-size * 0.5 + 1.5em;
+			}
+		}
+	}
+
+	&> span.contextmenuindicator {
+		position: absolute;
+		top: 0;
+		right: 0;
+		font-size: 2em;
+	}
+}
+
+span.fitname, strong.fitname {
+	text-decoration: underline;
+	font-weight: bold;
+
+	&> img { height: 1em; }
+}
+
+ul.tags {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+
+	&> li {
+		display: inline-block;
+		border: 1px solid $tag-border-color;
+		border-radius: 0.25em;
+		font-size: 0.8em;
+		padding: 0.1em 0.5em;
+		background-color: $tag-bg-color;
+		margin: 0.25em 0.05em;
+	}
+}

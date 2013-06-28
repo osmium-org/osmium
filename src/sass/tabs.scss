@@ -1,7 +1,7 @@
 @mixin tabs {
 	list-style-type: none;
 	margin: 0;
-	padding: 0;
+	padding: 0 1em;
 	text-align: center;
 
 	border-bottom: 1px solid $tab-border-color;
@@ -31,6 +31,15 @@
 		&> a {
 			display: block;
 			padding: 0.25em 0.5em;
+			text-decoration: underline;
+		}
+
+		&.external {
+			float: right;
+			bottom: -3px;
+			margin-left: 0.3em;
+
+			&> a { color: $aside-text-color; }
 		}
 	}
 }

@@ -1,31 +1,43 @@
+div#vlmain {
+	@extend div#nlmain;
+	margin-right: 0 !important;
+	border-right: 0 !important;
+}
+
+div#vlattribs {
+	@extend div#nlattribs;
+}
+
+
+
 @mixin authorboxes {
 	&> div.author {
 		position: relative;
-		float: right;
 		margin-left: 0.5em;
 		background-color: $subsection-bg-color;
 		height: 3.5em;
-		width: 13em;
+		min-width: 7em;
+		display: inline-block;
+		padding-left: 0.25em;
 
 		@include ellipsis;
 
 		&> img.portrait {
 			float: left;
+			padding-top: 0.25em;
+			padding-right: 0.25em;
+			width: 3em;
 			height: 3em;
-			padding: 0.25em 0.25em 0 0.25em;
 		}
 
 		&> img.corporation, &> img.alliance {
-			position: absolute;
+			float: right;
+			padding-right: 0.25em;
+			padding-top: 0.25em;
+			padding-left: 0.5em;
+			width: 3em;
 			height: 3em;
-			top: 0.25em;
-			right: 0.25em;
-
 			opacity: 0.5;
-
-			@include layout-type(smallandextrasmall) {
-				opacity: 0.2;
-			}
 		}
 
 		&> time {
@@ -40,70 +52,9 @@
 	}
 
 	&> div.author.edit {
-		width: 10em;
-		margin-right: 0;
-		background-color: transparent;
 		opacity: 0.5;
-	}
-}
-
-div#vloadoutbox {
-	@include prop-metadata-width(margin-left, 1em);
-	border-left: 1px dotted $loadout-column-border-color;
-	padding: 0 1em;
-
-	&> header {
-		position: relative;
-		padding-left: 11em;
-		min-height: 7.5em;
-
-		&> img#fittypepic {
-			position: absolute;
-			top: 0em;
-			left: 3.5em;
-			height: 7em;
-			width: 7em;
-		}
-
-		&> h1 {
-			margin: 0;
-		}
-
-		&> h2 {
-			margin-bottom: 0;
-		}
-
-		&> div#fittags {
-			&> h2, &> ul {
-				display: inline-block;
-			}
-
-			&> h2 {
-				margin: 0;
-				font-size: 1em;
-			}
-		}
-
-		&> div.votes {
-			position: absolute;
-			left: 0;
-			top: 0.5em;
-			width: 3em;
-		}
-
-		&> p.evebuild {
-			margin: 0;
-			padding: 0;
-			opacity: 0.7;
-		}
-	}
-
-	&> div.slots, &> div#vdronebay {
-		@include module-list-togglable;
-	}
-
-	&> div#vdronebay {
-		@include drone-list;
+		background-color: transparent;
+		outline: 1px dotted $subsection-border-color;
 	}
 }
 
@@ -127,144 +78,52 @@ div#pwfit {
 	}
 }
 
-div#vcomments {
-	margin: 0 2em 2em 0;
+section#export {
+	@include readable;
+}
 
-	&> div.comment {
-		border-top: 1px solid $loadout-comment-border-color;
-		padding: 0.5em 0;
-		position: relative;
+section#description {
+	&> h3:first-child {
+		padding-left: 0.25em;
+		margin-bottom: 0;
+		border-bottom: 1px solid $section-border-color;
+	}
 
-		&> div.votes {
-			position: absolute;
-			left: 0.5em;
-			top: 0.5em;
-		}
-
-		&> header {
-			clear: left;
-			min-height: 3.5em;
-			padding-top: 1em;
-
-			@include authorboxes;
-
-			&> div.meta {
-				margin-left: 0.25em;
-				color: $loadout-comment-meta-text-color;
-				font-size: 0.9em;
-
-				@include layout-type(smallandextrasmall) {
-					padding-top: 0.25em;
-					clear: both;
-				}
-
-				&> span.outdated, &> span.outdated > a {
-					color: $loadout-comment-meta-text-color;
-				}
-
-				&> span.outdated {
-					display: block;
-					padding-top: 0.5em;
-				}
-			}
-		}
-
-		&> a.add_comment, &> header > div.meta > a {
-			color: $loadout-comment-meta-text-color;
-			text-decoration: none;
-			
-			&:hover {
-				text-decoration: underline;
-			}
-		}
-
-		&> a.add_comment {
-			padding-left: 0.25em;
-			font-size: 0.9em;
-		}
-
-		&> div.body {
-			padding-top: 0.5em;
-			padding-left: 50px;
-			min-height: 4em;
-
-			&> p, &> h1, &> h2, &> h3, &> h4, &> h5, &> h6 {
-				&:first-child {
-					margin-top: 0;
-				}
-
-				&:last-child {
-					margin-bottom: 0;
-				}
-			}
-		}
-
-		&> ul.replies {
-			list-style-type: none;
-			padding: 0;
-			margin: 0.5em 1em;
-
-			&> li {
-				border-bottom: 1px dotted $loadout-comment-reply-border-color;
-				color: $loadout-comment-reply-meta-text-color;
-				padding: 0.5em 2em;
-
-				&:first-child {
-					border-top: 1px dotted $loadout-comment-reply-border-color;
-				}
-
-				&> div.body {
-					display: inline;
-					color: $main-text-color;
-				}
-
-				&> time, &> a.profile, &> span.meta > a, &> span.updated {
-					font-size: 0.9em;
-					color: $loadout-comment-reply-active-meta-text-color;
-				}
-
-				&> span.meta {
-					opacity: 0.2;
-				}
-
-				&:hover > span.meta {
-					opacity: 1.0;
-				}
-			}
-
-			&> li.new {
-				color: $main-text-color;
-				display: none;
-
-				&> form > textarea {
-					min-height: 4em;
-					width: 100%;
-				}
-			}
-		}
+	&> div {
+		@include readable;
 	}
 }
 
-div#metadatabox > div#loadoutcredits {
+div#vlmain > section#presets tr {
+	&> td > select {
+		max-width: 30em;
+	}
+
+	&> td > div.pdesc > :first-child {
+		margin-top: 0.2em;
+		padding-top: 0;
+	}
+
+	&> td > div.pdesc > p.placeholder {
+		text-align: left;
+	}
+}
+
+section#credits {
 	@include authorboxes;
-	padding: 0 0.5em 0.5em 0.5em;
 
-	&> div.author {
-		width: 20em;
-		display: inline-block;
-		float: none;
-
-		@include layout-type(smallandextrasmall) {
-			width: 10em;
-		}
+	&.edited > div.author {
+		width: $metadata-width - 12.5em;
 
 		&.edit {
-			width: 7.5em;
+			width: 10em;
 		}
 	}
 
 	&.notedited > div.author {
 		display: block;
-		width: 100%;
 	}
+
+	margin-left: 0.5em;
+	margin-bottom: 1em;
 }

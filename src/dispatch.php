@@ -35,13 +35,15 @@ namespace Osmium\Dispatch;
 $osmium_dispatch_rules = array(
 	/* Very common pages */
 	'%^/$%D' => '/src/main.php',
-	'%^/loadout/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_fit.php',
+	'%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?$%D' => '/src/view_loadout.php',
+	'%^/__deprecated__loadout/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_fit.php',
 	'%^/new(/(?<token>0|[1-9][0-9]*))?$%D' => '/src/new_loadout.php',
 	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 	'%^/search$%D' => '/src/search.php',
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
-	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_fit.php',
-	'%^/export/(.+)-(?<type>clf|md|evexml|eft|dna)-(?<loadoutid>[1-9][0-9]*)-(?<revision>[1-9][0-9]*)\.(json|md|xml|txt)$%D' => '/src/export_fit.php',
+	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_loadout.php',
+	'%^/__deprecated__loadout/private/(?<loadoutid>[1-9][0-9]*)/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_fit.php',
+	'%^/__deprecated__export/(.+)-(?<type>clf|md|evexml|eft|dna)-(?<loadoutid>[1-9][0-9]*)-(?<revision>[1-9][0-9]*)\.(json|md|xml|txt)$%D' => '/src/export_fit.php',
 
 	/* Atom feeds */
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
@@ -55,8 +57,7 @@ $osmium_dispatch_rules = array(
 	'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
 	/* API calls */
-	'%^/api/$%D' => ['/src/mdstatic.php', ['relative' => '..', 'title' => 'Osmium API', 'f' => 'api.md']],
-	'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
+    '%^/loadout/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/view_loadout.php',
     '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
     '%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
 	'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],

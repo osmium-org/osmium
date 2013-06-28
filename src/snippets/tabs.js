@@ -28,12 +28,18 @@ osmium_tabify = function(ul, selected) {
 	ul.on('osmium_select_tab', 'li', function(event) {
 		var li = $(this);
 		var a = li.children('a');
-		var dest = $(a.attr('href'));
+		var href = a.attr('href');
+		if(href.substring(0, 1) != '#') return;
+		var dest = $(href);
 
 		if(!li.hasClass('active')) {
 			li.parent().children('li').each(function() {
 				var li = $(this);
+				var a = li.children('a');
+				var href = a.attr('href');
+				if(href.substring(0, 1) != '#') return;
 				var dest = $(li.children('a').attr('href'));
+
 				li.removeClass('active');
 				dest.hide();
 			});
@@ -48,7 +54,11 @@ osmium_tabify = function(ul, selected) {
 		return false;
 	}).on('click', 'li', function() {
 		var li = $(this);
-		var selectedid = li.children('a').attr('href').substring(1);
+		var a = li.children('a');
+		var href = a.attr('href');
+		if(href.substring(0, 1) != '#') return;
+		var selectedid = href.substring(1);
+
 		li.trigger('osmium_select_tab');
 
 		var cur_tabs;
@@ -61,7 +71,7 @@ osmium_tabify = function(ul, selected) {
 		}
 
 		for(var i = 0; i < cur_tabs.length; ++i) {
-			var j = targets.indexOf(cur_tabs[i]);
+			var j = $.inArray(cur_tabs[i], targets);
 			if(j == -1) continue;
 
 			cur_tabs[i] = selectedid;
@@ -93,7 +103,7 @@ osmium_tabify = function(ul, selected) {
 	}
 
 	for(var i = 0; i < cur_tabs.length; ++i) {
-		var j = targets.indexOf(cur_tabs[i]);
+		var j = $.inArray(cur_tabs[i], targets);
 		if(j == -1) continue;
 
 		$('a[href="#' + cur_tabs[i] + '"]').closest('li').click();

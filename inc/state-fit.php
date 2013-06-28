@@ -18,6 +18,11 @@
 
 namespace Osmium\State;
 
+/** How long to "remember" the password for protected fits */
+const DEFAULT_PASSWORD_AUTHENTICATION_DURATION = 1800;
+
+
+
 /**
  * Checks whether a loadout can be viewed (but maybe still needing a
  * password) by the current user.
@@ -79,7 +84,7 @@ function can_edit_fit($loadoutid) {
  * only makes can_access_fit() return true if the fit is password
  * protected.
  */
-function grant_fit_access($fit, $duration) {
+function grant_fit_access($fit, $duration = DEFAULT_PASSWORD_AUTHENTICATION_DURATION) {
 	$pw = get_state('pw_fits', array());
 	$pw[$fit['metadata']['loadoutid']] = time() + $duration;
 	put_state('pw_fits', $pw);

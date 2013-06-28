@@ -21,6 +21,9 @@ osmium_user_initiated_stack = [];
 osmium_undo_stack = [];
 osmium_undo_stack_position = 0;
 
+osmium_must_send_clf = false;
+osmium_sending_clf = false;
+
 osmium_load_static_client_data = function(relative, staticver, onsuccess) {
 	var idx = 'osmium_static_client_data_' + staticver;
 
@@ -92,3 +95,51 @@ osmium_undo_pop = function() {
 	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
 	osmium_undo_trim();
 }
+
+/* Synchronize the CLF with the server and update the attribute list,
+ * etc. It is safe to call this function repeatedly in a short amount
+ * of time, it has built-in rate limiting. Requires osmium_clftype and
+ * osmium_on_clf_payload global variables to be set. */
+osmium_commit_clf = function() {
+	osmium_must_send_clf = true;
+
+	if(osmium_sending_clf) return;
+	osmium_sending_clf = true;
+
+	osmium_send_clf();
+};
+
+/** @internal */
+osmium_send_clf = function() {
+	if(!osmium_must_send_clf) {
+		osmium_sending_clf = false;
+		return;
+	}
+	osmium_must_send_clf = false;
+
+	var postopts = {
+		clf: JSON.stringify(osmium_clf)
+	};
+
+	var getopts = {
+		type: osmium_clftype,
+		token: osmium_token,
+		clftoken: osmium_clftoken
+	};
+
+	$.ajax({
+		type: 'POST',
+		url: '../src/json/process_clf.php?' + $.param(getopts),
+		data: postopts,
+		dataType: 'json',
+		error: function(xhr, error, httperror) {
+			alert('Could not sync loadout with remote: ' + error + ' (' + httperror 
+				  + '). This shouldn\'t normally happen, try again or refresh the page.');
+			setTimeout(osmium_send_clf, 500);
+		},
+		success: function(payload) {
+			osmium_on_clf_payload(payload);
+			setTimeout(osmium_send_clf, 500);
+		}
+	});
+};

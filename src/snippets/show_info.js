@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,47 +21,3 @@ osmium_showinfo = function(opts, relative) {
 		osmium_tabify($('ul#showinfotabs'), 0);
 	});
 };
-
-osmium_addicon = function(items) {
-	var d = $('div#showinfoicon');
-	var onorig = false;
-	var onicon = false;
-
-	items.hover(function() {
-		onorig = true;
-
-		var t = $(this);
-		var p = t.offset();
-
-		d.css('top', p.top + "px");
-		d.css('left', (p.left + t.width() - d.width()) + "px");
-
-		d.unbind('click');
-		d.click(function() { t.click(); });
-		d.show();
-	}, function() {
-		onorig = false;
-
-		if(!onicon) {
-			d.hide();
-		}
-	});
-
-	d.hover(function() {
-		onicon = true;
-
-		d.show();
-	}, function() {
-		onicon = false;
-
-		if(!onorig) {
-			d.hide();
-		}
-	});
-
-	d.css('cursor', 'help');
-};
-
-$(function() {
-	$('body').append("<div id='showinfoicon' title='Click to show info'> </div>");
-});

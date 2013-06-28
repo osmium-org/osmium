@@ -139,7 +139,9 @@ while($row = \Osmium\Db\fetch_row($q)) {
 }
 
 /** CLF state name => [Pretty name, Image name]
- * Order must be consistent with $static['modulestates'] */
+ * Order must be consistent with $static['modulestates']
+ *
+ * @see \Osmium\Fit\get_state_names() */
 $static['modulestatenames'] = array(
     'offline' => array('Offline', 'offline.png'),
     'online' => array('Online', 'online.png'),

@@ -188,6 +188,14 @@ if($commentsallowed && isset($_POST['commentbody']) && $loggedin) {
 
 \Osmium\State\set_fit_green($fit['metadata']['loadoutid']);
 
+
+
+
+
+
+
+
+
 $defaultpid = $fit['modulepresetid'];
 $defaultcpid = $fit['chargepresetid'];
 $defaultdpid = $fit['dronepresetid'];
