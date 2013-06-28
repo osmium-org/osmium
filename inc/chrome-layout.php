@@ -88,10 +88,11 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	echo get_navigation_link($relative.'/', "Main page");
 	echo get_navigation_link($relative.'/search', "Search loadouts");
 	echo get_navigation_link($relative.'/new', "New loadout");
+	echo get_navigation_link($relative.'/import', "Import");
+	echo get_navigation_link($relative.'/convert', "Convert");
 	if(\Osmium\State\is_logged_in()) {
 		$a = \Osmium\State\get_state('a');
 
-		echo get_navigation_link($relative.'/import', "Import loadouts");
 		echo get_navigation_link($relative.'/settings', "Settings");
 
 		if($a['ismoderator'] === 't') {
@@ -101,8 +102,6 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		\Osmium\Chrome\print_js_snippet('notifications');
 		\Osmium\Chrome\print_js_code('$(function() { osmium_notifications("'
 		                             .str_replace('"', '\"', $relative).'"); });');
-	} else {
-		echo get_navigation_link($relative.'/import', "Import loadout");
 	}
 	echo "</ul>\n";
 
@@ -118,9 +117,13 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 function print_footer() {
 	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code;
 
-	echo "<div id='push'></div>\n</div>\n<footer>\n";
-	echo "<p><a href='http://artefact2.com/osmium/'><strong>Osmium ".\Osmium\get_osmium_version()." @ ".gethostname()."</strong></a>  — <a href='https://github.com/Artefact2/osmium'>Browse source</a> (<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)</p>";
-	echo "</footer>\n";
+	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
+	echo "<a href='http://artefact2.com/osmium/'><strong>Osmium "
+		.\Osmium\get_osmium_version()." @ ".gethostname()."</strong></a> –\n";
+	echo "<a href='".$__osmium_chrome_relative."/api'>API</a> –\n";
+	echo "<a href='https://github.com/Artefact2/osmium'>Browse source</a>\n";
+	echo "(<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)\n";
+	echo "</p>\n</footer>\n";
 
 	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>\n";
 	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";

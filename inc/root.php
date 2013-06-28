@@ -25,10 +25,10 @@ if(!defined('Osmium\ROOT')) {
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 
 /** Bump this when static files (icons, JS snippets, etc.) are updated */
-const STATICVER = 5;
+const STATICVER = 7;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 6;
+const CSS_STATICVER = 7;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 12;

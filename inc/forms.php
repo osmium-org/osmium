@@ -230,7 +230,7 @@ function print_checkbox_or_radio($type, $label, $name, $id = null, $checked = nu
 }
 
 function print_checkbox($label, $name, $id = null, $checked = null, $flags = 0) {
-	print_checkbox_or_radio('checkbox', $label, $name, $id, $checked, null, $flags);
+	print_checkbox_or_radio('checkbox', $label, $name, $id, $checked, 'on', $flags);
 }
 
 function print_radio($label, $name, $value, $id = null, $checked = null, $flags = 0) {

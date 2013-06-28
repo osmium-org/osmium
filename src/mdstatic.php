@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,24 +21,12 @@ namespace Osmium\MarkdownStatic;
 require __DIR__.'/../inc/root.php';
 
 $f = __DIR__.'/md/'.$_GET['f'];
-
 $data = $_GET;
-$data['lastmodified'] = filemtime($f);
-$data['this_lastmodified'] = filemtime(__FILE__);
-
-$etag = sha1(json_encode($data));
-
-header('ETag: '.$etag);
-header('Cache-Control: public');
-header('Pragma:');
-
-if(isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
-	header('HTTP/1.1 304 Not Modified', true, 304);
-	die();
-}
 
 \Osmium\Chrome\print_header($data['title'], $data['relative']);
 
+echo "<div id='mdstatic'>\n";
 echo \Osmium\Chrome\format_md(file_get_contents($f));
+echo "</div>\n";
 
 \Osmium\Chrome\print_footer();

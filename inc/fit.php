@@ -141,13 +141,15 @@ function get_attr_slottypes() {
 /**
  * Get an array of formatted state names, with the name of the picture
  * represting the state.
+ *
+ * @returns [ STATE_* => [PrettyName, Icon, CLFName], … ]
  */
 function get_state_names() {
 	return array(
-		STATE_OFFLINE => array('Offline', 'offline.png'),
-		STATE_ONLINE => array('Online', 'online.png'),
-		STATE_ACTIVE => array('Active', 'active.png'),
-		STATE_OVERLOADED => array('Overloaded', 'overloaded.png'),
+		STATE_OFFLINE => array('Offline', 'offline.png', 'offline'),
+		STATE_ONLINE => array('Online', 'online.png', 'online'),
+		STATE_ACTIVE => array('Active', 'active.png', 'active'),
+		STATE_OVERLOADED => array('Overloaded', 'overloaded.png', 'overloaded'),
 		);
 }
 
@@ -1213,7 +1215,7 @@ function sanitize(&$fit, &$errors = null, $interactive = false) {
 	$origtitle = $fit['metadata']['name'];
 	$title =& $fit['metadata']['name'];
 	$title = preg_replace('%\p{C}%u', '', $title); /* Remove control chars and other unused codes */
-	$title = preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $title); /* Trim title */
+	$title = \Osmium\Chrome\trim($title);
 	if($title !== $origtitle) {
 		$errors[] = 'Removed blanks and control characters from title.';
 	}

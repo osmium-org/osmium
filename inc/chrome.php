@@ -21,6 +21,11 @@ namespace Osmium\Chrome;
 require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
 
+/** Much better than the junk trim() function from the PHP library */
+function trim($s) {
+	return preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $s);
+}
+
 /**
  * Print a basic seach form. Pre-fills the search form from $_GET data
  * if present.

@@ -29,3 +29,19 @@ div#methodselect > ul {
 		}
 	}
 }
+
+form#exportresults {
+	&> p {
+		margin: 0.5em 2em;
+		position: relative;
+		height: 20em;
+
+		&> textarea {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
+	}
+}

@@ -116,7 +116,7 @@ form > table {
 			@include layout-type(extrasmall) { min-width: 10em; }
 		}
 
-		input[type='submit'], input[type='button'], button {
+		input[type='submit'], input[type='button'], button, input[type='radio'], input[type='checkbox'] {
 			min-width: 0;
 			width: auto;
 		}

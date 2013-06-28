@@ -49,6 +49,7 @@ $osmium_dispatch_rules = array(
 
 	/* Loadout-related operations */
 	'%^/import$%D' => '/src/import_loadouts.php',
+	'%^/convert%D' => '/src/convert.php',
 	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
 	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 	'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
@@ -57,6 +58,9 @@ $osmium_dispatch_rules = array(
 	'%^/api/$%D' => ['/src/mdstatic.php', ['relative' => '..', 'title' => 'Osmium API', 'f' => 'api.md']],
 	'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
     '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
+    '%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
+	'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],
+	'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
 
 	/* Less common pages */
 	'%^/register$%D' => '/src/register.php',

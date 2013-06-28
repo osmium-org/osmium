@@ -22,7 +22,9 @@ const CLF_PATH = '/../lib/common-loadout-format/validators/php/lib.php';
 const DNA_REGEX = '([0-9]+)(:([0-9]+)(;([0-9]+))?)*::';
 
 /**
- * Get a list of available export formats.
+ * Get a list of available export formats, with a human-readable name,
+ * the content-type of the exported data, and a function taking a $fit
+ * and returning the exported data.
  */
 function get_export_formats() {
 	return array(
@@ -57,7 +59,192 @@ function get_export_formats() {
 		);
 }
 
-/*
+/**
+ * Get a list of available import formats, with a human-readable name
+ * and precisions, and a function taking the data and an array of
+ * generated errors and returning an array of $fit.
+ */
+function get_import_formats() {
+	return array(
+		'autodetect' => array(
+			'Autodetect', 'try to autodetect format',
+			function($data, &$errors) {
+				$fmt = autodetect_format($data);
+				$available = get_import_formats();
+				if(!isset($available[$fmt])) {
+					return false;
+				} else {
+					return $available[$fmt][2]($data, $errors);
+				}
+			}),
+		'clf' => array(
+			'CLF', 'single or array',
+			function($data, &$errors) {
+				$srcarray = json_decode($data, true);
+				if(json_last_error() !== JSON_ERROR_NONE) {
+					$errors[] = 'Fatal: source is not valid JSON';
+					return false;
+				} else if(!is_array($srcarray)) {
+					$errors[] = 'Fatal: source is not a JSON array';
+					return false;
+				}
+
+				$fits = array();
+				if(isset($srcarray['clf-version']) && is_int($srcarray['clf-version'])) {
+					$fits[] = try_parse_fit_from_common_loadout_format(json_encode($srcarray), $errors);
+				} else {
+					foreach($srcarray as $clf) {
+						if(isset($clf['clf-version']) && is_int($clf['clf-version'])) {
+							$fits[] = try_parse_fit_from_common_loadout_format(json_encode($clf), $errors);
+						} 
+					}
+				}
+				$fits = array_filter($fits);
+				return $fits === array() ? false : $fits;
+			}),
+		'gzclf' => array(
+			'gzCLF', 'supports multiple blocks',
+			function($data, &$errors) {
+				$start = strpos($data, 'BEGIN gzCLF BLOCK');
+				$fits = array();
+
+				while($start !== false) {
+					$end = strpos($data, 'END gzCLF BLOCK');
+					if($end === false) break;
+
+					$gzclf = substr($data, $start, $end + strlen('END gzCLF BLOCK'));
+					$fits[] = \Osmium\Fit\try_parse_fit_from_gzclf($gzclf, $errors);
+					$start = strpos($data, 'BEGIN gzCLF BLOCK', $start + strlen('BEGIN gzCLF BLOCK'));
+				}
+
+				$fits = array_filter($fits);
+				return $fits === array() ? false : $fits;
+			}),
+		'evexml' => array(
+			'EVE XML', 'supports multiple <fitting> elements',
+			function($data, &$errors) {
+				$fits = array();
+
+				try {
+					$old = libxml_use_internal_errors(true);
+					$xml = new \SimpleXMLElement($data);
+					libxml_use_internal_errors($old);
+
+					if(isset($xml->shipType)) {
+						$fits[] = try_parse_fit_from_eve_xml($xml, $errors);
+					} else if(isset($xml->fitting) && isset($xml->fitting->shipType)) {
+						$fits[] = try_parse_fit_from_eve_xml($xml->fitting, $errors);
+					} else if(isset($xml->fitting) && is_array($xml->fitting[0]->shipType)) {
+						foreach($xml->fitting as $f) {
+							$fits[] = try_parse_fit_from_eve_xml($f, $errors);
+						}
+					} else {
+						$errors[] = 'XML error: root element is neither <fitting> nor <fittings>';
+					}
+				} catch(\Exception $e) {
+					$errors[] = 'Caught exception while creating SimpleXMLElement: '.$e->getMessage();
+				}
+
+				$fits = array_filter($fits);
+				return $fits === array() ? false : $fits;
+			}),
+		'dna' => array(
+			'DNA', '<url=fitting:> syntax is supported',
+			function($data, &$errors) {
+				$fits = array();
+
+				$data = preg_replace_callback(
+					'%<url=fitting:(?P<dna>'.\Osmium\Fit\DNA_REGEX.')>(?P<name>.+)</url>%U',
+					function($match) use(&$fits) {
+						$fits[] = try_parse_fit_from_shipdna($match['dna'], $match['name'], $errors);
+						return ''; /* To avoid rematching them later */
+					},
+					$data
+				);
+
+				preg_match_all('%'.\Osmium\Fit\DNA_REGEX.'%U', $data, $matches);
+				foreach($matches[0] as $dnastring) {
+					$fits[] = try_parse_fit_from_shipdna($dnastring, 'DNA-imported loadout', $errors);
+				}
+
+				$fits = array_filter($fits);
+				return $fits === array() ? false : $fits;
+			}),
+		'eft' => array(
+			'EFT', 'supports multiple fits',
+			function($data, &$errors) {
+				$fits = array();
+				$lines = array_map('trim', explode("\n", $data));
+
+				foreach($lines as $l) {
+					if(preg_match('%^\[(.+)(,(.+)?)\]$%U', $l)) {
+						if(isset($eft)) {
+							$fits[] = try_parse_fit_from_eft_format($eft, $errors);
+						}
+						$eft = '';
+					}
+
+					$eft .= $l."\n";
+				}
+
+				if(isset($eft)) {
+					$fits[] = try_parse_fit_from_eft_format($eft, $errors);
+				}
+
+				$fits = array_filter($fits);
+				return $fits === array() ? false : $fits;
+			}),
+	);
+}
+
+/**
+ * Try to autodetect a loadout format, based on heuristics.
+ *
+ * @returns one of "clf", "gzclf", "evexml", "eft", "dna" or false on
+ * failure to detect.
+ */
+function autodetect_format($source) {
+	$json = json_decode($source, true);
+	if(json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+		/* Input is JSON array/object */
+
+		if(isset($json['clf-version']) && is_int($json['clf-version']) || (
+			isset($json[0]['clf-version']) && is_int($json[0]['clf-version'])
+		)) {
+			/* Input looks like CLF */
+			return 'clf';
+		}
+	}
+
+	if(($start = strpos($source, 'BEGIN gzCLF BLOCK')) !== false
+	   && ($end = strpos($source, 'END gzCLF BLOCK')) !== false
+	   && $start < $end) {
+		/* Input looks like gzCLF */
+		return 'gzclf';
+	}
+
+	try {
+		$old = libxml_use_internal_errors(true);
+		$xml = new \SimpleXMLElement($source);
+		libxml_use_internal_errors($old);
+
+		if(isset($xml->shipType) || isset($xml->fitting->shipType) || isset($xml->fitting[0]->shipType)) {
+			return 'evexml';
+		}
+	} catch(\Exception $e) {}
+
+	if(preg_match('%^\[(.+),(.+)\]%U', $source)) {
+		return 'eft';
+	}
+
+	if(preg_match('%'.DNA_REGEX.'%U', $source)) {
+		return 'dna';
+	}
+
+	return false;
+}
+
+/**
  * Try to parse a loadout from a CLF string (containing JSON-encoded
  * data). Any errors will be put in $errors.
  *
@@ -372,6 +559,64 @@ function clf_parse_meta_1(&$fit, &$metadata, &$errors) {
 
 		$fit['metadata']['tags'] = array_keys($fit['metadata']['tags']);
 	}
+}
+
+/**
+ * Try to parse a loadout from a gzCLF block.
+ *
+ * gzCLF is just a base64-encoded, gz-compressed CLF JSON string with
+ * easily identifiable delimiters.
+ */
+function try_parse_fit_from_gzclf($source, &$errors) {
+	$source = explode('BEGIN gzCLF BLOCK', $source, 2);
+	if(count($source) === 1) {
+		$errors[] = 'Did not find a gzCLF block.';
+		return false;
+	}
+
+	$source = explode('END gzCLF BLOCK', $source[1], 2);
+	if(count($source) === 1) {
+		$errors[] = 'Did not find a gzCLF block.';
+		return false;
+	}
+
+	$gzclf = $source[0];
+	$clf = @gzuncompress(base64_decode(html_entity_decode($gzclf, ENT_XML1)));
+	if($clf === false) {
+		$errors[] = 'Error parsing the gzCLF block.';
+		return false;
+	}
+
+	return try_parse_fit_from_common_loadout_format($clf, $errors);
+}
+
+/**
+ * Try to parse a loadout in the EVE XML format, from a string
+ * containing the XML.
+ *
+ * If multiple loadouts are contained in one <loadouts> parent
+ * element, only the first will be used (and returned).
+ */
+function try_parse_fit_from_eve_xml_string($xmlstring, &$errors) {
+	try {
+		$old = libxml_use_internal_errors(true);
+		$xml = new \SimpleXMLElement($xmlstring);
+		libxml_use_internal_errors($old);
+
+		if(isset($xml->shipType)) {
+			/* Root element is <fitting> */
+			return try_parse_fit_from_eve_xml($xml, $errors);
+		} else if(isset($xml->fitting)) {
+			/* Root element is <fittings> */
+			return try_parse_fit_from_eve_xml($xml->fitting[0], $errors);
+		} else {
+			$errors[] = 'XML error: root element is neither <fitting> nor <fittings>';
+		}
+	} catch(\Exception $e) {
+		$errors[] = 'Caught exception while creating SimpleXMLElement: '.$e->getMessage();
+	}
+
+	return false;
 }
 
 /**
@@ -813,7 +1058,7 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 				if($osmiumextraprops
 				   || ($isactivable && $state != STATE_ACTIVE)
 				   || (!$isactivable && $state != STATE_ONLINE)) {
-					$jsonmodule['state'] = lcfirst($statenames[$state][0]);
+					$jsonmodule['state'] = $statenames[$state][2];
 				}
 
 				foreach($preset['chargepresets'] as $cpid => $chargepreset) {
@@ -951,7 +1196,7 @@ function export_to_markdown($fit, $embedclf = true) {
 				list($isactivable, ) = get_module_states($fit, $module['typeid']);
 				$state = $module['state'] === null ? $module['old_state'] : $module['state'];
 				if(($isactivable && $state != STATE_ACTIVE) || (!$isactivable && $state != STATE_ONLINE)) {
-					$md .= " (".lcfirst($statenames[$state][0]).")";
+					$md .= " (".$statenames[$state][2].")";
 				}
 
 				$md .= "\n";

@@ -402,3 +402,19 @@ ul#ctxmenu, ul.subctxmenu {
 		z-index: 10;
 	}
 }
+
+div#mdstatic {
+	max-width: 70em;
+	margin: 0 1em;
+	line-height: 1.5em;
+
+	&> h2 {
+		margin-top: 3em;
+		border-bottom: 1px solid $section-border-color;
+		padding-left: 0.25em;
+	}
+
+	&> h3 {
+		border-bottom: 1px dotted $subsection-border-color;
+	}
+}
