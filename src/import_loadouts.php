@@ -21,6 +21,9 @@ namespace Osmium\Page\Convert;
 require __DIR__.'/../inc/root.php';
 require __DIR__.'/../inc/import-common.php';
 
+const DEFAULT_VP = \Osmium\Fit\VIEW_EVERYONE;
+const DEFAULT_EP = \Osmium\Fit\EDIT_OWNER_ONLY;
+const DEFAULT_VIS = \Osmium\Fit\VISIBILITY_PRIVATE;
 const MAX_FITS = 100;
 
 if(!\Osmium\State\is_logged_in()) {

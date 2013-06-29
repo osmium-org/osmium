@@ -20,10 +20,6 @@ namespace Osmium\Import;
 
 const MAX_FILESIZE = 1048576;
 
-const DEFAULT_VP = \Osmium\Fit\VIEW_EVERYONE;
-const DEFAULT_EP = \Osmium\Fit\EDIT_OWNER_ONLY;
-const DEFAULT_VIS = \Osmium\Fit\VISIBILITY_PRIVATE;
-
 function print_tri_choice($textarea_name, $uri_name, $file_name) {
 	\Osmium\Forms\print_generic_row('', '<label>Method</label>', '<div id="methodselect">Use at most one of the three methods below:</div>');
 
