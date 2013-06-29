@@ -1181,6 +1181,7 @@ function sanitize(&$fit, &$errors = null, $interactive = false) {
 		             VIEW_EVERYONE,
 		             VIEW_PASSWORD_PROTECTED,
 		             VIEW_ALLIANCE_ONLY,
+		             VIEW_CORPORATION_ONLY,
 		             VIEW_OWNER_ONLY,
 		             ))) {
 		$errors[] = 'Incorrect view permission, reset to viewable by everyone.';
