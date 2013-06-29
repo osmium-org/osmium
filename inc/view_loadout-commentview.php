@@ -143,7 +143,7 @@ function format_comment($row) {
 	}
 	if($row['loadoutrevision'] < $fit['metadata']['revision']) {
 		echo "<br />\n<span class='outdated'>(this comment applies to a previous revision of this loadout:";
-		echo " <a href='".RELATIVE.\Osmium\Fit\get_fit_uri(
+		echo " <a href='".RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
 			$fit['metadata']['loadoutid'],
 			$fit['metadata']['visibility'],
 			$fit['metadata']['privatetoken'],
