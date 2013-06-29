@@ -23,7 +23,7 @@ const SPHINXQL_PORT = 24492;
 function get_link() {
 	static $link = null;
 	if($link === null) {
-		$link = mysqli_connect('127.0.0.1:'.SPHINXQL_PORT);
+		$link = mysqli_connect('127.0.0.1', 'root', '', '', SPHINXQL_PORT);
 		if(!$link) {
 			\Osmium\fatal(500, 'Could not connect to Sphinx.');
 		}
@@ -34,8 +34,8 @@ function get_link() {
 
 function query_select_searchdata($cond, array $params = array()) {
 	return \Osmium\Db\query_params('SELECT loadoutid,
-	restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
-	tags, modules, author, name, description, shipid,
+	restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid, restrictedtostanding,
+	tags, modules, author, accountid, name, description, shipid,
 	upvotes, downvotes, score, ship, groups, creationdate, updatedate
 	FROM osmium.loadoutssearchdata '.$cond, $params);
 }
@@ -57,10 +57,10 @@ function unindex($loadoutid) {
 
 function index($loadout) {
 	unindex($loadout['loadoutid']);
-	
+
 	return query('INSERT INTO osmium_loadouts 
-  (id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid, 
-  shipid, upvotes, downvotes, score, creationdate, updatedate,
+  (id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
+  shipid, upvotes, downvotes, score, creationdate, updatedate, accountid,
   ship, groups, author, name, description, tags, modules)
   VALUES ('
 	             .$loadout['loadoutid'].','
@@ -73,6 +73,7 @@ function index($loadout) {
 	             .$loadout['score'].','
 	             .$loadout['creationdate'].','
 	             .$loadout['updatedate'].','
+				 .$loadout['accountid'].','
 	             .'\''.escape($loadout['ship']).'\','
 	             .'\''.escape($loadout['groups']).'\','
 	             .'\''.escape($loadout['author']).'\','
@@ -97,8 +98,8 @@ function get_search_query($search_query) {
 			if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
 		}
 	}
-
-	return 'SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtoaccountid IN ('.implode(',', $accountids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
+	
+	return 'SELECT id, restrictedtostanding FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtoaccountid IN ('.implode(',', $accountids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
 }
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
@@ -107,18 +108,28 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 	$ids = array();
 	while($row = fetch_row($q)) {
-		$ids[] = $row[0];
+		if($row[2] <> -1)
+		{
+			if(\Osmium\State\can_view_fit($row[0]))
+			{
+				$ids[] = $row[0];
+			}
+		}
+		else
+		{
+			$ids[] = $row[0];
+		}
 	}
 
 	return $ids;
 }
 
 function get_total_matches($search_query, $more_cond = '') {
-	$q = query(get_search_query($search_query).' '.$more_cond);
+	$q = get_search_ids($search_query, $more_cond);
+	
 	if($q === false) return 0;
 
-	$meta = get_meta();
-	return $meta['total_found'];
+	return count($q);
 }
 
 function fetch_assoc($result) {

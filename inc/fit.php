@@ -49,6 +49,11 @@ const VIEW_CORPORATION_ONLY = 3;
 /** The loadout can only be viewed by its author. */
 const VIEW_OWNER_ONLY = 4;
 
+/** The loadout can only be viewed by contacts with good standing with the author. */
+const VIEW_GOOD_STANDING = 5;
+
+/** The loadout can only be viewed by contacts with excellent standing with the author. */
+const VIEW_EXCELLENT_STANDING = 6;
 
 /** The loadout can only be edited by its author. */
 const EDIT_OWNER_ONLY = 0;

@@ -8,3 +8,4 @@ chdir(__DIR__);
 
 passthru('./update_charinfo');
 passthru('./reindex_loadouts');
+passthru('php update_charcontactlist');

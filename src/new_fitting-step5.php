@@ -86,6 +86,8 @@ function final_settings() {
 			                           \Osmium\Fit\VIEW_PASSWORD_PROTECTED => 'everyone but require a password',
 			                           \Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
 			                           \Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
+									   \Osmium\Fit\VIEW_GOOD_STANDING => 'my good standings only (includes alliance and corp)',
+									   \Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my excellent standings only (includes alliance and corp)',
 			                           \Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
 			                           ), null, 'view_perms',
 		                           \Osmium\Forms\FIELD_REMEMBER_VALUE);
@@ -167,6 +169,8 @@ function update_metadata() {
 			             \Osmium\Fit\VIEW_PASSWORD_PROTECTED,
 			             \Osmium\Fit\VIEW_ALLIANCE_ONLY,
 			             \Osmium\Fit\VIEW_CORPORATION_ONLY,
+						 \Osmium\Fit\VIEW_GOOD_STANDING,
+						 \Osmium\Fit\VIEW_EXCELLENT_STANDING,
 			             \Osmium\Fit\VIEW_OWNER_ONLY,
 			             ))) {
 			$view_perm = \Osmium\Fit\VIEW_EVERYONE;

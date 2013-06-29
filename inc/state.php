@@ -40,7 +40,8 @@ $__osmium_cache_enabled = true;
 const COOKIE_AUTH_DURATION = 604800;
 
 const CHARACTER_SHEET_ACCESS_MASK = 8;
-const REQUIRED_ACCESS_MASK = 33554440; /* CharacterSheet+AccountStatus */
+const REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS = 33554440; /* CharacterSheet+AccountStatus*/
+const REQUIRED_ACCESS_MASK_WITH_CONTACTS = 33554456; /* CharacterSheet+AccountStatus+Contacts*/
 
 /**
  * Checks whether the current user is logged in.
@@ -173,7 +174,9 @@ function print_logoff_box($relative, $notifications) {
 
 /** @internal */
 function print_api_link() {
-	echo "<p>\nYou can create an API key here: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."'>https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK."</a></strong><br />\n";
+	echo "<p>\nYou can create an API key here: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK_WITH_CONTACTS."' target='_blank'>https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK_WITH_CONTACTS."</a></strong> (with ContactList access), 
+	or here : <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS."' target='_blank'>https://support.eveonline.com/api/Key/CreatePredefined/".\Osmium\State\REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS."</a></strong> (without ContactList access).<br />\n
+	Be aware that you need the ContactList access check on your API if you want to use the standings based visibility.<br />\n";
 	echo "<strong>Make sure that you only select one character, do not change any of the checkboxes on the right.</strong>\n</p>\n";
 	echo "<p>\nIf you are still having errors despite having updated your API key, you will have to wait for the cache to expire, or just create a whole new API key altogether (no waiting involved!).\n</p>\n";
 }
@@ -304,8 +307,8 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	    return 'Invalid key type. Make sure you only select one character.';
 	}
 
-	if((int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK) {
-		return 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK.' (or use the link above).';
+	if((int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS && (int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS ) {
+		return 'Incorrect access mask. Please set it to '.\Osmium\State\REQUIRED_ACCESS_MASK_WITH_CONTACTS.' (with ContactList) or '.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS.' (without ContactList), or use the link above.';
 	}
 
 	$characterid = (int)$api->result->key->rowset->row['characterID'];
@@ -356,7 +359,7 @@ function check_api_key($a, $initial = false) {
 
 	if(!$must_renew
 	   && (string)$info->result->key["type"] !== 'Character'
-	   || (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK
+	   || (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS && (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
 	   || (!$initial && (int)$info->result->key->rowset->row['characterID'] != $a['characterid'])) {
 		$must_renew = true;
 	}
@@ -464,6 +467,47 @@ function get_character_info($character_id, $a) {
 	}
   
 	return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, (int)$is_fitting_manager);
+}
+
+function get_character_contactlist($character_id, $a) {
+	$char_contactlist = \Osmium\EveApi\fetch('/char/ContactList.xml.aspx', 
+	                                   array(
+		                                   'characterID' => $character_id, 
+		                                   'keyID' => $a['keyid'],
+		                                   'vCode' => $a['verificationcode'],
+		                                   ));
+
+	if($char_contactlist === false) {
+		return false;
+	}
+  
+	$list_contact = array();
+  
+  	foreach(($char_contactlist->result->rowset ?: array()) as $rowset) {
+		foreach($rowset->children() as $row) {
+			$contactid = (int)$row['contactID'];
+			$standing = (int)$row['standing'];
+			array_push($list_contact, array($contactid, $standing));
+			
+			list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(contactid) FROM osmium.contacts WHERE accountid = $1 AND contactid = $2 AND standing = $3', array($a['accountid'], $contactid, $standing)));
+			if($c == 0) {
+				\Osmium\Db\query_params('INSERT INTO osmium.contacts (accountid, contactid, standing) VALUES ($1, $2, $3)', array($a['accountid'], $contactid, $standing));
+			}
+		}
+	}
+	
+	$where_clause = '';
+	//Remove deleted/changed contacts
+	foreach ($list_contact as $contact)
+	{
+		if($where_clause == '') {
+			$where_clause = 'accountid = '.$a['accountid'].' AND NOT (contactid = '.$contact[0].' AND standing = '.$contact[1].')';
+		}
+		else
+		{
+			$where_clause = $where_clause. ' AND NOT (contactid = '.$contact[0].' AND standing = '.$contact[1].')';
+		}
+	}
 }
 
 /**
