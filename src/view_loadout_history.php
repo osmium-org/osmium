@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -71,9 +71,15 @@ echo "<ol id='lhistory'>\n";
 $first = true;
 while($rev = \Osmium\Db\fetch_assoc($histq)) {
 	$class = $first ? 'opened' : 'closed';
+	$loadouturi = \Osmium\Fit\get_fit_uri(
+		$loadoutid,
+		$fit['metadata']['visibility'],
+		$fit['metadata']['privatetoken'],
+		$rev['revision']
+	);
 
 	echo "<li value='".$rev['revision']."' class='$class' id='revision".$rev['revision']."'>\n<p>";
-	echo "<a href='../$loadouturi?revision=".$rev['revision']."'><strong>Revision #".$rev['revision']."</strong></a>";
+	echo "<a href='../{$loadouturi}'><strong>Revision #".$rev['revision']."</strong></a>";
 	echo ", by ".\Osmium\Chrome\format_character_name($rev, '..');
 	echo " (".date('Y-m-d', $rev['updatedate']).")";
 	echo " — <small class='anchor'><a href='#revision".$rev['revision']."'>#</a></small>";
@@ -84,7 +90,9 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 
 	if($rev['revision'] > 1) {
 		echo "<pre>";
-		echo $rev['delta'] === null ? '(delta is not available, sorry)' : $rev['delta'];
+		echo $rev['delta'] === null ? '(delta is not available, sorry)' : (
+			empty($rev['delta']) ? '(blank delta, something else must have changed)' : $rev['delta']
+		);
 		echo "</pre>\n";
 	}
 
