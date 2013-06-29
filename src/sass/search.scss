@@ -80,7 +80,7 @@ ol.loadout_sr {
 		border-bottom: 1px dotted $subsection-border-color;
 		padding-bottom: 1.5em;
 		padding-top: 0.5em;
-		padding-left: 9.5em;
+		padding-left: 13.5em;
 		height: 3em;
 		@include ellipsis;
 
@@ -88,7 +88,7 @@ ol.loadout_sr {
 			background-color: $loadout-list-odd-bg-color;
 		}
 
-		&> div.lscore, &> img:first-child {
+		&> div.lscore, &> div.ccount, &> a > img:first-child {
 			position: absolute;
 			width: 4em;
 			height: 4em;
@@ -96,26 +96,33 @@ ol.loadout_sr {
 			left: 0.5em;
 		}
 
-		&> img:first-child {
-			position: absolute;
-			height: 4em;
-			top: 0.5em;
-			left: 5em;
+		&> a > img:first-child {
+			left: 9em;
 			border-radius: 0.75em;
 			overflow: hidden;
 		}
 
-		&> div.lscore {
+		&> div.ccount {
+			left: 4.5em;
+		}
+
+		&> div.lscore, &> div.ccount {
 			text-align: center;
 			line-height: 4em;
 
-			&> span {
+			a {
+				text-decoration: none;
+				color: $main-text-color;
+			}
+
+			span {
 				line-height: 1em;
 				display: inline-block;
 				vertical-align: middle;
 
 				&> strong {
 					font-size: 1.5em;
+					@include ellipsis;
 				}
 			}
 		}

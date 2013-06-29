@@ -33,11 +33,11 @@ function get_link() {
 }
 
 function query_select_searchdata($cond, array $params = array()) {
-	return \Osmium\Db\query_params('SELECT loadoutid,
-	restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
-	tags, modules, author, name, description, shipid,
-	upvotes, downvotes, score, ship, groups, creationdate, updatedate, evebuildnumber
-	FROM osmium.loadoutssearchdata '.$cond, $params);
+	return \Osmium\Db\query_params('SELECT loadoutid, restrictedtoaccountid, restrictedtocorporationid,
+	restrictedtoallianceid, tags, modules, author, name, description,
+	shipid, upvotes, downvotes, score, ship, groups, creationdate,
+	updatedate, evebuildnumber, comments FROM
+	osmium.loadoutssearchdata '.$cond, $params);
 }
 
 function query($q) {
@@ -59,11 +59,11 @@ function index($loadout) {
 	unindex($loadout['loadoutid']);
 	
 	return query(
-		'INSERT INTO osmium_loadouts
-(id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
-shipid, upvotes, downvotes, score, creationdate, updatedate, build,
-ship, groups, author, name, description, tags, modules)
-VALUES ('
+		'INSERT INTO osmium_loadouts (id, restrictedtoaccountid,
+		restrictedtocorporationid, restrictedtoallianceid, shipid,
+		upvotes, downvotes, score, creationdate, updatedate, build,
+		comments, ship, groups, author, name, description, tags,
+		modules) VALUES ('
 		.$loadout['loadoutid'].','
 		.$loadout['restrictedtoaccountid'].','
 		.$loadout['restrictedtocorporationid'].','
@@ -75,6 +75,7 @@ VALUES ('
 		.$loadout['creationdate'].','
 		.$loadout['updatedate'].','
 		.$loadout['evebuildnumber'].','
+		.$loadout['comments'].','
 		.'\''.escape($loadout['ship']).'\','
 		.'\''.escape($loadout['groups']).'\','
 		.'\''.escape($loadout['author']).'\','
@@ -175,7 +176,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -184,6 +185,7 @@ JOIN osmium.accounts ON accounts.accountid = loadouts.accountid
 JOIN eve.invtypes ON hullid = invtypes.typeid
 JOIN osmium.loadoutupdownvotes ON loadoutupdownvotes.loadoutid = loadouts.loadoutid
 LEFT JOIN osmium.fittingaggtags ON fittingaggtags.fittinghash = loadouthistory.fittinghash
+LEFT JOIN osmium.loadoutcommentcount lcc ON lcc.loadoutid = loadouts.loadoutid
 WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
 	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
@@ -192,19 +194,24 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			/* Only write the <ol> tag if there is at least one loadout */
 			echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
 		}
-		echo "<li>\n";
-		echo "<img src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' />\n";
-		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
-		echo "<div class='lscore'><span title='".$loadout['upvotes']
-			." upvote(s), ".$loadout['downvotes']." downvote(s)'><strong>"
-			.$loadout['votes']."</strong><br />$votes</span></div>\n";
 
 		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
 
+		echo "<li>\n<a href='$relative/".$uri."'><img src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
+
+		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
+		echo "<div class='lscore'><span title='".$loadout['upvotes']
+			." upvote(s), ".$loadout['downvotes']." downvote(s)'><strong>"
+			.$loadout['votes']."</strong><br /><small>".$votes."</small></span></div>\n";
+
+		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
+
+		$comments = ($loadout['comments'] == 1) ? 'comment' : 'comments';
+		echo "<div class='ccount'><a href='$relative/".$uri."#comments'><span><strong>".$loadout['comments']."</strong><br /><small>".$comments."</small></span></a></div>\n";
+
 		echo "<a href='$relative/".$uri."'>";
 		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
-		echo "</a>\n<br />\n";
-		echo "<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
+		echo "</a>\n<br />\n<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
 		echo " — ".\Osmium\Chrome\format_character_name($loadout, $relative);
 		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")";
 		echo " — revision #".$loadout['latestrevision'];

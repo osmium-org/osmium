@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,6 +30,7 @@ $sortby = isset($_GET['sortby']) ? $_GET['sortby'] : 'relevance';
 $sorts = array(
 	'creationdate' => 'ORDER BY updatedate DESC', /* Not a typo */
 	'score' => 'ORDER BY score DESC',
+	'comments' => 'ORDER BY comments DESC',
 	'relevance' => '',
 );
 
@@ -66,7 +67,7 @@ $ids[] = -1;
 $q = \Osmium\Db\query(
 'SELECT l.loadoutid, l.visibility, f.name, f.hullid, stn.typename, lh.updatedate,
 a.nickname, a.charactername, a.apiverified,
-fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score
+fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score, COALESCE(lcc.count, 0) AS comments
 FROM osmium.loadouts AS l
 JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = l.loadoutid
 JOIN osmium.loadouthistory AS lh ON lh.loadoutid = l.loadoutid AND lh.revision = llr.latestrevision
@@ -75,6 +76,7 @@ JOIN eve.invtypes AS stn ON stn.typeid = f.hullid
 JOIN osmium.accounts AS a ON a.accountid = l.accountid
 LEFT JOIN osmium.fittingaggtags AS fat ON fat.fittinghash = lh.fittinghash
 JOIN osmium.loadoutscores AS ls ON ls.loadoutid = l.loadoutid
+LEFT JOIN osmium.loadoutcommentcount lcc ON lcc.loadoutid = l.loadoutid
 WHERE l.loadoutid IN ('.implode(',', $ids).')'
 );
 $rows = array();
@@ -108,6 +110,7 @@ foreach($ids as $id) {
 	$r['score'] = (float)$rows[$id]['score'];
 	$r['upvotes'] = (int)$rows[$id]['upvotes'];
 	$r['downvotes'] = (int)$rows[$id]['downvotes'];
+	$r['comments'] = (int)$rows[$id]['comments'];
 
 	$result[] = $r;
 }

@@ -5,7 +5,8 @@ The osmium schema has been updated:
 
 * Added evebuildnumber column in fittings, auto-filling it using
   creationdate.
-* Added evebuildnumber in loadoutssearchdata.
+* Added loadoutcommentcount view.
+* Added evebuildnumber and comment count in loadoutssearchdata.
 
 The Sphinx loadout index has been updated. You must:
 
