@@ -81,32 +81,32 @@ function final_settings() {
 	if(!$anonymous) {
 		\Osmium\Forms\print_text('<h2>Permissions</h2>');
 		\Osmium\Forms\print_select('Can be seen by', 'view_perms', 
-		                           array(
-			                           \Osmium\Fit\VIEW_EVERYONE => 'everyone',
-			                           \Osmium\Fit\VIEW_PASSWORD_PROTECTED => 'everyone but require a password',
-			                           \Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
-			                           \Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
-									   \Osmium\Fit\VIEW_GOOD_STANDING => 'my good standings only (includes alliance and corp)',
-									   \Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my excellent standings only (includes alliance and corp)',
-			                           \Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
-			                           ), null, 'view_perms',
-		                           \Osmium\Forms\FIELD_REMEMBER_VALUE);
+									array(
+										\Osmium\Fit\VIEW_EVERYONE => 'everyone',
+										\Osmium\Fit\VIEW_PASSWORD_PROTECTED => 'everyone but require a password',
+										\Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
+										\Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
+										\Osmium\Fit\VIEW_GOOD_STANDING => 'my good standings only (includes alliance and corp)',
+										\Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my excellent standings only (includes alliance and corp)',
+										\Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
+										), null, 'view_perms',
+										\Osmium\Forms\FIELD_REMEMBER_VALUE);
 		\Osmium\Forms\print_select('Can be edited by', 'edit_perms', 
-		                           array(
-			                           \Osmium\Fit\EDIT_OWNER_ONLY => 'only me',
-			                           \Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY => 'me and anyone in my corporation with the Fitting Manager role',
-			                           \Osmium\Fit\EDIT_CORPORATION_ONLY => 'anyone in my corporation',
-			                           \Osmium\Fit\EDIT_ALLIANCE_ONLY => 'anyone in my alliance',
-			                           ), null, 'edit_perms',
-		                           \Osmium\Forms\FIELD_REMEMBER_VALUE);
+									array(
+										\Osmium\Fit\EDIT_OWNER_ONLY => 'only me',
+										\Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY => 'me and anyone in my corporation with the Fitting Manager role',
+										\Osmium\Fit\EDIT_CORPORATION_ONLY => 'anyone in my corporation',
+										\Osmium\Fit\EDIT_ALLIANCE_ONLY => 'anyone in my alliance',
+										), null, 'edit_perms',
+										\Osmium\Forms\FIELD_REMEMBER_VALUE);
 		\Osmium\Forms\print_select('Visibility', 'visibility', 
-		                           array(
-			                           \Osmium\Fit\VISIBILITY_PUBLIC => 'public (this fit can appear in search results when appropriate)',
-			                           \Osmium\Fit\VISIBILITY_PRIVATE => 'private (you will have to give the URL manually)',
-			                           ), null, 'visibility',
-		                           \Osmium\Forms\FIELD_REMEMBER_VALUE);
+									array(
+										\Osmium\Fit\VISIBILITY_PUBLIC => 'public (this fit can appear in search results when appropriate)',
+										\Osmium\Fit\VISIBILITY_PRIVATE => 'private (you will have to give the URL manually)',
+										), null, 'visibility',
+										\Osmium\Forms\FIELD_REMEMBER_VALUE);
 		\Osmium\Forms\print_generic_field('Password', 'password', 'pw', 'pw',
-		                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+										\Osmium\Forms\FIELD_REMEMBER_VALUE);
 	} else {
 		$options = array();
 
