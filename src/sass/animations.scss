@@ -23,12 +23,12 @@
 	}
 }
 
-:target {
+:target, .pseudoclasstarget {
 	@include prefixize(animation-name, tfade);
 	@include prefixize(animation-duration, 15s);
 }
 
-.notarget:target {
+.notarget:target, .pseudoclasstarget.notarget {
 	@include prefixize(animation-name, none);
 }
 

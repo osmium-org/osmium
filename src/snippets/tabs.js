@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+osmium_orig_anchor = null;
+
 osmium_tabify = function(ul, selected) {
 	var targets = [];
 
@@ -24,6 +26,28 @@ osmium_tabify = function(ul, selected) {
 		targets.push(href.substring(1));
 		$(href).addClass('notarget');
 	});
+
+	if(osmium_orig_anchor === null) {
+		if(window.location.hash) {
+			osmium_orig_anchor = $(window.location.hash.split(',')[0]);
+			if(osmium_orig_anchor.length) {
+				var p = osmium_orig_anchor.parent();
+				var id, a;
+
+				while(p.length) {
+					if(id = p.prop('id')) {
+						var a = $("a[href='#" + id + "']");
+						if(a.length && $.inArray(id, targets) > 0) {
+							selected = a.parent().index();
+							break;
+						}
+					}
+
+					p = p.parent();
+				}
+			}
+		}
+	}
 
 	ul.on('osmium_select_tab', 'li', function(event) {
 		var li = $(this);
@@ -92,6 +116,13 @@ osmium_tabify = function(ul, selected) {
 			window.location.hash = '#' + cur_tabs.join(',');
 			document.body.scrollTop = s_top;
 		}
+
+		if(osmium_orig_anchor !== false && osmium_orig_anchor.length) {
+			osmium_orig_anchor.addClass('pseudoclasstarget');
+			$(window).scrollTop(osmium_orig_anchor.offset().top);
+			osmium_orig_anchor = [];
+		}
+
 		return false;
 	});
 

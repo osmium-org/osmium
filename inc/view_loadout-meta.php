@@ -181,10 +181,8 @@ if($loadoutid !== false && \Osmium\Flag\is_fit_flaggable($fit)) {
 }
 
 if($can_edit) {
-	$prefix = $ismoderator ? '<span title="Moderator action">'.\Osmium\Flag\MODERATOR_SYMBOL.'</span> ' : '';
-
-	$actions[] = "<strong><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'>{$prefix}Edit this loadout</a></strong>: change the lodaout (older versions will still be visible and can be restored through the history).";
-	$actions[] = "<strong><a class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Continue?\");' href='".RELATIVE."/delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' rel='nofollow'>{$prefix}Delete this loadout</a></strong>: permanently remove the loadout and all its history.";
+	$actions[] = "<strong><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'>{$modprefix}Edit this loadout</a></strong>: change the lodaout (older versions will still be visible and can be restored through the history).";
+	$actions[] = "<strong><a class='dangerous' onclick='return confirm(\"Deleting this loadout will also delete all its history, and cannot be undone. Continue?\");' href='".RELATIVE."/delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' rel='nofollow'>{$modprefix}Delete this loadout</a></strong>: permanently remove the loadout and all its history.";
 }
 
 if($loggedin && $loadoutid !== false) {

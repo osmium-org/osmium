@@ -135,3 +135,127 @@ section#meta {
 		height: 1.2em;
 	}
 }
+
+section#comments {
+	@include readable;
+
+	&> div.comment {
+		border-top: 1px solid $loadout-comment-border-color;
+		padding-bottom: 1em;
+		padding-top: 0.25em;
+		position: relative;
+
+		&:first-child {
+			border-top: 0;
+		}
+
+		&> div.votes {
+			position: absolute;
+			left: 0;
+			top: 0.5em;
+		}
+
+		&> header {
+			min-height: 3.5em;
+			padding-top: 1em;
+			position: relative;
+
+			@include authorboxes;
+
+			&> div.author {
+				position: absolute;
+				right: 0;
+				top: 0;
+				width: 12em;
+				line-height: 1em;
+			}
+
+			&> div.meta {
+				margin-left: 0.25em;
+				color: $loadout-comment-meta-text-color;
+				font-size: 0.9em;
+
+				&> span.outdated, &> span.outdated.a {
+					color: $loadout-comment-meta-text-color;
+				}
+
+				&> span.outdated {
+					display: block;
+					padding-top: 0.5em;
+				}
+			}
+		}
+
+		&> a.add_comment, &> header > div.meta > a {
+			color: $loadout-comment-meta-text-color;
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+
+		&> a.add_comment {
+			padding-left: 0.25em;
+			font-size: 0.9em;
+		}
+
+		&> div.body {
+			padding-top: 0.5em;
+			padding-left: 40px;
+			min-height: 4em;
+
+			&> p, &> h1, &> h2, &> h3, &> h4, &> h5, &> h6, &> ul, &> ol {
+				&:first-child {
+					margin-top: 0;
+				}
+			}
+		}
+
+		&> ul.replies {
+			list-style-type: none;
+			padding: 0;
+			margin: 0.5em 1em;
+			font-size: 0.9em;
+			clear: right;
+
+			&> li {
+				border-bottom: 1px dotted $loadout-comment-reply-border-color;
+				color: $loadout-comment-reply-meta-text-color;
+				padding: 0.5em 2em;
+
+				&:first-child {
+					border-top: 1px dotted $loadout-comment-reply-border-color;
+				}
+
+				&> div.body {
+					display: inline;
+					color: $main-text-color;
+				}
+
+				&> time, &> a.profile, &> span.meta > a, &> span.updated {
+					font-size: 0.9em;
+					color: $loadout-comment-reply-meta-text-color;
+				}
+
+				&> span.meta {
+					opacity: 0.5;
+				}
+
+				&:hover > span.meta {
+					opacity: 1.0;
+				}
+
+				&.new {
+					color: $main-text-color;
+					display: none;
+
+					&> form > textarea {
+						min-height: 4em;
+						width: 100%;
+					}
+				}
+			}
+		}
+	}
+}

@@ -18,6 +18,57 @@
 
 namespace Osmium\ViewLoadout;
 
+$commentsperpage = (int)\Osmium\get_ini_setting('comments_per_page');
+
+if(isset($_GET['jtr']) && $_GET['jtr'] > 0) {
+	/* Jump To Reply */
+	$jtr = (int)$_GET['jtr'];
+
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT commentid
+		FROM osmium.loadoutcommentreplies
+		WHERE commentreplyid = $1',
+		array($jtr)
+	));
+
+	if($r !== false) {
+		$_GET['jtc'] = $r[0];
+		$anchor = '#r'.$jtr;
+	}
+}
+
+if(isset($_GET['jtc']) && $_GET['jtc'] > 0) {
+	/* Jump To Comment */
+	$jtc = (int)$_GET['jtc'];
+
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT revision, creationdate
+		FROM osmium.loadoutcomments WHERE commentid = $1',
+		array($jtc)
+	));
+
+	if($r !== false) {
+		list($before) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(commentid) FROM osmium.loadoutcomments
+			WHERE loadoutid = $1 AND revision <= $2
+			AND (revision > $3 OR (revision = $4 AND creationdate < $4))',
+			array(
+				$loadoutid,
+				$revision,
+				$r[0],
+				$r[1],
+			)
+		));
+
+		$page = 1 + floor($before / $commentsperpage);
+		if(!isset($anchor)) {
+			$anchor = '#c'.$jtc;
+		}
+		header('Location: ?pagec='.$page.$anchor);
+		die();
+	}
+}
+
 if(!$commentsallowed) return;
 if(!$loggedin) return;
 

@@ -1267,7 +1267,11 @@ function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
  * path", that is, no GET parameters (so it is possible to append
  * "?foo=bar" after the returned value of get_fit_uri() in all cases).
  */
-function get_fit_uri($loadoutid, $visibility, $privatetoken) {
+function get_fit_uri($loadoutid, $visibility, $privatetoken, $revision = null) {
+	if($revision !== null) {
+		$loadoutid = $loadoutid.'R'.$revision;
+	}
+
 	if($visibility == VISIBILITY_PRIVATE) {
 		return 'loadout/private/'.$loadoutid.'/'.$privatetoken;
 	}

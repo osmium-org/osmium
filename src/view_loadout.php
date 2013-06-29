@@ -84,9 +84,10 @@ if($loadoutid !== false) {
 
 
 
-	/* Insert the comment/reply if there is one. Requires
-	 * $commentsallowed, $loggedin, $loadoutid, $a and $author to be
-	 * set. */
+	/* Insert the comment/reply if there is one. Jump to the correct
+	 * page if a ?jtc URI is present. Requires $commentsallowed,
+	 * $loggedin, $loadoutid, $a and $author to be set. Sets the
+	 * $commentperpage variable. */
 	require __DIR__.'/../inc/view_loadout-comments.php';
 } else {
 	/* Thin loadout mode */
@@ -97,6 +98,7 @@ if($loadoutid !== false) {
 
 $ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
 $canedit = ($loadoutid !== false) && \Osmium\State\can_edit_fit($loadoutid);
+$modprefix = $ismoderator ? '<span title="Moderator action">'.\Osmium\Flag\MODERATOR_SYMBOL.'</span> ' : '';
 
 
 
@@ -151,6 +153,17 @@ list($groupname) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
 	WHERE typeid = $1',
 	array($fit['ship']['typeid'])
 ));
+
+
+list($commentcount) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT COUNT(commentid) FROM osmium.loadoutcomments
+	WHERE loadoutid = $1 AND revision <= $2',
+	array(
+		(int)$loadoutid,
+		$revision,
+	)
+));
+$commentcount = (int)$commentcount;
 
 echo "<div id='vlattribs'>
 <section id='ship'>
@@ -208,7 +221,7 @@ echo "<div id='vlmain'>
 <ul class='tabs'>
 <li><a href='#loadout'>Loadout</a></li>
 <li><a href='#presets'>Presets (".(max(count($fit['presets']), count($fit['chargepresets']), count($fit['dronepresets']))).")</a></li>
-<li><a href='#comments'>Comments</a></li>
+<li><a href='#comments'>Comments (".$commentcount.")</a></li>
 <li><a href='#meta'>Meta</a></li>
 <li><a href='#export'>Export</a></li>
 <li class='external'><a href='".$historyuri."' title='View the different revisions of the loadout and compare the changes that were made'>History (".($revision - 1).")</a></li>
@@ -388,6 +401,9 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 echo "</section>
 <section id='comments'>\n";
 
+/* Prints paginated comments and the "add comment" form. */
+require __DIR__.'/../inc/view_loadout-commentview.php';
+
 
 
 echo "</section>
@@ -395,6 +411,8 @@ echo "</section>
 
 /* Pretty prints permissions, show actions and moderator actions. */
 require __DIR__.'/../inc/view_loadout-meta.php';
+
+
 
 $dna = \Osmium\Fit\export_to_dna($fit);
 echo "</section>
