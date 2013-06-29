@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,23 +32,53 @@ if(!isset($_GET['tok']) || $_GET['tok'] != \Osmium\State\get_token()) {
 
 $accountid = \Osmium\State\get_state('a')['accountid'];
 
-if(!\Osmium\State\can_view_fit($loadoutid)) {
-	\Osmium\fatal(404, 'No such loadout.');
-}
-$fit = \Osmium\Fit\get_fit($loadoutid);
-if(!\Osmium\State\can_access_fit($fit) || !\Osmium\State\is_fit_green($loadoutid)) {
-	\Osmium\fatal(403, "Please view the loadout page first (and eventually enter the password), then retry.");
-}
-
-$fav = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.accountfavorites WHERE accountid = $1 AND loadoutid = $2', array($accountid, $loadoutid)));
+$fav = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT loadoutid FROM osmium.accountfavorites
+	WHERE accountid = $1 AND loadoutid = $2',
+	array(
+		$accountid,
+		$loadoutid
+	)
+));
 
 if($fav === false) {
-	\Osmium\Db\query_params('INSERT INTO osmium.accountfavorites (accountid, loadoutid, favoritedate) VALUES ($1, $2, $3)',
-	                        array($accountid, $loadoutid, time()));
+	if(!\Osmium\State\can_view_fit($loadoutid)) {
+		\Osmium\fatal(404, 'No such loadout.');
+	}
+	$fit = \Osmium\Fit\get_fit($loadoutid);
+	if(!\Osmium\State\can_access_fit($fit) || !\Osmium\State\is_fit_green($loadoutid)) {
+		\Osmium\fatal(403, "Please view the loadout page first (and eventually enter the password), then retry.");
+	}
+
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.accountfavorites
+		(accountid, loadoutid, favoritedate)
+		VALUES ($1, $2, $3)',
+		array(
+			$accountid,
+			$loadoutid,
+			time()
+		)
+	);
 } else {
-	\Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE accountid = $1 AND loadoutid = $2',
-	                        array($accountid, $loadoutid));
+	/* Allow user to delete a favorite even if he can no longer access
+	 * it (to avoid "stale" favorites…) */
+
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.accountfavorites
+		WHERE accountid = $1 AND loadoutid = $2',
+		array(
+			$accountid,
+			$loadoutid
+		)
+	);
 }
 
-header('Location: ../'.\Osmium\Fit\fetch_fit_uri($loadoutid));
+if(isset($_GET['redirect'])) {
+	if($_GET['redirect'] === 'loadout') {
+		header('Location: ../'.\Osmium\Fit\fetch_fit_uri($loadoutid)."#meta");
+	} else if($_GET['redirect'] === 'profile') {
+		header('Location: ../profile/'.$accountid.'#pfavorites');
+	}
+}
 die();

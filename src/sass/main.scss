@@ -12,17 +12,6 @@ div#mainpcont > section {
 		}
 	}
 
-	&> ol.loadout_sr {
-		list-style-type: none;
-		padding: 0;
-		margin: 0;
-		text-align: left;
-
-		&> li {
-			@include ellipsis;
-		}
-	}
-
 	&> ul#populartags {
 		text-align: center;
 

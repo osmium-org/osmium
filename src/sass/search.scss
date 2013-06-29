@@ -72,7 +72,8 @@ div#search_full {
 ol.loadout_sr {
 	margin: 0;
 	padding: 0;
-	padding-left: 3em;
+	list-style-type: none;
+	text-align: left;
 
 	&> li {
 		position: relative;
@@ -81,6 +82,7 @@ ol.loadout_sr {
 		padding-top: 0.5em;
 		padding-left: 9.5em;
 		height: 3em;
+		@include ellipsis;
 
 		&:nth-child(2n) {
 			background-color: $loadout-list-odd-bg-color;

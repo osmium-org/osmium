@@ -75,7 +75,7 @@ function get_updown_vote_reputation() {
 function get_privileges() {
 	return array(
 		PRIVILEGE_CREATE_LOADOUT => array('Create a loadout', 1, 1),
-		PRIVILEGE_COMMENT_LOADOUT => array('Comment loadouts', 1, 1),
+		PRIVILEGE_COMMENT_LOADOUT => array('Comment on loadouts', 1, 1),
 		PRIVILEGE_REPLY_TO_COMMENTS => array('Reply to comments', 25, 1),
 		PRIVILEGE_UPVOTE => array('Cast upvotes', 25, 1),
 		PRIVILEGE_DOWNVOTE => array('Cast downvotes', 75, 25),

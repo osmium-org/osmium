@@ -127,3 +127,11 @@ section#credits {
 	margin-left: 0.5em;
 	margin-bottom: 1em;
 }
+
+section#meta {
+	@include readable;
+
+	li.hasleadicon > img:first-child {
+		height: 1.2em;
+	}
+}

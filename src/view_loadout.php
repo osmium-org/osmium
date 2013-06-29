@@ -96,6 +96,7 @@ if($loadoutid !== false) {
 }
 
 $ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
+$canedit = ($loadoutid !== false) && \Osmium\State\can_edit_fit($loadoutid);
 
 
 
@@ -391,6 +392,9 @@ echo "</section>
 
 echo "</section>
 <section id='meta'>\n";
+
+/* Pretty prints permissions, show actions and moderator actions. */
+require __DIR__.'/../inc/view_loadout-meta.php';
 
 $dna = \Osmium\Fit\export_to_dna($fit);
 echo "</section>

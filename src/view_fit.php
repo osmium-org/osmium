@@ -387,7 +387,7 @@ echo "<header>\n";
 echo "<h2>".$fit['ship']['typename']." loadout</h2>\n";
 echo "<img src='http://image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='".$fit['ship']['typename']."' id='fittypepic' />\n";
 echo "<h1 id='fitname' class='has_spinner'>";
-echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $fit['metadata']['visibility'], $author, RELATIVE, $fit['metadata']['loadoutid']);
+echo \Osmium\Chrome\print_loadout_title($fit['metadata']['name'], $fit['metadata']['view_permission'], $fit['metadata']['visibility'], $author, RELATIVE);
 echo "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/spinner.gif' id='vloadoutbox_spinner' class='spinner' alt='' /></h1>\n";
 echo "<div id='fittags'>\n<h2>Tags:</h2>\n";
 if(count($fit['metadata']['tags']) > 0) {

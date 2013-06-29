@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -96,10 +96,34 @@ if($myprofile) {
 
 	echo "<section id='pfavorites' class='psection'>\n<h2>My favorite loadouts</h2>\n";
 	$favorites = array();
-	$favq = \Osmium\Db\query_params('SELECT loadoutid FROM osmium.accountfavorites WHERE accountid = $1 ORDER BY favoritedate DESC', array($a['accountid']));
+	$stale = array();
+	$favq = \Osmium\Db\query_params(
+		'SELECT af.loadoutid, al.loadoutid FROM osmium.accountfavorites af
+		LEFT JOIN osmium.allowedloadoutsbyaccount al ON al.loadoutid = af.loadoutid AND al.accountid = $1
+		WHERE af.accountid = $1
+		ORDER BY af.favoritedate DESC',
+		array($a['accountid'])
+	);
 	while($r = \Osmium\Db\fetch_row($favq)) {
-		$favorites[] = $r[0];
+		if($r[0] === $r[1]) {
+			$favorites[] = $r[0];
+		} else {
+			$stale[] = $r[0];
+		}
 	}
+
+	if(count($stale) > 0) {
+		echo "<p>These following loadouts you added as favorites are no longer accessible to you:</p>\n<ol>\n";
+
+		foreach($stale as $id) {
+			echo "<li>Loadout <a href='../loadout/{$id}'>#{$id}</a>"
+				." — <a href='../favorite/{$id}?tok=".\Osmium\State\get_token()
+				."&amp;redirect=profile'>unfavorite</a></li>\n";
+		}
+
+		echo "</ol>\n";
+	}
+
 	\Osmium\Search\print_loadout_list($favorites, '..', 0, 'You have no favorited loadouts.');
 	echo "</section>\n";
 
