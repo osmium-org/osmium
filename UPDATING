@@ -1,3 +1,13 @@
+staging
+=======
+
+The view used to generate the Sphinx type index has been updated. You
+must:
+
+* stop sphinx-searchd;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd.
+
 v0.7.0, released 2013-06-09
 ===========================
 

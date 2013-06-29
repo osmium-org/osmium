@@ -292,6 +292,7 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 
 		$moduleusage = $discharge / $duration;
 		if($moduleusage == 0) $fraction = 1;
+		else if($usage > 0) continue;
 		else $fraction = min(1, -$usage / $moduleusage);
 
 		$usage += $fraction * $moduleusage;
@@ -508,10 +509,15 @@ function get_optimal_falloff_tracking_of_module($fit, $type, $index) {
 			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
 			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
 
-			/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
-			/* Integrate the velocity of the missile from 0 to flighttime: */
-			$K = -1000000 / ($mass * $agility);
-			$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
+			if($mass != 0 && $agility != 0) {
+				/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
+				/* Integrate the velocity of the missile from 0 to flighttime: */
+				$K = -1000000 / ($mass * $agility);
+				$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
+			} else {
+				/* Zero mass or zero agility, for example defender missiles */
+				$attributes['maxrange'] = $velocity * $flighttime;
+			}
 
 			return $attributes;
 		}
