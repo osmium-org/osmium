@@ -105,7 +105,7 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 		});
 	}
 
-	if(("default" in opts) && opts.default && !li.hasClass('disabled')) {
+	if(("default" in opts) && opts['default'] && !li.hasClass('disabled')) {
 		li.addClass('default');
 	}
 

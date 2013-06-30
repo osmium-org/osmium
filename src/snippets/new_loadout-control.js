@@ -51,7 +51,7 @@ osmium_init_control = function() {
 			type: 'new',
 			token: osmium_token,
 			clftoken: osmium_clftoken,
-			export: 1,
+			'export': 1,
 			exportfmt: $("section#control select#export_type").val()
 		};
 

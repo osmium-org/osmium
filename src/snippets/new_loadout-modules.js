@@ -401,7 +401,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				li.trigger('remove_module');
 				osmium_commit_clf();
 				osmium_undo_push();
-			}, { default: true });
+			}, { 'default': true });
 
 			osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
 				li.parent().find('li').filter(function() {
@@ -568,21 +568,21 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 		osmium_ctxmenu_add_option(menu, "Show module info", function() {
 			osmium_showinfo({
-				new: osmium_clftoken,
+				'new': osmium_clftoken,
 				type: "module",
 				slottype: li.data('slottype'),
 				index: li.data('index')
-			}, "..");
-		}, { icon: "showinfo.png", default: osmium_loadout_readonly });
+			});
+		}, { icon: "showinfo.png", 'default': osmium_loadout_readonly });
 
 		if(hascharges && li.data('chargetypeid') !== null) {
 			osmium_ctxmenu_add_option(menu, "Show charge info", function() {
 				osmium_showinfo({
-					new: osmium_clftoken,
+					'new': osmium_clftoken,
 					type: "charge",
 					slottype: li.data('slottype'),
 					index: li.data('index')
-				}, "..");
+				});
 			}, { icon: "showinfo.png" });
 		}
 

@@ -228,9 +228,8 @@ Dependencies
 
 * Sass >= 3.2 (http://sass-lang.com/)
 
-* (Optional) UglifyJS (`uglifyjs` should be in your `$PATH`), see
-  https://github.com/mishoo/UglifyJS **(heavily recommended for
-  production)**
+* (Optional) A Javascript minifier (UglifyJS is recommended)
+  **(heavily recommended for production)**
 
 * (Optional) Horde_Text_Diff+Horde_Autoloader PEAR packages, see
   http://pear.horde.org **(heavily recommended for production)**

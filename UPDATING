@@ -22,9 +22,13 @@ must:
 * run `sphinx-indexer osmium_types`;
 * start sphinx-searchd.
 
-The config.ini file has been updated, you must add the [tags] section
-from config-example.ini to your config.ini file. You must add the
-comments_per_page option as well.
+The config.ini file has been updated, you must:
+
+* add the [tags] section from config-example.ini to your config.ini
+  file
+* add the comments_per_page option in [osmium]
+* replace the [uglifyjs] section by [minifier] and edit the settings
+  accordingly
 
 v0.7.0, released 2013-06-09
 ===========================

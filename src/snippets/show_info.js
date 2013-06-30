@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-osmium_showinfo = function(opts, relative) {
-	$.getJSON(relative + '/src/json/show_info.php', opts, function(json) {
+osmium_showinfo = function(opts) {
+	$.getJSON(osmium_relative + '/src/json/show_info.php', opts, function(json) {
 		osmium_modal(json['modal']);
 		osmium_tabify($('ul#showinfotabs'), 0);
 	});

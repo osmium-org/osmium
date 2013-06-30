@@ -277,7 +277,7 @@ osmium_add_non_shortlist_contextmenu = function(li) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
 
-		osmium_add_add_to_fit_option(menu, li, { default: true });
+		osmium_add_add_to_fit_option(menu, li, { 'default': true });
 		osmium_ctxmenu_add_option(menu, "Add to shortlist", function() {
 			if($('div#nlsources > section#shortlist > ul.types > li.module').filter(function() {
 				return $(this).data('typeid') === li.data('typeid');
@@ -300,7 +300,7 @@ osmium_add_shortlist_contextmenu = function(li) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
 
-		osmium_add_add_to_fit_option(menu, li, { default: true });
+		osmium_add_add_to_fit_option(menu, li, { 'default': true });
 		osmium_ctxmenu_add_option(menu, "Remove from shortlist", function() {
 			li.remove();
 			osmium_commit_shortlist();

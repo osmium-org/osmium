@@ -135,20 +135,19 @@ function print_footer() {
 		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\STATICVER.'/cache/'.$name;
 
 		if(!file_exists($cachefile)) {
-			if($ujs = \Osmium\get_ini_setting('use_uglifyjs')) {
+			if($min = \Osmium\get_ini_setting('minify_js')) {
+				$command = \Osmium\get_ini_setting('minify_command');
+
 				/* Concatenate & minify */
-				shell_exec('cat '.
-				           implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
-				           .' | uglifyjs -nc -o '
-				           .escapeshellarg($cachefile));
+				shell_exec('cat '.implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
+				           .' | '.$command.' > '.escapeshellarg($cachefile));
 			}
 
-			if(!$ujs || !file_exists($cachefile)) {
-				/* Not using UglifyJS, or UglifyJS failed for some reason */
+			if(!$min || !file_exists($cachefile)) {
+				/* Not minifying, or minifier failed for some reason */
 				/* Just concatenate the files together */
-
-				file_put_contents($cachefile,
-				                  implode("\n", array_map('file_get_contents', $__osmium_js_snippets)));
+				shell_exec('cat '.implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
+				           .' > '.escapeshellarg($cachefile));
 			}
 		}
 

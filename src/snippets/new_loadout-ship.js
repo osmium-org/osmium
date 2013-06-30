@@ -107,13 +107,13 @@ osmium_init_ship = function() {
 		osmium_ctxmenu_add_option(menu, "Show ship info", function() {
 			if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
 				osmium_showinfo({
-					new: osmium_clftoken,
+					'new': osmium_clftoken,
 					type: "ship"
-				}, "..");
+				});
 			} else {
 				alert("No ship is selected. What are you expecting?");
 			}
-		}, { icon: "showinfo.png", default: true });
+		}, { icon: "showinfo.png", 'default': true });
 
 		return menu;
 	});
