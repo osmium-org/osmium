@@ -131,7 +131,13 @@ foreach(array('', 'charge', 'drone') as $ptype) {
 	}
 }
 
-$title = htmlspecialchars($fit['ship']['typename'].' / '.$fit['metadata']['name']);
+if(count($fit['metadata']['tags']) > 0) {
+	$tags = ' ('.implode(', ', $fit['metadata']['tags']).')';
+} else {
+	$tags = '';
+}
+
+$title = htmlspecialchars($fit['metadata']['name'].$tags.' / '.$fit['ship']['typename'].' fitting');
 if($revision_overridden) {
 	$title .= ' (R'.$revision.')';
 }
@@ -143,8 +149,17 @@ if($revision_overridden) {
 	 && !$preset_overridden)
 );
 
-echo "<h1>Viewing loadout: <strong class='fitname'>".htmlspecialchars($fit['metadata']['name'])."</strong></h1>\n";
+echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'>"
+.htmlspecialchars($fit['metadata']['name'])."</strong>";
 
+if(count($fit['metadata']['tags']) > 0) {
+	echo "\n<ul class='tags'>\n";
+	foreach($fit['metadata']['tags'] as $tag) {
+		echo "<li><a href='".RELATIVE."/search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n";
+	}
+	echo "</ul>\n";
+}
+echo "</h1>\n";
 
 
 list($groupname) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
@@ -196,7 +211,6 @@ echo "<a title='This loadout suffers from severe flaws, is badly formatted, or s
 ."'><img src='".RELATIVE."/static-".\Osmium\STATICVER
 ."/icons/vote.svg' alt='downvote' /></a>\n";
 echo "</div>\n";
-
 
 echo "</section>\n";
 
