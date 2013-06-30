@@ -108,6 +108,7 @@ if(isset($_GET['dronepreset'])) {
 
 list(, $ctype, $func) = $available_export_formats[$tgt];
 
+header('X-Robots-Tag: noindex');
 header('Content-Type: '.$ctype);
 $dest = $func($fit, $_GET);
 

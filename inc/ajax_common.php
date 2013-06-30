@@ -63,42 +63,6 @@ function get_slot_usage(&$fit) {
 	return $usage;
 }
 
-/** @deprecated */
-function get_module_states(&$fit) {
-	$astates = \Osmium\Fit\get_state_names();
-	$states = array();
-
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $m) {
-			list($name, $image) = $astates[$m['state']];
-			$states[$type][$index] = array('state' => $m['state'], 'name' => $name, 'image' => $image);
-		}
-	}
-
-	return $states;
-}
-
-/** @deprecated */
-function get_module_ranges($fit) {
-	$ranges = array();
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $m) {
-			$r = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
-			if($r === array()) {
-				$ranges[$type][$index] = array('', '');
-				continue;
-			}
-
-			$ranges[$type][$index] = array(
-				\Osmium\Chrome\format_short_range($r),
-				\Osmium\Chrome\format_long_range($r)
-				);
-		}
-	}
-
-	return $ranges;
-}
-
 /**
  * Generate formatted interesting attributes for all the modules in
  * the fit.
