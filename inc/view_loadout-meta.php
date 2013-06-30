@@ -210,10 +210,17 @@ if($loggedin && $loadoutid !== false) {
 	];
 }
 
-$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')."'>Browse all ".htmlspecialchars($fit['ship']['typename'])." loadouts</a>";
+$shipname = htmlspecialchars($fit['ship']['typename']);
+$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')
+	."'>Browse all ".$shipname." loadouts</a>";
 
 if(isset($rauthorname)) {
 	$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a>";
 }
+
+$actions[] = [
+	"external.svg",
+	"<a href='http://zkillboard.com/ship/".$fit['ship']['typeid']."/'>".$shipname." activity on zKillboard</a>"
+];
 
 print_list("Actions", $actions);
