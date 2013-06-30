@@ -237,3 +237,118 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		echo "<p class='placeholder'>".$nothing_message."</p>\n";
 	}
 }
+
+function get_search_cond_from_advanced() {
+	if(!isset($_GET['build']) && !isset($_GET['op'])) {
+		/* Use sane defaults, ie hide absurdly outdated loadouts by
+		 * default */
+
+		$versions = \Osmium\Fit\get_eve_db_versions();
+		$cutoff = min(count($versions) - 1, 2);
+
+		$_GET['op'] = 'gt';
+		$_GET['build'] = array_values($versions)[$cutoff]['build'];
+	}
+
+	static $operators = array(
+		'eq' => '=',
+		'lt' => '<=',
+		'gt' => '>=',
+	);
+
+	static $orderby = array(
+		//"relevance" => "relevance", /* Does not match to an ORDER BY statement as this is the default */
+		"creationdate" => "creation date",
+		"score" => "score",
+		"comments" => "comments",
+	);
+
+	$cond = '';
+	if(isset($_GET['op']) && isset($_GET['build']) && isset($operators[$_GET['op']])) {
+		$cond .= " AND build ".$operators[$_GET['op']]." ".((int)$_GET['build']);
+	}
+
+	if(isset($_GET['sort']) && isset($orderby[$_GET['sort']])) {
+		$cond .= ' ORDER BY '.$_GET['sort'].' DESC';
+	}
+
+	return $cond;
+}
+
+/**
+ * Print a basic seach form. Pre-fills the search form from $_GET data
+ * if present.
+ */
+function print_search_form($uri = null, $relative = '.', $label = 'Search loadouts', $icon = 'search.png', $advanced = 'Advanced search', $placeholder = 'Search by name, description, ship, modules or tags…') {
+	static $operands = array(
+		"gt" => "or newer",
+		"eq" => "exactly",
+		"lt" => "or older",
+	);
+
+	static $orderby = array(
+		"relevance" => "relevance",
+		"creationdate" => "creation date",
+		"score" => "score",
+		"comments" => "comments",
+	);
+
+	$val = '';
+	if(isset($_GET['q']) && strlen($_GET['q']) > 0) {
+		$val = "value='".htmlspecialchars($_GET['q'], ENT_QUOTES)."' ";
+	}
+
+	if($uri === null) {
+		$uri = htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0], ENT_QUOTES);
+	}
+
+	echo "<form method='get' action='{$uri}'>\n";
+	echo "<h1><label for='search'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/{$icon}' alt='' />{$label}</label></h1>\n";
+
+	echo "<p>\n<input id='search' type='search' autofocus='autofocus' placeholder='{$placeholder}' name='q' $val/> <input type='submit' value='Go!' /><br />\n";
+
+	if(isset($_GET['ad']) && $_GET['ad']) {
+		echo "for \n";
+
+		echo "<select name='build' id='build'>\n";
+		foreach(\Osmium\Fit\get_eve_db_versions() as $v) {
+			echo "<option value='".$v['build']."'";
+
+			if(isset($_GET['build']) && (int)$_GET['build'] === $v['build']) {
+				echo " selected='selected'";
+			}
+
+			echo ">".htmlspecialchars($v['name'])."</option>\n";
+		}
+		echo "</select>\n";
+
+		echo "<select name='op' id='op'>\n";
+		foreach($operands as $op => $label) {
+			echo "<option value='$op'";
+
+			if(isset($_GET['op']) && $_GET['op'] === $op) {
+				echo " selected='selected'";
+			}
+
+			echo ">$label</option>\n";
+		}
+		echo "</select><br />\nsort by \n<select name='sort' id='sort'>\n";
+		foreach($orderby as $sort => $label) {
+			echo "<option value='{$sort}'";
+			if(isset($_GET['sort']) && $_GET['sort'] === $sort) {
+				echo " selected='selected'";
+			}
+			echo ">{$label}</option>\n";
+		}
+		echo "</select>\n<input type='hidden' name='ad' value='1' />\n";
+	} else {
+		$get = 'ad=1';
+		foreach($_GET as $k => $v) {
+			$get .= "&amp;".htmlspecialchars($k, ENT_QUOTES)."=".htmlspecialchars($v, ENT_QUOTES);
+		}
+		echo "<a href='{$uri}?{$get}'><small>{$advanced}</small></a>";
+	}
+
+	echo"</p>\n";
+	echo "</form>\n";
+}

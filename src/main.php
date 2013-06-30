@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,7 @@ echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
 echo "<div id='mainpcont'>\n";
 
 echo "<div class='quick' id='search_mini'>\n";
-\Osmium\Chrome\print_search_form();
+\Osmium\Search\print_search_form('./search');
 echo "</div>\n";
 
 $a = \Osmium\State\get_state('a', null);

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,13 +32,18 @@ if($type == 'best') {
 }
 
 unset($_GET['type']);
-if(!isset($_GET['f'])) $_GET['f'] = '';
+if(!isset($_GET['q'])) $_GET['q'] = '';
+$advq = \Osmium\Search\get_search_cond_from_advanced();
 
 \Osmium\Chrome\print_header($t, '..', false);
 echo "<div id='search_mini'>\n";
-echo "<form method='get' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n";
-echo "<h1><label for='filter'><img src='../static-".\Osmium\STATICVER."/icons/filter.png' alt='' /> Filter loadouts</label></h1>\n";
-echo "<p>\n<input type='search' name='f' value='".htmlspecialchars($_GET['f'], ENT_QUOTES)."' id='filter' />\n<input type='submit' value='Filter' />\n</p>\n";
-echo "</form>\n</div>\n";
-\Osmium\Search\print_pretty_results('..', $_GET['f'], $more, true, 25, 'p', 'No loadouts matched your filter(s).');
+\Osmium\Search\print_search_form(null, '..', 'Filter loadouts', 'filter.png', 'Advanced filters',
+                                 'Filter by name, description, ship, modules or tags…');
+echo "</div>\n";
+if(!isset($_GET['sort'])) {
+	$advq .= ' '.$more;
+}
+
+\Osmium\Search\print_pretty_results('..', $_GET['q'], $advq, true, 25,
+                                    'p', 'No loadouts matched your filter(s).');
 \Osmium\Chrome\print_footer();
