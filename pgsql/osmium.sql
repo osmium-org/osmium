@@ -466,7 +466,7 @@ CREATE VIEW invships AS
 --
 
 CREATE VIEW typessearchdata AS
-    SELECT t.typeid, it.typename, t.category, t.subcategory, ig.groupname, COALESCE((imt.metagroupid)::integer, (dta_mg.value)::integer, CASE (dta_tl.value)::integer WHEN 2 THEN 2 WHEN 3 THEN 14 ELSE 1 END) AS metagroupid, img.marketgroupid, img.marketgroupname FROM (((((((((((SELECT invships.typeid, 'ship'::text AS category, NULL::text AS subcategory FROM invships UNION SELECT invmodules.typeid, 'module'::text AS category, CASE dte.effectid WHEN 11 THEN 'low'::text WHEN 12 THEN 'high'::text WHEN 13 THEN 'medium'::text WHEN 2663 THEN 'rig'::text WHEN 3772 THEN 'subsystem'::text ELSE NULL::text END AS subcategory FROM (invmodules JOIN eve.dgmtypeeffects dte ON (((invmodules.typeid = dte.typeid) AND (dte.effectid = ANY (ARRAY[11, 12, 13, 2663, 3772])))))) UNION SELECT invcharges.chargeid AS typeid, 'charge'::text AS category, NULL::text AS subcategory FROM invcharges) UNION SELECT invdrones.typeid, 'drone'::text AS category, NULL::text AS subcategory FROM invdrones) UNION SELECT invimplants.typeid, 'implant'::text AS category, (invimplants.implantness)::text AS subcategory FROM invimplants) UNION SELECT invboosters.typeid, 'booster'::text AS category, (invboosters.boosterness)::text AS subcategory FROM invboosters) t JOIN eve.invtypes it ON ((it.typeid = t.typeid))) JOIN eve.invgroups ig ON ((it.groupid = ig.groupid))) LEFT JOIN eve.invmarketgroups img ON ((img.marketgroupid = it.marketgroupid))) LEFT JOIN eve.invmetatypes imt ON ((it.typeid = imt.typeid))) LEFT JOIN eve.dgmtypeattribs dta_tl ON (((dta_tl.typeid = it.typeid) AND (dta_tl.attributeid = 422)))) LEFT JOIN eve.dgmtypeattribs dta_mg ON (((dta_mg.typeid = it.typeid) AND (dta_mg.attributeid = 1692))));
+    SELECT t.typeid, it.typename, t.category, t.subcategory, ig.groupname, COALESCE((imt.metagroupid)::integer, (dta_mg.value)::integer, CASE (dta_tl.value)::integer WHEN 2 THEN 2 WHEN 3 THEN 14 ELSE 1 END) AS metagroupid, img.marketgroupid, img.marketgroupname, t.other FROM (((((((((((SELECT invships.typeid, 'ship'::text AS category, NULL::text AS subcategory, NULL::text AS other FROM invships UNION SELECT invmodules.typeid, 'module'::text AS category, CASE dte.effectid WHEN 11 THEN 'low'::text WHEN 12 THEN 'high'::text WHEN 13 THEN 'medium'::text WHEN 2663 THEN 'rig'::text WHEN 3772 THEN 'subsystem'::text ELSE NULL::text END AS subcategory, CASE hardpoint.effectid WHEN 40 THEN 'launcher'::text WHEN 42 THEN 'turret'::text ELSE NULL::text END AS other FROM ((invmodules JOIN eve.dgmtypeeffects dte ON (((invmodules.typeid = dte.typeid) AND (dte.effectid = ANY (ARRAY[11, 12, 13, 2663, 3772]))))) LEFT JOIN eve.dgmtypeeffects hardpoint ON (((invmodules.typeid = hardpoint.typeid) AND (hardpoint.effectid = ANY (ARRAY[40, 42])))))) UNION SELECT invcharges.chargeid AS typeid, 'charge'::text AS category, NULL::text AS subcategory, NULL::text AS other FROM invcharges) UNION SELECT invdrones.typeid, 'drone'::text AS category, NULL::text AS subcategory, (bw.value)::text AS other FROM (invdrones LEFT JOIN eve.dgmtypeattribs bw ON (((bw.attributeid = 1272) AND (bw.typeid = invdrones.typeid))))) UNION SELECT invimplants.typeid, 'implant'::text AS category, (invimplants.implantness)::text AS subcategory, NULL::text AS other FROM invimplants) UNION SELECT invboosters.typeid, 'booster'::text AS category, (invboosters.boosterness)::text AS subcategory, NULL::text AS other FROM invboosters) t JOIN eve.invtypes it ON ((it.typeid = t.typeid))) JOIN eve.invgroups ig ON ((it.groupid = ig.groupid))) LEFT JOIN eve.invmarketgroups img ON ((img.marketgroupid = it.marketgroupid))) LEFT JOIN eve.invmetatypes imt ON ((it.typeid = imt.typeid))) LEFT JOIN eve.dgmtypeattribs dta_tl ON (((dta_tl.typeid = it.typeid) AND (dta_tl.attributeid = 422)))) LEFT JOIN eve.dgmtypeattribs dta_mg ON (((dta_mg.typeid = it.typeid) AND (dta_mg.attributeid = 1692))));
 
 
 --
@@ -491,6 +491,27 @@ CREATE VIEW invshipslots AS
 
 CREATE VIEW invskills AS
     SELECT invtypes.typeid, invtypes.typename, invtypes.groupid, invgroups.groupname FROM (eve.invtypes JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid))) WHERE ((invgroups.categoryid = 16) AND (invtypes.published = true));
+
+
+--
+-- Name: loadoutcomments; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE loadoutcomments (
+    commentid integer NOT NULL,
+    loadoutid integer NOT NULL,
+    accountid integer NOT NULL,
+    creationdate integer NOT NULL,
+    revision integer NOT NULL
+);
+
+
+--
+-- Name: loadoutcommentcount; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW loadoutcommentcount AS
+    SELECT loadoutcomments.loadoutid, count(loadoutcomments.commentid) AS count FROM loadoutcomments GROUP BY loadoutcomments.loadoutid;
 
 
 --
@@ -539,19 +560,6 @@ CREATE TABLE loadoutcommentrevisions (
     updatedate integer NOT NULL,
     commentbody text NOT NULL,
     commentformattedbody text NOT NULL
-);
-
-
---
--- Name: loadoutcomments; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE TABLE loadoutcomments (
-    commentid integer NOT NULL,
-    loadoutid integer NOT NULL,
-    accountid integer NOT NULL,
-    creationdate integer NOT NULL,
-    revision integer NOT NULL
 );
 
 
@@ -664,7 +672,7 @@ CREATE VIEW loadoutslatestrevision AS
 --
 
 CREATE VIEW loadoutssearchdata AS
-    SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE (-1) END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE (-1) END ELSE 0 END AS restrictedtoallianceid, fittingaggtags.taglist AS tags, fittingfittedtypes.typelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittingdescriptions.descriptions AS description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate, ls.upvotes, ls.downvotes, ls.score, (invgroups.groupname)::text AS groups, fittings.evebuildnumber FROM (((((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN loadoutscores ls ON ((ls.loadoutid = searchableloadouts.loadoutid))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid))) LEFT JOIN fittingaggtags ON ((fittingaggtags.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingfittedtypes ON ((fittingfittedtypes.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingdescriptions ON ((fittingdescriptions.fittinghash = loadouthistory.fittinghash))) LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)));
+    SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE (-1) END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE (-1) END ELSE 0 END AS restrictedtoallianceid, fittingaggtags.taglist AS tags, fittingfittedtypes.typelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittingdescriptions.descriptions AS description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate, ls.upvotes, ls.downvotes, ls.score, (invgroups.groupname)::text AS groups, fittings.evebuildnumber, COALESCE(lcc.count, (0)::bigint) AS comments FROM ((((((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN loadoutscores ls ON ((ls.loadoutid = searchableloadouts.loadoutid))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid))) LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = searchableloadouts.loadoutid))) LEFT JOIN fittingaggtags ON ((fittingaggtags.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingfittedtypes ON ((fittingfittedtypes.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingdescriptions ON ((fittingdescriptions.fittinghash = loadouthistory.fittinghash))) LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)));
 
 
 --
