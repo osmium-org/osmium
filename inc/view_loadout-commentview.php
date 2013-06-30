@@ -173,7 +173,7 @@ function format_comment_end($commentid) {
 }
 
 function format_comment_reply($row) {
-	global $ismoderator, $loggedin, $isflaggable, $a;
+	global $ismoderator, $loggedin, $isflaggable, $a, $modprefix;
 
 	$c = array(
 		'accountid' => $row['raccountid'],
