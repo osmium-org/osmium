@@ -145,6 +145,12 @@ browse/search pages. Only public loadouts will be returned.
 <tr><td>GET</td><td>sortby</td><td>string</td><td>no</td><td>creationdate, score, comments, relevance</td><td>relevance</td>
 <td>Sort loadouts either by creation date, by score (calculated from up and down votes), number of comments, or relevance (wrt the search query). Sort order is always DESC.</td></tr>
 
+<tr><td>GET</td><td>buildmin</td><td>integer</td><td>no</td><td>0 ≤ x</td><td>0</td>
+<td>If present, only return loadouts whose build number (EVE expansion) is at least the specified value.</td></tr>
+
+<tr><td>GET</td><td>buildmax</td><td>integer</td><td>no</td><td>0 ≤ x</td><td>+∞</td>
+<td>If present, only return loadouts whose build number (EVE expansion) is at most the specified value.</td></tr>
+
 </tbody>
 </table>
 
@@ -166,4 +172,5 @@ An array of JSON objects having the following fields:
 * `score`: score of the loadout, based on the number of up/down votes;
 * `upvotes`: total number of upvotes;
 * `downvotes`: total number of downvotes;
-* `comments`: total number of comments (does not include replies).
+* `comments`: total number of comments (does not include replies);
+* `buildnumber`: intended EVE build number for this loadout.

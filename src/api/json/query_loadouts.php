@@ -61,13 +61,23 @@ if(!in_array($sortby, array_keys($sorts))) {
 	die('invalid sortby value');	
 }
 
-$ids = \Osmium\Search\get_search_ids($query, $sorts[$sortby], $offset, $limit);
+$cond = $sorts[$sortby];
+
+if(isset($_GET['buildmin'])) {
+	$cond = ' AND build >= '.(int)$_GET['buildmin'].' '.$cond;
+}
+if(isset($_GET['buildmax'])) {
+	$cond = ' AND build <= '.(int)$_GET['buildmax'].' '.$cond;
+}
+
+$ids = \Osmium\Search\get_search_ids($query, $cond, $offset, $limit);
 $ids[] = -1;
 
 $q = \Osmium\Db\query(
 'SELECT l.loadoutid, l.visibility, f.name, f.hullid, stn.typename, lh.updatedate,
 a.nickname, a.charactername, a.apiverified,
-fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score, COALESCE(lcc.count, 0) AS comments
+fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score, COALESCE(lcc.count, 0) AS comments,
+f.evebuildnumber
 FROM osmium.loadouts AS l
 JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = l.loadoutid
 JOIN osmium.loadouthistory AS lh ON lh.loadoutid = l.loadoutid AND lh.revision = llr.latestrevision
@@ -111,6 +121,7 @@ foreach($ids as $id) {
 	$r['upvotes'] = (int)$rows[$id]['upvotes'];
 	$r['downvotes'] = (int)$rows[$id]['downvotes'];
 	$r['comments'] = (int)$rows[$id]['comments'];
+	$r['buildnumber'] = (int)$rows[$id]['evebuildnumber'];
 
 	$result[] = $r;
 }
