@@ -261,6 +261,9 @@ $stypes = \Osmium\Fit\get_slottypes_names();
 $stateful = array_flip(\Osmium\Fit\get_stateful_slottypes());
 $slotusage = \Osmium\AjaxCommon\get_slot_usage($fit);
 $states = \Osmium\Fit\get_state_names();
+$ia_ = \Osmium\AjaxCommon\get_modules_interesting_attributes($fit);
+$ia = array();
+foreach($ia_ as $k) { $ia[$k[0]][$k[1]] = $k; }
 $fittedtotal = 0;
 foreach($stypes as $type => $fname) {
 	if($slotusage[$type] == 0 && (
@@ -286,24 +289,38 @@ foreach($stypes as $type => $fname) {
 
 	foreach($sub as $index => $m) {
 		$s = $states[$m['state']];
-
-		echo "<li data-typeid='".$m['typeid']."' data-slottype='"
-			.$type."' data-index='".$index."' data-state='".$s[2]."'>";
-		echo "<img src='//image.eveonline.com/Type/".$m['typeid']."_64.png' alt='' />";
-		echo htmlspecialchars($m['typename']);
-
 		if(isset($fit['charges'][$type][$index])) {
 			$c = $fit['charges'][$type][$index];
+		} else $c = null;
+
+		$class = '';
+		if(isset($ia[$type][$index])) {
+			$class = ' class="hasattribs"';
+		}
+
+		echo "<li{$class} data-typeid='".$m['typeid']."' data-slottype='"
+			.$type."' data-index='".$index."' data-state='".$s[2]."' data-chargetypeid='"
+			.($c === null ? 'null' : $c['typeid'])."'>\n";
+		echo "<img src='//image.eveonline.com/Type/".$m['typeid']."_64.png' alt='' />";
+		echo htmlspecialchars($m['typename'])."\n";
+
+		if($c !== null) {
 			echo "<span class='charge'>,<br />";
 			echo "<img src='//image.eveonline.com/Type/".$c['typeid']."_64.png' alt='' />";
 			echo "<span class='name'>".htmlspecialchars($c['typename'])."</span>";
-			echo "</span>";
+			echo "</span>\n";
 		}
 
 		if(isset($stateful[$type])) {
 			echo "<a class='toggle_state' href='javascript:void(0);' title='".$s[0]."'>";
 			echo "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/".$s[1]."' alt='".$s[0]."' />";
-			echo "</a>";
+			echo "</a>\n";
+		}
+
+		if(isset($ia[$type][$index])) {
+			echo "<small class='attribs' title='".htmlspecialchars(
+				$ia[$type][$index][3], ENT_QUOTES
+			)."'>".htmlspecialchars($ia[$type][$index][2])."</small>\n";
 		}
 
 		echo "</li>\n";
@@ -461,12 +478,15 @@ echo "</section>
 
 echo "</div>\n";
 
+$tok = \Osmium\State\get_unique_new_loadout_token();
+\Osmium\State\put_new_loadout($tok, $fit);
+
 \Osmium\Chrome\print_js_code(
 "osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
 osmium_staticver = ".\Osmium\STATICVER.";
 osmium_relative = '".RELATIVE."';
 osmium_token = '".\Osmium\State\get_token()."';
-osmium_clftoken = '".\Osmium\State\get_unique_new_loadout_token()."';
+osmium_clftoken = '".$tok."';
 osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
 osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 );
@@ -477,5 +497,9 @@ osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_ac
 \Osmium\Chrome\print_js_snippet('loadout_common');
 \Osmium\Chrome\print_js_snippet('show_info');
 \Osmium\Chrome\print_js_snippet('view_loadout');
+\Osmium\Chrome\print_js_snippet('view_loadout-presets');
+\Osmium\Chrome\print_js_snippet('new_loadout-ship');
+\Osmium\Chrome\print_js_snippet('new_loadout-modules');
+\Osmium\Chrome\print_js_snippet('new_loadout-drones');
 \Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();

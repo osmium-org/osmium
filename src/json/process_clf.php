@@ -31,12 +31,10 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()
 $type = $_GET['type'];
 $token = $_GET['clftoken'];
 $clftext = $_POST['clf'];
+$relative = $_GET['relative'];
 $local = null;
 
-if($type === 'new') {
-	$local = \Osmium\State\get_new_loadout($token);
-	$relative = '..';
-}
+$local = \Osmium\State\get_new_loadout($token);
 
 if($local === null) {
 	header('HTTP/1.1 404 Not Found', true, 404);
@@ -60,9 +58,9 @@ $payload = array(
 	),
 );
 
-if($type === 'new') {
-	\Osmium\State\put_new_loadout($token, $local);
+\Osmium\State\put_new_loadout($token, $local);
 
+if($type === 'new') {
 	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);
 	$payload['hardpoints'] = array(
 		'turret' => \Osmium\Dogma\get_ship_attribute($local, 'turretSlotsLeft'),

@@ -18,15 +18,77 @@
 $(function() {
 	osmium_tabify($("div#vlmain > ul.tabs"), 0);
 
-	osmium_load_static_client_data('..', osmium_cdatastaticver, function(cdata) {
+	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
+		osmium_gen();
 		osmium_init();
 		osmium_user_initiated_push(true);
 		osmium_undo_push();
 	});
+
+	osmium_init_votes();
+	osmium_init_comment_replies();
 });
 
+osmium_loadout_readonly = true;
+osmium_clftype = 'view';
+osmium_on_clf_payload = function(payload) {
+	$('div#computed_attributes').html(payload.attributes);
+	osmium_clf_rawattribs = payload.rawattribs;
+
+	$("section#modules div.slots li > small.attribs").remove();
+	$("section#modules div.slots li.hasattribs").removeClass('hasattribs');
+	for(var i = 0; i < payload.mia.length; ++i) {
+		var s = $(document.createElement('small'));
+		s.text(payload.mia[i][2]);
+		s.prop('title', payload.mia[i][3]);
+		s.addClass('attribs');
+
+		$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
+			return $(this).data('index') == payload.mia[i][1];
+		}).addClass('hasattribs').append(s);
+	}
+
+	$("section#drones small.bayusage").text(
+		osmium_clf_rawattribs.dronecapacityused
+			+ ' / ' + osmium_clf_rawattribs.dronecapacity + ' m³'
+	).toggleClass(
+		'overflow',
+		osmium_clf_rawattribs.dronecapacityused > osmium_clf_rawattribs.dronecapacity
+	);
+	$("section#drones small.bandwidth").text(
+		osmium_clf_rawattribs.dronebandwidthused
+			+ ' / ' + osmium_clf_rawattribs.dronebandwidth + ' Mbps'
+	).toggleClass(
+		'overflow',
+		osmium_clf_rawattribs.dronebandwidthused > osmium_clf_rawattribs.dronebandwidth
+	);
+	var ndrones = 0;
+	var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
+	if("inspace" in dp) {
+		for(var i = 0; i < dp.inspace.length; ++i) {
+			ndrones += dp.inspace[i].quantity;
+		}
+	}
+	$("section#drones small.maxdrones").text(
+		ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
+	).toggleClass(
+		'overflow',
+		ndrones > osmium_clf_rawattribs.maxactivedrones
+	);
+	osmium_clf_rawattribs.activedrones = ndrones;
+};
+
 osmium_init = function() {
-	osmium_init_votes();
+	osmium_init_ship();
+	osmium_init_presets();
+	$("section#loadout > section#modules > div.slots > ul > li[data-typeid] span.charge").remove();
+	osmium_init_modules();
+	osmium_init_drones();
+};
+
+osmium_gen = function() {
+	osmium_gen_modules();
+	osmium_gen_drones();
 };
 
 osmium_init_votes = function() {
@@ -98,5 +160,14 @@ osmium_init_votes = function() {
 				error.fadeIn(250);
 			}
 		});
+	});
+};
+
+osmium_init_comment_replies = function() {
+	$("section#comments > div.comment > a.add_comment").click(function() {
+		$(this).parent().find('ul.replies > li.new').fadeIn(250).find('textarea').focus();
+	});
+	$("section#comments > div.comment > ul.replies > li.new > form > a.cancel").click(function() {
+		$(this).parent().parent().hide().find('textarea').val('');
 	});
 };

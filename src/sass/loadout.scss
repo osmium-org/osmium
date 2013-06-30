@@ -359,6 +359,8 @@ section#ship {
 	min-height: $render-size;
 	margin-bottom: 1em;
 
+	@include no-user-select;
+
 	position: relative;
 
 	&> h1 {
@@ -422,12 +424,12 @@ section#ship {
 
 	&.hascontextmenu {
 		&> h1 > small.dbver {
-			left: $render-size + 5em;
+			left: $render-size + 3.6em;
 		}
 
 		&> span.contextmenuindicator {
 			position: absolute;
-			top: ($render-size * 0.5 + 1.5em) * 0.5 - 0.25em;
+			top: ($render-size * 0.5 + 1.5em) * 0.5 - 0.3em;
 			left: ($render-size + 2em) * 0.5;
 			font-size: 2em;
 		}

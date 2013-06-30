@@ -19,6 +19,17 @@ osmium_gen_modules = function() {
 	var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
 	var cpid = osmium_clf['X-Osmium-current-chargepresetid'];
 	var m, i, j, type, c, chargeid;
+	var old_ias = {};
+
+	$('section#modules > div.slots > ul > li.hasattribs > small.attribs').each(function() {
+		var s = $(this);
+		var li = $(this).parent();
+		var typeid = li.data('typeid');
+		var index = li.data('index');
+
+		if(!(typeid in old_ias)) old_ias[typeid] = {};
+		old_ias[typeid][index] = s.clone();
+	});
 
 	$('section#modules > div.slots > ul').empty();
 
@@ -40,8 +51,14 @@ osmium_gen_modules = function() {
 			}
 		}
 
-		osmium_add_module(m.typeid, m.index, m.state, chargeid);
+		var li = osmium_add_module(m.typeid, m.index, m.state, chargeid);
+
+		if(m.typeid in old_ias && m.index in old_ias[m.typeid]) {
+			li.append(old_ias[m.typeid][m.index]);
+		}
 	}
+
+	if(osmium_loadout_readonly) return;
 
 	for(type in osmium_clf_slots) {
 		$('section#modules > div.slots.' + type).data('type', type);
@@ -68,6 +85,8 @@ osmium_init_modules = function() {
 		var t = $(this);
 		t.prop('title', t.text());
 	});
+
+	if(osmium_loadout_readonly) return;
 
 	$("section#modules > div.slots > ul").sortable({
 		items: "li:not(.placeholder)",
@@ -112,6 +131,8 @@ osmium_init_modules = function() {
 };
 
 osmium_update_slotcounts = function() {
+	if(osmium_loadout_readonly) return;
+
 	$('section#modules > div.slots').each(function() {
 		var t = $(this);
 		osmium_update_overflow(t);
@@ -251,14 +272,16 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			osmium_add_charge(li, chargeid);
 		}
 
-		charge.on('dblclick', function(e) {
-			/* When dblclicking the charge, remove the charge but not the module */
-			li.trigger('remove_charge');
-			osmium_commit_clf();
-			osmium_undo_push();
-			e.stopPropagation();
-			return false;
-		});
+		if(!osmium_loadout_readonly) {
+			charge.on('dblclick', function(e) {
+				/* When dblclicking the charge, remove the charge but not the module */
+				li.trigger('remove_charge');
+				osmium_commit_clf();
+				osmium_undo_push();
+				e.stopPropagation();
+				return false;
+			});
+		}
 	}
 
 	if(stateful = ($.inArray(m[3], osmium_stateful_slot_types) !== -1)) {
@@ -373,25 +396,27 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
 
-		osmium_ctxmenu_add_option(menu, "Unfit module", function() {
-			li.trigger('remove_module');
-			osmium_commit_clf();
-			osmium_undo_push();
-		}, { default: true });
+		if(!osmium_loadout_readonly) {
+			osmium_ctxmenu_add_option(menu, "Unfit module", function() {
+				li.trigger('remove_module');
+				osmium_commit_clf();
+				osmium_undo_push();
+			}, { default: true });
 
-		osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
-			li.parent().find('li').filter(function() {
-				return $(this).data('typeid') === typeid
-			}).trigger('remove_module');
+			osmium_ctxmenu_add_option(menu, "Unfit all of the same type", function() {
+				li.parent().find('li').filter(function() {
+					return $(this).data('typeid') === typeid
+				}).trigger('remove_module');
 
-			osmium_commit_clf();
-			osmium_undo_push();
-			osmium_update_slotcounts();
-		}, {});
+				osmium_commit_clf();
+				osmium_undo_push();
+				osmium_update_slotcounts();
+			}, {});
+
+			osmium_ctxmenu_add_separator(menu);
+		}
 
 		if(hascharges) {
-			osmium_ctxmenu_add_separator(menu);
-
 			osmium_ctxmenu_add_subctxmenu(menu, "Charges", function() {
 				var chargemenu = osmium_ctxmenu_create();
 				var cgroups = {};
@@ -475,11 +500,11 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				osmium_commit_clf();
 				osmium_undo_push();
 			}, { icon: "no_charge.png" });
+
+			osmium_ctxmenu_add_separator(menu);
 		}
 
 		if(stateful) {
-			osmium_ctxmenu_add_separator(menu);
-
 			if(osmium_module_states[typeid][0]) {
 				osmium_ctxmenu_add_option(menu, "Offline module", function() {
 					osmium_set_module_state(li, "offline");
@@ -537,9 +562,9 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				osmium_commit_clf();
 				osmium_undo_push();
 			}, { icon: osmium_module_state_names['overloaded'][1] });
-		}
 
-		osmium_ctxmenu_add_separator(menu);
+			osmium_ctxmenu_add_separator(menu);
+		}
 
 		osmium_ctxmenu_add_option(menu, "Show module info", function() {
 			osmium_showinfo({
@@ -548,7 +573,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				slottype: li.data('slottype'),
 				index: li.data('index')
 			}, "..");
-		}, { icon: "showinfo.png" });
+		}, { icon: "showinfo.png", default: osmium_loadout_readonly });
 
 		if(hascharges && li.data('chargetypeid') !== null) {
 			osmium_ctxmenu_add_option(menu, "Show charge info", function() {
@@ -564,7 +589,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		return menu;
 	});
 
-	return div;
+	return li;
 };
 
 osmium_add_placeholder_module = function(slotsdiv) {

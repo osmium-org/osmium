@@ -20,8 +20,7 @@ $(function() {
 		osmium_tabify($(this), 0);
 	});
 
-	osmium_load_static_client_data('..', osmium_cdatastaticver, function(cdata) {
-
+	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
 
@@ -35,6 +34,7 @@ $(function() {
 	});
 });
 
+osmium_loadout_readonly = false;
 osmium_clftype = 'new';
 osmium_on_clf_payload = function(payload) {
 	$('div#computed_attributes').html(payload.attributes);
@@ -112,8 +112,6 @@ osmium_on_clf_payload = function(payload) {
 		ndrones > osmium_clf_rawattribs.maxactivedrones
 	);
 	osmium_clf_rawattribs.activedrones = ndrones;
-
-	
 };
 
 /* Generate all the missing DOM elements from the CLF */

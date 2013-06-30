@@ -161,7 +161,8 @@ function format_comment_end($commentid) {
 		echo "<form method='post' action='#creplies".$commentid."' accept-charset='utf-8'>\n";
 		echo "<textarea name='replybody' placeholder='Type your reply… (Markdown and some HTML allowed, basic formatting only)'></textarea>\n";
 		echo "<input type='hidden' name='commentid' value='".$commentid."' />\n";
-		echo "<input type='submit' value='Submit reply' />\n</form>\n</li>\n";
+		echo "<input type='submit' value='Submit reply' />\n";
+		echo "<a href='javascript:void(0);' class='cancel'>cancel</a>\n</form>\n</li>\n";
 	}
 
 	echo "</ul>\n";

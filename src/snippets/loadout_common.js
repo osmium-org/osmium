@@ -24,7 +24,7 @@ osmium_undo_stack_position = 0;
 osmium_must_send_clf = false;
 osmium_sending_clf = false;
 
-osmium_load_static_client_data = function(relative, staticver, onsuccess) {
+osmium_load_static_client_data = function(staticver, onsuccess) {
 	var idx = 'osmium_static_client_data_' + staticver;
 
 	var onsuccess2 = function(json) {
@@ -55,7 +55,7 @@ osmium_load_static_client_data = function(relative, staticver, onsuccess) {
 		}
 	} catch(e) { /* Incognito mode probably */ }
 
-	$.getJSON(relative + '/static-' + staticver + '/cache/clientdata.json', function(json) {
+	$.getJSON(osmium_relative + '/static-' + staticver + '/cache/clientdata.json', function(json) {
 		try { localStorage.setItem(idx, JSON.stringify(json)); }
 		catch(e) { /* Incognito mode probably */ }
 		return onsuccess2(json);
@@ -124,12 +124,13 @@ osmium_send_clf = function() {
 	var getopts = {
 		type: osmium_clftype,
 		token: osmium_token,
-		clftoken: osmium_clftoken
+		clftoken: osmium_clftoken,
+		relative: osmium_relative
 	};
 
 	$.ajax({
 		type: 'POST',
-		url: '../src/json/process_clf.php?' + $.param(getopts),
+		url: osmium_relative + '/src/json/process_clf.php?' + $.param(getopts),
 		data: postopts,
 		dataType: 'json',
 		error: function(xhr, error, httperror) {

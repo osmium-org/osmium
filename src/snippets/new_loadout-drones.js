@@ -65,32 +65,34 @@ osmium_gen_drones = function() {
 				return function() {
 					var menu = osmium_ctxmenu_create();
 
-					osmium_ctxmenu_add_option(menu, "Remove 1 drone", function() {
-						osmium_remove_drone_from_clf(t, 1, p);
-						osmium_gen_drones();
-						osmium_undo_push();
-						osmium_commit_clf();
-					}, { default: true });
-
-					if(qty > 5) {
-						osmium_ctxmenu_add_option(menu, "Remove 5 drones", function() {
-							osmium_remove_drone_from_clf(t, 5, p);
+					if(!osmium_loadout_readonly) {
+						osmium_ctxmenu_add_option(menu, "Remove 1 drone", function() {
+							osmium_remove_drone_from_clf(t, 1, p);
 							osmium_gen_drones();
 							osmium_undo_push();
 							osmium_commit_clf();
-						}, { });
-					}
+						}, { default: true });
 
-					if(qty > 1) {
-						osmium_ctxmenu_add_option(menu, "Remove " + qty + " drones", function() {
-							osmium_remove_drone_from_clf(t, qty, p);
-							osmium_gen_drones();
-							osmium_undo_push();
-							osmium_commit_clf();
-						}, { });
-					}
+						if(qty > 5) {
+							osmium_ctxmenu_add_option(menu, "Remove 5 drones", function() {
+								osmium_remove_drone_from_clf(t, 5, p);
+								osmium_gen_drones();
+								osmium_undo_push();
+								osmium_commit_clf();
+							}, { });
+						}
 
-					osmium_ctxmenu_add_separator(menu);
+						if(qty > 1) {
+							osmium_ctxmenu_add_option(menu, "Remove " + qty + " drones", function() {
+								osmium_remove_drone_from_clf(t, qty, p);
+								osmium_gen_drones();
+								osmium_undo_push();
+								osmium_commit_clf();
+							}, { });
+						}
+
+						osmium_ctxmenu_add_separator(menu);
+					}
 
 					osmium_ctxmenu_add_option(menu, "Move 1 to " + other, function() {
 						osmium_add_drone_to_clf(t, 1, other);
@@ -122,14 +124,16 @@ osmium_gen_drones = function() {
 
 					osmium_ctxmenu_add_separator(menu);
 
-					osmium_ctxmenu_add_option(menu, "Clear all drones in " + p, function() {
-						osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']]['in' + p] = [];
-						osmium_gen_drones();
-						osmium_undo_push();
-						osmium_commit_clf();
-					}, { });
+					if(!osmium_loadout_readonly) {
+						osmium_ctxmenu_add_option(menu, "Clear all drones in " + p, function() {
+							osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']]['in' + p] = [];
+							osmium_gen_drones();
+							osmium_undo_push();
+							osmium_commit_clf();
+						}, { });
 
-					osmium_ctxmenu_add_separator(menu);
+						osmium_ctxmenu_add_separator(menu);
+					}
 
 					osmium_ctxmenu_add_option(menu, "Show drone info", function() {
 						osmium_showinfo({
@@ -137,7 +141,7 @@ osmium_gen_drones = function() {
 							type: "drone",
 							typeid: t
 						}, "..");
-					}, { icon: "showinfo.png" });
+					}, { icon: "showinfo.png", default: osmium_loadout_readonly });
 
 					return menu;
 				};
