@@ -33,18 +33,22 @@ osmium_tabify = function(ul, selected) {
 			if(osmium_orig_anchor.length) {
 				var p = osmium_orig_anchor.parent();
 				var id, a;
+				var found = false;
 
 				while(p.length) {
 					if(id = p.prop('id')) {
 						var a = $("a[href='#" + id + "']");
 						if(a.length && $.inArray(id, targets) > 0) {
 							selected = a.parent().index();
+							found = true;
 							break;
 						}
 					}
 
 					p = p.parent();
 				}
+
+				if(!found) osmium_orig_anchor = null;
 			}
 		}
 	}
@@ -117,10 +121,10 @@ osmium_tabify = function(ul, selected) {
 			document.body.scrollTop = s_top;
 		}
 
-		if(osmium_orig_anchor !== false && osmium_orig_anchor.length) {
+		if(osmium_orig_anchor && osmium_orig_anchor.length) {
 			osmium_orig_anchor.addClass('pseudoclasstarget');
 			$(window).scrollTop(osmium_orig_anchor.offset().top);
-			osmium_orig_anchor = [];
+			osmium_orig_anchor = false;
 		}
 
 		return false;
@@ -138,8 +142,10 @@ osmium_tabify = function(ul, selected) {
 		if(j == -1) continue;
 
 		$('a[href="#' + cur_tabs[i] + '"]').closest('li').click();
+		osmium_orig_anchor = false;
 		return;
 	}
 
 	ul.children('li').eq(selected).click();
+	osmium_orig_anchor = false;
 };
