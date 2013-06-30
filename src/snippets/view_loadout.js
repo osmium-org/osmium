@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -26,6 +26,77 @@ $(function() {
 });
 
 osmium_init = function() {
-
+	osmium_init_votes();
 };
 
+osmium_init_votes = function() {
+	$("section#ship > div.votes > a, section#comments > div.comment > div.votes > a").click(function() {
+		var t = $(this);
+		var score = t.parent().children('strong');
+		var delta = 0;
+		var upvoted = t.parent().children('a.upvote').hasClass('voted');
+		var downvoted = t.parent().children('a.downvote').hasClass('voted');
+		var action;
+
+		if(t.hasClass('voted')) {
+			t.removeClass('voted');
+			delta += t.hasClass('upvote') ? -1 : 1;
+			action = 'rmvote';
+		} else {
+			t.parent().children('a.voted').each(function() {
+				delta += $(this).removeClass('voted').hasClass('upvote') ? -1 : 1;
+			});
+
+			t.addClass('voted');
+			if(t.hasClass('upvote')) {
+				delta += 1;
+				action = 'castupvote';
+			} else {
+				delta += -1;
+				action = 'castdownvote';
+			}
+		}
+
+		score.text(parseInt(score.text(), 10) + delta);
+
+		var targettype = t.parent().data('targettype');
+		var opts = {
+			targettype: targettype,
+			action: action,
+			loadoutid: $("section#ship").data('loadoutid')
+		};
+
+		if(targettype == 'comment') {
+			opts['commentid'] = t.parent().parent().data('commentid');
+		}
+
+		$.getJSON(osmium_relative + '/src/json/cast_vote.php', opts, function(data) {
+			if(!data['success']) {
+				score.text(parseInt(score.text(), 10) - delta);
+
+				if(upvoted) {
+					t.parent().children('a.upvote').addClass('voted');
+				} else {
+					t.parent().children('a.upvote').removeClass('voted');
+				}
+
+				if(downvoted) {
+					t.parent().children('a.downvote').addClass('voted');
+				} else {
+					t.parent().children('a.downvote').removeClass('voted');
+				}
+
+				var error = $(document.createElement('div'));
+				error.addClass('verror');
+				error.text(data['error']);
+				error.append('<br /><small>(click to close)</small>');
+				error.hide();
+				error.click(function() {
+					$(this).fadeOut(250);
+				});
+				t.parent().append(error);
+				error.fadeIn(250);
+			}
+		});
+	});
+};

@@ -259,3 +259,19 @@ section#comments {
 		}
 	}
 }
+
+div#vlattribs > section#ship {
+	position: relative;
+
+	&> h1 {
+		&> small, &> strong {
+			right: 40px;
+		}
+	}
+
+	&> div.votes {
+		position: absolute;
+		right: 0;
+		top: 0;
+	}
+}

@@ -166,14 +166,39 @@ list($commentcount) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
 $commentcount = (int)$commentcount;
 
 echo "<div id='vlattribs'>
-<section id='ship'>
+<section id='ship' data-loadoutid='".(int)$loadoutid."'>
 <h1>
 <img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />
 <small class='groupname'>".htmlspecialchars($groupname)."</small>
 <strong>".htmlspecialchars($fit['ship']['typename'])."</strong>
 <small class='dbver'>".htmlspecialchars(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
-</h1>
-</section>\n";
+</h1>\n";
+
+if($loadoutid === false) {
+	$votesclass = ' dummy';
+	$totalupvotes = 0;
+	$totalvotes = 0;
+	$totaldownvotes = 0;
+	$votetype = null;
+} else {
+	$votesclass = '';
+}
+
+echo "<div class='votes{$votesclass}' data-targettype='loadout'>\n";
+echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote"
+.($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')
+."'><img src='".RELATIVE."/static-".\Osmium\STATICVER
+."/icons/vote.svg' alt='upvote' /></a>\n";
+echo "<strong title='".$totalupvotes." upvote(s), "
+.$totaldownvotes." downvote(s)'>".$totalvotes."</strong>\n";
+echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort'"
+." class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')
+."'><img src='".RELATIVE."/static-".\Osmium\STATICVER
+."/icons/vote.svg' alt='downvote' /></a>\n";
+echo "</div>\n";
+
+
+echo "</section>\n";
 
 if($loadoutid !== false) {
 	$class = $fit['metadata']['revision'] > 1 ? 'edited' : 'notedited';

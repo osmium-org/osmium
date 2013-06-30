@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,6 +32,12 @@ if(!isset($_GET['loadoutid']) || !isset($_GET['targettype']) || !isset($_GET['ac
 $loadoutid = intval($_GET['loadoutid']);
 $targettype = $_GET['targettype'];
 $action = $_GET['action'];
+
+if($loadoutid === 0) {
+	$result['error'] = 'This loadout cannot be voted on.';
+	$result['success'] = false;
+	\Osmium\Chrome\return_json($result);
+}
 
 if(!\Osmium\State\is_fit_green($loadoutid)) {
 	$result['error'] = 'Refresh page and try again';
