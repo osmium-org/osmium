@@ -52,12 +52,13 @@ osmium_init_control = function() {
 			token: osmium_token,
 			clftoken: osmium_clftoken,
 			'export': 1,
-			exportfmt: $("section#control select#export_type").val()
+			exportfmt: $("section#control select#export_type").val(),
+			relative: osmium_relative
 		};
 
 		$.ajax({
 			type: "POST",
-			url: "../src/json/process_clf.php?" + $.param(getopts),
+			url: osmium_relative + "/src/json/process_clf.php?" + $.param(getopts),
 			data: postopts,
 			dataType: "json",
 			error: function(xhr, error, httperror) {
@@ -91,12 +92,13 @@ osmium_init_control = function() {
 			type: 'new',
 			token: osmium_token,
 			clftoken: osmium_clftoken,
-			submit: 1
+			submit: 1,
+			relative: osmium_relative
 		};
 
 		$.ajax({
 			type: "POST",
-			url: "../src/json/process_clf.php?" + $.param(getopts),
+			url: osmium_relative + "/src/json/process_clf.php?" + $.param(getopts),
 			data: postopts,
 			dataType: "json",
 			error: function(xhr, error, httperror) {

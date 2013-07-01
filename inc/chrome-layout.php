@@ -132,7 +132,7 @@ function print_footer() {
 		$name = 'JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
 		$cache = '/static/cache/'.$name;
 		$cachefile = \Osmium\ROOT.$cache;
-		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\STATICVER.'/cache/'.$name;
+		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\JS_STATICVER.'/cache/'.$name;
 
 		if(!file_exists($cachefile)) {
 			if($min = \Osmium\get_ini_setting('minify_js')) {
