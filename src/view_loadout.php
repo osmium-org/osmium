@@ -113,7 +113,7 @@ if(isset($_GET['pid'])) {
 	}
 }
 if(isset($_GET['dpid']) && !isset($_GET['dronepreset'])) {
-	$_GET['dpid'] = $_GET['dronepreset'];
+	$_GET['dronepreset'] = $_GET['dpid'];
 }
 
 $preset_overridden = false;
