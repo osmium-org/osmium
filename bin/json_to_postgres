@@ -46,8 +46,6 @@ $structure = array(
 		'effectID' => 'effectid',
 		'effectName' => 'effectname',
 		'effectCategory' => 'effectcategory',
-		'preExpression' => 'preexpression',
-		'postExpression' => 'postexpression',
 		'durationAttributeID' => 'durationattributeid',
 		'trackingSpeedAttributeID' => 'trackingspeedattributeid',
 		'dischargeAttributeID' => 'dischargeattributeid',
@@ -118,25 +116,6 @@ $structure = array(
 	array(
 		'typeID' => 'typeid',
 		'averagePrice' => 'averageprice'
-		),
-
-	'dgmoperands', 'dogma_GetOperandsForChar.json',
-	array(
-		'operandID' => 'operandid',
-		'operandKey' => 'operandkey',
-		),
-
-	'dgmexpressions', 'dgmexpressions.json',
-	array(
-		'expressionID' => 'expressionid',
-		'operandID' => 'operandid',
-		'arg1' => 'arg1',
-		'arg2' => 'arg2',
-		'expressionName' => 'expressionname',
-		'expressionValue' => 'expressionvalue',
-		'expressionTypeID' => 'expressiontypeid',
-		'expressionGroupID' => 'expressiongroupid',
-		'expressionAttributeID' => 'expressionattributeid',
 		),
 	);
 

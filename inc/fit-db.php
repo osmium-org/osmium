@@ -449,8 +449,8 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	}
 
 	$revision = $fit['metadata']['revision'];
-	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
-	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid, 'Loadout_Cache_');
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision, 'Loadout_Cache_');
 	\Osmium\State\invalidate_cache_memory('main_popular_tags');
 	\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
 
@@ -490,7 +490,8 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
  * errors happened.
  */
 function get_fit($loadoutid, $revision = null) {
-	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null)) !== null) {
+	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null, 'Loadout_Cache_')) !== null) {
+		dogma_late_init($cache);
 		return $cache;
 	}
 
@@ -503,11 +504,12 @@ function get_fit($loadoutid, $revision = null) {
 		$latest_revision = true;
 	}
 
-	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null)) !== null) {
+	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null, 'Loadout_Cache_')) !== null) {
 		if(isset($latest_revision) && $latest_revision === true) {
-			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache);
+			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache, 0, 'Loadout_Cache_');
 		}
 
+		dogma_late_init($cache);
 		return $cache;
 	}
 
@@ -621,9 +623,10 @@ function get_fit($loadoutid, $revision = null) {
 	\Osmium\Fit\use_drone_preset($fit, key($fit['dronepresets']));
   
 	if(isset($latest_revision) && $latest_revision === true) {
-		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
+		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, 0, 'Loadout_Cache_');
 	}
-	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit);
+	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit, 0, 'Loadout_Cache_');
+	dogma_late_init($fit);
 	return $fit;
 }
 
@@ -715,4 +718,31 @@ function get_available_skillset_names_for_account() {
 	}
 
 	return $names;
+}
+
+function dogma_late_init(&$fit) {
+	dogma_init_context($fit['__dogma_context']);
+
+	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] > 0) {
+		dogma_set_ship($fit['__dogma_context'], $fit['ship']['typeid']);
+	}
+
+	foreach($fit['modules'] as $type => &$sub) {
+		foreach($sub as $index => &$m) {
+			dogma_add_module($fit['__dogma_context'], $m['typeid'], $m['dogma_index']);
+
+			if(isset($fit['charges'][$type][$index])) {
+				dogma_add_charge(
+					$fit['__dogma_context'], $m['dogma_index'],
+					$fit['charges'][$type][$index]['typeid']
+				);
+			}
+		}
+	}
+
+	foreach($fit['drones'] as $typeid => $d) {
+		if($d['quantityinspace'] == 0) continue;
+
+		dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
+	}
 }

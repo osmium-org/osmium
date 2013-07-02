@@ -72,7 +72,6 @@ function get_capacitor_stability(&$fit) {
 				}
 
 				if(!isset($effectdata['dischargeattributeid'])) continue;
-				get_attribute_in_cache($effectdata['dischargeattributeid'], $fit['cache']);
 
 				$discharge = \Osmium\Dogma\get_module_attribute(
 					$fit, $type, $index, 
@@ -243,8 +242,6 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 
 		$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
 		$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
-		get_attribute_in_cache($durationattributeid, $fit['cache']);
-		get_attribute_in_cache($dischargeattributeid, $fit['cache']);
 		$durationattributename = \Osmium\Dogma\get_attributename($durationattributeid);
 		$dischargeattributename = \Osmium\Dogma\get_attributename($dischargeattributeid);
 
@@ -376,8 +373,6 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
 	$dps = 0;
 	$alpha = 0;
 
-	get_attribute_in_cache($fit['cache']['__effects'][$attackeffectname]['durationattributeid'], $fit['cache']);
-
 	$durationattributename = \Osmium\Dogma\get_attributename(
 		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']);
 
@@ -447,8 +442,6 @@ function get_damage_from_drones(&$fit) {
 
 	if(!isset($fit['cache']['__effects']['targetAttack'])) return 0;
 
-	get_attribute_in_cache($fit['cache']['__effects']['targetAttack']['durationattributeid'], $fit['cache']);
-
 	$durationattributename = 
 		\Osmium\Dogma\get_attributename($fit['cache']['__effects']['targetAttack']['durationattributeid']);
 
@@ -504,7 +497,6 @@ function get_module_interesting_attributes($fit, $type, $index) {
 			if(!$effectdata[$t.'attributeid']) continue;
 			$attributeid = $effectdata[$t.'attributeid'];
 
-			get_attribute_in_cache($attributeid, $fit['cache']);
 			$attributename = \Osmium\Dogma\get_attributename($attributeid);
 
 			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
@@ -580,8 +572,6 @@ function get_average_price(&$fit, &$missing) {
 		}
 	}
 
-	get_attributes_and_effects(array_keys($types), $fit['cache']);
-
 	foreach($types as $typeid => $a) {
 		list($qty, $name) = $a;
 
@@ -613,7 +603,6 @@ function get_mining_yield(&$fit) {
 
 			$durationid = $fit['cache']['__effects']['miningLaser']['durationattributeid'];
 
-			get_attribute_in_cache($durationid, $fit['cache']);
 			$durationname = \Osmium\Dogma\get_attributename($durationid);
 
 			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationname);

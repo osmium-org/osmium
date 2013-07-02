@@ -250,10 +250,9 @@ The long way
 ------------
 
 The dump file is generated from the database of the EVE client
-itself. Not all of the data is in the official Static Data Dump (and
-it's often lags behind the official patch), so you'll have to dump the
-database from the client yourself then do some minor transformations
-to make it PostgreSQL-friendly.
+itself. It could be generated from the Static Data Dump, but Osmium
+uses a different schema with clear, defined constraints. In practice
+it is much easier to generate it from the client itself.
 
 Use the [`phobos`](http://jira.evefit.org/browse/PHOBOS) dumper to
 dump the EVE database as JSON files:
@@ -263,7 +262,7 @@ git clone git://dev.evefit.org/phobos.git
 cd phobos
 python2.7 setup.py build
 
-PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
+PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups
 ~~~~
 
 Then convert the JSON files to SQL statements using the
@@ -287,23 +286,9 @@ SET search_path TO eve;
 \i osmium-eve-data.sql
 ~~~~
 
-Now, use the `cache_expressions` script to populate the
-`dgmcacheexpressions` table:
+That's it! You can now dump the eve schema for later use (for example
+by using the `backup_eve` script).
 
 ~~~~
-./bin/cache_expressions
-~~~~
-
-That's it! You can now truncate the `dgmoperands` and `dgmexpressions`
-tables, and dump the eve schema for later use (for example by using
-the `backup_eve` script).
-
-~~~~
-psql osmium osmium_user
-
-SET search_path TO eve;
-TRUNCATE dgmoperands, dgmexpressions;
-\q
-
 ./bin/backup_eve
 ~~~~

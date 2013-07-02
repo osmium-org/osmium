@@ -25,6 +25,7 @@ namespace Osmium\Fit;
  * state at all. This makes it easier to test and debug.
  */
 
+require __DIR__.'/fit-names.php';
 require __DIR__.'/fit-presets.php';
 require __DIR__.'/fit-attributes.php';
 require __DIR__.'/fit-tags.php';
@@ -167,6 +168,54 @@ function get_state_categories() {
 		);
 }
 
+function get_typename($typeid) {
+	static $cache = null;
+	if($cache === null) {
+		$cache = \Osmium\State\get_cache_memory('type_map', null);
+		if($cache === null) {
+			$cache = array();
+			$q = \Osmium\Db\query('SELECT typename, typeid FROM eve.invtypes');
+			while($r = \Osmium\Db\fetch_row($q)) {
+				$cache[$r[1]] = $r[0];
+			}
+			\Osmium\State\put_cache_memory('type_map', $cache);
+		}
+	}
+
+	if(!isset($cache[$typeid])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('get_typename(): unknown typeid "'.$typeid.'"', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
+	}
+
+	return $cache[$typeid];
+}
+
+function get_typeid($typename) {
+	static $cache = null;
+	if($cache === null) {
+		$cache = \Osmium\State\get_cache_memory('type_map_flipped', null);
+		if($cache === null) {
+			$cache = array();
+			$q = \Osmium\Db\query('SELECT typename, typeid FROM eve.invtypes');
+			while($r = \Osmium\Db\fetch_row($q)) {
+				$cache[$r[0]] = $r[1];
+			}
+			\Osmium\State\put_cache_memory('type_map_flipped', $cache);
+		}
+	}
+
+	if(!isset($cache[$typename])) {
+		// @codeCoverageIgnoreStart
+		trigger_error('get_typeid(): unknown typename "'.$typename.'"', E_USER_ERROR);
+		// @codeCoverageIgnoreEnd
+	}
+
+	return (int)$cache[$typename];
+}
+
+
+
 /**
  * Initialize a new fitting in variable $fit.
  *
@@ -180,7 +229,7 @@ function get_state_categories() {
  * modulepresetid => (integer) 
  * modulepresetname => (string)
  * modulepresetdesc => (string)
- * modules => array(<slot_type> => array(<index> => array(typeid, typename, state)))
+ * modules => array(<slot_type> => array(<index> => array(typeid, typename, dogma_index, state)))
  *
  * chargepresetid => (integer) 
  * chargepresetname => (string)
@@ -198,41 +247,17 @@ function get_state_categories() {
  *
  * dronepresets => array(<presetid> => array(name, description, drones))
  *
- * dogma => array({char,
- *                 ship,
- *                 modules => <slot_type> => <index>,
- *                 charges => <slot_type> => <index>,
- *                 drones => <typeid>,
- *                 skills => <typeid>}
- *                 => array(<attributename> => (base value),
- *                          __modifiers => array(
- *                              <attributename> =>
- *                                  array(<action> =>
- *                                      array(<group> =>
- *                                          array(array(name, source => [modifier source])))))))
- *
- * cache => array(__attributes => array({<attributename>, <attributeid>} =>
- *                                          array(attributename, defaultvalue, stackable, highisgood))
- *                __effects => array({<effectname>, <effectid>} =>
- *                                       array(effectcategory,
- *                                             {duration, trackingspeed, discharge, range, falloff}attributeid))
- *                <typeid> => array(attributes =>
- *                                      array(<attributename> =>
- *                                          array(attributename, attributeid, value)),
- *                                  effects =>
- *                                      array(<effectname> =>
- *                                          array(effectid, effectname, preexp, postexp)))
- *
  * metadata => array(name, description, tags, evebuildnumber,
  *					 view_permission, edit_permission, visibility,
  *					 password, loadoutid, hash, revision,
  *					 privatetoken, skillset)
+ *
+ * __dogma_context => (Dogma context resource)
  */
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(),
 		'dogma' => array(),
-		'cache' => array(),
 		'presets' => array(),
 		'dronepresets' => array(),
 		'metadata' => array(
@@ -253,8 +278,7 @@ function create(&$fit) {
 	$dpid = create_drone_preset($fit, 'Default drone preset', '');
 	use_drone_preset($fit, $dpid);
 
-	/* Apply the default skill modifiers */
-	\Osmium\Dogma\eval_skill_preexpressions($fit);
+	dogma_init_context($fit['__dogma_context']);
 }
 
 /**
@@ -279,72 +303,32 @@ function reset(&$fit) {
  * there are fitted modules and whatnot.
  */
 function select_ship(&$fit, $new_typeid) {
-	if(isset($fit['ship']['typeid'])) {
-		/* Switching hull */
-		\Osmium\Dogma\eval_ship_postexpressions($fit);
-		$old_typeid = $fit['ship']['typeid'];
-		$fit['ship'] = array();
-		if($old_typeid != $new_typeid) {
-			maybe_remove_cache($fit, $old_typeid);
-		}
-	}
-
-	foreach($fit['dogma']['ship'] as $key => $value) {
-		if($key === '__modifiers') continue;
-		unset($fit['dogma']['ship'][$key]);
-	}
-
-	$row = \Osmium\Db\fetch_row(
-		\Osmium\Db\query_params(
-			'SELECT invships.typename FROM osmium.invships JOIN eve.invtypes ON invtypes.typeid = invships.typeid WHERE invships.typeid = $1', 
-			array($new_typeid)));
+	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT invships.typename FROM osmium.invships
+		JOIN eve.invtypes ON invtypes.typeid = invships.typeid
+		WHERE invships.typeid = $1', 
+		array($new_typeid)
+	));
 	if($row === false) return false;
 
 	$fit['ship'] = array(
 		'typeid' => $new_typeid,
 		'typename' => $row[0],
-		);
-	
-	get_attributes_and_effects(array($new_typeid), $fit['cache']);
+	);
 
-	foreach($fit['cache'][$fit['ship']['typeid']]['attributes'] as $attr) {
-		$fit['dogma']['ship'][$attr['attributename']] = $attr['value'];
-	}
-	$fit['dogma']['ship']['typeid'] =& $fit['ship']['typeid'];
-
-	/* Mass is in invtypes, not dgmtypeattribs, so it has to be hardcoded here */
-	$fit['cache']['__attributes']['mass'] = array(
-		'attributename' => 'mass',
-		'stackable' => 0,
-		'highisgood' => 1,
-		);
-	
-	\Osmium\Dogma\eval_ship_preexpressions($fit);
+	dogma_set_ship($fit['__dogma_context'], $new_typeid);
 
 	return true;
 }
 
 /**
- * Add several modules to the fit. This is more efficient than calling
- * add_module() multiple times.
+ * Add several modules to the fit.
  *
  * @param $modules array of modules to add, should be of the form
  * array(slot_type => array(index => typeid)), or array(slot_type =>
  * array(index => array(typeid, modulestate))).
  */
 function add_modules_batch(&$fit, $modules) {
-	$typeids = array();
-	foreach($modules as $type => $a) {
-		foreach($a as $index => $magic) {
-			if(is_array($magic)) $typeid = $magic[0];
-			else $typeid = $magic;
-
-			$typeids[$typeid] = true;
-		}
-	}
-
-	get_attributes_and_effects(array_keys($typeids), $fit['cache']);
-
 	foreach($modules as $type => $a) {
 		foreach($a as $index => $magic) {
 			if(is_array($magic)) {
@@ -375,7 +359,11 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
             if($state !== null) {
                 /* Module is already installed, but state still needs an update */
-                change_module_state_by_location($fit, $type, $index, $state);
+	            dogma_set_module_state(
+		            $fit['__dogma_context'],
+		            $fit['modules'][$type][$index]['dogma_index'],
+		            \Osmium\Dogma\get_dogma_states()[$state]
+	            );
             }
 
 			return;
@@ -384,50 +372,23 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 		remove_module($fit, $index, $fit['modules'][$type][$index]['typeid']);
 	}
 
-	$fit['modules'][$type][$index] = array(
-		'typeid' => $typeid,
-		'typename' => $fit['cache'][$typeid]['typename'],
-		'state' => null
-		);
-
 	list($isactivable, ) = get_module_states($fit, $typeid);
 	if($state === null) {
 		$state = ($isactivable && in_array($type, get_stateful_slottypes())) ? STATE_ACTIVE : STATE_ONLINE;
 	}
-	$fit['modules'][$type][$index]['old_state'] = $state;
 
-	online_module($fit, $type, $index);
-}
+	$fit['modules'][$type][$index] = array(
+		'typeid' => $typeid,
+		'typename' => get_typename($typeid),
+		'state' => $state
+	);
 
-/** @internal */
-function online_module(&$fit, $slottype, $index, $onlinecharge = true) {
-	if(isset($fit['dogma']['modules'][$slottype][$index])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('online_module(): module already appears to be online', E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	$typeid = $fit['modules'][$slottype][$index]['typeid'];
-	$fit['dogma']['modules'][$slottype][$index] = array();
-	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
-		$fit['dogma']['modules'][$slottype][$index][$attr['attributename']] = $attr['value'];
-	}
-	$fit['dogma']['modules'][$slottype][$index]['typeid'] =& $fit['modules'][$slottype][$index]['typeid'];
-
-	$state = $fit['modules'][$slottype][$index]['old_state'];
-	change_module_state_by_location($fit, $slottype, $index, $state);
-	unset($fit['modules'][$slottype][$index]['old_state']);
-
-	/* This may seem logical, but no. online_module() will be called
-	 * by add_module() (in which case there is nocharge anyway), or by
-	 * use_preset(), which will call use_charge_preset() immediately
-	 * after. Onlining the charge here would cause the charge to be
-	 * onlined twice while switching between (module) presets. */
-	//if(isset($fit['charges'][$slottype][$index])) {
-	//	online_charge($fit, $slottype, $index);
-	//}
-
+	dogma_add_module_s(
+		$fit['__dogma_context'],
+		$typeid,
+		$fit['modules'][$type][$index]['dogma_index'],
+		\Osmium\Dogma\get_dogma_states()[$state]
+	);
 }
 
 /**
@@ -441,7 +402,6 @@ function remove_module(&$fit, $index, $typeid) {
 	if(!isset($fit['modules'][$type][$index]['typeid'])) {
 		// @codeCoverageIgnoreStart
 		trigger_error('remove_module(): trying to remove a nonexistent module!', E_USER_WARNING);
-		maybe_remove_cache($fit, $typeid);
 		return;
 		// @codeCoverageIgnoreEnd
 	}
@@ -458,30 +418,8 @@ function remove_module(&$fit, $index, $typeid) {
 		}
 	}
 
-	offline_module($fit, $type, $index);
+	dogma_remove_module($fit['__dogma_context'], $fit['modules'][$type][$index]['dogma_index']);
 	unset($fit['modules'][$type][$index]);
-
-	maybe_remove_cache($fit, $typeid);
-}
-
-/** @internal */
-function offline_module(&$fit, $slottype, $index) {
-	if(!isset($fit['dogma']['modules'][$slottype][$index])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('offline_module(): module already appears to be offline', E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	if(isset($fit['charges'][$slottype][$index])) {
-		offline_charge($fit, $slottype, $index);
-	}
-
-	$state = get_module_state_by_location($fit, $slottype, $index);
-	change_module_state_by_location($fit, $slottype, $index, null);
-	$fit['modules'][$slottype][$index]['old_state'] = $state;
-
-	unset($fit['dogma']['modules'][$slottype][$index]);
 }
 
 /**
@@ -513,20 +451,11 @@ function sort_modules(&$fit, $order) {
  * @param $state one of the STATE_* constants.
  */
 function change_module_state_by_location(&$fit, $type, $index, $state) {
-	$previous_state = get_module_state_by_location($fit, $type, $index);
-    if($previous_state === $state) {
-        /* Be lazy */
-        return;
-    }
-
-	$categories = get_state_categories();
-
-	$added_groups = array_diff($categories[$state], $categories[$previous_state]);
-	$removed_groups = array_diff($categories[$previous_state], $categories[$state]);
-
-	\Osmium\Dogma\eval_module_postexpressions($fit, $type, $index, $removed_groups);
-	\Osmium\Dogma\eval_module_preexpressions($fit, $type, $index, $added_groups);
-
+	dogma_set_module_state(
+		$fit['__dogma_context'],
+		$fit['modules'][$type][$index]['dogma_index'],
+		\Osmium\Dogma\get_dogma_states()[$state]
+	);
 	$fit['modules'][$type][$index]['state'] = $state;
 }
 
@@ -608,49 +537,20 @@ function get_previous_state($state, $isactivable, $isoverloadable) {
  * overloadable.
  */
 function get_module_states(&$fit, $typeid) {
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$type = get_module_slottype($fit, $typeid);
+	dogma_type_has_overload_effects($typeid, $overloadable);
+	if($overloadable) return array(true, true);
 
-	$isactivable = false;
-	$isoverloadable = false;
-
-	foreach($fit['cache'][$typeid]['effects'] as $effect) {
-		$name = $effect['effectname'];
-
-		if($fit['cache']['__effects'][$name]['effectcategory'] == 1
-		   || $fit['cache']['__effects'][$name]['effectcategory'] == 2
-		   || $fit['cache']['__effects'][$name]['effectcategory'] == 3) {
-			$isactivable = true;
-			continue;
-		}
-
-		if($fit['cache']['__effects'][$name]['effectcategory'] == 5) {
-			$isoverloadable = true;
-			$isactivable = true;
-			break;
-		}
-	}
-
-	return array($isactivable, $isoverloadable);
+	dogma_type_has_active_effects($typeid, $activable);
+	return array($activable, false);
 }
 
 /**
- * Add several charges at once to the current charge preset. This is
- * more efficient than calling add_charge() multiple times.
+ * Add several charges at once to the current charge preset.
  *
  * @param $charges an array of the form array(<slot_type> =>
  * array(<index> => <typeid>))
  */
 function add_charges_batch(&$fit, $charges) {
-	$typeids = array();
-	foreach($charges as $slot => $a) {
-		foreach($a as $index => $typeid) {
-			$typeids[$typeid] = true;
-		}
-	}
-
-	get_attributes_and_effects(array_keys($typeids), $fit['cache']);
-
 	foreach($charges as $slottype => $a) {
 		foreach($a as $index => $typeid) {
 			add_charge($fit, $slottype, $index, $typeid);
@@ -669,8 +569,6 @@ function add_charge(&$fit, $slottype, $index, $typeid) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-
 	if(isset($fit['charges'][$slottype][$index])) {
 		if($fit['charges'][$slottype][$index]['typeid'] == $typeid) {
 			return;
@@ -681,31 +579,14 @@ function add_charge(&$fit, $slottype, $index, $typeid) {
 
 	$fit['charges'][$slottype][$index] = array(
 		'typeid' => $typeid,
-		'typename' => $fit['cache'][$typeid]['typename'],
-		);
+		'typename' => get_typename($typeid)
+	);
 
-	online_charge($fit, $slottype, $index);
-}
-
-/** @internal */
-function online_charge(&$fit, $slottype, $index) {
-	if(isset($fit['dogma']['charges'][$slottype][$index])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('online_charge(): charge already appears to be online', E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	$typeid = $fit['charges'][$slottype][$index]['typeid'];
-	$fit['dogma']['charges'][$slottype][$index] = array();
-	foreach($fit['cache'][$typeid]['attributes'] as $attr) {
-		$fit['dogma']['charges'][$slottype][$index][$attr['attributename']]
-			= $attr['value'];
-	}
-	$fit['dogma']['charges'][$slottype][$index]['typeid']
-		=& $fit['charges'][$slottype][$index]['typeid'];
-	
-	\Osmium\Dogma\eval_charge_preexpressions($fit, $slottype, $index);
+	dogma_add_charge(
+		$fit['__dogma_context'],
+		$fit['modules'][$slottype][$index]['dogma_index'],
+		$typeid
+	);
 }
 
 /**
@@ -719,38 +600,22 @@ function remove_charge(&$fit, $slottype, $index) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	offline_charge($fit, $slottype, $index);
-
-	$typeid = $fit['charges'][$slottype][$index]['typeid'];
+	dogma_remove_charge(
+		$fit['__dogma_context'],
+		$fit['modules'][$slottype][$index]['dogma_index']
+	);
 	unset($fit['charges'][$slottype][$index]);
-	maybe_remove_cache($fit, $typeid);
-}
-
-/** @internal */
-function offline_charge(&$fit, $slottype, $index) {
-	if(!isset($fit['dogma']['charges'][$slottype][$index])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('offline_charge(): charge already appears to be offline', E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	\Osmium\Dogma\eval_charge_postexpressions($fit, $slottype, $index);
-	unset($fit['dogma']['charges'][$slottype][$index]);
 }
 
 /**
- * Add several different drones to a fitting. This is more efficient
- * than multiple calls to add_drone(). If drones with the same typeid
- * are already present on the fitting, this will add them to the
- * existing drones instead of replacing them.
+ * Add several different drones to a fitting. If drones with the same
+ * typeid are already present on the fitting, this will add them to
+ * the existing drones instead of replacing them.
  *
  * @param $drones array of structure array(<typeid> =>
  * array(quantityinbay, quantityinspace))
  */
 function add_drones_batch(&$fit, $drones) {
-	get_attributes_and_effects(array_keys($drones), $fit['cache']);
-
 	foreach($drones as $typeid => $quantities) {
 		$quantityinbay = isset($quantities['quantityinbay']) ? $quantities['quantityinbay'] : 0;
 		$quantityinspace = isset($quantities['quantityinspace']) ? $quantities['quantityinspace'] : 0;
@@ -769,26 +634,35 @@ function add_drones_batch(&$fit, $drones) {
 function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 	if($quantityinbay == 0 && $quantityinspace == 0) return;
 
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-
 	if(!isset($fit['drones'][$typeid])) {
 		$fit['drones'][$typeid] = array(
 			'typeid' => $typeid,
-			'typename' => $fit['cache'][$typeid]['typename'],
-			'volume' => $fit['cache'][$typeid]['volume'],
+			'typename' => get_typename($typeid),
 			'quantityinbay' => 0,
 			'quantityinspace' => 0,
-			);
-
-		$fit['dogma']['drones'][$typeid] = array();
-		foreach($fit['cache'][$typeid]['attributes'] as $attr) {
-			$fit['dogma']['drones'][$typeid][$attr['attributename']] = $attr['value'];
-		}
-		$fit['dogma']['drones'][$typeid]['typeid'] =& $fit['drones'][$typeid]['typeid'];
+		);
 	}
 
 	$fit['drones'][$typeid]['quantityinbay'] += $quantityinbay;
 	$fit['drones'][$typeid]['quantityinspace'] += $quantityinspace;
+
+	dogma_add_drone(
+		$fit['__dogma_context'],
+		$typeid,
+		$quantityinspace
+	);
+
+	if($quantityinspace == 0) {
+		/* XXX, this is a hack */
+		dogma_add_drone($fit['__dogma_context'], $typeid, 1);
+	}
+
+	$fit['drones'][$typeid]['volume'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'volume');
+
+	if($quantityinspace == 0) {
+		/* XXX, this is a hack */
+		dogma_remove_drone($fit['__dogma_context'], $typeid);
+	}
 }
 
 /**
@@ -845,16 +719,20 @@ function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 		// @codeCoverageIgnoreStart
 		trigger_error('remove_drone(): not enough drones to remove', E_USER_WARNING);
 		$fit['drones'][$typeid]['quantityin'.$from] = 0;
+		if($from === 'space') {
+			dogma_remove_drone($fit['__dogma_context'], $typeid);
+		}
 		// @codeCoverageIgnoreEnd
 	} else {
 		$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
+		if($from === 'space') {
+			dogma_remove_drone_partial($fit['__dogma_context'], $typeid, $quantity);
+		}
 	}
 
 	if($fit['drones'][$typeid]['quantityinbay'] == 0
 		&& $fit['drones'][$typeid]['quantityinspace'] == 0) {
 		unset($fit['drones'][$typeid]);
-		unset($fit['dogma']['drones'][$typeid]);
-		maybe_remove_cache($fit, $typeid);
 	}
 }
 
@@ -894,46 +772,14 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 		// @codeCoverageIgnoreEnd
 	}
 
+	if($from === 'space') {
+		dogma_remove_drone_partial($fit['__dogma_context'], $typeid, $quantity);
+	} else {
+		dogma_add_drone($fit['__dogma_context'], $typeid, $quantity);
+	}
+
 	$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
 	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
-}
-
-/**
- * Balance drones in space and in bay according to their total number,
- * and the number of drones in either state.
- *
- * @param $typeid typeid of the drone to balance
- * 
- * @param $location either "space" or "bay"
- *
- * @param $knownquantity the number of drones that must be in
- * $location after this call
- */
-function dispatch_drones(&$fit, $typeid, $location, $knownquantity) {
-	if($location !== 'bay' && $location !== 'space') {
-		// @codeCoverageIgnoreStart
-		trigger_error('dispatch_drones(): unknown location '.$location, E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	if(!isset($fit['drones'][$typeid]) 
-	   || $fit['drones'][$typeid]['quantityinspace'] 
-	   + $fit['drones'][$typeid]['quantityinbay'] < $knownquantity) {
-		// @codeCoverageIgnoreStart
-		trigger_error('dispatch_drones(): not enough drones to dispatch', E_USER_WARNING);
-		return;
-		// @codeCoverageIgnoreEnd
-	}
-
-	$currentquantity = $fit['drones'][$typeid]['quantityin'.$location];
-	if($currentquantity == $knownquantity) {
-		/* Just perfect! */
-		return;
-	} else {
-		/* Let transfer_drone figure out the direction of the transfer */
-		transfer_drone($fit, $typeid, $location, $currentquantity - $knownquantity);
-	}
 }
 
 /* ----------------------------------------------------- */
@@ -967,196 +813,29 @@ function get_module_state_by_typeid(&$fit, $index, $typeid) {
 
 /**
  * Get the type of slot a module occupies.
+ *
+ * __deprecated__
  */
 function get_module_slottype(&$fit, $typeid) {
-	get_attributes_and_effects(array($typeid), $fit['cache']);
-	$effects = $fit['cache'][$typeid]['effects'];
+	dogma_type_has_effect($typeid, EFFECT_LoPower, $t);
+	if($t) return 'low';
 
-	if(isset($effects['loPower'])) return 'low';
-	if(isset($effects['medPower'])) return 'medium';
-	if(isset($effects['hiPower'])) return 'high';
-	if(isset($effects['rigSlot'])) return 'rig';
-	if(isset($effects['subSystem'])) return 'subsystem';
+	dogma_type_has_effect($typeid, EFFECT_MedPower, $t);
+	if($t) return 'medium';
+
+	dogma_type_has_effect($typeid, EFFECT_HiPower, $t);
+	if($t) return 'high';
+
+	dogma_type_has_effect($typeid, EFFECT_RigSlot, $t);
+	if($t) return 'rig';
+
+	dogma_type_has_effect($typeid, EFFECT_SubSystem, $t);
+	if($t) return 'subsystem';
+
 	return false;
 }
 
 /* ----------------------------------------------------- */
-
-/**
- * Try to remove any leftover cached attributes/effects no longer used
- * by any fitted entity.
- *
- * Usually not needed, as some housekeeping is already done internally
- * when removing entities (such as modules, drones, etc.).
- */
-function prune_cache(&$fit) {
-	/* TODO: also prune __effects and __attributes (hard). Maybe use a
-	 * counter for every effect/attribute represting the number of
-	 * entities using it? */
-
-	foreach($fit['cache'] as $typeid => $bla) {
-		maybe_remove_cache($fit, $typeid);
-	}
-}
-
-/** @internal */
-function maybe_remove_cache(&$fit, $deleted_typeid) {
-	if(!isset($fit['cache'][$deleted_typeid])) return;
-
-	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] == $deleted_typeid) return;
-
-	foreach($fit['presets'] as $presetid => $preset) {
-		foreach($preset['modules'] as $submods) {
-			foreach($submods as $mod) {
-				if($mod['typeid'] == $deleted_typeid) return;
-			}
-		}
-
-		foreach($preset['chargepresets'] as $chargepreset) {
-			foreach($chargepreset['charges'] as $subcharges) {
-				foreach($subcharges as $charge) {
-					if($charge['typeid'] == $deleted_typeid) return;
-				}
-			}
-		}
-	}
-	
-	foreach($fit['dronepresets'] as $dronepreset) {
-		foreach($dronepreset['drones'] as $drone) {
-			if($drone['typeid'] == $deleted_typeid) return;
-		}
-	}
-
-	unset($fit['cache'][$deleted_typeid]);
-}
-
-/** @internal */
-function get_attribute_in_cache($attributenameorid, &$out) {
-	if(isset($out['__attributes'][$attributenameorid])) return;
-
-	$name = is_numeric($attributenameorid) ?
-		\Osmium\Dogma\get_attributename($attributenameorid) : $attributenameorid;
-
-	$attribsq = \Osmium\Db\query_params('SELECT attributename, attributeid, highisgood, stackable, defaultvalue
-  FROM eve.dgmattribs 
-  WHERE attributename = $1', array($name));
-
-	$row = \Osmium\Db\fetch_assoc($attribsq);
-
-	$row['stackable'] = $row['stackable'] === 't';
-	$row['highisgood'] = $row['highisgood'] === 't';
-	$out['__attributes'][$row['attributename']] = $row;
-}
-
-/** @internal */
-function get_attributes_and_effects($typeids, &$out) {
-	static $hardcoded_effectcategories = array(
-		'online' => 4,
-		);
-
-	foreach($typeids as $i => $tid) {
-		if(isset($out[$tid])) {
-			unset($typeids[$i]);
-			continue;
-		}
-
-		$out[$tid]['effects'] = array();
-		$out[$tid]['attributes'] = array();
-	}
-
-	if(count($typeids) == 0) return; /* Everything is already cached, yay! */
-
-	$typeidIN = implode(',', $typeids);
-  
-	$metaq = \Osmium\Db\query_params('SELECT invtypes.typeid, typename, groupid, volume, mass, capacity, averageprice
-	FROM eve.invtypes
-	LEFT JOIN eve.averagemarketprices ON invtypes.typeid = averagemarketprices.typeid 
-	WHERE invtypes.typeid IN ('.$typeidIN.')', array());
-	while($row = \Osmium\Db\fetch_assoc($metaq)) {
-		$out[$row['typeid']]['typename'] = $row['typename'];
-		$out[$row['typeid']]['groupid'] = $row['groupid'];
-		$out[$row['typeid']]['volume'] = $row['volume'];
-		$out[$row['typeid']]['averageprice'] = $row['averageprice'];
-
-		$out[$row['typeid']]['attributes']['mass'] = array(
-			'attributename' => 'mass',
-			'attributeid' => '4',
-			'value' => $row['mass'],
-			);
-		$out[$row['typeid']]['attributes']['volume'] = array(
-			'attributename' => 'volume',
-			'attributeid' => '161',
-			'value' => $row['volume'],
-			);
-		$out[$row['typeid']]['attributes']['capacity'] = array(
-			'attributename' => 'capacity',
-			'attributeid' => '38',
-			'value' => $row['capacity'],
-			);
-	}
-
-	/* Effect categories (maybe):
-	   0 -> passive
-	   1 -> activation
-	   2 -> target
-	   3 -> area
-	   4 -> online
-	   5 -> overload
-	   6 -> dungeon
-	   7 -> system
-	   http://pastie.org/pastes/2768807/text */
-	$effectsq = \Osmium\Db\query('SELECT typeid, effectname, dgmeffects.effectid, preexpr.exp AS preexp, postexpr.exp AS postexp, effectcategory,
-  durationattributeid, trackingspeedattributeid, dischargeattributeid, rangeattributeid, falloffattributeid
-  FROM eve.dgmeffects 
-  JOIN eve.dgmtypeeffects ON dgmeffects.effectid = dgmtypeeffects.effectid 
-  LEFT JOIN eve.dgmcacheexpressions AS preexpr ON preexpr.expressionid = preexpression
-  LEFT JOIN eve.dgmcacheexpressions AS postexpr ON postexpr.expressionid = postexpression
-  WHERE typeid IN ('.$typeidIN.')');
-	while($row = \Osmium\Db\fetch_assoc($effectsq)) {
-		$tid = $row['typeid'];
-
-		if(isset($hardcoded_effectcategories[$row['effectname']])) {
-			$row['effectcategory'] = $hardcoded_effectcategories[$row['effectname']];
-		}
-
-		$out['__effects'][$row['effectname']]['durationattributeid'] = $row['durationattributeid'];
-		$out['__effects'][$row['effectname']]['trackingspeedattributeid'] = $row['trackingspeedattributeid'];
-		$out['__effects'][$row['effectname']]['dischargeattributeid'] = $row['dischargeattributeid'];
-		$out['__effects'][$row['effectname']]['rangeattributeid'] = $row['rangeattributeid'];
-		$out['__effects'][$row['effectname']]['falloffattributeid'] = $row['falloffattributeid'];
-		$out['__effects'][$row['effectname']]['effectcategory'] = $row['effectcategory'];
-
-		unset($row['typeid']);
-		unset($row['durationattributeid']);
-		unset($row['trackingspeedattributeid']);
-		unset($row['dischargeattributeid']);
-		unset($row['rangeattributeid']);
-		unset($row['falloffattributeid']);
-		unset($row['effectcategory']);
-
-		$out[$tid]['effects'][$row['effectname']] = $row;
-	}
-
-	$attribsq = \Osmium\Db\query('SELECT dgmtypeattribs.typeid, attributename, dgmattribs.attributeid, highisgood, stackable, value, defaultvalue
-  FROM eve.dgmattribs 
-  JOIN eve.dgmtypeattribs ON dgmattribs.attributeid = dgmtypeattribs.attributeid
-  WHERE dgmtypeattribs.typeid IN ('.$typeidIN.')');
-	while($row = \Osmium\Db\fetch_assoc($attribsq)) {
-		$tid = $row['typeid'];
-
-		$out['__attributes'][$row['attributename']]['attributename'] = $row['attributename'];
-		$out['__attributes'][$row['attributename']]['stackable'] = $row['stackable'] === 't';
-		$out['__attributes'][$row['attributename']]['highisgood'] = $row['highisgood'] === 't';
-		$out['__attributes'][$row['attributename']]['defaultvalue'] = $row['defaultvalue'];
-
-		unset($row['typeid']);
-		unset($row['stackable']);
-		unset($row['highisgood']);
-		unset($row['defaultvalue']);
-
-		$out[$tid]['attributes'][$row['attributename']] = $row;
-	}
-}
 
 /**
  * Try to auto-magically fix issues of a loadout.
@@ -1260,13 +939,11 @@ function delta($old, $new) {
  * @param $defaultlevel level to use for skills not in $skillset
  */
 function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
-	foreach($fit['dogma']['skills'] as $typeid => &$s) {
-		$s['skillLevel'] = $defaultlevel;
-	}
+	dogma_reset_skill_levels($fit['__dogma_context']);
+	dogma_set_default_skill_level($fit['__dogma_context'], (int)$defaultlevel);
 
 	foreach($skillset as $typeid => $level) {
-		if(!isset($fit['dogma']['skills'][$typeid])) continue;
-		$fit['dogma']['skills'][$typeid]['skillLevel'] = $level;
+		dogma_set_skill_level($fit['__dogma_context'], (int)$typeid, (int)$level);
 	}
 }
 
