@@ -27,7 +27,7 @@ class FitPresets extends PHPUnit_Framework_TestCase {
 		 * $fit['dogma'] when switching presets. */
 
 		\Osmium\Fit\create($fit);
-		\Osmium\Fit\select_ship($fit, 24698);
+		\Osmium\Fit\select_ship($fit, 24698); /* Drake */
 		\Osmium\Fit\add_module($fit, 0, 31790); /* Medium CDFE I */
 		\Osmium\Fit\add_module($fit, 1, 31790);
 		\Osmium\Fit\add_module($fit, 2, 31790);
@@ -50,9 +50,10 @@ class FitPresets extends PHPUnit_Framework_TestCase {
 
 		$t2ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 
-		/* Pyfa 1.1.7-git */		
-		$this->assertEquals(61840, $t1ehp['ehp']['avg'], '', 1);
-		$this->assertEquals(66918, $t2ehp['ehp']['avg'], '', 1);
+		/* Source: Pyfa-c67034e (2013-07-01) */
+
+		$this->assertEquals(56259, $t1ehp['ehp']['avg'], '', 1);
+		$this->assertEquals(60941, $t2ehp['ehp']['avg'], '', 1);
 
 		/* Check internal consistency/sanity */
 		\Osmium\Fit\use_preset($fit, $t1);

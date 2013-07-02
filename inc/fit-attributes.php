@@ -56,9 +56,18 @@ function get_capacitor_stability(&$fit) {
 					}
 
 					$restored = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'capacitorBonus', false);
+					$mcapacity = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'capacity', false);
+					$cvolume = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'volume', false);
 
-					$usage_rate -= $restored / $duration;
-					$usage[] = array(-$restored, $duration, 0);
+					if($cvolume > 0) {
+						$numcharges = floor($mcapacity / $cvolume);
+						$reload = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'reloadTime', false);
+						$usage_rate -= ($restored * $numcharges) / ($duration * $numcharges + $reload);
+						$usage[] = array(-$restored, $duration + $reload / $numcharges, 0);
+					} else {
+						$usage_rate -= $restored / $duration;
+						$usage[] = array(-$restored, $duration, 0);
+					}
 					continue;
 				}
 

@@ -1068,7 +1068,7 @@ function get_attributes_and_effects($typeids, &$out) {
 
 	$typeidIN = implode(',', $typeids);
   
-	$metaq = \Osmium\Db\query_params('SELECT invtypes.typeid, typename, groupid, volume, mass, averageprice
+	$metaq = \Osmium\Db\query_params('SELECT invtypes.typeid, typename, groupid, volume, mass, capacity, averageprice
 	FROM eve.invtypes
 	LEFT JOIN eve.averagemarketprices ON invtypes.typeid = averagemarketprices.typeid 
 	WHERE invtypes.typeid IN ('.$typeidIN.')', array());
@@ -1082,6 +1082,16 @@ function get_attributes_and_effects($typeids, &$out) {
 			'attributename' => 'mass',
 			'attributeid' => '4',
 			'value' => $row['mass'],
+			);
+		$out[$row['typeid']]['attributes']['volume'] = array(
+			'attributename' => 'volume',
+			'attributeid' => '161',
+			'value' => $row['volume'],
+			);
+		$out[$row['typeid']]['attributes']['capacity'] = array(
+			'attributename' => 'capacity',
+			'attributeid' => '38',
+			'value' => $row['capacity'],
 			);
 	}
 
