@@ -493,7 +493,7 @@ echo "</section>
 echo "</div>\n";
 
 $tok = \Osmium\State\get_unique_new_loadout_token();
-\Osmium\State\put_new_loadout($tok, $fit);
+\Osmium\State\put_view_loadout($tok, $fit);
 
 \Osmium\Chrome\print_js_code(
 "osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";

@@ -115,14 +115,25 @@ function is_fit_green($loadoutid) {
  * Get a loadout being currently edited (null in case of invalid token).
  */
 function get_new_loadout($token) {
-	return get_cache_memory_fb(/* session_id(). */$token, null, 'NewLoadout_');
+	$fit = get_cache_memory_fb(/* session_id(). */$token, null, 'Loadout_New_');
+	if($fit === null) return null;
+	\Osmium\Fit\dogma_late_init($fit);
+	return $fit;
 }
 
 /**
  * Update a loadout being currently edited.
  */
 function put_new_loadout($token, $fit) {
-	return put_cache_memory_fb(/* session_id(). */$token, $fit, 86400, 'NewLoadout_');
+	return put_cache_memory_fb(/* session_id(). */$token, $fit, 86400, 'Loadout_New_');
+}
+
+/**
+ * Like put_new_loadout(), but intended for much shorter-term
+ * loadouts. Use get_new_loadout() to retrieve.
+ */
+function put_view_loadout($token, $fit) {
+	return put_cache_memory_fb(/* session_id(). */$token, $fit, 600, 'Loadout_New_');
 }
 
 /**
