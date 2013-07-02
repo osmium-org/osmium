@@ -31,7 +31,7 @@ osmium_gen_modules = function() {
 		old_ias[typeid][index] = s.clone();
 	});
 
-	$('section#modules > div.slots > ul').empty();
+	$('section#modules > div.slots > ul > li').not('.placeholder').remove();
 
 	if(!("modules" in p)) p.modules = [];
 
