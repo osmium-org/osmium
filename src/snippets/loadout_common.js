@@ -139,6 +139,7 @@ osmium_send_clf = function() {
 			setTimeout(osmium_send_clf, 500);
 		},
 		success: function(payload) {
+			osmium_clftoken = payload.clftoken;
 			osmium_on_clf_payload(payload);
 			setTimeout(osmium_send_clf, 500);
 		}

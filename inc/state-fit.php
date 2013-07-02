@@ -129,11 +129,21 @@ function put_new_loadout($token, $fit) {
 }
 
 /**
+ * Get a loadout being currently viewed.
+ */
+function get_view_loadout($token) {
+	$fit = get_cache_memory(/* session_id(). */$token, null, 'Loadout_View_');
+	if($fit === null) return null;
+	\Osmium\Fit\dogma_late_init($fit);
+	return $fit;
+}
+
+/**
  * Like put_new_loadout(), but intended for much shorter-term
- * loadouts. Use get_new_loadout() to retrieve.
+ * loadouts. Use get_view_loadout() to retrieve.
  */
 function put_view_loadout($token, $fit) {
-	return put_cache_memory_fb(/* session_id(). */$token, $fit, 600, 'Loadout_New_');
+	return put_cache_memory(/* session_id(). */$token, $fit, 600, 'Loadout_View_');
 }
 
 /**
