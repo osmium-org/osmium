@@ -299,11 +299,7 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
             if($state !== null) {
                 /* Module is already installed, but state still needs an update */
-	            dogma_set_module_state(
-		            $fit['__dogma_context'],
-		            $fit['modules'][$type][$index]['dogma_index'],
-		            \Osmium\Dogma\get_dogma_states()[$state]
-	            );
+	            change_module_state_by_typeid($fit, $index, $typeid, $state);
             }
 
 			return;
@@ -391,12 +387,15 @@ function sort_modules(&$fit, $order) {
  * @param $state one of the STATE_* constants.
  */
 function change_module_state_by_location(&$fit, $type, $index, $state) {
+	$m =& $fit['modules'][$type][$index];
+	if($m['state'] === $state) return;
+
 	dogma_set_module_state(
 		$fit['__dogma_context'],
-		$fit['modules'][$type][$index]['dogma_index'],
+	    $m['dogma_index'],
 		\Osmium\Dogma\get_dogma_states()[$state]
 	);
-	$fit['modules'][$type][$index]['state'] = $state;
+	$m['state'] = $state;
 }
 
 /**
