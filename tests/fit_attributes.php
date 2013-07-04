@@ -31,7 +31,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		list($c, $s, $d) = \Osmium\Fit\get_capacitor_stability($fit);
 		$this->assertSame($stable, $s);
 		$this->assertEquals($rate, 1000 * $c, '', 0.1); /* 0.1 GJ/s margin (Pyfa rounding) */
-		$this->assertEquals($value, $d, '', 0.1 * $value); /* 10% margin */
+		$this->assertEquals($value, $d, '', 0.20 * $value); /* 20% margin */
 	}
 
 	private function assertShieldResistances(&$fit, $em, $thermal, $kinetic, $explosive) {

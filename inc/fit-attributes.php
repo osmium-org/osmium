@@ -22,128 +22,14 @@ namespace Osmium\Fit;
  * Get capacitor-related attributes of a given fit.
  *
  * Returns an array of length 3: the first value is the capacitor
- * usage rate (minus peak recharge rate) in GJ/s, the second is a
+ * usage rate (minus peak recharge rate) in GJ/ms, the second is a
  * boolean indicating whether the capacitor is stable or not and the
  * third is either time in seconds until the capacitor is depleted, or
  * the stable percentage level (between 0 and 100).
  */
-function get_capacitor_stability(&$fit) {
-	static $step = 1000; /* Number of milliseconds between each integration step */
-	$categories = get_state_categories();
-
-	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
-	$capacity = \Osmium\Dogma\get_ship_attribute($fit, 'capacitorCapacity');
-	$tau = \Osmium\Dogma\get_ship_attribute($fit, 'rechargeRate') / 5.0;
-
-	$usage_rate = 0;
-	$usage = array();
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $module) {
-			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
-				$effectdata = $fit['cache']['__effects'][$effect['effectname']];
-
-				if(!in_array($effectdata['effectcategory'], $categories[$module['state']])) continue;
-				if(!isset($effectdata['durationattributeid'])) continue;
-
-				$duration = \Osmium\Dogma\get_module_attribute(
-					$fit, $type, $index, 
-					\Osmium\Dogma\get_attributename($effectdata['durationattributeid']));
-
-				if($effect['effectname'] == 'powerBooster') {
-					/* Special case must be hardcoded (eg. cap boosters) */
-					if(!isset($fit['charges'][$type][$index])) {
-						continue;
-					}
-
-					$restored = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'capacitorBonus', false);
-					$mcapacity = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'capacity', false);
-					$cvolume = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'volume', false);
-
-					if($cvolume > 0) {
-						$numcharges = floor($mcapacity / $cvolume);
-						$reload = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'reloadTime', false);
-						$usage_rate -= ($restored * $numcharges) / ($duration * $numcharges + $reload);
-						$usage[] = array(-$restored, $duration + $reload / $numcharges, 0);
-					} else {
-						$usage_rate -= $restored / $duration;
-						$usage[] = array(-$restored, $duration, 0);
-					}
-					continue;
-				}
-
-				if(!isset($effectdata['dischargeattributeid'])) continue;
-
-				$discharge = \Osmium\Dogma\get_module_attribute(
-					$fit, $type, $index, 
-					\Osmium\Dogma\get_attributename($effectdata['dischargeattributeid']));
-
-				$usage_rate += $discharge / $duration;
-				$usage[] = array($discharge, $duration, 0);
-			}
-		}
-	}
-
-	if($capacity == 0 || $tau == 0) {
-		return array($usage_rate, true, 0);
-	}
-
-	$peak_rate = (sqrt(0.25) - 0.25) * 2 * $capacity / $tau; /* Recharge rate at 25% capacitor */
-	$X = max(0, $usage_rate);
-
-	/* I got the solution for cap stability by solving the quadratic equation:
-	   dC   /       C        C   \   2Cmax
-	   -- = |sqrt(-----) - ----- | x -----
-	   dt   \     Cmax     Cmax  /    Tau
-
-	           Cmax - X*Tau + sqrt(Cmax^2 - 2X*Tau*Cmax)          dC
-	   ==> C = ----------------------------------------- with X = --
-	                             2                                dt
-	   
-	   A simple check is that, for dC/dt = 0, the two solutions should be 0 and Cmax. */
-	$delta = $capacity * $capacity - 2 * $tau * $X * $capacity;
-	if($delta < 0) {
-		/* $delta negative, not cap stable */
-		$t = 0;
-		$capacitor = $capacity; /* Start with full capacitor */
-
-		/* Simulate what happens with the Runge-Kutta method (RK4) */
-		$f = function($c) use($capacity, $tau) {
-			$c = max($c, 0);
-			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau;
-		};
-
-		/* The limit on $t is there for two reasons: 1. because there
-		 * is no guarantee this loop will ever exit otherwise, and
-		 * 2. to prevent malicious users from generating excessive
-		 * load. */
-		while($capacitor > 0 && $t < 3600000) {
-			foreach($usage as &$u) {
-				while($u[2] <= $t) {
-					$capacitor -= $u[0];
-					$u[2] += $u[1];
-				}
-			}
-
-			$k1 = $f($capacitor);
-			$k2 = $f($capacitor + 0.5 * $step * $k1);
-			$k3 = $f($capacitor + 0.5 * $step * $k2);
-			$k4 = $f($capacitor + $step * $k3);
-			$capacitor += ($increment = $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6);
-			$t += $step;
-		}
-
-		/* Use a linear interpolation to refine the result */
-		$rate = $increment / $step;
-		$zero = ($increment - $capacitor) * $rate;
-		$t -= (1 - $zero) * $step;
-
-		return array($usage_rate - $peak_rate, false, $t / 1000);
-	} else {
-		/* $delta positive, cap-stable */
-		/* Use the highest root of our equation (but there is also another solution below the 25% peak) */
-		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
-		return array($usage_rate - $peak_rate, true, 100 * $C / $capacity);
-	}
+function get_capacitor_stability(&$fit, $reload = true) {
+	dogma_get_capacitor($fit['__dogma_context'], $reload, $delta, $stable, $p);
+	return array($delta, $stable, $stable ? $p : ($p / 1000.0));
 }
 
 /**
@@ -482,6 +368,7 @@ function get_module_interesting_attributes($fit, $type, $index) {
 	$state = $fit['modules'][$type][$index]['state'];
 
 	if($state != STATE_ACTIVE && $state != STATE_OVERLOADED) return $attributes;
+	if(!isset($fit['cache'][$typeid]['effects'])) return $attributes;
 
 	foreach($fit['cache'][$typeid]['effects'] as $effect) {
 		$effectdata = $fit['cache']['__effects'][$effect['effectname']];
