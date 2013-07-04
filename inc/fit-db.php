@@ -729,7 +729,8 @@ function dogma_late_init(&$fit) {
 
 	foreach($fit['modules'] as $type => &$sub) {
 		foreach($sub as $index => &$m) {
-			dogma_add_module($fit['__dogma_context'], $m['typeid'], $m['dogma_index']);
+			dogma_add_module_s($fit['__dogma_context'], $m['typeid'], $m['dogma_index'],
+			                   \Osmium\Dogma\get_dogma_states()[$m['state']]);
 
 			if(isset($fit['charges'][$type][$index])) {
 				dogma_add_charge(

@@ -64,6 +64,7 @@ function get_recommended_tags($fit) {
 	/* Count the number of modules by group */
 	$groups = array();
 
+/* XXX
 	foreach($fit['modules'] as $a) {
 		foreach($a as $m) {
 			$groupid = $fit['cache'][$m['typeid']]['groupid'];
@@ -72,6 +73,7 @@ function get_recommended_tags($fit) {
 			++$groups[$groupid];
 		}
 	}
+*/
 
 	static $groupgroups = array(
 		'shield' => array(
