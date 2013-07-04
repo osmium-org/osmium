@@ -16,6 +16,18 @@
  */
 
 osmium_showinfo = function(opts) {
+	osmium_showinfo_internal(opts, function() {
+		/* First error… Try committing CLF and retry once */
+		osmium_commit_clf(function() {
+			osmium_showinfo_internal(opts, function(xhr, error, httperror) {
+				alert('Could not show info: ' + error + ' (' + httperror
+					  + '). Try refreshing the page and report if the problem persists.');
+			});
+		});
+	});
+};
+
+osmium_showinfo_internal = function(opts, onerror) {
 	opts.loadoutsource = osmium_clftype;
 	opts.clftoken = osmium_clftoken;
 
@@ -24,13 +36,10 @@ osmium_showinfo = function(opts) {
 		url: osmium_relative + '/src/json/show_info.php',
 		data: opts,
 		dataType: 'json',
-		error: function(xhr, error, httperror) {
-			alert('Could not show info: ' + error + ' (' + httperror
-				  + '). Try refreshing the page and report if the problem persists.');
-		},
+		error: onerror,
 		success: function(json) {
 			osmium_modal(json['modal']);
 			osmium_tabify($('ul#showinfotabs'), 0);
 		}
 	});
-};
+}

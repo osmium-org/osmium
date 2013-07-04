@@ -109,17 +109,17 @@ osmium_undo_pop = function() {
  * etc. It is safe to call this function repeatedly in a short amount
  * of time, it has built-in rate limiting. Requires osmium_clftype and
  * osmium_on_clf_payload global variables to be set. */
-osmium_commit_clf = function() {
+osmium_commit_clf = function(onsuccess) {
 	osmium_must_send_clf = true;
 
 	if(osmium_sending_clf) return;
 	osmium_sending_clf = true;
 
-	osmium_send_clf();
+	osmium_send_clf(onsuccess);
 };
 
 /** @internal */
-osmium_send_clf = function() {
+osmium_send_clf = function(onsuccess) {
 	if(!osmium_must_send_clf) {
 		osmium_sending_clf = false;
 		return;
@@ -150,6 +150,7 @@ osmium_send_clf = function() {
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
 			osmium_on_clf_payload(payload);
+			if((typeof onsuccess) === "function") onsuccess(payload);
 			setTimeout(osmium_send_clf, 500);
 		}
 	});
