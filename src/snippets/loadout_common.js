@@ -55,10 +55,19 @@ osmium_load_static_client_data = function(staticver, onsuccess) {
 		}
 	} catch(e) { /* Incognito mode probably */ }
 
-	$.getJSON(osmium_relative + '/static-' + staticver + '/cache/clientdata.json', function(json) {
-		try { localStorage.setItem(idx, JSON.stringify(json)); }
-		catch(e) { /* Incognito mode probably */ }
-		return onsuccess2(json);
+	$.ajax({
+		type: 'GET',
+		url: osmium_relative + '/static-' + staticver + '/cache/clientdata.json',
+		dataType: 'json',
+		error: function(xhr, error, httperror) {
+			alert('Could not fetch static client data: ' + error + ' (' + httperror
+				  + '). Try refreshing the page and report if the problem persists.');
+		},
+		success: function(json) {
+			try { localStorage.setItem(idx, JSON.stringify(json)); }
+			catch(e) { /* Incognito mode probably */ }
+			return onsuccess2(json);
+		}
 	});
 };
 
@@ -135,7 +144,7 @@ osmium_send_clf = function() {
 		dataType: 'json',
 		error: function(xhr, error, httperror) {
 			alert('Could not sync loadout with remote: ' + error + ' (' + httperror 
-				  + '). This shouldn\'t normally happen, try again or refresh the page.');
+				  + '). This shouldn\'t normally happen, try again or refresh the page. Please report if the problem persists.');
 			setTimeout(osmium_send_clf, 500);
 		},
 		success: function(payload) {

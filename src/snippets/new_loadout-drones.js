@@ -137,7 +137,6 @@ osmium_gen_drones = function() {
 
 					osmium_ctxmenu_add_option(menu, "Show drone info", function() {
 						osmium_showinfo({
-							'new': osmium_clftoken,
 							type: "drone",
 							typeid: t
 						});

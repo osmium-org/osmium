@@ -16,8 +16,21 @@
  */
 
 osmium_showinfo = function(opts) {
-	$.getJSON(osmium_relative + '/src/json/show_info.php', opts, function(json) {
-		osmium_modal(json['modal']);
-		osmium_tabify($('ul#showinfotabs'), 0);
+	opts.loadoutsource = osmium_clftype;
+	opts.clftoken = osmium_clftoken;
+
+	$.ajax({
+		type: 'GET',
+		url: osmium_relative + '/src/json/show_info.php',
+		data: opts,
+		dataType: 'json',
+		error: function(xhr, error, httperror) {
+			alert('Could not show info: ' + error + ' (' + httperror
+				  + '). Try refreshing the page and report if the problem persists.');
+		},
+		success: function(json) {
+			osmium_modal(json['modal']);
+			osmium_tabify($('ul#showinfotabs'), 0);
+		}
 	});
 };
