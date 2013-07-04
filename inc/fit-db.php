@@ -490,8 +490,10 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
  * errors happened.
  */
 function get_fit($loadoutid, $revision = null) {
-	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null, 'Loadout_Cache_')) !== null) {
-		dogma_late_init($cache);
+	if($revision === null && (
+		$cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null, 'Loadout_Cache_')
+	) !== null) {
+		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 
@@ -509,7 +511,7 @@ function get_fit($loadoutid, $revision = null) {
 			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache, 0, 'Loadout_Cache_');
 		}
 
-		dogma_late_init($cache);
+		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 
@@ -626,7 +628,7 @@ function get_fit($loadoutid, $revision = null) {
 		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, 0, 'Loadout_Cache_');
 	}
 	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit, 0, 'Loadout_Cache_');
-	dogma_late_init($fit);
+	\Osmium\Dogma\late_init($fit);
 	return $fit;
 }
 
@@ -718,32 +720,4 @@ function get_available_skillset_names_for_account() {
 	}
 
 	return $names;
-}
-
-function dogma_late_init(&$fit) {
-	dogma_init_context($fit['__dogma_context']);
-
-	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] > 0) {
-		dogma_set_ship($fit['__dogma_context'], $fit['ship']['typeid']);
-	}
-
-	foreach($fit['modules'] as $type => &$sub) {
-		foreach($sub as $index => &$m) {
-			dogma_add_module_s($fit['__dogma_context'], $m['typeid'], $m['dogma_index'],
-			                   \Osmium\Dogma\get_dogma_states()[$m['state']]);
-
-			if(isset($fit['charges'][$type][$index])) {
-				dogma_add_charge(
-					$fit['__dogma_context'], $m['dogma_index'],
-					$fit['charges'][$type][$index]['typeid']
-				);
-			}
-		}
-	}
-
-	foreach($fit['drones'] as $typeid => $d) {
-		if($d['quantityinspace'] == 0) continue;
-
-		dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
-	}
 }

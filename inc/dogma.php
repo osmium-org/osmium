@@ -29,58 +29,45 @@ function get_dogma_states() {
 	);
 }
 
-function get_attributename($attributeid) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('dogma_attribute_map', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT attributename, attributeid FROM eve.dgmattribs');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[1]] = $r[0];
+
+/** Create a new dogma context for $fit with all modules, charges and
+ * drones of current presets. */
+function late_init(&$fit) {
+	dogma_init_context($fit['__dogma_context']);
+
+	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] > 0) {
+		dogma_set_ship($fit['__dogma_context'], $fit['ship']['typeid']);
+	}
+
+	foreach($fit['modules'] as $type => &$sub) {
+		foreach($sub as $index => &$m) {
+			dogma_add_module_s($fit['__dogma_context'], $m['typeid'], $m['dogma_index'],
+			                   \Osmium\Dogma\get_dogma_states()[$m['state']]);
+
+			if(isset($fit['charges'][$type][$index])) {
+				dogma_add_charge(
+					$fit['__dogma_context'], $m['dogma_index'],
+					$fit['charges'][$type][$index]['typeid']
+				);
 			}
-			\Osmium\State\put_cache_memory('dogma_attribute_map', $cache);
 		}
 	}
 
-	if(!isset($cache[$attributeid])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_attributename(): unknown attributeid "'.$attributeid.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
+	foreach($fit['drones'] as $typeid => $d) {
+		if($d['quantityinspace'] == 0) continue;
 
-	return $cache[$attributeid];
+		dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
+	}
 }
 
-function get_attributeid($attributename) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('dogma_attribute_map_flipped', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT attributename, attributeid FROM eve.dgmattribs');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[0]] = $r[1];
-			}
-			\Osmium\State\put_cache_memory('dogma_attribute_map_flipped', $cache);
-		}
-	}
 
-	if(!isset($cache[$attributename])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_attributeid(): unknown attributename "'.$attributename.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
 
-	return (int)$cache[$attributename];
-}
-
-/* @internal __deprecated__ */
+/* @internal */
 function get_att($att) {
 	if(is_string($att) && ctype_digit($att)) {
 		return (int)$att;
 	} else if(!is_int($att)) {
-		return get_attributeid($att);
+		return \Osmium\Fit\get_attributeid($att);
 	}
 	return $att;
 }

@@ -117,7 +117,7 @@ function is_fit_green($loadoutid) {
 function get_new_loadout($token) {
 	$fit = get_cache_memory_fb(/* session_id(). */$token, null, 'Loadout_New_');
 	if($fit === null) return null;
-	\Osmium\Fit\dogma_late_init($fit);
+	\Osmium\Dogma\late_init($fit);
 	return $fit;
 }
 
@@ -134,7 +134,7 @@ function put_new_loadout($token, $fit) {
 function get_view_loadout($token) {
 	$fit = get_cache_memory(/* session_id(). */$token, null, 'Loadout_View_');
 	if($fit === null) return null;
-	\Osmium\Fit\dogma_late_init($fit);
+	\Osmium\Dogma\late_init($fit);
 	return $fit;
 }
 

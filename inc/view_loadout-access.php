@@ -34,7 +34,7 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
 
 	    \Osmium\State\put_cache_memory_fb($ckey, $fit, 7200);
     } else {
-	    \Osmium\Fit\dogma_late_init($fit);
+	    \Osmium\Dogma\late_init($fit);
     }
 
     define('RELATIVE', '../..');

@@ -154,66 +154,6 @@ function get_state_names() {
 		);
 }
 
-/**
- * Get an array of categories of effects that should be activated on a
- * per-state basis.
- */
-function get_state_categories() {
-	return array(
-		null => array(),
-		STATE_OFFLINE => array(0),
-		STATE_ONLINE => array(0, 4),
-		STATE_ACTIVE => array(0, 4, 1, 2, 3),
-		STATE_OVERLOADED => array(0, 4, 1, 2, 3, 5),
-		);
-}
-
-function get_typename($typeid) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('type_map', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT typename, typeid FROM eve.invtypes');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[1]] = $r[0];
-			}
-			\Osmium\State\put_cache_memory('type_map', $cache);
-		}
-	}
-
-	if(!isset($cache[$typeid])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_typename(): unknown typeid "'.$typeid.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
-
-	return $cache[$typeid];
-}
-
-function get_typeid($typename) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('type_map_flipped', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT typename, typeid FROM eve.invtypes');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[0]] = $r[1];
-			}
-			\Osmium\State\put_cache_memory('type_map_flipped', $cache);
-		}
-	}
-
-	if(!isset($cache[$typename])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_typeid(): unknown typename "'.$typename.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
-
-	return (int)$cache[$typename];
-}
-
 
 
 /**

@@ -128,8 +128,8 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 
 		$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
 		$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
-		$durationattributename = \Osmium\Dogma\get_attributename($durationattributeid);
-		$dischargeattributename = \Osmium\Dogma\get_attributename($dischargeattributeid);
+		$durationattributename = get_attributename($durationattributeid);
+		$dischargeattributename = get_attributename($dischargeattributeid);
 
 		foreach(get_modules($fit) as $type => $a) {
 			foreach($a as $index => $module) {
@@ -259,7 +259,7 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
 	$dps = 0;
 	$alpha = 0;
 
-	$durationattributename = \Osmium\Dogma\get_attributename(
+	$durationattributename = get_attributename(
 		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']);
 
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
@@ -329,7 +329,7 @@ function get_damage_from_drones(&$fit) {
 	if(!isset($fit['cache']['__effects']['targetAttack'])) return 0;
 
 	$durationattributename = 
-		\Osmium\Dogma\get_attributename($fit['cache']['__effects']['targetAttack']['durationattributeid']);
+		get_attributename($fit['cache']['__effects']['targetAttack']['durationattributeid']);
 
 	foreach($fit['drones'] as $drone) {
 		if($drone['quantityinspace'] == 0) continue;
@@ -361,6 +361,8 @@ function get_damage_from_drones(&$fit) {
  * missile range)
  */
 function get_module_interesting_attributes($fit, $type, $index) {
+	return array();
+
 	$categories = get_state_categories();
 
 	$attributes = array();
@@ -384,7 +386,7 @@ function get_module_interesting_attributes($fit, $type, $index) {
 			if(!$effectdata[$t.'attributeid']) continue;
 			$attributeid = $effectdata[$t.'attributeid'];
 
-			$attributename = \Osmium\Dogma\get_attributename($attributeid);
+			$attributename = get_attributename($attributeid);
 
 			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
 		}
@@ -490,7 +492,7 @@ function get_mining_yield(&$fit) {
 
 			$durationid = $fit['cache']['__effects']['miningLaser']['durationattributeid'];
 
-			$durationname = \Osmium\Dogma\get_attributename($durationid);
+			$durationname = get_attributename($durationid);
 
 			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationname);
 
