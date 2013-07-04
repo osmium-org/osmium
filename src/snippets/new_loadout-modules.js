@@ -54,6 +54,7 @@ osmium_gen_modules = function() {
 		var li = osmium_add_module(m.typeid, m.index, m.state, chargeid);
 
 		if(m.typeid in old_ias && m.index in old_ias[m.typeid]) {
+			li.addClass('hasattribs');
 			li.append(old_ias[m.typeid][m.index]);
 		}
 	}
