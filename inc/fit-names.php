@@ -2,11 +2,12 @@
 
 namespace Osmium\Fit;
 
+const EFFECT_HiPower = 12;
 const EFFECT_LoPower = 11;
 const EFFECT_MedPower = 13;
-const EFFECT_HiPower = 12;
 const EFFECT_RigSlot = 2663;
 const EFFECT_SubSystem = 3772;
+const EFFECT_UseMissiles = 101;
 
 
 /* XXX: refactor and improve the mess below */

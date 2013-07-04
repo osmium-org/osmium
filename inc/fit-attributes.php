@@ -361,59 +361,62 @@ function get_damage_from_drones(&$fit) {
  * missile range)
  */
 function get_module_interesting_attributes($fit, $type, $index) {
-	return array();
-
-	$categories = get_state_categories();
-
 	$attributes = array();
 	$typeid = $fit['modules'][$type][$index]['typeid'];
 	$state = $fit['modules'][$type][$index]['state'];
+	$mdindex = $fit['modules'][$type][$index]['dogma_index'];
 
-	if($state != STATE_ACTIVE && $state != STATE_OVERLOADED) return $attributes;
-	if(!isset($fit['cache'][$typeid]['effects'])) return $attributes;
+	if($state < STATE_ONLINE) return array();
 
-	foreach($fit['cache'][$typeid]['effects'] as $effect) {
-		$effectdata = $fit['cache']['__effects'][$effect['effectname']];
+	$trackings = array();
+	$ranges = array();
+	$falloffs = array();
 
-		if(!in_array($effectdata['effectcategory'], $categories[$state])) continue;
-		if(!$effectdata['trackingspeedattributeid']
-		   && !$effectdata['rangeattributeid']
-		   && !$effectdata['falloffattributeid']) {
-			continue;
-		}
+	$i = 0;
+	while(dogma_get_nth_type_effect_with_attributes($typeid, $i, $effect) === DOGMA_OK) {
+		++$i;
 
-		foreach(array('trackingspeed', 'range', 'falloff') as $t) {
-			if(!$effectdata[$t.'attributeid']) continue;
-			$attributeid = $effectdata[$t.'attributeid'];
+		$tra = $ran = $fal = 0;
 
-			$attributename = get_attributename($attributeid);
+		/* XXX check effect category? */
+		dogma_get_location_effect_attributes(
+			$fit['__dogma_context'], [ DOGMA_LOC_Module, 'module_index' => $mdindex ], $effect,
+			$dur, $tra, $dis, $ran, $fal, $fua
+		);
 
-			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
-		}
-
-		return $attributes;
+		/* Sometimes zero values are not exactly zero but a very small
+		 * value, due to floating point precision loss. */
+		if($tra > 1e-300) $trackings[] = $tra;
+		if($ran > 1e-300) $ranges[] = $ran;
+		if($fal > 1e-300) $falloffs[] = $fal;
 	}
 
-	if(isset($fit['charges'][$type][$index])) {
-		$typeid = $fit['charges'][$type][$index]['typeid'];
-		if(isset($fit['cache'][$typeid]['attributes']['explosionDelay']) &&
-		   isset($fit['cache'][$typeid]['attributes']['maxVelocity'])) {
-			$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
-			$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
-			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
-			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
+	if($trackings !== array()) {
+		$attributes['trackingspeed'] = min($trackings);
+	}
+	if($ranges !== array()) {
+		$attributes['range'] = min($ranges);
+	}
+	if($trackings !== array()) {
+		$attributes['falloff'] = min($falloffs);
+	}
 
-			if($mass != 0 && $agility != 0) {
-				/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
-				/* Integrate the velocity of the missile from 0 to flighttime: */
-				$K = -1000000 / ($mass * $agility);
-				$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
-			} else {
-				/* Zero mass or zero agility, for example defender missiles */
-				$attributes['maxrange'] = $velocity * $flighttime;
-			}
+	if(isset($fit['charges'][$type][$index])
+	   && dogma_type_has_effect($typeid, EFFECT_UseMissiles, $hasit) === DOGMA_OK
+	   && $hasit) {
+		$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
+		$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
+		$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
+		$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
 
-			return $attributes;
+		if($mass != 0 && $agility != 0) {
+			/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
+			/* Integrate the velocity of the missile from 0 to flighttime: */
+			$K = -1000000 / ($mass * $agility);
+			$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
+		} else {
+			/* Zero mass or zero agility, for example defender missiles */
+			$attributes['maxrange'] = $velocity * $flighttime;
 		}
 	}
 

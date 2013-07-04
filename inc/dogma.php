@@ -90,7 +90,7 @@ function get_char_attribute(&$fit, $att) {
  */
 function get_ship_attribute(&$fit, $att) {
 	if($att === 'upgradeLoad') {
-		$load = 0; /* XXX */
+		$load = 0;
 		if(!isset($fit['modules']['rig'])) return 0;
 
 		foreach($fit['modules']['rig'] as $index => $m) {
