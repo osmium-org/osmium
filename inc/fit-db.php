@@ -18,36 +18,42 @@
 
 namespace Osmium\Fit;
 
+/** @internal */
+function unique_key($stuff) {
+	return sha1(json_encode($stuff));
+}
+
 /**
  * Get an array that contains all the significant data of a fit. Used
  * to compare fits.
  */
-function get_unique($fit) {
-	$unique = array();
+function get_unique(&$fit) {
+	sanitize($fit);
 
+	$unique = array();
 	$unique['ship'] = (int)$fit['ship']['typeid'];
 
 	$unique['metadata'] = array(
 		'name' => $fit['metadata']['name'],
 		'description' => $fit['metadata']['description'],
-		'evebuildnumber' => $fit['metadata']['evebuildnumber'],
+		'evebuildnumber' => (int)$fit['metadata']['evebuildnumber'],
 		'tags' => $fit['metadata']['tags'],
-		);
+	);
 
 	foreach($fit['presets'] as $presetid => $preset) {
 		$uniquep = array(
 			'name' => $preset['name'],
 			'description' => $preset['description']
-			);
+		);
 
 		$newindexes = array();
 		foreach($preset['modules'] as $type => $d) {
 			$z = 0;
-
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
 				$newindexes[$type][$index] = ($z++);
-				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$module['state']);
+				$newmodule = array((int)$module['typeid'], (int)$module['state']);
+				$uniquep['modules'][$type][unique_key($newmodule)] = $newmodule;
 			}
 		}
 
@@ -55,7 +61,7 @@ function get_unique($fit) {
 			$uniquecp = array(
 				'name' => $chargepreset['name'],
 				'description' => $chargepreset['description']
-				);
+			);
 
 			foreach($chargepreset['charges'] as $type => $a) {
 				foreach($a as $index => $charge) {
@@ -64,10 +70,10 @@ function get_unique($fit) {
 				}
 			}
 
-			$uniquep['chargepresets'][] = $uniquecp;
+			$uniquep['chargepresets'][unique_key($uniquecp)] = $uniquecp;
 		}
 
-		$unique['presets'][] = $uniquep;
+		$unique['presets'][unique_key($uniquep)] = $uniquep;
 	}
 
 	foreach($fit['dronepresets'] as $dronepreset) {
@@ -77,12 +83,13 @@ function get_unique($fit) {
 			);
 
 		foreach($dronepreset['drones'] as $drone) {
-			$uniquedp['drones'][] = array((int)$drone['typeid'],
-			                              (int)$drone['quantityinbay'],
-			                              (int)$drone['quantityinspace']);
+			$newdrone = array((int)$drone['typeid'],
+			                  (int)$drone['quantityinbay'],
+			                  (int)$drone['quantityinspace']);
+			$uniquedp['drones'][unique_key($newdrone)] = $newdrone;
 		}
 
-		$unique['dronepresets'][] = $uniquedp;
+		$unique['dronepresets'][unique_key($uniquedp)] = $uniquedp;
 	}
 
 	/* Ensure equality if key ordering is different */
@@ -105,7 +112,7 @@ function ksort_rec(array &$array) {
  * example order of tags, order of module indexes etc.
  */
 function get_hash($fit) {
-	return sha1(serialize(get_unique($fit)));
+	return unique_key(get_unique($fit));
 }
 
 /**
@@ -183,11 +190,6 @@ function commit_fitting(&$fit, &$error = null) {
 			$z = 0;
 			foreach($data as $index => $module) {
 				$normalizedindexes[$type][$index] = $z;
-				if($presetid == $fit['modulepresetid']) {
-					$state = $module['state'];
-				} else {
-					$state = $module['old_state'];
-				}
 
 				$ret = \Osmium\Db\query_params(
 					'INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -197,7 +199,7 @@ function commit_fitting(&$fit, &$error = null) {
 						$type,
 						$z,
 						$module['typeid'],
-						$state
+						$module['state'],
 					)
 				);
 
