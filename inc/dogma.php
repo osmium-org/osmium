@@ -89,46 +89,61 @@ function get_char_attribute(&$fit, $att) {
  * Get the final value of a ship attribute.
  */
 function get_ship_attribute(&$fit, $att) {
-	if($att === 'upgradeLoad') {
+	switch($att) {
+
+	case 'upgradeLoad':
+	case \Osmium\Fit\ATT_UpgradeLoad:
 		$load = 0;
 		if(!isset($fit['modules']['rig'])) return 0;
-
 		foreach($fit['modules']['rig'] as $index => $m) {
 			$load += get_module_attribute($fit, 'rig', $index, 'upgradeCost'); 
 		}
-
 		return $load;
-	} else if(in_array($att, array('hiSlots', 'medSlots', 'lowSlots'))) {
+
+	case 'hiSlots':
+	case 'medSlots':
+	case 'lowSlots':
+	case \Osmium\Fit\ATT_HiSlots:
+	case \Osmium\Fit\ATT_LowSlots:
+	case \Osmium\Fit\ATT_MedSlots:
 		dogma_get_ship_attribute($fit['__dogma_context'], get_att($att), $base);
 		$att = substr($att, 0, -1);
-
-		if(isset($fit['dogma']['modules']['subsystem'])) {
-			foreach($fit['dogma']['modules']['subsystem'] as $k => $s) {
+		if(isset($fit['modules']['subsystem'])) {
+			foreach($fit['modules']['subsystem'] as $k => $s) {
 				$base += get_module_attribute($fit, 'subsystem', $k, $att.'Modifier');
 			}
 		}
-
 		return $base;
-	} else if(in_array($att, array('turretSlots', 'launcherSlots'))) {
-		dogma_get_ship_attribute($fit['__dogma_context'], get_att($att.'Left'), $base);
+
+	case 'turretSlots':
+	case 'launcherSlots':
+		dogma_type_base_attribute($fit['ship']['typeid'], get_att($att.'Left'), $base);
 		$att = substr($att, 0, -5);
 
-		if(isset($fit['dogma']['modules']['subsystem'])) {
-			foreach($fit['dogma']['modules']['subsystem'] as $k => $subsystem) {
+	case 'launcherSlotsLeft':
+	case 'turretSlotsLeft':
+	case \Osmium\Fit\ATT_LauncherSlotsLeft:
+	case \Osmium\Fit\ATT_TurretSlotsLeft:
+		if(!isset($base)) {
+			dogma_get_ship_attribute($fit['__dogma_context'], get_att($att), $base);
+			$att = substr($att, 0, -9);
+		}
+		if(isset($fit['modules']['subsystem'])) {
+			foreach($fit['modules']['subsystem'] as $k => $subsystem) {
 				$base += get_module_attribute($fit, 'subsystem', $k, $att.'HardPointModifier');
 			}
 		}
-
 		return $base;
+
+	default:
+		$ret = dogma_get_ship_attribute(
+			$fit['__dogma_context'],
+			get_att($att),
+			$val
+		);
+		return $ret === DOGMA_OK ? $val : false;
+
 	}
-
-	$ret = dogma_get_ship_attribute(
-		$fit['__dogma_context'],
-		get_att($att),
-		$val
-	);
-
-	return $ret === DOGMA_OK ? $val : false;
 }
 
 /**

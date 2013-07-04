@@ -23,8 +23,8 @@ class FitPresets extends PHPUnit_Framework_TestCase {
 	 * @group fit
 	 */
 	public function testSwitchModulePreset() {
-		/* Make sure the module attributes are correctly updated in
-		 * $fit['dogma'] when switching presets. */
+		/* Make sure the module attributes are correctly updated when
+		 * switching presets. */
 
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 24698); /* Drake */

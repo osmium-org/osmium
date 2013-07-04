@@ -5,9 +5,19 @@ namespace Osmium\Fit;
 const EFFECT_HiPower = 12;
 const EFFECT_LoPower = 11;
 const EFFECT_MedPower = 13;
+const EFFECT_ProjectileFired = 34;
 const EFFECT_RigSlot = 2663;
 const EFFECT_SubSystem = 3772;
+const EFFECT_TargetAttack = 10;
 const EFFECT_UseMissiles = 101;
+
+const ATT_HiSlots = 14;
+const ATT_LauncherSlotsLeft = 101;
+const ATT_LowSlots = 12;
+const ATT_MedSlots = 13;
+const ATT_TurretSlotsLeft = 102;
+const ATT_UpgradeLoad = 1152;
+
 
 
 /* XXX: refactor and improve the mess below */

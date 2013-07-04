@@ -251,38 +251,41 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
  * @param $globalmultiplier optional value of a global damage
  * multiplier
  */
-function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultiplierattributename = null, $globalmultiplier = 1) {
-	if(!isset($fit['cache']['__effects'][$attackeffectname])) {
-		return array(0, 0);
-	}
-
+function get_damage_from_attack_effect(&$fit, $attackeffectid,
+                                       $modulemultiplierattribute = null,
+                                       $globalmultiplier = 1) {
 	$dps = 0;
 	$alpha = 0;
 
-	$durationattributename = get_attributename(
-		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']);
-
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
-			if(!isset($fit['cache'][$module['typeid']]['effects'][$attackeffectname])) {
-				continue;
-			}
-			if(!isset($fit['charges'][$type][$index])) {
-				continue;
-			}
-			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
+			$ret = dogma_type_has_effect($module['typeid'], $attackeffectid, $hasit);
+			if($ret !== DOGMA_OK || $hasit !== true) {
 				continue;
 			}
 
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
+			if($module['state'] < STATE_ACTIVE) {
+				continue; /* XXX use effect category */
+			}
+
+			$duration = 0;
+			dogma_get_location_effect_attributes(
+				$fit['__dogma_context'],
+				[ DOGMA_LOC_Module, "module_index" => $module['dogma_index'] ],
+				$attackeffectid,
+				$duration, $tracking, $discharge, $range, $falloff, $usagechance
+			);
+
+			if($duration <= 1e-300) continue;
+
 			$damage = 
 				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage');
 
-			$multiplier = $modulemultiplierattributename === null ? 1 :
-				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattributename);
+			$multiplier = $modulemultiplierattribute === null ? 1 :
+				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattribute);
 
 			$dps += $multiplier * $damage / $duration;
 			$alpha += $multiplier * $damage;
@@ -297,9 +300,9 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
  */
 function get_damage_from_missiles(&$fit) {
 	return get_damage_from_attack_effect(
-		$fit, 'useMissiles', null,
+		$fit, EFFECT_UseMissiles, null,
 		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier')
-		);
+	);
 }
 
 /**
@@ -307,17 +310,17 @@ function get_damage_from_missiles(&$fit) {
  */
 function get_damage_from_turrets(&$fit) {
 	$projectiles = get_damage_from_attack_effect(
-		$fit, 'projectileFired', 'damageMultiplier'
-		);
+		$fit, EFFECT_ProjectileFired, 'damageMultiplier'
+	);
 
 	$lasers = get_damage_from_attack_effect(
-		$fit, 'targetAttack', 'damageMultiplier'
-		);
+		$fit, EFFECT_TargetAttack, 'damageMultiplier'
+	);
 
 	return array(
 		$projectiles[0] + $lasers[0],
 		$projectiles[1] + $lasers[1],
-		);
+	);
 }
 
 /**
@@ -326,19 +329,24 @@ function get_damage_from_turrets(&$fit) {
 function get_damage_from_drones(&$fit) {
 	$dps = 0;
 
-	if(!isset($fit['cache']['__effects']['targetAttack'])) return 0;
-
-	$durationattributename = 
-		get_attributename($fit['cache']['__effects']['targetAttack']['durationattributeid']);
-
 	foreach($fit['drones'] as $drone) {
 		if($drone['quantityinspace'] == 0) continue;
 
-		if(!isset($fit['cache'][$drone['typeid']]['effects']['targetAttack'])) {
+		$ret = dogma_type_has_effect($drone['typeid'], EFFECT_TargetAttack, $hasit);
+		if($ret !== DOGMA_OK || $hasit !== true) {
 			continue;
 		}
 
-		$duration = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], $durationattributename);
+		$duration = 0;
+		dogma_get_location_effect_attributes(
+			$fit['__dogma_context'],
+			[ DOGMA_LOC_Drone, "drone_typeid" => $drone['typeid'] ],
+			EFFECT_TargetAttack,
+			$duration, $tracking, $discharge, $range, $falloff, $usagechance
+		);
+
+		if($duration <= 1e-300) continue;
+
 		$damage = 
 			\Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'emDamage')
 			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'thermalDamage')

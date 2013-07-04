@@ -46,21 +46,8 @@ function get_unique($fit) {
 
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				if($presetid == $fit['modulepresetid']) {
-					$state = $module['state'];
-				} else {
-					if(!isset($module['old_state'])) {
-						unset($fit['cache']);
-						unset($fit['dogma']);
-						\Osmium\printr($fit);
-						die();
-					}
-					$state = $module['old_state'];
-				}
-
 				$newindexes[$type][$index] = ($z++);
-
-				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$state);
+				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$module['state']);
 			}
 		}
 
