@@ -57,10 +57,11 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $index => $module) {
-			dogma_add_module(
+			dogma_add_module_s(
 				$fit['__dogma_context'],
 				$module['typeid'],
-				$module['dogma_index']
+				$module['dogma_index'],
+				\Osmium\Dogma\get_dogma_states()[$module['state']]
 			);
 		}
 	}
@@ -395,16 +396,6 @@ function clone_preset_generic(&$presets_array, $id, $newname) {
 	/* Yes, this is a hack, and it's (very slightly) faster than unserialize(serialize(...)). */
 	$clone = json_decode(json_encode($presets_array[$id]), true);
 	$clone['name'] = $newname;
-
-	if(isset($clone['modules'])) {
-		/* Modules of the cloned presets should be offline */
-		foreach($clone['modules'] as &$a) {
-			foreach($a as &$module) {
-				$module['old_state'] = $module['state'];
-				$module['state'] = null;
-			}
-		}
-	}
 
 	$presets_array[] = $clone;
 

@@ -265,17 +265,7 @@ function try_parse_fit_from_common_loadout_format($jsonstring, &$errors) {
 		return false;
 	}
 
-	$fit = $parse($json, $errors);
-	if($fit === false) return false;
-
-	\reset($fit['presets']);
-	use_preset($fit, key($fit['presets']));
-	\reset($fit['chargepresets']);
-	use_charge_preset($fit, key($fit['chargepresets']));
-	\reset($fit['dronepresets']);
-	use_drone_preset($fit, key($fit['dronepresets']));
-
-	return $fit;
+	return $parse($json, $errors);
 }
 
 /** @internal */
@@ -297,6 +287,30 @@ function clf_parse_1(array $json, &$errors) {
 
 	if(isset($json['client-version']) && is_int($json['client-version'])) {
 		$fit['metadata']['evebuildnumber'] = get_closest_version_by_build($json['client-version'])['build'];
+	}
+
+	if(isset($json['X-Osmium-current-presetid'])
+	   && isset($fit['presets'][$json['X-Osmium-current-presetid']])) {
+		use_preset($fit, $json['X-Osmium-current-presetid']);
+	} else {
+		\reset($fit['presets']);
+		use_preset($fit, key($fit['presets']));
+	}
+
+	if(isset($json['X-Osmium-current-chargepresetid'])
+	   && isset($fit['chargepresets'][$json['X-Osmium-current-chargepresetid']])) {
+		use_charge_preset($fit, $json['X-Osmium-current-chargepresetid']);
+	} else {
+		\reset($fit['chargepresets']);
+		use_charge_preset($fit, key($fit['chargepresets']));
+	}
+
+	if(isset($json['X-Osmium-current-dronepresetid'])
+	   && isset($fit['dronepresets'][$json['X-Osmium-current-dronepresetid']])) {
+		use_drone_preset($fit, $json['X-Osmium-current-dronepresetid']);
+	} else {
+		\reset($fit['dronepresets']);
+		use_drone_preset($fit, key($fit['dronepresets']));
 	}
 
 	return $fit;
@@ -362,11 +376,7 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 		'online' => STATE_ONLINE,
 		'active' => STATE_ACTIVE,
 		'overloaded' => STATE_OVERLOADED,
-		);
-	static $states = array(
-		array(STATE_OFFLINE, STATE_ONLINE, STATE_ACTIVE, STATE_OVERLOADED),
-		array(STATE_OFFLINE, STATE_ONLINE, STATE_ACTIVE)
-		);
+	);
 
 	$indexes = array();
 
@@ -384,19 +394,17 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 		}
 		$indexes[$type][$index] = true;
 
-		add_module($fit, $index, $m['typeid']);
-
-		list($isactivable, $isoverloadable) = get_module_states($fit, $m['typeid']);
 		if(isset($m['state']) && isset($nstates[$m['state']])) {
 			$state = $nstates[$m['state']];
-			if(($isoverloadable && in_array($state, $states[0]))
-			   || ($isactivable && in_array($state, $states[1]))) {
-				change_module_state_by_typeid($fit, $index, $m['typeid'], $state);
-			}
+			list($isactivable, $isoverloadable) = get_module_states($fit, $m['typeid']);
+			if(!$isactivable) $state = min($state, STATE_ONLINE);
+			else if(!$isoverloadable) $state = min($state, STATE_ACTIVE);
+		} else {
+			$state = null;
 		}
 
+		add_module($fit, $index, $m['typeid'], $state);
 		$m['slottype'] = $type;
-		$m['index'] = $index;
 	}
 }
 

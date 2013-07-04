@@ -49,11 +49,18 @@ if($local === null) {
 	/* Outdated token, generate a new one and send it to client */
 	$token = \Osmium\State\get_unique_new_loadout_token();
 	$local = \Osmium\Fit\try_parse_fit_from_common_loadout_format($clftext, $errors);
-}
 
-if($local === false || !\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
-	header('HTTP/1.1 400 Bad Request', true, 400);
-	\Osmium\Chrome\return_json(array());
+	if(!is_array($local)) {
+		header('HTTP/1.1 400 Bad Request', true, 400);
+		\Osmium\Chrome\return_json(array());
+	}
+} else {
+	/* Valid token, just update local loadout from client CLF */
+
+	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
+		header('HTTP/1.1 400 Bad Request', true, 400);
+		\Osmium\Chrome\return_json(array());
+	}
 }
 
 $payload = array(
