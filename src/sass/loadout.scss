@@ -340,6 +340,10 @@ section#siafftype, section#siaffatt {
 
 				&> li {
 					padding: 0.1em 0;
+
+					&> small {
+						color: $aside-text-color;
+					}
 				}
 
 				&> li > label {

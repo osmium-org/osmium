@@ -113,6 +113,7 @@ $affectors_per_att = array();
 $numaffectors = 0;
 
 foreach($affectors as $affector) {
+	/* Skip affectors affecting non-overridden attributes */
 	if(!isset($attributes[$affector['destid']])) continue;
 
 	$dest = $attributes[$affector['destid']][0];
@@ -120,23 +121,20 @@ foreach($affectors as $affector) {
 
 	switch($affector['operator']) {
 
-	case '':
-		$fval = round($affector['value'], 3);
-		break;
-
 	case '*':
 		$affector['operator'] = '×';
 		if($affector['value'] == 1.0) continue;
-		$fval = round($affector['value'], 3);
 		break;
 
+	case '-':
+		$affector['value'] = -$affector['value'];
 	case '+':
 		if($affector['value'] == 0.0) continue;
-		$fval = round(abs($affector['value']), 3);
-		if($affector['value'] < 0) $affector['operator'] = '-';
 		break;
 
 	}
+
+	$fval = $affector['value'];
 
 	if($affector['flags'] > 0) {
 		$flags = array();
@@ -147,15 +145,17 @@ foreach($affectors as $affector) {
 			$flags[] = 'singleton';
 		}
 
-		$fval .= ' ('.implode(', ', $flags).')';
+		$fval .= ' <small>('.implode(', ', $flags).')</small>';
 	}
 
-	/* XXX: show order in an intuitive, non obtrusive way */
+	/* TODO: show order in an intuitive, non obtrusive way */
 	$a = [ $affector, $dest, $source, $fval ];
 	$affectors_per_type[$affector['id']][] = $a;
 	$affectors_per_att[$affector['destid']][] = $a;
 	++$numaffectors;
 }
+
+
 
 $fresult = array(
 	'header' => "<img src='http://image.eveonline.com/Type/".$typeid."_64.png' alt='' /> "
@@ -165,6 +165,8 @@ $fresult = array(
 	'affectors_per_type' => '',
 	'affectors_per_att' => '',
 );
+
+
 
 $fresult['attributes'] .= "<table class='d'>\n<tbody>\n";
 $previouscatid = null;
@@ -183,12 +185,19 @@ foreach($attributes as $a) {
 }
 $fresult['attributes'] .= "</tbody>\n</table>\n";
 
+
+
+uasort($affectors_per_type, function($a, $b) { return strcmp($a[0][2], $b[0][2]); });
+uasort($affectors_per_att, function($a, $b) { return strcmp($a[0][1], $b[0][1]); });
+
 $fresult['affectors_per_type'] .= "<ul>\n";
-foreach($affectors_per_type as $typeid => $a) {
-	$typename = htmlspecialchars(\Osmium\Fit\get_typename($typeid));
+foreach($affectors_per_type as $typeid => &$a) {
+	$typename = htmlspecialchars($a[0][2]);
 	$fresult['affectors_per_type'] .= "<li><img src='http://image.eveonline.com/Type/"
 		.$typeid."_64.png' alt='' /> ".$typename.":\n";
 	$fresult['affectors_per_type'] .= "<ul>\n";
+
+	usort($a, function($x, $y) { return strcmp($x[1], $y[1]); });
 
 	foreach($a as $val) {
 		list($aff, $dest, $source, $fval) = $val;
@@ -200,11 +209,15 @@ foreach($affectors_per_type as $typeid => $a) {
 }
 $fresult['affectors_per_type'] .= "</ul>\n";
 
+
+
 $fresult['affectors_per_att'] .= "<ul>\n";
-foreach($affectors_per_att as $attid => $a) {
-	$attname = htmlspecialchars($attributes[$attid][0]);
+foreach($affectors_per_att as $attid => &$a) {
+	$attname = htmlspecialchars($a[0][1]);
 	$fresult['affectors_per_att'] .= "<li>".$attname.":\n";
 	$fresult['affectors_per_att'] .= "<ul>\n";
+
+	usort($a, function($x, $y) { return strcmp($x[2], $y[2]); });
 
 	foreach($a as $val) {
 		list($aff, $dest, $source, $fval) = $val;
@@ -217,10 +230,14 @@ foreach($affectors_per_att as $attid => $a) {
 }
 $fresult['affectors_per_att'] .= "</ul>\n";
 
+
+
 if($affectors_per_type === array()) {
 	$fresult['affectors_per_type'] .= "<p class='placeholder'>No affectors</p>\n";
 	$fresult['affectors_per_att'] .= "<p class='placeholder'>No affectors</p>\n";
 }
+
+
 
 \Osmium\Chrome\return_json(
 	array(
