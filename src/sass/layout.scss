@@ -41,6 +41,10 @@ html, body {
 	background-color: $main-bg-color;
 }
 
+section, header, nav {
+	display: block;
+}
+
 div#wrapper {
 	min-height: 100%;
 	height: auto !important;
