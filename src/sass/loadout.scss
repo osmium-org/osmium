@@ -325,6 +325,10 @@ section#siattributes > table > tbody > tr {
 }
 
 section#siafftype, section#siaffatt {
+	&> p {
+		text-align: center;
+	}
+
 	&> ul {
 		&> li {
 			font-weight: bold;

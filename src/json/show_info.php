@@ -148,7 +148,6 @@ foreach($affectors as $affector) {
 		$fval .= ' <small>('.implode(', ', $flags).')</small>';
 	}
 
-	/* TODO: show order in an intuitive, non obtrusive way */
 	$a = [ $affector, $dest, $source, $fval ];
 	$affectors_per_type[$affector['id']][] = $a;
 	$affectors_per_att[$affector['destid']][] = $a;
@@ -210,6 +209,9 @@ foreach($affectors_per_type as $typeid => &$a) {
 $fresult['affectors_per_type'] .= "</ul>\n";
 
 
+if($numaffectors > 0) {
+	$fresult['affectors_per_att'] .= "<p><em>The operations are ordered by precedence (lower operations get applied last).</em></p>\n";
+}
 
 $fresult['affectors_per_att'] .= "<ul>\n";
 foreach($affectors_per_att as $attid => &$a) {
@@ -217,7 +219,7 @@ foreach($affectors_per_att as $attid => &$a) {
 	$fresult['affectors_per_att'] .= "<li>".$attname.":\n";
 	$fresult['affectors_per_att'] .= "<ul>\n";
 
-	usort($a, function($x, $y) { return strcmp($x[2], $y[2]); });
+	usort($a, function($x, $y) { return $x[0]['order'] - $y[0]['order']; });
 
 	foreach($a as $val) {
 		list($aff, $dest, $source, $fval) = $val;
