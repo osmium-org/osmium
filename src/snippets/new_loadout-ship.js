@@ -111,7 +111,7 @@ osmium_init_ship = function() {
 					type: "ship"
 				});
 			} else {
-				alert("No ship is selected. What are you expecting?");
+				alert("No ship is selected. Please select one first (by searching for it or by using the browser).");
 			}
 		}, { icon: "showinfo.png", 'default': true });
 
