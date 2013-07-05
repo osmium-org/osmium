@@ -25,97 +25,63 @@ const ATT_TurretSlotsLeft = 102;
 const ATT_UpgradeLoad = 1152;
 
 
+/** @internal */
+function get_cached_thing_generic($table, $field, $wherename, $whereval) {
+	$key = 'NameCache_'.$table.'_'.$field.'_'.$wherename.'_'.$whereval;
+	$cache = \Osmium\State\get_cache_memory($key);
 
-/* XXX: refactor and improve the mess below */
+	if($cache !== null) {
+		return $cache;
+	}
+
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		"SELECT $field FROM $table WHERE $wherename = $1",
+		array($whereval)
+	));
+
+	$val = ($r === false) ? false : $r[0];
+	\Osmium\State\put_cache_memory($key, $val, 86400);
+	return $val;
+}
 
 function get_attributename($attributeid) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('dogma_attribute_map', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT attributename, attributeid FROM eve.dgmattribs');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[1]] = $r[0];
-			}
-			\Osmium\State\put_cache_memory('dogma_attribute_map', $cache);
-		}
-	}
-
-	if(!isset($cache[$attributeid])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_attributename(): unknown attributeid "'.$attributeid.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
-
-	return $cache[$attributeid];
+	return get_cached_thing_generic(
+		'eve.dgmattribs', 'attributename', 'attributeid', (int)$attributeid
+	);
 }
 
 function get_attributeid($attributename) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('dogma_attribute_map_flipped', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT attributename, attributeid FROM eve.dgmattribs');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[0]] = $r[1];
-			}
-			\Osmium\State\put_cache_memory('dogma_attribute_map_flipped', $cache);
-		}
-	}
-
-	if(!isset($cache[$attributename])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_attributeid(): unknown attributename "'.$attributename.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
-
-	return (int)$cache[$attributename];
+	return get_cached_thing_generic(
+		'eve.dgmattribs', 'attributeid', 'attributename', $attributename
+	);
 }
 
 function get_typename($typeid) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('type_map', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT typename, typeid FROM eve.invtypes');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[1]] = $r[0];
-			}
-			\Osmium\State\put_cache_memory('type_map', $cache);
-		}
-	}
-
-	if(!isset($cache[$typeid])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_typename(): unknown typeid "'.$typeid.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
-
-	return $cache[$typeid];
+	return get_cached_thing_generic(
+		'eve.invtypes', 'typename', 'typeid', (int)$typeid
+	);
 }
 
 function get_typeid($typename) {
-	static $cache = null;
-	if($cache === null) {
-		$cache = \Osmium\State\get_cache_memory('type_map_flipped', null);
-		if($cache === null) {
-			$cache = array();
-			$q = \Osmium\Db\query('SELECT typename, typeid FROM eve.invtypes');
-			while($r = \Osmium\Db\fetch_row($q)) {
-				$cache[$r[0]] = $r[1];
-			}
-			\Osmium\State\put_cache_memory('type_map_flipped', $cache);
-		}
-	}
+	return get_cached_thing_generic(
+		'eve.invtypes', 'typeid', 'typename', $name
+	);
+}
 
-	if(!isset($cache[$typename])) {
-		// @codeCoverageIgnoreStart
-		trigger_error('get_typeid(): unknown typename "'.$typename.'"', E_USER_ERROR);
-		// @codeCoverageIgnoreEnd
-	}
+function get_groupid($typeid) {
+	return get_cached_thing_generic(
+		'eve.invtypes', 'groupid', 'typeid', (int)$typeid
+	);
+}
 
-	return (int)$cache[$typename];
+function get_volume($typeid) {
+	return get_cached_thing_generic(
+		'eve.invtypes', 'volume', 'typeid', (int)$typeid
+	);
+}
+
+function get_average_market_price($typeid) {
+	return get_cached_thing_generic(
+		'eve.averagemarketprices', 'averageprice', 'typeid', (int)$typeid
+	);
 }

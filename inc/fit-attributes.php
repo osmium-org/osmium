@@ -426,33 +426,32 @@ function get_module_interesting_attributes($fit, $type, $index) {
 }
 
 /**
- * Get the average price of a fit, using the in-game average
- * prices. Items whose price cannot be determined will be added to
+ * Get the estimated price of a fit, using the in-game
+ * estimates. Items whose price cannot be determined will be added to
  * $missing.
  */
-function get_average_price(&$fit, &$missing) {
-	$total = 0;
-
+function get_estimated_price(&$fit, array &$missing) {
 	$types = array();
 
 	if(isset($fit['ship']['typeid'])) {
-		$types[$fit['ship']['typeid']] = array(1, $fit['ship']['typename']);
+		$types['ship'][$fit['ship']['typeid']] = 1;
 	}
+
 	foreach($fit['modules'] as $a) {
 		foreach($a as $m) {
-			if(isset($types[$m['typeid']])) {
-				++$types[$m['typeid']][0];
+			if(isset($types['fitting'][$m['typeid']])) {
+				++$types['fitting'][$m['typeid']];
 			} else {
-				$types[$m['typeid']] = array(1, $m['typename']);
+				$types['fitting'][$m['typeid']] = 1;
 			}
 		}
 	}
 	foreach($fit['charges'] as $a) {
 		foreach($a as $c) {
-			if(isset($types[$c['typeid']])) {
-				++$types[$c['typeid']][0];
+			if(isset($types['fitting'][$c['typeid']])) {
+				++$types['fitting'][$c['typeid']];
 			} else {
-				$types[$c['typeid']] = array(1, $c['typename']);
+				$types['fitting'][$c['typeid']] = 1;
 			}
 		}
 	}
@@ -460,24 +459,32 @@ function get_average_price(&$fit, &$missing) {
 		$qty = $d['quantityinbay'] + $d['quantityinspace'];
 
 		if(isset($types[$d['typeid']])) {
-			$types[$d['typeid']][0] += $qty;
+			$types['fitting'][$d['typeid']] += $qty;
 		} else {
-			$types[$d['typeid']] = array($qty, $d['typename']);
+			$types['fitting'][$d['typeid']] = $qty;
 		}
 	}
 
-	foreach($types as $typeid => $a) {
-		list($qty, $name) = $a;
+	$totals = array();
 
-		$p = isset($fit['cache'][$typeid]['averageprice']) ? $fit['cache'][$typeid]['averageprice'] : null;
-		if($p !== null) {
-			$total += $qty * $p;
-		} else {
-			$missing[$name] = true;
+	foreach($types as $section => $t) {
+		$total = 0;
+		$hassomemissing = false;
+
+		foreach($t as $typeid => $qty) {
+			$p = get_average_market_price($typeid);
+			if($p !== false) {
+				$total += $qty * $p;
+			} else {
+				$hassomemissing = true;
+				$missing[] = $typeid;
+			}
 		}
+
+		$totals[$section] = ($total === 0 && $hassomemissing) ? 'N/A' : $total;
 	}
 
-	return $total;
+	return $totals;
 }
 
 /**

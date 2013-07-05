@@ -577,6 +577,7 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 		$fit['drones'][$typeid] = array(
 			'typeid' => $typeid,
 			'typename' => get_typename($typeid),
+			'volume' => get_volume($typeid),
 			'quantityinbay' => 0,
 			'quantityinspace' => 0,
 		);
@@ -590,18 +591,6 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 		$typeid,
 		$quantityinspace
 	);
-
-	if($quantityinspace == 0) {
-		/* XXX, this is a hack */
-		dogma_add_drone($fit['__dogma_context'], $typeid, 1);
-	}
-
-	$fit['drones'][$typeid]['volume'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'volume');
-
-	if($quantityinspace == 0) {
-		/* XXX, this is a hack */
-		dogma_remove_drone($fit['__dogma_context'], $typeid);
-	}
 }
 
 /**
