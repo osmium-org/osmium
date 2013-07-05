@@ -76,8 +76,8 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overlaunchers);
 	echo "<p class='overflow$overlaunchers'><img src='$relative/static-".\Osmium\STATICVER."/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
 
-	$formattedCapacitor = \Osmium\Chrome\format_capacitor($capacitor);
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'>".$formattedCapacitor."</span></p>\n";
+	list($captime, $capdelta) = \Osmium\Chrome\format_capacitor($capacitor);
+	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'><span>".$captime."</span><br /><span>".$capdelta."</span></span></p>\n";
 
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
@@ -94,7 +94,7 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $overupgrade);
 	echo "<p class='overflow$overupgrade'><img src='$relative/static-".\Osmium\STATICVER."/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
 
-	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".lcfirst($formattedCapacitor).'</span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
+	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".$captime.' </span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
 }
 
 function print_formatted_offense(&$fit, $relative) {
@@ -215,12 +215,49 @@ function print_formatted_navigation(&$fit, $relative) {
 	$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
 	$agility = \Osmium\Dogma\get_ship_attribute($fit, 'agility');
 	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass') * $agility / 1000000;
+	$warpspeed = \Osmium\Dogma\get_ship_attribute($fit, 'warpSpeedMultiplier') * 3.0;
+	$warpstrength = -\Osmium\Dogma\get_ship_attribute($fit, 'warpScrambleStatus');
+	$fpoints = 'point'.(abs($warpstrength) == 1 ? '' : 's');
 
 	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span title='Maximum velocity'>".format_number($maxvelocity)." m/s</span></p>\n";
 
 	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/agility.png' alt='Agility' title='Agility' /><span><span title='Agility modifier'>".format_number($agility, 3)."x</span><br /><span title='Time to align'>".format_number($aligntime)." s</span></span></p>\n";
 
+	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/warpcore.png' alt='Warp' title='Warp' /><span><span title='Warp speed'>".round($warpspeed, 1)." AU/s</span><br /><span title='Warp core strength'>".$warpstrength." ".$fpoints."</span></span></p>\n";
+
 	print_formatted_attribute_category('navigation', 'Navigation', '<span title="Maximum velocity">'.format_number($maxvelocity, -1).' m/s</span>', '', ob_get_clean());
+}
+
+function print_formatted_targeting(&$fit, $relative) {
+	ob_start();
+
+	$scanstrength = array();
+	$maxtype = null;
+	foreach(array('radar', 'ladar', 'magnetometric', 'gravimetric') as $t) {
+		$scanstrength[$t] = \Osmium\Dogma\get_ship_attribute($fit, 'scan'.ucfirst($t).'Strength');
+		if($maxtype === null || $scanstrength[$t] > $scanstrength[$maxtype]) {
+			$maxtype = $t;
+		}
+	}
+
+	$targetrange = \Osmium\Dogma\get_ship_attribute($fit, 'maxTargetRange');
+	$numtargets = (int)min(\Osmium\Dogma\get_char_attribute($fit, 'maxLockedTargets'),
+	                  \Osmium\Dogma\get_ship_attribute($fit, 'maxLockedTargets'));
+	$ftargets = 'target'.($numtargets !== 1 ? 's' : '');
+	$scanres = \Osmium\Dogma\get_ship_attribute($fit, 'scanResolution');
+	$sigradius = \Osmium\Dogma\get_ship_attribute($fit, 'signatureRadius');
+
+	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting_".$maxtype.".png' alt='".ucfirst($maxtype)." strength' title='".ucfirst($maxtype)." strength' /><span><span title='Maximum locked targets'>".$numtargets." ".$ftargets."</span><br /><span title='Sensor strength'>".round($scanstrength[$maxtype], 1)." points</span></span></p>\n";
+
+	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting.png' alt='Targeting range' title='Targeting range' /><span><span title='Targeting range'>".format_range($targetrange)."</span><br /><span title='Scan resolution'>".format_number($scanres)." mm</span></span></p>\n";
+
+	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/radius.png' alt='Signature radius' title='Signature radius' /><span>".format_range($sigradius)."</span></p>\n";
+
+	print_formatted_attribute_category(
+		'targeting', 'Targeting',
+		$numtargets.' '.$ftargets.' @ '.format_range($targetrange, true),
+		'', ob_get_clean()
+	);
 }
 
 function print_formatted_misc(&$fit) {
@@ -252,6 +289,7 @@ function print_formatted_misc(&$fit) {
 	}
 
 	$fprices = implode(',<br />', $fprices);
+	if($fprices === '') $fprices = '<small>N/A</small>';
 
 	if(count($missing) > 0) {
 		$missing = implode(",&#10;", array_unique(array_map('Osmium\Fit\get_typename', $missing)));
@@ -268,6 +306,14 @@ function print_formatted_misc(&$fit) {
 		echo "<tr><th>Mining yield:</th><td>$yield m<sup>3</sup>/h</td></tr>\n";
 	}
 
+	$cargo = \Osmium\Dogma\get_ship_attribute($fit, 'capacity');
+	echo "<tr><th>Cargo capacity:</th><td>".round($cargo, 2)." m<sup>3</sup></td></tr>\n";
+
+	if(count($fit['drones']) > 0) {
+		$dcrange = \Osmium\Dogma\get_char_attribute($fit, 'droneControlDistance');
+		echo "<tr><th>Drone control range:</th><td>".format_range($dcrange)."</td></tr>\n";
+	}
+
 	echo "</tbody>\n</table>\n";
 	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
 }
@@ -282,6 +328,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.') {
 	print_formatted_offense($fit, $relative);
 	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile);
 	print_formatted_navigation($fit, $relative);
+	print_formatted_targeting($fit, $relative);
 	print_formatted_misc($fit);
 }
 

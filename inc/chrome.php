@@ -153,9 +153,9 @@ function format_capacitor($array) {
 	if($rate > 0) $rate = '+'.((string)$rate);
 
 	if($is_stable) {
-		return "Stable at ".round($data, 1)."% ($rate)";
+		return array('stable at '.round($data, 1)."%", $rate);
 	} else {
-		return "Lasts ".format_duration($data)." ($rate)";
+		return array(format_duration($data), $rate);
 	}
 }
 
@@ -253,23 +253,11 @@ function format_long_range($ranges) {
 	$r = array();
 
 	if(isset($ranges['range'])) {
-		if($ranges['range'] >= 10000) {
-			$range = round($ranges['range'] / 1000, 1).' km';
-		} else {
-			$range = round($ranges['range']).' m';
-		}
-
-		$r[] = "Optimal: ".$range;
+		$r[] = (isset($ranges['falloff']) ? "Optimal" : "Range").": ".format_range($ranges['range']);
 	}
 
 	if(isset($ranges['falloff'])) {
-		if($ranges['falloff'] >= 10000) {
-			$falloff = round($ranges['falloff'] / 1000, 1).' km';
-		} else {
-			$falloff = round($ranges['falloff']).' m';
-		}
-
-		$r[] = "Falloff: ".$falloff;
+		$r[] = "Falloff: ".format_range($ranges['falloff']);
 	}
 
 	if(isset($ranges['trackingspeed'])) {
@@ -277,16 +265,23 @@ function format_long_range($ranges) {
 	}
 
 	if(isset($ranges['maxrange'])) {
-		if($ranges['maxrange'] >= 10000) {
-			$max = round($ranges['maxrange'] / 1000, 1).' km';
-		} else {
-			$max = round($ranges['maxrange']).' m';
-		}
-
-		$r[] = "Maximum range: ".$max;
+		$r[] = "Maximum range: ".format_range($ranges['maxrange']);
 	}
 
 	return implode(";\n", $r);
+}
+
+/** Format a range in meters. */
+function format_range($meters, $shortfmt = false) {
+	if($shortfmt) {
+		return round($meters / 1000, 1).'k';
+	} else {
+		if($meters >= 10000) {
+			return round($meters / 1000, 1).' km';
+		} else {
+			return round($meters).' m';
+		}
+	}
 }
 
 /**
