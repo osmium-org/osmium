@@ -1386,22 +1386,35 @@ function export_to_eve_xml_single(\DOMDocument $f, $fit, $embedclf = true) {
  * Export a loadout to the EFT format. Use at your own risk.
  */
 function export_to_eft($fit) {
-	static $slotorder = array('low', 'medium', 'high', 'rig', 'subsystem');
+	static $slotorder = array(
+		'low' => 'low',
+		'medium' => 'med',
+		'high' => 'high',
+		'rig' => false,
+		'subsystem' => ' subsystem',
+	);
 	$r = '['.$fit['ship']['typename'];
 
 	$name = isset($fit['metadata']['name']) ? $fit['metadata']['name'] : 'unnamed';
-	$r .= ', '.$name."]\n\n";
+	$r .= ', '.$name."]\n";
 
-	foreach($slotorder as $type) {
-		if(!isset($fit['modules'][$type])) continue;
+	foreach($slotorder as $type => $emptyname) {
+		$i = 0;
+		$max = \Osmium\Dogma\get_ship_attribute($fit, get_attr_slottypes()[$type]);
 
-		foreach($fit['modules'][$type] as $index => $module) {
+		$m = isset($fit['modules'][$type]) ? $fit['modules'][$type] : array();
+		foreach($m as $index => $module) {
 			$r .= $module['typename'];
 			if(isset($fit['charges'][$type][$index])) {
 				$r .= ', '.$fit['charges'][$type][$index]['typename'];
 			}
-
+			++$i;
 			$r .= "\n";
+		}
+
+		while($i < $max && $emptyname !== false) {
+			$r .= "[empty {$emptyname} slot]\n";
+			++$i;
 		}
 
 		$r .= "\n";
