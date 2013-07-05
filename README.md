@@ -11,12 +11,13 @@ version 3. You can see the full license text in the `COPYING` file.
 
 For the full list of Osmium contributors, see the `CREDITS` file.
 
-Osmium uses the PHP Markdown Extra library, released under the GNU
-General Public License, version 2.
-<http://michelf.com/projects/php-markdown/license/>
+Osmium uses libdogma, released under the GNU General Public License,
+version 3 (or later).
+<https://github.com/Artefact2/libdogma/blob/master/COPYING>
 
-Osmium uses the phpass library, released in the public domain.
-<http://www.openwall.com/phpass/>
+Osmium uses php-dogma, released under the GNU Affero General Public
+License, version 3 (or later).
+<https://github.com/Artefact2/php-dogma/blob/master/COPYING>
 
 Osmium uses the Common Loadout Format PHP validator, released under
 the WTFPL license, version 2.
@@ -24,6 +25,13 @@ the WTFPL license, version 2.
 
 Osmium uses jQuery, released under the MIT license.
 <https://jquery.org/license/>
+
+Osmium uses the PHP Markdown Extra library, released under the GNU
+General Public License, version 2.
+<http://michelf.com/projects/php-markdown/license/>
+
+Osmium uses the phpass library, released in the public domain.
+<http://www.openwall.com/phpass/>
 
 Contact
 -------
@@ -142,16 +150,16 @@ Updating
    git fetch origin
    git merge origin/production
    git submodule update
-   make
    ~~~~
 
-3. Clear stale cache files:
+3. Read the `UPDATING` file for release-specific upgrade instructions.
+
+4. Clear stale cache files and regenerate stylesheets and static data:
 
    ~~~~
    make clear-harmless-cache
+   make
    ~~~~
-
-4. Read the `UPDATING` file for release-specific upgrade instructions.
 
 5. Start your webserver and test changes.
 
@@ -210,6 +218,7 @@ Dependencies
 ============
 
 * PHP >= 5.4, with:
+  * [dogma extension](https://github.com/Artefact2/php-dogma) (`dogma.so`)
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)
@@ -250,9 +259,10 @@ The long way
 ------------
 
 The dump file is generated from the database of the EVE client
-itself. It could be generated from the Static Data Dump, but Osmium
-uses a different schema with clear, defined constraints. In practice
-it is much easier to generate it from the client itself.
+itself. It could be generated from the Static Data Dump (with a price
+index from a third party source). Since Osmium uses a different schema
+with clear, defined constraints, it is in practice much easier to
+generate it from the client itself.
 
 Use the [`phobos`](http://jira.evefit.org/browse/PHOBOS) dumper to
 dump the EVE database as JSON files:
