@@ -247,26 +247,7 @@ function remove_preset(&$fit, $presetid) {
 		}
 	}
 
-	/* Collect the typeIDs of modules but also charges in all the charge presets */
-	$typeids = array();
-	foreach($fit['presets'][$presetid]['modules'] as $type => $a) {
-		foreach($a as $index => $module) {
-			$typeids[$module['typeid']] = true;
-		}
-	}
-	foreach($fit['presets'][$presetid]['chargepresets'] as $chargepreset) {
-		foreach($chargepreset['charges'] as $type => $a) {
-			foreach($a as $index => $charge) {
-				$typeids[$charge['typeid']] = true;
-			}
-		}
-	}
-
 	unset($fit['presets'][$presetid]);
-
-	foreach($typeids as $tid => $true) {
-		maybe_remove_cache($fit, $tid);
-	}
 }
 
 /**
@@ -295,19 +276,7 @@ function remove_charge_preset(&$fit, $cpid) {
 		}
 	}
 
-	/* Collect the typeIDs of charges we are about to remove */
-	$typeids = array();
-	foreach($fit['chargepresets'][$cpid]['charges'] as $type => $a) {
-		foreach($a as $index => $charge) {
-			$typeids[$charge['typeid']] = true;
-		}
-	}
-
 	unset($fit['chargepresets'][$cpid]);
-
-	foreach($typeids as $tid => $true) {
-		maybe_remove_cache($fit, $tid);
-	}
 }
 
 /**
@@ -334,16 +303,7 @@ function remove_drone_preset(&$fit, $dpid) {
 		}
 	}
 
-	$typeids = array();
-	foreach($fit['dronepresets'][$dpid]['drones'] as $drone) {
-		$typeids[$drone['typeid']] = true;
-	}
-
 	unset($fit['dronepresets'][$dpid]);
-
-	foreach($typeids as $tid => $true) {
-		maybe_remove_cache($fit, $tid);
-	}
 }
 
 /** @internal */
