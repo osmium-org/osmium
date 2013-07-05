@@ -49,16 +49,6 @@ CREATE TABLE dgmattribs (
 
 
 --
--- Name: dgmcacheexpressions; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE TABLE dgmcacheexpressions (
-    expressionid integer NOT NULL,
-    exp text NOT NULL
-);
-
-
---
 -- Name: dgmeffects; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -66,40 +56,11 @@ CREATE TABLE dgmeffects (
     effectid smallint NOT NULL,
     effectname character varying(300) NOT NULL,
     effectcategory smallint NOT NULL,
-    preexpression integer NOT NULL,
-    postexpression integer NOT NULL,
     durationattributeid smallint,
     trackingspeedattributeid smallint,
     dischargeattributeid smallint,
     rangeattributeid smallint,
     falloffattributeid smallint
-);
-
-
---
--- Name: dgmexpressions; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE TABLE dgmexpressions (
-    expressionid integer NOT NULL,
-    operandid smallint NOT NULL,
-    arg1 integer,
-    arg2 integer,
-    expressionname text,
-    expressionvalue text,
-    expressiontypeid integer,
-    expressiongroupid integer,
-    expressionattributeid smallint
-);
-
-
---
--- Name: dgmoperands; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE TABLE dgmoperands (
-    operandid smallint NOT NULL,
-    operandkey character varying(100) NOT NULL
 );
 
 
@@ -213,14 +174,6 @@ ALTER TABLE ONLY averagemarketprices
 
 
 --
--- Name: cacheexpressions_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY dgmcacheexpressions
-    ADD CONSTRAINT cacheexpressions_pkey PRIMARY KEY (expressionid);
-
-
---
 -- Name: dgmattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -234,30 +187,6 @@ ALTER TABLE ONLY dgmattribs
 
 ALTER TABLE ONLY dgmeffects
     ADD CONSTRAINT dgmeffects_pkey PRIMARY KEY (effectid);
-
-
---
--- Name: dgmexpressions_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY dgmexpressions
-    ADD CONSTRAINT dgmexpressions_pkey PRIMARY KEY (expressionid);
-
-
---
--- Name: dgmoperands_operandkey_uniq; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY dgmoperands
-    ADD CONSTRAINT dgmoperands_operandkey_uniq UNIQUE (operandkey);
-
-
---
--- Name: dgmoperands_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY dgmoperands
-    ADD CONSTRAINT dgmoperands_pkey PRIMARY KEY (operandid);
 
 
 --
@@ -379,20 +308,6 @@ CREATE INDEX dgmeffects_effectname_idx ON dgmeffects USING btree (effectname);
 --
 
 CREATE INDEX dgmeffects_falloffattributeid_idx ON dgmeffects USING btree (falloffattributeid);
-
-
---
--- Name: dgmeffects_postexpression_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_postexpression_idx ON dgmeffects USING btree (postexpression);
-
-
---
--- Name: dgmeffects_preexpression_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_preexpression_idx ON dgmeffects USING btree (preexpression);
 
 
 --
@@ -554,14 +469,6 @@ ALTER TABLE ONLY dgmeffects
 
 ALTER TABLE ONLY dgmeffects
     ADD CONSTRAINT dgmeffects_trackingspeedattributeid_fkey FOREIGN KEY (trackingspeedattributeid) REFERENCES dgmattribs(attributeid);
-
-
---
--- Name: dgmexpressions_operandid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY dgmexpressions
-    ADD CONSTRAINT dgmexpressions_operandid_fkey FOREIGN KEY (operandid) REFERENCES dgmoperands(operandid);
 
 
 --

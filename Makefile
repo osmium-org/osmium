@@ -30,7 +30,7 @@ tags:
 	ctags -e -R .
 
 clear-harmless-cache:
-	rm -f cache/OsmiumCache_* static/cache/*
+	rm -f cache/{OsmiumCache,Loadout_Cache}_* static/cache/*
 	rm -Rf cache/CSS cache/HTML cache/URI
 
 clear-api-cache:

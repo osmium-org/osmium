@@ -156,16 +156,12 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile) {
 	echo "</tr>\n</tbody>\n</table>\n";
 
 	$layers = array(
-		'hull_repair' => array('hullrepair.png', 'Hull repairs',
+		'hull' => array('hullrepair.png', 'Hull repairs',
 		                       'Hull EHP repaired per second', true),
-		'armor_repair' => array('armorrepair.png', 'Armor repairs',
+		'armor' => array('armorrepair.png', 'Armor repairs',
 		                        'Armor EHP repaired per second', true),
-		'armor_repair_fueled' => array('fueledarmorrepair.png', 'Fueled armor repairs',
-		                               'Armor EHP repaired per second', true),
-		'shield_boost' => array('shieldboost.png', 'Shield boost',
+		'shield' => array('shieldboost.png', 'Shield boost',
 		                        'Shield EHP boost per second', true),
-		'shield_boost_fueled' => array('fueledshieldboost.png', 'Fueled shield boost',
-		                               'Shield EHP boost per second', true),
 		'shield_passive' => array('shieldrecharge.png', 'Passive shield recharge',
 		                          'Peak shield EHP recharged per second', false),
 		);
@@ -233,19 +229,37 @@ function print_formatted_misc(&$fit) {
 	echo "<table>\n<tbody>\n";
 
 	$missing = array();
-	$p = \Osmium\Fit\get_average_price($fit, $missing);
-	if(!$p) {
-		$p = 'N/A';
+	$prices = \Osmium\Fit\get_estimated_price($fit, $missing);
+	$grand_total = 0;
+	$fprices = array();
+
+	foreach($prices as $section => $p) {
+		if($p !== 'N/A') {
+			$grand_total += $p;
+			$p = format_isk($p);
+		}
+
+		$fprices[] = $section.': '.$p;
+	}
+
+	if($grand_total === 0 && count($missing) > 0) {
+		$grand_total = 'N/A';
 	} else {
-		$p = format_isk($p);
+		$grand_total = format_isk($grand_total);
 		if(count($missing) > 0) {
-			$missing = implode(', ', array_keys($missing));
-			$p = "<span title='Estimate of the following items unavailable: "
-				.htmlspecialchars($missing, ENT_QUOTES)."'>≥".$p.'</span>';
+			$grand_total = '≥ '.$grand_total;
 		}
 	}
 
-	echo "<tr><th>Average price:</th><td>$p</td></tr>\n";
+	$fprices = implode(',<br />', $fprices);
+
+	if(count($missing) > 0) {
+		$missing = implode(",&#10;", array_unique(array_map('Osmium\Fit\get_typename', $missing)));
+		$fprices = "<span title='Estimate of the following items unavailable:&#10;"
+			.htmlspecialchars($missing, ENT_QUOTES)."'>".$fprices.'</span>';
+	}
+
+	echo "<tr><th>Estimated price:</th><td>{$fprices}</td></tr>\n";
 
 	$yield = \Osmium\Fit\get_mining_yield($fit);
 	if($yield > 0) {
@@ -255,7 +269,7 @@ function print_formatted_misc(&$fit) {
 	}
 
 	echo "</tbody>\n</table>\n";
-	print_formatted_attribute_category('misc', 'Miscellaneous', $p, '', ob_get_clean());
+	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
 }
 
 function print_formatted_loadout_attributes(&$fit, $relative = '.') {

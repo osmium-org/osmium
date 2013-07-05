@@ -34,19 +34,37 @@ $clftext = $_POST['clf'];
 $relative = $_GET['relative'];
 $local = null;
 
-$local = \Osmium\State\get_new_loadout($token);
-
-if($local === null) {
-	header('HTTP/1.1 404 Not Found', true, 404);
-	\Osmium\Chrome\return_json(array());
-}
-
-if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
+if($type === 'new') {
+	$local = \Osmium\State\get_new_loadout($token);
+} else if($type === 'view') {
+	$local = \Osmium\State\get_view_loadout($token);
+} else {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }
 
+$payload = array();
+
+if($local === null) {
+	/* Outdated token, generate a new one and send it to client */
+	$token = \Osmium\State\get_unique_new_loadout_token();
+	$local = \Osmium\Fit\try_parse_fit_from_common_loadout_format($clftext, $errors);
+
+	if(!is_array($local)) {
+		header('HTTP/1.1 400 Bad Request', true, 400);
+		\Osmium\Chrome\return_json(array());
+	}
+} else {
+	/* Valid token, just update local loadout from client CLF */
+
+	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
+		header('HTTP/1.1 400 Bad Request', true, 400);
+		\Osmium\Chrome\return_json(array());
+	}
+}
+
 $payload = array(
+	'clftoken' => $token,
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative),
 	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
 	'rawattribs' => array(
@@ -58,7 +76,11 @@ $payload = array(
 	),
 );
 
-\Osmium\State\put_new_loadout($token, $local);
+if($type === 'new') {
+	\Osmium\State\put_new_loadout($token, $local);
+} else if($type === 'view') {
+	\Osmium\State\put_view_loadout($token, $local);
+}
 
 if($type === 'new') {
 	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);

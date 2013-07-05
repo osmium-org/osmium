@@ -66,12 +66,12 @@ function get_recommended_tags($fit) {
 
 	foreach($fit['modules'] as $a) {
 		foreach($a as $m) {
-			$groupid = $fit['cache'][$m['typeid']]['groupid'];
-			if(!isset($groups[$groupid])) $groups[$groupid] = 0;
-
-			++$groups[$groupid];
+			$groupid = get_groupid($m['typeid']);
+			if(!isset($groups[$groupid])) $groups[$groupid] = 1;
+			else ++$groups[$groupid];
 		}
 	}
+
 
 	static $groupgroups = array(
 		'shield' => array(

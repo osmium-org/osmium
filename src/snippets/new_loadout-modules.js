@@ -31,7 +31,7 @@ osmium_gen_modules = function() {
 		old_ias[typeid][index] = s.clone();
 	});
 
-	$('section#modules > div.slots > ul').empty();
+	$('section#modules > div.slots > ul > li').not('.placeholder').remove();
 
 	if(!("modules" in p)) p.modules = [];
 
@@ -54,6 +54,7 @@ osmium_gen_modules = function() {
 		var li = osmium_add_module(m.typeid, m.index, m.state, chargeid);
 
 		if(m.typeid in old_ias && m.index in old_ias[m.typeid]) {
+			li.addClass('hasattribs');
 			li.append(old_ias[m.typeid][m.index]);
 		}
 	}
@@ -568,7 +569,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 		osmium_ctxmenu_add_option(menu, "Show module info", function() {
 			osmium_showinfo({
-				'new': osmium_clftoken,
 				type: "module",
 				slottype: li.data('slottype'),
 				index: li.data('index')
@@ -578,7 +578,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		if(hascharges && li.data('chargetypeid') !== null) {
 			osmium_ctxmenu_add_option(menu, "Show charge info", function() {
 				osmium_showinfo({
-					'new': osmium_clftoken,
 					type: "charge",
 					slottype: li.data('slottype'),
 					index: li.data('index')

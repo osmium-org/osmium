@@ -31,8 +31,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		list($c, $s, $d) = \Osmium\Fit\get_capacitor_stability($fit);
 		$this->assertSame($stable, $s);
 		$this->assertEquals($rate, 1000 * $c, '', 0.1); /* 0.1 GJ/s margin (Pyfa rounding) */
-		$this->assertEquals($value, $d, '', 0.1 * $value); /* 10% margin */
-		
+		$this->assertEquals($value, $d, '', 0.20 * $value); /* 20% margin */
 	}
 
 	private function assertShieldResistances(&$fit, $em, $thermal, $kinetic, $explosive) {
@@ -103,42 +102,42 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	 * @group engine
 	 */
 	public function testStackingPenalties() {
-		static $eanm = 14950; /* Fancy EANM */
+		static $eanm = 14950; /* Draclira's modified EANM */
 
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 24692); /* Abaddon */
-		
-		/* Numbers below extracted from Pyfa 1.1.7-git, rounded to .1% (0.001) */
+
+		/* Source: Pyfa-c67034e (2013-07-01) */
 
 		/* Base resist (with ship bonus) */
-		$this->assertExplosiveResistance($fit, 0.4000);
+		$this->assertExplosiveResistance($fit, 0.3600);
 
-		/* Fit one EANM II */
+		/* Fit one EANM */
 		\Osmium\Fit\add_module($fit, 0, $eanm);
-		$this->assertExplosiveResistance($fit, 0.6269);
+		$this->assertExplosiveResistance($fit, 0.6020);
 
 		/* Add a second one */
 		\Osmium\Fit\add_module($fit, 1, $eanm);
-		$this->assertExplosiveResistance($fit, 0.7495);
+		$this->assertExplosiveResistance($fit, 0.7328);
 
 		/* Etc. */
 		\Osmium\Fit\add_module($fit, 2, $eanm);
-		$this->assertExplosiveResistance($fit, 0.8035);
+		$this->assertExplosiveResistance($fit, 0.7904);
 
 		\Osmium\Fit\add_module($fit, 3, $eanm);
-		$this->assertExplosiveResistance($fit, 0.8246);
+		$this->assertExplosiveResistance($fit, 0.8129);
 
 		\Osmium\Fit\add_module($fit, 4, $eanm);
-		$this->assertExplosiveResistance($fit, 0.8316);
+		$this->assertExplosiveResistance($fit, 0.8204);
 
 		\Osmium\Fit\add_module($fit, 5, $eanm);
-		$this->assertExplosiveResistance($fit, 0.8335);
+		$this->assertExplosiveResistance($fit, 0.8224);
 
 		/* Now add a Damage Control, its bonuses should not be
 		 * penalized by the EANMs since their modifiers are not in the
 		 * same category (premul/postpercent) */
 		\Osmium\Fit\add_module($fit, 6, 2048);
-		$this->assertExplosiveResistance($fit, 0.8585);
+		$this->assertExplosiveResistance($fit, 0.8490);
 
 		\Osmium\Fit\destroy($fit);
 	}
@@ -151,7 +150,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* The Reactive Armor Hardener is penalized by Damage
 		 * Controls, but not by regular hardeners. */
 
-		/* Numbers below extracted from Pyfa 1.1.7-git, rounded to .1% (0.001) */
+		/* Source: Pyfa-c67034e (2013-07-01) */
 
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 24692); /* Abaddon */
@@ -159,21 +158,21 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 0, 11646); /* Armor Explosive Hardener II */
 		\Osmium\Fit\add_module($fit, 2, 11269); /* EANM II */
 		\Osmium\Fit\add_module($fit, 3, 11269);
-		$this->assertExplosiveResistance($fit, 0.8188);
+		$this->assertExplosiveResistance($fit, 0.8067);
 
 		\Osmium\Fit\add_module($fit, 4, 2048); /* DC II */
-		$this->assertExplosiveResistance($fit, 0.846);
+		$this->assertExplosiveResistance($fit, 0.8357);
 
 		\Osmium\Fit\change_module_state_by_typeid($fit, 4, 2048, \Osmium\Fit\STATE_ONLINE);
 		\Osmium\Fit\add_module($fit, 5, 4403); /* Reactive Armor Hardener */
-		$this->assertExplosiveResistance($fit, 0.846);
+		$this->assertExplosiveResistance($fit, 0.8357);
 
 		/* Assert penalized resist */
 		\Osmium\Fit\remove_module($fit, 0, 11646);
 		\Osmium\Fit\remove_module($fit, 2, 11269);
 		\Osmium\Fit\remove_module($fit, 3, 11269);
 		\Osmium\Fit\change_module_state_by_typeid($fit, 4, 2048, \Osmium\Fit\STATE_ACTIVE);
-		$this->assertExplosiveResistance($fit, 0.5565);
+		$this->assertExplosiveResistance($fit, 0.5269);
 		
 		\Osmium\Fit\destroy($fit);
 	}
@@ -284,41 +283,16 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 				)
 			);
 
-		$this->assertCapacitorStatus($fit, 42.3 - 21.3, false, 4 * 60 + 55);
+		/* Source: Pyfa-c67034e (2013-07-01) */
+
+		$this->assertCapacitorStatus($fit, 38.1 - 21.3, false, 5 * 60 + 53);
 
 		/* Heavy Capacitor Booster II, with 800 charges */
 		\Osmium\Fit\add_module($fit, 0, 3578);
 		\Osmium\Fit\add_charge($fit, 'medium', 0, 11289);
 
-		/* Only "really" test for cap stability */
-		$this->assertCapacitorStatus($fit, -45.6, true, 100.0);
-	}
-
-	/**
-	 * @group fit
-	 * @group engine
-	 */
-	public function testInvulnerabilityFieldPassiveAndActiveBonus() {
-		\Osmium\Fit\create($fit);
-		\Osmium\Fit\select_ship($fit, 28710); /* Golem */
-		\Osmium\Fit\add_module($fit, 0, 4347); /* Pithum A-Type Invulnerability Field */
-
-		/* Pyfa 1.1.7-git */
-
-		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_OFFLINE);
-		$this->assertShieldResistances($fit, 0.000, 0.400, 0.475, 0.500);
-
-		/* Test the passive bonus */
-		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_ONLINE);
-		$this->assertShieldResistances($fit, 0.150, 0.490, 0.5538, 0.575);
-
-		/* Test the active bonus */
-		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_ACTIVE);
-		$this->assertShieldResistances($fit, 0.4688, 0.6812, 0.7211, 0.7344);
-
-		/* Test the active bonus when overloaded */
-		\Osmium\Fit\change_module_state_by_typeid($fit, 0, 4347, \Osmium\Fit\STATE_OVERLOADED);
-		$this->assertShieldResistances($fit, 0.5625, 0.7375, 0.7703, 0.7812);
+		/* Pyfa factors in reload time of capacitor boosters. */
+		$this->assertCapacitorStatus($fit, 38.1 - 78.4, true, 100.0);
 	}
 
 	/**
@@ -340,11 +314,11 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	 */
 	public function testHybridDPS() {
 		/* Brutix with Heavy Ion Blasters and Antimatter */
-		/* Pyfa 1.1.7-git */
-		$this->assertGunDamagePerSecond(16229, 7, 3138, 230, 
-		                                1177, 363, 
+		/* Source: Pyfa-c67034e (2013-07-01) */
+		$this->assertGunDamagePerSecond(16229, 6, 3138, 230, 
+		                                1210, 374, 
 		                                3, 10190,
-		                                1487, 600);
+		                                1530, 617);
 	}
 
 	/**
@@ -366,11 +340,11 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	 */
 	public function testMissileDPS() {
 		/* Raven with Cruise missiles */
-		/* Pyfa 1.1.7-git */
+		/* Source: Pyfa-c67034e (2013-07-01) */
 		$this->assertMissileDamagePerSecond(638, 6, 19739, 204, 
-		                                    2475, 272, 
+		                                    3094, 362, 
 		                                    4, 22291,
-		                                    3216, 477);
+		                                    4021, 635);
 	}
 
 	/**
@@ -380,13 +354,13 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	public function testDroneAndSentryDPS() {
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 12005); /* Ishtar */
-		\Osmium\Fit\add_module($fit, 0, 32083); /* Sentry Damage Augmentor */
+		\Osmium\Fit\add_module($fit, 0, 32083); /* Sentry Damage Augmentor I */
 		\Osmium\Fit\add_module($fit, 1, 32083);
 		\Osmium\Fit\add_module($fit, 0, 4405); /* Drone Damage Amplifier II */
 		\Osmium\Fit\add_module($fit, 1, 4405);
 		\Osmium\Fit\add_module($fit, 2, 4405);
 
-		/* Pyfa 1.1.7-git */
+		/* Source: Pyfa-c67034e (2013-07-01) */
 
 		$dps = \Osmium\Fit\get_damage_from_drones($fit);
 		$this->assertSame(0, $dps);
@@ -394,15 +368,24 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_drone($fit, 28211, 0, 5); /* 5x Garde IIs in space */
 		\Osmium\Fit\add_drone($fit, 2488, 5, 0); /* 5x Warrior IIs in bay */
 
+		$this->assertEquals(
+			5 * 25 + 5 * 5,
+			\Osmium\Fit\get_used_drone_capacity($fit),
+			'', 0
+		);
+
 		$dps = \Osmium\Fit\get_damage_from_drones($fit);
-		$this->assertEquals(719, $dps, '', 1);
+		$this->assertEquals(781, $dps, '', 1);
 
 		/* Swap the drones */
 		\Osmium\Fit\transfer_drone($fit, 28211, 'space', 5);
 		\Osmium\Fit\transfer_drone($fit, 2488, 'bay', 5);
 
+		/* Add drones that do no damage */
+		\Osmium\Fit\add_drone($fit, 23731, 0,  5);
+
 		$dps = \Osmium\Fit\get_damage_from_drones($fit);
-		$this->assertEquals(185, $dps, '', 1);
+		$this->assertEquals(201, $dps, '', 1);
 	}
 
 	/**
@@ -416,20 +399,20 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_module($fit, 1, 4391); /* Large ASB */
 		\Osmium\Fit\add_module($fit, 2, 4391);
 
-		/* Pyfa 1.1.8 */
+		/* Source: Pyfa-c67034e (2013-07-01) */
 
 		$this->assertEquals(400, \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad'), '', 0.05);
 		$this->assertEquals(800, \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad'), '', 0.05);
-		$this->assertEquals(531.2, \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput'), '', 0.05);
-		$this->assertEquals(1512.5, \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput'), '', 0.05);
+		$this->assertEquals(656.3, \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput'), '', 0.05);
+		$this->assertEquals(1375.0, \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput'), '', 0.05);
 
 		$uniform = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
 		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
 		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
 
-		$this->assertEquals(834.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
-		$this->assertEquals(34.3, 1000 * $tank['shield_boost_fueled'][1], '', 0.05);
+		$this->assertEquals(741.6, 1000 * $tank['shield'][0], '', 0.05);
+		$this->assertEquals(24.8, 1000 * $tank['shield'][1], '', 0.05);
 
 		\Osmium\Fit\add_charge($fit, 'medium', 0, 11287);
 		\Osmium\Fit\add_charge($fit, 'medium', 1, 11283);
@@ -438,8 +421,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
 		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
 
-		$this->assertSame($tank['shield_boost_fueled'][0], $tank['shield_boost_fueled'][1]);
-		$this->assertEquals(834.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
+		$this->assertSame($tank['shield'][0], $tank['shield'][1]);
+		$this->assertEquals(741.6, 1000 * $tank['shield'][0], '', 0.05);
 	}
 
 	/**
@@ -489,10 +472,11 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_charge($fit, 'medium', 0, 28999); /* Optimal Range Script */
 		\Osmium\Fit\add_module($fit, 0, 26038); /* Large Projectile Ambit Extension I */
 
-		/* Pyfa 1.1.8 */
+		/* Source: Pyfa-c67034e (2013-07-01) */
+
 		$a = \Osmium\Fit\get_module_interesting_attributes($fit, 'high', 0);
-		$this->assertEquals(4.27, $a['range'] / 1000, '', 0.005);
-		$this->assertEquals(73.1, $a['falloff'] / 1000, '', 0.05);
+		$this->assertEquals(3.998, $a['range'] / 1000, '', 0.005);
+		$this->assertEquals(64.783, $a['falloff'] / 1000, '', 0.05);
 		$this->assertEquals(0.0888, $a['trackingspeed'], '', 0.00005);
 	}
 
@@ -509,6 +493,23 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* Pyfa 1.1.8, the range is only an approximation and is actually slightly wrong */
 		$a = \Osmium\Fit\get_module_interesting_attributes($fit, 'high', 0);
 		$this->assertEquals(9960, $a['maxrange'], '', 250);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
+	public function testDefenderMissileRange() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 587); /* Rifter */
+		\Osmium\Fit\add_module($fit, 0, 2404); /* Light Missile Launcher II */
+		\Osmium\Fit\add_charge($fit, 'high', 0, 32782); /* Light Defender Missile I */
+
+		/* No source for this. Pyfa doesn't show range (although the
+		 * flighttime * velocity checks out) and EFT doesn't apply
+		 * skill bonuses to the defender missile. */
+		$a = \Osmium\Fit\get_module_interesting_attributes($fit, 'high', 0);
+		$this->assertEquals(225000, $a['maxrange'], '', 1);
 	}
 
 	/**
@@ -536,15 +537,13 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		$this->assertEquals(38370, $ehp['ehp']['avg'], '', 1);
 		$this->assertEquals(17.2, 1000 * $tank['shield_passive'][0], '', 0.05);
-		$this->assertSame($tank['shield_passive'][1], $tank['shield_passive'][1]);
-		$this->assertEquals(165.5, 1000 * $tank['shield_boost'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost'][1]);
-		$this->assertEquals(134.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost_fueled'][1]);
-		$this->assertEquals(434.6, 1000 * $tank['armor_repair'][0], '', 0.05);
-		$this->assertEquals(81.5, 1000 * $tank['armor_repair'][1], '', 0.05);
-		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
-		$this->assertEquals(0, $tank['hull_repair'][1]);
+		$this->assertSame($tank['shield_passive'][0], $tank['shield_passive'][1]);
+		$this->assertEquals(300.0, 1000 * $tank['shield'][0], '', 0.05);
+		$this->assertEquals(0, $tank['shield'][1]);
+		$this->assertEquals(434.6, 1000 * $tank['armor'][0], '', 0.05);
+		$this->assertEquals(81.5, 1000 * $tank['armor'][1], '', 0.05);
+		$this->assertEquals(6.7, 1000 * $tank['hull'][0], '', 0.05);
+		$this->assertEquals(0, $tank['hull'][1]);
 
 		/* Test with a more general profile */
 		$profile = array('em' => 10, 'thermal' => 20, 'explosive' => 30, 'kinetic' => 40);
@@ -553,37 +552,39 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		$this->assertEquals(39132, $ehp['ehp']['avg'], '', 1);
 		$this->assertEquals(19.2, 1000 * $tank['shield_passive'][0], '', 0.05);
-		$this->assertSame($tank['shield_passive'][1], $tank['shield_passive'][1]);
-		$this->assertEquals(184.6, 1000 * $tank['shield_boost'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost'][1]);
-		$this->assertEquals(150, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost_fueled'][1]);
-		$this->assertEquals(413.1, 1000 * $tank['armor_repair'][0], '', 0.05);
-		$this->assertEquals(77.5, 1000 * $tank['armor_repair'][1], '', 0.05);
-		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
-		$this->assertEquals(0, $tank['hull_repair'][1]);
+		$this->assertSame($tank['shield_passive'][0], $tank['shield_passive'][1]);
+		$this->assertEquals(334.6, 1000 * $tank['shield'][0], '', 0.05);
+		$this->assertEquals(0, 1000 * $tank['shield'][1], '', 0.05);
+		$this->assertEquals(413.1, 1000 * $tank['armor'][0], '', 0.05);
+		$this->assertEquals(77.5, 1000 * $tank['armor'][1], '', 0.05);
+		$this->assertEquals(6.7, 1000 * $tank['hull'][0], '', 0.05);
+		$this->assertEquals(0, $tank['hull'][1]);
 	}
 
 	/**
 	 * @group fit
 	 * @group engine
+	 * @group import
 	 */
-	public function testShipSpecificModifiers() {
-		\Osmium\Fit\create($fit);
-		\Osmium\Fit\select_ship($fit, 24696); /* Harbinger */
-		\Osmium\Fit\add_module($fit, 0, 2559); /* ECM - Phase Inverter II */
-		\Osmium\Fit\add_drone($fit, 23705, 0, 5); /* Vespa EC-600 */
+	public function testMiningYield() {
+		/* Source: Pyfa-c67034e (2013-07-01) */
 
-		/* Pyfa 1.1.9 */
+		/* Mackinaw with 2x Ice Harvester II and one upgrade and one ice harvester accelerator rig */
+		$fit = \Osmium\Fit\try_parse_fit_from_shipdna('22548:22229;2:32772;2:9568:2553:2048:28578:3888:31360:32819:2488;5:2456;4:32787:264;2::', 'Mackinaw', $errors);
+		$this->assertEquals(
+			2 * 1000.0 / 95085.4905,
+			\Osmium\Fit\get_mining_yield($fit),
+			'',
+			0.000000001
+		);
 
-		/* ECM module should be affected by the Signal Dispersion skill */
-		$this->assertEquals(4.5,
-		                    \Osmium\Dogma\get_module_attribute($fit, 'medium', 0, 'scanLadarStrengthBonus'),
-		                    '', 0.05);
-
-		/* ECM drone should NOT be affected by the Signal Dispersion skill */
-		$this->assertEquals(1.5,
-		                    \Osmium\Dogma\get_drone_attribute($fit, 23705, 'scanLadarStrengthBonus'),
-		                    '', 0.05);
+		/* Venture with 2x Modulated DCM IIs and T2 crystals */
+		$fit = \Osmium\Fit\try_parse_fit_from_shipdna('32880:18068;2:18618;2::', 'Venture', $errors);
+		$this->assertEquals(
+			2 * 820.3125 / 180000.0,
+			\Osmium\Fit\get_mining_yield($fit),
+			'',
+			0.000000001
+		);
 	}
 }

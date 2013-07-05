@@ -492,15 +492,16 @@ echo "</section>
 
 echo "</div>\n";
 
-$tok = \Osmium\State\get_unique_new_loadout_token();
-\Osmium\State\put_new_loadout($tok, $fit);
+/* The phony CLF token is obviously not a valid token, and process_clf
+ * will pick it up and create a new token on demand. So if the user
+ * never interacts with the loadout, it never gets cached. */
 
 \Osmium\Chrome\print_js_code(
 "osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
 osmium_staticver = ".\Osmium\STATICVER.";
 osmium_relative = '".RELATIVE."';
 osmium_token = '".\Osmium\State\get_token()."';
-osmium_clftoken = '".$tok."';
+osmium_clftoken = '___demand___';
 osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
 osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 );

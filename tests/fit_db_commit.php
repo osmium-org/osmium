@@ -162,7 +162,16 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		$dbfitrev = \Osmium\Fit\get_fit($loadoutid, $revision);
 		\Osmium\State\pop_cache_enabled();
 
+		$this->assertSame(
+			json_encode(\Osmium\Fit\get_unique($fit), JSON_PRETTY_PRINT),
+			json_encode(\Osmium\Fit\get_unique($dbfit), JSON_PRETTY_PRINT)
+		);
 		$this->assertSame(\Osmium\Fit\get_hash($fit), \Osmium\Fit\get_hash($dbfit));
+
+		$this->assertSame(
+			json_encode(\Osmium\Fit\get_unique($fit), JSON_PRETTY_PRINT),
+			json_encode(\Osmium\Fit\get_unique($dbfitrev), JSON_PRETTY_PRINT)
+		);
 		$this->assertSame(\Osmium\Fit\get_hash($fit), \Osmium\Fit\get_hash($dbfitrev));
 	}
 

@@ -22,120 +22,14 @@ namespace Osmium\Fit;
  * Get capacitor-related attributes of a given fit.
  *
  * Returns an array of length 3: the first value is the capacitor
- * usage rate (minus peak recharge rate) in GJ/s, the second is a
+ * usage rate (minus peak recharge rate) in GJ/ms, the second is a
  * boolean indicating whether the capacitor is stable or not and the
  * third is either time in seconds until the capacitor is depleted, or
  * the stable percentage level (between 0 and 100).
  */
-function get_capacitor_stability(&$fit) {
-	static $step = 1000; /* Number of milliseconds between each integration step */
-	$categories = get_state_categories();
-
-	/* Base formula taken from: http://wiki.eveuniversity.org/Capacitor_Recharge_Rate */
-	$capacity = \Osmium\Dogma\get_ship_attribute($fit, 'capacitorCapacity');
-	$tau = \Osmium\Dogma\get_ship_attribute($fit, 'rechargeRate') / 5.0;
-
-	$usage_rate = 0;
-	$usage = array();
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $module) {
-			foreach($fit['cache'][$module['typeid']]['effects'] as $effect) {
-				$effectdata = $fit['cache']['__effects'][$effect['effectname']];
-
-				if(!in_array($effectdata['effectcategory'], $categories[$module['state']])) continue;
-				if(!isset($effectdata['durationattributeid'])) continue;
-
-				$duration = \Osmium\Dogma\get_module_attribute(
-					$fit, $type, $index, 
-					\Osmium\Dogma\get_attributename($effectdata['durationattributeid']));
-
-				if($effect['effectname'] == 'powerBooster') {
-					/* Special case must be hardcoded (eg. cap boosters) */
-					if(!isset($fit['charges'][$type][$index])) {
-						continue;
-					}
-
-					$restored = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'capacitorBonus', false);
-
-					$usage_rate -= $restored / $duration;
-					$usage[] = array(-$restored, $duration, 0);
-					continue;
-				}
-
-				if(!isset($effectdata['dischargeattributeid'])) continue;
-				get_attribute_in_cache($effectdata['dischargeattributeid'], $fit['cache']);
-
-				$discharge = \Osmium\Dogma\get_module_attribute(
-					$fit, $type, $index, 
-					\Osmium\Dogma\get_attributename($effectdata['dischargeattributeid']));
-
-				$usage_rate += $discharge / $duration;
-				$usage[] = array($discharge, $duration, 0);
-			}
-		}
-	}
-
-	if($capacity == 0 || $tau == 0) {
-		return array($usage_rate, true, 0);
-	}
-
-	$peak_rate = (sqrt(0.25) - 0.25) * 2 * $capacity / $tau; /* Recharge rate at 25% capacitor */
-	$X = max(0, $usage_rate);
-
-	/* I got the solution for cap stability by solving the quadratic equation:
-	   dC   /       C        C   \   2Cmax
-	   -- = |sqrt(-----) - ----- | x -----
-	   dt   \     Cmax     Cmax  /    Tau
-
-	           Cmax - X*Tau + sqrt(Cmax^2 - 2X*Tau*Cmax)          dC
-	   ==> C = ----------------------------------------- with X = --
-	                             2                                dt
-	   
-	   A simple check is that, for dC/dt = 0, the two solutions should be 0 and Cmax. */
-	$delta = $capacity * $capacity - 2 * $tau * $X * $capacity;
-	if($delta < 0) {
-		/* $delta negative, not cap stable */
-		$t = 0;
-		$capacitor = $capacity; /* Start with full capacitor */
-
-		/* Simulate what happens with the Runge-Kutta method (RK4) */
-		$f = function($c) use($capacity, $tau) {
-			$c = max($c, 0);
-			return (sqrt($c / $capacity) - $c / $capacity) * 2 * $capacity / $tau;
-		};
-
-		/* The limit on $t is there for two reasons: 1. because there
-		 * is no guarantee this loop will ever exit otherwise, and
-		 * 2. to prevent malicious users from generating excessive
-		 * load. */
-		while($capacitor > 0 && $t < 3600000) {
-			foreach($usage as &$u) {
-				while($u[2] <= $t) {
-					$capacitor -= $u[0];
-					$u[2] += $u[1];
-				}
-			}
-
-			$k1 = $f($capacitor);
-			$k2 = $f($capacitor + 0.5 * $step * $k1);
-			$k3 = $f($capacitor + 0.5 * $step * $k2);
-			$k4 = $f($capacitor + $step * $k3);
-			$capacitor += ($increment = $step * ($k1 + 2 * $k2 + 2 * $k3 + $k4) / 6);
-			$t += $step;
-		}
-
-		/* Use a linear interpolation to refine the result */
-		$rate = $increment / $step;
-		$zero = ($increment - $capacitor) * $rate;
-		$t -= (1 - $zero) * $step;
-
-		return array($usage_rate - $peak_rate, false, $t / 1000);
-	} else {
-		/* $delta positive, cap-stable */
-		/* Use the highest root of our equation (but there is also another solution below the 25% peak) */
-		$C = 0.5 * ($capacity - $tau * $X + sqrt($delta));
-		return array($usage_rate - $peak_rate, true, 100 * $C / $capacity);
-	}
+function get_capacitor_stability(&$fit, $reload = true) {
+	dogma_get_capacitor($fit['__dogma_context'], $reload, $delta, $stable, $p);
+	return array($delta, $stable, $stable ? $p : ($p / 1000.0));
 }
 
 /**
@@ -179,10 +73,14 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
 		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
 
 		$sum = array_sum($damageprofile);
+
+		// @codeCoverageIgnoreStart
 		if($sum == 0) {
 			trigger_error(__FUNCTION__.'(): invalid damage profile', E_USER_WARNING);
 			$sum = 1;
 		}
+		// @codeCoverageIgnoreEnd
+
 		$avgresonance = 0;
 		foreach($damageprofile as $type => $damage) {
 			$avgresonance += $damage * $out[$name]['resonance'][$type];
@@ -210,59 +108,44 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
  * @returns array(repair_type => array(reinforced, sustained))
  */
 function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
-	static $effects = array(
-		'hull_repair' => array('structureRepair', 'structureDamageAmount', 'hull'),
-		'armor_repair' => array('armorRepair', 'armorDamageAmount', 'armor'),
-		'armor_repair_fueled' => array('fueledArmorRepair', 'armorDamageAmount', 'armor'),
-		'shield_boost' =>  array('shieldBoosting', 'shieldBonus', 'shield'),
-		'shield_boost_fueled' => array('fueledShieldBoosting', 'shieldBonus', 'shield'),
-		'shield_passive' => array(null, null, 'shield'),
-		);
+	static $localrepaireffects = array(
+		'hull' => [ [ EFFECT_StructureRepair, 'structureDamageAmount' ] ],
+		'armor' => [ [ EFFECT_ArmorRepair, 'armorDamageAmount' ],
+		             [ EFFECT_FueledArmorRepair, 'armorDamageAmount' ] ],
+		'shield' => [ [ EFFECT_ShieldBoosting, 'shieldBonus' ],
+		              [ EFFECT_FueledShieldBoosting, 'shieldBonus' ] ]
+	);
 
 	$modules = array();
 	$out = array();
 
-	foreach($effects as $key => $effectd) {
-		list($effectname, $attributename, $type) = $effectd;
+	foreach($localrepaireffects as $layer => $effects) {
+		foreach($effects as $effectdata) {
+			list($effect, $moduleattribute) = $effectdata;
 
-		if(!isset($fit['cache']['__effects'][$effectname])) {
-			/* Effect not in cache, there's no point traversing the
-			 * modules */
-			$out[$key] = array(0, 0);
-			continue;
-		}
+			foreach(get_modules($fit) as $type => $a) {
+				foreach($a as $index => $module) {
+					$ret = dogma_type_has_effect(
+						$module['typeid'],
+						\Osmium\Dogma\get_dogma_states()[$module['state']],
+						$effect, $hasit);
+					if($ret !== DOGMA_OK || $hasit !== true) {
+						continue;
+					}
 
-		$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
-		$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
-		get_attribute_in_cache($durationattributeid, $fit['cache']);
-		get_attribute_in_cache($dischargeattributeid, $fit['cache']);
-		$durationattributename = \Osmium\Dogma\get_attributename($durationattributeid);
-		$dischargeattributename = \Osmium\Dogma\get_attributename($dischargeattributeid);
+					$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $moduleattribute);
+					dogma_get_location_effect_attributes(
+						$fit['__dogma_context'],
+						[ DOGMA_LOC_Module, "module_index" => $module['dogma_index'] ],
+						$effect,
+						$duration, $tracking, $discharge,
+						$range, $falloff, $usagechance
+					);
 
-		foreach(get_modules($fit) as $type => $a) {
-			foreach($a as $index => $module) {
-				if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
-					continue;
+					if($duration > 1e-300) {
+						$modules[] = array($layer, $amount, $duration, $discharge);
+					}
 				}
-
-				if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
-					continue;
-				}
-
-				$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
-				if($key === 'armor_repair_fueled' && isset($fit['charges'][$type][$index]['typeid'])
-				   && $fit['charges'][$type][$index]['typeid'] == 28668) {
-					/* XXX: ugly exception for the Ancillary Armor
-					 * Repairer. Proper effect override will be in
-					 * libdogma. */
-					$amount *= \Osmium\Dogma\get_module_attribute($fit, $type, $index,
-					                                              'chargedArmorDamageMultiplier');
-				}
-
-				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
-
-				$modules[] = array($key, $amount, $duration, $discharge);				
 			}
 		}
 	}
@@ -303,10 +186,6 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 		$out[$key][1] += $fraction * $amount / $duration;
 	}
 
-	$shieldrechargerate = \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
-	$passiverate = ($shieldrechargerate > 0) ? 2.5 * $ehp['shield']['capacity'] / $shieldrechargerate : 0;
-	$out['shield_passive'] = array($passiverate, $passiverate);
-
 	$sum = array_sum($damageprofile);
 	if($sum == 0) {
 		trigger_error(__FUNCTION__.'(): invalid damage profile given', E_USER_WARNING);
@@ -325,16 +204,22 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 		$multipliers[$ltype] /= $sum;
 	}
 
-	foreach($effects as $key => $e) {
-		list(, , $type) = $e;
+	foreach($out as $layer => $a) {
+		if(!isset($multipliers[$layer])) continue;
 
-		if(!isset($out[$key])) continue;
-
-		$out[$key] = array(
-			$out[$key][0] / $multipliers[$type],
-			$out[$key][1] / $multipliers[$type],
-			);
+		$out[$layer] = array(
+			$out[$layer][0] / $multipliers[$layer],
+			$out[$layer][1] / $multipliers[$layer],
+		);
 	}
+
+	$shieldrechargerate = \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
+	$passiverate = ($shieldrechargerate > 0) ? 2.5 * $ehp['shield']['capacity'] / $shieldrechargerate : 0;
+
+	$out['shield_passive'] = array(
+		$passiverate / $multipliers['shield'],
+		$passiverate / $multipliers['shield']
+	);
 
 
 	return $out;
@@ -359,40 +244,41 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
  * @param $globalmultiplier optional value of a global damage
  * multiplier
  */
-function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultiplierattributename = null, $globalmultiplier = 1) {
-	if(!isset($fit['cache']['__effects'][$attackeffectname])) {
-		return array(0, 0);
-	}
-
+function get_damage_from_attack_effect(&$fit, $attackeffectid,
+                                       $modulemultiplierattribute = null,
+                                       $globalmultiplier = 1) {
 	$dps = 0;
 	$alpha = 0;
 
-	get_attribute_in_cache($fit['cache']['__effects'][$attackeffectname]['durationattributeid'], $fit['cache']);
-
-	$durationattributename = \Osmium\Dogma\get_attributename(
-		$fit['cache']['__effects'][$attackeffectname]['durationattributeid']);
-
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
-			if(!isset($fit['cache'][$module['typeid']]['effects'][$attackeffectname])) {
-				continue;
-			}
-			if(!isset($fit['charges'][$type][$index])) {
-				continue;
-			}
-			if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
+			$ret = dogma_type_has_effect(
+				$module['typeid'],
+				\Osmium\Dogma\get_dogma_states()[$module['state']],
+				$attackeffectid, $hasit
+			);
+			if($ret !== DOGMA_OK || $hasit !== true) {
 				continue;
 			}
 
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
+			$duration = 0;
+			dogma_get_location_effect_attributes(
+				$fit['__dogma_context'],
+				[ DOGMA_LOC_Module, "module_index" => $module['dogma_index'] ],
+				$attackeffectid,
+				$duration, $tracking, $discharge, $range, $falloff, $usagechance
+			);
+
+			if($duration <= 1e-300) continue;
+
 			$damage = 
 				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
 				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage');
 
-			$multiplier = $modulemultiplierattributename === null ? 1 :
-				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattributename);
+			$multiplier = $modulemultiplierattribute === null ? 1 :
+				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattribute);
 
 			$dps += $multiplier * $damage / $duration;
 			$alpha += $multiplier * $damage;
@@ -407,9 +293,9 @@ function get_damage_from_attack_effect(&$fit, $attackeffectname, $modulemultipli
  */
 function get_damage_from_missiles(&$fit) {
 	return get_damage_from_attack_effect(
-		$fit, 'useMissiles', null,
+		$fit, EFFECT_UseMissiles, null,
 		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier')
-		);
+	);
 }
 
 /**
@@ -417,17 +303,17 @@ function get_damage_from_missiles(&$fit) {
  */
 function get_damage_from_turrets(&$fit) {
 	$projectiles = get_damage_from_attack_effect(
-		$fit, 'projectileFired', 'damageMultiplier'
-		);
+		$fit, EFFECT_ProjectileFired, 'damageMultiplier'
+	);
 
 	$lasers = get_damage_from_attack_effect(
-		$fit, 'targetAttack', 'damageMultiplier'
-		);
+		$fit, EFFECT_TargetAttack, 'damageMultiplier'
+	);
 
 	return array(
 		$projectiles[0] + $lasers[0],
 		$projectiles[1] + $lasers[1],
-		);
+	);
 }
 
 /**
@@ -436,21 +322,24 @@ function get_damage_from_turrets(&$fit) {
 function get_damage_from_drones(&$fit) {
 	$dps = 0;
 
-	if(!isset($fit['cache']['__effects']['targetAttack'])) return 0;
-
-	get_attribute_in_cache($fit['cache']['__effects']['targetAttack']['durationattributeid'], $fit['cache']);
-
-	$durationattributename = 
-		\Osmium\Dogma\get_attributename($fit['cache']['__effects']['targetAttack']['durationattributeid']);
-
 	foreach($fit['drones'] as $drone) {
 		if($drone['quantityinspace'] == 0) continue;
 
-		if(!isset($fit['cache'][$drone['typeid']]['effects']['targetAttack'])) {
+		$ret = dogma_type_has_effect($drone['typeid'], DOGMA_STATE_Active, EFFECT_TargetAttack, $hasit);
+		if($ret !== DOGMA_OK || $hasit !== true) {
 			continue;
 		}
 
-		$duration = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], $durationattributename);
+		$duration = 0;
+		dogma_get_location_effect_attributes(
+			$fit['__dogma_context'],
+			[ DOGMA_LOC_Drone, "drone_typeid" => $drone['typeid'] ],
+			EFFECT_TargetAttack,
+			$duration, $tracking, $discharge, $range, $falloff, $usagechance
+		);
+
+		if($duration <= 1e-300) continue;
+
 		$damage = 
 			\Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'emDamage')
 			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'thermalDamage')
@@ -473,57 +362,63 @@ function get_damage_from_drones(&$fit) {
  * missile range)
  */
 function get_module_interesting_attributes($fit, $type, $index) {
-	$categories = get_state_categories();
-
 	$attributes = array();
 	$typeid = $fit['modules'][$type][$index]['typeid'];
 	$state = $fit['modules'][$type][$index]['state'];
+	$mdindex = $fit['modules'][$type][$index]['dogma_index'];
 
-	if($state != STATE_ACTIVE && $state != STATE_OVERLOADED) return $attributes;
+	if($state < STATE_ONLINE) return array();
 
-	foreach($fit['cache'][$typeid]['effects'] as $effect) {
-		$effectdata = $fit['cache']['__effects'][$effect['effectname']];
+	$trackings = array();
+	$ranges = array();
+	$falloffs = array();
 
-		if(!in_array($effectdata['effectcategory'], $categories[$state])) continue;
-		if(!$effectdata['trackingspeedattributeid']
-		   && !$effectdata['rangeattributeid']
-		   && !$effectdata['falloffattributeid']) {
-			continue;
-		}
+	$i = 0;
+	while(dogma_get_nth_type_effect_with_attributes($typeid, $i, $effect) === DOGMA_OK) {
+		++$i;
 
-		foreach(array('trackingspeed', 'range', 'falloff') as $t) {
-			if(!$effectdata[$t.'attributeid']) continue;
-			$attributeid = $effectdata[$t.'attributeid'];
+		$tra = $ran = $fal = 0;
 
-			get_attribute_in_cache($attributeid, $fit['cache']);
-			$attributename = \Osmium\Dogma\get_attributename($attributeid);
+		/* XXX check effect category? */
+		dogma_get_location_effect_attributes(
+			$fit['__dogma_context'], [ DOGMA_LOC_Module, 'module_index' => $mdindex ], $effect,
+			$dur, $tra, $dis, $ran, $fal, $fua
+		);
 
-			$attributes[$t] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
-		}
-
-		return $attributes;
+		/* Sometimes zero values are not exactly zero but a very small
+		 * value, due to floating point precision loss. */
+		if($tra > 1e-300) $trackings[] = $tra;
+		if($ran > 1e-300) $ranges[] = $ran;
+		if($fal > 1e-300) $falloffs[] = $fal;
 	}
 
-	if(isset($fit['charges'][$type][$index])) {
-		$typeid = $fit['charges'][$type][$index]['typeid'];
-		if(isset($fit['cache'][$typeid]['attributes']['explosionDelay']) &&
-		   isset($fit['cache'][$typeid]['attributes']['maxVelocity'])) {
-			$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
-			$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
-			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
-			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
+	if($trackings !== array()) {
+		$attributes['trackingspeed'] = min($trackings);
+	}
+	if($ranges !== array()) {
+		$attributes['range'] = min($ranges);
+	}
+	if($trackings !== array()) {
+		$attributes['falloff'] = min($falloffs);
+	}
 
-			if($mass != 0 && $agility != 0) {
-				/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
-				/* Integrate the velocity of the missile from 0 to flighttime: */
-				$K = -1000000 / ($mass * $agility);
-				$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
-			} else {
-				/* Zero mass or zero agility, for example defender missiles */
-				$attributes['maxrange'] = $velocity * $flighttime;
-			}
+	if(isset($fit['charges'][$type][$index])
+	   && dogma_type_has_effect($typeid, \Osmium\Dogma\get_dogma_states()[$state],
+	                            EFFECT_UseMissiles, $hasit) === DOGMA_OK
+	   && $hasit) {
+		$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
+		$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
+		$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
+		$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
 
-			return $attributes;
+		if($mass != 0 && $agility != 0) {
+			/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
+			/* Integrate the velocity of the missile from 0 to flighttime: */
+			$K = -1000000 / ($mass * $agility);
+			$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
+		} else {
+			/* Zero mass or zero agility, for example defender missiles */
+			$attributes['maxrange'] = $velocity * $flighttime;
 		}
 	}
 
@@ -531,33 +426,32 @@ function get_module_interesting_attributes($fit, $type, $index) {
 }
 
 /**
- * Get the average price of a fit, using the in-game average
- * prices. Items whose price cannot be determined will be added to
+ * Get the estimated price of a fit, using the in-game
+ * estimates. Items whose price cannot be determined will be added to
  * $missing.
  */
-function get_average_price(&$fit, &$missing) {
-	$total = 0;
-
+function get_estimated_price(&$fit, array &$missing) {
 	$types = array();
 
 	if(isset($fit['ship']['typeid'])) {
-		$types[$fit['ship']['typeid']] = array(1, $fit['ship']['typename']);
+		$types['ship'][$fit['ship']['typeid']] = 1;
 	}
+
 	foreach($fit['modules'] as $a) {
 		foreach($a as $m) {
-			if(isset($types[$m['typeid']])) {
-				++$types[$m['typeid']][0];
+			if(isset($types['fitting'][$m['typeid']])) {
+				++$types['fitting'][$m['typeid']];
 			} else {
-				$types[$m['typeid']] = array(1, $m['typename']);
+				$types['fitting'][$m['typeid']] = 1;
 			}
 		}
 	}
 	foreach($fit['charges'] as $a) {
 		foreach($a as $c) {
-			if(isset($types[$c['typeid']])) {
-				++$types[$c['typeid']][0];
+			if(isset($types['fitting'][$c['typeid']])) {
+				++$types['fitting'][$c['typeid']];
 			} else {
-				$types[$c['typeid']] = array(1, $c['typename']);
+				$types['fitting'][$c['typeid']] = 1;
 			}
 		}
 	}
@@ -565,26 +459,32 @@ function get_average_price(&$fit, &$missing) {
 		$qty = $d['quantityinbay'] + $d['quantityinspace'];
 
 		if(isset($types[$d['typeid']])) {
-			$types[$d['typeid']][0] += $qty;
+			$types['fitting'][$d['typeid']] += $qty;
 		} else {
-			$types[$d['typeid']] = array($qty, $d['typename']);
+			$types['fitting'][$d['typeid']] = $qty;
 		}
 	}
 
-	get_attributes_and_effects(array_keys($types), $fit['cache']);
+	$totals = array();
 
-	foreach($types as $typeid => $a) {
-		list($qty, $name) = $a;
+	foreach($types as $section => $t) {
+		$total = 0;
+		$hassomemissing = false;
 
-		$p = isset($fit['cache'][$typeid]['averageprice']) ? $fit['cache'][$typeid]['averageprice'] : null;
-		if($p !== null) {
-			$total += $qty * $p;
-		} else {
-			$missing[$name] = true;
+		foreach($t as $typeid => $qty) {
+			$p = get_average_market_price($typeid);
+			if($p !== false) {
+				$total += $qty * $p;
+			} else {
+				$hassomemissing = true;
+				$missing[] = $typeid;
+			}
 		}
+
+		$totals[$section] = ($total === 0 && $hassomemissing) ? 'N/A' : $total;
 	}
 
-	return $total;
+	return $totals;
 }
 
 /**
@@ -592,22 +492,28 @@ function get_average_price(&$fit, &$missing) {
  * per millisecond).
  */
 function get_mining_yield(&$fit) {
-	if(!isset($fit['cache']['__effects']['miningLaser'])) return 0;
 	$total = 0;
 
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $index => $m) {
 			$typeid = $m['typeid'];
 
-			if(!isset($fit['cache'][$typeid]['effects']['miningLaser'])) continue;
-			if($m['state'] != STATE_ACTIVE && $m['state'] != STATE_OVERLOADED) continue;
+			$ret = dogma_type_has_effect(
+				$m['typeid'],
+				\Osmium\Dogma\get_dogma_states()[$m['state']],
+				EFFECT_MiningLaser,
+				$hasit
+			);
+			if($ret !== DOGMA_OK || $hasit !== true) continue;
 
-			$durationid = $fit['cache']['__effects']['miningLaser']['durationattributeid'];
+		    dogma_get_location_effect_attributes(
+			    $fit['__dogma_context'],
+			    [ DOGMA_LOC_Module, "module_index" => $m['dogma_index'] ],
+			    EFFECT_MiningLaser,
+			    $duration, $tra, $dis, $ran, $fal, $fuc
+		    );
 
-			get_attribute_in_cache($durationid, $fit['cache']);
-			$durationname = \Osmium\Dogma\get_attributename($durationid);
-
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationname);
+		    if($duration <= 1e-300) continue;
 
 			if(isset($fit['charges'][$type][$index])) {
 				/* Has crystal */
@@ -616,8 +522,8 @@ function get_mining_yield(&$fit) {
 				/* No crystal */
 				$amount = 'miningAmount';
 			}
-			$volume = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $amount);
 
+			$volume = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $amount);
 			$total += $volume / $duration;
 		}
 	}

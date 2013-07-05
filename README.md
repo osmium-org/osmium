@@ -11,12 +11,13 @@ version 3. You can see the full license text in the `COPYING` file.
 
 For the full list of Osmium contributors, see the `CREDITS` file.
 
-Osmium uses the PHP Markdown Extra library, released under the GNU
-General Public License, version 2.
-<http://michelf.com/projects/php-markdown/license/>
+Osmium uses libdogma, released under the GNU General Public License,
+version 3 (or later).
+<https://github.com/Artefact2/libdogma/blob/master/COPYING>
 
-Osmium uses the phpass library, released in the public domain.
-<http://www.openwall.com/phpass/>
+Osmium uses php-dogma, released under the GNU Affero General Public
+License, version 3 (or later).
+<https://github.com/Artefact2/php-dogma/blob/master/COPYING>
 
 Osmium uses the Common Loadout Format PHP validator, released under
 the WTFPL license, version 2.
@@ -24,6 +25,13 @@ the WTFPL license, version 2.
 
 Osmium uses jQuery, released under the MIT license.
 <https://jquery.org/license/>
+
+Osmium uses the PHP Markdown Extra library, released under the GNU
+General Public License, version 2.
+<http://michelf.com/projects/php-markdown/license/>
+
+Osmium uses the phpass library, released in the public domain.
+<http://www.openwall.com/phpass/>
 
 Contact
 -------
@@ -142,16 +150,16 @@ Updating
    git fetch origin
    git merge origin/production
    git submodule update
-   make
    ~~~~
 
-3. Clear stale cache files:
+3. Read the `UPDATING` file for release-specific upgrade instructions.
+
+4. Clear stale cache files and regenerate stylesheets and static data:
 
    ~~~~
    make clear-harmless-cache
+   make
    ~~~~
-
-4. Read the `UPDATING` file for release-specific upgrade instructions.
 
 5. Start your webserver and test changes.
 
@@ -210,6 +218,7 @@ Dependencies
 ============
 
 * PHP >= 5.4, with:
+  * [dogma extension](https://github.com/Artefact2/php-dogma) (`dogma.so`)
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)
@@ -250,10 +259,10 @@ The long way
 ------------
 
 The dump file is generated from the database of the EVE client
-itself. Not all of the data is in the official Static Data Dump (and
-it's often lags behind the official patch), so you'll have to dump the
-database from the client yourself then do some minor transformations
-to make it PostgreSQL-friendly.
+itself. It could be generated from the Static Data Dump (with a price
+index from a third party source). Since Osmium uses a different schema
+with clear, defined constraints, it is in practice much easier to
+generate it from the client itself.
 
 Use the [`phobos`](http://jira.evefit.org/browse/PHOBOS) dumper to
 dump the EVE database as JSON files:
@@ -263,7 +272,7 @@ git clone git://dev.evefit.org/phobos.git
 cd phobos
 python2.7 setup.py build
 
-PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,dgmexpressions,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups,dogma_GetOperandsForChar
+PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups
 ~~~~
 
 Then convert the JSON files to SQL statements using the
@@ -287,23 +296,9 @@ SET search_path TO eve;
 \i osmium-eve-data.sql
 ~~~~
 
-Now, use the `cache_expressions` script to populate the
-`dgmcacheexpressions` table:
+That's it! You can now dump the eve schema for later use (for example
+by using the `backup_eve` script).
 
 ~~~~
-./bin/cache_expressions
-~~~~
-
-That's it! You can now truncate the `dgmoperands` and `dgmexpressions`
-tables, and dump the eve schema for later use (for example by using
-the `backup_eve` script).
-
-~~~~
-psql osmium osmium_user
-
-SET search_path TO eve;
-TRUNCATE dgmoperands, dgmexpressions;
-\q
-
 ./bin/backup_eve
 ~~~~

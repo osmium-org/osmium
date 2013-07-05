@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -130,45 +130,45 @@ if(function_exists('apc_store')) {
 	/* Use APC-based memory cache */
 
 	/** @see get_cache() */
-	function get_cache_memory($key, $default = null) {
+	function get_cache_memory($key, $default = null, $prefix = '') {
 		global $__osmium_cache_enabled;
 		if(!$__osmium_cache_enabled) return;
 
-		$v = apc_fetch('Osmium_'.$key, $success);
+		$v = apc_fetch('Osmium_'.$prefix.$key, $success);
 		return $success ? $v : $default;
 	}
 
 	/** @see put_cache() */
-	function put_cache_memory($key, $value, $expires = 0) {
+	function put_cache_memory($key, $value, $expires = 0, $prefix = '') {
 		global $__osmium_cache_enabled;
 		if(!$__osmium_cache_enabled) return;
 
-		return apc_store('Osmium_'.$key, $value, $expires);
+		return apc_store('Osmium_'.$prefix.$key, $value, $expires);
 	}
 
 	/** @see invalidate_cache() */
-	function invalidate_cache_memory($key) {
+	function invalidate_cache_memory($key, $prefix = '') {
 		global $__osmium_cache_enabled;
 		if(!$__osmium_cache_enabled) return;
 
-		return apc_delete('Osmium_'.$key);
+		return apc_delete('Osmium_'.$prefix.$key);
 	}
 } else {
 	/* Use disk-based cache as a fallback */
 
 	/** @see get_cache() */
-	function get_cache_memory($key, $default = null) {
-		return get_cache($key, $default, 'MemoryCache_');
+	function get_cache_memory($key, $default = null, $prefix = '') {
+		return get_cache($key, $default, 'MemoryCacheFB_'.$prefix);
 	}
 
 	/** @see put_cache() */
-	function put_cache_memory($key, $value, $expires = 0) {
-		return put_cache($key, $value, $expires, 'MemoryCache_');
+	function put_cache_memory($key, $value, $expires = 0, $prefix = '') {
+		return put_cache($key, $value, $expires, 'MemoryCacheFB_'.$prefix);
 	}
 
 	/** @see invalidate_cache() */
-	function invalidate_cache_memory($key) {
-		return invalidate_cache($key, 'MemoryCache_');
+	function invalidate_cache_memory($key, $prefix = '') {
+		return invalidate_cache($key, 'MemoryCache_'.$prefix);
 	}
 }
 
@@ -177,19 +177,19 @@ if(function_exists('apc_store')) {
  * faster than disk-only cache in most cases. */
 
 /** @see get_cache() */
-function get_cache_memory_fb($key, $default = null) {
-	$v = get_cache_memory('MemoryFB_'.$key);
+function get_cache_memory_fb($key, $default = null, $prefix = '') {
+	$v = get_cache_memory($key, null, $prefix);
 	if($v === null) {
-		$v = get_cache($key, null, 'MemoryFB_');
+		$v = get_cache('MemoryFB_'.$key, null, $prefix);
 		if($v === null) {
 			return $default;
 		}
 
 		/* Re-put the value in the memory cache */
-		$expires = get_expiration_date($key, 'MemoryFB_');
+		$expires = get_expiration_date('MemoryFB_'.$key, $prefix);
 		$time = time();
 		if($expires == 0 || $expires > $time) {
-			put_cache_memory('MemoryFB_'.$key, $v, ($expires == 0) ? $expires : ($expires - $time));
+			put_cache_memory($key, $v, ($expires == 0) ? $expires : ($expires - $time), $prefix);
 		}
 	}
 
@@ -197,15 +197,15 @@ function get_cache_memory_fb($key, $default = null) {
 }
 
 /** @see put_cache() */
-function put_cache_memory_fb($key, $value, $expires = 0) {
-	put_cache($key, $value, $expires, 'MemoryFB_');
-	put_cache_memory('MemoryFB_'.$key, $value, $expires);
+function put_cache_memory_fb($key, $value, $expires = 0, $prefix = '') {
+	put_cache('MemoryFB_'.$key, $value, $expires, $prefix);
+	put_cache_memory($key, $value, $expires, $prefix);
 }
 
 /** @see invalidate_cache() */
-function invalidate_cache_memory_fb($key) {
-	invalidate_cache($key, 'MemoryFB_');
-	invalidate_cache_memory('MemoryFB_'.$key);
+function invalidate_cache_memory_fb($key, $prefix = '') {
+	invalidate_cache('MemoryFB_'.$key, $prefix);
+	invalidate_cache_memory($key, $prefix);
 }
 
 /* --------------------- STATE --------------------- */

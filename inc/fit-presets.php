@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -34,7 +34,10 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 
 		foreach($fit['modules'] as $type => $a) {
 			foreach($a as $index => $module) {
-				offline_module($fit, $type, $index);
+				dogma_remove_module(
+					$fit['__dogma_context'],
+					$module['dogma_index']
+				);
 			}
 		}
 	}
@@ -54,7 +57,12 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $index => $module) {
-			online_module($fit, $type, $index);
+			dogma_add_module_s(
+				$fit['__dogma_context'],
+				$module['typeid'],
+				$module['dogma_index'],
+				\Osmium\Dogma\get_dogma_states()[$module['state']]
+			);
 		}
 	}
 
@@ -84,7 +92,10 @@ function use_charge_preset(&$fit, $cpid) {
 
 		foreach($fit['charges'] as $type => $a) {
 			foreach($a as $index => $charge) {
-				offline_charge($fit, $type, $index);
+				dogma_remove_charge(
+					$fit['__dogma_context'],
+					$fit['modules'][$type][$index]['dogma_index']
+				);
 			}
 		}
 	}
@@ -96,7 +107,11 @@ function use_charge_preset(&$fit, $cpid) {
 
 	foreach($fit['charges'] as $type => $a) {
 		foreach($a as $index => $charge) {
-			online_charge($fit, $type, $index);
+			dogma_add_charge(
+				$fit['__dogma_context'],
+				$fit['modules'][$type][$index]['dogma_index'],
+				$charge['typeid']
+			);
 		}
 	}
 }
@@ -112,10 +127,21 @@ function use_drone_preset(&$fit, $dpid) {
 		// @codeCoverageIgnoreEnd
 	}
 
+	if(isset($fit['drones'])) {
+		foreach($fit['drones'] as $typeid => $d) {
+			dogma_remove_drone($fit['__dogma_context'], $typeid);
+		}
+	}
+
 	$fit['dronepresetid'] = $dpid;
 	$fit['dronepresetname'] =& $fit['dronepresets'][$dpid]['name'];
 	$fit['dronepresetdesc'] =& $fit['dronepresets'][$dpid]['description'];
 	$fit['drones'] =& $fit['dronepresets'][$dpid]['drones'];
+
+	foreach($fit['drones'] as $typeid => $d) {
+		if($d['quantityinspace'] == 0) continue;
+		dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
+	}
 }
 
 /** @internal */
@@ -370,16 +396,6 @@ function clone_preset_generic(&$presets_array, $id, $newname) {
 	/* Yes, this is a hack, and it's (very slightly) faster than unserialize(serialize(...)). */
 	$clone = json_decode(json_encode($presets_array[$id]), true);
 	$clone['name'] = $newname;
-
-	if(isset($clone['modules'])) {
-		/* Modules of the cloned presets should be offline */
-		foreach($clone['modules'] as &$a) {
-			foreach($a as &$module) {
-				$module['old_state'] = $module['state'];
-				$module['state'] = null;
-			}
-		}
-	}
 
 	$presets_array[] = $clone;
 

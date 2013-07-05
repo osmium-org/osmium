@@ -18,49 +18,42 @@
 
 namespace Osmium\Fit;
 
+/** @internal */
+function unique_key($stuff) {
+	return sha1(json_encode($stuff));
+}
+
 /**
  * Get an array that contains all the significant data of a fit. Used
  * to compare fits.
  */
-function get_unique($fit) {
-	$unique = array();
+function get_unique(&$fit) {
+	sanitize($fit);
 
+	$unique = array();
 	$unique['ship'] = (int)$fit['ship']['typeid'];
 
 	$unique['metadata'] = array(
 		'name' => $fit['metadata']['name'],
 		'description' => $fit['metadata']['description'],
-		'evebuildnumber' => $fit['metadata']['evebuildnumber'],
+		'evebuildnumber' => (int)$fit['metadata']['evebuildnumber'],
 		'tags' => $fit['metadata']['tags'],
-		);
+	);
 
 	foreach($fit['presets'] as $presetid => $preset) {
 		$uniquep = array(
 			'name' => $preset['name'],
 			'description' => $preset['description']
-			);
+		);
 
 		$newindexes = array();
 		foreach($preset['modules'] as $type => $d) {
 			$z = 0;
-
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				if($presetid == $fit['modulepresetid']) {
-					$state = $module['state'];
-				} else {
-					if(!isset($module['old_state'])) {
-						unset($fit['cache']);
-						unset($fit['dogma']);
-						\Osmium\printr($fit);
-						die();
-					}
-					$state = $module['old_state'];
-				}
-
 				$newindexes[$type][$index] = ($z++);
-
-				$uniquep['modules'][$type][] = array((int)$module['typeid'], (int)$state);
+				$newmodule = array((int)$module['typeid'], (int)$module['state']);
+				$uniquep['modules'][$type][unique_key($newmodule)] = $newmodule;
 			}
 		}
 
@@ -68,7 +61,7 @@ function get_unique($fit) {
 			$uniquecp = array(
 				'name' => $chargepreset['name'],
 				'description' => $chargepreset['description']
-				);
+			);
 
 			foreach($chargepreset['charges'] as $type => $a) {
 				foreach($a as $index => $charge) {
@@ -77,10 +70,10 @@ function get_unique($fit) {
 				}
 			}
 
-			$uniquep['chargepresets'][] = $uniquecp;
+			$uniquep['chargepresets'][unique_key($uniquecp)] = $uniquecp;
 		}
 
-		$unique['presets'][] = $uniquep;
+		$unique['presets'][unique_key($uniquep)] = $uniquep;
 	}
 
 	foreach($fit['dronepresets'] as $dronepreset) {
@@ -90,12 +83,13 @@ function get_unique($fit) {
 			);
 
 		foreach($dronepreset['drones'] as $drone) {
-			$uniquedp['drones'][] = array((int)$drone['typeid'],
-			                              (int)$drone['quantityinbay'],
-			                              (int)$drone['quantityinspace']);
+			$newdrone = array((int)$drone['typeid'],
+			                  (int)$drone['quantityinbay'],
+			                  (int)$drone['quantityinspace']);
+			$uniquedp['drones'][unique_key($newdrone)] = $newdrone;
 		}
 
-		$unique['dronepresets'][] = $uniquedp;
+		$unique['dronepresets'][unique_key($uniquedp)] = $uniquedp;
 	}
 
 	/* Ensure equality if key ordering is different */
@@ -118,7 +112,7 @@ function ksort_rec(array &$array) {
  * example order of tags, order of module indexes etc.
  */
 function get_hash($fit) {
-	return sha1(serialize(get_unique($fit)));
+	return unique_key(get_unique($fit));
 }
 
 /**
@@ -196,11 +190,6 @@ function commit_fitting(&$fit, &$error = null) {
 			$z = 0;
 			foreach($data as $index => $module) {
 				$normalizedindexes[$type][$index] = $z;
-				if($presetid == $fit['modulepresetid']) {
-					$state = $module['state'];
-				} else {
-					$state = $module['old_state'];
-				}
 
 				$ret = \Osmium\Db\query_params(
 					'INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -210,7 +199,7 @@ function commit_fitting(&$fit, &$error = null) {
 						$type,
 						$z,
 						$module['typeid'],
-						$state
+						$module['state'],
 					)
 				);
 
@@ -449,8 +438,8 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	}
 
 	$revision = $fit['metadata']['revision'];
-	\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
-	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision);
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid, 'Loadout_Cache_');
+	\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision, 'Loadout_Cache_');
 	\Osmium\State\invalidate_cache_memory('main_popular_tags');
 	\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
 
@@ -490,7 +479,10 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
  * errors happened.
  */
 function get_fit($loadoutid, $revision = null) {
-	if($revision === null && ($cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null)) !== null) {
+	if($revision === null && (
+		$cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null, 'Loadout_Cache_')
+	) !== null) {
+		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 
@@ -503,11 +495,12 @@ function get_fit($loadoutid, $revision = null) {
 		$latest_revision = true;
 	}
 
-	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null)) !== null) {
+	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null, 'Loadout_Cache_')) !== null) {
 		if(isset($latest_revision) && $latest_revision === true) {
-			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache);
+			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache, 0, 'Loadout_Cache_');
 		}
 
+		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 
@@ -621,9 +614,10 @@ function get_fit($loadoutid, $revision = null) {
 	\Osmium\Fit\use_drone_preset($fit, key($fit['dronepresets']));
   
 	if(isset($latest_revision) && $latest_revision === true) {
-		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit);
+		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, 0, 'Loadout_Cache_');
 	}
-	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit);
+	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit, 0, 'Loadout_Cache_');
+	\Osmium\Dogma\late_init($fit);
 	return $fit;
 }
 

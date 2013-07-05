@@ -92,8 +92,7 @@ function get_vote_types() {
 }
 
 function is_fit_public($fit) {
-	return \Osmium\State\is_logged_in()
-		&& $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
+	return $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 		&& $fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_EVERYONE;	
 }
 
