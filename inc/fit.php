@@ -756,19 +756,19 @@ function get_module_state_by_typeid(&$fit, $index, $typeid) {
  * __deprecated__
  */
 function get_module_slottype(&$fit, $typeid) {
-	dogma_type_has_effect($typeid, EFFECT_LoPower, $t);
+	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_LoPower, $t);
 	if($t) return 'low';
 
-	dogma_type_has_effect($typeid, EFFECT_MedPower, $t);
+	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_MedPower, $t);
 	if($t) return 'medium';
 
-	dogma_type_has_effect($typeid, EFFECT_HiPower, $t);
+	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_HiPower, $t);
 	if($t) return 'high';
 
-	dogma_type_has_effect($typeid, EFFECT_RigSlot, $t);
+	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_RigSlot, $t);
 	if($t) return 'rig';
 
-	dogma_type_has_effect($typeid, EFFECT_SubSystem, $t);
+	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_SubSystem, $t);
 	if($t) return 'subsystem';
 
 	return false;

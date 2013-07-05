@@ -104,57 +104,44 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
  * @returns array(repair_type => array(reinforced, sustained))
  */
 function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
-	static $effects = array(
-		'hull_repair' => array('structureRepair', 'structureDamageAmount', 'hull'),
-		'armor_repair' => array('armorRepair', 'armorDamageAmount', 'armor'),
-		'armor_repair_fueled' => array('fueledArmorRepair', 'armorDamageAmount', 'armor'),
-		'shield_boost' =>  array('shieldBoosting', 'shieldBonus', 'shield'),
-		'shield_boost_fueled' => array('fueledShieldBoosting', 'shieldBonus', 'shield'),
-		'shield_passive' => array(null, null, 'shield'),
-		);
+	static $localrepaireffects = array(
+		'hull' => [ [ EFFECT_StructureRepair, 'structureDamageAmount' ] ],
+		'armor' => [ [ EFFECT_ArmorRepair, 'armorDamageAmount' ],
+		             [ EFFECT_FueledArmorRepair, 'armorDamageAmount' ] ],
+		'shield' => [ [ EFFECT_ShieldBoosting, 'shieldBonus' ],
+		              [ EFFECT_FueledShieldBoosting, 'shieldBonus' ] ]
+	);
 
 	$modules = array();
 	$out = array();
 
-	foreach($effects as $key => $effectd) {
-		list($effectname, $attributename, $type) = $effectd;
+	foreach($localrepaireffects as $layer => $effects) {
+		foreach($effects as $effectdata) {
+			list($effect, $moduleattribute) = $effectdata;
 
-		if(!isset($fit['cache']['__effects'][$effectname])) {
-			/* Effect not in cache, there's no point traversing the
-			 * modules */
-			$out[$key] = array(0, 0);
-			continue;
-		}
+			foreach(get_modules($fit) as $type => $a) {
+				foreach($a as $index => $module) {
+					$ret = dogma_type_has_effect(
+						$module['typeid'],
+						\Osmium\Dogma\get_dogma_states()[$module['state']],
+						$effect, $hasit);
+					if($ret !== DOGMA_OK || $hasit !== true) {
+						continue;
+					}
 
-		$durationattributeid = $fit['cache']['__effects'][$effectname]['durationattributeid'];
-		$dischargeattributeid = $fit['cache']['__effects'][$effectname]['dischargeattributeid'];
-		$durationattributename = get_attributename($durationattributeid);
-		$dischargeattributename = get_attributename($dischargeattributeid);
+					$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $moduleattribute);
+					dogma_get_location_effect_attributes(
+						$fit['__dogma_context'],
+						[ DOGMA_LOC_Module, "module_index" => $module['dogma_index'] ],
+						$effect,
+						$duration, $tracking, $discharge,
+						$range, $falloff, $usagechance
+					);
 
-		foreach(get_modules($fit) as $type => $a) {
-			foreach($a as $index => $module) {
-				if(!isset($fit['cache'][$module['typeid']]['effects'][$effectname])) {
-					continue;
+					if($duration > 1e-300) {
+						$modules[] = array($layer, $amount, $duration, $discharge);
+					}
 				}
-
-				if($module['state'] !== STATE_ACTIVE && $module['state'] !== STATE_OVERLOADED) {
-					continue;
-				}
-
-				$amount = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $attributename);
-				if($key === 'armor_repair_fueled' && isset($fit['charges'][$type][$index]['typeid'])
-				   && $fit['charges'][$type][$index]['typeid'] == 28668) {
-					/* XXX: ugly exception for the Ancillary Armor
-					 * Repairer. Proper effect override will be in
-					 * libdogma. */
-					$amount *= \Osmium\Dogma\get_module_attribute($fit, $type, $index,
-					                                              'chargedArmorDamageMultiplier');
-				}
-
-				$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationattributename);
-				$discharge = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $dischargeattributename);
-
-				$modules[] = array($key, $amount, $duration, $discharge);				
 			}
 		}
 	}
@@ -195,10 +182,6 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 		$out[$key][1] += $fraction * $amount / $duration;
 	}
 
-	$shieldrechargerate = \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
-	$passiverate = ($shieldrechargerate > 0) ? 2.5 * $ehp['shield']['capacity'] / $shieldrechargerate : 0;
-	$out['shield_passive'] = array($passiverate, $passiverate);
-
 	$sum = array_sum($damageprofile);
 	if($sum == 0) {
 		trigger_error(__FUNCTION__.'(): invalid damage profile given', E_USER_WARNING);
@@ -217,16 +200,22 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 		$multipliers[$ltype] /= $sum;
 	}
 
-	foreach($effects as $key => $e) {
-		list(, , $type) = $e;
+	foreach($out as $layer => $a) {
+		if(!isset($multipliers[$layer])) continue;
 
-		if(!isset($out[$key])) continue;
-
-		$out[$key] = array(
-			$out[$key][0] / $multipliers[$type],
-			$out[$key][1] / $multipliers[$type],
-			);
+		$out[$layer] = array(
+			$out[$layer][0] / $multipliers[$layer],
+			$out[$layer][1] / $multipliers[$layer],
+		);
 	}
+
+	$shieldrechargerate = \Osmium\Dogma\get_ship_attribute($fit, 'shieldRechargeRate');
+	$passiverate = ($shieldrechargerate > 0) ? 2.5 * $ehp['shield']['capacity'] / $shieldrechargerate : 0;
+
+	$out['shield_passive'] = array(
+		$passiverate / $multipliers['shield'],
+		$passiverate / $multipliers['shield']
+	);
 
 
 	return $out;
@@ -259,13 +248,13 @@ function get_damage_from_attack_effect(&$fit, $attackeffectid,
 
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $module) {
-			$ret = dogma_type_has_effect($module['typeid'], $attackeffectid, $hasit);
+			$ret = dogma_type_has_effect(
+				$module['typeid'],
+				\Osmium\Dogma\get_dogma_states()[$module['state']],
+				$attackeffectid, $hasit
+			);
 			if($ret !== DOGMA_OK || $hasit !== true) {
 				continue;
-			}
-
-			if($module['state'] < STATE_ACTIVE) {
-				continue; /* XXX use effect category */
 			}
 
 			$duration = 0;
@@ -332,7 +321,7 @@ function get_damage_from_drones(&$fit) {
 	foreach($fit['drones'] as $drone) {
 		if($drone['quantityinspace'] == 0) continue;
 
-		$ret = dogma_type_has_effect($drone['typeid'], EFFECT_TargetAttack, $hasit);
+		$ret = dogma_type_has_effect($drone['typeid'], DOGMA_STATE_Active, EFFECT_TargetAttack, $hasit);
 		if($ret !== DOGMA_OK || $hasit !== true) {
 			continue;
 		}
@@ -410,7 +399,8 @@ function get_module_interesting_attributes($fit, $type, $index) {
 	}
 
 	if(isset($fit['charges'][$type][$index])
-	   && dogma_type_has_effect($typeid, EFFECT_UseMissiles, $hasit) === DOGMA_OK
+	   && dogma_type_has_effect($typeid, \Osmium\Dogma\get_dogma_states()[$state],
+	                            EFFECT_UseMissiles, $hasit) === DOGMA_OK
 	   && $hasit) {
 		$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
 		$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');

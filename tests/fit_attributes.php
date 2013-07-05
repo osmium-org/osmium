@@ -402,8 +402,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
 		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
 
-		$this->assertEquals(741.6, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
-		$this->assertEquals(24.8, 1000 * $tank['shield_boost_fueled'][1], '', 0.05);
+		$this->assertEquals(741.6, 1000 * $tank['shield'][0], '', 0.05);
+		$this->assertEquals(24.8, 1000 * $tank['shield'][1], '', 0.05);
 
 		\Osmium\Fit\add_charge($fit, 'medium', 0, 11287);
 		\Osmium\Fit\add_charge($fit, 'medium', 1, 11283);
@@ -412,8 +412,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
 		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
 
-		$this->assertSame($tank['shield_boost_fueled'][0], $tank['shield_boost_fueled'][1]);
-		$this->assertEquals(741.6, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
+		$this->assertSame($tank['shield'][0], $tank['shield'][1]);
+		$this->assertEquals(741.6, 1000 * $tank['shield'][0], '', 0.05);
 	}
 
 	/**
@@ -511,15 +511,13 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		$this->assertEquals(38370, $ehp['ehp']['avg'], '', 1);
 		$this->assertEquals(17.2, 1000 * $tank['shield_passive'][0], '', 0.05);
-		$this->assertSame($tank['shield_passive'][1], $tank['shield_passive'][1]);
-		$this->assertEquals(165.5, 1000 * $tank['shield_boost'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost'][1]);
-		$this->assertEquals(134.5, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost_fueled'][1]);
-		$this->assertEquals(434.6, 1000 * $tank['armor_repair'][0], '', 0.05);
-		$this->assertEquals(81.5, 1000 * $tank['armor_repair'][1], '', 0.05);
-		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
-		$this->assertEquals(0, $tank['hull_repair'][1]);
+		$this->assertSame($tank['shield_passive'][0], $tank['shield_passive'][1]);
+		$this->assertEquals(300.0, 1000 * $tank['shield'][0], '', 0.05);
+		$this->assertEquals(0, $tank['shield'][1]);
+		$this->assertEquals(434.6, 1000 * $tank['armor'][0], '', 0.05);
+		$this->assertEquals(81.5, 1000 * $tank['armor'][1], '', 0.05);
+		$this->assertEquals(6.7, 1000 * $tank['hull'][0], '', 0.05);
+		$this->assertEquals(0, $tank['hull'][1]);
 
 		/* Test with a more general profile */
 		$profile = array('em' => 10, 'thermal' => 20, 'explosive' => 30, 'kinetic' => 40);
@@ -528,15 +526,13 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		$this->assertEquals(39132, $ehp['ehp']['avg'], '', 1);
 		$this->assertEquals(19.2, 1000 * $tank['shield_passive'][0], '', 0.05);
-		$this->assertSame($tank['shield_passive'][1], $tank['shield_passive'][1]);
-		$this->assertEquals(184.6, 1000 * $tank['shield_boost'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost'][1]);
-		$this->assertEquals(150, 1000 * $tank['shield_boost_fueled'][0], '', 0.05);
-		$this->assertEquals(0, $tank['shield_boost_fueled'][1]);
-		$this->assertEquals(413.1, 1000 * $tank['armor_repair'][0], '', 0.05);
-		$this->assertEquals(77.5, 1000 * $tank['armor_repair'][1], '', 0.05);
-		$this->assertEquals(6.7, 1000 * $tank['hull_repair'][0], '', 0.05);
-		$this->assertEquals(0, $tank['hull_repair'][1]);
+		$this->assertSame($tank['shield_passive'][0], $tank['shield_passive'][1]);
+		$this->assertEquals(334.6, 1000 * $tank['shield'][0], '', 0.05);
+		$this->assertEquals(0, 1000 * $tank['shield'][1], '', 0.05);
+		$this->assertEquals(413.1, 1000 * $tank['armor'][0], '', 0.05);
+		$this->assertEquals(77.5, 1000 * $tank['armor'][1], '', 0.05);
+		$this->assertEquals(6.7, 1000 * $tank['hull'][0], '', 0.05);
+		$this->assertEquals(0, $tank['hull'][1]);
 	}
 
 	/**

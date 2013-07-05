@@ -156,16 +156,12 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile) {
 	echo "</tr>\n</tbody>\n</table>\n";
 
 	$layers = array(
-		'hull_repair' => array('hullrepair.png', 'Hull repairs',
+		'hull' => array('hullrepair.png', 'Hull repairs',
 		                       'Hull EHP repaired per second', true),
-		'armor_repair' => array('armorrepair.png', 'Armor repairs',
+		'armor' => array('armorrepair.png', 'Armor repairs',
 		                        'Armor EHP repaired per second', true),
-		'armor_repair_fueled' => array('fueledarmorrepair.png', 'Fueled armor repairs',
-		                               'Armor EHP repaired per second', true),
-		'shield_boost' => array('shieldboost.png', 'Shield boost',
+		'shield' => array('shieldboost.png', 'Shield boost',
 		                        'Shield EHP boost per second', true),
-		'shield_boost_fueled' => array('fueledshieldboost.png', 'Fueled shield boost',
-		                               'Shield EHP boost per second', true),
 		'shield_passive' => array('shieldrecharge.png', 'Passive shield recharge',
 		                          'Peak shield EHP recharged per second', false),
 		);
