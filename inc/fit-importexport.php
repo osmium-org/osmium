@@ -313,6 +313,11 @@ function clf_parse_1(array $json, &$errors) {
 		use_drone_preset($fit, key($fit['dronepresets']));
 	}
 
+	if(isset($json['metadata']['X-Osmium-skillset'])) {
+		$a = \Osmium\State\get_state('a', null);
+		use_skillset_by_name($fit, $json['metadata']['X-Osmium-skillset'], $a);
+	}
+
 	return $fit;
 }
 
