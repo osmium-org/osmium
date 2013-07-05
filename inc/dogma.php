@@ -117,7 +117,9 @@ function get_ship_attribute(&$fit, $att) {
 
 	case 'turretSlots':
 	case 'launcherSlots':
-		dogma_type_base_attribute($fit['ship']['typeid'], get_att($att.'Left'), $base);
+		if(isset($fit['ship']['typeid'])) {
+			dogma_type_base_attribute($fit['ship']['typeid'], get_att($att.'Left'), $base);
+		} else $base = 0.0;
 		$att = substr($att, 0, -5);
 
 	case 'launcherSlotsLeft':

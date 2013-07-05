@@ -368,12 +368,21 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_drone($fit, 28211, 0, 5); /* 5x Garde IIs in space */
 		\Osmium\Fit\add_drone($fit, 2488, 5, 0); /* 5x Warrior IIs in bay */
 
+		$this->assertEquals(
+			5 * 25 + 5 * 5,
+			\Osmium\Fit\get_used_drone_capacity($fit),
+			'', 0
+		);
+
 		$dps = \Osmium\Fit\get_damage_from_drones($fit);
 		$this->assertEquals(781, $dps, '', 1);
 
 		/* Swap the drones */
 		\Osmium\Fit\transfer_drone($fit, 28211, 'space', 5);
 		\Osmium\Fit\transfer_drone($fit, 2488, 'bay', 5);
+
+		/* Add drones that do no damage */
+		\Osmium\Fit\add_drone($fit, 23731, 0,  5);
 
 		$dps = \Osmium\Fit\get_damage_from_drones($fit);
 		$this->assertEquals(201, $dps, '', 1);
@@ -490,6 +499,23 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	 * @group fit
 	 * @group engine
 	 */
+	public function testDefenderMissileRange() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 587); /* Rifter */
+		\Osmium\Fit\add_module($fit, 0, 2404); /* Light Missile Launcher II */
+		\Osmium\Fit\add_charge($fit, 'high', 0, 32782); /* Light Defender Missile I */
+
+		/* No source for this. Pyfa doesn't show range (although the
+		 * flighttime * velocity checks out) and EFT doesn't apply
+		 * skill bonuses to the defender missile. */
+		$a = \Osmium\Fit\get_module_interesting_attributes($fit, 'high', 0);
+		$this->assertEquals(225000, $a['maxrange'], '', 1);
+	}
+
+	/**
+	 * @group fit
+	 * @group engine
+	 */
 	public function testDamageProfiles() {
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 24690); /* Hyperion */
@@ -538,23 +564,27 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	/**
 	 * @group fit
 	 * @group engine
+	 * @group import
 	 */
-	public function testShipSpecificModifiers() {
-		\Osmium\Fit\create($fit);
-		\Osmium\Fit\select_ship($fit, 24696); /* Harbinger */
-		\Osmium\Fit\add_module($fit, 0, 2559); /* ECM - Phase Inverter II */
-		\Osmium\Fit\add_drone($fit, 23705, 0, 5); /* Vespa EC-600 */
+	public function testMiningYield() {
+		/* Source: Pyfa-c67034e (2013-07-01) */
 
-		/* Pyfa 1.1.9 */
+		/* Mackinaw with 2x Ice Harvester II and one upgrade and one ice harvester accelerator rig */
+		$fit = \Osmium\Fit\try_parse_fit_from_shipdna('22548:22229;2:32772;2:9568:2553:2048:28578:3888:31360:32819:2488;5:2456;4:32787:264;2::', 'Mackinaw', $errors);
+		$this->assertEquals(
+			2 * 1000.0 / 95085.4905,
+			\Osmium\Fit\get_mining_yield($fit),
+			'',
+			0.000000001
+		);
 
-		/* ECM module should be affected by the Signal Dispersion skill */
-		$this->assertEquals(4.5,
-		                    \Osmium\Dogma\get_module_attribute($fit, 'medium', 0, 'scanLadarStrengthBonus'),
-		                    '', 0.05);
-
-		/* ECM drone should NOT be affected by the Signal Dispersion skill */
-		$this->assertEquals(1.5,
-		                    \Osmium\Dogma\get_drone_attribute($fit, 23705, 'scanLadarStrengthBonus'),
-		                    '', 0.05);
+		/* Venture with 2x Modulated DCM IIs and T2 crystals */
+		$fit = \Osmium\Fit\try_parse_fit_from_shipdna('32880:18068;2:18618;2::', 'Venture', $errors);
+		$this->assertEquals(
+			2 * 820.3125 / 180000.0,
+			\Osmium\Fit\get_mining_yield($fit),
+			'',
+			0.000000001
+		);
 	}
 }

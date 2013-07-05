@@ -73,10 +73,14 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
 		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
 
 		$sum = array_sum($damageprofile);
+
+		// @codeCoverageIgnoreStart
 		if($sum == 0) {
 			trigger_error(__FUNCTION__.'(): invalid damage profile', E_USER_WARNING);
 			$sum = 1;
 		}
+		// @codeCoverageIgnoreEnd
+
 		$avgresonance = 0;
 		foreach($damageprofile as $type => $damage) {
 			$avgresonance += $damage * $out[$name]['resonance'][$type];
@@ -481,21 +485,28 @@ function get_average_price(&$fit, &$missing) {
  * per millisecond).
  */
 function get_mining_yield(&$fit) {
-	if(!isset($fit['cache']['__effects']['miningLaser'])) return 0;
 	$total = 0;
 
 	foreach($fit['modules'] as $type => $a) {
 		foreach($a as $index => $m) {
 			$typeid = $m['typeid'];
 
-			if(!isset($fit['cache'][$typeid]['effects']['miningLaser'])) continue;
-			if($m['state'] != STATE_ACTIVE && $m['state'] != STATE_OVERLOADED) continue;
+			$ret = dogma_type_has_effect(
+				$m['typeid'],
+				\Osmium\Dogma\get_dogma_states()[$m['state']],
+				EFFECT_MiningLaser,
+				$hasit
+			);
+			if($ret !== DOGMA_OK || $hasit !== true) continue;
 
-			$durationid = $fit['cache']['__effects']['miningLaser']['durationattributeid'];
+		    dogma_get_location_effect_attributes(
+			    $fit['__dogma_context'],
+			    [ DOGMA_LOC_Module, "module_index" => $m['dogma_index'] ],
+			    EFFECT_MiningLaser,
+			    $duration, $tra, $dis, $ran, $fal, $fuc
+		    );
 
-			$durationname = get_attributename($durationid);
-
-			$duration = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $durationname);
+		    if($duration <= 1e-300) continue;
 
 			if(isset($fit['charges'][$type][$index])) {
 				/* Has crystal */
@@ -504,8 +515,8 @@ function get_mining_yield(&$fit) {
 				/* No crystal */
 				$amount = 'miningAmount';
 			}
-			$volume = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $amount);
 
+			$volume = \Osmium\Dogma\get_module_attribute($fit, $type, $index, $amount);
 			$total += $volume / $duration;
 		}
 	}

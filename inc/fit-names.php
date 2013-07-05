@@ -8,6 +8,7 @@ const EFFECT_FueledShieldBoosting = 4936;
 const EFFECT_HiPower = 12;
 const EFFECT_LoPower = 11;
 const EFFECT_MedPower = 13;
+const EFFECT_MiningLaser = 67;
 const EFFECT_ProjectileFired = 34;
 const EFFECT_RigSlot = 2663;
 const EFFECT_ShieldBoosting = 4;
