@@ -255,6 +255,7 @@ function try_parse_fit_from_common_loadout_format($jsonstring, &$errors) {
 
 	$status = \CommonLoadoutFormat\validate_clf($jsonstring, $errors);
 	if($status !== \CommonLoadoutFormat\OK && $status !== \CommonLoadoutFormat\OK_WITH_WARNINGS) {
+		$errors[] = 'validate_clf() found fatal errors.';
 		return false;
 	}
 

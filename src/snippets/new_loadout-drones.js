@@ -49,7 +49,7 @@ osmium_gen_drones = function() {
 			var qty = drones[p][t];
 			var other = (p === 'bay') ? 'space' : 'bay';
 
-			li.data('typeid', t);
+			li.data('typeid', m[0]);
 			li.data('location', p);
 			li.data('quantity', qty);
 			li.text(m[1]);
@@ -145,7 +145,7 @@ osmium_gen_drones = function() {
 
 					return menu;
 				};
-			})(t, p, qty, other));
+			})(m[0], p, qty, other));
 		}
 
 		if(ul.children('li').length == 0) {
