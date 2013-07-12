@@ -21,6 +21,7 @@ const ATT_HiSlots = 14;
 const ATT_LauncherSlotsLeft = 101;
 const ATT_LowSlots = 12;
 const ATT_MedSlots = 13;
+const ATT_ReloadTime = 1795;
 const ATT_TurretSlotsLeft = 102;
 const ATT_UpgradeLoad = 1152;
 

@@ -18,6 +18,10 @@
 
 namespace Osmium\Chrome;
 
+const USE_RELOAD_TIME_FOR_CAPACITOR = 1;
+const USE_RELOAD_TIME_FOR_DPS = 2;
+const USE_RELOAD_TIME_FOR_TANK = 4;
+
 /**
  * Print the title of a loadout with additional state pictures.
  *
@@ -97,13 +101,13 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".$captime.' </span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
 }
 
-function print_formatted_offense(&$fit, $relative) {
+function print_formatted_offense(&$fit, $relative, $reload = false) {
 	ob_start();
 
-	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit);
+	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit, $reload);
 	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/missilelauncher.png' alt='Missile damage' title='Missile damage' /><span><span title='Missile volley (alpha)'>".format_number($missilealpha)."</span><br /><span title='Missile DPS'>".format_number($missiledps)."</span></span></p>\n";
 
-	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit);
+	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit, $reload);
 	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/turret.png' alt='Turret damage' title='Turret damage' /><span><span title='Turret volley (alpha)'>".format_number($turretalpha)."</span><br /><span title='Turret DPS'>".format_number($turretdps)."</span></span></p>\n";
 
 	$dronedps = \Osmium\Fit\get_damage_from_drones($fit);
@@ -113,7 +117,7 @@ function print_formatted_offense(&$fit, $relative) {
 	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
 }
 
-function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile) {
+function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $reload = false) {
 	ob_start();
 
 	$resists = array();
@@ -171,7 +175,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile) {
 
 	$rtotal = 0;
 	$stotal = 0;
-	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap, $dmgprofile) as $lname => $a) {
+	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap, $dmgprofile, $reload) as $lname => $a) {
 		list($reinforced, $sustained) = $a;
 		if($reinforced == 0) continue;
 
@@ -318,23 +322,29 @@ function print_formatted_misc(&$fit) {
 	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
 }
 
-function print_formatted_loadout_attributes(&$fit, $relative = '.') {
+function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null) {
+	if($opts === null) {
+		/* NB: if you change the defaults here, also change the
+		 * default exported values in CLF export function. */
+		$opts = USE_RELOAD_TIME_FOR_CAPACITOR;
+	}
+
 	$dmgprofile = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
 
-	$cap = \Osmium\Fit\get_capacitor_stability($fit);
+	$cap = \Osmium\Fit\get_capacitor_stability($fit, $opts & USE_RELOAD_TIME_FOR_CAPACITOR);
 	$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
 
 	print_formatted_engineering($fit, $relative, $cap);
-	print_formatted_offense($fit, $relative);
-	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile);
+	print_formatted_offense($fit, $relative, $opts & USE_RELOAD_TIME_FOR_DPS);
+	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile, $opts & USE_RELOAD_TIME_FOR_TANK);
 	print_formatted_navigation($fit, $relative);
 	print_formatted_targeting($fit, $relative);
 	print_formatted_misc($fit);
 }
 
-function get_formatted_loadout_attributes(&$fit, $relative = '.') {
+function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null) {
 	ob_start();
-	print_formatted_loadout_attributes($fit, $relative);
+	print_formatted_loadout_attributes($fit, $relative, $opts);
 	return ob_get_clean();
 }
 

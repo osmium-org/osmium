@@ -101,6 +101,30 @@ osmium_init_ship = function() {
 			return smenu;
 		}, { icon: "//image.eveonline.com/Type/3327_64.png" });
 
+		osmium_ctxmenu_add_subctxmenu(menu, "Reload times", function() {
+			var smenu = osmium_ctxmenu_create();
+
+			osmium_ctxmenu_add_option(smenu, "Include in capacitor time", function() {
+				osmium_clf.metadata['X-Osmium-capreloadtime'] = !osmium_clf.metadata['X-Osmium-capreloadtime'];
+				osmium_undo_push();
+				osmium_commit_clf();
+			}, { toggled: osmium_clf.metadata['X-Osmium-capreloadtime'] });
+
+			osmium_ctxmenu_add_option(smenu, "Include in DPS", function() {
+				osmium_clf.metadata['X-Osmium-dpsreloadtime'] = !osmium_clf.metadata['X-Osmium-dpsreloadtime'];
+				osmium_undo_push();
+				osmium_commit_clf();
+			}, { toggled: osmium_clf.metadata['X-Osmium-dpsreloadtime'] });
+
+			osmium_ctxmenu_add_option(smenu, "Include in sustained tank", function() {
+				osmium_clf.metadata['X-Osmium-tankreloadtime'] = !osmium_clf.metadata['X-Osmium-tankreloadtime'];
+				osmium_undo_push();
+				osmium_commit_clf();
+			}, { toggled: osmium_clf.metadata['X-Osmium-tankreloadtime'] });
+
+			return smenu;
+		}, {});
+
 		osmium_ctxmenu_add_separator(menu);
 
 		osmium_ctxmenu_add_option(menu, "Show ship info", function() {

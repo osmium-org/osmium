@@ -34,6 +34,12 @@ $clftext = gzinflate(base64_decode($_POST['clf']));
 $relative = $_GET['relative'];
 $local = null;
 
+$clf = json_decode($clftext, true);
+if(json_last_error() !== JSON_ERROR_NONE) {
+	header('HTTP/1.1 400 Bad Request', true, 400);
+	\Osmium\Chrome\return_json(array());
+}
+
 if($type === 'new') {
 	$local = \Osmium\State\get_new_loadout($token);
 } else if($type === 'view') {
@@ -57,15 +63,26 @@ if($local === null) {
 } else {
 	/* Valid token, just update local loadout from client CLF */
 
-	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clftext)) {
+	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clf)) {
 		header('HTTP/1.1 400 Bad Request', true, 400);
 		\Osmium\Chrome\return_json(array());
 	}
 }
 
+$attribflags = 0;
+if(isset($clf['metadata']['X-Osmium-capreloadtime']) && $clf['metadata']['X-Osmium-capreloadtime']) {
+	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_CAPACITOR;
+}
+if(isset($clf['metadata']['X-Osmium-dpsreloadtime']) && $clf['metadata']['X-Osmium-dpsreloadtime']) {
+	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_DPS;
+}
+if(isset($clf['metadata']['X-Osmium-tankreloadtime']) && $clf['metadata']['X-Osmium-tankreloadtime']) {
+	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_TANK;
+}
+
 $payload = array(
 	'clftoken' => $token,
-	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative),
+	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribflags),
 	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
 	'rawattribs' => array(
 		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($local, 'droneBandwidth'),

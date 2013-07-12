@@ -107,7 +107,7 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
  *
  * @returns array(repair_type => array(reinforced, sustained))
  */
-function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
+function get_tank(&$fit, $ehp, $capacitor, $damageprofile, $reload = false) {
 	static $localrepaireffects = array(
 		'hull' => [ [ EFFECT_StructureRepair, 'structureDamageAmount' ] ],
 		'armor' => [ [ EFFECT_ArmorRepair, 'armorDamageAmount' ],
@@ -142,8 +142,14 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 						$range, $falloff, $usagechance
 					);
 
+					dogma_get_number_of_module_cycles_before_reload(
+						$fit['__dogma_context'], $module['dogma_index'], $ncycles
+					);
+
+					$reloadtime = \Osmium\Dogma\get_module_attribute($fit, $type, $index, ATT_ReloadTime);
+
 					if($duration > 1e-300) {
-						$modules[] = array($layer, $amount, $duration, $discharge);
+						$modules[] = array($layer, $amount, $duration, $discharge, $ncycles, $reloadtime);
 					}
 				}
 			}
@@ -175,15 +181,19 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
 
 	/* Second pass: enable best modules while capacitor is available */
 	foreach($modules as $m) {
-		list($key, $amount, $duration, $discharge) = $m;
+		list($key, $amount, $duration, $discharge, $ncycles, $reloadtime) = $m;
 
-		$moduleusage = $discharge / $duration;
+		$moduleusage = (!$reload || $ncycles === -1) ? ($discharge / $duration) :
+			($discharge / ($duration + $reloadtime / $ncycles));
 		if($moduleusage == 0) $fraction = 1;
 		else if($usage > 0) continue;
 		else $fraction = min(1, -$usage / $moduleusage);
 
 		$usage += $fraction * $moduleusage;
-		$out[$key][1] += $fraction * $amount / $duration;
+		$out[$key][1] += $fraction * (
+			(!$reload || $ncycles === -1) ? ($amount / $duration) :
+			($amount / ($duration + $reloadtime / $ncycles))
+		);
 	}
 
 	$sum = array_sum($damageprofile);
@@ -246,7 +256,8 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile) {
  */
 function get_damage_from_attack_effect(&$fit, $attackeffectid,
                                        $modulemultiplierattribute = null,
-                                       $globalmultiplier = 1) {
+                                       $globalmultiplier = 1,
+                                       $reload = false) {
 	$dps = 0;
 	$alpha = 0;
 
@@ -280,8 +291,23 @@ function get_damage_from_attack_effect(&$fit, $attackeffectid,
 			$multiplier = $modulemultiplierattribute === null ? 1 :
 				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattribute);
 
-			$dps += $multiplier * $damage / $duration;
 			$alpha += $multiplier * $damage;
+			if(!$reload) {
+				$dps += $multiplier * $damage / $duration;
+				continue;
+			}
+
+			dogma_get_number_of_module_cycles_before_reload(
+				$fit['__dogma_context'], $module['dogma_index'], $ncycles
+			);
+
+			if($ncycles === -1) {
+				$dps += $multiplier * $damage / $duration;
+				continue;
+			}
+
+			$reloadtime = \Osmium\Dogma\get_module_attribute($fit, $type, $index, ATT_ReloadTime);
+			$dps += $multiplier * $damage / ($duration + $reloadtime / $ncycles);
 		}
 	}
 
@@ -291,23 +317,24 @@ function get_damage_from_attack_effect(&$fit, $attackeffectid,
 /**
  * Get DPS/volley damage from active missile launchers.
  */
-function get_damage_from_missiles(&$fit) {
+function get_damage_from_missiles(&$fit, $reload = false) {
 	return get_damage_from_attack_effect(
 		$fit, EFFECT_UseMissiles, null,
-		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier')
+		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier'),
+		$reload
 	);
 }
 
 /**
  * Get DPS/volley damage from active turrets (projectile, hybrids and lasers).
  */
-function get_damage_from_turrets(&$fit) {
+function get_damage_from_turrets(&$fit, $reload = false) {
 	$projectiles = get_damage_from_attack_effect(
-		$fit, EFFECT_ProjectileFired, 'damageMultiplier'
+		$fit, EFFECT_ProjectileFired, 'damageMultiplier', 1.0, $reload
 	);
 
 	$lasers = get_damage_from_attack_effect(
-		$fit, EFFECT_TargetAttack, 'damageMultiplier'
+		$fit, EFFECT_TargetAttack, 'damageMultiplier', 1.0, $reload
 	);
 
 	return array(

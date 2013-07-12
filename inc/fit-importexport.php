@@ -1035,6 +1035,9 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 		}
 
 		$json['metadata']['X-Osmium-skillset'] = $fit['metadata']['skillset'];
+		$json['metadata']['X-Osmium-capreloadtime'] = true;
+		$json['metadata']['X-Osmium-dpsreloadtime'] = false;
+		$json['metadata']['X-Osmium-tankreloadtime'] = false;
 	}
 
 	if(isset($fit['ship']['typeid'])) {
@@ -1488,10 +1491,7 @@ function export_to_dna($fit) {
  * than calling try_parse_fit_from_common_loadout_format if $fit is
  * already a fitting somewhat close to the result.
  */
-function synchronize_from_clf_1(&$fit, $clfstring) {
-	$clf = json_decode($clfstring, true);
-	if(json_last_error() !== JSON_ERROR_NONE) return false;
-
+function synchronize_from_clf_1(&$fit, $clf) {
 	if(!isset($clf['clf-version']) || (int)$clf['clf-version'] !== 1) {
 		// @codeCoverageIgnoreStart
 		trigger_error(__FUNCTION__.'(): expected CLF version 1, got '
