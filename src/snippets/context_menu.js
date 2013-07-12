@@ -70,8 +70,9 @@ osmium_ctxmenu_create = function() {
 /* opts is a Hashtable that can accept the properties:
  * - icon: URI of the icon to show
  * - title: tooltip of this option (uses title attribute)
- * - enabled: whether this option is enabled or not (default yes)
+ * - enabled: whether this option is enabled or not (default yes); disabled elements cannot be clicked on
  * - default: whether this option is the default when the element is double-clicked (default false)
+ * - toggled: whether this option is "checked" or "selected"
  */
 osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 	var li = $(document.createElement('li'));
@@ -94,6 +95,19 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 		}
 		img.addClass('icon');
 		li.prepend(img);
+		li.addClass('hasicon');
+	}
+
+	if("toggled" in opts) {
+		var c = $(document.createElement('input'));
+		c.prop('type', 'checkbox');
+		c.prop('checked', opts.toggled);
+		li.prepend(c);
+		li.addClass('hastoggle');
+
+		if(opts.toggled) {
+			li.addClass('toggled');
+		}
 	}
 
 	if(("enabled" in opts) && !opts.enabled) {
@@ -144,6 +158,7 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 		}
 		img.addClass('icon');
 		li.prepend(img);
+		li.addClass('hasicon');
 	}
 
 	show_submenu = function() {

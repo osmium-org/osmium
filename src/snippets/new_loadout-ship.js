@@ -94,8 +94,7 @@ osmium_init_ship = function() {
 						osmium_commit_clf();
 					};
 				})(osmium_skillsets[i]), {
-					"default": osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i],
-					icon: "//image.eveonline.com/Type/3327_64.png"
+					toggled: osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i]
 				});
 			}
 

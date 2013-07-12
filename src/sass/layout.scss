@@ -335,17 +335,26 @@ ul#ctxmenu, ul.subctxmenu {
 			@include ellipsis;
 		}
 
+		&.hastoggle > span {
+			padding-left: 1.75em;
+		}
+
 		&:first-child {
 			border-top: 0;
 		}
 
-		&> img.icon {
+		&.hasicon > img.icon, &.hastoggle > input {
 			position: absolute;
 			left: 0.25em;
 			top: 0.25em;
 			height: 1em;
 			line-height: 1em;
 			width: 1em;
+		}
+
+		&.hasicon.hastoggle {
+			&> input { left: 1.5em; }
+			&> span { padding-left: 2.75em; }
 		}
 
 		&.separator {
@@ -358,7 +367,7 @@ ul#ctxmenu, ul.subctxmenu {
 			}
 		}
 
-		&.default {
+		&.default > span {
 			font-weight: bold;
 		}
 
