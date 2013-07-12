@@ -30,7 +30,7 @@ if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()
 
 $type = $_GET['type'];
 $token = $_GET['clftoken'];
-$clftext = $_POST['clf'];
+$clftext = gzinflate(base64_decode($_POST['clf']));
 $relative = $_GET['relative'];
 $local = null;
 

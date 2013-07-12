@@ -353,22 +353,11 @@ echo "</section>\n";
 
 echo "</div>\n";
 
+\Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, $tok);
 \Osmium\Chrome\print_js_code(
-"osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
-osmium_staticver = ".\Osmium\STATICVER.";
-osmium_relative = '".RELATIVE."';
-osmium_token = '".\Osmium\State\get_token()."';
-osmium_clftoken = '".$tok."';
-osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";
-osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
-osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
+	"osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";"
 );
 
-\Osmium\Chrome\print_js_snippet('tabs');
-\Osmium\Chrome\print_js_snippet('modal');
-\Osmium\Chrome\print_js_snippet('context_menu');
-\Osmium\Chrome\print_js_snippet('loadout_common');
-\Osmium\Chrome\print_js_snippet('show_info');
 \Osmium\Chrome\print_js_snippet('new_loadout');
 \Osmium\Chrome\print_js_snippet('new_loadout-control');
 \Osmium\Chrome\print_js_snippet('new_loadout-sources');
@@ -377,5 +366,4 @@ osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_ac
 \Osmium\Chrome\print_js_snippet('new_loadout-metadata');
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('new_loadout-drones');
-\Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();

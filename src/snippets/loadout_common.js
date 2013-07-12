@@ -126,8 +126,16 @@ osmium_send_clf = function(onsuccess) {
 	}
 	osmium_must_send_clf = false;
 
+	var deflated = btoa(RawDeflate.deflate(
+		JSON.stringify(osmium_clf).replace(/[\u007F-\uFFFF]/g, function(m) {
+			/* Thanks to Jason S. for this neat code, see
+			 * http://stackoverflow.com/a/4901205/615776 */
+			return "\\u" + ('0000' + m.charCodeAt(0).toString(16)).slice(-4);
+		})
+	));
+
 	var postopts = {
-		clf: JSON.stringify(osmium_clf)
+		clf: deflated
 	};
 
 	var getopts = {

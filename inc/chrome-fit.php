@@ -337,3 +337,24 @@ function get_formatted_loadout_attributes(&$fit, $relative = '.') {
 	print_formatted_loadout_attributes($fit, $relative);
 	return ob_get_clean();
 }
+
+function print_loadout_common_footer(&$fit, $relative, $clftoken) {
+	\Osmium\Chrome\print_js_code(
+		"osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
+osmium_staticver = ".\Osmium\STATICVER.";
+osmium_relative = '".$relative."';
+osmium_token = '".\Osmium\State\get_token()."';
+osmium_clftoken = '".$clftoken."';
+osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
+osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
+	);
+
+	echo "<script type='application/javascript' src='".$relative."/static-1/rawdeflate.min.js'></script>";
+
+	\Osmium\Chrome\print_js_snippet('tabs');
+	\Osmium\Chrome\print_js_snippet('modal');
+	\Osmium\Chrome\print_js_snippet('context_menu');
+	\Osmium\Chrome\print_js_snippet('loadout_common');
+	\Osmium\Chrome\print_js_snippet('show_info');
+	\Osmium\Chrome\print_js_snippet('formatted_attributes');
+}

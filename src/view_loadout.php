@@ -495,26 +495,11 @@ echo "</div>\n";
 /* The phony CLF token is obviously not a valid token, and process_clf
  * will pick it up and create a new token on demand. So if the user
  * never interacts with the loadout, it never gets cached. */
+\Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, '___demand___');
 
-\Osmium\Chrome\print_js_code(
-"osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
-osmium_staticver = ".\Osmium\STATICVER.";
-osmium_relative = '".RELATIVE."';
-osmium_token = '".\Osmium\State\get_token()."';
-osmium_clftoken = '___demand___';
-osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
-osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
-);
-
-\Osmium\Chrome\print_js_snippet('tabs');
-\Osmium\Chrome\print_js_snippet('modal');
-\Osmium\Chrome\print_js_snippet('context_menu');
-\Osmium\Chrome\print_js_snippet('loadout_common');
-\Osmium\Chrome\print_js_snippet('show_info');
 \Osmium\Chrome\print_js_snippet('view_loadout');
 \Osmium\Chrome\print_js_snippet('view_loadout-presets');
 \Osmium\Chrome\print_js_snippet('new_loadout-ship');
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('new_loadout-drones');
-\Osmium\Chrome\print_js_snippet('formatted_attributes');
 \Osmium\Chrome\print_footer();

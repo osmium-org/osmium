@@ -33,6 +33,10 @@ General Public License, version 2.
 Osmium uses the phpass library, released in the public domain.
 <http://www.openwall.com/phpass/>
 
+Osmium uses js-deflate, released under the GNU General Public License,
+version 2.
+<https://github.com/dankogai/js-deflate/blob/master/rawdeflate.js>
+
 Contact
 -------
 
