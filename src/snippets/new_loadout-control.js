@@ -44,7 +44,7 @@ osmium_init_control = function() {
 		b.prop('disabled', 'disabled').prop('value', 'Exporting loadout…');
 
 		var postopts = {
-			clf: JSON.stringify(osmium_clf)
+			clf: osmium_compress_json(osmium_clf)
 		};
 
 		var getopts = {
@@ -85,7 +85,7 @@ osmium_init_control = function() {
 		b.prop('disabled', 'disabled').prop('value', 'Submitting loadout…');
 
 		var postopts = {
-			clf: JSON.stringify(osmium_clf)
+			clf: osmium_compress_json(osmium_clf)
 		};
 
 		var getopts = {
