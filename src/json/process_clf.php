@@ -84,6 +84,7 @@ $payload = array(
 	'clftoken' => $token,
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribflags),
 	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
+	'ncycles' => array(),
 	'rawattribs' => array(
 		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($local, 'droneBandwidth'),
 		'dronebandwidthused' => \Osmium\Fit\get_used_drone_bandwidth($local),
@@ -92,6 +93,21 @@ $payload = array(
 		'maxactivedrones' => \Osmium\Dogma\get_char_attribute($local, 'maxActiveDrones'),
 	),
 );
+
+foreach($local['modules'] as $slottype => $sub) {
+	foreach($sub as $index => $m) {
+		if(!isset($local['charges'][$slottype][$index])) continue;
+		dogma_get_number_of_module_cycles_before_reload(
+			$local['__dogma_context'], $m['dogma_index'], $ncycles
+		);
+
+		if($ncycles !== -1) {
+			$payload['ncycles'][] = array(
+				$slottype, $index, $ncycles
+			);
+		}
+	}
+}
 
 if($type === 'new') {
 	\Osmium\State\put_new_loadout($token, $local);

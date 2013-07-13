@@ -149,6 +149,65 @@ osmium_send_clf = function(onsuccess) {
 		},
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
+
+			$('div#computed_attributes').html(payload.attributes);
+			osmium_clf_rawattribs = payload.rawattribs;
+
+			$("section#modules div.slots li.hasattribs").removeClass('hasattribs')
+				.children('small.attribs').remove();
+			for(var i = 0; i < payload.mia.length; ++i) {
+				var s = $(document.createElement('small'));
+				s.text(payload.mia[i][2]);
+				s.prop('title', payload.mia[i][3]);
+				s.addClass('attribs');
+
+				$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
+					return $(this).data('index') == payload.mia[i][1];
+				}).addClass('hasattribs').append(s);
+			}
+
+			$("section#modules div.slots li > span.charge.hasncycles").removeClass('hasncycles')
+				.children('span.ncycles').remove();
+			for(var i = 0; i < payload.ncycles.length; ++i) {
+				var s = $(document.createElement('span'));
+				s.text(payload.ncycles[i][2]);
+				s.prop('title', 'Number of module cycles before having to reload');
+				s.addClass('ncycles');
+
+				$("section#modules div.slots." + payload.ncycles[i][0] + " li").filter(function() {
+					return $(this).data('index') == payload.ncycles[i][1];
+				}).children('span.charge').addClass('hasncycles').append(s);
+			}
+
+			$("section#drones small.bayusage").text(
+				osmium_clf_rawattribs.dronecapacityused
+					+ ' / ' + osmium_clf_rawattribs.dronecapacity + ' m³'
+			).toggleClass(
+				'overflow',
+				osmium_clf_rawattribs.dronecapacityused > osmium_clf_rawattribs.dronecapacity
+			);
+			$("section#drones small.bandwidth").text(
+				osmium_clf_rawattribs.dronebandwidthused
+					+ ' / ' + osmium_clf_rawattribs.dronebandwidth + ' Mbps'
+			).toggleClass(
+				'overflow',
+				osmium_clf_rawattribs.dronebandwidthused > osmium_clf_rawattribs.dronebandwidth
+			);
+			var ndrones = 0;
+			var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
+			if("inspace" in dp) {
+				for(var i = 0; i < dp.inspace.length; ++i) {
+					ndrones += dp.inspace[i].quantity;
+				}
+			}
+			$("section#drones small.maxdrones").text(
+				ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
+			).toggleClass(
+				'overflow',
+				ndrones > osmium_clf_rawattribs.maxactivedrones
+			);
+			osmium_clf_rawattribs.activedrones = ndrones;
+
 			osmium_on_clf_payload(payload);
 			if((typeof onsuccess) === "function") onsuccess(payload);
 			setTimeout(osmium_send_clf, 500);

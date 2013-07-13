@@ -319,9 +319,17 @@ foreach($stypes as $type => $fname) {
 		echo htmlspecialchars($m['typename'])."\n";
 
 		if($c !== null) {
-			echo "<span class='charge'>,<br />";
+			dogma_get_number_of_module_cycles_before_reload(
+				$fit['__dogma_context'], $m['dogma_index'], $ncycles
+			);
+
+			echo "<span class='charge".($ncycles !== -1 ? ' hasncycles' : '')."'>,<br />";
 			echo "<img src='//image.eveonline.com/Type/".$c['typeid']."_64.png' alt='' />";
 			echo "<span class='name'>".htmlspecialchars($c['typename'])."</span>";
+			if($ncycles !== -1) {
+				echo "<span class='ncycles' title='Number of module cycles before having to reload'>"
+					.$ncycles."</span>";
+			}
 			echo "</span>\n";
 		}
 

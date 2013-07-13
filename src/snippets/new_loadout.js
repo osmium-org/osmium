@@ -37,27 +37,11 @@ $(function() {
 osmium_loadout_readonly = false;
 osmium_clftype = 'new';
 osmium_on_clf_payload = function(payload) {
-	$('div#computed_attributes').html(payload.attributes);
 	if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
 		osmium_clf_slots = payload.slots;
 		osmium_clf_hardpoints = payload.hardpoints;
 	}
-	osmium_clf_rawattribs = payload.rawattribs;
-
 	osmium_update_slotcounts();
-
-	$("section#modules div.slots li > small.attribs").remove();
-	$("section#modules div.slots li.hasattribs").removeClass('hasattribs');
-	for(var i = 0; i < payload.mia.length; ++i) {
-		var s = $(document.createElement('small'));
-		s.text(payload.mia[i][2]);
-		s.prop('title', payload.mia[i][3]);
-		s.addClass('attribs');
-
-		$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
-			return $(this).data('index') == payload.mia[i][1];
-		}).addClass('hasattribs').append(s);
-	}
 
 	$("section#metadata tr#recommended_tags").remove();
 	if(payload.rectags.length > 0) {
@@ -83,36 +67,6 @@ osmium_on_clf_payload = function(payload) {
 
 		$("input#tags").closest('tr').after(tr);
 	}
-
-	$("section#drones small.bayusage").text(
-		osmium_clf_rawattribs.dronecapacityused
-			+ ' / ' + osmium_clf_rawattribs.dronecapacity + ' m³'
-	).toggleClass(
-		'overflow',
-		osmium_clf_rawattribs.dronecapacityused > osmium_clf_rawattribs.dronecapacity
-	);
-	$("section#drones small.bandwidth").text(
-		osmium_clf_rawattribs.dronebandwidthused
-			+ ' / ' + osmium_clf_rawattribs.dronebandwidth + ' Mbps'
-	).toggleClass(
-		'overflow',
-		osmium_clf_rawattribs.dronebandwidthused > osmium_clf_rawattribs.dronebandwidth
-	);
-	var ndrones = 0;
-	var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
-	if("inspace" in dp) {
-		for(var i = 0; i < dp.inspace.length; ++i) {
-			ndrones += dp.inspace[i].quantity;
-		}
-	}
-	$("section#drones small.maxdrones").text(
-		ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
-	).toggleClass(
-		'overflow',
-		ndrones > osmium_clf_rawattribs.maxactivedrones
-	);
-	osmium_clf_rawattribs.activedrones = ndrones;
-
 
 	if(window.history && window.history.replaceState) {
 		/* Refresh URI in case token changed and user refreshes the page */

@@ -30,9 +30,27 @@ $hidden-char: '\0025B8';
 	line-height: 2em;
 	position: relative;
 	background-color: $main-bg-color;
+	@include ellipsis;
 
 	&, &> span.charge {
-		@include ellipsis;
+		&.hasncycles > span.ncycles {
+			&:before { content: "("; }
+			&:after { content: ")"; }
+			font-size: 0.8em;
+			opacity: 0.8;
+			padding-left: 0.5em;
+			display: inline-block;
+		}
+
+		&> span.name {
+			@include ellipsis;
+		}
+
+		&.hasncycles > span.name {
+			display: inline-block;
+			vertical-align: middle;
+			max-width: $module-width - 6em;
+		}
 	}
 
 	&:first-child {

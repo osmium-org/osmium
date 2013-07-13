@@ -20,15 +20,26 @@ osmium_gen_modules = function() {
 	var cpid = osmium_clf['X-Osmium-current-chargepresetid'];
 	var m, i, j, type, c, chargeid;
 	var old_ias = {};
+	var old_ncycles = {};
 
 	$('section#modules > div.slots > ul > li.hasattribs > small.attribs').each(function() {
 		var s = $(this);
-		var li = $(this).parent();
+		var li = s.parent();
 		var typeid = li.data('typeid');
 		var index = li.data('index');
 
 		if(!(typeid in old_ias)) old_ias[typeid] = {};
 		old_ias[typeid][index] = s.clone();
+	});
+
+	$('section#modules > div.slots > ul > li > span.charge > span.ncycles').each(function() {
+		var s = $(this);
+		var li = s.parent().parent();
+		var typeid = li.data('typeid');
+		var index = li.data('index');
+
+		if(!(typeid in old_ncycles)) old_ncycles[typeid] = {};
+		old_ncycles[typeid][index] = s.clone();
 	});
 
 	$('section#modules > div.slots > ul > li').not('.placeholder').remove();
@@ -54,8 +65,14 @@ osmium_gen_modules = function() {
 		var li = osmium_add_module(m.typeid, m.index, m.state, chargeid);
 
 		if(m.typeid in old_ias && m.index in old_ias[m.typeid]) {
-			li.addClass('hasattribs');
-			li.append(old_ias[m.typeid][m.index]);
+			li.addClass('hasattribs')
+				.append(old_ias[m.typeid][m.index]);
+		}
+
+		if(m.typeid in old_ncycles && m.index in old_ncycles[m.typeid]) {
+			li.children('span.charge')
+				.addClass('hasncycles')
+				.append(old_ncycles[m.typeid][m.index]);
 		}
 	}
 
