@@ -34,7 +34,7 @@ const CSS_STATICVER = 8;
 const JS_STATICVER = 9;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 13;
+const CLIENT_DATA_STATICVER = 14;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

@@ -93,6 +93,7 @@ osmium_init = function() {
 	osmium_init_presets();
 	osmium_init_modules();
 	osmium_init_drones();
+	osmium_init_fattribs();
 };
 
 osmium_add_to_clf = function(item) {

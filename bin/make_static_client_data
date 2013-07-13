@@ -190,4 +190,64 @@ while($row = \Osmium\Db\fetch_row($q)) {
 
 /* ---------------------------------------------------------- */
 
+$groups = array(
+	'Interceptor' => [ ['Interceptor'], true, true, null ],
+	'Frigate' => [ ['Frigate', 'Assault Ship'], true, true, null ],
+	'Frigate+MWD' => [ ['Frigate', 'Assault Ship'], true, false, function($ctx) {
+			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_1MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
+		} ],
+	'Cruiser' => [ ['Cruiser', 'Heavy Assault Cruiser'], true, true, null ],
+	'Cruiser+MWD' => [ ['Cruiser', 'Heavy Assault Cruiser'], true, false, function($ctx) {
+			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_10MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
+		} ],
+	'Industrial' => [ ['Industrial'], true, true, null ],
+	'Battlecruiser' => [ ['Combat Battlecruiser', 'Attack Battlecruiser'], true, true, null ],
+	'Battlecruiser+MWD' => [ ['Combat Battlecruiser', 'Attack Battlecruiser'], true, false, function($ctx) {
+			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_10MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
+		} ],
+	'Battleship' => [ ['Battleship'], true, true, null ],
+	'Battleship+MWD' => [ ['Battleship'], true, false, function($ctx) {
+			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_100MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
+		} ],
+	'Carrier' => [ ['Carrier'], true, true, null ],
+	'Titan' => [ ['Titan'], true, true, null ],
+);
+foreach($groups as $g => $d) {
+	list($gnames, $istargetee, $istargeter, $beforehook) = $d;
+
+	$c = 0;
+	$signatureradius = 0;
+	$scanresolution = 0;
+
+	dogma_init_context($ctx);
+	if($beforehook !== null) $beforehook($ctx);
+
+	foreach($gnames as $gname) {
+		$q = \Osmium\Db\query_params(
+			'SELECT typeid FROM osmium.invships
+			WHERE groupname = $1',
+			array($gname)
+		);
+
+		while($row = \Osmium\Db\fetch_row($q)) {
+			dogma_set_ship($ctx, $row[0]);
+			dogma_get_ship_attribute($ctx, \Osmium\Fit\ATT_ScanResolution, $scan);
+			dogma_get_ship_attribute($ctx, \Osmium\Fit\ATT_SignatureRadius, $sig);
+
+			$signatureradius += $sig;
+			$scanresolution += $scan;
+			++$c;
+		}
+	}
+
+	if($c !== 0) {
+		$static['targetclass'][] = array(
+			$g, $istargetee, $istargeter,
+			$signatureradius / $c, $scanresolution / $c,
+		);
+	}
+}
+
+/* ---------------------------------------------------------- */
+
 file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));

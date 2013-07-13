@@ -22,8 +22,14 @@ const ATT_LauncherSlotsLeft = 101;
 const ATT_LowSlots = 12;
 const ATT_MedSlots = 13;
 const ATT_ReloadTime = 1795;
+const ATT_ScanResolution = 564;
+const ATT_SignatureRadius = 552;
 const ATT_TurretSlotsLeft = 102;
 const ATT_UpgradeLoad = 1152;
+
+const TYPE_1MNMicrowarpdriveII = 440;
+const TYPE_10MNMicrowarpdriveII = 12076;
+const TYPE_100MNMicrowarpdriveII = 12084;
 
 
 /** @internal */

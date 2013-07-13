@@ -253,9 +253,9 @@ function print_formatted_targeting(&$fit, $relative) {
 
 	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting_".$maxtype.".png' alt='".ucfirst($maxtype)." strength' title='".ucfirst($maxtype)." strength' /><span><span title='Maximum locked targets'>".$numtargets." ".$ftargets."</span><br /><span title='Sensor strength'>".round($scanstrength[$maxtype], 1)." points</span></span></p>\n";
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting.png' alt='Targeting range' title='Targeting range' /><span><span title='Targeting range'>".format_range($targetrange)."</span><br /><span title='Scan resolution'>".format_number($scanres)." mm</span></span></p>\n";
+	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting.png' alt='Targeting range' title='Targeting range' /><span><span title='Targeting range'>".format_range($targetrange)."</span><br /><span title='Scan resolution' id='scan_resolution' data-value='".$scanres."'>".format_number($scanres)." mm</span></span></p>\n";
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/radius.png' alt='Signature radius' title='Signature radius' /><span>".format_range($sigradius)."</span></p>\n";
+	echo "<p id='signature_radius' title='Signature radius' data-value='".$sigradius."'><img src='$relative/static-".\Osmium\STATICVER."/icons/radius.png' alt='Signature radius' /><span>".format_range($sigradius)."</span></p>\n";
 
 	print_formatted_attribute_category(
 		'targeting', 'Targeting',
@@ -367,4 +367,5 @@ osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_ac
 	\Osmium\Chrome\print_js_snippet('loadout_common');
 	\Osmium\Chrome\print_js_snippet('show_info');
 	\Osmium\Chrome\print_js_snippet('formatted_attributes');
+	\Osmium\Chrome\print_js_snippet('new_loadout-fattribs');
 }

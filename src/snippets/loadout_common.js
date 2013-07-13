@@ -37,6 +37,7 @@ osmium_load_static_client_data = function(staticver, onsuccess) {
 		osmium_stateful_slot_types = json.statefulslottypes;
 		osmium_ship_slots = json.shipslots;
 		osmium_chargedmg = json.chargedmg;
+		osmium_targetclass = json.targetclass;
 
 		/* Module states as they are defined in the CLF specification */
 		osmium_states = ['offline', 'online', 'active', 'overloaded'];
@@ -152,6 +153,7 @@ osmium_send_clf = function(onsuccess) {
 
 			$('div#computed_attributes').html(payload.attributes);
 			osmium_clf_rawattribs = payload.rawattribs;
+			osmium_init_fattribs();
 
 			$("section#modules div.slots li.hasattribs").removeClass('hasattribs')
 				.children('small.attribs').remove();
