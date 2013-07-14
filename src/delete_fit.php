@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,10 +32,27 @@ if(!$can_edit) {
 }
 
 \Osmium\Db\query('BEGIN;');
+
+\Osmium\Db\query_params(
+	'DELETE FROM osmium.loadoutcommentreplies
+	USING osmium.loadoutcomments
+	WHERE loadoutcomments.loadoutid = $1
+	AND loadoutcommentreplies.commentid = loadoutcomments.commentid',
+	array($loadoutid)
+);
+\Osmium\Db\query_params(
+	'DELETE FROM osmium.loadoutcommentrevisions
+	USING osmium.loadoutcomments
+	WHERE loadoutcomments.loadoutid = $1
+	AND loadoutcommentrevisions.commentid = loadoutcomments.commentid',
+	array($loadoutid)
+);
+\Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouthistory WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_LOADOUT, null, $loadoutid);
+
 \Osmium\Db\query('COMMIT;');
 
 /* FIXME check that transaction was successful before unindexing this */
