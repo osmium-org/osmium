@@ -86,8 +86,11 @@ osmium_init_fattribs = function() {
 
 			osmium_ctxmenu_add_subctxmenu(smenu, "Custom", function() {
 				var ssmenu = osmium_ctxmenu_create();
+				var count = 0;
 
 				for(var k in osmium_custom_damage_profiles) {
+					++count;
+
 					osmium_ctxmenu_add_subctxmenu(ssmenu, k, (function(k, profile) {
 						return function() {
 							var sssmenu = osmium_ctxmenu_create();
@@ -115,7 +118,7 @@ osmium_init_fattribs = function() {
 					});
 				}
 
-				if(osmium_custom_damage_profiles.length >= 1) {
+				if(count >= 1) {
 					osmium_ctxmenu_add_separator(ssmenu);
 				}
 
