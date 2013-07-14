@@ -263,20 +263,19 @@ $static['dmgprofiles'] = array(
 	/* Data "stolen" from http://wiki.eveuniversity.org/NPC_Damage_Types */
 	'Factions' => array(
 		/* Pirate factions */
-		'Angel Cartel' => [ .07, .62, .22, .9 ],
-		'Blood Raiders' => [ .50, .0, .02, .48 ],
-		'EoM' => [ .0, .0, .74, .26 ],
-		'Guristas' => [ .02, .01, .79, .18 ],
-		'Mordu\'s Legion' => [ .0, .0, .70, .30 ],
-		'Sansha\'s Nation' => [ .53, .0, .0, .47 ],
-		'Serpentis' => [ .0, .0, .55, .45 ],
+		'Angel Cartel' => [ .07, .62, .22, .9, "//image.eveonline.com/Alliance/500011_128.png" ],
+		'Blood Raiders' => [ .50, .0, .02, .48, "//image.eveonline.com/Alliance/500012_128.png" ],
+		'Guristas' => [ .02, .01, .79, .18, "//image.eveonline.com/Alliance/500010_128.png" ],
+		'Mordu\'s Legion' => [ .0, .0, .70, .30, "//image.eveonline.com/Alliance/500018_128.png" ],
+		'Sansha\'s Nation' => [ .53, .0, .0, .47, "//image.eveonline.com/Alliance/500019_128.png" ],
+		'Serpentis' => [ .0, .0, .55, .45, "//image.eveonline.com/Alliance/500020_128.png" ],
 
 		/* Empire factions */
-		'CONCORD' => [ .29, .30, .37, .32 ],
-		'Amarr Empire' => [ .47, .04, .07, .42 ],
-		'Caldari State' => [ .01, .0, .51, .48 ],
-		'Gallente Federation' => [ .01, .0, .60, .39 ],
-		'Minmatar Republic' => [ .12, .50, .31, .07 ],
+		'CONCORD' => [ .29, .30, .37, .32, "//image.eveonline.com/Alliance/500006_128.png" ],
+		'Amarr Empire' => [ .47, .04, .07, .42, "//image.eveonline.com/Alliance/500003_128.png" ],
+		'Caldari State' => [ .01, .0, .51, .48, "//image.eveonline.com/Alliance/500001_128.png" ],
+		'Gallente Federation' => [ .01, .0, .60, .39, "//image.eveonline.com/Alliance/500004_128.png" ],
+		'Minmatar Republic' => [ .12, .50, .31, .07, "//image.eveonline.com/Alliance/500002_128.png" ],
 	),
 );
 
