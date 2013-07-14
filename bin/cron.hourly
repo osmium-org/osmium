@@ -7,3 +7,4 @@
 chdir(__DIR__);
 
 passthru('./update_lscores');
+passthru('./prune_cache');
