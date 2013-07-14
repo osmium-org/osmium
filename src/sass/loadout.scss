@@ -253,6 +253,29 @@ div#computed_attributes > section {
 			width: 50%;
 		}
 	}
+
+	&.hascontextmenu {
+		position: relative;
+
+		&> span.contextmenuindicator {
+			position: absolute;
+			top: -0.25em;
+			right: 0;
+			font-size: 1.5em;
+			color: $aside-text-color;
+		}
+
+		&> h4 > small {
+			right: 1.5em;
+		}
+	}
+
+	&#defense > h4 > span.pname {
+		&:before { content: "("; }
+		&:after { content: ")"; }
+		font-size: 0.8em;
+		color: $aside-text-color;
+	}
 }
 
 div#computed_attributes > section > div > table#resists {

@@ -37,11 +37,11 @@ osmium_ctxmenu_bind = function(element, menu_constructor) {
 			return false;
 		});
 
-		menu.click(function() {
+		menu.bind('click delete_menu', function() {
 			$("ul#ctxmenu, div#ctxbg, ul.subctxmenu").remove();
 		});
 
-		$('ul#ctxmenu, div#ctxbg').remove();
+		$('ul#ctxmenu, div#ctxbg, ul.subctxmenu').remove();
 		$('body').append(div).append(menu);
 
 		var x = Math.min(e.pageX, $(document).width() - menu.width() - 5);
@@ -161,6 +161,18 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 		li.addClass('hasicon');
 	}
 
+	if("toggled" in opts) {
+		var c = $(document.createElement('input'));
+		c.prop('type', 'checkbox');
+		c.prop('checked', opts.toggled);
+		li.prepend(c);
+		li.addClass('hastoggle');
+
+		if(opts.toggled) {
+			li.addClass('toggled');
+		}
+	}
+
 	show_submenu = function() {
 		var submenu = submenu_ctor();
 
@@ -189,6 +201,12 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 			e.stopPropagation();
 			return false;
 		}).on('click', function(e) {
+			var def = li.children('ul.subctxmenu').children('li.default');
+			if(def.length === 1) {
+				def.trigger('do_action');
+				return;
+			}
+
 			li.trigger('show_submenu');
 			e.stopPropagation();
 			return false;

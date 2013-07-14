@@ -38,12 +38,13 @@ osmium_init = function() {
 	osmium_init_presets();
 	$("section#loadout > section#modules > div.slots > ul > li[data-typeid] span.charge").remove();
 	osmium_init_modules();
-	osmium_init_drones();
 	osmium_init_fattribs();
+	osmium_init_drones();
 };
 
 osmium_gen = function() {
 	osmium_gen_modules();
+	osmium_gen_fattribs();
 	osmium_gen_drones();
 };
 

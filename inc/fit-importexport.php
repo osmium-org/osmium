@@ -1038,6 +1038,8 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 		$json['metadata']['X-Osmium-capreloadtime'] = true;
 		$json['metadata']['X-Osmium-dpsreloadtime'] = false;
 		$json['metadata']['X-Osmium-tankreloadtime'] = false;
+
+		$json['X-damage-profile'] = array("Uniform", [ .25, .25, .25, .25 ]);
 	}
 
 	if(isset($fit['ship']['typeid'])) {

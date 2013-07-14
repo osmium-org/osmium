@@ -80,9 +80,13 @@ if(isset($clf['metadata']['X-Osmium-tankreloadtime']) && $clf['metadata']['X-Osm
 	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_TANK;
 }
 
+$dmgprofile = isset($clf['X-damage-profile']) ? array_combine(
+	[ 'em', 'explosive', 'kinetic', 'thermal' ], $clf['X-damage-profile'][1]
+) : null;
+
 $payload = array(
 	'clftoken' => $token,
-	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribflags),
+	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribflags, $dmgprofile),
 	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
 	'ncycles' => array(),
 	'rawattribs' => array(

@@ -81,6 +81,7 @@ osmium_gen = function() {
 	osmium_gen_metadata();
 	osmium_gen_presets();
 	osmium_gen_modules();
+	osmium_gen_fattribs();
 	osmium_gen_drones();
 };
 
@@ -92,8 +93,8 @@ osmium_init = function() {
 	osmium_init_metadata();
 	osmium_init_presets();
 	osmium_init_modules();
-	osmium_init_drones();
 	osmium_init_fattribs();
+	osmium_init_drones();
 };
 
 osmium_add_to_clf = function(item) {

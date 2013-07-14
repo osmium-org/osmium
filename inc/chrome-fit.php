@@ -142,7 +142,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 	echo "<th><abbr title='Effective Hitpoints'>EHP</abbr></th>\n";
 	echo "<th id='ehp'>\n";
 	echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".$mehp."</span><br />\n";
-	echo "<strong title='EHP in the average case (uniform damage repartition)'>".$aehp."</strong><br />\n";
+	echo "<strong title='EHP using the selected damage profile'>".$aehp."</strong><br />\n";
 	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".$Mehp."</span></th>\n";
 	echo "<td><img src='$relative/static-".\Osmium\STATICVER."/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
 	echo "<td><img src='$relative/static-".\Osmium\STATICVER."/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
@@ -210,7 +210,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 		}
 	}
 	
-	print_formatted_attribute_category('defense', 'Defense', implode(' – ', $subtitles), '', ob_get_clean());
+	print_formatted_attribute_category('defense', 'Defense <span class="pname">Uniform</span>', implode(' – ', $subtitles), '', ob_get_clean());
 }
 
 function print_formatted_navigation(&$fit, $relative) {
@@ -322,14 +322,16 @@ function print_formatted_misc(&$fit) {
 	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
 }
 
-function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null) {
+function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null, $dmgprofile = null) {
 	if($opts === null) {
 		/* NB: if you change the defaults here, also change the
 		 * default exported values in CLF export function. */
 		$opts = USE_RELOAD_TIME_FOR_CAPACITOR;
 	}
 
-	$dmgprofile = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
+	if($dmgprofile === null) {
+		$dmgprofile = array('em' => .25, 'thermal' => .25, 'explosive' => .25, 'kinetic' => .25);
+	}
 
 	$cap = \Osmium\Fit\get_capacitor_stability($fit, $opts & USE_RELOAD_TIME_FOR_CAPACITOR);
 	$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
@@ -342,13 +344,20 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null
 	print_formatted_misc($fit);
 }
 
-function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null) {
+function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null, $dmgprofile = null) {
 	ob_start();
-	print_formatted_loadout_attributes($fit, $relative, $opts);
+	print_formatted_loadout_attributes($fit, $relative, $opts, $dmgprofile);
 	return ob_get_clean();
 }
 
 function print_loadout_common_footer(&$fit, $relative, $clftoken) {
+	$cdp = \Osmium\State\get_state_trypersist('custom_damage_profiles', []);
+	if($cdp === []) {
+		$cdp = "{}";
+	} else {
+		$cdp = json_encode($cdp);
+	}
+
 	\Osmium\Chrome\print_js_code(
 		"osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
 osmium_staticver = ".\Osmium\STATICVER.";
@@ -356,6 +365,7 @@ osmium_relative = '".$relative."';
 osmium_token = '".\Osmium\State\get_token()."';
 osmium_clftoken = '".$clftoken."';
 osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
+osmium_custom_damage_profiles = ".$cdp.";
 osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 	);
 

@@ -23,8 +23,6 @@ const SHORTLIST_MAXIMUM_LENGTH = 200;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-$anonymous = !\Osmium\State\is_logged_in();
-
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$shortlist = array();
 	$keys = array();

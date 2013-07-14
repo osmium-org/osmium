@@ -250,4 +250,36 @@ foreach($groups as $g => $d) {
 
 /* ---------------------------------------------------------- */
 
+/* Damage values should be positive and add up to 1.0, they are sorted
+ * by alphabetical order: EM, Explosive, Kinetic, Thermal */
+$static['dmgprofiles'] = array(
+	'Generic' => array(
+		'Uniform' => [ .25, .25, .25, .25 ],
+		'EM' => [ 1.0, .0, .0, .0, "r_em.png" ],
+		'Explosive' => [ .0, 1.0, .0, .0, "r_explosive.png" ],
+		'Kinetic' => [ .0, .0, 1.0, .0, "r_kinetic.png" ],
+		'Thermal' => [ .0, .0, .0, 1.0, "r_thermal.png" ]
+	),
+	/* Data "stolen" from http://wiki.eveuniversity.org/NPC_Damage_Types */
+	'Factions' => array(
+		/* Pirate factions */
+		'Angel Cartel' => [ .07, .62, .22, .9 ],
+		'Blood Raiders' => [ .50, .0, .02, .48 ],
+		'EoM' => [ .0, .0, .74, .26 ],
+		'Guristas' => [ .02, .01, .79, .18 ],
+		'Mordu\'s Legion' => [ .0, .0, .70, .30 ],
+		'Sansha\'s Nation' => [ .53, .0, .0, .47 ],
+		'Serpentis' => [ .0, .0, .55, .45 ],
+
+		/* Empire factions */
+		'CONCORD' => [ .29, .30, .37, .32 ],
+		'Amarr Empire' => [ .47, .04, .07, .42 ],
+		'Caldari State' => [ .01, .0, .51, .48 ],
+		'Gallente Federation' => [ .01, .0, .60, .39 ],
+		'Minmatar Republic' => [ .12, .50, .31, .07 ],
+	),
+);
+
+/* ---------------------------------------------------------- */
+
 file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));
