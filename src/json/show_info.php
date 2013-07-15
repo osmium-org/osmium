@@ -100,9 +100,20 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 	$typeid = $_GET['typeid'];
 	$typename = $fit['drones'][$typeid]['typename'];
 	$loc = [ DOGMA_LOC_Drone, 'drone_typeid' => (int)$typeid ];
+
+	if($temptransfer = ($fit['drones'][$typeid]['quantityinspace'] == 0)) {
+		/* libdogma only knows about drones in space */
+		\Osmium\Fit\transfer_drone($fit, $typeid, 'bay', 1);
+	}
+
 	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
 			return \Osmium\Dogma\get_drone_attribute($fit, $typeid, $aname);
 		});
+
+	if($temptransfer) {
+		dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
+		\Osmium\Fit\transfer_drone($fit, $typeid, 'space', 1);
+	}
 } else if(($_GET['type'] === 'implant' || $_GET['type'] === 'booster')
           && isset($_GET['typeid'])
           && isset($fit['implants'][$_GET['typeid']])) {
@@ -118,7 +129,9 @@ else {
 	\Osmium\Chrome\return_json(array());
 }
 
-dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
+if(!isset($affectors)) {
+	dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
+}
 $affectors_per_type = array();
 $affectors_per_att = array();
 $numaffectors = 0;

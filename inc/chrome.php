@@ -530,13 +530,9 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		}
 	} else if($unitid == 116) {
 		/* Typeid */
-		$row = \Osmium\Db\fetch_row(
-			\Osmium\Db\query_params(
-				'SELECT typename FROM eve.invtypes WHERE typeid = $1',
-				array($number)
-				));
-		if($row !== false) {
-			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> ".htmlspecialchars($row[0]);
+		$typename = \Osmium\Fit\get_typename($number);
+		if($typename !== false) {
+			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> ".htmlspecialchars($typename);
 		}
 	} else if($unitid == 117) {
 		if($number == 1) return 'Small';
