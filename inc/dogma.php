@@ -58,6 +58,14 @@ function late_init(&$fit) {
 
 		dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
 	}
+
+	foreach($fit['implants'] as $typeid => &$i) {
+		dogma_add_implant(
+			$fit['__dogma_context'],
+			$i['typeid'],
+			$i['dogma_index']
+		);
+	}
 }
 
 
@@ -191,6 +199,24 @@ function get_drone_attribute(&$fit, $typeid, $att) {
 	$ret = dogma_get_drone_attribute(
 		$fit['__dogma_context'],
 		$typeid,
+		get_att($att),
+		$val
+	);
+
+	return $ret === DOGMA_OK ? $val : false;
+}
+
+/**
+ * Get the final value of an implant attribute (of the current preset).
+ */
+function get_implant_attribute(&$fit, $typeid, $att) {
+	if(!isset($fit['implants'][$typeid]['dogma_index'])) {
+		return false;
+	}
+
+	$ret = dogma_get_implant_attribute(
+		$fit['__dogma_context'],
+		$fit['implants'][$typeid]['dogma_index'],
 		get_att($att),
 		$val
 	);

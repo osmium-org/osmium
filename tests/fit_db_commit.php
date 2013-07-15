@@ -25,7 +25,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 	private function commitLoadoutPlumbing(&$fit) {
 		$fit['metadata']['name'] = 'Test loadout (PHPUnit-generated)';
 		$fit['metadata']['description'] = '(Not intended for public usage.)';
-		$fit['metadata']['view_permission'] = \Osmium\Fit\VIEW_EVERYONE;
+		$fit['metadata']['view_permission'] = \Osmium\Fit\VIEW_OWNER_ONLY;
 		$fit['metadata']['edit_permission'] = \Osmium\Fit\EDIT_OWNER_ONLY;
 		$fit['metadata']['visibility'] = \Osmium\Fit\VISIBILITY_PRIVATE;
 		$fit['metadata']['tags'] = array('test', 'do-not-use');
@@ -84,6 +84,10 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 			\Osmium\Fit\add_module($fit, 3, 19814);
 			\Osmium\Fit\add_module($fit, 4, 5399);
 			\Osmium\Fit\add_module($fit, 5, 4031);
+
+			/* Implants */
+			\Osmium\Fit\add_implant($fit, 2082);
+			\Osmium\Fit\add_implant($fit, 2589);
 		};
 
 		$presets = array(
@@ -216,6 +220,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		\Osmium\Db\query('DELETE FROM osmium.fittingcharges WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingchargepresets WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingmodules WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingimplants WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingpresets WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingdrones WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingdronepresets WHERE fittinghash IN ('.$h.')');

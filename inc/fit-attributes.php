@@ -491,6 +491,9 @@ function get_estimated_price(&$fit, array &$missing) {
 			$types['fitting'][$d['typeid']] = $qty;
 		}
 	}
+	foreach($fit['implants'] as $i) {
+		$types['implants'][$i['typeid']] = 1;
+	}
 
 	$totals = array();
 

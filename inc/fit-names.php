@@ -31,6 +31,8 @@ const TYPE_1MNMicrowarpdriveII = 440;
 const TYPE_10MNMicrowarpdriveII = 12076;
 const TYPE_100MNMicrowarpdriveII = 12084;
 
+const GROUP_Booster = 303;
+
 
 /** @internal */
 function get_cached_thing_generic($table, $field, $wherename, $whereval) {

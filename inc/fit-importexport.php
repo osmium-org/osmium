@@ -371,6 +371,14 @@ function clf_parse_presets_1(&$fit, &$presets, &$errors) {
 
 			clf_parse_chargepresets_1($fit, $preset['chargepresets'], $modules, $errors);
 		}
+
+		if(isset($preset['implants']) && is_array($preset['implants'])) {
+			clf_parse_implants_1($fit, $preset['implants'], $errors);
+		}
+
+		if(isset($preset['boosters']) && is_array($preset['boosters'])) {
+			clf_parse_implants_1($fit, $preset['boosters'], $errors);
+		}
 	}
 }
 
@@ -410,6 +418,16 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 
 		add_module($fit, $index, $m['typeid'], $state);
 		$m['slottype'] = $type;
+	}
+}
+
+/** @internal */
+function clf_parse_implants_1(&$fit, &$implants, &$errors) {
+	foreach($implants as $i) {
+		if(\CommonLoadoutFormat\check_typeof_type($i['typeid'], 'implant')
+		   || \CommonLoadoutFormat\check_typeof_type($i['typeid'], 'booster')) {
+			add_implant($fit, $i['typeid']);
+		}
 	}
 }
 
@@ -892,8 +910,24 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 
 		if($qty <= 0) continue;
 
-		if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {
-			add_drone_auto($fit, $typeid, $qty);
+		if(\CommonLoadoutFormat\check_typeof_type($typeid, 'module')) {
+			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
+			if($slottype === 'unknown') {
+				$errors[] = 'Unknown typeid "'.$typeid.'". Discarded.';
+				continue;
+			}
+
+			if(!isset($indexes[$slottype])) {
+				$indexes[$slottype] = 0;
+			}
+
+			for($z = 0; $z < $qty; ++$z) {
+				$index = $indexes[$slottype];
+				++$indexes[$slottype];
+
+				$modules[$slottype][$index] = $typeid;
+				add_module($fit, $index, $typeid);
+			}
 		}
 		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
 			/* The game won't generate/recognize charges, but it
@@ -918,24 +952,17 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 				 * again, all the modules have already been tested */
 				break;
 			}
-		} else {
-			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
-			if($slottype === 'unknown') {
-				$errors[] = 'Unknown typeid "'.$typeid.'". Discarded.';
-				continue;
+		}
+		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {
+			add_drone_auto($fit, $typeid, $qty);
+		}
+		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'implant')
+		        || \CommonLoadoutFormat\check_typeof_type($typeid, 'booster')) {
+			/* Non-"standard" DNA, support it anyway */
+			if($qty !== 1) {
+				$errors[] = 'Adding implant '.$typeid.' only once (quantity of '.$qty.' specified).';
 			}
-
-			if(!isset($indexes[$slottype])) {
-				$indexes[$slottype] = 0;
-			}
-
-			for($z = 0; $z < $qty; ++$z) {
-				$index = $indexes[$slottype];
-				++$indexes[$slottype];
-				
-				$modules[$slottype][$index] = $typeid;
-				add_module($fit, $index, $typeid);
-			}
+			add_implant($fit, $typeid);
 		}
 	}
 
@@ -1110,6 +1137,26 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 			$jsonpreset['chargepresets'][] = $jsoncp;
 		}
 
+		foreach($preset['implants'] as $i) {
+			$jsonimplant = array('typeid' => (int)$i['typeid']);
+			if(!$minify) {
+				$jsonimplant['typename'] = $i['typename'];
+				$jsonimplant['slot'] = (int)$i['slot'];
+			}
+
+			if(get_groupid($i['typeid']) != GROUP_Booster) {
+				$jsonpreset['implants'][] = $jsonimplant;
+			} else {
+				$jsonpreset['boosters'][] = $jsonimplant;
+			}
+		}
+
+		if(!$minify) {
+			$slotsort = function($x, $y) { return $x['slot'] - $y['slot']; };
+			if(isset($jsonpreset['implants'])) usort($jsonpreset['implants'], $slotsort);
+			if(isset($jsonpreset['boosters'])) usort($jsonpreset['boosters'], $slotsort);
+		}
+
 		$json['presets'][] = $jsonpreset;
 	}
 
@@ -1218,6 +1265,17 @@ function export_to_markdown($fit, $embedclf = true) {
 				}
 
 				$md .= "\n";
+			}
+
+			$md .= "\n";
+		}
+
+		if($preset['implants'] !== array()) {
+			ksort($preset['implants']);
+			$md .= "# Implants and boosters\n\n";
+
+			foreach($preset['implants'] as $i) {
+				$md .= "- ".$i['typename']."\n";
 			}
 
 			$md .= "\n";
@@ -1468,14 +1526,27 @@ function export_to_dna($fit) {
 		$tids[$d['typeid']] += $d['quantityinbay'];
 	}
 
-	foreach($fit['charges'] as $a) {
-		foreach($a as $c) {
-			if(!isset($tids[$c['typeid']])) {
-				$tids[$c['typeid']] = 1;
+	foreach($fit['charges'] as $type => $sub) {
+		foreach($sub as $index => $c) {
+			$cv = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'volume');
+			$mc = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'capacity');
+
+			if($cv > 1e-300) {
+				$qty = (int)floor($mc / $cv);
 			} else {
-				++$tids[$c['typeid']];
+				$qty = 1;
+			}
+
+			if(!isset($tids[$c['typeid']])) {
+				$tids[$c['typeid']] = $qty;
+			} else {
+				$tids[$c['typeid']] += $qty;
 			}	
 		}
+	}
+
+	foreach($fit['implants'] as $i) {
+		$tids[$i['typeid']] = 1;
 	}
 
 	$ftids = array();

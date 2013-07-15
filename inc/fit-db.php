@@ -73,6 +73,10 @@ function get_unique(&$fit) {
 			$uniquep['chargepresets'][unique_key($uniquecp)] = $uniquecp;
 		}
 
+		foreach($preset['implants'] as $i) {
+			$uniquep['implants'][(int)$i['typeid']] = 1;
+		}
+
 		$unique['presets'][unique_key($uniquep)] = $uniquep;
 	}
 
@@ -258,6 +262,23 @@ function commit_fitting(&$fit, &$error = null) {
 			}
 
 			++$cpid;
+		}
+
+		foreach($preset['implants'] as $typeid => $i) {
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingimplants (fittinghash, presetid, typeid) VALUES ($1, $2, $3)',
+				array(
+					$fittinghash,
+					$presetid,
+					$i['typeid'],
+				)
+			);
+
+			if($ret === false) {
+				$error = \Osmium\Db\last_error();
+				\Osmium\Db\query('ROLLBACK;');
+				return false;
+			}
 		}
 
 		++$presetid;
@@ -580,6 +601,11 @@ function get_fit($loadoutid, $revision = null) {
 				$charges[$row[0]][$row[2]] = $row[1];
 			}
 			add_charges_batch($fit, $charges);
+		}
+
+		$implantsq = \Osmium\Db\query_params('SELECT typeid FROM osmium.fittingimplants WHERE fittinghash = $1 AND presetid = $2', array($fit['metadata']['hash'], $preset['presetid']));
+		while($implant = \Osmium\Db\fetch_row($implantsq)) {
+			add_implant($fit, $implant[0]);
 		}
 	}
 	

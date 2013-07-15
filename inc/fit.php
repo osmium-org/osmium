@@ -181,7 +181,9 @@ function get_state_names() {
  * dronepresetdesc => (string)
  * drones => array(<typeid> => array(typeid, typename, volume, bandwidth, quantityin{bay, space})))
  *
- * presets => array(<presetid> => array(name, description, modules, chargepresets))
+ * implants => array(<typeid> => array(typeid, typename, slot, dogma_index))
+ *
+ * presets => array(<presetid> => array(name, description, modules, chargepresets, implants))
  *
  * chargepresets => array(<presetid> => array(name, description, charges))
  *
@@ -197,7 +199,6 @@ function get_state_names() {
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(),
-		'dogma' => array(),
 		'presets' => array(),
 		'dronepresets' => array(),
 		'metadata' => array(
@@ -708,6 +709,36 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 
 	$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
 	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
+}
+
+/** Add an implant to a $fit. Boosters are considered to be implants,
+ * and can be added using add_implant() as well. Will not add
+ * duplicate implants. */
+function add_implant(&$fit, $typeid) {
+	if(isset($fit['implants'][$typeid])) return;
+
+	$fit['implants'][$typeid] = array(
+		'typeid' => (int)$typeid,
+		'typename' => get_typename($typeid),
+	);
+
+	dogma_add_implant($fit['__dogma_context'], (int)$typeid, $fit['implants'][$typeid]['dogma_index']);
+
+	if(get_groupid($typeid) == GROUP_Booster) {
+		$fit['implants'][$typeid]['slot'] = 
+			\Osmium\Dogma\get_implant_attribute($fit, $typeid, 'boosterness');
+	} else {
+		$fit['implants'][$typeid]['slot'] = 
+			\Osmium\Dogma\get_implant_attribute($fit, $typeid, 'implantness');
+	}
+}
+
+/** Remove an implant (or booster) from a $fit. */
+function remove_implant(&$fit, $typeid) {
+	if(!isset($fit['implants'][$typeid])) return;
+
+	dogma_remove_implant($fit['__dogma_context'], $fit['implants'][$typeid]['dogma_index']);
+	unset($fit['implants'][$typeid]);
 }
 
 /* ----------------------------------------------------- */

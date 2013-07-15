@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -62,5 +62,33 @@ class FitPresets extends PHPUnit_Framework_TestCase {
 		$newt2ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 		$this->assertSame(serialize($t1ehp), serialize($newt1ehp));
 		$this->assertSame(serialize($t2ehp), serialize($newt2ehp));
+	}
+
+	/**
+	 * @group fit
+	 */
+	public function testImplantsWithPresets() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\add_implant($fit, 9941); /* Memory Augmentation - Basic */
+
+		$p1 = $fit['modulepresetid'];
+		$p2 = \Osmium\Fit\clone_preset($fit, 'Other');
+		\Osmium\Fit\use_preset($fit, $p2);
+
+		\Osmium\Fit\remove_implant($fit, 9941);
+		\Osmium\Fit\add_implant($fit, 10212); /* Neural Boost - Standard */
+
+		$bonus = \Osmium\Dogma\get_implant_attribute($fit, 10212, 'willpowerBonus');
+		$this->assertSame(4.0, $bonus);
+
+		$willpower = \Osmium\Dogma\get_char_attribute($fit, 'willpower');
+		$this->assertSame(4.0, $willpower);
+
+		\Osmium\Fit\use_preset($fit, $p1);
+
+		$willpower = \Osmium\Dogma\get_char_attribute($fit, 'willpower');
+		$memory = \Osmium\Dogma\get_char_attribute($fit, 'memory');
+		$this->assertSame(0.0, $willpower);
+		$this->assertSame(3.0, $memory);
 	}
 }

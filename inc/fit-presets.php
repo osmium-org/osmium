@@ -40,6 +40,13 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 				);
 			}
 		}
+
+		foreach($fit['implants'] as $typeid => $i) {
+			dogma_remove_implant(
+				$fit['__dogma_context'],
+				$i['dogma_index']
+			);
+		}
 	}
 
 	unset($fit['chargepresetid']);
@@ -49,14 +56,15 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 	$fit['modulepresetdesc'] =& $fit['presets'][$presetid]['description'];
 	$fit['modules'] =& $fit['presets'][$presetid]['modules'];
 	$fit['chargepresets'] =& $fit['presets'][$presetid]['chargepresets'];
+	$fit['implants'] =& $fit['presets'][$presetid]['implants'];
 
 	if(count($fit['chargepresets']) == 0 && $createdefaultchargepreset) {
 		/* Add an empty preset */
 		create_charge_preset($fit, 'Default charge preset', '');
 	}
 
-	foreach($fit['modules'] as $type => $a) {
-		foreach($a as $index => $module) {
+	foreach($fit['modules'] as $type => &$a) {
+		foreach($a as $index => &$module) {
 			dogma_add_module_s(
 				$fit['__dogma_context'],
 				$module['typeid'],
@@ -71,6 +79,14 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 		 * \Osmium\Fit\reset() is a totally different function! */
 		\reset($fit['chargepresets']);
 		use_charge_preset($fit, key($fit['chargepresets']));
+	}
+
+	foreach($fit['implants'] as $typeid => &$i) {
+		dogma_add_implant(
+			$fit['__dogma_context'],
+			$i['typeid'],
+			$i['dogma_index']
+		);
 	}
 }
 
@@ -184,7 +200,8 @@ function create_preset(&$fit, $name, $description, $newid = null) {
 		'name' => $name,
 		'description' => $description,
 		'modules' => array(),
-		'chargepresets' => array()
+		'chargepresets' => array(),
+		'implants' => array(),
 		);
 
 	return create_preset_generic($fit, 'presets', $preset, $newid);
