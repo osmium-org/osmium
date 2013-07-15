@@ -70,7 +70,7 @@ osmium_on_clf_payload = function(payload) {
 
 	if(window.history && window.history.replaceState) {
 		/* Refresh URI in case token changed and user refreshes the page */
-		window.history.replaceState(null, null, './' + osmium_clftoken);
+		window.history.replaceState(null, null, './' + osmium_clftoken + window.location.hash);
 	}
 };
 
@@ -83,6 +83,7 @@ osmium_gen = function() {
 	osmium_gen_modules();
 	osmium_gen_fattribs();
 	osmium_gen_drones();
+	osmium_gen_implants();
 };
 
 /* Set up event listeners that alter the CLF appropriately */
@@ -95,6 +96,7 @@ osmium_init = function() {
 	osmium_init_modules();
 	osmium_init_fattribs();
 	osmium_init_drones();
+	osmium_init_implants();
 };
 
 osmium_add_to_clf = function(item) {
@@ -164,6 +166,10 @@ osmium_add_to_clf = function(item) {
 		if(location !== null) {
 			osmium_auto_add_charge_to_location(location, typeid);
 			osmium_undo_push();
+
+			if(osmium_user_initiated) {
+				$('a[href="#modules"]').parent().click();
+			}
 		} else {
 			alert("This charge cannot be used with any fitted type.");
 		}
@@ -194,6 +200,46 @@ osmium_add_to_clf = function(item) {
 		osmium_add_drone_to_clf(typeid, qty, dest);
 		osmium_gen_drones();
 		osmium_undo_push();
+	} else if(cat === 'implant') {
+		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
+		var implantness = osmium_types[typeid][3];
+		if(!("implants" in p)) p.implants = [];
+
+		for(var i = 0; i < p.implants.length; ++i) {
+			if(implantness === osmium_types[p.implants[i].typeid][3]) {
+				p.implants.splice(i, 1);
+				--i;
+			}
+		}
+
+		p.implants.push({ typeid: typeid });
+
+		osmium_gen_implants();
+		osmium_undo_push();
+
+		if(osmium_user_initiated) {
+			$('a[href="#implants"]').parent().click();
+		}
+	} else if(cat === 'booster') {
+		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
+		var boosterness = osmium_types[typeid][3];
+		if(!("boosters" in p)) p.boosters = [];
+
+		for(var i = 0; i < p.boosters.length; ++i) {
+			if(boosterness === osmium_types[p.boosters[i].typeid][3]) {
+				p.boosters.splice(i, 1);
+				--i;
+			}
+		}
+
+		p.boosters.push({ typeid: typeid });
+
+		osmium_gen_implants();
+		osmium_undo_push();
+
+		if(osmium_user_initiated) {
+			$('a[href="#implants"]').parent().click();
+		}
 	}
 
 	osmium_commit_clf();

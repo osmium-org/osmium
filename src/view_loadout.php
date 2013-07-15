@@ -411,6 +411,39 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 }
 
 echo "</section>
+<section id='implants'>\n";
+
+$implants = array();
+$boosters = array();
+
+foreach($fit['implants'] as $i) {
+	if(\Osmium\Fit\get_groupid($i['typeid']) == \Osmium\Fit\GROUP_Booster) {
+		$boosters[] = $i;
+	} else {
+		$implants[] = $i;
+	}
+}
+
+$slotcmp = function($x, $y) { return $x['slot'] - $y['slot']; };
+usort($implants, $slotcmp);
+usort($boosters, $slotcmp);
+
+foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) {
+	if($imps === array()) continue;
+
+	echo "<div class='".$k."'>\n<h3>".ucfirst($k)."</h3>\n<ul>\n";
+
+	foreach($imps as $i) {
+		echo "<li><img src='//image.eveonline.com/Type/".$i['typeid']."_64.png' alt='' />"
+			.htmlspecialchars($i['typename'])
+			.'<span class="slot">, '.substr($k, 0, -1).' slot '.$i['slot'].'</span>'
+			."</li>\n";
+	}
+
+	echo "</ul>\n</div>\n";
+}
+
+echo "</section>
 <section id='description'>
 <h3>Fitting description</h3>\n";
 
@@ -510,4 +543,5 @@ echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('new_loadout-ship');
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('new_loadout-drones');
+\Osmium\Chrome\print_js_snippet('new_loadout-implants');
 \Osmium\Chrome\print_footer();

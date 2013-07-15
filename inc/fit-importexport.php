@@ -1769,6 +1769,7 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 
 	$clfmods = array();
     $clfcharges = array();
+    $clfimplants = array();
 
 	foreach(isset($clfp['modules']) ? $clfp['modules'] : array() as $m) {
 		/* add_module() is lazy, it's okay to blindly call it here */
@@ -1795,6 +1796,16 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 		$clfmods[$type][$m['index']] = $m['typeid'];
 	}
 
+	foreach(isset($clfp['implants']) ? $clfp['implants'] : array() as $i) {
+		add_implant($fit, $i['typeid']);
+		$clfimplants[$i['typeid']] = true;
+	}
+
+	foreach(isset($clfp['boosters']) ? $clfp['boosters'] : array() as $i) {
+		add_implant($fit, $i['typeid']);
+		$clfimplants[$i['typeid']] = true;
+	}
+
     foreach($fit['charges'] as $type => $charges) {
         foreach($charges as $index => $c) {
             if(isset($clfcharges[$type][$index])) continue;
@@ -1815,6 +1826,11 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 		}
 
 		ksort($mods);
+	}
+
+	foreach($fit['implants'] as $typeid => $i) {
+		if(isset($clfimplants[$typeid])) continue;
+		remove_implant($fit, $typeid);
 	}
 }
 

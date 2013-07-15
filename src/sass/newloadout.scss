@@ -270,3 +270,11 @@ section#modules div.slots, section#drones div.drones {
 	}
 }
 
+section#implants > div {
+	@include module-list;
+
+	&> ul > li > span.slot {
+		font-size: 0.8em;
+		color: $aside-text-color;
+	}
+}

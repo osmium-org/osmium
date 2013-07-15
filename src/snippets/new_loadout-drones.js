@@ -53,6 +53,7 @@ osmium_gen_drones = function() {
 			li.data('location', p);
 			li.data('quantity', qty);
 			li.text(m[1]);
+			li.prop('title', m[1]);
 			li.prepend($(document.createElement('strong')).addClass('qty').text(qty + '×'));
 
 			img.prop('src', '//image.eveonline.com/Type/' + t + '_64.png');

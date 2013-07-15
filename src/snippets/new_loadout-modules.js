@@ -220,6 +220,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 	li.data('index', index);
 	li.data('state', state);
 	li.text(m[1]);
+	li.prop('title', m[1]);
 
 	img = $(document.createElement('img'));
 	img.prop('src', '//image.eveonline.com/Type/' + typeid + '_64.png');
@@ -652,6 +653,7 @@ osmium_add_charge = function(li, chargetypeid) {
 	chargeimg.prop('src', '//image.eveonline.com/Type/' + chargetypeid + '_64.png');
 	charge.empty();
 	charge.text(osmium_types[chargetypeid][1]);
+	charge.prop('title', osmium_types[chargetypeid][1]);
 };
 
 osmium_add_charge_by_location = function(locationtypeid, locationindex, chargetypeid) {

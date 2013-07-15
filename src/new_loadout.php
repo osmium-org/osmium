@@ -221,6 +221,7 @@ echo "<div id='nlmain'>
 <ul class='tabs'>
 <li><a href='#modules'>Modules &amp; Charges</a></li>
 <li><a href='#drones'>Drones</a></li>
+<li><a href='#implants'>Implants &amp; Boosters</a></li>
 <li><a href='#presets'>Presets</a></li>
 <li><a href='#metadata'>Metadata</a></li>
 </ul>\n";
@@ -351,6 +352,11 @@ foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
 }
 echo "</section>\n";
 
+echo "<section id='implants'>\n";
+echo "<div class='implants'>\n<h3>Implants</h3>\n<ul></ul>\n</div>\n";
+echo "<div class='boosters'>\n<h3>Boosters</h3>\n<ul></ul>\n</div>\n";
+echo "</section>\n";
+
 echo "</div>\n";
 
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, $tok);
@@ -366,4 +372,5 @@ echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('new_loadout-metadata');
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('new_loadout-drones');
+\Osmium\Chrome\print_js_snippet('new_loadout-implants');
 \Osmium\Chrome\print_footer();

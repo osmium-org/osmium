@@ -285,3 +285,9 @@ h1#vltitle > ul.tags {
 	vertical-align: middle;
 	margin: 0;
 }
+
+section#loadout {
+	&> section#drones, &> section#implants {
+		display: inline;
+	}
+}

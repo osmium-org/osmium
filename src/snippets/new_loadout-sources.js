@@ -68,6 +68,7 @@ osmium_init_sources = function() {
 				li.data('subcategory', json.payload[i][3]);
 				li.addClass('mg' + json.payload[i][4]);
 				li.text(json.payload[i][1]);
+				li.prop('title', json.payload[i][1]);
 
 				img = $(document.createElement('img'));
 				img.prop('alt', '');
@@ -140,6 +141,7 @@ osmium_init_browser = function() {
 				li.addClass('module');
 				li.data('typeid', type[0]);
 				li.text(type[1]);
+				li.prop('title', type[1]);
 				li.data('category', type[2]);
 				li.data('subcategory', type[3]);
 				li.addClass('mg' + type[4]);
@@ -201,6 +203,7 @@ osmium_init_shortlist = function() {
 		li.data('subcategory', type[3]);
 		li.addClass('mg' + type[4]);
 		li.text(type[1]);
+		li.prop('title', type[1]);
 
 		img = $(document.createElement('img'));
 		img.prop('alt', '');

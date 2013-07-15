@@ -103,7 +103,18 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
 			return \Osmium\Dogma\get_drone_attribute($fit, $typeid, $aname);
 		});
-} else {
+} else if(($_GET['type'] === 'implant' || $_GET['type'] === 'booster')
+          && isset($_GET['typeid'])
+          && isset($fit['implants'][$_GET['typeid']])) {
+	$typeid = $_GET['typeid'];
+	$typename = $fit['implants'][$typeid]['typename'];
+	$loc = [ DOGMA_LOC_Implant, 'implant_index' => $fit['implants'][$typeid]['dogma_index'] ];
+	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
+		return \Osmium\Dogma\get_implant_attribute($fit, $typeid, $aname);
+	});
+}
+
+else {
 	\Osmium\Chrome\return_json(array());
 }
 
@@ -246,8 +257,8 @@ if($affectors_per_type === array()) {
 		'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n"
 		."<ul id='showinfotabs'>\n"
 		."<li><a href='#siattributes'>Attributes</a></li>\n"
-		."<li><a href='#siafftype'>Affectors by type (".$numaffectors.")</a></li>\n"
-		."<li><a href='#siaffatt'>Affectors by attribute (".$numaffectors.")</a></li>\n"
+		."<li><a href='#siafftype'>Affectors by type (".count($affectors_per_type).")</a></li>\n"
+		."<li><a href='#siaffatt'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n"
 		."</ul>\n"
 		."<section id='siattributes'>\n".$fresult['attributes']."</section>\n"
 		."<section id='siafftype'>\n".$fresult['affectors_per_type']."</section>\n"
