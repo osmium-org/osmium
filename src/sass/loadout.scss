@@ -405,6 +405,16 @@ section#siafftype, section#siaffatt {
 	}
 }
 
+section#sidesc {
+	@include readable;
+	padding: 0.5em 1em;
+
+	font {
+		font-size: 1.2em;
+		text-decoration: underline;
+	}
+}
+
 .overflow6 { @include error-background-opacity(0.30); }
 .overflow5 { @include error-background-opacity(0.25); }
 .overflow4 { @include error-background-opacity(0.20); }

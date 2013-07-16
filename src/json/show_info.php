@@ -136,8 +136,6 @@ $affectors_per_type = array();
 $affectors_per_att = array();
 $numaffectors = 0;
 
-\Osmium\fprintr($affectors);
-
 foreach($affectors as $affector) {
 	/* Skip affectors affecting non-overridden attributes */
 	if(!isset($attributes[$affector['destid']])) continue;
@@ -216,10 +214,10 @@ uasort($affectors_per_type, function($a, $b) { return strcmp($a[0][2], $b[0][2])
 uasort($affectors_per_att, function($a, $b) { return strcmp($a[0][1], $b[0][1]); });
 
 $fresult['affectors_per_type'] .= "<ul>\n";
-foreach($affectors_per_type as $typeid => &$a) {
+foreach($affectors_per_type as $a_typeid => &$a) {
 	$typename = htmlspecialchars($a[0][2]);
 	$fresult['affectors_per_type'] .= "<li><img src='http://image.eveonline.com/Type/"
-		.$typeid."_64.png' alt='' /> ".$typename.":\n";
+		.$a_typeid."_64.png' alt='' /> ".$typename.":\n";
 	$fresult['affectors_per_type'] .= "<ul>\n";
 
 	usort($a, function($x, $y) { return strcmp($x[1], $y[1]); });
@@ -265,16 +263,31 @@ if($affectors_per_type === array()) {
 	$fresult['affectors_per_att'] .= "<p class='placeholder'>No affectors</p>\n";
 }
 
+list($desc) = \Osmium\Db\fetch_row(
+	\Osmium\Db\query_params(
+		'SELECT description FROM eve.invtypes WHERE typeid = $1', 
+		array($typeid)
+	)
+);
+
+$desc = \Osmium\Chrome\trim($desc);
+if($desc === '') {
+	$desc = '<p class="placeholder">This type has no description.</p>';
+} else {
+	$desc = \Osmium\Chrome\format_sanitize_md(nl2br($desc));
+}
 
 
 \Osmium\Chrome\return_json(
 	array(
 		'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n"
 		."<ul id='showinfotabs'>\n"
+		."<li><a href='#sidesc'>Description</a></li>\n"
 		."<li><a href='#siattributes'>Attributes</a></li>\n"
 		."<li><a href='#siafftype'>Affectors by type (".count($affectors_per_type).")</a></li>\n"
 		."<li><a href='#siaffatt'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n"
 		."</ul>\n"
+		."<section id='sidesc'>".$desc."</section>\n"
 		."<section id='siattributes'>\n".$fresult['attributes']."</section>\n"
 		."<section id='siafftype'>\n".$fresult['affectors_per_type']."</section>\n"
 		."<section id='siaffatt'>\n".$fresult['affectors_per_att']."</section>\n"

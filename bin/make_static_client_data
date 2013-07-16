@@ -24,7 +24,7 @@ $static = array();
 /* ---------------------------------------------------------- */
 
 $q = \Osmium\Db\query(
-	'SELECT typeid, typename, category, subcategory, metagroupid, groupname, other,
+	'SELECT tsd.typeid, typename, category, subcategory, tsd.metagroupid, groupname, other, mt.parenttypeid,
 	mg0.marketgroupid AS mgid0, mg0.marketgroupname AS mgname0,
 	mg1.marketgroupid AS mgid1, mg1.marketgroupname AS mgname1,
 	mg2.marketgroupid AS mgid2, mg2.marketgroupname AS mgname2,
@@ -36,6 +36,7 @@ $q = \Osmium\Db\query(
 	LEFT JOIN eve.invmarketgroups mg2 ON mg2.marketgroupid = mg1.parentgroupid
 	LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
 	LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
+	LEFT JOIN eve.invmetatypes mt ON mt.typeid = tsd.typeid
 	ORDER BY mgname4, mgname3, mgname2, mgname1, mgname0, category, metagroupid, typename'
 	);
 
@@ -91,6 +92,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		(int)$row['metagroupid'],
 		$row['groupname'],
 		$row['other'],
+		(int)$row['parenttypeid'],
 	);
 }
 

@@ -438,26 +438,26 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		if(hascharges) {
 			osmium_ctxmenu_add_subctxmenu(menu, "Charges", function() {
 				var chargemenu = osmium_ctxmenu_create();
-				var cgroups = {};
-				var ngroups = 0;
-				var pgroup = function(menu, group) {
-					var sortcharges = (group.length >= 2 && (group[0] in osmium_chargedmg)
-									   && osmium_chargedmg[group[0]] > 0);
-					if(sortcharges) {
-						group.sort(function(a, b) {
-							var x = (a in osmium_chargedmg) ? osmium_chargedmg[a] : 0;
-							var y = (b in osmium_chargedmg) ? osmium_chargedmg[b] : 0;
-							return y < x ? -1 : (y > x ? 1 : (a - b));
-						});
 
+				var charges_mg_pt = {}; /* metagroup -> parenttypeid -> chargetypeid */
+				var charges_mg_pt_sorted = {}; /* metagroup -> [ [ parenttypeid, chargetypeids ], … ] */
+				var mgcount = 0;
+
+				var append_charges = function(menu, chargetypeids, showhelpers) {
+					showhelpers = showhelpers & (
+						chargetypeids.length >= 2 && (chargetypeids[0] in osmium_chargedmg)
+							&& osmium_chargedmg[chargetypeids[0]] > 0
+					);
+
+					if(showhelpers) {
 						osmium_ctxmenu_add_option(menu, "More damage", function() {}, { enabled: false });
 						osmium_ctxmenu_add_separator(menu);
 					}
 
-					for(var i = 0; i < group.length; ++i) {
+					for(var i = 0; i < chargetypeids.length; ++i) {
 						osmium_ctxmenu_add_option(
 							menu,
-							osmium_types[group[i]][1],
+							osmium_types[chargetypeids[i]][1],
 							(function(chargeid) {
 								return function() {
 									var modules = osmium_clf.presets[
@@ -473,41 +473,101 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 										}
 									}
 								};
-							})(group[i]),
-							{ icon: "//image.eveonline.com/Type/" + group[i] + "_64.png" }
+							})(chargetypeids[i]),
+							{ icon: "//image.eveonline.com/Type/" + chargetypeids[i] + "_64.png" }
 						);
 					}
 
-					if(sortcharges) {
+					if(showhelpers) {
 						osmium_ctxmenu_add_separator(menu);
 						osmium_ctxmenu_add_option(menu, "Less damage", function() {}, { enabled: false });
 					}
 				};
 
+				var pgroup = function(menu, charges_pt) {
+					var showhelpers = charges_pt.length >= 2 && (charges_pt[0][1][0] in osmium_chargedmg)
+						&& osmium_chargedmg[charges_pt[0][1][0]] > 0;
+
+					if(showhelpers) {
+						osmium_ctxmenu_add_option(menu, "More damage", function() {}, { enabled: false });
+						osmium_ctxmenu_add_separator(menu);
+					}
+
+					for(var z = 0; z < charges_pt.length; ++z) {
+						if(charges_pt[z][1].length === 1) {
+							append_charges(menu, charges_pt[z][1], false);
+						} else {
+							var c = osmium_types[charges_pt[z][0]];
+
+							osmium_ctxmenu_add_subctxmenu(menu, c[1], (function(typeids) {
+								return function() {
+									var smenu = osmium_ctxmenu_create();
+									append_charges(smenu, typeids, true);
+									return smenu;
+								};
+							})(charges_pt[z][1]), {
+								icon: "//image.eveonline.com/Type/" + c[0] + "_64.png"
+							});
+						}
+					}
+
+					if(showhelpers) {
+						osmium_ctxmenu_add_separator(menu);
+						osmium_ctxmenu_add_option(menu, "Less damage", function() {}, { enabled: false });
+					}
+				};
+
+				compare_damage = function(a, b) {
+					var x = (a in osmium_chargedmg) ? osmium_chargedmg[a] : 0;
+					var y = (b in osmium_chargedmg) ? osmium_chargedmg[b] : 0;
+					return y < x ? -1 : (y > x ? 1 : (a - b));
+				};
+
 				for(var i = 0; i < osmium_charges[typeid].length; ++i) {
 					var t = osmium_types[osmium_charges[typeid][i]];
-					if(!(t[4] in cgroups)) {
-						cgroups[t[4]] = [];
-						++ngroups;
+					var parent = t[7] > 0 ? t[7] : t[0];
+
+					if(!(t[4] in charges_mg_pt)) {
+						charges_mg_pt[t[4]] = {};
+						charges_mg_pt_sorted[t[4]] = {};
+						++mgcount;
 					}
-					cgroups[t[4]].push(t[0]);
+					if(!(parent in charges_mg_pt[t[4]])) {
+						charges_mg_pt[t[4]][parent] = [];
+					}
+					charges_mg_pt[t[4]][parent].push(t[0]);
 				}
 
-				if(ngroups === 1) {
-					for(var g in cgroups) {
-						pgroup(chargemenu, cgroups[g]);
+				for(var mg in charges_mg_pt) {
+					var arr = [];
+
+					for(var pt in charges_mg_pt[mg]) {
+						charges_mg_pt[mg][pt].sort(compare_damage);
+						arr.push([ pt, charges_mg_pt[mg][pt] ]);
+					}
+
+					arr.sort(function(a, b) {
+						return compare_damage(a[1][0], b[1][0]);
+					});
+
+					charges_mg_pt_sorted[mg] = arr;
+				}
+
+				if(mgcount === 1) {
+					for(var g in charges_mg_pt_sorted) {
+						pgroup(chargemenu, charges_mg_pt_sorted[g]);
 					}
 				} else {
-					for(var g in cgroups) {
-						/* Does not work like you expect it to without
-						 * the wrapper "generator function". */
+					for(var g in charges_mg_pt_sorted) {
 						osmium_ctxmenu_add_subctxmenu(chargemenu, osmium_metagroups[g], (function(group) {
 							return function() {
 								var submenu = osmium_ctxmenu_create();
 								pgroup(submenu, group);
 								return submenu;
 							};
-						})(cgroups[g]), { icon: "//image.eveonline.com/Type/" + cgroups[g][0] + "_64.png" });
+						})(charges_mg_pt_sorted[g]), {
+							icon: "//image.eveonline.com/Type/" + charges_mg_pt_sorted[g][0][0] + "_64.png"
+						});
 					}
 				}
 

@@ -1155,6 +1155,7 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 					$jsonimplant['X-sideeffects'][] = (int)$effectid;
 				}
 
+				if(!isset($jsonimplant['X-sideeffects'])) continue;
 				sort($jsonimplant['X-sideeffects']);
 			}
 

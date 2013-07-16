@@ -4,6 +4,8 @@ staging
 The $fit structure changed. All cache must be cleared while updating
 (remove any file in cache/, except API_* and sess_* files).
 
+The eve schema has been updated.
+
 v0.8.0, released 2013-06-30
 ===========================
 

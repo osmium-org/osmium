@@ -139,7 +139,8 @@ CREATE TABLE invmetagroups (
 
 CREATE TABLE invmetatypes (
     typeid integer NOT NULL,
-    metagroupid smallint NOT NULL
+    metagroupid smallint NOT NULL,
+    parenttypeid integer NOT NULL
 );
 
 
@@ -155,7 +156,8 @@ CREATE TABLE invtypes (
     volume double precision NOT NULL,
     capacity double precision NOT NULL,
     published boolean NOT NULL,
-    marketgroupid integer
+    marketgroupid integer,
+    description text NOT NULL
 );
 
 
@@ -340,6 +342,13 @@ CREATE INDEX invmetatypes_metagroupid_idx ON invmetatypes USING btree (metagroup
 
 
 --
+-- Name: invmetatypes_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE INDEX invmetatypes_parentgroupid_idx ON invmetatypes USING btree (parenttypeid);
+
+
+--
 -- Name: invmetatypes_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -436,6 +445,14 @@ ALTER TABLE ONLY invmarketgroups
 
 ALTER TABLE ONLY invmetatypes
     ADD CONSTRAINT invmetatypes_metagroupid_fkey FOREIGN KEY (metagroupid) REFERENCES invmetagroups(metagroupid);
+
+
+--
+-- Name: invmetatypes_parenttypeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY invmetatypes
+    ADD CONSTRAINT invmetatypes_parenttypeid_fkey FOREIGN KEY (parenttypeid) REFERENCES invtypes(typeid);
 
 
 --

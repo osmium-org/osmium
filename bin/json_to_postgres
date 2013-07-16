@@ -45,6 +45,7 @@ $structure = array(
 	array(
 		'effectID' => 'effectid',
 		'effectName' => 'effectname',
+		'effectCategory' => 'effectcategory',
 		),
 
 	'invcategories', 'invcategories.json',
@@ -84,6 +85,7 @@ $structure = array(
 		'capacity' => 'capacity',
 		'published' => 'published',
 		'marketGroupID' => 'marketgroupid',
+		'description' => 'description',
 		),
 
 	'dgmtypeattribs', 'dgmtypeattribs.json',
@@ -102,7 +104,8 @@ $structure = array(
 	'invmetatypes', 'invmetatypes.json',
 	array(
 		'typeID' => 'typeid',
-		'metaGroupID' => 'metagroupid'
+		'metaGroupID' => 'metagroupid',
+		'parentTypeID' => 'parenttypeid',
 		),
 
 	'averagemarketprices', 'config_GetAverageMarketPricesForClient.json',

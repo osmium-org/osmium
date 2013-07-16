@@ -379,15 +379,8 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	return $offset;
 }
 
-function format_md($markdowntext) {
-	require_once \Osmium\ROOT.'/lib/markdown.php';
-
-    return \Markdown($markdowntext);
-}
-
-function format_sanitize_md($markdowntext) {
+function sanitize_html($html) {
 	static $purifier = null;
-
 	require_once 'HTMLPurifier.includes.php';
 	require_once 'HTMLPurifier.auto.php';
 
@@ -405,12 +398,11 @@ function format_sanitize_md($markdowntext) {
 		$purifier = new \HTMLPurifier($config);
 	}
 
-	return $purifier->purify(format_md($markdowntext));
+	return $purifier->purify($html);
 }
 
-function format_sanitize_md_phrasing($markdowntext) {
+function sanitize_html_phrasing($html) {
 	static $purifier = null;
-
 	require_once 'HTMLPurifier.includes.php';
 	require_once 'HTMLPurifier.auto.php';
 
@@ -429,34 +421,20 @@ function format_sanitize_md_phrasing($markdowntext) {
 		$purifier = new \HTMLPurifier($config);
 	}
 
-	return $purifier->purify(format_md($markdowntext));
+	return $purifier->purify($html);
 }
 
-function print_market_group_with_children($groups, $groupid, $headinglevel, $formatfunc) {
-	$headinglevel = min(max(1, $headinglevel), 6);
-	$g = $groups[$groupid];
+function format_md($markdowntext) {
+	require_once \Osmium\ROOT.'/lib/markdown.php';
+    return \Markdown($markdowntext);
+}
 
-	echo "<div data-marketgroupid='".$groupid."' class='mgroup'>\n<h$headinglevel>".htmlspecialchars($g['groupname'])."</h$headinglevel>\n";
+function format_sanitize_md($markdowntext) {
+	return sanitize_html(format_md($markdowntext));
+}
 
-	if(isset($g['subgroups'])) {
-		echo "<ul class='subgroups'>\n";
-		foreach($g['subgroups'] as $subgroupid => $foo) {
-			echo "<li>\n";
-			print_market_group_with_children($groups, $subgroupid, $headinglevel + 1, $formatfunc);
-			echo "</li>\n";
-		}
-		echo "</ul>\n";
-	}
-
-	if(isset($g['types'])) {
-		echo "<ul class='types'>\n";
-		foreach($g['types'] as $typeid => $typename) {
-			$formatfunc($typeid, $typename);
-		}
-		echo "</ul>\n";
-	}
-
-	echo "</div>\n";
+function format_sanitize_md_phrasing($markdowntext) {
+	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
 function format_isk($isk) {
@@ -477,9 +455,9 @@ function format_isk($isk) {
 	return $isk.' ISK';
 }
 
-function truncate_string($s, $length, $fill = '...') {
-	if(strlen($s) > $length) {
-		$s = substr($s, 0, $length - strlen($fill)).$fill;
+function truncate_string($s, $length, $fill = '…') {
+	if(mb_strlen($s) > $length) {
+		$s = mb_substr($s, 0, $length - mb_strlen($fill)).$fill;
 	}
 
 	return $s;
