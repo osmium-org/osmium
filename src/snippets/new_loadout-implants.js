@@ -137,6 +137,56 @@ osmium_gen_implants = function() {
 						osmium_ctxmenu_add_separator(menu);
 					}
 
+					osmium_ctxmenu_add_subctxmenu(menu, "Side effects", function() {
+						var smenu = osmium_ctxmenu_create();
+
+						if(t in osmium_booster_side_effects) {
+							for(var z = 0; z < osmium_booster_side_effects[t].length; ++z) {
+								var effectid = osmium_booster_side_effects[t][z][0];
+								var effectname = osmium_booster_side_effects[t][z][1];
+								var clfbooster = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]
+									.boosters;
+								for(var k = 0; k < clfbooster.length; ++k) {
+									if(clfbooster[k].typeid === t) {
+										clfbooster = clfbooster[k];
+									}
+								}
+
+								osmium_ctxmenu_add_option(
+									smenu, osmium_format_penalty_effectname(effectname),
+									(function(effectid, clfbooster) {
+										return function() {
+											if("X-sideeffects" in clfbooster) {
+												var index = $.inArray(effectid, clfbooster['X-sideeffects']);
+
+												if(index !== -1) {
+													clfbooster['X-sideeffects'].splice(index, 1);
+												} else {
+													clfbooster['X-sideeffects'].push(effectid);
+												}
+											} else {
+												clfbooster['X-sideeffects'] = [ effectid ];
+											}
+
+											osmium_undo_push();
+											osmium_commit_clf();
+										};
+									})(effectid, clfbooster),
+									{
+										toggled: "X-sideeffects" in clfbooster
+											&& $.inArray(effectid, clfbooster['X-sideeffects']) !== -1
+									}
+								);
+							}
+						} else {
+							osmium_ctxmenu_add_option(smenu, "No side effects", function() {}, { enabled: false });
+						}
+
+						return smenu;
+					}, {});
+
+					osmium_ctxmenu_add_separator(menu);
+
 					osmium_ctxmenu_add_option(menu, "Show booster info", function() {
 						osmium_showinfo({ type: 'implant', typeid: t });
 					}, { icon: "showinfo.png", "default": osmium_loadout_readonly });
@@ -157,4 +207,19 @@ osmium_gen_implants = function() {
 
 osmium_init_implants = function() {
 	
+};
+
+osmium_format_penalty_effectname = function(name) {
+	var s = name.split(/([A-Z])/);
+	var words = [];
+	words.push(s.shift());
+	while(s.length > 0) {
+		words.push(s.shift() + s.shift());
+	}
+
+	if(words[0] === "booster") words.shift();
+	var p = $.inArray("Penalty", words);
+	if(p !== -1) words = words.slice(0, p);
+
+	return words.join(" ");
 };

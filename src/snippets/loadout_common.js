@@ -39,6 +39,7 @@ osmium_load_static_client_data = function(staticver, onsuccess) {
 		osmium_chargedmg = json.chargedmg;
 		osmium_targetclass = json.targetclass;
 		osmium_damage_profiles = json.dmgprofiles;
+		osmium_booster_side_effects = json.boostersideeffects;
 
 		/* Module states as they are defined in the CLF specification */
 		osmium_states = ['offline', 'online', 'active', 'overloaded'];

@@ -281,4 +281,35 @@ $static['dmgprofiles'] = array(
 
 /* ---------------------------------------------------------- */
 
+$sideeffectsq = \Osmium\Db\query(
+	'SELECT invboosters.typeid, dgmtypeeffects.effectid, effectname
+	FROM osmium.invboosters
+	JOIN eve.dgmtypeeffects ON dgmtypeeffects.typeid = invboosters.typeid
+	JOIN eve.dgmeffects ON dgmeffects.effectid = dgmtypeeffects.effectid
+	ORDER BY invboosters.typeid ASC, effectname ASC'
+);
+dogma_init_context($ctx);
+while($r = \Osmium\Db\fetch_row($sideeffectsq)) {
+	list($typeid, $effectid, $effectname) = $r;
+	dogma_add_implant($ctx, (int)$typeid, $key);
+
+	$fittingusagechance = 0;
+	dogma_get_location_effect_attributes(
+		$ctx,
+		[ DOGMA_LOC_Implant, "implant_index" => $key ],
+		(int)$effectid,
+		$dur, $tra, $dis, $ran, $fal, $fittingusagechance
+	);
+	if($fittingusagechance > 1e-300) {
+		/* Assume side effect */
+		$static['boostersideeffects'][$typeid][] = array(
+			(int)$effectid, $effectname
+		);
+	}
+
+	dogma_remove_implant($ctx, $key);
+}
+
+/* ---------------------------------------------------------- */
+
 file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));

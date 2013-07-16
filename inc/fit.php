@@ -181,7 +181,7 @@ function get_state_names() {
  * dronepresetdesc => (string)
  * drones => array(<typeid> => array(typeid, typename, volume, bandwidth, quantityin{bay, space})))
  *
- * implants => array(<typeid> => array(typeid, typename, slot, dogma_index))
+ * implants => array(<typeid> => array(typeid, typename, slot, dogma_index, sideeffects => array(effectid)))
  *
  * presets => array(<presetid> => array(name, description, modules, chargepresets, implants))
  *
@@ -739,6 +739,41 @@ function remove_implant(&$fit, $typeid) {
 
 	dogma_remove_implant($fit['__dogma_context'], $fit['implants'][$typeid]['dogma_index']);
 	unset($fit['implants'][$typeid]);
+}
+
+/** Toggle a booster side effect.
+ *
+ * @param $toggled if true, enable the side effect. If false, disable
+ * the side effect. If null, toggle the status (side effects are
+ * disabled by default).
+ */
+function toggle_implant_side_effect(&$fit, $typeid, $effectid, $toggled = null) {
+	if(!isset($fit['implants'][$typeid])) {
+		trigger_error('Cannot toggle side effect of nonexisting implant', E_USER_WARNING);
+		return false;
+	}
+
+	$i =& $fit['implants'][$typeid];
+	$effectid = (int)$effectid;
+	if(!isset($i['sideeffects'])) $i['sideeffects'] = array();
+
+	$currentindex = array_search($effectid, $i['sideeffects'], true);
+	$hasit = $currentindex !== false;
+
+	$want = ($toggled === null) ? (!$hasit) : (bool)$toggled;
+
+	if($want && !$hasit) {
+		$i['sideeffects'][] = $effectid;
+	} else if(!$want && $hasit) {
+		unset($i['sideeffects'][$currentindex]);
+	}
+
+	dogma_toggle_chance_based_effect(
+		$fit['__dogma_context'],
+		[ DOGMA_LOC_Implant, "implant_index" => $i['dogma_index'] ],
+		$effectid,
+	    $want
+	);
 }
 
 /* ----------------------------------------------------- */

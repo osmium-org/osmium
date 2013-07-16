@@ -427,6 +427,12 @@ function clf_parse_implants_1(&$fit, &$implants, &$errors) {
 		if(\CommonLoadoutFormat\check_typeof_type($i['typeid'], 'implant')
 		   || \CommonLoadoutFormat\check_typeof_type($i['typeid'], 'booster')) {
 			add_implant($fit, $i['typeid']);
+
+			if(isset($i['X-sideeffects']) && is_array($i['X-sideeffects'])) {
+				foreach($i['X-sideeffects'] as $effectid) {
+					toggle_implant_side_effect($fit, $i['typeid'], $effectid, true);
+				}
+			}
 		}
 	}
 }
@@ -1144,6 +1150,14 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 				$jsonimplant['slot'] = (int)$i['slot'];
 			}
 
+			if(isset($i['sideeffects'])) {
+				foreach($i['sideeffects'] as $effectid) {
+					$jsonimplant['X-sideeffects'][] = (int)$effectid;
+				}
+
+				sort($jsonimplant['X-sideeffects']);
+			}
+
 			if(get_groupid($i['typeid']) != GROUP_Booster) {
 				$jsonpreset['implants'][] = $jsonimplant;
 			} else {
@@ -1768,8 +1782,9 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 		);
 
 	$clfmods = array();
-    $clfcharges = array();
-    $clfimplants = array();
+	$clfcharges = array();
+	$clfimplants = array();
+	$clfsideeffects = array();
 
 	foreach(isset($clfp['modules']) ? $clfp['modules'] : array() as $m) {
 		/* add_module() is lazy, it's okay to blindly call it here */
@@ -1804,6 +1819,13 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 	foreach(isset($clfp['boosters']) ? $clfp['boosters'] : array() as $i) {
 		add_implant($fit, $i['typeid']);
 		$clfimplants[$i['typeid']] = true;
+
+		if(isset($i['X-sideeffects']) && is_array($i['X-sideeffects'])) {
+			foreach($i['X-sideeffects'] as $effectid) {
+				\Osmium\Fit\toggle_implant_side_effect($fit, $i['typeid'], $effectid, true);
+				$clfsideeffects[$i['typeid']][$effectid] = true;
+			}
+		}
 	}
 
     foreach($fit['charges'] as $type => $charges) {
@@ -1829,6 +1851,13 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 	}
 
 	foreach($fit['implants'] as $typeid => $i) {
+		if(isset($i['sideeffects'])) {
+			foreach($i['sideeffects'] as $effectid) {
+				if(isset($clfsideeffects[$typeid][$effectid])) continue;
+				toggle_implant_side_effect($fit, $typeid, $effectid, false);
+			}
+		}
+
 		if(isset($clfimplants[$typeid])) continue;
 		remove_implant($fit, $typeid);
 	}

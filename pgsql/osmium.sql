@@ -368,6 +368,17 @@ CREATE VIEW fittingfittedtypes AS
 
 
 --
+-- Name: fittingimplants; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingimplants (
+    fittinghash character(40) NOT NULL,
+    presetid integer NOT NULL,
+    typeid integer NOT NULL
+);
+
+
+--
 -- Name: flags; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -665,6 +676,14 @@ CREATE VIEW loadoutscores AS
 
 CREATE VIEW loadoutslatestrevision AS
     SELECT loadouts.loadoutid, max(loadouthistory.revision) AS latestrevision FROM (loadouts JOIN loadouthistory ON ((loadouthistory.loadoutid = loadouts.loadoutid))) GROUP BY loadouts.loadoutid;
+
+
+--
+-- Name: loadoutsmodulelist; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW loadoutsmodulelist AS
+    SELECT fittingmodules.fittinghash, string_agg(DISTINCT (invtypes.typename)::text, ' '::text) AS modulelist FROM (fittingmodules JOIN eve.invtypes ON ((fittingmodules.typeid = invtypes.typeid))) GROUP BY fittingmodules.fittinghash;
 
 
 --
@@ -1001,6 +1020,14 @@ ALTER TABLE ONLY fittingdronepresets
 
 ALTER TABLE ONLY fittingdrones
     ADD CONSTRAINT fittingdrones_pkey PRIMARY KEY (fittinghash, dronepresetid, typeid);
+
+
+--
+-- Name: fittingimplants_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY fittingimplants
+    ADD CONSTRAINT fittingimplants_pkey PRIMARY KEY (fittinghash, presetid, typeid);
 
 
 --
@@ -1843,6 +1870,22 @@ ALTER TABLE ONLY fittingdrones
 
 ALTER TABLE ONLY fittingdrones
     ADD CONSTRAINT fittingdrones_typeid_fkey FOREIGN KEY (typeid) REFERENCES eve.invtypes(typeid);
+
+
+--
+-- Name: fittingimplants_fittinghash_presetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingimplants
+    ADD CONSTRAINT fittingimplants_fittinghash_presetid_fkey FOREIGN KEY (fittinghash, presetid) REFERENCES fittingpresets(fittinghash, presetid);
+
+
+--
+-- Name: fittingimplants_typeid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingimplants
+    ADD CONSTRAINT fittingimplants_typeid_fkey FOREIGN KEY (typeid) REFERENCES eve.invtypes(typeid);
 
 
 --

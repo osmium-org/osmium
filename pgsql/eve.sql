@@ -55,12 +55,7 @@ CREATE TABLE dgmattribs (
 CREATE TABLE dgmeffects (
     effectid smallint NOT NULL,
     effectname character varying(300) NOT NULL,
-    effectcategory smallint NOT NULL,
-    durationattributeid smallint,
-    trackingspeedattributeid smallint,
-    dischargeattributeid smallint,
-    rangeattributeid smallint,
-    falloffattributeid smallint
+    effectcategory smallint NOT NULL
 );
 
 
@@ -81,8 +76,7 @@ CREATE TABLE dgmtypeattribs (
 
 CREATE TABLE dgmtypeeffects (
     typeid integer NOT NULL,
-    effectid smallint NOT NULL,
-    isdefault boolean NOT NULL
+    effectid smallint NOT NULL
 );
 
 
@@ -276,20 +270,6 @@ CREATE INDEX dgmattribs_unitid_idx ON dgmattribs USING btree (unitid);
 
 
 --
--- Name: dgmeffects_dischargeattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_dischargeattributeid_idx ON dgmeffects USING btree (dischargeattributeid);
-
-
---
--- Name: dgmeffects_durationattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_durationattributeid_idx ON dgmeffects USING btree (durationattributeid);
-
-
---
 -- Name: dgmeffects_effectcategory_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -301,27 +281,6 @@ CREATE INDEX dgmeffects_effectcategory_idx ON dgmeffects USING btree (effectcate
 --
 
 CREATE INDEX dgmeffects_effectname_idx ON dgmeffects USING btree (effectname);
-
-
---
--- Name: dgmeffects_falloffattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_falloffattributeid_idx ON dgmeffects USING btree (falloffattributeid);
-
-
---
--- Name: dgmeffects_rangeattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_rangeattributeid_idx ON dgmeffects USING btree (rangeattributeid);
-
-
---
--- Name: dgmeffects_trackingspeedattributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
---
-
-CREATE INDEX dgmeffects_trackingspeedattributeid_idx ON dgmeffects USING btree (trackingspeedattributeid);
 
 
 --
@@ -429,46 +388,6 @@ ALTER TABLE ONLY averagemarketprices
 
 ALTER TABLE ONLY dgmattribs
     ADD CONSTRAINT dgmattribs_unitid_fkey FOREIGN KEY (unitid) REFERENCES dgmunits(unitid);
-
-
---
--- Name: dgmeffects_dischargeattributeid; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY dgmeffects
-    ADD CONSTRAINT dgmeffects_dischargeattributeid FOREIGN KEY (dischargeattributeid) REFERENCES dgmattribs(attributeid);
-
-
---
--- Name: dgmeffects_durationattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY dgmeffects
-    ADD CONSTRAINT dgmeffects_durationattributeid_fkey FOREIGN KEY (durationattributeid) REFERENCES dgmattribs(attributeid);
-
-
---
--- Name: dgmeffects_falloffattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY dgmeffects
-    ADD CONSTRAINT dgmeffects_falloffattributeid_fkey FOREIGN KEY (falloffattributeid) REFERENCES dgmattribs(attributeid);
-
-
---
--- Name: dgmeffects_rangeattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY dgmeffects
-    ADD CONSTRAINT dgmeffects_rangeattributeid_fkey FOREIGN KEY (rangeattributeid) REFERENCES dgmattribs(attributeid);
-
-
---
--- Name: dgmeffects_trackingspeedattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY dgmeffects
-    ADD CONSTRAINT dgmeffects_trackingspeedattributeid_fkey FOREIGN KEY (trackingspeedattributeid) REFERENCES dgmattribs(attributeid);
 
 
 --

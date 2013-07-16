@@ -65,6 +65,17 @@ function late_init(&$fit) {
 			$i['typeid'],
 			$i['dogma_index']
 		);
+
+		if(isset($i['sideeffects'])) {
+			foreach($i['sideeffects'] as $effectid) {
+				dogma_toggle_chance_based_effect(
+					$fit['__dogma_context'],
+					[ DOGMA_LOC_Implant, "implant_index" => $i['dogma_index'] ],
+					(int)$effectid,
+					true
+				);
+			}
+		}
 	}
 }
 

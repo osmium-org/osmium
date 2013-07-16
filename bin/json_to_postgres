@@ -45,12 +45,6 @@ $structure = array(
 	array(
 		'effectID' => 'effectid',
 		'effectName' => 'effectname',
-		'effectCategory' => 'effectcategory',
-		'durationAttributeID' => 'durationattributeid',
-		'trackingSpeedAttributeID' => 'trackingspeedattributeid',
-		'dischargeAttributeID' => 'dischargeattributeid',
-		'rangeAttributeID' => 'rangeattributeid',
-		'falloffAttributeID' => 'falloffattributeid',
 		),
 
 	'invcategories', 'invcategories.json',
@@ -103,7 +97,6 @@ $structure = array(
 	array(
 		'typeID' => 'typeid',
 		'effectID' => 'effectid',
-		'isDefault' => 'isdefault',
 		),
 
 	'invmetatypes', 'invmetatypes.json',

@@ -136,6 +136,8 @@ $affectors_per_type = array();
 $affectors_per_att = array();
 $numaffectors = 0;
 
+\Osmium\fprintr($affectors);
+
 foreach($affectors as $affector) {
 	/* Skip affectors affecting non-overridden attributes */
 	if(!isset($attributes[$affector['destid']])) continue;
@@ -147,13 +149,13 @@ foreach($affectors as $affector) {
 
 	case '*':
 		$affector['operator'] = '×';
-		if($affector['value'] == 1.0) continue;
+		if(abs($affector['value'] - 1.0) < 1e-300) continue 2;
 		break;
 
 	case '-':
 		$affector['value'] = -$affector['value'];
 	case '+':
-		if($affector['value'] == 0.0) continue;
+		if(abs($affector['value']) < 1e-300) continue 2;
 		break;
 
 	}
