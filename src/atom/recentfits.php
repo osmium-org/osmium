@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -41,6 +41,10 @@ array_pop($fpath);
 array_pop($fpath);
 $fpath = implode('/', $fpath);
 
+$proto = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https': 'http';
+$host = $_SERVER['HTTP_HOST'];
+$abs = rtrim($proto.'://'.$host.'/'.$fpath, '/');
+
 header('Content-Type: application/atom+xml');
 
 $idprefix = 'http://artefact2.com/osmium/atom/local/'.$_SERVER['HTTP_HOST'].$fpath;
@@ -63,7 +67,7 @@ $link = $feed->appendChild($atom->createElement('link'));
 $rel = $link->appendChild($atom->createAttribute('rel'));
 $rel->appendChild($atom->createTextNode('self'));
 $href = $link->appendChild($atom->createAttribute('href'));
-$href->appendChild($atom->createTextNode($_SERVER['REQUEST_URI']));
+$href->appendChild($atom->createTextNode($abs.$_SERVER['REQUEST_URI']));
 
 $generator = $feed->appendChild($atom->createElement('generator'));
 $generator->appendChild($atom->createTextNode('Osmium'));
@@ -109,7 +113,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$rel = $link->appendChild($atom->createAttribute('rel'));
 	$rel->appendChild($atom->createTextNode('alternate'));
 	$href = $link->appendChild($atom->createAttribute('href'));
-	$href->appendChild($atom->createTextNode('../'.\Osmium\Fit\get_fit_uri($row['loadoutid'], $row['visibility'], '0')));
+	$href->appendChild($atom->createTextNode($abs.'/'.\Osmium\Fit\get_fit_uri($row['loadoutid'], $row['visibility'], '0')));
 
 	$author = $entry->appendChild($atom->createElement('author'));
 	$name = $author->appendChild($atom->createElement('name'));
@@ -118,7 +122,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$otype = $name->appendChild($atom->createAttribute('osmium:type'));
 	$otype->appendChild($atom->createTextNode($row['apiverified'] === 't' ? 'charactername' : 'nickname'));
 	$uri = $author->appendChild($atom->createElement('uri'));
-	$uri->appendChild($atom->createTextNode('../profile/'.$row['accountid']));
+	$uri->appendChild($atom->createTextNode($abs.'/profile/'.$row['accountid']));
 
 	$oloadoutid = $entry->appendChild($atom->createElement('osmium:loadoutid'));
 	$oloadoutid->appendChild($atom->createTextNode($row['loadoutid']));
