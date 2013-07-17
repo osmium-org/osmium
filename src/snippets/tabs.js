@@ -16,136 +16,120 @@
  */
 
 osmium_orig_anchor = null;
+osmium_selected_tabs = [];
+osmium_available_tabs = [];
+osmium_tab_ul_count = 0;
 
 osmium_tabify = function(ul, selected) {
-	var targets = [];
-
-	ul.find('li > a').each(function() {
-		var href = $(this).attr('href');
-		if(href.substring(0, 1) != '#') return;
-		targets.push(href.substring(1));
-		$(href).addClass('notarget');
-	});
-
 	if(osmium_orig_anchor === null) {
 		if(window.location.hash) {
-			osmium_orig_anchor = $(window.location.hash.split(',')[0]);
-			if(osmium_orig_anchor.length) {
-				var p = osmium_orig_anchor.parent();
-				var id, a;
-				var found = false;
-
-				while(p.length) {
-					if(id = p.prop('id')) {
-						var a = $("a[href='#" + id + "']");
-						if(a.length && $.inArray(id, targets) > 0) {
-							selected = a.parent().index();
-							found = true;
-							break;
-						}
-					}
-
-					p = p.parent();
-				}
-
-				if(!found) osmium_orig_anchor = null;
-			}
+			osmium_orig_anchor = window.location.hash.substring(1).split(",");
+		} else {
+			osmium_orig_anchor = [];
 		}
 	}
 
-	ul.on('osmium_select_tab', 'li', function(event) {
-		var li = $(this);
-		var a = li.children('a');
-		var href = a.attr('href');
+	ul.data('tab_ul_index', osmium_tab_ul_count++);
+
+	var tabs = [];
+	var i = 0;
+	var selected_pref = 0;
+
+	ul.find('li > a').each(function() {
+		var t = $(this);
+		var href = t.attr('href');
 		if(href.substring(0, 1) != '#') return;
-		var dest = $(href);
-
-		if(!li.hasClass('active')) {
-			li.parent().children('li').each(function() {
-				var li = $(this);
-				var a = li.children('a');
-				var href = a.attr('href');
-				if(href.substring(0, 1) != '#') return;
-				var dest = $(li.children('a').attr('href'));
-
-				li.removeClass('active');
-				dest.hide();
-			});
-
-			$(a.attr('href')).fadeIn(500);
-			li.addClass('active').delay(501).trigger('afteractive');
-		}
-
-		a.blur();
-		event.preventDefault();
-		event.stopPropagation();
-		return false;
-	}).on('click', 'li', function() {
-		var li = $(this);
-		var a = li.children('a');
-		var href = a.attr('href');
-		if(href.substring(0, 1) != '#') return;
-		var selectedid = href.substring(1);
-
-		li.trigger('osmium_select_tab');
-
-		var cur_tabs;
-		var found = false;
-
-		if(window.location.hash) {
-			cur_tabs = window.location.hash.substring(1).split(',');
-		} else {
-			cur_tabs = [];
-		}
-
-		for(var i = 0; i < cur_tabs.length; ++i) {
-			var j = $.inArray(cur_tabs[i], targets);
-			if(j == -1) continue;
-
-			cur_tabs[i] = selectedid;
-			found = true;
-			break;
-		}
-
-		if(!found) {
-			cur_tabs.push(selectedid);
-		}
-
-		if(window.history && window.history.replaceState) {
-			window.history.replaceState(
-				null, null,
-				window.location.href.substring(0, -window.location.hash) + '#' + cur_tabs.join(','));
-		} else {
-			var s_top = document.body.scrollTop;
-			window.location.hash = '#' + cur_tabs.join(',');
-			document.body.scrollTop = s_top;
-		}
-
-		if(osmium_orig_anchor && osmium_orig_anchor.length) {
-			osmium_orig_anchor.addClass('pseudoclasstarget');
-			$(window).scrollTop(osmium_orig_anchor.offset().top);
-			osmium_orig_anchor = false;
-		}
-
-		return false;
+		t.parent().addClass('anchor');
+		tabs.push(href.substring(1));
+		++i;
 	});
 
-	var cur_tabs;
-	if(window.location.hash) {
-		cur_tabs = window.location.hash.substring(1).split(',');
-	} else {
-		cur_tabs = [];
+	for(var j = 0; j < osmium_orig_anchor.length; ++j) {
+		var index = $.inArray(osmium_orig_anchor[j], tabs);
+		if(index !== -1) {
+			/* Got one of our tabs in hash */
+			if(selected_pref < 1) {
+				selected = index;
+				selected_pref = 1;
+			}
+			osmium_orig_anchor.splice(j, 1);
+
+			/* Don't break here, as this choice may be overridden by a
+			 * "true" anchor in another tab */
+		} else {
+			if(selected_pref >= 2) continue; /* Already found */
+
+			/* Not one of our tabs, see if it is an anchor in one of our tabs */
+			var target = $('#' + osmium_orig_anchor[j]);
+			if(target.length === 0) continue;
+			target = target.parent();
+			do {
+				var id = target.prop('id');
+				var index;
+				if(id && ((index = $.inArray(id, tabs)) !== -1)) {
+					/* Found one of our tabs as parent */
+					selected = index;
+					selected_pref = 2;
+					break;
+				}
+				target = target.parent();
+			} while("length" in target && target.length !== 0);
+		}
 	}
 
-	for(var i = 0; i < cur_tabs.length; ++i) {
-		var j = $.inArray(cur_tabs[i], targets);
-		if(j == -1) continue;
+	i = 0;
+	ul.find('li.anchor').each(function() {
+		var t = $(this);
+		var href = t.children('a').attr('href');
+		var tget = $(href).addClass('notarget');
 
-		$('a[href="#' + cur_tabs[i] + '"]').closest('li').click();
-		osmium_orig_anchor = false;
+		if(i !== selected) {
+			tget.hide();
+		} else {
+			t.addClass('active');
+		}
+		++i;
+	});
+
+	osmium_available_tabs.push(tabs);
+	osmium_selected_tabs.push(tabs[selected]);
+	ul.find('li.anchor').on('click', osmium_tab_click);
+
+	for(i = 0; i < osmium_orig_anchor.length; ++i) {
+		var target = $("#" + osmium_orig_anchor[i]);
+		if(target.length === 0) continue;
+		if(!target.is(":visible")) continue;
+		$(window).scrollTop(target.offset().top);
 		return;
 	}
 
-	ul.children('li').eq(selected).click();
-	osmium_orig_anchor = false;
+	$(window).scrollTop(0);
+};
+
+osmium_tab_click = function(e) {
+	var li = $(this);
+	var ul_index = li.parent().data('tab_ul_index');
+	var tabnames = osmium_available_tabs[ul_index];
+	var want = li.children('a').blur().attr('href').substring(1);
+
+	for(var i = 0; i < tabnames.length; ++i) {
+		if(tabnames[i] === want) {
+			$("#" + want).fadeIn(250);
+		} else {
+			$("#" + tabnames[i]).hide();
+		}
+	}
+
+	li.parent().children('li.active').removeClass('active');
+	li.addClass('active');
+
+	osmium_selected_tabs[ul_index] = want;
+
+	if(window.history && window.history.replaceState) {
+		window.history.replaceState(null, null, '#' + osmium_selected_tabs.join(','));
+	}
+
+	e.preventDefault();
+	e.stopPropagation();
+	return false;
 };
