@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+osmium_showinfo_sprite_position = [ 6, 58, 16, 16 ];
+
 osmium_showinfo = function(opts) {
 	osmium_showinfo_internal(opts, function() {
 		/* First error… Try committing CLF and retry once */

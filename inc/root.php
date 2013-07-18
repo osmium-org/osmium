@@ -25,16 +25,16 @@ if(!defined('Osmium\ROOT')) {
 const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 
 /** Bump this when static files (icons, etc.) are updated */
-const STATICVER = 9;
+const STATICVER = 10;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 9;
+const CSS_STATICVER = 10;
 
 /** Bump this when JS snippets are updated */
 const JS_STATICVER = 10;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 19;
+const CLIENT_DATA_STATICVER = 20;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

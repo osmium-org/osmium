@@ -334,9 +334,9 @@ foreach($stypes as $type => $fname) {
 		}
 
 		if(isset($stateful[$type])) {
-			echo "<a class='toggle_state' href='javascript:void(0);' title='".$s[0]."'>";
-			echo "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/".$s[1]."' alt='".$s[0]."' />";
-			echo "</a>\n";
+			echo "<a class='toggle_state' href='javascript:void(0);' title='".$s[0]."'>"
+				.\Osmium\Chrome\sprite(RELATIVE, $s[2], $s[1][0], $s[1][1], $s[1][2], $s[1][3], 16)
+				."</a>\n";
 		}
 
 		if(isset($ia[$type][$index])) {

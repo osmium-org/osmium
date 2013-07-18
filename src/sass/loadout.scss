@@ -95,12 +95,12 @@ $hidden-char: '\0025B8';
 		position: absolute;
 		top: 16px;
 		left: 16px;
-	}
 
-	&> a.toggle_state, &> a.toggle_state > img {
-		width: 16px;
-		height: 16px;
-		line-height: 16px;
+		&, &> img, &> div.mainsprite {
+			line-height: 16px;
+			width: 16px;
+			height: 16px;
+		}
 	}
 
 	&> small.attribs {

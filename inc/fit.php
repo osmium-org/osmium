@@ -143,14 +143,14 @@ function get_attr_slottypes() {
  * Get an array of formatted state names, with the name of the picture
  * represting the state.
  *
- * @returns [ STATE_* => [PrettyName, Icon, CLFName], … ]
+ * @returns [ STATE_* => [PrettyName, Sprite position, CLFName], … ]
  */
 function get_state_names() {
 	return array(
-		STATE_OFFLINE => array('Offline', 'offline.png', 'offline'),
-		STATE_ONLINE => array('Online', 'online.png', 'online'),
-		STATE_ACTIVE => array('Active', 'active.png', 'active'),
-		STATE_OVERLOADED => array('Overloaded', 'overloaded.png', 'overloaded'),
+		STATE_OFFLINE => array('Offline', [ 2, 58, 16, 16 ], 'offline'),
+		STATE_ONLINE => array('Online', [ 2, 59, 16, 16 ], 'online'),
+		STATE_ACTIVE => array('Active', [ 3, 58, 16, 16 ], 'active'),
+		STATE_OVERLOADED => array('Overloaded', [ 0, 29, 32, 32 ], 'overloaded'),
 		);
 }
 

@@ -73,7 +73,7 @@ osmium_gen_implants = function() {
 
 					osmium_ctxmenu_add_option(menu, "Show implant info", function() {
 						osmium_showinfo({ type: 'implant', typeid: t });
-					}, { icon: "showinfo.png", "default": osmium_loadout_readonly });
+					}, { icon: osmium_showinfo_sprite_position, "default": osmium_loadout_readonly });
 
 					return menu;
 				};
@@ -189,7 +189,7 @@ osmium_gen_implants = function() {
 
 					osmium_ctxmenu_add_option(menu, "Show booster info", function() {
 						osmium_showinfo({ type: 'implant', typeid: t });
-					}, { icon: "showinfo.png", "default": osmium_loadout_readonly });
+					}, { icon: osmium_showinfo_sprite_position, "default": osmium_loadout_readonly });
 
 					return menu;
 				};

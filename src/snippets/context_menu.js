@@ -78,37 +78,7 @@ osmium_ctxmenu_add_option = function(menu, name, action, opts) {
 	var li = $(document.createElement('li'));
 
 	li.append($(document.createElement('span')).text(name));
-
-	if("title" in opts) {
-		li.prop('title', opts.title);
-	}
-
-	if("icon" in opts) {
-		var img = $(document.createElement('img'));
-		img.prop('alt', '');
-		if(opts.icon.substring(0, 2) === '//') {
-			/* Absolute URI of type //foo.tld/path.png */
-			img.prop('src', opts.icon);
-		} else {
-			/* Relative URI */
-			img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
-		}
-		img.addClass('icon');
-		li.prepend(img);
-		li.addClass('hasicon');
-	}
-
-	if("toggled" in opts) {
-		var c = $(document.createElement('input'));
-		c.prop('type', 'checkbox');
-		c.prop('checked', opts.toggled);
-		li.prepend(c);
-		li.addClass('hastoggle');
-
-		if(opts.toggled) {
-			li.addClass('toggled');
-		}
-	}
+	osmium_ctxmenu_apply_opts(menu, li, opts);
 
 	if(("enabled" in opts) && !opts.enabled) {
 		li.addClass('disabled');
@@ -141,37 +111,7 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 	var show_submenu;
 
 	li.append($(document.createElement('span')).text(name));
-
-	if("title" in opts) {
-		li.prop('title', opts.title);
-	}
-
-	if("icon" in opts) {
-		var img = $(document.createElement('img'));
-		img.prop('alt', '');
-		if(opts.icon.substring(0, 2) === '//') {
-			/* Absolute URI of type //foo.tld/path.png */
-			img.prop('src', opts.icon);
-		} else {
-			/* Relative URI */
-			img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
-		}
-		img.addClass('icon');
-		li.prepend(img);
-		li.addClass('hasicon');
-	}
-
-	if("toggled" in opts) {
-		var c = $(document.createElement('input'));
-		c.prop('type', 'checkbox');
-		c.prop('checked', opts.toggled);
-		li.prepend(c);
-		li.addClass('hastoggle');
-
-		if(opts.toggled) {
-			li.addClass('toggled');
-		}
-	}
+	osmium_ctxmenu_apply_opts(menu, li, opts);
 
 	show_submenu = function() {
 		var submenu = submenu_ctor();
@@ -225,4 +165,48 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 
 	li.addClass('hassubcontextmenu');
 	menu.append(li);
+};
+
+/* @internal */
+osmium_ctxmenu_apply_opts = function(menu, li, opts) {
+	if("title" in opts) {
+		li.prop('title', opts.title);
+	}
+
+	if("icon" in opts && typeof opts.icon === "string") {
+		var img = $(document.createElement('img'));
+		img.prop('alt', '');
+		if(opts.icon.substring(0, 2) === '//') {
+			/* Absolute URI of type //foo.tld/path.png */
+			img.prop('src', opts.icon);
+		} else {
+			/* Relative URI */
+			img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/' + opts.icon);
+		}
+		img.addClass('icon');
+		li.prepend(img);
+		li.addClass('hasicon');
+	} else if("icon" in opts && typeof opts.icon === "object") {
+		li.prepend(osmium_sprite(
+			'',
+			opts.icon[0],
+			opts.icon[1],
+			opts.icon[2],
+			opts.icon[3],
+			16, 16
+		));
+		li.addClass('hasicon');
+	}
+
+	if("toggled" in opts) {
+		var c = $(document.createElement('input'));
+		c.prop('type', 'checkbox');
+		c.prop('checked', opts.toggled);
+		li.prepend(c);
+		li.addClass('hastoggle');
+
+		if(opts.toggled) {
+			li.addClass('toggled');
+		}
+	}
 };

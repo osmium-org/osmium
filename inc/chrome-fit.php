@@ -420,6 +420,7 @@ osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_ac
 	\Osmium\Chrome\print_js_snippet('modal');
 	\Osmium\Chrome\print_js_snippet('context_menu');
 	\Osmium\Chrome\print_js_snippet('loadout_common');
+	\Osmium\Chrome\print_js_snippet('sprite');
 	\Osmium\Chrome\print_js_snippet('show_info');
 	\Osmium\Chrome\print_js_snippet('formatted_attributes');
 	\Osmium\Chrome\print_js_snippet('new_loadout-fattribs');

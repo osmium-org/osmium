@@ -141,7 +141,7 @@ osmium_gen_drones = function() {
 							type: "drone",
 							typeid: t
 						});
-					}, { icon: "showinfo.png", 'default': osmium_loadout_readonly });
+					}, { icon: osmium_showinfo_sprite_position, 'default': osmium_loadout_readonly });
 
 					return menu;
 				};

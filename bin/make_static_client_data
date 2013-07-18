@@ -140,16 +140,17 @@ while($row = \Osmium\Db\fetch_row($q)) {
 		);
 }
 
-/** CLF state name => [Pretty name, Image name]
+/* ---------------------------------------------------------- */
+
+/** CLF state name => [Pretty name, Sprite position]
  * Order must be consistent with $static['modulestates']
  *
  * @see \Osmium\Fit\get_state_names() */
-$static['modulestatenames'] = array(
-    'offline' => array('Offline', 'offline.png'),
-    'online' => array('Online', 'online.png'),
-    'active' => array('Active', 'active.png'),
-    'overloaded' => array('Overloaded', 'overloaded.png'),
-);
+foreach(\Osmium\Fit\get_state_names() as $state) {
+	$static['modulestatenames'][$state[2]] = [ $state[0], $state[1] ];
+}
+
+/* ---------------------------------------------------------- */
 
 $static['statefulslottypes'] = \Osmium\Fit\get_stateful_slottypes();
 

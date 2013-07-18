@@ -314,13 +314,19 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 		li.on('state_changed', function() {
 			var a = li.children('a.toggle_state');
-			var stateimg = a.children('img');
-			var state = li.data('state');
+			var s = osmium_module_state_names[li.data('state')];
+			a.empty();
 
-			a.prop('title', osmium_module_state_names[state][0]);
-			stateimg.prop('alt', a.prop('title'));
-			stateimg.prop('src', osmium_relative + '/static-' + osmium_staticver
-						  + '/icons/' + osmium_module_state_names[state][1]);
+			a.append(osmium_sprite(
+				s[0],
+				s[1][0],
+				s[1][1],
+				s[1][2],
+				s[1][3],
+				16, 16
+			));
+
+			a.prop('title', s[0]);
 		}).trigger('state_changed');
 
 		a.on('click', function() {
@@ -651,7 +657,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				slottype: li.data('slottype'),
 				index: li.data('index')
 			});
-		}, { icon: "showinfo.png", 'default': osmium_loadout_readonly });
+		}, { icon: osmium_showinfo_sprite_position, 'default': osmium_loadout_readonly });
 
 		if(hascharges && li.data('chargetypeid') !== null) {
 			osmium_ctxmenu_add_option(menu, "Show charge info", function() {
@@ -660,7 +666,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 					slottype: li.data('slottype'),
 					index: li.data('index')
 				});
-			}, { icon: "showinfo.png" });
+			}, { icon: osmium_showinfo_sprite_position });
 		}
 
 		return menu;
