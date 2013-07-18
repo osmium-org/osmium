@@ -1,10 +1,18 @@
-staging
-=======
+v0.9.0, released 2013-07-18
+===========================
 
 The $fit structure changed. All cache must be cleared while updating
 (remove any file in cache/, except API_* and sess_* files).
 
-The eve schema has been updated.
+The eve schema has been updated:
+
+* Added description in invtypes
+* Removed unused columns of dgmeffects
+* Added parenttypeid in invmetatypes
+
+The osmium schema has been updated:
+
+* Added fittingimplants table
 
 v0.8.0, released 2013-06-30
 ===========================

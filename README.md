@@ -222,7 +222,7 @@ Dependencies
 ============
 
 * PHP >= 5.4, with:
-  * [dogma extension](https://github.com/Artefact2/php-dogma) (`dogma.so`)
+  * [dogma extension](https://github.com/Artefact2/php-dogma), using libdogma 1.0.0 (`dogma.so`)
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)
@@ -230,7 +230,7 @@ Dependencies
   * Zlib support
   * (Optional) iconv extension (`iconv.so`)
   * (Optional) intl extension (`intl.so`)
-  * (Optional) APC extension (`apc.so`, **≠ 3.1.12, see https://bugs.php.net/bug.php?id=62863**)
+  * (Optional) APC (or APCu for PHP >= 5.5) extension (`apc.so`)
 
 * PostgreSQL >= 9.0
 
@@ -272,11 +272,11 @@ Use the [`phobos`](http://jira.evefit.org/browse/PHOBOS) dumper to
 dump the EVE database as JSON files:
 
 ~~~~
-git clone git://dev.evefit.org/phobos.git
+git clone git://github.com/DarkFenX/Phobos.git
 cd phobos
 python2.7 setup.py build
 
-PYTHONPATH=./build/lib python2.7 dumpToJson.py -i -o <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups
+PYTHONPATH=./build/lib python2.7 dumpToJson.py -j <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits,dgmattribs,dgmtypeattribs,dgmeffects,dgmtypeeffects,invcategories,invgroups,invmetagroups,invmetatypes,invtypes,config_GetAverageMarketPricesForClient,marketProxy_GetMarketGroups
 ~~~~
 
 Then convert the JSON files to SQL statements using the

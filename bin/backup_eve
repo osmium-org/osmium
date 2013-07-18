@@ -36,5 +36,5 @@ $out_file = __DIR__.'/../pgsql/osmium-sde-'.date('YmdHis').fmod(microtime(true),
 passthru('pg_dump --host '.escapeshellarg($host)
          .' --port '.escapeshellarg($port)
          .' --username '.escapeshellarg($user)
-         .' -F p --verbose --file '.escapeshellarg($out_file)
+         .' -F p -O -x --verbose --file '.escapeshellarg($out_file)
          .' --schema eve '.escapeshellarg($dbname));
