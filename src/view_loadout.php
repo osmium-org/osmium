@@ -371,8 +371,9 @@ foreach($fit['drones'] as $typeid => $d) {
 	if(isset($d['quantityinspace'])) { $dronesin['space'] += $d['quantityinspace']; }
 	if(isset($d['quantityinbay'])) { $dronesin['bay'] += $d['quantityinbay']; }
 }
+$dbw = \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth');
 foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $v) {
-	if($dronesin[$k] === 0) continue;
+	if($dbw == 0 && $dronesin['space'] === 0 && $dronesin['bay'] === 0) continue;
 
 	echo "<div class='drones ".$k."'>\n";
 	echo "<h3>".htmlspecialchars($v)." <span>";
@@ -407,6 +408,12 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 		echo "<strong class='qty'>".$qty."×</strong>".$d['typename'];
 		echo "</li>\n";
 	}
+
+	if($dronesin[$k] === 0) {
+		echo "<li class='placeholder'><img src='".RELATIVE."/static-".\Osmium\STATICVER
+			."/icons/droneplaceholder.png' alt='' />No drones in ".$k."</li>\n";
+	}
+
 	echo "</ul>\n</div>\n";
 }
 

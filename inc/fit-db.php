@@ -707,6 +707,7 @@ function use_skillset_by_name(&$fit, $ssname, $a = null) {
 
 		$skillset = json_decode($row['importedskillset'], true);
 		$overridden = json_decode($row['overriddenskillset'], true);
+		if(!is_array($skillset)) $skillset = array();
 		if(!is_array($overridden)) $overridden = array();
 		foreach($overridden as $typeid => $l) {
 			$skillset[$typeid] = $l;
