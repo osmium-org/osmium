@@ -217,7 +217,8 @@ div#computed_attributes > section {
 		padding: 0.125em;
 		line-height: 1em;
 
-		&> img {
+		&> img, &> div.mainsprite {
+			width: 2em;
 			height: 2em;
 
 			&+ span {

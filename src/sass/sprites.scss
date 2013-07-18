@@ -10,3 +10,14 @@
 	width: $width;
 	height: $height;
 }
+
+div.mainsprite {
+	overflow: hidden;
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+
+	&> img {
+		position: absolute;
+	}
+}

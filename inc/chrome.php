@@ -555,3 +555,18 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 
 	return $num.' '.htmlspecialchars($unitdisplayname);
 }
+
+function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = null, $width = null, $height = null) {
+	if($grid_height === null) $grid_height = $grid_width;
+	if($width === null) $width = $grid_width;
+	if($height === null) $height = $width;
+
+	$posx = $grid_x * $width;
+	$posy = $grid_y * $height;
+	$imgwidth = $width / $grid_width * 1024;
+	$imgheight = $height / $grid_height * 1024;
+
+	$alt = htmlspecialchars($alt, ENT_QUOTES);
+
+	return "<div class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></div>";
+}

@@ -73,30 +73,42 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
 	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overturrets);
-	echo "<p class='overflow$overturrets'><img src='$relative/static-".\Osmium\STATICVER."/icons/turrethardpoints.png' alt='Turret hardpoints' title='Turret hardpoints' /><span id='turrethardpoints'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$overturrets'>"
+		.sprite($relative, 'Turret hardpoints', 0, 0, 64, 64, 32)
+		."<span id='turrethardpoints'>".$formatted."</span></p>\n";
 
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
 	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overlaunchers);
-	echo "<p class='overflow$overlaunchers'><img src='$relative/static-".\Osmium\STATICVER."/icons/launcherhardpoints.png' alt='Launcher hardpoints' title='Launcher hardpoints' /><span id='launcherhardpoints'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$overlaunchers'>"
+		.sprite($relative, 'Launcher hardpoints', 0, 1, 64, 64, 32)
+		."<span id='launcherhardpoints'>".$formatted."</span></p>\n";
 
 	list($captime, $capdelta) = \Osmium\Chrome\format_capacitor($capacitor);
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/capacitor.png' alt='Capacitor' title='Capacitor' /><span id='capacitor'><span>".$captime."</span><br /><span>".$capdelta."</span></span></p>\n";
+	echo "<p>"
+		.sprite($relative, 'Capacitor', 2, 0, 64, 64, 32)
+		."<span id='capacitor'><span>".$captime."</span><br /><span>".$capdelta."</span></span></p>\n";
 
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
 	$formatted = \Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true, $overcpu);
-	echo "<p class='overflow$overcpu'><img src='$relative/static-".\Osmium\STATICVER."/icons/cpu.png' alt='CPU' title='CPU' /><span id='cpu'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$overcpu'>"
+		.sprite($relative, 'CPU', 1, 0, 64, 64, 32)
+		."<span id='cpu'>".$formatted."</span></p>\n";
 
 	$powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 	$powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
 	$formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $overpower);
-	echo "<p class='overflow$overpower'><img src='$relative/static-".\Osmium\STATICVER."/icons/powergrid.png' alt='Powergrid' title='Powergrid' /><span id='power'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$overpower'>"
+		.sprite($relative, 'Powergrid', 1, 1, 64, 64, 32)
+		."<span id='power'>".$formatted."</span></p>\n";
 
 	$upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 	$upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
 	$formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $overupgrade);
-	echo "<p class='overflow$overupgrade'><img src='$relative/static-".\Osmium\STATICVER."/icons/calibration.png' alt='Calibration' title='Calibration' /><span id='upgradecapacity'>".$formatted."</span></p>\n";
+	echo "<p class='overflow$overupgrade'>"
+		.sprite($relative, 'Calibration (upgrade capacity)', 1, 2, 64, 64, 32)
+		."<span id='upgradecapacity'>".$formatted."</span></p>\n";
 
 	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".$captime.' </span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
 }
@@ -104,14 +116,24 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 function print_formatted_offense(&$fit, $relative, $reload = false) {
 	ob_start();
 
-	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit, $reload);
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/missilelauncher.png' alt='Missile damage' title='Missile damage' /><span><span title='Missile volley (alpha)'>".format_number($missilealpha)."</span><br /><span title='Missile DPS'>".format_number($missiledps)."</span></span></p>\n";
-
 	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit, $reload);
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/turret.png' alt='Turret damage' title='Turret damage' /><span><span title='Turret volley (alpha)'>".format_number($turretalpha)."</span><br /><span title='Turret DPS'>".format_number($turretdps)."</span></span></p>\n";
+	echo "<p>"
+		.sprite($relative, 'Turret damage', 0, 0, 64, 64, 32)
+		."<span><span title='Turret volley (alpha)'>"
+		.format_number($turretalpha)."</span><br /><span title='Turret DPS'>"
+		.format_number($turretdps)."</span></span></p>\n";
+
+	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit, $reload);
+	echo "<p>"
+		.sprite($relative, 'Missile damage', 0, 1, 64, 64, 32)
+		."<span><span title='Missile volley (alpha)'>"
+		.format_number($missilealpha)."</span><br /><span title='Missile DPS'>"
+		.format_number($missiledps)."</span></span></p>\n";
 
 	$dronedps = \Osmium\Fit\get_damage_from_drones($fit);
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/drones.png' alt='Drone damage' title='Drone damage' /><span title='Drone DPS'>".format_number($dronedps)."</span></p>\n";	
+	echo "<p>"
+		.sprite($relative, 'Drone damage', 0, 2, 64, 64, 32)
+		."<span title='Drone DPS'>".format_number($dronedps)."</span></p>\n";	
 
 	$dps = format_number($missiledps + $turretdps + $dronedps, -1);
 	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
@@ -144,34 +166,30 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 	echo "<span title='EHP in the worst case (dealing damage with the lowest resistance)'>≥".$mehp."</span><br />\n";
 	echo "<strong title='EHP using the selected damage profile'>".$aehp."</strong><br />\n";
 	echo "<span title='EHP in the best case (dealing damage with the highest resistance)'>≤".$Mehp."</span></th>\n";
-	echo "<td><img src='$relative/static-".\Osmium\STATICVER."/icons/r_em.png' alt='EM Resistance' title='EM Resistance' /></td>\n";
-	echo "<td><img src='$relative/static-".\Osmium\STATICVER."/icons/r_thermal.png' alt='Thermal Resistance' title='Thermal Resistance' /></td>\n";
-	echo "<td><img src='$relative/static-".\Osmium\STATICVER."/icons/r_kinetic.png' alt='Kinetic Resistance' title='Kinetic Resistance' /></td>\n";
-	echo "<td><img src='$relative/static-".\Osmium\STATICVER."/icons/r_explosive.png' alt='Explosive Resistance' title='Explosive Resistance' /></td>\n";
+	echo "<td>".sprite($relative, 'EM Resistance', 7, 29, 32)."</td>\n";
+	echo "<td>".sprite($relative, 'Thermal Resistance', 4, 29, 32)."</td>\n";
+	echo "<td>".sprite($relative, 'Kinetic Resistance', 5, 29, 32)."</td>\n";
+	echo "<td>".sprite($relative, 'Explosive Resistance', 6, 29, 32)."</td>\n";
 	echo "</tr>\n</thead>\n<tfoot></tfoot>\n<tbody>\n<tr id='shield'>\n";
-	echo "<th><img src='$relative/static-".\Osmium\STATICVER."/icons/shield.png' alt='Shield' title='Shield' /></th>\n";
+	echo "<th>".sprite($relative, 'Shield hitpoints', 3, 0, 64, 64, 32)."</th>\n";
 	echo implode('', $resists['shield']);
 	echo"</tr>\n<tr id='armor'>\n";
-	echo "<th><img src='$relative/static-".\Osmium\STATICVER."/icons/armor.png' alt='Armor' title='Armor' /></th>\n";
+	echo "<th>".sprite($relative, 'Armor hitpoints', 3, 1, 64, 64, 32)."</th>\n";
 	echo implode('', $resists['armor']);
 	echo"</tr>\n<tr id='hull'>\n";
-	echo "<th><img src='$relative/static-".\Osmium\STATICVER."/icons/hull.png' alt='Hull' title='Hull' /></th>\n";
+	echo "<th>".sprite($relative, 'Structure (hull) hitpoints', 3, 2, 64, 64, 32)."</th>\n";
 	echo implode('', $resists['hull']);
 	echo "</tr>\n</tbody>\n</table>\n";
 
 	$layers = array(
-		'hull' => array('hullrepair.png', 'Hull repairs',
-		                       'Hull EHP repaired per second', true),
-		'armor' => array('armorrepair.png', 'Armor repairs',
-		                        'Armor EHP repaired per second', true),
-		'shield' => array('shieldboost.png', 'Shield boost',
-		                        'Shield EHP boost per second', true),
-		'shield_passive' => array('shieldrecharge.png', 'Passive shield recharge',
-		                          'Peak shield EHP recharged per second', false),
+		'hull' => array('Hull repairs', 'Hull EHP repaired per second', true, 4, 3),
+		'armor' => array('Armor repairs', 'Armor EHP repaired per second', true, 4, 2),
+		'shield' => array('Shield boost', 'Shield EHP boost per second', true, 4, 1),
+		'shield_passive' => array('Passive shield recharge', 'Peak shield EHP recharged per second', false, 4, 0),
 		);
 
-	$rimg = "<img src='$relative/static-".\Osmium\STATICVER."/icons/tankreinforced.png' title='Reinforced tank' alt='Reinforced' />";
-	$simg = "<img src='$relative/static-".\Osmium\STATICVER."/icons/tanksustained.png' title='Sustained tank' alt='Sustained' />";
+	$rimg = sprite($relative, 'Reinforced tank', 2, 2, 64, 64, 16);
+	$simg = sprite($relative, 'Sustained tank', 2, 1, 64, 64, 16);
 
 	$rtotal = 0;
 	$stotal = 0;
@@ -179,9 +197,9 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 		list($reinforced, $sustained) = $a;
 		if($reinforced == 0) continue;
 
-		list($img, $alt, $title, $showboth) = $layers[$lname];
+		list($alt, $title, $showboth, $posx, $posy) = $layers[$lname];
 
-		echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/$img' alt='$alt' title='$title' />";
+		echo "<p>".sprite($relative, $title, $posx, $posy, 64, 64, 32);
 		if($showboth) {
 			echo "<span>";
 			echo $rimg."<span title='$title'>".format_number(1000 * $reinforced)."</span><br />";
@@ -223,11 +241,21 @@ function print_formatted_navigation(&$fit, $relative) {
 	$warpstrength = -\Osmium\Dogma\get_ship_attribute($fit, 'warpScrambleStatus');
 	$fpoints = 'point'.(abs($warpstrength) == 1 ? '' : 's');
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/propulsion.png' alt='Propulsion' title='Propulsion' /><span title='Maximum velocity'>".format_number($maxvelocity)." m/s</span></p>\n";
+	echo "<p>"
+		.sprite($relative, 'Propulsion', 5, 0, 64, 64, 32)
+		."<span title='Maximum velocity'>".format_number($maxvelocity)." m/s</span></p>\n";
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/agility.png' alt='Agility' title='Agility' /><span><span title='Agility modifier'>".format_number($agility, 3)."x</span><br /><span title='Time to align'>".format_number($aligntime)." s</span></span></p>\n";
+	echo "<p>"
+		.sprite($relative, 'Agility', 10, 2, 32)
+		."<span><span title='Agility modifier'>"
+		.format_number($agility, 3)."x</span><br /><span title='Time to align'>"
+		.format_number($aligntime)." s</span></span></p>\n";
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/warpcore.png' alt='Warp' title='Warp' /><span><span title='Warp speed'>".round($warpspeed, 1)." AU/s</span><br /><span title='Warp core strength'>".$warpstrength." ".$fpoints."</span></span></p>\n";
+	echo "<p>"
+		.sprite($relative, 'Warp Core', 5, 2, 64, 64, 32)
+		."<span><span title='Warp speed'>"
+		.round($warpspeed, 1)." AU/s</span><br /><span title='Warp core strength'>"
+		.$warpstrength." ".$fpoints."</span></span></p>\n";
 
 	print_formatted_attribute_category('navigation', 'Navigation', '<span title="Maximum velocity">'.format_number($maxvelocity, -1).' m/s</span>', '', ob_get_clean());
 }
@@ -235,9 +263,16 @@ function print_formatted_navigation(&$fit, $relative) {
 function print_formatted_targeting(&$fit, $relative) {
 	ob_start();
 
+	static $types = array(
+		'radar' => [ 12, 0 ],
+		'ladar' => [ 13, 0 ],
+		'magnetometric' => [ 12, 1 ],
+		'gravimetric' => [ 13, 1 ],
+	);
+
 	$scanstrength = array();
 	$maxtype = null;
-	foreach(array('radar', 'ladar', 'magnetometric', 'gravimetric') as $t) {
+	foreach($types as $t => $p) {
 		$scanstrength[$t] = \Osmium\Dogma\get_ship_attribute($fit, 'scan'.ucfirst($t).'Strength');
 		if($maxtype === null || $scanstrength[$t] > $scanstrength[$maxtype]) {
 			$maxtype = $t;
@@ -251,11 +286,21 @@ function print_formatted_targeting(&$fit, $relative) {
 	$scanres = \Osmium\Dogma\get_ship_attribute($fit, 'scanResolution');
 	$sigradius = \Osmium\Dogma\get_ship_attribute($fit, 'signatureRadius');
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting_".$maxtype.".png' alt='".ucfirst($maxtype)." strength' title='".ucfirst($maxtype)." strength' /><span><span title='Maximum locked targets'>".$numtargets." ".$ftargets."</span><br /><span title='Sensor strength'>".round($scanstrength[$maxtype], 1)." points</span></span></p>\n";
+	echo "<p>"
+		.sprite($relative, ucfirst($maxtype).' Sensor Strength', $types[$maxtype][0], $types[$maxtype][1], 32)
+		."<span><span title='Maximum locked targets'>"
+		.$numtargets." ".$ftargets."</span><br /><span title='Sensor strength'>"
+		.round($scanstrength[$maxtype], 1)." points</span></span></p>\n";
 
-	echo "<p><img src='$relative/static-".\Osmium\STATICVER."/icons/targeting.png' alt='Targeting range' title='Targeting range' /><span><span title='Targeting range'>".format_range($targetrange)."</span><br /><span title='Scan resolution' id='scan_resolution' data-value='".$scanres."'>".format_number($scanres)." mm</span></span></p>\n";
+	echo "<p>"
+		.sprite($relative, 'Targeting', 6, 1, 64, 64, 32)
+		."<span><span title='Targeting range'>".format_range($targetrange)
+		."</span><br /><span title='Scan resolution' id='scan_resolution' data-value='".$scanres."'>"
+		.format_number($scanres)." mm</span></span></p>\n";
 
-	echo "<p id='signature_radius' title='Signature radius' data-value='".$sigradius."'><img src='$relative/static-".\Osmium\STATICVER."/icons/radius.png' alt='Signature radius' /><span>".format_range($sigradius)."</span></p>\n";
+	echo "<p id='signature_radius' title='Signature radius' data-value='".$sigradius."'>"
+		.sprite($relative, 'Signature Radius', 12, 4, 32)
+		."<span>".format_range($sigradius)."</span></p>\n";
 
 	print_formatted_attribute_category(
 		'targeting', 'Targeting',
