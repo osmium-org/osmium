@@ -21,6 +21,8 @@ namespace Osmium\CLI\UpdateCharacterInfo;
 
 require __DIR__.'/../inc/root.php';
 
+/* FIXME: the API is very slow, this script will not scale as it is */
+
 $q = \Osmium\Db\query_params('SELECT
 accountid, keyid, verificationcode, apiverified,
 characterid, charactername,
@@ -31,7 +33,10 @@ FROM osmium.accounts WHERE apiverified = true', array());
 
 while($a = \Osmium\Db\fetch_assoc($q)) {
 	if(\Osmium\State\check_api_key($a) === null) {
-		echo "X";
+		/* Not only printing errors to standard error is expected, it
+		 * will usually be mailed by the cron daemon to warn the
+		 * server admin that something is wrong */
+		fprintf(STDERR, "X");
 	} else {
 		echo ".";
 	}

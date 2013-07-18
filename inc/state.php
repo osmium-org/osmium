@@ -347,7 +347,7 @@ function check_api_key($a, $initial = false) {
 			$must_renew = true;
 		} else {
 			/* Most likely internal error */
-			return;
+			return null;
 		}
 	}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,15 +21,16 @@ require __DIR__.'/../inc/root.php';
 
 /* Truncate the index (FIXME: replace this by TRUNCATE RTINDEX when
  * available) */
-$q = \Osmium\Search\query('SELECT id FROM osmium_loadouts');
-while($row = \Osmium\Search\fetch_row($q)) {
-	\Osmium\Search\query('DELETE FROM osmium_loadouts WHERE id = '.$row[0]);
-}
+do {
+	$q = \Osmium\Search\query('SELECT id FROM osmium_loadouts');
+	$deleted = 0;
+	while($row = \Osmium\Search\fetch_row($q)) {
+		\Osmium\Search\query('DELETE FROM osmium_loadouts WHERE id = '.$row[0]);
+		++$deleted;
+	}
+} while($deleted > 0);
 
-const BATCH_SIZE = 100;
-
-$i = 0;
-$r = \Osmium\Search\query_select_searchdata('ORDER BY loadoutid ASC');
+const BATCH_SIZE = 1000;
 
 $offset = 0;
 do {
