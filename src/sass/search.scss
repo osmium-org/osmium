@@ -10,10 +10,6 @@ div#search_mini {
 		&> h1 {
 			font-size: 1.5em;
 			margin-right: 0.5em;
-
-			&> img {
-				height: 2em;
-			}
 		}
 
 		&> p {
@@ -50,10 +46,6 @@ div#search_full {
 		margin: 0;
 		padding: 0;
 		margin-bottom: 0.5em;
-
-		&> img {
-			height: 1.5em;
-		}
 	}
 
 	&> form > p {

@@ -279,7 +279,7 @@ function get_search_cond_from_advanced() {
  * Print a basic seach form. Pre-fills the search form from $_GET data
  * if present.
  */
-function print_search_form($uri = null, $relative = '.', $label = 'Search loadouts', $icon = 'search.png', $advanced = 'Advanced search', $placeholder = 'Search by name, description, ship, modules or tags…') {
+function print_search_form($uri = null, $relative = '.', $label = 'Search loadouts', $icon = null, $advanced = 'Advanced search', $placeholder = 'Search by name, description, ship, modules or tags…') {
 	static $operands = array(
 		"gt" => "or newer",
 		"eq" => "exactly",
@@ -293,6 +293,8 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 		"comments" => "comments",
 	);
 
+	if($icon === null) $icon = [ 2, 12, 64, 64 ];
+
 	$val = '';
 	if(isset($_GET['q']) && strlen($_GET['q']) > 0) {
 		$val = "value='".htmlspecialchars($_GET['q'], ENT_QUOTES)."' ";
@@ -303,7 +305,9 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 	}
 
 	echo "<form method='get' action='{$uri}'>\n";
-	echo "<h1><label for='search'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/{$icon}' alt='' />{$label}</label></h1>\n";
+	echo "<h1><label for='search'>"
+		.\Osmium\Chrome\sprite($relative, '', $icon[0], $icon[1], $icon[2], $icon[3], 64)
+		.$label."</label></h1>\n";
 
 	echo "<p>\n<input id='search' type='search' autofocus='autofocus' placeholder='{$placeholder}' name='q' $val/> <input type='submit' value='Go!' /><br />\n";
 

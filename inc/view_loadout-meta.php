@@ -24,7 +24,12 @@ function print_list($heading, array $elements) {
 
 	foreach($elements as $v) {
 		if(is_array($v)) {
-			$v = "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/".$v[0]."' alt='' /> ".$v[1];
+			if(is_array($v[0])) {
+				$img = \Osmium\Chrome\sprite(RELATIVE, '', $v[0][0], $v[0][1], $v[0][2], $v[0][3], 16);
+			} else {
+				$img = "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/".$v[0]."' alt='' />";
+			}
+			$v = $img." ".$v[1];
 			$c = ' class="hasleadicon"';
 		} else {
 			$c = '';
@@ -45,19 +50,22 @@ case \Osmium\Fit\VIEW_EVERYONE:
 	break;
 
 case \Osmium\Fit\VIEW_PASSWORD_PROTECTED:
-	$perms[] = "This loadout can be viewed by <strong>anyone</strong>, provided they have the <strong>password</strong>.";
+	$perms[] = [
+		[ 0, 25, 32, 32 ],
+		"This loadout can be viewed by <strong>anyone</strong>, provided they have the <strong>password</strong>."
+	];
 	break;
 
 case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
 	if($author['apiverified'] === 't' && $author['allianceid'] > 0) {
 		$perms[] = [
-			"corporation.png",
+			[ 2, 13, 64, 64 ],
 			"This loadout can only be viewed by members of <strong>"
 			.htmlspecialchars($author['alliancename'])."</strong> only"
 		];
 	} else {
 		$perms[] = [
-			"onlyme.png",
+			[ 1, 25, 32, 32 ],
 			"This loadout is marked as alliance only, but the author is not in any alliance (or has not verified his account). This loadout can effectively be viewed by its <strong>owner only</strong>."
 		];
 	}
@@ -66,13 +74,13 @@ case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
 case \Osmium\Fit\VIEW_CORPORATION_ONLY:
 	if($author['apiverified'] === 't') {
 		$perms[] = [
-			"corporation.png",
+			[ 3, 13, 64, 64 ],
 			"This loadout can only be viewed by members of <strong>"
 			.htmlspecialchars($author['corporationname'])."</strong> only."
 		];
 	} else {
 		$perms[] = [
-			"onlyme.png",
+			[ 1, 25, 32, 32 ],
 			"This loadout is marked as corporation only, but the author is not in any corporation (or has not verified his account). This loadout can effectively be viewed by its <strong>owner only</strong>."
 		];
 	}
@@ -80,7 +88,7 @@ case \Osmium\Fit\VIEW_CORPORATION_ONLY:
 
 case \Osmium\Fit\VIEW_OWNER_ONLY:
 	$perms[] = [
-		"onlyme.png",
+		[ 1, 25, 32, 32 ],
 		"This loadout can be viewed by its <strong>owner only</strong>."
 	];
 	break;
@@ -92,7 +100,7 @@ if($loadoutid !== false) {
 
 	case \Osmium\Fit\EDIT_OWNER_ONLY:
 		$perms[] = [
-			"onlyme.png",
+			[ 1, 25, 32, 32 ],
 			"This loadout can be edited by its <strong>owner only</strong>."
 		];
 		break;
@@ -100,14 +108,14 @@ if($loadoutid !== false) {
 	case \Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY:
 		if($author['apiverified'] === 't') {
 			$perms[] = [
-				"corporation.png",
+				[ 3, 13, 64, 64 ],
 				"This loadout can be edited by its <strong>owner</strong> or by people in <strong>"
 				.htmlspecialchars($author['corporationname'])
 				."</strong> with the <strong>fitting manager</strong> role."
 			];
 		} else {
 			$perms[] = [
-				"onlyme.png",
+				[ 1, 25, 32, 32 ],
 				"This loadout is marked as editable its owner and by people in the same corporation with the fitting manager role, but the owner is not in a corporation (or has not verified his account). This loadout can effectively be edited by its <strong>owner only</strong>."
 			];
 		}
@@ -116,13 +124,13 @@ if($loadoutid !== false) {
 	case \Osmium\Fit\EDIT_CORPORATION_ONLY:
 		if($author['apiverified'] === 't') {
 			$perms[] = [
-				"corporation.png",
+				[ 3, 13, 64, 64 ],
 				"This loadout can be edited by any person in <strong>"
 				.htmlspecialchars($author['corporationname'])."</strong>."
 			];
 		} else {
 			$perms[] = [
-				"onlyme.png",
+				[ 1, 25, 32, 32 ],
 				"This loadout is marked as editable by the corporation of the owner, but the owner is not in a corporation (or has not verified his account). This loadout can effectively be edited by its <strong>owner only</strong>."
 			];
 		}
@@ -131,13 +139,13 @@ if($loadoutid !== false) {
 	case \Osmium\Fit\EDIT_ALLIANCE_ONLY:
 		if($author['apiverified'] === 't' && $author['allianceid'] > 0) {
 			$perms[] = [
-				"corporation.png",
+				[ 2, 13, 64, 64 ],
 				"This loadout can be edited by any person in <strong>"
 				.htmlspecialchars($author['alliancename'])."</strong>."
 			];
 		} else {
 			$perms[] = [
-				"onlyme.png",
+				[ 1, 25, 32, 32 ],
 				"This loadout is marked as editable by the alliance of the owner, but the owner is not in an alliance (or has not verified his account). This loadout can effectively be edited by its <strong>owner only</strong>."
 			];
 		}
@@ -160,7 +168,7 @@ case \Osmium\Fit\VISIBILITY_PUBLIC:
 
 case \Osmium\Fit\VISIBILITY_PRIVATE:
 	$perms[] = [
-		"hidden.png",
+		[ 4, 13, 64, 64 ],
 		"This loadout is <strong>private</strong>. It will not be indexed and will not appear on any search results. Only people with the correct URI will be able to access the loadout."
 	];
 	break;
@@ -197,14 +205,14 @@ if($loggedin && $loadoutid !== false) {
 
 	if($fav) {
 		$title = 'Remove from your favorite loadouts';
-		$favimg = '_ds';
+		$favimg = [ 3, 25, 32, 32 ];
 	} else {
 		$title = 'Add to your favorite loadouts';
-		$favimg = '';
+		$favimg = [ 2, 25, 32, 32 ];
 	}
 
 	$actions[] = [
-		"favorited".$favimg.".png",
+		$favimg,
 		"<a href='".RELATIVE."/favorite/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;redirect=loadout'>"
 		.$title."</a>: favorite loadouts are listed on your <a href='".RELATIVE."/profile/".$a['accountid']."#pfavorites'>profile</a> page."
 	];
