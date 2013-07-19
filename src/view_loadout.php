@@ -271,15 +271,14 @@ echo "<div id='vlmain'>
 
 echo "<section id='loadout'>
 <section id='modules'>\n";
-$stypes = \Osmium\Fit\get_slottypes_names();
-$stateful = array_flip(\Osmium\Fit\get_stateful_slottypes());
+$stypes = \Osmium\Fit\get_slottypes();
 $slotusage = \Osmium\AjaxCommon\get_slot_usage($fit);
 $states = \Osmium\Fit\get_state_names();
 $ia_ = \Osmium\AjaxCommon\get_modules_interesting_attributes($fit);
 $ia = array();
 foreach($ia_ as $k) { $ia[$k[0]][$k[1]] = $k; }
 $fittedtotal = 0;
-foreach($stypes as $type => $fname) {
+foreach($stypes as $type => $tdata) {
 	if($slotusage[$type] == 0 && (
 		!isset($fit['modules'][$type]) || count($fit['modules'][$type]) === 0
 	)) continue;
@@ -295,7 +294,7 @@ foreach($stypes as $type => $fname) {
 	}
 
 	echo "<div class='slots $type $groupstatus'>\n<h3>";
-	echo htmlspecialchars($fname)." <span>$groupedcharges";
+	echo htmlspecialchars($tdata[0])." <span>$groupedcharges";
 	$u = count($sub);
 	$overflow = $u > $slotusage[$type] ? ' overflow' : '';
 	echo "<small class='counts$overflow'>".$u." / ".$slotusage[$type]."</small></span>";
@@ -333,7 +332,7 @@ foreach($stypes as $type => $fname) {
 			echo "</span>\n";
 		}
 
-		if(isset($stateful[$type])) {
+		if($tdata[2]) {
 			echo "<a class='toggle_state' href='javascript:void(0);' title='".$s[0]."'>"
 				.\Osmium\Chrome\sprite(RELATIVE, $s[2], $s[1][0], $s[1][1], $s[1][2], $s[1][3], 16)
 				."</a>\n";
@@ -350,9 +349,9 @@ foreach($stypes as $type => $fname) {
 	}
 
 	for($i = count($sub); $i < $slotusage[$type]; ++$i) {
-		echo "<li class='placeholder'>";
-		echo "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/slot_".$type.".png' alt='' />";
-		echo "Unused ".$type." slot</li>\n";
+		echo "<li class='placeholder'>"
+			.\Osmium\Chrome\sprite(RELATIVE, '', $tdata[1][0], $tdata[1][1], $tdata[1][2], $tdata[1][3], 32)
+			."Unused ".$type." slot</li>\n";
 		++$fittedtotal;
 	}
 
@@ -410,8 +409,9 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 	}
 
 	if($dronesin[$k] === 0) {
-		echo "<li class='placeholder'><img src='".RELATIVE."/static-".\Osmium\STATICVER
-			."/icons/droneplaceholder.png' alt='' />No drones in ".$k."</li>\n";
+		echo "<li class='placeholder'>"
+			.\Osmium\Chrome\sprite(RELATIVE, '', 0, 13, 64, 64, 32)
+			."No drones in ".$k."</li>\n";
 	}
 
 	echo "</ul>\n</div>\n";

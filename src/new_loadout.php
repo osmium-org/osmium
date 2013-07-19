@@ -322,8 +322,8 @@ if(\Osmium\State\is_logged_in()) {
 echo "</section>\n";
 
 echo "<section id='modules'>\n";
-$stypes = \Osmium\Fit\get_slottypes_names();
-foreach($stypes as $type => $fname) {
+$stypes = \Osmium\Fit\get_slottypes();
+foreach($stypes as $type => $tdata) {
     if($type === "high" || $type === "medium") {
         $groupstatus = "grouped";
         $groupedcharges = "<small class='groupcharges'>Charges are grouped</small>";
@@ -332,7 +332,7 @@ foreach($stypes as $type => $fname) {
         $groupedcharges = "";
     }
 
-	echo "<div class='slots $type $groupstatus'>\n<h3>".htmlspecialchars($fname)
+	echo "<div class='slots $type $groupstatus'>\n<h3>".htmlspecialchars($tdata[0])
 		." <span>$groupedcharges<small class='counts'></small></span></h3>\n";
 	echo "<ul></ul>\n";
 	echo "</div>\n";

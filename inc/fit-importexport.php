@@ -1265,7 +1265,7 @@ function export_to_markdown($fit, $embedclf = true) {
 		}
 
 		/* Enforce consistent ordering of slot types, instead of just using foreach */
-		foreach(get_slottypes() as $type) {
+		foreach(get_slottypes() as $type => $tdata) {
 			if(!isset($preset['modules'][$type]) || count($preset['modules'][$type]) == 0) continue;
 
 			$md .= "### ".ucfirst($type)." slots\n\n";
@@ -1321,7 +1321,7 @@ function export_to_markdown($fit, $embedclf = true) {
 				if($q !== "") $md .= $q."\n\n";
 			}
 
-			foreach(get_slottypes() as $type) {
+			foreach(get_slottypes() as $type => $tdata) {
 				if(!isset($cp['charges'][$type])) continue;
 
 				foreach($cp['charges'][$type] as $index => $charge) {
@@ -1490,9 +1490,11 @@ function export_to_eft($fit) {
 	$name = isset($fit['metadata']['name']) ? $fit['metadata']['name'] : 'unnamed';
 	$r .= ', '.$name."]\n";
 
+	$slots = get_slottypes();
+
 	foreach($slotorder as $type => $emptyname) {
 		$i = 0;
-		$max = \Osmium\Dogma\get_ship_attribute($fit, get_attr_slottypes()[$type]);
+		$max = \Osmium\Dogma\get_ship_attribute($fit, $slots[$type][3]);
 
 		$m = isset($fit['modules'][$type]) ? $fit['modules'][$type] : array();
 		foreach($m as $index => $module) {

@@ -230,12 +230,12 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 	if(hascharges = (typeid in osmium_charges)) {
 		li.on('remove_charge_nogroupcheck', function() {
 			var span = li.children('span.charge');
-			var chargeimg = span.children('img');
 			var charge = span.children('span.name');
 
 			li.data('chargetypeid', null);
-			chargeimg.prop('src', osmium_relative + '/static-' + osmium_staticver
-						   + '/icons/no_charge.png');
+			span.children('img, div.mainsprite').replaceWith(
+				osmium_sprite('', 0, 28, 32, 32, 32, 32)
+			);
 			charge.empty();
 			charge.append($(document.createElement('em')).text('(No charge)'));
 
@@ -303,7 +303,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		}
 	}
 
-	if(stateful = ($.inArray(m[3], osmium_stateful_slot_types) !== -1)) {
+	if(stateful = osmium_slot_types[m[3]][2]) {
 		a = $(document.createElement('a'));
 		stateimg = $(document.createElement('img'));
 		a.addClass('toggle_state');
@@ -584,7 +584,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				li.trigger('remove_charge');
 				osmium_commit_clf();
 				osmium_undo_push();
-			}, { icon: "no_charge.png" });
+			}, { icon: [ 0, 28, 32, 32 ] });
 
 			osmium_ctxmenu_add_separator(menu);
 		}
@@ -677,17 +677,21 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 osmium_add_placeholder_module = function(slotsdiv) {
 	var ul = slotsdiv.children('ul');
-	var li, img;
+	var li;
 	var type = slotsdiv.data('type');
 
 	li = $(document.createElement('li'));
 	li.addClass('placeholder');
 	li.text('Unused ' + type + ' slot');
 
-	img = $(document.createElement('img'));
-	img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/slot_' + type + '.png');
-
-	li.prepend(img);
+	li.prepend(osmium_sprite(
+		'',
+		osmium_slot_types[type][1][0],
+		osmium_slot_types[type][1][1],
+		osmium_slot_types[type][1][2],
+		osmium_slot_types[type][1][3],
+		32, 32
+	));
 	ul.append(li);
 };
 
@@ -711,12 +715,14 @@ osmium_set_module_state = function(li, newstate) {
 
 osmium_add_charge = function(li, chargetypeid) {
 	var span = li.children('span.charge');
-	var chargeimg = span.children('img');
+	var img = $(document.createElement('img'));
 	var charge = span.children('span.name');
 
 	li.data('chargetypeid', chargetypeid);
+	img.prop('src', '//image.eveonline.com/Type/' + chargetypeid + '_64.png');
+	img.prop('alt', '');
+	span.children('img, div.mainsprite').replaceWith(img);
 
-	chargeimg.prop('src', '//image.eveonline.com/Type/' + chargetypeid + '_64.png');
 	charge.empty();
 	charge.text(osmium_types[chargetypeid][1]);
 	charge.prop('title', osmium_types[chargetypeid][1]);

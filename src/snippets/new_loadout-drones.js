@@ -151,11 +151,9 @@ osmium_gen_drones = function() {
 		if(ul.children('li').length == 0) {
 			/* Add placeholder entry */
 			var li = $(document.createElement('li'));
-			var img = $(document.createElement('img'));
 			li.text('No drones in ' + p);
 			li.addClass('placeholder');
-			img.prop('src', osmium_relative + '/static-' + osmium_staticver + '/icons/droneplaceholder.png');
-			li.prepend(img);
+			li.prepend(osmium_sprite('', 0, 13, 64, 64, 32, 32));
 			ul.append(li);
 		}
 	}

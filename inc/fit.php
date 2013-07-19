@@ -100,43 +100,19 @@ const STATE_OVERLOADED = 3;
 
 /* ----------------------------------------------------- */
 
-/** Get the different module slot categories. */
+/**
+ * Get the different module slot categories.
+ *
+ * @returns array(slottype => [ title, sprite_position, stateful, attributename ]
+ */
 function get_slottypes() {
-	return array('high', 'medium', 'low', 'rig', 'subsystem');
-}
-
-/** Get the names of the module slot categories. */
-function get_slottypes_names() {
 	return array(
-		'high' => 'High slots',
-		'medium' => 'Medium slots',
-		'low' => 'Low slots',
-		'rig' => 'Rig slots',
-		'subsystem' => 'Subsystems',
-		);
-}
-
-/**
- * Get all the module slot categories which contain stateful modules,
- * ie modules that can be activated, overloaded, offlined etc.
- */
-function get_stateful_slottypes() {
-	/* Rigs and subsystems cannot be offlined/activated/overloaded */
-	return array('high', 'medium', 'low');
-}
-
-/**
- * Get an array of all the attribute names defining the number of
- * slots available on a ship.
- */
-function get_attr_slottypes() {
-	return array(
-		'high' => 'hiSlots',
-		'medium' => 'medSlots',
-		'low' => 'lowSlots',
-		'rig' => 'upgradeSlotsLeft',
-		'subsystem' => 'maxSubSystems'
-		);
+		'high' => [ 'High slots', [ 0, 15, 64, 64 ], true, 'hiSlots' ],
+		'medium' => [ 'Medium slots', [ 1, 15, 64, 64 ], true, 'medSlots' ],
+		'low' => [ 'Low slots', [ 2, 15, 64, 64 ], true, 'lowSlots' ],
+		'rig' => [ 'Rig slots', [ 3, 15, 64, 64 ], false, 'upgradeSlotsLeft' ],
+		'subsystem' => [ 'Subsystems', [ 4, 15, 64, 64 ], false, 'maxSubSystems' ],
+	);
 }
 
 /**
@@ -311,7 +287,7 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 
 	list($isactivable, ) = get_module_states($fit, $typeid);
 	if($state === null) {
-		$state = ($isactivable && in_array($type, get_stateful_slottypes())) ? STATE_ACTIVE : STATE_ONLINE;
+		$state = ($isactivable && get_slottypes()[$type][2]) ? STATE_ACTIVE : STATE_ONLINE;
 	}
 
 	$fit['modules'][$type][$index] = array(

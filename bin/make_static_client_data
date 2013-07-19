@@ -152,7 +152,7 @@ foreach(\Osmium\Fit\get_state_names() as $state) {
 
 /* ---------------------------------------------------------- */
 
-$static['statefulslottypes'] = \Osmium\Fit\get_stateful_slottypes();
+$static['slottypes'] = \Osmium\Fit\get_slottypes();
 
 /* ---------------------------------------------------------- */
 
@@ -258,10 +258,10 @@ foreach($groups as $g => $d) {
 $static['dmgprofiles'] = array(
 	'Generic' => array(
 		'Uniform' => [ .25, .25, .25, .25 ],
-		'EM' => [ 1.0, .0, .0, .0, "r_em.png" ],
-		'Explosive' => [ .0, 1.0, .0, .0, "r_explosive.png" ],
-		'Kinetic' => [ .0, .0, 1.0, .0, "r_kinetic.png" ],
-		'Thermal' => [ .0, .0, .0, 1.0, "r_thermal.png" ]
+		'EM' => [ 1.0, .0, .0, .0, [ 7, 29, 32, 32 ] ],
+		'Explosive' => [ .0, 1.0, .0, .0, [ 6, 29, 32, 32 ] ],
+		'Kinetic' => [ .0, .0, 1.0, .0, [ 5, 29, 32, 32 ] ],
+		'Thermal' => [ .0, .0, .0, 1.0, [ 4, 29, 32, 32 ] ]
 	),
 	/* Data "stolen" from http://wiki.eveuniversity.org/NPC_Damage_Types */
 	'Factions' => array(

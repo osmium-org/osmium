@@ -63,7 +63,7 @@ $hidden-char: '\0025B8';
 		display: inline-block;
 	}
 	
-	&> img, &> span.charge > img {
+	&> img, &> span.charge > img, &> div.mainsprite, &> span.charge > div.mainsprite {
 		height: 32px;
 		width: 32px;
 		margin-right: 0.125em;

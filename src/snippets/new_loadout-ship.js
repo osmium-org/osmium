@@ -79,7 +79,7 @@ osmium_init_ship = function() {
 			osmium_user_initiated_push(false);
 			osmium_gen();
 			osmium_user_initiated_pop();
-		}, { icon: "undo.png" });
+		}, { icon: [ 1, 13, 64, 64 ] });
 
 		osmium_ctxmenu_add_separator(menu);
 

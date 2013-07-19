@@ -30,13 +30,14 @@ tags:
 	ctags -e -R .
 
 clear-harmless-cache:
-	rm -f cache/{OsmiumCache,Loadout_Cache}_* static/cache/*
-	rm -Rf cache/CSS cache/HTML cache/URI
+	find ./cache -maxdepth 1 -type f -not \( -name "API_*" -or -name "sess_*" \) -delete
+	find ./static/cache -maxdepth 1 -type f -not -name ".empty_file" -delete
+	make
 
 clear-api-cache:
-	rm -f cache/API_*
+	find ./cache -name "API_*" -delete
 
 clear-sessions:
-	rm -f cache/sess_*
+	find ./cache -name "sess_*" -delete
 
 .PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache

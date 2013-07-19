@@ -56,8 +56,8 @@ function get_module_shortlist() {
 function get_slot_usage(&$fit) {
 	$usage = array();
 
-	foreach(\Osmium\Fit\get_attr_slottypes() as $type => $attr) {
-		$usage[$type] = (int)\Osmium\Dogma\get_ship_attribute($fit, $attr, false);
+	foreach(\Osmium\Fit\get_slottypes() as $type => $tdata) {
+		$usage[$type] = (int)\Osmium\Dogma\get_ship_attribute($fit, $tdata[3], false);
 	}
 
 	return $usage;
