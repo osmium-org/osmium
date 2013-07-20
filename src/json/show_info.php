@@ -41,7 +41,7 @@ function get_attributes($typeid, $getval_callback) {
 	$attributes = array();
 
 	$aq = \Osmium\Db\query_params(
-		"SELECT dgmtypeattribs.attributeid, attributename, dgmattribs.displayname, dgmattribs.unitid,
+		"SELECT dgmtypeattribs.attributeid, attributename, dgmattribs.displayname, value, dgmattribs.unitid,
 		dgmunits.displayname AS udisplayname, categoryid
 		FROM eve.dgmtypeattribs
 		JOIN eve.dgmattribs ON dgmtypeattribs.attributeid = dgmattribs.attributeid
@@ -54,7 +54,7 @@ function get_attributes($typeid, $getval_callback) {
 		$attributes[$a['attributeid']] = array(
 			ucfirst($a['displayname']),
 			\Osmium\Chrome\format_number_with_unit(
-				$getval_callback($a['attributeid']),
+				$getval_callback !== null ? $getval_callback($a['attributeid']) : (float)$a['value'],
 				$a['unitid'],
 				$a['udisplayname']
 				),
@@ -123,59 +123,15 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
 		return \Osmium\Dogma\get_implant_attribute($fit, $typeid, $aname);
 	});
+} else if($_GET['type'] === 'generic') {
+	$typeid = (int)$_GET['typeid'];
+	$typename = \Osmium\Fit\get_typename($typeid);
+	$attributes = get_attributes($typeid, null);
+	$affectors = false;
 }
 
 else {
 	\Osmium\Chrome\return_json(array());
-}
-
-if(!isset($affectors)) {
-	dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
-}
-$affectors_per_type = array();
-$affectors_per_att = array();
-$numaffectors = 0;
-
-foreach($affectors as $affector) {
-	/* Skip affectors affecting non-overridden attributes */
-	if(!isset($attributes[$affector['destid']])) continue;
-
-	$dest = $attributes[$affector['destid']][0];
-	$source = \Osmium\Fit\get_typename($affector['id']);
-
-	switch($affector['operator']) {
-
-	case '*':
-		$affector['operator'] = '×';
-		if(abs($affector['value'] - 1.0) < 1e-300) continue 2;
-		break;
-
-	case '-':
-		$affector['value'] = -$affector['value'];
-	case '+':
-		if(abs($affector['value']) < 1e-300) continue 2;
-		break;
-
-	}
-
-	$fval = $affector['value'];
-
-	if($affector['flags'] > 0) {
-		$flags = array();
-		if($affector['flags'] & DOGMA_AFFECTOR_PENALIZED) {
-			$flags[] = 'penalized';
-		}
-		if($affector['flags'] & DOGMA_AFFECTOR_SINGLETON) {
-			$flags[] = 'singleton';
-		}
-
-		$fval .= ' <small>('.implode(', ', $flags).')</small>';
-	}
-
-	$a = [ $affector, $dest, $source, $fval ];
-	$affectors_per_type[$affector['id']][] = $a;
-	$affectors_per_att[$affector['destid']][] = $a;
-	++$numaffectors;
 }
 
 
@@ -183,15 +139,125 @@ foreach($affectors as $affector) {
 $fresult = array(
 	'header' => "<img src='http://image.eveonline.com/Type/".$typeid."_64.png' alt='' /> "
 	.htmlspecialchars($typename),
-
-	'attributes' => '',
-	'affectors_per_type' => '',
-	'affectors_per_att' => '',
 );
 
+if(!isset($affectors)) {
+	dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
+}
+
+if($affectors !== false) {
+	$affectors_per_type = array();
+	$affectors_per_att = array();
+	$numaffectors = 0;
 
 
-$fresult['attributes'] .= "<table class='d'>\n<tbody>\n";
+
+	foreach($affectors as $affector) {
+		/* Skip affectors affecting non-overridden attributes */
+		if(!isset($attributes[$affector['destid']])) continue;
+
+		$dest = $attributes[$affector['destid']][0];
+		$source = \Osmium\Fit\get_typename($affector['id']);
+
+		switch($affector['operator']) {
+
+		case '*':
+			$affector['operator'] = '×';
+			if(abs($affector['value'] - 1.0) < 1e-300) continue 2;
+			break;
+
+		case '-':
+			$affector['value'] = -$affector['value'];
+		case '+':
+			if(abs($affector['value']) < 1e-300) continue 2;
+			break;
+
+		}
+
+		$fval = $affector['value'];
+
+		if($affector['flags'] > 0) {
+			$flags = array();
+			if($affector['flags'] & DOGMA_AFFECTOR_PENALIZED) {
+				$flags[] = 'penalized';
+			}
+			if($affector['flags'] & DOGMA_AFFECTOR_SINGLETON) {
+				$flags[] = 'singleton';
+			}
+
+			$fval .= ' <small>('.implode(', ', $flags).')</small>';
+		}
+
+		$a = [ $affector, $dest, $source, $fval ];
+		$affectors_per_type[$affector['id']][] = $a;
+		$affectors_per_att[$affector['destid']][] = $a;
+		++$numaffectors;
+	}
+
+
+
+	uasort($affectors_per_type, function($a, $b) { return strcmp($a[0][2], $b[0][2]); });
+	uasort($affectors_per_att, function($a, $b) { return strcmp($a[0][1], $b[0][1]); });
+
+
+
+	$fresult['affectors_per_type'] = "<ul>\n";
+	foreach($affectors_per_type as $a_typeid => &$a) {
+		$typename = htmlspecialchars($a[0][2]);
+		$fresult['affectors_per_type'] .= "<li><img src='http://image.eveonline.com/Type/"
+			.$a_typeid."_64.png' alt='' /> ".$typename.":\n";
+		$fresult['affectors_per_type'] .= "<ul>\n";
+
+		usort($a, function($x, $y) { return strcmp($x[1], $y[1]); });
+
+		foreach($a as $val) {
+			list($aff, $dest, $source, $fval) = $val;
+			$op = $aff['operator'];
+
+			$fresult['affectors_per_type'] .= "<li><label>".htmlspecialchars($dest)."</label> {$op}{$fval}</li>\n";
+		}
+		$fresult['affectors_per_type'] .= "</ul>\n</li>\n";
+	}
+	$fresult['affectors_per_type'] .= "</ul>\n";
+
+
+
+	if($numaffectors > 0) {
+		$fresult['affectors_per_att'] = "<p><em>The operations are ordered by precedence (lower operations get applied last).</em></p>\n";
+	} else {
+		$fresult['affectors_per_att'] = '';
+	}
+
+	$fresult['affectors_per_att'] .= "<ul>\n";
+	foreach($affectors_per_att as $attid => &$a) {
+		$attname = htmlspecialchars($a[0][1]);
+		$fresult['affectors_per_att'] .= "<li>".$attname.":\n";
+		$fresult['affectors_per_att'] .= "<ul>\n";
+
+		usort($a, function($x, $y) { return $x[0]['order'] - $y[0]['order']; });
+
+		foreach($a as $val) {
+			list($aff, $dest, $source, $fval) = $val;
+			$op = $aff['operator'];
+
+			$fresult['affectors_per_att'] .= "<li><label><img src='//image.eveonline.com/Type/".$aff['id']
+				."_64.png' alt='' /> ".htmlspecialchars($source)."</label> {$op}{$fval}</li>\n";
+		}
+		$fresult['affectors_per_att'] .= "</ul>\n</li>\n";
+	}
+	$fresult['affectors_per_att'] .= "</ul>\n";
+
+
+
+	if($affectors_per_type === array()) {
+		$fresult['affectors_per_type'] .= "<p class='placeholder'>No affectors</p>\n";
+		$fresult['affectors_per_att'] .= "<p class='placeholder'>No affectors</p>\n";
+	}
+}
+
+
+
+$fresult['attributes'] = "<table class='d'>\n<tbody>\n";
 $previouscatid = null;
 foreach($attributes as $a) {
 	list($dname, $value, $catid) = $a;
@@ -210,58 +276,7 @@ $fresult['attributes'] .= "</tbody>\n</table>\n";
 
 
 
-uasort($affectors_per_type, function($a, $b) { return strcmp($a[0][2], $b[0][2]); });
-uasort($affectors_per_att, function($a, $b) { return strcmp($a[0][1], $b[0][1]); });
 
-$fresult['affectors_per_type'] .= "<ul>\n";
-foreach($affectors_per_type as $a_typeid => &$a) {
-	$typename = htmlspecialchars($a[0][2]);
-	$fresult['affectors_per_type'] .= "<li><img src='http://image.eveonline.com/Type/"
-		.$a_typeid."_64.png' alt='' /> ".$typename.":\n";
-	$fresult['affectors_per_type'] .= "<ul>\n";
-
-	usort($a, function($x, $y) { return strcmp($x[1], $y[1]); });
-
-	foreach($a as $val) {
-		list($aff, $dest, $source, $fval) = $val;
-		$op = $aff['operator'];
-
-		$fresult['affectors_per_type'] .= "<li><label>".htmlspecialchars($dest)."</label> {$op}{$fval}</li>\n";
-	}
-	$fresult['affectors_per_type'] .= "</ul>\n</li>\n";
-}
-$fresult['affectors_per_type'] .= "</ul>\n";
-
-
-if($numaffectors > 0) {
-	$fresult['affectors_per_att'] .= "<p><em>The operations are ordered by precedence (lower operations get applied last).</em></p>\n";
-}
-
-$fresult['affectors_per_att'] .= "<ul>\n";
-foreach($affectors_per_att as $attid => &$a) {
-	$attname = htmlspecialchars($a[0][1]);
-	$fresult['affectors_per_att'] .= "<li>".$attname.":\n";
-	$fresult['affectors_per_att'] .= "<ul>\n";
-
-	usort($a, function($x, $y) { return $x[0]['order'] - $y[0]['order']; });
-
-	foreach($a as $val) {
-		list($aff, $dest, $source, $fval) = $val;
-		$op = $aff['operator'];
-
-		$fresult['affectors_per_att'] .= "<li><label><img src='//image.eveonline.com/Type/".$aff['id']
-			."_64.png' alt='' /> ".htmlspecialchars($source)."</label> {$op}{$fval}</li>\n";
-	}
-	$fresult['affectors_per_att'] .= "</ul>\n</li>\n";
-}
-$fresult['affectors_per_att'] .= "</ul>\n";
-
-
-
-if($affectors_per_type === array()) {
-	$fresult['affectors_per_type'] .= "<p class='placeholder'>No affectors</p>\n";
-	$fresult['affectors_per_att'] .= "<p class='placeholder'>No affectors</p>\n";
-}
 
 list($desc) = \Osmium\Db\fetch_row(
 	\Osmium\Db\query_params(
@@ -277,19 +292,23 @@ if($desc === '') {
 	$desc = \Osmium\Chrome\format_sanitize_md(nl2br($desc));
 }
 
+$lis = array(
+	"<li><a href='#sidesc'>Description</a></li>",
+	"<li><a href='#siattributes'>Attributes</a></li>\n",
+);
+$sections = array(
+	"<section id='sidesc'>".$desc."</section>\n",
+	"<section id='siattributes'>\n".$fresult['attributes']."</section>\n",
+);
 
-\Osmium\Chrome\return_json(
-	array(
-		'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n"
-		."<ul id='showinfotabs'>\n"
-		."<li><a href='#sidesc'>Description</a></li>\n"
-		."<li><a href='#siattributes'>Attributes</a></li>\n"
-		."<li><a href='#siafftype'>Affectors by type (".count($affectors_per_type).")</a></li>\n"
-		."<li><a href='#siaffatt'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n"
-		."</ul>\n"
-		."<section id='sidesc'>".$desc."</section>\n"
-		."<section id='siattributes'>\n".$fresult['attributes']."</section>\n"
-		."<section id='siafftype'>\n".$fresult['affectors_per_type']."</section>\n"
-		."<section id='siaffatt'>\n".$fresult['affectors_per_att']."</section>\n"
-		)
-	);
+if($affectors !== false) {
+	$lis[] = "<li><a href='#siafftype'>Affectors by type (".count($affectors_per_type).")</a></li>\n";
+	$lis[] = "<li><a href='#siaffatt'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n";
+
+	$sections[] = "<section id='siafftype'>\n".$fresult['affectors_per_type']."</section>\n";
+	$sections[] = "<section id='siaffatt'>\n".$fresult['affectors_per_att']."</section>\n";
+}
+
+\Osmium\Chrome\return_json(array(
+	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections)
+));

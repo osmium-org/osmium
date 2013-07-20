@@ -237,6 +237,8 @@ osmium_add_metagroup_style = function(aselector, liselector) {
 };
 
 osmium_add_add_to_fit_option = function(menu, source, opts) {
+	if(osmium_loadout_readonly) return;
+
 	var name;
 	var cat = source.data('category');
 
@@ -276,6 +278,15 @@ osmium_add_add_to_fit_option = function(menu, source, opts) {
 	osmium_ctxmenu_add_separator(menu);
 };
 
+osmium_add_generic_showinfo = function(menu, typeid) {
+	osmium_ctxmenu_add_option(menu, "Show info", function() {
+		osmium_showinfo({
+			type: 'generic',
+			typeid: typeid
+		});
+	}, { icon: osmium_showinfo_sprite_position });
+};
+
 osmium_add_non_shortlist_contextmenu = function(li) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
@@ -294,6 +305,8 @@ osmium_add_non_shortlist_contextmenu = function(li) {
 			$('div#nlsources > section#shortlist > ul.types').append(n);
 			osmium_commit_shortlist();
 		}, {});
+		osmium_ctxmenu_add_separator(menu);
+		osmium_add_generic_showinfo(menu, li.data('typeid'));
 
 		return menu;
 	});
@@ -308,6 +321,8 @@ osmium_add_shortlist_contextmenu = function(li) {
 			li.remove();
 			osmium_commit_shortlist();
 		}, {});
+		osmium_ctxmenu_add_separator(menu);
+		osmium_add_generic_showinfo(menu, li.data('typeid'));
 
 		return menu;
 	});
