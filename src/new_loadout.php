@@ -190,11 +190,20 @@ echo "<div id='nlsources'>
 <li><a href='#shortlist'>Shortlist</a></li>
 </ul>\n";
 
+$searchexamples = array(
+	'dc2', '10mn ab', 'rf tp', 'large asb',
+	'cn bcs', 'med cdfe', 'rcu 2', '1mn mwd',
+	'fn web', 'c-type aif', 'eanm ii', 'pds',
+	'mjd', 'rf disru', 'pwnage', 'tachyon ii',
+	'sni', 'rni', 'sfi', 'pirate frig',
+);
 echo "<section id='search'>
 <form method='get' action='?'>
 <ul class='filters'></ul>
 <div class='query'>
-<div><input type='search' name='q' placeholder='Search modules, ships, implants…' /></div>
+<div><input type='search' name='q' placeholder='Search items (ex: ".
+htmlspecialchars($searchexamples[mt_rand(0, count($searchexamples) - 1)], ENT_QUOTES)
+.")' title='Search items by name, by group, by abbreviation' /></div>
 <input type='submit' value='Search' />
 </div>
 </form>

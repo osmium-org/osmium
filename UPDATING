@@ -1,3 +1,17 @@
+staging
+=======
+
+If you use a recent version of Sphinx (>= 2.1.1-beta), you can tweak
+the sphinx.conf to enable prefix matching on the loadout index too. If
+you want to, you must:
+
+* stop sphinx-searchd;
+* review (and tweak to your liking) the new sphinx.conf;
+* delete any file in sphinx/ other than sphinx.conf;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd;
+* run ./bin/reindex_loadouts.
+
 v0.9.0, released 2013-07-18
 ===========================
 
