@@ -28,7 +28,7 @@ $filters = array_keys(array_filter(isset($_GET['mg']) && is_array($_GET['mg']) ?
                                    function($v) { return $v === '0'; }));
 $filters[] = -1;
 
-$query = \Osmium\Search\query('SELECT id, typename, category, subcategory, metagroupid
+$query = \Osmium\Search\query('SELECT id
 FROM osmium_types
 WHERE metagroupid NOT IN ('.implode(',', $filters).')
 AND MATCH(\''.\Osmium\Search\escape($q).'\')
@@ -40,13 +40,7 @@ if($query === false) {
 
 $out = array();
 while($row = \Osmium\Search\fetch_assoc($query)) {
-	$out[] = array(
-		(int)$row['id'],
-		$row['typename'],
-		$row['category'],
-		$row['subcategory'],
-		(int)$row['metagroupid'],
-		);
+	$out[] = (int)$row['id'];
 }
 
 if(count($out) == MAX_TYPES + 1) {
@@ -58,4 +52,7 @@ if(count($out) == MAX_TYPES + 1) {
 	$warning = false;
 }
 
-\Osmium\Chrome\return_json(array('payload' => $out, 'warning' => $warning));
+$json = array('payload' => $out);
+if($warning) $json['warning'] = $warning;
+
+\Osmium\Chrome\return_json($json);

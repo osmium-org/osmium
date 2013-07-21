@@ -61,18 +61,19 @@ osmium_init_sources = function() {
 			t.parent().children('p.warning').remove();
 
 			for(var i in json.payload) {
+				var m = osmium_types[json.payload[i]];
 				li = $(document.createElement('li'));
 				li.addClass('module');
-				li.data('typeid', json.payload[i][0]);
-				li.data('category', json.payload[i][2]);
-				li.data('subcategory', json.payload[i][3]);
-				li.addClass('mg' + json.payload[i][4]);
-				li.text(json.payload[i][1]);
-				li.prop('title', json.payload[i][1]);
+				li.data('typeid', m[0]);
+				li.data('category', m[2]);
+				li.data('subcategory', m[3]);
+				li.addClass('mg' + m[4]);
+				li.text(m[1]);
+				li.prop('title', m[1]);
 
 				img = $(document.createElement('img'));
 				img.prop('alt', '');
-				img.prop('src', '//image.eveonline.com/Type/' + json.payload[i][0] + '_64.png');
+				img.prop('src', '//image.eveonline.com/Type/' + m[0] + '_64.png');
 				li.prepend(img);
 
 				osmium_add_non_shortlist_contextmenu(li);
@@ -80,7 +81,7 @@ osmium_init_sources = function() {
 				ul.append(li);
 			}
 
-			if(json.warning !== null) {
+			if('warning' in json) {
 				p = $(document.createElement('p'));
 				p.addClass('placeholder');
 				p.addClass('warning');
