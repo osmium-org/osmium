@@ -81,13 +81,13 @@ function get_notifications($callback, $newonly = false) {
 		l.visibility, l.privatetoken
 		FROM osmium.notifications AS n
 		JOIN osmium.accounts AS a ON n.fromaccountid = a.accountid
-		LEFT JOIN osmium.loadouts l ON (n.type = $5 AND n.targetid1 = l.loadoutid) OR (n.type = $6 AND n.targetid2 = l.loadoutid) OR (n.type = $7 AND n.targetid3 = l.loadoutid)
-		WHERE (n.creationdate >= $1 OR ($2 AND n.creationdate >= $3))
-		AND n.accountid = $4
-		ORDER BY n.creationdate DESC',
-		array($threshold,
-		      $newonly ? 'f' : 't',
-		      time() - 86400 * 7,
+		LEFT JOIN osmium.loadouts l ON (n.type = $3 AND n.targetid1 = l.loadoutid)
+		OR (n.type = $4 AND n.targetid2 = l.loadoutid)
+		OR (n.type = $5 AND n.targetid3 = l.loadoutid)
+		WHERE n.creationdate >= $1 AND n.accountid = $2
+		ORDER BY n.creationdate DESC
+		'.($newonly ? '' : 'LIMIT 50'),
+		array($newonly ? $threshold : 0,
 		      $a['accountid'],
 		      NOTIFICATION_TYPE_LOADOUT_EDITED,
 		      NOTIFICATION_TYPE_LOADOUT_COMMENTED,

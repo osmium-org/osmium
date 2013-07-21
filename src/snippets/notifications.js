@@ -23,12 +23,13 @@ osmium_notifications = function(relative) {
 
 			a.text(cnt);
 			a.data('count', cnt);
+			a.prop('title', cnt + ' new notification(s)');
 
 			if(parseInt(cnt, 10) > 0) {
-				a.fadeIn(500);
+				a.show().css('display', 'inline-block');
 				document.title = "(" + cnt + ") " + rawtitle;
 			} else {
-				a.fadeOut(500);
+				a.hide();
 				document.title = rawtitle;
 			}
 		});

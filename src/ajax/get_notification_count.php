@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,11 +20,21 @@ namespace Osmium\Ajax\GetNotificationCount;
 
 require __DIR__.'/../../inc/root.php';
 
-/* Set up a 1-minute cache, hopefully this will prevent overloading
- * the server if some guy has a bazillion tabs opened… */
 header('Content-Type: text/plain');
-header('Expires: '.date('r', time() + 60));
-header('Pragma:');
-header('Cache-Control: private');
 
-echo \Osmium\Notification\get_new_notification_count();
+$a = \Osmium\State\get_state('a', null);
+$a = $a === null ? 0 : $a['accountid'];
+$k = 'notification_count_'.$a;
+
+$count = \Osmium\State\get_cache_memory($k, -1);
+
+if($count >= -1) {
+	echo $count;
+	die();
+}
+
+$count = \Osmium\Notification\get_new_notification_count();
+/* Cache $count for about a minute */
+\Osmium\State\put_cache_memory($k, (int)$count, 59);
+
+echo $count;
