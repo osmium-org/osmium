@@ -580,29 +580,27 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 function add_drone_auto(&$fit, $typeid, $quantity) {
 	if($quantity == 0) return;
 
+	/* Add drone in space first (because we need to get the bandwidth
+	 * usage, and it is only possible to query attributes of drones in
+	 * space */
+	add_drone($fit, $typeid, 0, $quantity);
+	$usedbw = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'droneBandwidthUsed');
+
 	$available = 
 		\Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth')
 		- get_used_drone_bandwidth($fit);
 
-	/* Add drone to bay first */
-	add_drone($fit, $typeid, $quantity, 0);
+	/* How many drones are over the available bandwidth? */
+	$over_bw = min(max(0, ceil(-$available / $usedbw)), $quantity);
 
-	$usedbw = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'droneBandwidthUsed');
-
-	/* How many drones can fit in the remaining bandwidth? */
-	$totransfer = min(
-		$usedbw > 0 ? (int)floor($available / $usedbw) : $quantity,
-		$quantity
-		);
-
-	/* How many more drones can be in space? */
-	$remainingslots = \Osmium\Dogma\get_char_attribute($fit, 'maxActiveDrones');
+	/* How many drones are over the drone limit? */
+	$over_cnt = -\Osmium\Dogma\get_char_attribute($fit, 'maxActiveDrones');
 	foreach($fit['drones'] as $d) {
-		$remainingslots -= $d['quantityinspace'];
+		$over_cnt += $d['quantityinspace'];
 	}
-	$totransfer = min($totransfer, max($remainingslots, 0));
+	$over_cnt = min($over_cnt, $quantity);
 
-	transfer_drone($fit, $typeid, 'bay', $totransfer);
+	transfer_drone($fit, $typeid, 'space', max($over_bw, $over_cnt));
 }
 
 /**

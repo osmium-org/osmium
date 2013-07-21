@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -107,5 +107,17 @@ class FitImportExport extends PHPUnit_Framework_TestCase {
 		$this->assertSlotsAre($fit, 'charges', 'medium', array(32014, 32014));
 		$this->assertSlotsAre($fit, 'charges', 'low', array());
 		$this->assertDronesAre($fit, array());
+	}
+
+	/**
+	 * @group fit
+	 * @group import
+	 */
+	public function testMixedDronesDNA() {
+		$dna = '19720:23563;2:23559;2:23563;3::';
+
+		$errors = array();
+		$fit = \Osmium\Fit\try_parse_fit_from_shipdna($dna, 'Foo', $errors);
+		$this->assertSame(array(), $errors);
 	}
 }
