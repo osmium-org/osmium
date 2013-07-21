@@ -288,7 +288,7 @@ function format_range($meters, $shortfmt = false) {
  * Round a number with a fixed number of significant digits.
  */
 function round_sd($number, $digits = 0) {
-	if($number == 0) $normalized = 0;
+	if($number == 0) return 0;
 	else {
 		$normalized = $number / ($m = pow(10, floor(log10($number))));
 	}
@@ -464,41 +464,64 @@ function truncate_string($s, $length, $fill = '…') {
 }
 
 function format_number_with_unit($number, $unitid, $unitdisplayname) {
-	if($unitid == 1) {
-		/* Meters */
+	switch((int)$unitid) {
+
+	case 1: /* Meters */
 		if($number >= 10000) {
 			$number /= 1000;
 			$unitdisplayname = 'km';
 		} else {
 			$unitdisplayname = 'm';
 		}
-	} else if($unitid == 101) {
-		/* Milliseconds */
+		break;
+
+	case 101: /* Milliseconds */
 		$number /= 1000;
-		$unitdisplayname = 'sec';
-	} else if($unitid == 104) {
-		/* Multiplier */
-		return round($number, 3).' x';
-	} else if($unitid == 105) {
-		/* Percentage */
-		return round($number, 3).' %';
-	} else if($unitid == 108) {
-		/* Inverse absolute percent */
-		return round((1 - $number) * 100, 3).' %';
-	} else if($unitid == 109) {
-		/* Modifier percent */
-		$p = ($number - 1) * 100;
-		return ($p >= 0 ? '+' : '').round($p, 3).' %';
-	} else if($unitid == 111) {
-		/* Inversed modifier percent */
-		return round((1 - $number) * 100, 3).' %';
-	} else if($unitid == 115) {
-		/* Groupid */
-		$row = \Osmium\Db\fetch_row(
-			\Osmium\Db\query_params(
-				'SELECT groupname, typeid FROM eve.invgroups LEFT JOIN eve.invtypes ON invtypes.groupid = invgroups.groupid AND invtypes.published = true WHERE invgroups.groupid = $1 ORDER BY typeid ASC LIMIT 1',
-				array($number)
-				));
+		$unitdisplayname = 's';
+		break;
+
+	case 104: /* Multiplier */
+		$unitdisplayname = 'x';
+		break;
+
+	case 108: /* Inverse absolute percent */
+		$number = (1 - $number) * 100;
+
+	case 105: /* Percentage */
+	case 121: /* Real percentage */
+		$unitdisplayname = '%';
+		break;
+
+	case 111: /* Inversed modifier percent */
+		$number = 2 - $number;
+
+	case 109: /* Modifier percent */
+		$number -= 1;
+		$number *= 100;
+
+	case 124: /* Modifier relative percent */
+		$unitdisplayname = '%';
+		$rounded = ($number >= 0 ? '+' : '').round_sd($number, 2);
+		break;
+
+	case 127: /* Absolute percent */
+		$unitdisplayname = '%';
+		$number *= 100;
+		break;
+
+	case 112: /* Rotation speed */
+		$rounded = round_sd($number, 4);
+		break;
+
+	case 115: /* Group ID */
+		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT groupname, typeid FROM eve.invgroups
+			LEFT JOIN eve.invtypes
+			ON invtypes.groupid = invgroups.groupid AND invtypes.published = true
+			WHERE invgroups.groupid = $1 ORDER BY typeid ASC
+			LIMIT 1',
+			array($number)
+		));
 		if($row !== false) {
 			$image = '';
 			if($row[1] !== null) {
@@ -506,54 +529,55 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 			}
 			return $image.htmlspecialchars($row[0]);
 		}
-	} else if($unitid == 116) {
-		/* Typeid */
+		$unitdisplayname = 'Group ID';
+		break;
+
+	case 116: /* Type ID */
 		$typename = \Osmium\Fit\get_typename($number);
 		if($typename !== false) {
-			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> ".htmlspecialchars($typename);
+			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> "
+				.htmlspecialchars($typename);
 		}
-	} else if($unitid == 117) {
+		$unitdisplayname = 'Type ID';
+		break;
+
+	case 117: /* Size class */
 		if($number == 1) return 'Small';
 		if($number == 2) return 'Medium';
 		if($number == 3) return 'Large';
 		if($number == 4) return 'XLarge';
-	} else if($unitid == 121) {
-		/* Real percentage */
-		return round($number, 3).' %';
-	} else if($unitid == 124) {
-		/* Modifier relative percent */
-		return round($number, 3).' %';
-	} else if($unitid == 125) {
-		$unitdisplayname = 'N';
-	} else if($unitid == 127) {
-		/* Absolute percent */
-		return round($number * 100, 3).' %';
-	} else if($unitid == 137) {
-		/* Boolean */
+		break;
+
+	case 137: /* Boolean */
 		if($number == 0) return 'False';
 		if($number == 1) return 'True';
-	} else if($unitid == 139) {
-		/* Bonus */
-		if($number >= 0) return "+".round($number, 3);
-		else return round($number, 3);
-	} else if($unitid == 140) {
-		/* Level */
+		break;
+
+	case 139: /* Bonus */
+		$rounded = (($number >= 0) ? '+' : '').round_sd($number, 2);
+		break;
+
+	case 140: /* Level */
 		return 'Level '.$number;
-	} else if($unitid == 142) {
-		/* Sex */
+
+	case 142: /* Sex */
 		if($number == 1) return 'Male';
 		if($number == 2) return 'Unisex';
 		if($number == 3) return 'Female';
-	} else if($unitid == null) {
-		$unitdisplayname = '';
+		break;
+
 	}
 
-	$n = number_format($number, 3);
-	list($num, $dec) = explode('.', $n);
-	$dec = rtrim($dec, '0');
-	if($dec) $num .= '.'.$dec;
+	if(!isset($rounded)) {
+		$n = number_format($number, 3);
+		list($rounded, $dec) = explode('.', $n);
+		$dec = rtrim($dec, '0');
+		if($dec) $rounded .= '.'.$dec;
+	}
 
-	return $num.' '.htmlspecialchars($unitdisplayname);
+	return '<span title="'.sprintf("%.14f", $number).'">'
+		.$rounded.' '.htmlspecialchars($unitdisplayname)
+		.'</span>';
 }
 
 function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = null, $width = null, $height = null) {
