@@ -1,5 +1,5 @@
-staging
-=======
+v0.9.1, released 2013-07-22
+===========================
 
 If you use a recent version of Sphinx (>= 2.1.1-beta), you can tweak
 the sphinx.conf to enable prefix matching on the loadout index too. If
