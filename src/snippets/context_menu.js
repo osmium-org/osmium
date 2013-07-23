@@ -123,10 +123,20 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 		li.append(submenu);
 
 		var offset = li.offset();
-		submenu.offset({
-			top: offset.top,
-			left: offset.left + li.outerWidth()
-		});
+		var ow = li.outerWidth();
+		var sow = submenu.outerWidth();
+
+		if(offset.left + ow + sow > $(document).width()) {
+			submenu.offset({
+				top: offset.top,
+				left: offset.left - sow
+			});
+		} else {
+			submenu.offset({
+				top: offset.top,
+				left: offset.left + ow
+			});
+		}
 	};
 
 	if(("enabled" in opts) && !opts.enabled) {
