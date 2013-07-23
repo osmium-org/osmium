@@ -28,7 +28,7 @@ const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 const STATICVER = 10;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 10;
+const CSS_STATICVER = 11;
 
 /** Bump this when JS snippets are updated */
 const JS_STATICVER = 11;

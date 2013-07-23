@@ -301,23 +301,15 @@ div#computed_attributes > section > div > table#resists {
 	}
 
 	&> tbody > tr > td > div {
-		position: relative;
+		@include bottom-progress-bar;
 		width: 100%;
-		padding-bottom: 1px;
-
-		&> span.bar {
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			height: 2px;
-		}
 	}
 
 	&> tbody > tr {
-		&> td.emresist > div > span.bar { background-color: $em-bg-color; }
-		&> td.thermalresist > div > span.bar { background-color: $thermal-bg-color; }
-		&> td.kineticresist > div > span.bar { background-color: $kinetic-bg-color; }
-		&> td.explosiveresist > div > span.bar { background-color: $explosive-bg-color; }
+		&> td.emresist > div > span.bar { @include linear-gradient-lighten-right($em-bg-color); }
+		&> td.thermalresist > div > span.bar { @include linear-gradient-lighten-right($thermal-bg-color); }
+		&> td.kineticresist > div > span.bar { @include linear-gradient-lighten-right($kinetic-bg-color); }
+		&> td.explosiveresist > div > span.bar { @include linear-gradient-lighten-right($explosive-bg-color); }
 	}
 
 	&> thead > tr > th#ehp {
@@ -326,6 +318,20 @@ div#computed_attributes > section > div > table#resists {
 
 		&> strong {
 			font-size: 1.5em;
+		}
+	}
+}
+
+div#computed_attributes > section#engineering {
+	span#cpu, span#power {
+		@include bottom-progress-bar;
+
+		&#cpu > span.lbar {
+			@include linear-gradient-lighten-left(hsl(163, 50, 50), 10%);
+		}
+
+		&#power > span.lbar {
+			@include linear-gradient-lighten-left(hsl(32, 50, 50), 10%);
 		}
 	}
 }

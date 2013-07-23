@@ -33,6 +33,40 @@ $nav-height: 2.5em;
 	user-select: none;
 }
 
+@mixin bottom-progress-bar {
+	position: relative;
+	padding-bottom: 2px;
+
+	&> span.bar, &> span.lbar {
+		z-index: 2;
+		position: absolute;
+		bottom: 0;
+		height: 2px;
+		background-color: $main-text-color;
+
+		&.over {
+			z-index: 3;
+			background-color: red;
+		}
+	}
+
+	&> span.bar {
+		right: 0;
+	}
+
+	&> span.lbar {
+		left: 0;
+	}
+
+	&> span.bar.fill {
+		z-index: 1;
+		left: 0;
+		right: 0;
+		background-color: $main-text-color;
+		opacity: 0.15;
+	}
+}
+
 html, body {
 	margin: 0;
 	padding: 0;

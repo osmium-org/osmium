@@ -71,14 +71,24 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
-	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overturrets);
+	$formatted = format_used(
+		$slotsTotal - $slotsLeft, $slotsTotal,
+		'', 0,
+		F_USED_SHOW_ABSOLUTE,
+		$overturrets
+	);
 	echo "<p class='overflow$overturrets'>"
 		.sprite($relative, 'Turret hardpoints', 0, 0, 64, 64, 32)
 		."<span id='turrethardpoints'>".$formatted."</span></p>\n";
 
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
-	$formatted = \Osmium\Chrome\format_used($slotsTotal - $slotsLeft, $slotsTotal, 0, false, $overlaunchers);
+	$formatted = format_used(
+		$slotsTotal - $slotsLeft, $slotsTotal,
+		'', 0,
+		F_USED_SHOW_ABSOLUTE,
+		$overlaunchers
+	);
 	echo "<p class='overflow$overlaunchers'>"
 		.sprite($relative, 'Launcher hardpoints', 0, 1, 64, 64, 32)
 		."<span id='launcherhardpoints'>".$formatted."</span></p>\n";
@@ -90,21 +100,36 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
-	$formatted = \Osmium\Chrome\format_used($cpuUsed, $cpuTotal, 2, true, $overcpu);
+	$formatted = format_used(
+		$cpuUsed, $cpuTotal,
+		'tf', 2,
+		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR,
+		$overcpu
+	);
 	echo "<p class='overflow$overcpu'>"
 		.sprite($relative, 'CPU', 1, 0, 64, 64, 32)
 		."<span id='cpu'>".$formatted."</span></p>\n";
 
 	$powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 	$powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
-	$formatted = \Osmium\Chrome\format_used($powerUsed, $powerTotal, 2, true, $overpower);
+	$formatted = format_used(
+		$powerUsed, $powerTotal,
+		'MW', 2,
+		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR,
+		$overpower
+	);
 	echo "<p class='overflow$overpower'>"
 		.sprite($relative, 'Powergrid', 1, 1, 64, 64, 32)
 		."<span id='power'>".$formatted."</span></p>\n";
 
 	$upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 	$upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
-	$formatted = \Osmium\Chrome\format_used($upgradeCapacityUsed, $upgradeCapacityTotal, 2, true, $overupgrade);
+	$formatted = format_used(
+		$upgradeCapacityUsed, $upgradeCapacityTotal,
+		'', 2,
+		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE,
+		$overupgrade
+	);
 	echo "<p class='overflow$overupgrade'>"
 		.sprite($relative, 'Calibration (upgrade capacity)', 1, 2, 64, 64, 32)
 		."<span id='upgradecapacity'>".$formatted."</span></p>\n";

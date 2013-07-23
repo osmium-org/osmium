@@ -1,8 +1,21 @@
-@mixin linear-gradient-lighten-top($color, $intensity: 5%) {
+@mixin _linear-gradient-lighten($direction, $opposite, $color, $intensity) {
 	background-color: $color;
-	background: -webkit-linear-gradient(top, lighten($color, $intensity), $color, darken($color, $intensity));
-	background: -ms-linear-gradient(top, lighten($color, $intensity), $color, darken($color, $intensity));
-	background: -o-linear-gradient(top, lighten($color, $intensity), $color, darken($color, $intensity));
-	background: -moz-linear-gradient(to bottom, lighten($color, $intensity), $color, darken($color, $intensity));
-	background: linear-gradient(to bottom, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -webkit-linear-gradient($direction, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -ms-linear-gradient($direction, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -o-linear-gradient($direction, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: -moz-linear-gradient(to $opposite, lighten($color, $intensity), $color, darken($color, $intensity));
+	background: linear-gradient(to $opposite, lighten($color, $intensity), $color, darken($color, $intensity));
+}
+
+
+@mixin linear-gradient-lighten-top($color, $intensity: 5%) {
+	@include _linear-gradient-lighten(top, bottom, $color, $intensity);
+}
+
+@mixin linear-gradient-lighten-left($color, $intensity: 5%) {
+	@include _linear-gradient-lighten(left, right, $color, $intensity);
+}
+
+@mixin linear-gradient-lighten-right($color, $intensity: 5%) {
+	@include _linear-gradient-lighten(right, left, $color, $intensity);
 }
