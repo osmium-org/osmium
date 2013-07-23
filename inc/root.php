@@ -31,10 +31,10 @@ const STATICVER = 10;
 const CSS_STATICVER = 10;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 11;
+const JS_STATICVER = 12;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 21;
+const CLIENT_DATA_STATICVER = 22;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

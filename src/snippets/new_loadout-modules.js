@@ -526,7 +526,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				compare_damage = function(a, b) {
 					var x = (a in osmium_chargedmg) ? osmium_chargedmg[a] : 0;
 					var y = (b in osmium_chargedmg) ? osmium_chargedmg[b] : 0;
-					return y < x ? -1 : (y > x ? 1 : (a - b));
+					return y < x ? -1 : (y > x ? 1 : 0);
 				};
 
 				for(var i = 0; i < osmium_charges[typeid].length; ++i) {
