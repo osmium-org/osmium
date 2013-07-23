@@ -47,14 +47,37 @@ function get_attributes($typeid, $getval_callback) {
 		JOIN eve.dgmattribs ON dgmtypeattribs.attributeid = dgmattribs.attributeid
 		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
 		WHERE typeid = $1 AND published = true AND dgmattribs.displayname <> ''
-		ORDER BY categoryid ASC, dgmattribs.attributeid ASC",
+
+		UNION
+
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname, invtypes.volume as value, dgmattribs.unitid,
+		dgmunits.displayname AS udisplayname, categoryid
+		FROM eve.invtypes
+		JOIN eve.dgmattribs ON dgmattribs.attributeid = 161
+		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
+		WHERE typeid = $1
+
+		UNION
+
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname, invtypes.capacity as value, dgmattribs.unitid,
+		dgmunits.displayname AS udisplayname, categoryid
+		FROM eve.invtypes
+		JOIN eve.dgmattribs ON dgmattribs.attributeid = 38
+		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
+		WHERE typeid = $1
+
+		ORDER BY categoryid ASC, attributeid ASC",
 		array($typeid)
 	);
 	while($a = \Osmium\Db\fetch_assoc($aq)) {
+		$rawval = $getval_callback !== null ? $getval_callback($a['attributeid']) : (float)$a['value'];
+
+		if((int)$a['attributeid'] === 38 && $rawval === 0.0) continue;
+
 		$attributes[$a['attributeid']] = array(
 			ucfirst($a['displayname']),
 			\Osmium\Chrome\format_number_with_unit(
-				$getval_callback !== null ? $getval_callback($a['attributeid']) : (float)$a['value'],
+				$rawval,
 				$a['unitid'],
 				$a['udisplayname']
 				),
