@@ -18,6 +18,11 @@
 
 namespace Osmium\Chrome;
 
+const F_USED_SHOW_ABSOLUTE = 1;
+const F_USED_SHOW_DIFFERENCE = 2;
+const F_USED_SHOW_PERCENTAGE = 4;
+const F_USED_SHOW_PROGRESS_BAR = 8;
+
 require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
 
@@ -26,18 +31,70 @@ function trim($s) {
 	return preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $s);
 }
 
-function format_used($used, $total, $digits, $show_percent, &$overflow) {
-	if($total == 0 && $used == 0) {
+function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxoverflow = 10) {
+	$over = min($maxoverflow, max(0, $percent - 100));
+
+	$bclass = $ltr ? 'lbar' : 'bar';
+	$oclass = $ltr ? 'bar' : 'lbar';
+	if($percent > 100) {
+		$c = 'p100';
+	} else if($percent >= 95) {
+		$c = 'p95';
+	} else if($percent >= 80) {
+		$c = 'p80';
+	} else {
+		$c = 'p00';
+	}
+	$progress = max(0, min(100, $percent));
+
+	$ret = "<span class='{$bclass} {$c}' style='width: ".round($progress, 2)."%;'></span>";
+	if($over > 0) {
+		$over = round($over, 2).'%';
+		$ret .= "<span class='{$oclass} {$c} over' style='width: {$over}; "
+			.($ltr ? 'right' : 'left').": -{$over};'></span>";
+	}
+	if($fill) {
+		$ret .= "<span class='bar fill'></span>";
+	}
+
+	return $ret;
+}
+
+function format_used($rawused, $rawtotal, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE, &$overflow) {
+	if($rawtotal == 0 && $rawused == 0) {
 		$overflow = 0;
 		return '0';
 	}
 
+	$lines = array();
+	if($unit !== '') $unit = ' '.$unit;
 
-	$ret = format_number($used).' / '.format_number($total);
-	$percent = $total > 0 ? (100 * $used / $total) : 100;
+	$used = format_number($rawused).' / '.format_number($rawtotal).$unit;
+	$diff = ($rawtotal >= $rawused) ?
+		format_number($rawtotal - $rawused).$unit.' left' :
+		format_number($rawused - $rawtotal).$unit.' over';
+
+	if($opts & F_USED_SHOW_ABSOLUTE) {
+		$lines[] = "<span title='".htmlspecialchars($diff, ENT_QUOTES)."'>"
+			.htmlspecialchars($used)
+			."</span>";
+	}
+	if($opts & F_USED_SHOW_DIFFERENCE) {
+		$lines[] = "<span title='".htmlspecialchars($used, ENT_QUOTES)."'>"
+			.htmlspecialchars($diff)
+			."</span>";
+	}
+
+    $percent = $rawtotal > 0 ? (100 * $rawused / $rawtotal) : 100;
 	$overflow = max(min(6, ceil($percent) - 100), 0);
-	if($show_percent) {
-		$ret .= '<br />'.($total == 0 ? '∞' : round(100 * $used / $total, $digits)).' %';
+	if($opts & F_USED_SHOW_PERCENTAGE) {
+		$lines[] = ($rawtotal == 0 ? '∞' : round(100 * $rawused / $rawtotal, $digits)).' %';
+	}
+
+	$ret = implode("<br />", $lines);
+
+	if($opts & F_USED_SHOW_PROGRESS_BAR) {
+		$ret .= format_small_progress_bar($percent);
 	}
 
 	return $ret;
@@ -168,7 +225,10 @@ function format_resonance($resonance) {
 
 	$percent = (1 - $resonance) * 100;
 
-	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
+	return "<div>"
+		.number_format($percent, 1)."%"
+		.format_small_progress_bar($percent, false, false, 0)
+		."</div>";
 }
 
 function format_reputation($rep) {

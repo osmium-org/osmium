@@ -45,7 +45,7 @@ if(($ptags = \Osmium\State\get_cache_memory('main_popular_tags', null)) === null
 	while($row = \Osmium\Db\fetch_row($query)) {
 		list($name, $count) = $row;
 
-		$ptags .= "<li><a href='./browse/best?f=".urlencode('@tags "'.$name.'"')
+		$ptags .= "<li><a href='./browse/best?q=".urlencode('@tags "'.$name.'"')
 			."'>$name</a> ($count)</li>\n";
 	}
 
