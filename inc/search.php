@@ -102,11 +102,20 @@ function get_search_query($search_query) {
 		}
 	}
 
-	return 'SELECT id FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtoaccountid IN ('.implode(',', $accountids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
+	return 'SELECT id FROM osmium_loadouts
+	WHERE MATCH(\''.escape($search_query).'\')
+	AND restrictedtoaccountid IN ('.implode(',', $accountids).')
+	AND restrictedtocorporationid IN ('.implode(',', $corporationids).')
+	AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
 }
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
-	$q = query(get_search_query($search_query).' '.$more_cond.' LIMIT '.$offset.','.$limit);
+	$q = query(
+		get_search_query($search_query)
+		.' '.$more_cond
+		.' LIMIT '.$offset.','.$limit
+		.' OPTION field_weights=(ship=100,groups=80,author=100,name=70,description=10,tags=150,modules=30)'
+	);
 	if($q === false) return false; /* Invalid query */
 
 	$ids = array();
