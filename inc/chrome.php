@@ -60,8 +60,8 @@ function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxover
 	return $ret;
 }
 
-function format_used($used, $total, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE, &$overflow) {
-	if($total == 0 && $used == 0) {
+function format_used($rawused, $rawtotal, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE, &$overflow) {
+	if($rawtotal == 0 && $rawused == 0) {
 		$overflow = 0;
 		return '0';
 	}
@@ -69,10 +69,10 @@ function format_used($used, $total, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE
 	$lines = array();
 	if($unit !== '') $unit = ' '.$unit;
 
-	$used = format_number($used).' / '.format_number($total).$unit;
-	$diff = ($total >= $used) ?
-		format_number($total - $used).$unit.' left' :
-		format_number($used - $total).$unit.' over';
+	$used = format_number($rawused).' / '.format_number($rawtotal).$unit;
+	$diff = ($rawtotal >= $rawused) ?
+		format_number($rawtotal - $rawused).$unit.' left' :
+		format_number($rawused - $rawtotal).$unit.' over';
 
 	if($opts & F_USED_SHOW_ABSOLUTE) {
 		$lines[] = "<span title='".htmlspecialchars($diff, ENT_QUOTES)."'>"
@@ -85,10 +85,10 @@ function format_used($used, $total, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE
 			."</span>";
 	}
 
-    $percent = $total > 0 ? (100 * $used / $total) : 100;
+    $percent = $rawtotal > 0 ? (100 * $rawused / $rawtotal) : 100;
 	$overflow = max(min(6, ceil($percent) - 100), 0);
 	if($opts & F_USED_SHOW_PERCENTAGE) {
-		$lines[] = ($total == 0 ? '∞' : round(100 * $used / $total, $digits)).' %';
+		$lines[] = ($rawtotal == 0 ? '∞' : round(100 * $rawused / $rawtotal, $digits)).' %';
 	}
 
 	$ret = implode("<br />", $lines);
