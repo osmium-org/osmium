@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,11 +28,18 @@ $filters = array_keys(array_filter(isset($_GET['mg']) && is_array($_GET['mg']) ?
                                    function($v) { return $v === '0'; }));
 $filters[] = -1;
 
+$w = '';
+$q = preg_replace_callback("%@meta ([0-9]+)(\s|$)%", function($m) use(&$w) {
+	$w .= ' AND metalevel = '.(int)$m[1];
+	return '';
+}, $q, 1);
+
 $query = \Osmium\Search\query('SELECT id
 FROM osmium_types
 WHERE metagroupid NOT IN ('.implode(',', $filters).')
-AND MATCH(\''.\Osmium\Search\escape($q).'\')
-LIMIT '.(MAX_TYPES + 1));
+AND MATCH(\''.\Osmium\Search\escape($q).'\') '.$w.'
+LIMIT '.(MAX_TYPES + 1).'
+OPTION field_weights=(typename2=100,synonyms=100,parenttypename=10,parentsynonyms=10,groupname=10,marketgroupname=10)');
 
 if($query === false) {
 	\Osmium\Chrome\return_json(array('payload' => array(), 'warning' => 'Invalid search query.'));

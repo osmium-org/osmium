@@ -196,14 +196,15 @@ $searchexamples = array(
 	'fn web', 'c-type aif', 'eanm ii', 'pds',
 	'mjd', 'rf disru', 'pwnage', 'tachyon ii',
 	'sni', 'rni', 'sfi', 'pirate frig',
+	'gyro @meta 4', 'web @meta 4', 'hml @meta 4', 'eanm @meta 1'
 );
 echo "<section id='search'>
 <form method='get' action='?'>
 <ul class='filters'></ul>
 <div class='query'>
-<div><input type='search' name='q' placeholder='Search items (ex: ".
+<div><input type='search' name='q' placeholder='Example query: ".
 htmlspecialchars($searchexamples[mt_rand(0, count($searchexamples) - 1)], ENT_QUOTES)
-.")' title='Search items by name, by group, by abbreviation' /></div>
+."' title='Search items by name, by group, by abbreviation' /></div>
 <input type='submit' value='Search' />
 </div>
 </form>

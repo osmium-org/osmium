@@ -1,3 +1,14 @@
+staging
+=======
+
+The sphinx type index has been updated. You must:
+
+* stop sphinx-searchd;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd.
+
+The osmium schema has been updated.
+
 v0.9.1, released 2013-07-22
 ===========================
 

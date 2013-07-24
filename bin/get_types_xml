@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,8 @@
 require __DIR__.'/../inc/root.php';
 
 $q = \Osmium\Db\query(
-	'SELECT typeid, typename, category, subcategory, groupname, marketgroupname, metagroupid
+	'SELECT typeid, typename, parenttypename, category, subcategory,
+	groupname, marketgroupname, metagroupid, metalevel
 	FROM osmium.typessearchdata'
 	);
 
@@ -35,6 +36,10 @@ $name->appendChild($xml->createTextNode('typename2'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('parenttypename'));
+
+$field = $schema->appendChild($xml->createElement('sphinx:field'));
+$name = $field->appendChild($xml->createAttribute('name'));
 $name->appendChild($xml->createTextNode('groupname'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
@@ -45,9 +50,21 @@ $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
 $name->appendChild($xml->createTextNode('synonyms'));
 
+$field = $schema->appendChild($xml->createElement('sphinx:field'));
+$name = $field->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('parentsynonyms'));
+
 $attr = $schema->appendChild($xml->createElement('sphinx:attr'));
 $name = $attr->appendChild($xml->createAttribute('name'));
 $name->appendChild($xml->createTextNode('metagroupid'));
+$type = $attr->appendChild($xml->createAttribute('type'));
+$type->appendChild($xml->createTextNode('int'));
+$bits = $attr->appendChild($xml->createAttribute('bits'));
+$bits->appendChild($xml->createTextNode('32'));
+
+$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
+$name = $attr->appendChild($xml->createAttribute('name'));
+$name->appendChild($xml->createTextNode('metalevel'));
 $type = $attr->appendChild($xml->createAttribute('type'));
 $type->appendChild($xml->createTextNode('int'));
 $bits = $attr->appendChild($xml->createAttribute('bits'));
@@ -79,6 +96,9 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$typename = $document->appendChild($xml->createElement('typename2'));
 	$typename->appendChild($xml->createTextNode($row['typename']));
 
+	$typename = $document->appendChild($xml->createElement('parenttypename'));
+	$typename->appendChild($xml->createTextNode($row['parenttypename']));
+
 	$groupname = $document->appendChild($xml->createElement('groupname'));
 	$groupname->appendChild($xml->createTextNode($row['groupname']));
 
@@ -88,8 +108,14 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$synonyms = $document->appendChild($xml->createElement('synonyms'));
 	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['typename'])));
 
+	$synonyms = $document->appendChild($xml->createElement('parentsynonyms'));
+	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['parenttypename'])));
+
 	$metagroupid = $document->appendChild($xml->createElement('metagroupid'));
 	$metagroupid->appendChild($xml->createTextNode($row['metagroupid']));
+
+	$metalevel = $document->appendChild($xml->createElement('metalevel'));
+	$metalevel->appendChild($xml->createTextNode($row['metalevel']));
 
 	$slottype = $document->appendChild($xml->createElement('category'));
 	$slottype->appendChild($xml->createTextNode($row['category']));
