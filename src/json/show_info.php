@@ -278,6 +278,41 @@ $fresult['attributes'] .= "</tbody>\n</table>\n";
 
 
 
+$variations = array();
+$fvariations = array();
+$variationsq = \Osmium\Db\query_params(
+	'SELECT invmetatypes.typeid, metagroupid, mg.value::integer as metalevel
+	FROM eve.invmetatypes
+	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = invmetatypes.typeid
+	WHERE parenttypeid IN ($1, ( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 ))
+
+	UNION
+
+	SELECT invtypes.typeid, 1::integer as metagroupid, 0::integer as metalevel
+	FROM eve.invtypes
+	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = invtypes.typeid
+	WHERE invtypes.typeid = ( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 )
+
+	ORDER BY metalevel DESC, typeid ASC',
+	array($typeid)
+);
+while($r = \Osmium\Db\fetch_assoc($variationsq)) {
+	$variations[$r['metagroupid']][] = [ (int)$r['typeid'], (int)$r['metalevel'] ];
+}
+usort($variations, function($x, $y) {
+	return $x[0][1] - $y[0][1];
+});
+foreach($variations as $a) {
+	usort($a, function($x, $y) {
+		return $x[1] - $y[1];
+	});
+	$fvariations = array_merge($fvariations, $a);
+}
+
+
+
+
+
 list($desc) = \Osmium\Db\fetch_row(
 	\Osmium\Db\query_params(
 		'SELECT description FROM eve.invtypes WHERE typeid = $1', 
@@ -309,6 +344,14 @@ if($affectors !== false) {
 	$sections[] = "<section id='siaffatt'>\n".$fresult['affectors_per_att']."</section>\n";
 }
 
+if(count($fvariations) > 1) {
+	$lis[] = "<li><a href='#sivariations'>Variations (".count($fvariations).")</a></li>\n";
+	$sections[] = "<section id='sivariations'>\n<ul></ul>\n</section>\n";
+} else {
+	$fvariations = array();
+}
+
 \Osmium\Chrome\return_json(array(
-	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections)
+	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
+	'variations' => $fvariations,
 ));

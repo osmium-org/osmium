@@ -28,10 +28,10 @@ const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
 const STATICVER = 10;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 10;
+const CSS_STATICVER = 11;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 12;
+const JS_STATICVER = 13;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 22;

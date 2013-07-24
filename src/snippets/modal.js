@@ -16,7 +16,7 @@
  */
 
 osmium_modal = function(inside) {
-	$("body > div#modalbg").remove();
+	$("body > div#modalbg, body > div#modal").remove();
 	$('body').append("<div id='modalbg'> </div>\n<div id='modal'><a href='javascript:void(0);' title='Close' id='closemodal'>X</a></div>");
 
 	var modal = $('body > div#modal');

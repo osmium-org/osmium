@@ -42,6 +42,52 @@ osmium_showinfo_internal = function(opts, onerror) {
 		success: function(json) {
 			osmium_modal(json['modal']);
 			osmium_tabify($('ul#showinfotabs'), 0);
+
+			var ul = $("section#sivariations > ul");
+
+			for(var i = 0; i < json.variations.length; ++i) {
+				var t = osmium_types[json.variations[i][0]];
+				var li = $(document.createElement('li'));
+
+				li.addClass('module');
+				li.data('typeid', t[0]);
+				li.text(t[1]);
+				li.data('category', t[2]);
+				li.data('subcategory', t[3]);
+
+				li.prepend(
+					$(document.createElement('img'))
+					.prop('src', '//image.eveonline.com/Type/' + t[0] + '_64.png')
+					.prop('alt', '')
+				);
+
+				li.append(
+					$(document.createElement('span'))
+					.addClass('metalevel')
+					.text(', meta level ' + json.variations[i][1])
+				);
+
+				if(osmium_loadout_readonly) {
+					osmium_ctxmenu_bind(li, (function(typeid) {
+						return function() {
+							var menu = osmium_ctxmenu_create();
+
+							osmium_ctxmenu_add_option(menu, "Show info", function() {
+								osmium_showinfo({
+									type: 'generic',
+									typeid: typeid
+								});
+							}, { icon: osmium_showinfo_sprite_position, 'default': true });
+
+							return menu;
+						};
+					})(t[0]));
+				} else {
+					osmium_add_non_shortlist_contextmenu(li);
+				}
+
+				ul.append(li);
+			}
 		}
 	});
 }

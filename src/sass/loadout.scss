@@ -417,6 +417,22 @@ section#sidesc {
 	}
 }
 
+section#sivariations {
+	@include module-list;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+
+	&> ul {
+		padding: 0 0.25em;
+	}
+
+	&> ul > li > span.metalevel {
+		font-size: 0.8em;
+		color: $aside-text-color;
+	}
+}
+
 .overflow6 { @include error-background-opacity(0.30); }
 .overflow5 { @include error-background-opacity(0.25); }
 .overflow4 { @include error-background-opacity(0.20); }
