@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,9 +18,23 @@
 
 namespace Osmium\EveApi;
 
+/* Change this if you want to use an API proxy. BEWARE: whoever
+ * controls the proxy will be able to impersonate any character. */
 const API_ROOT = 'https://api.eveonline.com';
-const LOCK_FILE_TIMEOUT = 10; /* Number of seconds until a lock file is considered stale */
+const API_TIMEOUT = 5000;
+const API_CURL_TIMEOUT = 10000;
 
+/**
+ * Make an EVE API call. Handles caching.
+ *
+ * @param $name name of the call, with the leading /
+ *
+ * @param $params an array of POST parameters to send
+ *
+ * @returns a SimpleXMLElement if the call was successful (although
+ * the XML contents itself may be an error), or false in case of
+ * network error or unparseable XML.
+ */
 function fetch($name, array $params) {
 	libxml_use_internal_errors(true);
 
@@ -28,49 +42,32 @@ function fetch($name, array $params) {
 	   the paramaters are not given in the same order. It makes
 	   sense. */
 	ksort($params);
-	$hash = 'API_'.hash('sha512', serialize($name).serialize($params));
-	$cacheDir = \Osmium\CACHE_DIRECTORY;
-	$c_file = $cacheDir.'/'.$hash;
-	$lock_file = $cacheDir.'/LOCK_'.$hash;
+	$key = serialize($name).serialize($params);
 
-	if(file_exists($c_file) && filemtime($c_file) >= time()) {
-		$xml = new \SimpleXMLElement(file_get_contents($c_file));
-		return $xml;
+	$xmltext = \Osmium\State\get_cache($key, null, 'API_');
+	if($xmltext !== null) {
+		return new \SimpleXMLElement($xmltext);
 	}
 
-	if(file_exists($lock_file)) {
-		if(filemtime($lock_file) < time() - LOCK_FILE_TIMEOUT) {
-			/* Stale lock file, ignore */
-		} else {
-			/* Try to return outdated cache */
-			if(file_exists($c_file)) {
-				try {
-					$xml = new \SimpleXMLElement(file_get_contents($c_file));
-					return $xml;
-				} catch(\Exception $e) {
-					/* Invalid XML file cached, let's try again */
-					@unlink($c_file);
-					return fetch($name, $params);
-				}
-			} else {
-				/* Wait for the lock file to disappear */
-				do {
-					clearstatcache();
-					usleep(100000);
-				} while(file_exists($lock_file) && filemtime($lock_file) >= time() - LOCK_FILE_TIMEOUT);
-				/* Try again */
-				return fetch($name, $params);
-			}
-		}
-	}
+	/* Avoid concurrent accesses to the same API call */
+	$sem = \Osmium\State\semaphore_acquire('API_'.$key);
+	if($sem === false) return false;
 
-	touch($lock_file);
+	/* See if another process already cached the call while
+	 * semaphore_acquire() blocked */
+	$xmltext = \Osmium\State\get_cache($key, null, 'API_');
+	if($xmltext !== null) {
+		\Osmium\State\semaphore_release($sem);
+		return new \SimpleXMLElement($xmltext);
+	}
 
 	$c = curl_init(API_ROOT.$name);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($c, CURLOPT_CAINFO, \Osmium\ROOT.'/ext/ca/GeoTrustGlobalCA.pem');
-	curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($params, '', '&'));
+	curl_setopt($c, CURLOPT_POSTFIELDS, $params);
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT_MS, API_TIMEOUT);
+	curl_setopt($c, CURLOPT_TIMEOUT_MS, API_CURL_TIMEOUT);
 	$raw_xml = curl_exec($c);
 	curl_close($c);
   
@@ -82,16 +79,13 @@ function fetch($name, array $params) {
 	}
 
 	if($xml === false || $raw_xml === false) {
-		unlink($lock_file);
+		\Osmium\State\semaphore_release($sem);
 		return false;
 	}
 
-	$f = fopen($c_file, 'wb');
-	fwrite($f, $raw_xml);
-	fflush($f);
-	fclose($f);
-	unlink($lock_file);
-
-	touch($c_file, $expires = strtotime((string)$xml->cachedUntil), $expires);
+	$expires = strtotime((string)$xml->cachedUntil);
+	$ttl = $expires - time() + 1;
+	\Osmium\State\put_cache($key, $raw_xml, $ttl, 'API_');
+	\Osmium\State\semaphore_release($sem);
 	return $xml;
 }

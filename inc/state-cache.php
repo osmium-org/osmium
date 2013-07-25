@@ -312,3 +312,58 @@ function put_state_trypersist($key, $value) {
 		return put_state('__setting_'.$key, $value);
 	}
 }
+
+/* --------------------- SEMAPHORES --------------------- */
+/* You can use semaphores to avoid cache slams (ie when a heavily used
+ * cache entry expires, the cache will be generated simultaneously by
+ * a lot of requests and waste resources). All the functions above
+ * will not use semaphores automatically, you will have to do it when
+ * necessary. */
+
+if(function_exists('sem_acquire')) {
+	/* Use the builtin semaphore functions */
+
+	/**
+     * Acquire a semaphore. This will block until the semaphore can be
+     * acquired.
+     *
+     * @returns the semaphore resource to be given to
+     * semaphore_release().
+     */
+	function semaphore_acquire($name) {
+		$id = sem_get(crc32(__FILE__.'/'.$name));
+		if($id === false) return false;
+		if(sem_acquire($id) === false) return false;
+		return $id;
+	}
+
+	/**
+	 * Release a semaphore. This is automatically done when the
+	 * process terminates (but will generate a warning).
+	 */
+	function semaphore_release($semaphore) {
+		sem_release($semaphore);
+		sem_remove($semaphore);
+	}
+} else {
+	/* Use flock() as a fallback */
+
+	/** @see semaphore_acquire() */
+	function semaphore_acquire($name) {
+		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/Semaphore_'.hash('sha512', $name), 'cb');
+		touch($f, time() + 600); /* This semaphore will probably be stale in 10 minutes */
+		if($f === false) return false;
+		if(flock($f, LOCK_EX) === false) return false;
+		return [ $f, $filename ];
+	}
+
+	/** @see semaphore_release() */
+	function semaphore_release($semaphore) {
+		flock($semaphore[0], LOCK_UN);
+		/* unlink() will remove the file when it is no longer opened
+		 * by any process. So if the file is already opened by other
+		 * processes (aka other processes are waiting to acquire the
+		 * semaphore), it will still work as expected. */
+		unlink($semaphore[1]);
+	}
+}
