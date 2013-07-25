@@ -1,5 +1,23 @@
-div#mainpcont > section {
+div.mainpcont {
+	text-align: center;
+	max-width: 110em;
+	margin: auto;
+
+	&#search_mini.quick > form {
+		border-bottom: 0 !important;
+	}
+}
+
+div.mainpcont > section {
+	text-align: left;
+
 	@include fixed-width-page;
+
+	width: 50em;
+	display: inline-block;
+	vertical-align: top;
+	margin: 0 2em;
+	margin-bottom: 2em;
 
 	&> h2 > small:last-child > a > img {
 		width: 0.8em;
@@ -30,5 +48,28 @@ div#mainpcont > section {
 		text-align: center;
 	}
 
-	margin-bottom: 5em;
+	&.metrics {
+		&> ul {
+			text-align: center;
+			display: table;
+			table-layout: fixed;
+			width: 100%;
+
+			&, & > li {
+				margin: 0;
+				padding: 0;
+			}
+
+			&> li {
+				display: table-cell;
+				padding: 0.5em 2em;
+				font-size: 0.8em;
+
+				&> strong {
+					font-size: #{(2 / 0.8)}em;
+					display: block;
+				}
+			}
+		}
+	}
 }

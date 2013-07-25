@@ -23,18 +23,31 @@ require __DIR__.'/../../inc/root.php';
 header('Content-Type: text/plain');
 
 $a = \Osmium\State\get_state('a', null);
-$a = $a === null ? 0 : $a['accountid'];
-$k = 'notification_count_'.$a;
+if($a === null) {
+	echo "0";
+	die();
+}
+
+$k = 'notification_count_'.$a['accountid'];
+$count = \Osmium\State\get_cache_memory($k, -1);
+if($count >= -1) {
+	echo $count;
+	die();
+}
+
+$sem = \Osmium\State\semaphore_acquire($k);
+if($sem === false) {
+	echo "0";
+	die();
+}
 
 $count = \Osmium\State\get_cache_memory($k, -1);
-
 if($count >= -1) {
 	echo $count;
 	die();
 }
 
 $count = \Osmium\Notification\get_new_notification_count();
-/* Cache $count for about a minute */
 \Osmium\State\put_cache_memory($k, (int)$count, 59);
-
+\Osmium\State\semaphore_release($sem);
 echo $count;

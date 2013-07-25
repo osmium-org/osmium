@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -107,11 +107,16 @@ function logoff($global = false) {
  * visitor match the ones generated when the cookie was set.
  */
 function get_client_attributes() {
-	return hash('sha256', serialize(array($_SERVER['REMOTE_ADDR'],
-	                                      $_SERVER['HTTP_USER_AGENT'],
-	                                      $_SERVER['HTTP_ACCEPT'],
-	                                      $_SERVER['HTTP_HOST']
-		                                )));
+	if(!isset($_SERVER['REMOTE_ADDR'])) {
+		return 'CLI';
+	}
+
+	return hash('sha256', serialize(array(
+		$_SERVER['REMOTE_ADDR'],
+		$_SERVER['HTTP_USER_AGENT'],
+		$_SERVER['HTTP_ACCEPT'],
+		$_SERVER['HTTP_HOST'],
+	)));
 }
 
 /**
@@ -554,3 +559,12 @@ function get_nonce() {
 	$q = \Osmium\Db\query('SELECT ((random() * ((2)::double precision ^ (63)::double precision)))::bigint');
 	return \Osmium\Db\fetch_row($q)[0];
 }
+
+register_shutdown_function(function() {
+	/* Used for getting a rough estimate of the current member of
+	 * users browsing the site. */
+	if(defined('Osmium\ACTIVITY_IGNORE')) return;
+	$a = get_state('a', null);
+	$a = ($a === null) ? get_client_attributes() : $a['accountid'];
+	if($a !== 'CLI') put_cache_memory($a, 0, 65, 'Activity_');
+});

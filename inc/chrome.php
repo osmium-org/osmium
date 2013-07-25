@@ -229,16 +229,30 @@ function format_resonance($resonance) {
 		."</div>";
 }
 
-function format_reputation($rep) {
-	if($rep <= 0) $rep = 0;
-
-	if($rep >= 10000) {
-		$rep = round(floor($rep / 100) / 10, 1).'k';
-	} else {
-		$rep = number_format($rep);
+function format_integer($i, $exact = true) {
+	if($exact) {
+		return number_format($i);
 	}
 
-	return "<span class='reputation' title='reputation'>$rep</span>";
+	if($i >= 1e9) {
+		return number_format($i / 1e9, 3).'b';
+	}
+
+	if($i >= 1e6) {
+		return number_format($i / 1e6, 3).'m';
+	}
+
+	if($i >= 1e4) {
+		return number_format($i / 1e3, 2).'k';
+	}
+
+	return number_format($i);
+}
+
+function format_reputation($rep) {
+	if($rep <= 0) $rep = 0;
+	$rep = format_integer($rep, false);
+	return "<span class='reputation' title='reputation'>{$rep}</span>";
 }
 
 /**
@@ -495,7 +509,7 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
-function format_isk($isk) {
+function format_isk($isk, $withunit = true) {
 	if($isk >= 10000000000) {
 		$isk = round($isk / 1000000000, 2).'B';
 	} else if($isk >= 1000000000) {
@@ -510,7 +524,7 @@ function format_isk($isk) {
 		$isk = round($isk / 1000, 1).'K';
 	}
 
-	return $isk.' ISK';
+	return $isk.($withunit ? ' ISK' : '');
 }
 
 function truncate_string($s, $length, $fill = '…') {

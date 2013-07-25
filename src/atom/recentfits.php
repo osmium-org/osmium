@@ -21,6 +21,8 @@ namespace Osmium\Atom\NewFits;
 require __DIR__.'/../../inc/root.php';
 require \Osmium\ROOT.'/inc/atom_common.php';
 
+define('Osmium\ACTIVITY_IGNORE', true);
+
 $type = isset($_GET['type']) ? $_GET['type'] : '';
 
 if($type == 'newfits') {

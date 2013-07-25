@@ -98,7 +98,7 @@ function put_cache($key, $value, $expires = 0, $prefix = 'OsmiumCache_') {
 
 	if($expires > 0) $expires = time() + $expires;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
     return file_put_contents($f, serialize($value)) && touch($f, $expires);
 }
 
@@ -109,7 +109,7 @@ function invalidate_cache($key, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
 	if(file_exists($f)) unlink($f);
 }
 
@@ -126,8 +126,38 @@ function get_expiration_date($key, $prefix = 'OsmiumCache_') {
 	 * be expired. */
 	if(!$__osmium_cache_enabled) return 1;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
 	return file_exists($f) ? filemtime($f) : 1;
+}
+
+/**
+ * Count the number of (unexpired) cache entries matching a certain
+ * criteria.
+ *
+ * @param $filters an array which can contain the following keys:
+ * - regex: a regular expression to test the cache key against
+ * - mmin: entry was modified at least N minutes ago
+ */
+function count_cache_entries(array $filters = array(), $prefix = 'OsmiumCache_') {
+	$command = 'find '.escapeshellarg(\Osmium\CACHE_DIRECTORY)
+		.' -maxdepth 1 -type f -mtime -0 -printf "%f\n" -name '
+		.escapeshellarg($prefix.'*');
+
+	if(isset($filters['mmin'])) {
+		$command .= ' -mmin -'.(int)$filters['mmin'];
+	}
+
+	if(isset($filters['amin'])) {
+		$command .= ' -amin -'.(int)$filters['amin'];
+	}
+
+	if(isset($filters['regex'])) {
+		$command .= ' | grep -P '.escapeshellarg($filters['regex']);
+	}
+
+	$command .= ' | wc -l';
+
+	return (int)trim(shell_exec($command));
 }
 
 /* --------------------- MEMORY CACHE --------------------- */
@@ -162,22 +192,50 @@ if(function_exists('apc_store')) {
 
 		return apc_delete('Osmium_'.$prefix.$key);
 	}
+
+	/** @see count_cache_entries() */
+	function count_memory_cache_entries(array $filters = array(), $prefix = '') {
+		$iter = new \APCIterator(
+			'user', '%^Osmium_'.preg_quote($prefix).'%',
+			APC_ITER_KEY | APC_ITER_MTIME,
+			128, APC_LIST_ACTIVE
+			);
+		$count = 0;
+		$strip = strlen('Osmium_'.$prefix);
+		$mcutoff = isset($filters['mmin']) ? (time() - 60 * $filters['mmin']) : 0;
+		foreach($iter as $e) {
+			if(isset($filters['regex']) && !preg_match($filters['regex'], substr($e['key'], $strip))) {
+				continue;
+			}
+
+			if($e['mtime'] < $mcutoff) continue;
+
+			++$count;
+		}
+
+		return $count;
+	}
 } else {
 	/* Use disk-based cache as a fallback */
 
 	/** @see get_cache() */
 	function get_cache_memory($key, $default = null, $prefix = '') {
-		return get_cache($key, $default, 'MemoryCacheFB_'.$prefix);
+		return get_cache($key, $default, 'MemoryCache_'.$prefix);
 	}
 
 	/** @see put_cache() */
 	function put_cache_memory($key, $value, $expires = 0, $prefix = '') {
-		return put_cache($key, $value, $expires, 'MemoryCacheFB_'.$prefix);
+		return put_cache($key, $value, $expires, 'MemoryCache_'.$prefix);
 	}
 
 	/** @see invalidate_cache() */
 	function invalidate_cache_memory($key, $prefix = '') {
 		return invalidate_cache($key, 'MemoryCache_'.$prefix);
+	}
+
+	/** @see count_cache_entries() */
+	function count_memory_cache_entries(array $filters = array(), $prefix = '') {
+		return count_cache_entries($filters, 'MemoryCache_'.$prefix);
 	}
 }
 
@@ -340,7 +398,7 @@ if(function_exists('sem_acquire')) {
      * semaphore_release().
      */
 	function semaphore_acquire($name) {
-		$key = (SEM_PREFIX << (32 - SEM_PREFIX_LENGTH)) & (crc32(__FILE__.'/'.$name) >> SEM_PREFIX_LENGTH);
+		$key = (SEM_PREFIX << (32 - SEM_PREFIX_LENGTH)) | (crc32(__FILE__.'/'.$name) >> SEM_PREFIX_LENGTH);
 		$id = sem_get($key);
 		if($id === false) return false;
 		if(sem_acquire($id) === false) return false;

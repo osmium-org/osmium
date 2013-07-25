@@ -105,10 +105,6 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		if($a['ismoderator'] === 't') {
 			echo get_navigation_link($relative.'/moderation/', \Osmium\Flag\MODERATOR_SYMBOL);
 		}
-
-		\Osmium\Chrome\print_js_snippet('notifications');
-		\Osmium\Chrome\print_js_code('$(function() { osmium_notifications("'
-		                             .str_replace('"', '\"', $relative).'"); });');
 	}
 	echo "</ul>\n";
 
@@ -123,6 +119,11 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
  */
 function print_footer() {
 	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code;
+
+	\Osmium\Chrome\print_js_snippet('notifications');
+	\Osmium\Chrome\print_js_code(
+		'$(function() { osmium_notifications("'.str_replace('"', '\"', $__osmium_chrome_relative).'"); });'
+	);
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
 	echo "<a href='http://artefact2.com/osmium/'><strong>Osmium "
