@@ -215,10 +215,12 @@ function get_synonyms($name) {
 		array(
 			'Afterburner',
 			'Microwarpdrive',
+			'Low-grade',
 			),
 		array(
 			'AB',
 			'MWD',
+			'LG',
 			),
 		$name);
 

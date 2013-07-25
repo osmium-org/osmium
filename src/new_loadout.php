@@ -191,12 +191,20 @@ echo "<div id='nlsources'>
 </ul>\n";
 
 $searchexamples = array(
+	/* Module synonyms */
 	'dc2', '10mn ab', 'rf tp', 'large asb',
 	'cn bcs', 'med cdfe', 'rcu 2', '1mn mwd',
 	'fn web', 'c-type aif', 'eanm ii', 'pds',
 	'mjd', 'rf disru', 'pwnage', 'tachyon ii',
+
+	/* Ship synonyms */
 	'sni', 'rni', 'sfi', 'pirate frig',
-	'gyro @meta 4', 'web @meta 4', 'hml @meta 4', 'eanm @meta 1'
+
+	/* Meta level filter */
+	'gyro @meta 4', 'web @meta 4', 'hml @meta 4', 'eanm @meta 1',
+
+	/* Implants synonyms */
+	'lg snake', 'crystal implant',
 );
 echo "<section id='search'>
 <form method='get' action='?'>
