@@ -68,16 +68,17 @@ function print_formatted_attribute_category($identifier, $title, $titledata, $ti
 
 function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	ob_start();
+	$overall = '';
 
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
 	$formatted = format_used(
 		$slotsTotal - $slotsLeft, $slotsTotal,
 		'', 0,
-		F_USED_SHOW_ABSOLUTE,
-		$overturrets
+		F_USED_SHOW_ABSOLUTE
 	);
-	echo "<p class='overflow$overturrets'>"
+	$overturrets = $slotsLeft < 0 ? 'overflow' : '';
+	echo "<p class='{$overturrets}'>"
 		.sprite($relative, 'Turret hardpoints', 0, 0, 64, 64, 32)
 		."<span id='turrethardpoints'>".$formatted."</span></p>\n";
 
@@ -86,10 +87,10 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$formatted = format_used(
 		$slotsTotal - $slotsLeft, $slotsTotal,
 		'', 0,
-		F_USED_SHOW_ABSOLUTE,
-		$overlaunchers
+		F_USED_SHOW_ABSOLUTE
 	);
-	echo "<p class='overflow$overlaunchers'>"
+	$overlaunchers = $slotsLeft < 0 ? 'overflow' : '';
+	echo "<p class='{$overlaunchers}'>"
 		.sprite($relative, 'Launcher hardpoints', 0, 1, 64, 64, 32)
 		."<span id='launcherhardpoints'>".$formatted."</span></p>\n";
 
@@ -103,10 +104,10 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$formatted = format_used(
 		$cpuUsed, $cpuTotal,
 		'tf', 2,
-		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR,
-		$overcpu
+		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR
 	);
-	echo "<p class='overflow$overcpu'>"
+	$overcpu = $cpuUsed > $cpuTotal ? 'overflow' : '';
+	echo "<p class='{$overcpu}'>"
 		.sprite($relative, 'CPU', 1, 0, 64, 64, 32)
 		."<span id='cpu'>".$formatted."</span></p>\n";
 
@@ -115,10 +116,10 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$formatted = format_used(
 		$powerUsed, $powerTotal,
 		'MW', 2,
-		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR,
-		$overpower
+		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR
 	);
-	echo "<p class='overflow$overpower'>"
+	$overpower = $powerUsed > $powerTotal ? 'overflow' : '';
+	echo "<p class='{$overpower}'>"
 		.sprite($relative, 'Powergrid', 1, 1, 64, 64, 32)
 		."<span id='power'>".$formatted."</span></p>\n";
 
@@ -127,14 +128,19 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$formatted = format_used(
 		$upgradeCapacityUsed, $upgradeCapacityTotal,
 		'', 2,
-		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE,
-		$overupgrade
+		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR
 	);
-	echo "<p class='overflow$overupgrade'>"
+	$overupgrade = $upgradeCapacityUsed > $upgradeCapacityTotal ? 'overflow' : '';
+	echo "<p class='{$overupgrade}'>"
 		.sprite($relative, 'Calibration (upgrade capacity)', 1, 2, 64, 64, 32)
 		."<span id='upgradecapacity'>".$formatted."</span></p>\n";
 
-	print_formatted_attribute_category('engineering', 'Engineering', "<span title='Capacitor stability'>".$captime.' </span>', 'overflow'.max($overturrets, $overlaunchers, $overcpu, $overpower, $overupgrade), ob_get_clean());
+	print_formatted_attribute_category(
+		'engineering', 'Engineering',
+		"<span title='Capacitor stability'>".$captime.' </span>',
+		$overturrets || $overlaunchers || $overcpu || $overpower || $overupgrade ? 'overflow' : '',
+		ob_get_clean()
+	);
 }
 
 function print_formatted_offense(&$fit, $relative, $reload = false) {

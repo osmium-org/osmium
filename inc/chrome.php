@@ -60,9 +60,8 @@ function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxover
 	return $ret;
 }
 
-function format_used($rawused, $rawtotal, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE, &$overflow) {
+function format_used($rawused, $rawtotal, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE) {
 	if($rawtotal == 0 && $rawused == 0) {
-		$overflow = 0;
 		return '0';
 	}
 
@@ -86,9 +85,8 @@ function format_used($rawused, $rawtotal, $unit, $digits, $opts = F_USED_SHOW_AB
 	}
 
     $percent = $rawtotal > 0 ? (100 * $rawused / $rawtotal) : 100;
-	$overflow = max(min(6, ceil($percent) - 100), 0);
 	if($opts & F_USED_SHOW_PERCENTAGE) {
-		$lines[] = ($rawtotal == 0 ? '∞' : round(100 * $rawused / $rawtotal, $digits)).' %';
+		$lines[] = ($rawtotal == 0 ? '∞' : round($percent, $digits)).' %';
 	}
 
 	$ret = implode("<br />", $lines);

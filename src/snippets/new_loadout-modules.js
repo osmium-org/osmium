@@ -76,8 +76,6 @@ osmium_gen_modules = function() {
 		}
 	}
 
-	if(osmium_loadout_readonly) return;
-
 	for(type in osmium_clf_slots) {
 		$('section#modules > div.slots.' + type).data('type', type);
 	}
@@ -149,8 +147,6 @@ osmium_init_modules = function() {
 };
 
 osmium_update_slotcounts = function() {
-	if(osmium_loadout_readonly) return;
-
 	$('section#modules > div.slots').each(function() {
 		var t = $(this);
 		osmium_update_overflow(t);

@@ -323,7 +323,7 @@ div#computed_attributes > section > div > table#resists {
 }
 
 div#computed_attributes > section#engineering {
-	span#cpu, span#power {
+	span#cpu, span#power, span#upgradecapacity {
 		@include bottom-progress-bar;
 
 		&#cpu > span.lbar {
@@ -332,6 +332,10 @@ div#computed_attributes > section#engineering {
 
 		&#power > span.lbar {
 			@include linear-gradient-lighten-left(hsl(32, 50, 50), 10%);
+		}
+
+		&#upgradecapacity > span.lbar {
+			@include linear-gradient-lighten-left(hsl(268, 10, 50), 10%);
 		}
 	}
 }
@@ -439,12 +443,9 @@ section#sivariations {
 	}
 }
 
-.overflow6 { @include error-background-opacity(0.30); }
-.overflow5 { @include error-background-opacity(0.25); }
-.overflow4 { @include error-background-opacity(0.20); }
-.overflow3 { @include error-background-opacity(0.15); }
-.overflow2 { @include error-background-opacity(0.10); }
-.overflow1 { @include error-background-opacity(0.05); }
+.overflow {
+	color: $overflow-text-color !important;
+}
 
 
 

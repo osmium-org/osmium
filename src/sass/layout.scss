@@ -46,7 +46,7 @@ $nav-height: 2.5em;
 
 		&.over {
 			z-index: 3;
-			background-color: red;
+			background-color: $overflow-text-color;
 		}
 	}
 
@@ -215,10 +215,6 @@ a {
 
 ul {
 	list-style-type: square;
-}
-
-.overflow {
-	background-color: $overflow-bg-color !important;
 }
 
 abbr, .mod {

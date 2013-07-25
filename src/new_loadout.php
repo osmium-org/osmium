@@ -353,6 +353,7 @@ foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
 	echo "<div class='drones $type'>\n<h3>".htmlspecialchars($fname)." <span>";
 	if($type === 'space') {
 		echo "<small title='Maximum number of drones in space' class='maxdrones'></small>";
+		echo "<small> — </small>";
 		echo "<small title='Drone bandwidth usage' class='bandwidth'></small>";
 	} else if($type === 'bay') {
 		echo "<small title='Drone bay usage' class='bayusage'></small>";
