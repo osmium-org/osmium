@@ -43,10 +43,11 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	global $__osmium_chrome_relative;
 	$__osmium_chrome_relative = $relative;
 
+	$osmium = \Osmium\get_ini_setting('name');
 	if($title == '') {
-		$title = 'Osmium / '.\Osmium\SHORT_DESCRIPTION;
+		$title = $osmium.' / '.\Osmium\get_ini_setting('description');
 	} else {
-		$title .= ' / Osmium';
+		$title .= ' / '.$osmium;
 	}
 
 	$xhtml = isset($_SERVER['HTTP_ACCEPT']) && 
@@ -77,7 +78,13 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		echo "<link rel='alternate stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/$f' title='$t' type='text/css' />\n";
 	}
 
-	echo "<link rel='icon' type='image/png' href='$relative/static-".\Osmium\STATICVER."/favicon.png' />\n";
+	$favicon = \Osmium\get_ini_setting('favicon');
+	if(substr($favicon, 0, 2) === '//') {
+		$favicon = urlencode($favicon);
+	} else {
+		$favicon = $relative.'/static-'.\Osmium\STATICVER.'/'.urlencode($favicon);
+	}
+	echo "<link rel='icon' type='image/png' href='{$favicon}' />\n";
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 

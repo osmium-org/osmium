@@ -1,3 +1,10 @@
+staging
+=======
+
+The config.ini file has changed, the [branding] section has been
+added. Be sure to copy the new keys from config-example.ini to your
+config.ini while updating.
+
 v0.9.1, released 2013-07-22
 ===========================
 

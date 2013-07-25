@@ -22,8 +22,6 @@ if(!defined('Osmium\ROOT')) {
 	require __DIR__.'/dispatchroot.php';
 }
 
-const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
-
 /** Bump this when static files (icons, etc.) are updated */
 const STATICVER = 10;
 

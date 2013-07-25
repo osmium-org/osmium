@@ -50,9 +50,11 @@ function get_popular_tags() {
 	return $ptags;
 }
 
-\Osmium\Chrome\print_header('', '.', true, "<link href='./atom/newfits.xml' type='application/atom+xml' rel='alternate' title='New fits' />\n<link href='./atom/recentlyupdated.xml' type='application/atom+xml' rel='alternate' title='Recently updated' />\n");
+\Osmium\Chrome\print_header(
+	'', '.', true,
+	"<link href='./atom/newfits.xml' type='application/atom+xml' rel='alternate' title='New fits' />\n<link href='./atom/recentlyupdated.xml' type='application/atom+xml' rel='alternate' title='Recently updated' />\n");
 
-echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
+echo "<h1 id='mainp'>".\Osmium\get_ini_setting('name')." — ".\Osmium\get_ini_setting('description')."</h1>\n";
 echo "<div id='mainpcont'>\n";
 
 echo "<div class='quick' id='search_mini'>\n";
