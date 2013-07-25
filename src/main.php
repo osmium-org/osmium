@@ -21,6 +21,35 @@ namespace Osmium\Page\Main;
 require __DIR__.'/../inc/root.php';
 require \Osmium\ROOT.'/inc/atom_common.php';
 
+function get_popular_tags() {
+	$ptags = \Osmium\State\get_cache_memory('main_popular_tags', null);
+	if($ptags !== null) return $ptags;
+
+	$sem = \Osmium\State\semaphore_acquire('main_popular_tags');
+	$ptags = \Osmium\State\get_cache_memory('main_popular_tags', null);
+	if($ptags !== null) {
+		\Osmium\State\semaphore_release($sem);
+		return $ptags;
+	}
+
+	$query = \Osmium\Db\query(
+		"SELECT tagname, count
+		FROM osmium.tagcount
+		ORDER BY count DESC
+		LIMIT 13"
+	);
+
+	$ptags = array();
+	while($row = \Osmium\Db\fetch_row($query)) {
+		list($name, $count) = $row;
+		$ptags[$name] = $count;
+	}
+
+	\Osmium\State\put_cache_memory('main_popular_tags', $ptags, 3600);
+	\Osmium\State\semaphore_release($sem);
+	return $ptags;
+}
+
 \Osmium\Chrome\print_header('', '.', true, "<link href='./atom/newfits.xml' type='application/atom+xml' rel='alternate' title='New fits' />\n<link href='./atom/recentlyupdated.xml' type='application/atom+xml' rel='alternate' title='Recently updated' />\n");
 
 echo "<h1 id='mainp'>Osmium — ".\Osmium\SHORT_DESCRIPTION."</h1>\n";
@@ -37,22 +66,11 @@ $accountid = $a === null ? 0 : $a['accountid'];
 echo "<section>\n";
 echo "<h2>Popular</h2>\n<ul class='tags' id='populartags'>\n";
 
-if(($ptags = \Osmium\State\get_cache_memory('main_popular_tags', null)) === null) {
-	$query = \Osmium\Db\query(
-		"SELECT tagname, count FROM osmium.tagcount ORDER BY count DESC LIMIT 13");
-
-	$ptags = '';
-	while($row = \Osmium\Db\fetch_row($query)) {
-		list($name, $count) = $row;
-
-		$ptags .= "<li><a href='./browse/best?q=".urlencode('@tags "'.$name.'"')
-			."'>$name</a> ($count)</li>\n";
-	}
-
-	\Osmium\State\put_cache_memory('main_popular_tags', $ptags, 86400);
+foreach(get_popular_tags() as $name => $count) {
+	echo "<li><a href='./browse/best?q=".urlencode('@tags "'.$name.'"')
+		."'>{$name}</a> ({$count})</li>\n";
 }
 
-echo $ptags;
 echo "</ul>\n";
 echo "<p class='b_more'><a href='./browse/best'>Browse all popular loadouts…</a></p>\n";
 echo "</section>\n";
