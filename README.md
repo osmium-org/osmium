@@ -228,6 +228,7 @@ Dependencies
   * cURL extension (`curl.so`)
   * SimpleXML support (enabled by default)
   * Zlib support
+  * (Optional) Semaphores support (`sysvsem.so`)
   * (Optional) iconv extension (`iconv.so`)
   * (Optional) intl extension (`intl.so`)
   * (Optional) APC (or APCu for PHP >= 5.5) extension (`apc.so`)

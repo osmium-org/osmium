@@ -18,6 +18,15 @@
 
 namespace Osmium\State;
 
+/* System unique prefix for semaphore keys. Change this if you have
+ * some other process using semaphores whose first SEM_PREFIX_LENGTH
+ * bits are SEM_PREFIX. */
+const SEM_PREFIX = 0xA6;
+
+/* Number of bits to use of SEM_PREFIX. Increase this if you need to
+ * use a longer prefix. */
+const SEM_PREFIX_LENGTH = 8;
+
 /** @internal */
 $__osmium_cache_stack = array();
 
@@ -331,7 +340,8 @@ if(function_exists('sem_acquire')) {
      * semaphore_release().
      */
 	function semaphore_acquire($name) {
-		$id = sem_get(crc32(__FILE__.'/'.$name));
+		$key = (SEM_PREFIX << (32 - SEM_PREFIX_LENGTH)) & (crc32(__FILE__.'/'.$name) >> SEM_PREFIX_LENGTH);
+		$id = sem_get($key);
 		if($id === false) return false;
 		if(sem_acquire($id) === false) return false;
 		return $id;
