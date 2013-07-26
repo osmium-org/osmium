@@ -18,7 +18,7 @@
 
 namespace Osmium\AtomCommon;
 
-function get_new_fits($accountid = 0, $limit = 10) {
+function get_new_fits($accountid = 0, $limit = 20) {
 	$ids = array();
 	$query = \Osmium\Db\query_params('SELECT a.loadoutid FROM osmium.searchableloadouts AS a 
 	JOIN osmium.loadoutslatestrevision AS llr ON a.loadoutid = llr.loadoutid
@@ -36,7 +36,7 @@ function get_new_fits($accountid = 0, $limit = 10) {
 	return $ids;
 }
 
-function get_recently_updated_fits($accountid = 0, $limit = 10) {
+function get_recently_updated_fits($accountid = 0, $limit = 20) {
 	$ids = array();
 	$query = \Osmium\Db\query_params('SELECT a.loadoutid FROM osmium.searchableloadouts AS a 
 	JOIN osmium.loadoutslatestrevision AS llr ON a.loadoutid = llr.loadoutid

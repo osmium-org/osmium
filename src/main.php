@@ -218,30 +218,34 @@ if($topkills === null) {
 			}
 
 			if($doctrinec < 2 * $numrows) {
-				$bestalliance = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+				$alliancesq = \Osmium\Db\query_params(
 					'SELECT count(DISTINCT characterid), allianceid, alliancename
 					FROM recentkillsdna
 					WHERE groupdna = $1 AND allianceid > 0
 					GROUP BY allianceid, alliancename
 					ORDER BY count DESC
-					LIMIT 1',
+					LIMIT 4',
 					array($row[2])
-				));
+				);
 
-				/* If more than half of the losses were by the same
-				 * alliance, assume it's a doctrine fit */
-				if($bestalliance !== false && (int)$bestalliance[0] > ((int)$row[0] >> 1)) {
-					$topkills['doctrine'][] = [
-						'dna' => $bestdna,
-						'timespan' => (int)$row[1],
-						'count' => (int)$row[0],
-						'tags' => $fit['metadata']['tags'],
-						'allianceid' => (int)$bestalliance[1],
-						'alliancename' => $bestalliance[2],
-					];
-					++$doctrinec;
-					continue;
+				$alliances = array();
+				$proportion = 0;
+				while($proportion < .5 && $a = \Osmium\Db\fetch_row($alliancesq)) {
+					$alliances[] = $a;
+					$proportion += $a[0] / $row[0];
 				}
+
+				if($proportion < .5) continue;
+
+				$topkills['doctrine'][] = [
+					'dna' => $bestdna,
+					'timespan' => (int)$row[1],
+					'count' => (int)$row[0],
+					'tags' => $fit['metadata']['tags'],
+					'alliances' => $alliances,
+				];
+				++$doctrinec;
+				continue;
 			}
 
 			if($fotwc < 3 * $numrows) {
@@ -312,13 +316,22 @@ foreach($topkills['doctrine'] as $f) {
 		.($f['tags'] ? ": ".implode(", ", $f['tags']) : ''),
 		ENT_QUOTES
 	);
-	$aname = htmlspecialchars('mainly flown by: '.$f['alliancename'], ENT_QUOTES);
+
+	$anames = array();
+	$alogos = "";
+	foreach($f['alliances'] as $a) {
+		list($count, $id, $name) = $a;
+		$name = htmlspecialchars($name, ENT_QUOTES);
+		$anames[] = $name.' ('.round(100 * $count / $f['count']).' %)';
+		$alogos .= "<img class='abs' src='//image.eveonline.com/Alliance/{$id}_128.png' alt='{$name}' />\n";
+	}
+
+	$aname = "mainly flown by: &#10;".implode(", &#10;", $anames);
 
 	echo "<li><a href='./loadout/dna/".$f['dna']."'>"
 		."<img class='abs' src='//image.eveonline.com/Render/"
 		.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
-		."<img class='abs alogo' src='//image.eveonline.com/Alliance/"
-		.$f['allianceid']."_128.png' alt='{$aname}' title='{$aname}' />"
+		."<div title='{$aname}' class='abs alogos n".(count($f['alliances']))."'>\n{$alogos}</div>\n"
 		."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
 		."</strong><small>lost</small></span></div>\n"
 		."<div class='absnum timespan'><span title='Time span of the losses'><strong>"

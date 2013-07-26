@@ -145,6 +145,62 @@ div.mainpcont > section {
 		&.doctrines > ol > li {
 			margin: 1em 3em;
 
+			&> a > div.abs.alogos {
+				position: relative;
+
+				&, &> img {
+					padding: 0;
+				}
+
+				&.n2 > img {
+					position: absolute;
+					width: 2.5em;
+					height: 2.5em;
+				}
+
+				&.n3, &.n4 {
+					&> img {
+						position: absolute;
+						width: 2em;
+						height: 2em;
+					}
+				}
+
+				&.n2 > img {
+					&:nth-child(1) {
+						top: 0;
+						left: 0;
+					}
+
+					&:nth-child(2) {
+						bottom: 0;
+						right: 0;
+					}
+				}
+
+				&.n3 > img, &.n4 > img {
+					&:nth-child(1) {
+						top: 0;
+						left: 0;
+					}
+
+					&:nth-child(2) {
+						top: 0;
+						right: 0;
+					}
+
+					&:nth-child(3) {
+						bottom: 0;
+						left: 0;
+					}
+
+					&:nth-child(4) {
+						bottom: 0;
+						right: 0;
+					}
+				}
+			}
+
 			&:nth-child(4n+2), &:nth-child(4n+3) {
 				background-color: $loadout-list-odd-bg-color;
 			}
