@@ -1,0 +1,253 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\FetchZKillboardDNA;
+
+require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/ajax_common.php';
+
+const GROUP_Capsule = 29;
+
+
+
+function get_parent_typeid($typeid) {
+	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT parenttypeid FROM eve.invmetatypes
+		WHERE typeid = $1',
+		array($typeid)
+	));
+
+	if($row === false) return $typeid;
+	return $row[0];
+}
+
+/* The same fit can have multiple DNA representation. This function
+ * tries to correct this by converting all DNA to their "canonical"
+ * form, where types are sorted by category and by ID. */
+function uniquify_dna($dna) {
+	require_once __DIR__.\Osmium\Fit\CLF_PATH;
+
+	$types = array(
+		'module' => [],
+		'charge' => [],
+		'drone' => [],
+		'implant' => [],
+		'booster' => [],
+	);
+
+	$dnaparts = explode(':', rtrim($dna, ':'));
+	$ship = (int)array_shift($dnaparts);
+
+	if(!\CommonLoadoutFormat\check_typeof_type($ship, 'ship')) return false;
+	$shipgroup = (int)\Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT groupid FROM eve.invtypes WHERE typeid = $1',
+		array($ship)
+	))[0];
+	if($shipgroup === GROUP_Capsule) return false;
+
+	foreach($dnaparts as &$dnapart) {
+		if(strpos(';', $dnapart) !== false) {
+			list($typeid, $qty) = explode(';', $dnapart, 2);
+		} else {
+			$typeid = $dnapart;
+			$qty = 1;
+		}
+
+		$typeid = (int)$typeid;
+		$qty = (int)$qty;
+
+		foreach($types as $t => &$a) {
+			if(\CommonLoadoutFormat\check_typeof_type($typeid, $t)) {
+				if(!isset($a[$typeid])) $a[$typeid] = 0;
+				$a[$typeid] += $qty;
+				break;
+			}
+		}
+	}
+
+	$return = $ship;
+
+	foreach($types as &$a) {
+		ksort($a);
+
+		foreach($a as $typeid => $qty) {
+			$return .= ':'.$typeid.';'.$qty;
+		}
+	}
+
+	$groupdna = $ship;
+
+	foreach($types['module'] as $typeid => $qty) {
+		$groupdna .= ':'.get_parent_typeid($typeid).';'.$qty;
+	}
+
+	return [ $return.'::', $groupdna.'::' ];
+}
+
+function get_zkb_dna_page($page) {
+	$json = \Osmium\State\get_cache('dna_page_'.$page, null, 'API_ZKB_');
+	if($json !== null) {
+		echo "{$page} (C)\n";
+		return $json;
+	}
+
+	static $c = null;
+	static $next_request_time = 0;
+	if($c === null) {
+		$c = curl_init();
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($c, CURLOPT_HEADER, 1);
+		curl_setopt($c, CURLOPT_TIMEOUT, 20);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+	}
+
+	echo "$page";
+
+	curl_setopt($c, CURLOPT_URL, $uri = "https://zkillboard.com/api/dna/page/{$page}/");
+	usleep(max(1, ($next_request_time - microtime(true)) * 1e6));
+	$reply = curl_exec($c);
+	if($reply === false) {
+		fwrite(STDERR, "Requesting {$uri} failed");
+		die();
+	}
+
+	list($header, $body) = explode("\r\n\r\n", $reply, 2);
+	if(preg_match("%^X-Time-Between-Req: (.+)$%m", $header, $match)) {
+		$wait = $match[1] + 1;
+	} else {
+		$wait = 10;
+	}
+
+	$next_request_time = microtime(true) + $wait;
+	$json = json_decode($body, true);
+	if(json_last_error() !== JSON_ERROR_NONE) {
+		fwrite(STDERR, "Got invalid JSON: ".json_last_error()."\n");
+		die();
+	}
+
+	\Osmium\State\put_cache('dna_page_'.$page, $json, 1800, 'API_ZKB_');
+	echo "\n";
+	return $json;
+}
+
+function get_page_position($json, $cutoff) {
+	$last = strtotime($json[0]['killtime']);
+	$first = strtotime($json[count($json) - 1]['killtime']);
+
+	if($cutoff > $last) return -1; /* Need to fetch a page before */
+	if($cutoff < $last) return 1; /* Need to fetch a page after */
+	return 0;
+}
+
+function lerp($x1, $y1, $x2, $y2, $y) {
+	$m = ($y2 - $y1) / ($x2 - $x1);
+	$b = $y1 - $x1 * $m;
+	return ($y - $b) / $m;
+}
+
+$cutoff = max(
+	$hardcutoff = time() - 7 * 86400,
+	(int)\Osmium\Db\fetch_row(\Osmium\Db\query(
+		'SELECT max(killtime) FROM recentkillsdna'
+	))[0]
+);
+$cutoffid = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
+	'SELECT max(killid) FROM recentkillsdna'
+))[0];
+
+\Osmium\Db\query_params(
+	'DELETE FROM recentkillsdna
+	WHERE killtime < $1',
+	array($hardcutoff)
+);
+
+$cutoffpage = 1;
+
+$p1 = get_zkb_dna_page(1);
+if(get_page_position($p1, $cutoff) !== 0) {
+	$p128 = get_zkb_dna_page(128);
+
+	$start = strtotime($p128[count($p128) - 1]['killtime']);
+	$end = strtotime($p1[0]['killtime']);
+	$cutoffpage = ceil(lerp(1, $end, 128, $start, $cutoff));
+	$cp = get_zkb_dna_page($cutoffpage);
+	while(get_page_position($cp, $cutoff) === 1) {
+		$cnt = count($cp);
+		$start = strtotime($cp[$cnt - 1]['killtime']);
+		$end = strtotime($cp[0]['killtime']);
+		$cutoffpage = ceil(lerp($cutoffpage, $end, $cutoffpage + 1 - 1 / $cnt, $start, $cutoff));
+		$cp = get_zkb_dna_page($cutoffpage);
+	}
+}
+
+for($i = $cutoffpage; $i > 0; --$i) {
+	$page = get_zkb_dna_page($i);
+
+	while($kill = array_pop($page)) {
+		if($kill['killID'] < 0) continue;
+
+		$killtime = strtotime($kill['killtime']);
+		if($kill['killID'] <= $cutoffid || $killtime < $cutoff) {
+			continue;
+		}
+
+		$udna = uniquify_dna($kill['dna']);
+		if($udna === false) continue;
+		list($dna, $groupdna) = $udna;
+
+		/* Unfortunately due to caching and the volume of kills, it's
+		 * possible for kills to appear multiple times in consecutive
+		 * pages. The @ is there to hide the annoying warning. */
+		@\Osmium\Db\query_params(
+			'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna,
+			solarsystemid, solarsystemname, regionid, regionname,
+			characterid, charactername, corporationid, corporationname, allianceid, alliancename)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
+			array(
+				$kill['killID'],
+				$killtime,
+				$dna,
+				$groupdna,
+				$kill['solarSystemID'],
+				$kill['SolarSystemName'],
+				$kill['regionID'],
+				$kill['regionName'],
+				$kill['victimCharacterID'],
+				$kill['victimCharacterName'],
+				$kill['victimCorporationID'],
+				$kill['victimCorporationName'],
+				$kill['victimAllianceName'] !== null ? $kill['victimAllianceID'] : null,
+				$kill['victimAllianceName'],
+			)
+		);
+
+		echo ".";
+	}
+
+	echo "\n";
+}
+
+\Osmium\Db\query('BEGIN');
+\Osmium\Db\query('TRUNCATE recentkillsdnagroup__mv');
+\Osmium\Db\query(
+	'INSERT INTO recentkillsdnagroup__mv (groupdna, count, timespan)
+	SELECT groupdna, count, timespan from recentkillsdnagroup'
+);
+\Osmium\Db\query('COMMIT');
+\Osmium\Db\query('VACUUM ANALYZE recentkillsdnagroup__mv');

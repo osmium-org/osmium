@@ -197,17 +197,17 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
 		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
 
-		echo "<li>\n<a href='$relative/".$uri."'><img src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
+		echo "<li>\n<a href='$relative/".$uri."'><img class='abs' src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
 
 		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
-		echo "<div class='lscore'><span title='".$loadout['upvotes']
+		echo "<div class='absnum lscore'><span title='".$loadout['upvotes']
 			." upvote(s), ".$loadout['downvotes']." downvote(s)'><strong>"
 			.$loadout['votes']."</strong><br /><small>".$votes."</small></span></div>\n";
 
 		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
 
 		$comments = ($loadout['comments'] == 1) ? 'comment' : 'comments';
-		echo "<div class='ccount'><a href='$relative/".$uri."#comments'><span><strong>".$loadout['comments']."</strong><br /><small>".$comments."</small></span></a></div>\n";
+		echo "<div class='absnum ccount'><a href='$relative/".$uri."#comments'><span><strong>".$loadout['comments']."</strong><br /><small>".$comments."</small></span></a></div>\n";
 
 		echo "<a href='$relative/".$uri."'>";
 		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);

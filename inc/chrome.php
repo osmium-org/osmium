@@ -130,14 +130,29 @@ function format_duration($seconds) {
 	}
 }
 
-function format_long_duration($seconds, $lessthanoneday = '1 day') {
-	list($y, $m, $d) = explode('-', date('Y-m-d', time() - $seconds));
-	list($Y, $M, $D) = explode('-', date('Y-m-d', time()));
+function format_long_duration($seconds, $precision = 6) {
+	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', time() - $seconds));
+	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', time()));
 
 	$years = $Y - $y;
 	$months = $M - $m;
 	$days = $D - $d;
+	$hours = $H - $h;
+	$minutes = $I - $i;
+	$seconds = $S - $s;
 
+	while($seconds < 0) {
+		--$minutes;
+		$seconds += 60;
+	}
+	while($minutes < 0) {
+		--$hours;
+		$minutes += 60;
+	}
+	while($hours < 0) {
+		--$days;
+		$hours += 24;
+	}
 	while($days < 0) {
 		--$months;
 		$days += 30;
@@ -147,18 +162,31 @@ function format_long_duration($seconds, $lessthanoneday = '1 day') {
 		$months += 12;
 	}
 
-	if($years == 0 && $months == 0 && $days == 0) {
-		return $lessthanoneday;
+	$out = array(
+		'year' => $years,
+		'month' => $months,
+		'day' => $days,
+		'hour' => $hours,
+		'minute' => $minutes,
+		'second' => $seconds,
+	);
+	foreach($out as $k => $v) {
+		if($v == 0) unset($out[$k]);
+		else if($v === 1) $out[$k] = $v.' '.$k;
+		else $out[$k] = $v.' '.$k.'s';
+	}
+	$out = array_slice($out, 0, $precision);
+
+	$c = count($out);
+	if($c === 0) {
+		return 'less than 1 '.$k;
+	}
+	if($c >= 2) {
+		$s = array_pop($out);
+		$m = array_pop($out);
+		$out[] = $m.' and '.$s;
 	}
 
-	$out = array();
-	foreach(array('year' => $years, 'month' => $months, 'day' => $days) as $n => $q) {
-		if($q == 0) continue;
-		if($q == 1) $out[] = '1 '.$n;
-		if($q > 1) $out[] = $q.' '.$n.'s';
-	}
-
-	$out = array_slice($out, 0, 2);
 	return implode(', ', $out);
 }
 

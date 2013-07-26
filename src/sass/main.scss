@@ -72,4 +72,57 @@ div.mainpcont > section {
 			}
 		}
 	}
+
+	&.fotw, &.doctrines {
+		&> h2 > small {
+			font-size: 0.6em;
+			opacity: 0.5;
+
+			&> a {
+				color: $aside-text-color;
+				text-decoration: none;
+			}
+
+			&:hover {
+				opacity: 1.0;
+			}
+		}
+
+		&> ol {
+			@include loadout-list;
+			text-align: center;
+
+			&> li {
+				display: inline-block;
+				margin: 1em;
+				border: 0;
+				vertical-align: top;
+
+				&> a > div.timespan {
+					left: 4.5em;
+				}
+
+				&> a > img:first-child {
+					left: 9em;
+				}
+
+				&> a > img.alogo {
+					left: 13.5em;
+				}
+			}
+		}
+
+		&.doctrines > ol > li {
+			margin: 1em 3em;
+			padding-left: 18em;
+
+			&:nth-child(4n+2), &:nth-child(4n+3) {
+				background-color: $loadout-list-odd-bg-color;
+			}
+
+			&:nth-child(4n), &:nth-child(4n+1) {
+				background-color: $main-bg-color;
+			}
+		}
+	}
 }

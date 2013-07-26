@@ -75,7 +75,7 @@ function get_cache($key, $default = null, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return $default;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
 	if(file_exists($f)) {
 		$mtime = filemtime($f);
 		if($mtime === 0 || $mtime > time()) {
@@ -418,7 +418,7 @@ if(function_exists('sem_acquire')) {
 
 	/** @see semaphore_acquire() */
 	function semaphore_acquire($name) {
-		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/Semaphore_'.hash('sha512', $name), 'cb');
+		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/Semaphore_'.str_replace('/', '_', $name), 'cb');
 		touch($f, time() + 600); /* This semaphore will probably be stale in 10 minutes */
 		if($f === false) return false;
 		if(flock($f, LOCK_EX) === false) return false;

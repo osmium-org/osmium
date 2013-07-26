@@ -61,7 +61,7 @@ div#search_full {
 	}
 }
 
-ol.loadout_sr {
+@mixin loadout-list() {
 	margin: 0;
 	padding: 0;
 	list-style-type: none;
@@ -80,7 +80,7 @@ ol.loadout_sr {
 			background-color: $loadout-list-odd-bg-color;
 		}
 
-		&> div.lscore, &> div.ccount, &> a > img:first-child {
+		.abs, .absnum {
 			position: absolute;
 			width: 4em;
 			height: 4em;
@@ -89,16 +89,11 @@ ol.loadout_sr {
 		}
 
 		&> a > img:first-child {
-			left: 9em;
 			border-radius: 0.75em;
 			overflow: hidden;
 		}
 
-		&> div.ccount {
-			left: 4.5em;
-		}
-
-		&> div.lscore, &> div.ccount {
+		.absnum {
 			text-align: center;
 			line-height: 4em;
 
@@ -123,6 +118,20 @@ ol.loadout_sr {
 			color: $loadout-search-metadata-text-color;
 		}
 	}
+}
+
+ol.loadout_sr {
+	@include loadout-list;
+}
+
+ol.loadout_sr > li {
+	&> a > img:first-child {
+		left: 9em;
+	}
+
+	&> div.ccount {
+		left: 4.5em;
+	}	
 }
 
 p.pagination {

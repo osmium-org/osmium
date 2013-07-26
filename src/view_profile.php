@@ -61,7 +61,7 @@ if($row['apiverified'] === 't') {
 	echo $sep;
 }
 
-echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['creationdate'])."</td>\n</tr>\n<tr>\n<td>last seen</td>\n<td>".(($s = \Osmium\Chrome\format_long_duration(time() - $row['lastlogindate'], null)) === null ? 'today' : $s.' ago')."</td>\n</tr>\n";
+echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['creationdate'], 2)."</td>\n</tr>\n<tr>\n<td>last seen</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['lastlogindate'], 2)." ago</td>\n</tr>\n";
 
 echo $sep;
 
