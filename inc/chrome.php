@@ -26,6 +26,32 @@ const F_USED_SHOW_PROGRESS_BAR = 8;
 require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
 
+/* Format a number with a fixed number of significant digits.
+ *
+ * @param $sd number of significant digits. If negative, keep all
+ * significant digits.
+ *
+ * @param $min show this suffix at least (must be one of k, m or b)
+ */
+function format($number, $sd = 3, $min = '') {
+	static $suffixes = [
+		'b' => 1e9,
+		'm' => 1e6,
+		'k' => 1e3,
+		'' => 1
+	];
+
+	if($number < 0) return '-'.format($number, $sd, $min);
+
+	if($sd < 0) return number_format($number / $suffixes[$min]).$min;
+
+	foreach($suffixes as $s => $limit) {
+		if($number >= $limit || $s === $min) {
+			return round_sd($number / $limit, $sd - 1).$s;
+		}
+	}
+}
+
 /** Much better than the junk trim() function from the PHP library */
 function trim($s) {
 	return preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $s);
@@ -539,17 +565,17 @@ function format_sanitize_md_phrasing($markdowntext) {
 
 function format_isk($isk, $withunit = true) {
 	if($isk >= 10000000000) {
-		$isk = round($isk / 1000000000, 2).'B';
+		$isk = round($isk / 1000000000, 2).'b';
 	} else if($isk >= 1000000000) {
-		$isk = round($isk / 1000000000, 3).'B';
+		$isk = round($isk / 1000000000, 3).'b';
 	} else if($isk > 100000000) {
-		$isk = round($isk / 1000000, 1).'M';
+		$isk = round($isk / 1000000, 1).'m';
 	} else if($isk > 10000000) {
-		$isk = round($isk / 1000000, 2).'M';
+		$isk = round($isk / 1000000, 2).'m';
 	} else if($isk > 1000000) {
-		$isk = round($isk / 1000000, 3).'M';
+		$isk = round($isk / 1000000, 3).'m';
 	} else {
-		$isk = round($isk / 1000, 1).'K';
+		$isk = round($isk / 1000, 1).'k';
 	}
 
 	return $isk.($withunit ? ' ISK' : '');

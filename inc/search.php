@@ -195,37 +195,75 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
 		}
 
-		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
+		$uri = \Osmium\Fit\get_fit_uri(
+			$loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']
+		);
 
-		echo "<li>\n<a href='$relative/".$uri."'><img class='abs' src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
+		$fit = \Osmium\Fit\get_fit($loadout['loadoutid']); /* XXX for obvious reasons */
 
+		echo "<li>\n<a href='$relative/".$uri."'>"
+			."<img class='abs' src='http://image.eveonline.com/Render/"
+			.$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
+
+		$dps = 0;
+		$dps += \Osmium\Fit\get_damage_from_turrets($fit)[0];
+		$dps += \Osmium\Fit\get_damage_from_missiles($fit)[0];
+		$dps += \Osmium\Fit\get_damage_from_drones($fit);
+
+		echo "<div title='Damage per second of this loadout' class='absnum dps'><span><strong>"
+			.\Osmium\Chrome\format($dps, 2)
+			."</strong><small>DPS</small></span></div>\n";
+
+		$ehp = \Osmium\Fit\get_ehp_and_resists(
+			$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25 ]
+		)['ehp']['avg'];
+
+		echo "<div title='Effective hitpoints of this loadouts (assumes uniform damage pattern)' class='absnum ehp'><span><strong>"
+			.\Osmium\Chrome\format($ehp, 2, 'k')
+			."</strong><small>EHP</small></span></div>\n";
+
+		$missing = array();
+		$esp = array_sum(\Osmium\Fit\get_estimated_price($fit, $missing));
+		if($missing !== array()) {
+			$esp = "N/A";
+		} else {
+			$esp = \Osmium\Chrome\format($esp, 2);
+		}
+
+		echo "<div title='Estimated price of this loadout' class='absnum esp'><span><strong>"
+			.$esp
+			."</strong><small>ISK</small></span></div>\n";
+
+		echo "<a class='fitname' href='$relative/".$uri."'>";
+		\Osmium\Chrome\print_loadout_title(
+			$loadout['name'], $loadout['viewpermission'], $loadout['visibility'],
+			$loadout, $relative
+		);
+		echo "</a>\n";
+
+		echo "<small>".\Osmium\Chrome\format_character_name($loadout, $relative);
+		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")</small>\n";
+
+		echo "<small> — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
+      
 		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
-		echo "<div class='absnum lscore'><span title='".$loadout['upvotes']
-			." upvote(s), ".$loadout['downvotes']." downvote(s)'><strong>"
-			.$loadout['votes']."</strong><br /><small>".$votes."</small></span></div>\n";
-
-		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
+		echo "<small title='".\Osmium\Chrome\format($loadout['upvotes'], -1)
+			." upvote(s), ".\Osmium\Chrome\format($loadout['downvotes'], -1)
+			." downvote(s)'>".\Osmium\Chrome\format($loadout['votes'], -1)." {$votes}</small>\n";
 
 		$comments = ($loadout['comments'] == 1) ? 'comment' : 'comments';
-		echo "<div class='absnum ccount'><a href='$relative/".$uri."#comments'><span><strong>".$loadout['comments']."</strong><br /><small>".$comments."</small></span></a></div>\n";
+		echo "<small> — <a href='$relative/".$uri."#comments'>"
+			.\Osmium\Chrome\format($loadout['comments'], -1)." {$comments}</a></small>\n";
 
-		echo "<a href='$relative/".$uri."'>";
-		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
-		echo "</a>\n<br />\n<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
-		echo " — ".\Osmium\Chrome\format_character_name($loadout, $relative);
-		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")";
-		echo " — revision #".$loadout['latestrevision'];
-		echo " — ".date('Y-m-d', $loadout['updatedate'])." ("
-			.\Osmium\Fit\get_closest_version_by_build($loadout['evebuildnumber'])['name']
-			.")</small><br />\n";
-      
 		$tags = array_filter(explode(' ', $loadout['taglist']), function($tag) { return trim($tag) != ''; });
 		if(count($tags) == 0) {
-			echo "<em>(no tags)</em>";
+			echo "<em class='notags'>(no tags)</em>\n";
 		} else {
-			echo "<ul class='tags'>\n".implode('', array_map(function($tag) use($relative) {
+			echo "<ul class='tags'>\n"
+				.implode('', array_map(function($tag) use($relative) {
 						$tag = trim($tag);
-						return "<li><a href='$relative/search?q=".urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
+						return "<li><a href='$relative/search?q="
+							.urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
 					}, $tags))."</ul>\n";
 		}
 		echo "</li>\n";

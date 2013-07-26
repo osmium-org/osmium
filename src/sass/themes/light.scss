@@ -49,6 +49,9 @@ $close-modal-bg-color: $modal-bg-color;
 $top-navigation-border-color: hsl(0, 0%, 75%);
 $top-navigation-bg-color: lighten($main-bg-color, 30%);
 
+$sub-navigation-border-color: hsl(0, 0%, 60%);
+$sub-navigation-bg-color: lighten($top-navigation-bg-color, 10%);
+
 $abbr-border-color: $main-text-color;
 
 $pagination-meta-text-color: $aside-text-color;

@@ -73,6 +73,10 @@ div.mainpcont > section {
 		}
 	}
 
+	&> ol.loadout_sr {
+		text-align: center;
+	}
+
 	&.fotw, &.doctrines {
 		&> h2 > small {
 			font-size: 0.6em;
@@ -89,32 +93,57 @@ div.mainpcont > section {
 		}
 
 		&> ol {
-			@include loadout-list;
+			margin: 0;
+			padding: 0;
+			list-style-type: none;
 			text-align: center;
 
 			&> li {
 				display: inline-block;
 				margin: 1em;
-				border: 0;
+				padding: 0.25em;
 				vertical-align: top;
 
-				&> a > div.timespan {
-					left: 4.5em;
+				img.abs {
+					overflow: hidden;
+					border-radius: 1em;
 				}
 
-				&> a > img:first-child {
-					left: 9em;
+				.abs, .absnum {
+					display: inline-block;
+					width: 4em;
+					height: 4em;
+					vertical-align: middle;
+					padding: 0.25em;
 				}
 
-				&> a > img.alogo {
-					left: 13.5em;
+				.absnum {
+					line-height: 4em;
+
+					&> span {
+						display: inline-block;
+						line-height: 1.2em;
+						vertical-align: middle;
+
+						&> strong {
+							display: block;
+							font-size: 1.5em;
+						}
+					}
+				}
+
+				&> a {
+					text-decoration: none !important;
+				}
+
+				&:nth-child(2n) {
+					background-color: $loadout-list-odd-bg-color;
 				}
 			}
 		}
 
 		&.doctrines > ol > li {
 			margin: 1em 3em;
-			padding-left: 18em;
 
 			&:nth-child(4n+2), &:nth-child(4n+3) {
 				background-color: $loadout-list-odd-bg-color;

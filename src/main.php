@@ -282,10 +282,10 @@ foreach($topkills['fotw'] as $f) {
 		."<img class='abs' src='//image.eveonline.com/Render/"
 		.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
 		."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
-		."</strong><br /><small>lost</small></span></div>\n"
+		."</strong><small>lost</small></span></div>\n"
 		."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
 		.\Osmium\Chrome\format_integer($num)
-		."</strong><br /><small>{$unit}</small></span></div>\n"
+		."</strong><small>{$unit}</small></span></div>\n"
 		."</a></li>\n";
 }
 echo "</ol>\n";
@@ -320,10 +320,10 @@ foreach($topkills['doctrine'] as $f) {
 		."<img class='abs alogo' src='//image.eveonline.com/Alliance/"
 		.$f['allianceid']."_128.png' alt='{$aname}' title='{$aname}' />"
 		."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
-		."</strong><br /><small>lost</small></span></div>\n"
+		."</strong><small>lost</small></span></div>\n"
 		."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
 		.$num
-		."</strong><br /><small>{$unit}</small></span></div>\n"
+		."</strong><small>{$unit}</small></span></div>\n"
 		."</a></li>\n";
 }
 echo "</ol>\n";
