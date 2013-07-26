@@ -642,6 +642,18 @@ CREATE VIEW loadoutcommentupdownvotes AS
 
 
 --
+-- Name: loadoutdogmaattribs; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE loadoutdogmaattribs (
+    loadoutid integer NOT NULL,
+    dps double precision NOT NULL,
+    ehp double precision NOT NULL,
+    estimatedprice double precision
+);
+
+
+--
 -- Name: loadouthistory; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -770,6 +782,47 @@ CREATE SEQUENCE notifications_notificationid_seq
 --
 
 ALTER SEQUENCE notifications_notificationid_seq OWNED BY notifications.notificationid;
+
+
+--
+-- Name: recentkillsdna; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE recentkillsdna (
+    killid integer NOT NULL,
+    killtime integer NOT NULL,
+    dna text NOT NULL,
+    groupdna text NOT NULL,
+    solarsystemid integer NOT NULL,
+    solarsystemname character varying(255) NOT NULL,
+    regionid integer NOT NULL,
+    regionname character varying(255) NOT NULL,
+    characterid integer NOT NULL,
+    charactername character varying(255) NOT NULL,
+    corporationid integer NOT NULL,
+    corporationname character varying(255) NOT NULL,
+    allianceid integer,
+    alliancename character varying(255)
+);
+
+
+--
+-- Name: recentkillsdnagroup; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW recentkillsdnagroup AS
+    SELECT count(DISTINCT recentkillsdna.characterid) AS count, (max(recentkillsdna.killtime) - min(recentkillsdna.killtime)) AS timespan, recentkillsdna.groupdna FROM recentkillsdna GROUP BY recentkillsdna.groupdna;
+
+
+--
+-- Name: recentkillsdnagroup__mv; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE recentkillsdnagroup__mv (
+    groupdna text NOT NULL,
+    count integer NOT NULL,
+    timespan integer NOT NULL
+);
 
 
 --
@@ -1103,6 +1156,14 @@ ALTER TABLE ONLY loadoutcomments
 
 
 --
+-- Name: loadoutdogmaattribs_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY loadoutdogmaattribs
+    ADD CONSTRAINT loadoutdogmaattribs_pkey PRIMARY KEY (loadoutid);
+
+
+--
 -- Name: loadouthistory_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1132,6 +1193,22 @@ ALTER TABLE ONLY log
 
 ALTER TABLE ONLY notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (notificationid);
+
+
+--
+-- Name: recentkillsdna_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY recentkillsdna
+    ADD CONSTRAINT recentkillsdna_pkey PRIMARY KEY (killid);
+
+
+--
+-- Name: recentkillsdnagroup__mv_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY recentkillsdnagroup__mv
+    ADD CONSTRAINT recentkillsdnagroup__mv_pkey PRIMARY KEY (groupdna);
 
 
 --
@@ -1676,6 +1753,34 @@ CREATE INDEX notifications_type_idx ON notifications USING btree (type);
 
 
 --
+-- Name: recentkillsdna_groupdna_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX recentkillsdna_groupdna_idx ON recentkillsdna USING btree (groupdna);
+
+
+--
+-- Name: recentkillsdna_killtime_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX recentkillsdna_killtime_idx ON recentkillsdna USING btree (killtime);
+
+
+--
+-- Name: recentkillsdnagroup__mv_count_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX recentkillsdnagroup__mv_count_idx ON recentkillsdnagroup__mv USING btree (count);
+
+
+--
+-- Name: recentkillsdnagroup__mv_timespan_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX recentkillsdnagroup__mv_timespan_idx ON recentkillsdnagroup__mv USING btree (timespan);
+
+
+--
 -- Name: votes_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1998,6 +2103,14 @@ ALTER TABLE ONLY loadoutcomments
 
 ALTER TABLE ONLY loadoutcomments
     ADD CONSTRAINT loadoutcomments_loadoutid_revision_fkey FOREIGN KEY (loadoutid, revision) REFERENCES loadouthistory(loadoutid, revision);
+
+
+--
+-- Name: loadoutdogmaattribs_loadoutid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY loadoutdogmaattribs
+    ADD CONSTRAINT loadoutdogmaattribs_loadoutid_fkey FOREIGN KEY (loadoutid) REFERENCES loadouts(loadoutid);
 
 
 --

@@ -52,17 +52,24 @@ function get_ini_setting($key) {
 }
 
 function get_osmium_version() {
-	static $version = null;
+	$version = \Osmium\State\get_cache_memory('git_version', null);
+	if($version !== null) return $version;
 
-	if($version === null) {
-		$version = \Osmium\State\get_cache_memory('git_version', null);
-		if($version === null) {
-			$version = trim(shell_exec('cd '.escapeshellarg(ROOT)
-			                           .'; (git describe --always --dirty 2>/dev/null || echo "unknown")'));
-			\Osmium\State\put_cache_memory('git_version', $version, 600);
-		}
+	$sem = \Osmium\State\semaphore_acquire('git_version');
+	if($sem === false) return 'unknown';
+
+	$version = \Osmium\State\get_cache_memory('git_version', null);
+	if($version !== null) {
+		\Osmium\State\semaphore_release($sem);
+		return $version;
 	}
 
+	$version = trim(shell_exec(
+		'cd '.escapeshellarg(ROOT)
+		.'; (git describe --always --dirty 2>/dev/null || echo "unknown")'
+	));
+	\Osmium\State\put_cache_memory('git_version', $version, 600);
+	\Osmium\State\semaphore_release($sem);
 	return $version;
 }
 

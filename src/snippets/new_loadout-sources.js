@@ -301,6 +301,7 @@ osmium_add_non_shortlist_contextmenu = function(li) {
 			}
 
 			var n = li.clone(true).unbind();
+			n.find('span.metalevel, span.slot').remove();
 			osmium_add_shortlist_contextmenu(n);
 
 			$('div#nlsources > section#shortlist > ul.types').append(n);

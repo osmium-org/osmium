@@ -1,5 +1,23 @@
-div#mainpcont > section {
+div.mainpcont {
+	text-align: center;
+	max-width: 110em;
+	margin: auto;
+
+	&#search_mini.quick > form {
+		border-bottom: 0 !important;
+	}
+}
+
+div.mainpcont > section {
+	text-align: left;
+
 	@include fixed-width-page;
+
+	width: 50em;
+	display: inline-block;
+	vertical-align: top;
+	margin: 0 2em;
+	margin-bottom: 2em;
 
 	&> h2 > small:last-child > a > img {
 		width: 0.8em;
@@ -30,5 +48,166 @@ div#mainpcont > section {
 		text-align: center;
 	}
 
-	margin-bottom: 5em;
+	&.metrics {
+		&> ul {
+			text-align: center;
+			display: table;
+			table-layout: fixed;
+			width: 100%;
+
+			&, & > li {
+				margin: 0;
+				padding: 0;
+			}
+
+			&> li {
+				display: table-cell;
+				padding: 0.5em 2em;
+				font-size: 0.8em;
+
+				&> strong {
+					font-size: #{(2 / 0.8)}em;
+					display: block;
+				}
+			}
+		}
+	}
+
+	&> ol.loadout_sr {
+		text-align: center;
+	}
+
+	&.fotw, &.doctrines {
+		&> h2 > small {
+			font-size: 0.6em;
+			opacity: 0.5;
+
+			&> a {
+				color: $aside-text-color;
+				text-decoration: none;
+			}
+
+			&:hover {
+				opacity: 1.0;
+			}
+		}
+
+		&> ol {
+			margin: 0;
+			padding: 0;
+			list-style-type: none;
+			text-align: center;
+
+			&> li {
+				display: inline-block;
+				margin: 1em;
+				padding: 0.25em;
+				vertical-align: top;
+
+				img.abs {
+					overflow: hidden;
+					border-radius: 1em;
+				}
+
+				.abs, .absnum {
+					display: inline-block;
+					width: 4em;
+					height: 4em;
+					vertical-align: middle;
+					padding: 0.25em;
+				}
+
+				.absnum {
+					line-height: 4em;
+
+					&> span {
+						display: inline-block;
+						line-height: 1.2em;
+						vertical-align: middle;
+
+						&> strong {
+							display: block;
+							font-size: 1.5em;
+						}
+					}
+				}
+
+				&> a {
+					text-decoration: none !important;
+				}
+
+				&:nth-child(2n) {
+					background-color: $loadout-list-odd-bg-color;
+				}
+			}
+		}
+
+		&.doctrines > ol > li {
+			margin: 1em 3em;
+
+			&> a > div.abs.alogos {
+				position: relative;
+
+				&, &> img {
+					padding: 0;
+				}
+
+				&.n2 > img {
+					position: absolute;
+					width: 2.5em;
+					height: 2.5em;
+				}
+
+				&.n3, &.n4 {
+					&> img {
+						position: absolute;
+						width: 2em;
+						height: 2em;
+					}
+				}
+
+				&.n2 > img {
+					&:nth-child(1) {
+						top: 0;
+						left: 0;
+					}
+
+					&:nth-child(2) {
+						bottom: 0;
+						right: 0;
+					}
+				}
+
+				&.n3 > img, &.n4 > img {
+					&:nth-child(1) {
+						top: 0;
+						left: 0;
+					}
+
+					&:nth-child(2) {
+						top: 0;
+						right: 0;
+					}
+
+					&:nth-child(3) {
+						bottom: 0;
+						left: 0;
+					}
+
+					&:nth-child(4) {
+						bottom: 0;
+						right: 0;
+					}
+				}
+			}
+
+			&:nth-child(4n+2), &:nth-child(4n+3) {
+				background-color: $loadout-list-odd-bg-color;
+			}
+
+			&:nth-child(4n), &:nth-child(4n+1) {
+				background-color: $main-bg-color;
+			}
+		}
+	}
 }

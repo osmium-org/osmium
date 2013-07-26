@@ -22,19 +22,17 @@ if(!defined('Osmium\ROOT')) {
 	require __DIR__.'/dispatchroot.php';
 }
 
-const SHORT_DESCRIPTION = 'the collaborative place to share your fittings!';
-
 /** Bump this when static files (icons, etc.) are updated */
 const STATICVER = 10;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 10;
+const CSS_STATICVER = 11;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 11;
+const JS_STATICVER = 13;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 21;
+const CLIENT_DATA_STATICVER = 22;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

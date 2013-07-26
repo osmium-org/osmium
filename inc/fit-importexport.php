@@ -757,7 +757,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 
 	$fit['metadata']['name'] = $name;
 	$fit['metadata']['description'] = $description;
-	$fit['metadata']['tags'] = array();
+	$fit['metadata']['tags'] = get_recommended_tags($fit);
 
 	return $fit;
 }
@@ -870,6 +870,8 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 		}
 	}
 
+	$fit['metadata']['tags'] = get_recommended_tags($fit);
+
 	return $fit;
 }
 
@@ -972,6 +974,8 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 			add_implant($fit, $typeid);
 		}
 	}
+
+	$fit['metadata']['tags'] = get_recommended_tags($fit);
 
 	return $fit;
 }

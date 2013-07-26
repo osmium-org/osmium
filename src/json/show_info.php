@@ -47,14 +47,37 @@ function get_attributes($typeid, $getval_callback) {
 		JOIN eve.dgmattribs ON dgmtypeattribs.attributeid = dgmattribs.attributeid
 		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
 		WHERE typeid = $1 AND published = true AND dgmattribs.displayname <> ''
-		ORDER BY categoryid ASC, dgmattribs.attributeid ASC",
+
+		UNION
+
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname, invtypes.volume as value, dgmattribs.unitid,
+		dgmunits.displayname AS udisplayname, categoryid
+		FROM eve.invtypes
+		JOIN eve.dgmattribs ON dgmattribs.attributeid = 161
+		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
+		WHERE typeid = $1
+
+		UNION
+
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname, invtypes.capacity as value, dgmattribs.unitid,
+		dgmunits.displayname AS udisplayname, categoryid
+		FROM eve.invtypes
+		JOIN eve.dgmattribs ON dgmattribs.attributeid = 38
+		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
+		WHERE typeid = $1
+
+		ORDER BY categoryid ASC, attributeid ASC",
 		array($typeid)
 	);
 	while($a = \Osmium\Db\fetch_assoc($aq)) {
+		$rawval = $getval_callback !== null ? $getval_callback($a['attributeid']) : (float)$a['value'];
+
+		if((int)$a['attributeid'] === 38 && $rawval === 0.0) continue;
+
 		$attributes[$a['attributeid']] = array(
 			ucfirst($a['displayname']),
 			\Osmium\Chrome\format_number_with_unit(
-				$getval_callback !== null ? $getval_callback($a['attributeid']) : (float)$a['value'],
+				$rawval,
 				$a['unitid'],
 				$a['udisplayname']
 				),
@@ -278,6 +301,41 @@ $fresult['attributes'] .= "</tbody>\n</table>\n";
 
 
 
+$variations = array();
+$fvariations = array();
+$variationsq = \Osmium\Db\query_params(
+	'SELECT invmetatypes.typeid, metagroupid, mg.value::integer as metalevel
+	FROM eve.invmetatypes
+	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = invmetatypes.typeid
+	WHERE parenttypeid IN ($1, ( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 ))
+
+	UNION
+
+	SELECT invtypes.typeid, 1::integer as metagroupid, 0::integer as metalevel
+	FROM eve.invtypes
+	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = invtypes.typeid
+	WHERE invtypes.typeid = ( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 )
+
+	ORDER BY metalevel DESC, typeid ASC',
+	array($typeid)
+);
+while($r = \Osmium\Db\fetch_assoc($variationsq)) {
+	$variations[$r['metagroupid']][] = [ (int)$r['typeid'], (int)$r['metalevel'] ];
+}
+usort($variations, function($x, $y) {
+	return $x[0][1] - $y[0][1];
+});
+foreach($variations as $a) {
+	usort($a, function($x, $y) {
+		return $x[1] - $y[1];
+	});
+	$fvariations = array_merge($fvariations, $a);
+}
+
+
+
+
+
 list($desc) = \Osmium\Db\fetch_row(
 	\Osmium\Db\query_params(
 		'SELECT description FROM eve.invtypes WHERE typeid = $1', 
@@ -309,6 +367,14 @@ if($affectors !== false) {
 	$sections[] = "<section id='siaffatt'>\n".$fresult['affectors_per_att']."</section>\n";
 }
 
+if(count($fvariations) > 1) {
+	$lis[] = "<li><a href='#sivariations'>Variations (".count($fvariations).")</a></li>\n";
+	$sections[] = "<section id='sivariations'>\n<ul></ul>\n</section>\n";
+} else {
+	$fvariations = array();
+}
+
 \Osmium\Chrome\return_json(array(
-	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections)
+	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
+	'variations' => $fvariations,
 ));

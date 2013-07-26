@@ -18,26 +18,107 @@
 
 namespace Osmium\Chrome;
 
+const F_USED_SHOW_ABSOLUTE = 1;
+const F_USED_SHOW_DIFFERENCE = 2;
+const F_USED_SHOW_PERCENTAGE = 4;
+const F_USED_SHOW_PROGRESS_BAR = 8;
+
 require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
+
+/* Format a number with a fixed number of significant digits.
+ *
+ * @param $sd number of significant digits. If negative, keep all
+ * significant digits.
+ *
+ * @param $min show this suffix at least (must be one of k, m or b)
+ */
+function format($number, $sd = 3, $min = '') {
+	static $suffixes = [
+		'b' => 1e9,
+		'm' => 1e6,
+		'k' => 1e3,
+		'' => 1
+	];
+
+	if($number < 0) return '-'.format($number, $sd, $min);
+
+	if($sd < 0) return number_format($number / $suffixes[$min]).$min;
+
+	foreach($suffixes as $s => $limit) {
+		if($number >= $limit || $s === $min) {
+			return round_sd($number / $limit, $sd - 1).$s;
+		}
+	}
+}
 
 /** Much better than the junk trim() function from the PHP library */
 function trim($s) {
 	return preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $s);
 }
 
-function format_used($used, $total, $digits, $show_percent, &$overflow) {
-	if($total == 0 && $used == 0) {
-		$overflow = 0;
+function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxoverflow = 10) {
+	$over = min($maxoverflow, max(0, $percent - 100));
+
+	$bclass = $ltr ? 'lbar' : 'bar';
+	$oclass = $ltr ? 'bar' : 'lbar';
+	if($percent > 100) {
+		$c = 'p100';
+	} else if($percent >= 95) {
+		$c = 'p95';
+	} else if($percent >= 80) {
+		$c = 'p80';
+	} else {
+		$c = 'p00';
+	}
+	$progress = max(0, min(100, $percent));
+
+	$ret = "<span class='{$bclass} {$c}' style='width: ".round($progress, 2)."%;'></span>";
+	if($over > 0) {
+		$over = round($over, 2).'%';
+		$ret .= "<span class='{$oclass} {$c} over' style='width: {$over}; "
+			.($ltr ? 'right' : 'left').": -{$over};'></span>";
+	}
+	if($fill) {
+		$ret .= "<span class='bar fill'></span>";
+	}
+
+	return $ret;
+}
+
+function format_used($rawused, $rawtotal, $unit, $digits, $opts = F_USED_SHOW_ABSOLUTE) {
+	if($rawtotal == 0 && $rawused == 0) {
 		return '0';
 	}
 
+	$lines = array();
+	if($unit !== '') $unit = ' '.$unit;
 
-	$ret = format_number($used).' / '.format_number($total);
-	$percent = $total > 0 ? (100 * $used / $total) : 100;
-	$overflow = max(min(6, ceil($percent) - 100), 0);
-	if($show_percent) {
-		$ret .= '<br />'.($total == 0 ? '∞' : round(100 * $used / $total, $digits)).' %';
+	$used = format_number($rawused).' / '.format_number($rawtotal).$unit;
+	$diff = ($rawtotal >= $rawused) ?
+		format_number($rawtotal - $rawused).$unit.' left' :
+		format_number($rawused - $rawtotal).$unit.' over';
+
+	if($opts & F_USED_SHOW_ABSOLUTE) {
+		$lines[] = "<span title='".htmlspecialchars($diff, ENT_QUOTES)."'>"
+			.htmlspecialchars($used)
+			."</span>";
+	}
+	if($opts & F_USED_SHOW_DIFFERENCE) {
+		$lines[] = "<span title='".htmlspecialchars($used, ENT_QUOTES)."'>"
+			.htmlspecialchars($diff)
+			."</span>";
+	}
+
+    $percent = $rawtotal > 0 ? (100 * $rawused / $rawtotal) : 100;
+	if($opts & F_USED_SHOW_PERCENTAGE) {
+		$lines[] = ($rawtotal == 0 ? '∞' : round($percent, $digits)).' %';
+	}
+
+	$ret = implode("<br />", $lines);
+
+	if($opts & F_USED_SHOW_PROGRESS_BAR) {
+		$ret .= format_small_progress_bar($percent);
 	}
 
 	return $ret;
@@ -75,14 +156,29 @@ function format_duration($seconds) {
 	}
 }
 
-function format_long_duration($seconds, $lessthanoneday = '1 day') {
-	list($y, $m, $d) = explode('-', date('Y-m-d', time() - $seconds));
-	list($Y, $M, $D) = explode('-', date('Y-m-d', time()));
+function format_long_duration($seconds, $precision = 6) {
+	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', time() - $seconds));
+	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', time()));
 
 	$years = $Y - $y;
 	$months = $M - $m;
 	$days = $D - $d;
+	$hours = $H - $h;
+	$minutes = $I - $i;
+	$seconds = $S - $s;
 
+	while($seconds < 0) {
+		--$minutes;
+		$seconds += 60;
+	}
+	while($minutes < 0) {
+		--$hours;
+		$minutes += 60;
+	}
+	while($hours < 0) {
+		--$days;
+		$hours += 24;
+	}
 	while($days < 0) {
 		--$months;
 		$days += 30;
@@ -92,18 +188,31 @@ function format_long_duration($seconds, $lessthanoneday = '1 day') {
 		$months += 12;
 	}
 
-	if($years == 0 && $months == 0 && $days == 0) {
-		return $lessthanoneday;
+	$out = array(
+		'year' => $years,
+		'month' => $months,
+		'day' => $days,
+		'hour' => $hours,
+		'minute' => $minutes,
+		'second' => $seconds,
+	);
+	foreach($out as $k => $v) {
+		if($v == 0) unset($out[$k]);
+		else if($v === 1) $out[$k] = $v.' '.$k;
+		else $out[$k] = $v.' '.$k.'s';
+	}
+	$out = array_slice($out, 0, $precision);
+
+	$c = count($out);
+	if($c === 0) {
+		return 'less than 1 '.$k;
+	}
+	if($c >= 2) {
+		$s = array_pop($out);
+		$m = array_pop($out);
+		$out[] = $m.' and '.$s;
 	}
 
-	$out = array();
-	foreach(array('year' => $years, 'month' => $months, 'day' => $days) as $n => $q) {
-		if($q == 0) continue;
-		if($q == 1) $out[] = '1 '.$n;
-		if($q > 1) $out[] = $q.' '.$n.'s';
-	}
-
-	$out = array_slice($out, 0, 2);
 	return implode(', ', $out);
 }
 
@@ -168,19 +277,36 @@ function format_resonance($resonance) {
 
 	$percent = (1 - $resonance) * 100;
 
-	return "<div>".number_format($percent, 1)."%<span class='bar' style='width: ".round($percent, 2)."%;'></span></div>";
+	return "<div>"
+		.number_format($percent, 1)."%"
+		.format_small_progress_bar($percent, false, false, 0)
+		."</div>";
+}
+
+function format_integer($i, $exact = true) {
+	if($exact) {
+		return number_format($i);
+	}
+
+	if($i >= 1e9) {
+		return number_format($i / 1e9, 3).'b';
+	}
+
+	if($i >= 1e6) {
+		return number_format($i / 1e6, 3).'m';
+	}
+
+	if($i >= 1e4) {
+		return number_format($i / 1e3, 2).'k';
+	}
+
+	return number_format($i);
 }
 
 function format_reputation($rep) {
 	if($rep <= 0) $rep = 0;
-
-	if($rep >= 10000) {
-		$rep = round(floor($rep / 100) / 10, 1).'k';
-	} else {
-		$rep = number_format($rep);
-	}
-
-	return "<span class='reputation' title='reputation'>$rep</span>";
+	$rep = format_integer($rep, false);
+	return "<span class='reputation' title='reputation'>{$rep}</span>";
 }
 
 /**
@@ -437,22 +563,22 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
-function format_isk($isk) {
+function format_isk($isk, $withunit = true) {
 	if($isk >= 10000000000) {
-		$isk = round($isk / 1000000000, 2).'B';
+		$isk = round($isk / 1000000000, 2).'b';
 	} else if($isk >= 1000000000) {
-		$isk = round($isk / 1000000000, 3).'B';
+		$isk = round($isk / 1000000000, 3).'b';
 	} else if($isk > 100000000) {
-		$isk = round($isk / 1000000, 1).'M';
+		$isk = round($isk / 1000000, 1).'m';
 	} else if($isk > 10000000) {
-		$isk = round($isk / 1000000, 2).'M';
+		$isk = round($isk / 1000000, 2).'m';
 	} else if($isk > 1000000) {
-		$isk = round($isk / 1000000, 3).'M';
+		$isk = round($isk / 1000000, 3).'m';
 	} else {
-		$isk = round($isk / 1000, 1).'K';
+		$isk = round($isk / 1000, 1).'k';
 	}
 
-	return $isk.' ISK';
+	return $isk.($withunit ? ' ISK' : '');
 }
 
 function truncate_string($s, $length, $fill = '…') {

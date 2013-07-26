@@ -206,7 +206,7 @@ osmium_send_clf = function(onsuccess) {
 				}
 			}
 			$("section#drones small.maxdrones").text(
-				ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones + ' — '
+				ndrones + ' / ' + osmium_clf_rawattribs.maxactivedrones
 			).toggleClass(
 				'overflow',
 				ndrones > osmium_clf_rawattribs.maxactivedrones

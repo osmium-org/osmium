@@ -4,7 +4,21 @@
 /* cron.daily - maintenance tasks that should ideally be executed on a
  * daily basis */
 
-chdir(__DIR__);
+chdir(__DIR__.'/../');
+require __DIR__.'/../inc/root.php';
 
-passthru('./update_charinfo');
-passthru('./reindex_loadouts');
+$start = time();
+$sem = \Osmium\State\semaphore_acquire('cron.daily');
+if($sem === false) {
+	fwrite(STDERR, "Could not acquire semaphore\n");
+	die(1);
+}
+if(time() - $start > 43200) {
+	fwrite(STDERR, "Spent more than 12 hours waiting for semaphore, aborting to avoid a backlog\n");
+	die(2);
+}
+
+passthru('make update-charinfo');
+passthru('./bin/reindex_loadouts');
+
+\Osmium\State\semaphore_release($sem);

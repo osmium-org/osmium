@@ -98,7 +98,19 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 
 $flatgroups['root']['children'][] = 0;
 
-ksort($flatgroups);
+foreach($flatgroups as $k => $g) {
+	if(isset($g['children'])) {
+		usort($flatgroups[$k]['children'], function($x, $y) use($flatgroups) {
+			return strnatcmp($flatgroups[$x]['name'], $flatgroups[$y]['name']);
+		});
+	}
+	if(isset($g['types'])) {
+		usort($flatgroups[$k]['types'], function($x, $y) use($flatgroups) {
+			return strnatcmp($flatgroups['types'][$x][1], $flatgroups['types'][$y][1]);
+		});
+	}
+}
+
 $static['groups'] = $flatgroups;
 
 /* ---------------------------------------------------------- */
@@ -110,6 +122,12 @@ $q = \Osmium\Db\query(
 
 while($row = \Osmium\Db\fetch_assoc($q)) {
 	$static['charges'][$row['moduleid']][] = (int)$row['chargeid'];
+}
+
+foreach($static['charges'] as $k => $a) {
+	usort($static['charges'][$k], function($x, $y) use($flatgroups) {
+		return strnatcmp($flatgroups['types'][$x][1], $flatgroups['types'][$y][1]);
+	});
 }
 
 /* ---------------------------------------------------------- */

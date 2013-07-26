@@ -185,7 +185,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments, lda.dps, lda.ehp, lda.estimatedprice
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -195,6 +195,7 @@ JOIN eve.invtypes ON hullid = invtypes.typeid
 JOIN osmium.loadoutupdownvotes ON loadoutupdownvotes.loadoutid = loadouts.loadoutid
 LEFT JOIN osmium.fittingaggtags ON fittingaggtags.fittinghash = loadouthistory.fittinghash
 LEFT JOIN osmium.loadoutcommentcount lcc ON lcc.loadoutid = loadouts.loadoutid
+LEFT JOIN osmium.loadoutdogmaattribs lda ON lda.loadoutid = loadouts.loadoutid
 WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
 	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
@@ -204,37 +205,58 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
 		}
 
-		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
+		$uri = \Osmium\Fit\get_fit_uri(
+			$loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']
+		);
 
-		echo "<li>\n<a href='$relative/".$uri."'><img src='http://image.eveonline.com/Render/".$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
+		echo "<li>\n<a href='$relative/".$uri."'>"
+			."<img class='abs' src='http://image.eveonline.com/Render/"
+			.$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
 
+		$dps = $loadout['dps'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['dps'], 2);
+		$ehp = $loadout['ehp'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['ehp'], 2, 'k');
+		$esp = $loadout['estimatedprice'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['estimatedprice'], 2);
+
+		echo "<div title='Damage per second of this loadout' class='absnum dps'><span><strong>"
+			.$dps."</strong><small>DPS</small></span></div>\n";
+
+		echo "<div title='Effective hitpoints of this loadouts (assumes uniform damage pattern)'"
+			." class='absnum ehp'><span><strong>"
+			.$ehp."</strong><small>EHP</small></span></div>\n";
+
+		echo "<div title='Estimated price of this loadout' class='absnum esp'><span><strong>"
+			.$esp."</strong><small>ISK</small></span></div>\n";
+
+		echo "<a class='fitname' href='$relative/".$uri."'>";
+		\Osmium\Chrome\print_loadout_title(
+			$loadout['name'], $loadout['viewpermission'], $loadout['visibility'],
+			$loadout, $relative
+		);
+		echo "</a>\n";
+
+		echo "<small>".\Osmium\Chrome\format_character_name($loadout, $relative);
+		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")</small>\n";
+
+		echo "<small> — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
+      
 		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
-		echo "<div class='lscore'><span title='".$loadout['upvotes']
-			." upvote(s), ".$loadout['downvotes']." downvote(s)'><strong>"
-			.$loadout['votes']."</strong><br /><small>".$votes."</small></span></div>\n";
-
-		$uri = \Osmium\Fit\get_fit_uri($loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']);
+		echo "<small title='".\Osmium\Chrome\format($loadout['upvotes'], -1)
+			." upvote(s), ".\Osmium\Chrome\format($loadout['downvotes'], -1)
+			." downvote(s)'>".\Osmium\Chrome\format($loadout['votes'], -1)." {$votes}</small>\n";
 
 		$comments = ($loadout['comments'] == 1) ? 'comment' : 'comments';
-		echo "<div class='ccount'><a href='$relative/".$uri."#comments'><span><strong>".$loadout['comments']."</strong><br /><small>".$comments."</small></span></a></div>\n";
+		echo "<small> — <a href='$relative/".$uri."#comments'>"
+			.\Osmium\Chrome\format($loadout['comments'], -1)." {$comments}</a></small>\n";
 
-		echo "<a href='$relative/".$uri."'>";
-		\Osmium\Chrome\print_loadout_title($loadout['name'], $loadout['viewpermission'], $loadout['visibility'], $loadout, $relative);
-		echo "</a>\n<br />\n<small><a href='$relative/search?q=".urlencode('@ship "'.$loadout['typename'].'"')."'>".$loadout['typename']."</a> loadout";
-		echo " — ".\Osmium\Chrome\format_character_name($loadout, $relative);
-		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")";
-		echo " — revision #".$loadout['latestrevision'];
-		echo " — ".date('Y-m-d', $loadout['updatedate'])." ("
-			.\Osmium\Fit\get_closest_version_by_build($loadout['evebuildnumber'])['name']
-			.")</small><br />\n";
-      
 		$tags = array_filter(explode(' ', $loadout['taglist']), function($tag) { return trim($tag) != ''; });
 		if(count($tags) == 0) {
-			echo "<em>(no tags)</em>";
+			echo "<em class='notags'>(no tags)</em>\n";
 		} else {
-			echo "<ul class='tags'>\n".implode('', array_map(function($tag) use($relative) {
+			echo "<ul class='tags'>\n"
+				.implode('', array_map(function($tag) use($relative) {
 						$tag = trim($tag);
-						return "<li><a href='$relative/search?q=".urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
+						return "<li><a href='$relative/search?q="
+							.urlencode('@tags "'.$tag.'"')."'>$tag</a></li>\n";
 					}, $tags))."</ul>\n";
 		}
 		echo "</li>\n";

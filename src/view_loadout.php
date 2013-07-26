@@ -305,16 +305,23 @@ foreach($stypes as $type => $tdata) {
 	echo "<small class='counts$overflow'>".$u." / ".$slotusage[$type]."</small></span>";
 	echo "</h3>\n<ul>\n";
 
+	$fittedtype = 0;
 	foreach($sub as $index => $m) {
 		$s = $states[$m['state']];
 		if(isset($fit['charges'][$type][$index])) {
 			$c = $fit['charges'][$type][$index];
 		} else $c = null;
 
-		$class = '';
+		$class = [];
 		if(isset($ia[$type][$index])) {
-			$class = ' class="hasattribs"';
+			$class[] = 'hasattribs';
 		}
+		if($fittedtype >= $slotusage[$type]) {
+			$class[] = 'overflow';
+		}
+
+		if($class) $class = " class='".implode(' ', $class)."'";
+		else $class = '';
 
 		echo "<li{$class} data-typeid='".$m['typeid']."' data-slottype='"
 			.$type."' data-index='".$index."' data-state='".$s[2]."' data-chargetypeid='"
@@ -351,6 +358,7 @@ foreach($stypes as $type => $tdata) {
 
 		echo "</li>\n";
 		++$fittedtotal;
+		++$fittedtype;
 	}
 
 	for($i = count($sub); $i < $slotusage[$type]; ++$i) {
@@ -389,7 +397,8 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 		$ad = $dronesin[$k];
 
 		$overflow = ($ad > $mad) ? ' overflow' : '';
-		echo "<small title='Maximum number of drones in space' class='maxdrones$overflow'>$ad / $mad — </small>";
+		echo "<small title='Maximum number of drones in space' class='maxdrones$overflow'>$ad / $mad</small>";
+		echo "<small> — </small>";
 		$overflow = ($dbwu > $dbw) ? ' overflow' : '';
 		echo "<small title='Drone bandwidth usage' class='bandwidth$overflow'>$dbwu / $dbw Mbps</small>";
 	} else if($k === 'bay') {
@@ -549,6 +558,10 @@ echo "</div>\n";
  * will pick it up and create a new token on demand. So if the user
  * never interacts with the loadout, it never gets cached. */
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, '___demand___');
+
+\Osmium\Chrome\print_js_code(
+	"osmium_clf_slots = ".json_encode(\Osmium\AjaxCommon\get_slot_usage($fit)).";"
+);
 
 \Osmium\Chrome\print_js_snippet('view_loadout');
 \Osmium\Chrome\print_js_snippet('view_loadout-presets');

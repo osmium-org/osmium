@@ -1,8 +1,6 @@
 staging
 =======
 
-The osmium schema has been updated.
-
 The sphinx type index has been updated. You must:
 
 * stop sphinx-searchd;
@@ -12,6 +10,13 @@ The sphinx type index has been updated. You must:
 The sphinx loadout index view has been updated. You must:
 
 * run ./bin/reindex_loadouts.
+
+The config.ini file has changed, the [branding] section has been
+added. Be sure to copy the new keys from config-example.ini to your
+config.ini while updating.
+
+The osmium schema has been updated. After applying the patches, you
+must run `make post-eve-schema-update`.
 
 v0.9.1, released 2013-07-22
 ===========================

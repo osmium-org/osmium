@@ -191,6 +191,10 @@ updated.)*
    pg_restore pgsql/osmium-full-XXXXX.pgsql | psql osmium osmium_user
    ~~~~
 
+5. ~~~
+   make post-eve-schema-update
+   ~~~
+
 Updating the `osmium` database schema
 -------------------------------------
 
@@ -228,6 +232,7 @@ Dependencies
   * cURL extension (`curl.so`)
   * SimpleXML support (enabled by default)
   * Zlib support
+  * (Optional) Semaphores support (`sysvsem.so`)
   * (Optional) iconv extension (`iconv.so`)
   * (Optional) intl extension (`intl.so`)
   * (Optional) APC (or APCu for PHP >= 5.5) extension (`apc.so`)

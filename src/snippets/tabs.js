@@ -29,8 +29,6 @@ osmium_tabify = function(ul, selected) {
 		}
 	}
 
-	ul.data('tab_ul_index', osmium_tab_ul_count++);
-
 	var tabs = [];
 	var i = 0;
 	var selected_pref = 0;
@@ -91,8 +89,20 @@ osmium_tabify = function(ul, selected) {
 		++i;
 	});
 
-	osmium_available_tabs.push(tabs);
-	osmium_selected_tabs.push(tabs[selected]);
+	var found = false;
+	for(i = 0; i < osmium_available_tabs.length; ++i) {
+		if($.inArray(tabs[selected], osmium_available_tabs[i]) !== -1) {
+			ul.data('tab_ul_index', i);
+			found = true;
+			break;
+		}
+	}
+	if(!found) {
+		osmium_available_tabs.push(tabs);
+		osmium_selected_tabs.push(tabs[selected]);
+		ul.data('tab_ul_index', osmium_tab_ul_count++);
+	}
+
 	ul.find('li.anchor').on('click', osmium_tab_click);
 
 	for(i = 0; i < osmium_orig_anchor.length; ++i) {

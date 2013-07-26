@@ -68,59 +68,71 @@ ol.loadout_sr {
 	text-align: left;
 
 	&> li {
+		display: inline-block;
 		position: relative;
-		border-bottom: 1px dotted $subsection-border-color;
-		padding-bottom: 1.5em;
-		padding-top: 0.5em;
-		padding-left: 13.5em;
-		height: 3em;
-		@include ellipsis;
+		width: 16em;
+		min-height: 7.25em;
+		vertical-align: top;
+		margin: 1em 1em 1em 5em;
+		padding: 0 0.5em;
+		text-align: left;
 
-		&:nth-child(2n) {
-			background-color: $loadout-list-odd-bg-color;
-		}
-
-		&> div.lscore, &> div.ccount, &> a > img:first-child {
-			position: absolute;
-			width: 4em;
-			height: 4em;
-			top: 0.5em;
-			left: 0.5em;
-		}
+		border-left: 1px solid $subsection-border-color;
 
 		&> a > img:first-child {
-			left: 9em;
-			border-radius: 0.75em;
+			display: inline-block;
+			width: 4em;
+			height: 4em;
+			vertical-align: middle;
+
 			overflow: hidden;
+			border-radius: 1em;
+			position: absolute;
+			left: -4.5em;
+			top: 0em;
 		}
 
-		&> div.ccount {
-			left: 4.5em;
+		&> a.fitname {
+			display: block;
+			@include ellipsis;
 		}
 
-		&> div.lscore, &> div.ccount {
-			text-align: center;
-			line-height: 4em;
+		&> div.dps, &> div.ehp, &> div.esp {
+			position: absolute;
+			left: -4.75em;
+			width: 4.25em;
+			@include ellipsis;
+			text-align: right;
 
-			a {
-				text-decoration: none;
-				color: $main-text-color;
+			&> span > strong:after {
+				content: " ";
 			}
 
-			span {
-				line-height: 1em;
-				display: inline-block;
-				vertical-align: middle;
+			&.dps {
+				top: 4.25em;
+			}
 
-				&> strong {
-					font-size: 1.5em;
-					@include ellipsis;
-				}
+			&.ehp {
+				top: 5.25em;
+			}
+
+			&.esp {
+				top: 6.25em;
 			}
 		}
 
 		&> small, &> small > a {
 			color: $loadout-search-metadata-text-color;
+			text-decoration: none;
+		}
+
+		&> em.notags {
+			display: block;
+			opacity: 0.5;
+		}
+
+		&> ul.tags {
+			opacity: 0.8;
 		}
 	}
 }

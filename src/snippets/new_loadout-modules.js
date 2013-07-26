@@ -76,8 +76,6 @@ osmium_gen_modules = function() {
 		}
 	}
 
-	if(osmium_loadout_readonly) return;
-
 	for(type in osmium_clf_slots) {
 		$('section#modules > div.slots.' + type).data('type', type);
 	}
@@ -149,8 +147,6 @@ osmium_init_modules = function() {
 };
 
 osmium_update_slotcounts = function() {
-	if(osmium_loadout_readonly) return;
-
 	$('section#modules > div.slots').each(function() {
 		var t = $(this);
 		osmium_update_overflow(t);
@@ -526,7 +522,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 				compare_damage = function(a, b) {
 					var x = (a in osmium_chargedmg) ? osmium_chargedmg[a] : 0;
 					var y = (b in osmium_chargedmg) ? osmium_chargedmg[b] : 0;
-					return y < x ? -1 : (y > x ? 1 : (a - b));
+					return y < x ? -1 : (y > x ? 1 : 0);
 				};
 
 				for(var i = 0; i < osmium_charges[typeid].length; ++i) {

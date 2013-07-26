@@ -43,10 +43,11 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	global $__osmium_chrome_relative;
 	$__osmium_chrome_relative = $relative;
 
+	$osmium = \Osmium\get_ini_setting('name');
 	if($title == '') {
-		$title = 'Osmium / '.\Osmium\SHORT_DESCRIPTION;
+		$title = $osmium.' / '.\Osmium\get_ini_setting('description');
 	} else {
-		$title .= ' / Osmium';
+		$title .= ' / '.$osmium;
 	}
 
 	$xhtml = isset($_SERVER['HTTP_ACCEPT']) && 
@@ -77,7 +78,13 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		echo "<link rel='alternate stylesheet' href='$relative/static-".\Osmium\CSS_STATICVER."/$f' title='$t' type='text/css' />\n";
 	}
 
-	echo "<link rel='icon' type='image/png' href='$relative/static-".\Osmium\STATICVER."/favicon.png' />\n";
+	$favicon = \Osmium\get_ini_setting('favicon');
+	if(substr($favicon, 0, 2) === '//') {
+		$favicon = urlencode($favicon);
+	} else {
+		$favicon = $relative.'/static-'.\Osmium\STATICVER.'/'.urlencode($favicon);
+	}
+	echo "<link rel='icon' type='image/png' href='{$favicon}' />\n";
 	echo "<title>$title</title>\n";
 	echo "$add_head</head>\n<body>\n<div id='wrapper'>\n";
 
@@ -98,10 +105,6 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		if($a['ismoderator'] === 't') {
 			echo get_navigation_link($relative.'/moderation/', \Osmium\Flag\MODERATOR_SYMBOL);
 		}
-
-		\Osmium\Chrome\print_js_snippet('notifications');
-		\Osmium\Chrome\print_js_code('$(function() { osmium_notifications("'
-		                             .str_replace('"', '\"', $relative).'"); });');
 	}
 	echo "</ul>\n";
 
@@ -116,6 +119,11 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
  */
 function print_footer() {
 	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code;
+
+	\Osmium\Chrome\print_js_snippet('notifications');
+	\Osmium\Chrome\print_js_code(
+		'$(function() { osmium_notifications("'.str_replace('"', '\"', $__osmium_chrome_relative).'"); });'
+	);
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
 	echo "<a href='http://artefact2.com/osmium/'><strong>Osmium "

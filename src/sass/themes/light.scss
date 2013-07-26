@@ -33,8 +33,7 @@ $tab-active-text-color: $strong-emphasis-text-color;
 
 $placeholder-text-color: hsl(0, 0%, 50%);
 
-$overflow-bg-color: hsla(0, 100%, 50%, 0.5);
-$overflow-alpha-bg-color: hsl(0%, 100%, 50%);
+$overflow-text-color: hsl(0, 80%, 40%);
 
 $anchor-target-highlight-bg-color: hsl(200, 100%, 90%);
 $anchor-target-final-bg-color: $main-bg-color;
@@ -49,6 +48,9 @@ $close-modal-bg-color: $modal-bg-color;
 
 $top-navigation-border-color: hsl(0, 0%, 75%);
 $top-navigation-bg-color: lighten($main-bg-color, 30%);
+
+$sub-navigation-border-color: hsl(0, 0%, 60%);
+$sub-navigation-bg-color: lighten($top-navigation-bg-color, 10%);
 
 $abbr-border-color: $main-text-color;
 

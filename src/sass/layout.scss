@@ -11,15 +11,19 @@ $nav-height: 2.5em;
 	max-width: 60em;
 	margin: auto;
 
+	border: 1px solid $subsection-border-color;
+
 	&> header > h2, &> section > h2, &> h2 {
-		margin: 1em 0 0.5em 0;
-		border-bottom: 1px solid $title-border-color;
+		padding: 0.3em 0.6em;
+		margin: 0.1em;
 		position: relative;
+
+		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);
 
 		&> small {
 			position: absolute;
-			right: 0;
-			bottom: 0;
+			right: 0.6em;
+			bottom: 0.3em;
 			color: $aside-text-color;
 		}
 	}
@@ -31,6 +35,40 @@ $nav-height: 2.5em;
 	-webkit-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+}
+
+@mixin bottom-progress-bar {
+	position: relative;
+	padding-bottom: 2px;
+
+	&> span.bar, &> span.lbar {
+		z-index: 2;
+		position: absolute;
+		bottom: 0;
+		height: 2px;
+		background-color: $main-text-color;
+
+		&.over {
+			z-index: 3;
+			background-color: $overflow-text-color;
+		}
+	}
+
+	&> span.bar {
+		right: 0;
+	}
+
+	&> span.lbar {
+		left: 0;
+	}
+
+	&> span.bar.fill {
+		z-index: 1;
+		left: 0;
+		right: 0;
+		background-color: $main-text-color;
+		opacity: 0.15;
+	}
 }
 
 html, body {
@@ -181,10 +219,6 @@ a {
 
 ul {
 	list-style-type: square;
-}
-
-.overflow {
-	background-color: $overflow-bg-color !important;
 }
 
 abbr, .mod {

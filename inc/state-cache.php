@@ -18,6 +18,15 @@
 
 namespace Osmium\State;
 
+/* System unique prefix for semaphore keys. Change this if you have
+ * some other process using semaphores whose first SEM_PREFIX_LENGTH
+ * bits are SEM_PREFIX. */
+const SEM_PREFIX = 0xA6;
+
+/* Number of bits to use of SEM_PREFIX. Increase this if you need to
+ * use a longer prefix. */
+const SEM_PREFIX_LENGTH = 8;
+
 /** @internal */
 $__osmium_cache_stack = array();
 
@@ -66,7 +75,7 @@ function get_cache($key, $default = null, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return $default;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
 	if(file_exists($f)) {
 		$mtime = filemtime($f);
 		if($mtime === 0 || $mtime > time()) {
@@ -89,7 +98,7 @@ function put_cache($key, $value, $expires = 0, $prefix = 'OsmiumCache_') {
 
 	if($expires > 0) $expires = time() + $expires;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
     return file_put_contents($f, serialize($value)) && touch($f, $expires);
 }
 
@@ -100,7 +109,7 @@ function invalidate_cache($key, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
 	if(file_exists($f)) unlink($f);
 }
 
@@ -117,8 +126,38 @@ function get_expiration_date($key, $prefix = 'OsmiumCache_') {
 	 * be expired. */
 	if(!$__osmium_cache_enabled) return 1;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.hash('sha512', $key);
+	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
 	return file_exists($f) ? filemtime($f) : 1;
+}
+
+/**
+ * Count the number of (unexpired) cache entries matching a certain
+ * criteria.
+ *
+ * @param $filters an array which can contain the following keys:
+ * - regex: a regular expression to test the cache key against
+ * - mmin: entry was modified at least N minutes ago
+ */
+function count_cache_entries(array $filters = array(), $prefix = 'OsmiumCache_') {
+	$command = 'find '.escapeshellarg(\Osmium\CACHE_DIRECTORY)
+		.' -maxdepth 1 -type f -mtime -0 -printf "%f\n" -name '
+		.escapeshellarg($prefix.'*');
+
+	if(isset($filters['mmin'])) {
+		$command .= ' -mmin -'.(int)$filters['mmin'];
+	}
+
+	if(isset($filters['amin'])) {
+		$command .= ' -amin -'.(int)$filters['amin'];
+	}
+
+	if(isset($filters['regex'])) {
+		$command .= ' | grep -P '.escapeshellarg($filters['regex']);
+	}
+
+	$command .= ' | wc -l';
+
+	return (int)trim(shell_exec($command));
 }
 
 /* --------------------- MEMORY CACHE --------------------- */
@@ -153,22 +192,50 @@ if(function_exists('apc_store')) {
 
 		return apc_delete('Osmium_'.$prefix.$key);
 	}
+
+	/** @see count_cache_entries() */
+	function count_memory_cache_entries(array $filters = array(), $prefix = '') {
+		$iter = new \APCIterator(
+			'user', '%^Osmium_'.preg_quote($prefix).'%',
+			APC_ITER_KEY | APC_ITER_MTIME,
+			128, APC_LIST_ACTIVE
+			);
+		$count = 0;
+		$strip = strlen('Osmium_'.$prefix);
+		$mcutoff = isset($filters['mmin']) ? (time() - 60 * $filters['mmin']) : 0;
+		foreach($iter as $e) {
+			if(isset($filters['regex']) && !preg_match($filters['regex'], substr($e['key'], $strip))) {
+				continue;
+			}
+
+			if($e['mtime'] < $mcutoff) continue;
+
+			++$count;
+		}
+
+		return $count;
+	}
 } else {
 	/* Use disk-based cache as a fallback */
 
 	/** @see get_cache() */
 	function get_cache_memory($key, $default = null, $prefix = '') {
-		return get_cache($key, $default, 'MemoryCacheFB_'.$prefix);
+		return get_cache($key, $default, 'MemoryCache_'.$prefix);
 	}
 
 	/** @see put_cache() */
 	function put_cache_memory($key, $value, $expires = 0, $prefix = '') {
-		return put_cache($key, $value, $expires, 'MemoryCacheFB_'.$prefix);
+		return put_cache($key, $value, $expires, 'MemoryCache_'.$prefix);
 	}
 
 	/** @see invalidate_cache() */
 	function invalidate_cache_memory($key, $prefix = '') {
 		return invalidate_cache($key, 'MemoryCache_'.$prefix);
+	}
+
+	/** @see count_cache_entries() */
+	function count_memory_cache_entries(array $filters = array(), $prefix = '') {
+		return count_cache_entries($filters, 'MemoryCache_'.$prefix);
 	}
 }
 
@@ -310,5 +377,61 @@ function put_state_trypersist($key, $value) {
 	} else {
 		/* For anonymous users, use session-based storage (not really persistent, but better than nothing) */
 		return put_state('__setting_'.$key, $value);
+	}
+}
+
+/* --------------------- SEMAPHORES --------------------- */
+/* You can use semaphores to avoid cache slams (ie when a heavily used
+ * cache entry expires, the cache will be generated simultaneously by
+ * a lot of requests and waste resources). All the functions above
+ * will not use semaphores automatically, you will have to do it when
+ * necessary. */
+
+if(function_exists('sem_acquire')) {
+	/* Use the builtin semaphore functions */
+
+	/**
+     * Acquire a semaphore. This will block until the semaphore can be
+     * acquired.
+     *
+     * @returns the semaphore resource to be given to
+     * semaphore_release().
+     */
+	function semaphore_acquire($name) {
+		$key = (SEM_PREFIX << (32 - SEM_PREFIX_LENGTH)) | (crc32(__FILE__.'/'.$name) >> SEM_PREFIX_LENGTH);
+		$id = sem_get($key);
+		if($id === false) return false;
+		if(sem_acquire($id) === false) return false;
+		return $id;
+	}
+
+	/**
+	 * Release a semaphore. This is automatically done when the
+	 * process terminates (but will generate a warning).
+	 */
+	function semaphore_release($semaphore) {
+		sem_release($semaphore);
+		sem_remove($semaphore);
+	}
+} else {
+	/* Use flock() as a fallback */
+
+	/** @see semaphore_acquire() */
+	function semaphore_acquire($name) {
+		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/Semaphore_'.str_replace('/', '_', $name), 'cb');
+		touch($f, time() + 600); /* This semaphore will probably be stale in 10 minutes */
+		if($f === false) return false;
+		if(flock($f, LOCK_EX) === false) return false;
+		return [ $f, $filename ];
+	}
+
+	/** @see semaphore_release() */
+	function semaphore_release($semaphore) {
+		flock($semaphore[0], LOCK_UN);
+		/* unlink() will remove the file when it is no longer opened
+		 * by any process. So if the file is already opened by other
+		 * processes (aka other processes are waiting to acquire the
+		 * semaphore), it will still work as expected. */
+		unlink($semaphore[1]);
 	}
 }
