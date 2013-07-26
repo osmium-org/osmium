@@ -191,6 +191,10 @@ updated.)*
    pg_restore pgsql/osmium-full-XXXXX.pgsql | psql osmium osmium_user
    ~~~~
 
+5. ~~~
+   make post-eve-schema-update
+   ~~~
+
 Updating the `osmium` database schema
 -------------------------------------
 

@@ -642,6 +642,18 @@ CREATE VIEW loadoutcommentupdownvotes AS
 
 
 --
+-- Name: loadoutdogmaattribs; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE loadoutdogmaattribs (
+    loadoutid integer NOT NULL,
+    dps double precision NOT NULL,
+    ehp double precision NOT NULL,
+    estimatedprice double precision
+);
+
+
+--
 -- Name: loadouthistory; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1141,6 +1153,14 @@ ALTER TABLE ONLY loadoutcommentrevisions
 
 ALTER TABLE ONLY loadoutcomments
     ADD CONSTRAINT loadoutcomments_pkey PRIMARY KEY (commentid);
+
+
+--
+-- Name: loadoutdogmaattribs_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY loadoutdogmaattribs
+    ADD CONSTRAINT loadoutdogmaattribs_pkey PRIMARY KEY (loadoutid);
 
 
 --
@@ -2083,6 +2103,14 @@ ALTER TABLE ONLY loadoutcomments
 
 ALTER TABLE ONLY loadoutcomments
     ADD CONSTRAINT loadoutcomments_loadoutid_revision_fkey FOREIGN KEY (loadoutid, revision) REFERENCES loadouthistory(loadoutid, revision);
+
+
+--
+-- Name: loadoutdogmaattribs_loadoutid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY loadoutdogmaattribs
+    ADD CONSTRAINT loadoutdogmaattribs_loadoutid_fkey FOREIGN KEY (loadoutid) REFERENCES loadouts(loadoutid);
 
 
 --

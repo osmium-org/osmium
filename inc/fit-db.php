@@ -439,6 +439,8 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 
 	$fit['metadata']['accountid'] = $ownerid;
 
+	commit_loadout_dogma_attribs($fit);
+
 	$ret = \Osmium\Db\query('COMMIT;');
 	if($ret === false) return false;
 
@@ -489,6 +491,43 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	}
 
 	return $ret;
+}
+
+/**
+ * Update the database cache of dogma attributes for a specific
+ * fit. Should be wrapped in a transaction.
+ */
+function commit_loadout_dogma_attribs(&$fit) {
+	if(!isset($fit['metadata']['loadoutid'])) return;
+
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.loadoutdogmaattribs WHERE loadoutid = $1',
+		array($fit['metadata']['loadoutid'])
+	);
+
+	$dps = 0;
+	$dps += get_damage_from_turrets($fit)[0];
+	$dps += get_damage_from_missiles($fit)[0];
+	$dps += get_damage_from_drones($fit);
+
+	$ehp = get_ehp_and_resists(
+		$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25 ]
+	)['ehp']['avg'];
+
+	$missing = array();
+	$price = array_sum(get_estimated_price($fit, $missing));
+	if($missing !== array()) $price = null;
+
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.loadoutdogmaattribs (loadoutid, dps, ehp, estimatedprice)
+		VALUES ($1, $2, $3, $4)',
+		array(
+			$fit['metadata']['loadoutid'],
+			$dps,
+			$ehp,
+			$price,
+		)
+	);
 }
 
 /**

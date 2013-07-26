@@ -176,7 +176,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments
+	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments, lda.dps, lda.ehp, lda.estimatedprice
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -186,6 +186,7 @@ JOIN eve.invtypes ON hullid = invtypes.typeid
 JOIN osmium.loadoutupdownvotes ON loadoutupdownvotes.loadoutid = loadouts.loadoutid
 LEFT JOIN osmium.fittingaggtags ON fittingaggtags.fittinghash = loadouthistory.fittinghash
 LEFT JOIN osmium.loadoutcommentcount lcc ON lcc.loadoutid = loadouts.loadoutid
+LEFT JOIN osmium.loadoutdogmaattribs lda ON lda.loadoutid = loadouts.loadoutid
 WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 
 	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
@@ -199,40 +200,23 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			$loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']
 		);
 
-		$fit = \Osmium\Fit\get_fit($loadout['loadoutid']); /* XXX for obvious reasons */
-
 		echo "<li>\n<a href='$relative/".$uri."'>"
 			."<img class='abs' src='http://image.eveonline.com/Render/"
 			.$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
 
-		$dps = 0;
-		$dps += \Osmium\Fit\get_damage_from_turrets($fit)[0];
-		$dps += \Osmium\Fit\get_damage_from_missiles($fit)[0];
-		$dps += \Osmium\Fit\get_damage_from_drones($fit);
+		$dps = $loadout['dps'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['dps'], 2);
+		$ehp = $loadout['ehp'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['ehp'], 2, 'k');
+		$esp = $loadout['estimatedprice'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['estimatedprice'], 2);
 
 		echo "<div title='Damage per second of this loadout' class='absnum dps'><span><strong>"
-			.\Osmium\Chrome\format($dps, 2)
-			."</strong><small>DPS</small></span></div>\n";
+			.$dps."</strong><small>DPS</small></span></div>\n";
 
-		$ehp = \Osmium\Fit\get_ehp_and_resists(
-			$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25 ]
-		)['ehp']['avg'];
-
-		echo "<div title='Effective hitpoints of this loadouts (assumes uniform damage pattern)' class='absnum ehp'><span><strong>"
-			.\Osmium\Chrome\format($ehp, 2, 'k')
-			."</strong><small>EHP</small></span></div>\n";
-
-		$missing = array();
-		$esp = array_sum(\Osmium\Fit\get_estimated_price($fit, $missing));
-		if($missing !== array()) {
-			$esp = "N/A";
-		} else {
-			$esp = \Osmium\Chrome\format($esp, 2);
-		}
+		echo "<div title='Effective hitpoints of this loadouts (assumes uniform damage pattern)'"
+			." class='absnum ehp'><span><strong>"
+			.$ehp."</strong><small>EHP</small></span></div>\n";
 
 		echo "<div title='Estimated price of this loadout' class='absnum esp'><span><strong>"
-			.$esp
-			."</strong><small>ISK</small></span></div>\n";
+			.$esp."</strong><small>ISK</small></span></div>\n";
 
 		echo "<a class='fitname' href='$relative/".$uri."'>";
 		\Osmium\Chrome\print_loadout_title(

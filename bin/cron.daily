@@ -4,7 +4,7 @@
 /* cron.daily - maintenance tasks that should ideally be executed on a
  * daily basis */
 
-chdir(__DIR__);
+chdir(__DIR__.'/../');
 require __DIR__.'/../inc/root.php';
 
 $start = time();
@@ -18,7 +18,7 @@ if(time() - $start > 43200) {
 	die(2);
 }
 
-passthru('./update_charinfo');
-passthru('./reindex_loadouts');
+passthru('make update-charinfo');
+passthru('./bin/reindex_loadouts');
 
 \Osmium\State\semaphore_release($sem);

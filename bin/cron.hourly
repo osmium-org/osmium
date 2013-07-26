@@ -4,7 +4,7 @@
 /* cron.hourly - maintenance tasks that should ideally be executed on
  * an hourly basis */
 
-chdir(__DIR__);
+chdir(__DIR__.'/../');
 require __DIR__.'/../inc/root.php';
 
 $start = time();
@@ -18,8 +18,8 @@ if(time() - $start > 1800) {
 	die(2);
 }
 
-passthru('./update_lscores');
-passthru('./prune_cache');
-passthru('./fetch_zkillboard_dna');
+passthru('./bin/update_lscores');
+passthru('./bin/prune_cache');
+passthru('./bin/fetch_zkillboard_dna');
 
 \Osmium\State\semaphore_release($sem);
