@@ -16,11 +16,11 @@
  */
 
 osmium_sprite = function(alt, grid_x, grid_y, grid_width, grid_height, width, height) {
-	var div = $(document.createElement('div'));
+	var span = $(document.createElement('span'));
 	var img = $(document.createElement('img'));
 
-	div.addClass('mainsprite');
-	div.css({
+	span.addClass('mainsprite');
+	span.css({
 		width: width + 'px',
 		height: height + 'px'
 	});
@@ -35,6 +35,6 @@ osmium_sprite = function(alt, grid_x, grid_y, grid_width, grid_height, width, he
 		left: (-grid_y * height) + 'px'
 	});
 
-	div.append(img);
-	return div;
+	span.append(img);
+	return span;
 };

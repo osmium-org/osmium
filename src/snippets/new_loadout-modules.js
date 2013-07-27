@@ -229,7 +229,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			var charge = span.children('span.name');
 
 			li.data('chargetypeid', null);
-			span.children('img, div.mainsprite').replaceWith(
+			span.children('img, span.mainsprite').replaceWith(
 				osmium_sprite('', 0, 28, 32, 32, 32, 32)
 			);
 			charge.empty();
@@ -717,7 +717,7 @@ osmium_add_charge = function(li, chargetypeid) {
 	li.data('chargetypeid', chargetypeid);
 	img.prop('src', '//image.eveonline.com/Type/' + chargetypeid + '_64.png');
 	img.prop('alt', '');
-	span.children('img, div.mainsprite').replaceWith(img);
+	span.children('img, span.mainsprite').replaceWith(img);
 
 	charge.empty();
 	charge.text(osmium_types[chargetypeid][1]);

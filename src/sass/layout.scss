@@ -369,7 +369,7 @@ ul#ctxmenu, ul.subctxmenu {
 			border-top: 0;
 		}
 
-		&.hasicon > img.icon, &.hasicon > div.mainsprite, &.hastoggle > input {
+		&.hasicon > img.icon, &.hasicon > span.mainsprite, &.hastoggle > input {
 			position: absolute;
 			left: 0.25em;
 			top: 0.25em;

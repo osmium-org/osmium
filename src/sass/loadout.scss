@@ -63,7 +63,7 @@ $hidden-char: '\0025B8';
 		display: inline-block;
 	}
 	
-	&> img, &> span.charge > img, &> div.mainsprite, &> span.charge > div.mainsprite {
+	&> img, &> span.charge > img, &> span.mainsprite, &> span.charge > div.mainsprite {
 		height: 32px;
 		width: 32px;
 		margin-right: 0.125em;
@@ -96,7 +96,7 @@ $hidden-char: '\0025B8';
 		top: 16px;
 		left: 16px;
 
-		&, &> img, &> div.mainsprite {
+		&, &> img, &> span.mainsprite {
 			line-height: 16px;
 			width: 16px;
 			height: 16px;
@@ -217,7 +217,7 @@ div#computed_attributes > section {
 		padding: 0.125em;
 		line-height: 1em;
 
-		&> img, &> div.mainsprite {
+		&> img, &> span.mainsprite {
 			width: 2em;
 			height: 2em;
 

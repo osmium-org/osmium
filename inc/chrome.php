@@ -718,5 +718,5 @@ function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = n
 
 	$alt = htmlspecialchars($alt, ENT_QUOTES);
 
-	return "<div class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></div>";
+	return "<span class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></span>";
 }

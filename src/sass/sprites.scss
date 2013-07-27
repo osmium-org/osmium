@@ -11,11 +11,12 @@
 	height: $height;
 }
 
-div.mainsprite {
+span.mainsprite {
 	overflow: hidden;
 	position: relative;
 	display: inline-block;
 	vertical-align: middle;
+	padding: 0 !important;
 
 	&> img {
 		position: absolute;
