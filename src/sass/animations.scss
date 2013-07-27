@@ -37,14 +37,11 @@
 	to { background-color: $anchor-target-final-bg-color; }
 }
 
-p.placeholder.loading > span {
-	@include prefixize(animation-name, cblink);
-	@include prefixize(animation-duration, 1s);
-	@include prefixize(animation-iteration-count, infinite);
+div.spinner, span.spinner {
+	@include prefixize(animation, rotate-cw 1s linear 0s infinite);
 }
 
-@include keyframes(cblink) {
-	from { opacity: 1; }
-	66% { opacity: 0; }
-	to { opacity: 1; }
+@include keyframes(rotate-cw) {
+	from { @include prefixize(transform, rotate(0deg)); }
+	to { @include prefixize(transform, rotate(359deg)); }
 }

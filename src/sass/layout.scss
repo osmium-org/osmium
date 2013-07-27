@@ -467,3 +467,13 @@ div#mdstatic {
 		margin-top: 3em;
 	}
 }
+
+div.spinner, span.spinner {
+	text-align: center;
+	font-weight: 2em;
+	&:before { content: "↻"; }
+}
+
+span.spinner {
+	display: inline-block;
+}

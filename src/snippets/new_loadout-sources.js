@@ -53,41 +53,63 @@ osmium_init_sources = function() {
 
 	$('div#nlsources > section#search > form').submit(function() {
 		var t = $(this);
-		var ul, li, img, p;
+		var s = t.find('input[type="submit"]');
+		var ul = t.parent().children('ul.results');
+		var li, img, p, spinner;
 
-		$.getJSON("../../src/json/search_types.php?" + t.serialize(), function(json) {
-			ul = t.parent().children('ul.results');
-			ul.empty();
-			t.parent().children('p.warning').remove();
+		if(s.prop('disabled')) return false;
+		s.prop('disabled', true);
+		ul.empty();
+		t.parent().children('p.warning').remove();
+		ul.after(
+			spinner = $(document.createElement('p'))
+				.addClass('loading')
+				.addClass('placeholder')
+				.text("Searching types…")
+				.append(
+					$(document.createElement('div'))
+						.addClass('spinner')
+				)
+		);
 
-			for(var i in json.payload) {
-				var m = osmium_types[json.payload[i]];
-				li = $(document.createElement('li'));
-				li.addClass('module');
-				li.data('typeid', m[0]);
-				li.data('category', m[2]);
-				li.data('subcategory', m[3]);
-				li.addClass('mg' + m[4]);
-				li.text(m[1]);
-				li.prop('title', m[1]);
+		$.ajax({
+			type: 'GET',
+			dataType: 'json',
+			url: "../../src/json/search_types.php?" + t.serialize(),
+			success: function(json) {
+				for(var i in json.payload) {
+					var m = osmium_types[json.payload[i]];
+					li = $(document.createElement('li'));
+					li.addClass('module');
+					li.data('typeid', m[0]);
+					li.data('category', m[2]);
+					li.data('subcategory', m[3]);
+					li.addClass('mg' + m[4]);
+					li.text(m[1]);
+					li.prop('title', m[1]);
 
-				img = $(document.createElement('img'));
-				img.prop('alt', '');
-				img.prop('src', '//image.eveonline.com/Type/' + m[0] + '_64.png');
-				li.prepend(img);
+					img = $(document.createElement('img'));
+					img.prop('alt', '');
+					img.prop('src', '//image.eveonline.com/Type/' + m[0] + '_64.png');
+					li.prepend(img);
 
-				osmium_add_non_shortlist_contextmenu(li);
+					osmium_add_non_shortlist_contextmenu(li);
 
-				ul.append(li);
-			}
+					ul.append(li);
+				}
 
-			if('warning' in json) {
-				p = $(document.createElement('p'));
-				p.addClass('placeholder');
-				p.addClass('warning');
-				p.html(json.warning);
+				if('warning' in json) {
+					p = $(document.createElement('p'));
+					p.addClass('placeholder');
+					p.addClass('warning');
+					p.html(json.warning);
 
-				ul.after(p);
+					ul.after(p);
+				}
+			},
+			complete: function() {
+				s.prop('disabled', false);
+				spinner.remove();
 			}
 		});
 

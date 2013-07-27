@@ -177,7 +177,7 @@ echo "</form>
 <section id='attributes'>
 <div class='compact' id='computed_attributes'>
 <p class='placeholder loading'>
-Loading attributes<span>…</span>
+Loading attributes…<div class='spinner'></div>
 </p>
 </div>
 </section>
@@ -222,14 +222,14 @@ htmlspecialchars($searchexamples[mt_rand(0, count($searchexamples) - 1)], ENT_QU
 echo "<section id='browse'>
 <ul class='filters'></ul>
 <p class='placeholder loading'>
-Fetching the list of types<span>…</span>
+Fetching the list of types…<div class='spinner'></div>
 </p>
 </section>\n";
 
 echo "<section id='shortlist'>
 <ul class='filters'></ul>
 <p class='placeholder loading'>
-Fetching shortlist<span>…</span>
+Fetching shortlist…<div class='spinner'></div>
 </p>
 </section>\n";
 

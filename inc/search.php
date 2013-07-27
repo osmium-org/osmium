@@ -220,7 +220,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		echo "<div title='Damage per second of this loadout' class='absnum dps'><span><strong>"
 			.$dps."</strong><small>DPS</small></span></div>\n";
 
-		echo "<div title='Effective hitpoints of this loadouts (assumes uniform damage pattern)'"
+		echo "<div title='Effective hitpoints of this loadout (assumes uniform damage pattern)'"
 			." class='absnum ehp'><span><strong>"
 			.$ehp."</strong><small>EHP</small></span></div>\n";
 

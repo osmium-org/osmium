@@ -40,8 +40,9 @@ osmium_init_control = function() {
 
 	$("section#control input#export_loadout").click(function() {
 		var b = $(this);
-		var bval = b.prop('value');
-		b.prop('disabled', 'disabled').prop('value', 'Exporting loadout…');
+		b.prop('disabled', true).after(
+			$(document.createElement('span')).addClass('spinner')
+		);
 
 		var postopts = {
 			clf: osmium_compress_json(osmium_clf)
@@ -62,27 +63,29 @@ osmium_init_control = function() {
 			data: postopts,
 			dataType: "json",
 			error: function(xhr, error, httperror) {
-				b.prop('value', bval).removeProp('disabled');
 				alert('An error occured: ' + error + ' (' + httperror 
 					  + '). This shouldn\'t normally happen, try again.'); 
 			},
 			success: function(payload) {
-				b.prop('value', bval).removeProp('disabled');
-
 				var textarea = $(document.createElement('textarea'));
 				textarea.text(payload['export-payload']);
 				textarea.prop('readonly', 'readonly');
-				textarea.css('width', '100%').css('height', '20em');
+				textarea.css('width', '100%').css('height', '100%');
 				osmium_modal(textarea);
-				textarea.parent().css('overflow-x', 'hidden'); /* XXX */
+				textarea.parent().css('overflow', 'hidden'); /* XXX */
+			},
+			complete: function() {
+				b.prop('disabled', false)
+					.parent().find('span.spinner').remove();
 			}
 		});
 	});
 
 	$("section#control input#submit_loadout").click(function() {
 		var b = $(this);
-		var bval = b.prop('value');
-		b.prop('disabled', 'disabled').prop('value', 'Submitting loadout…');
+		b.prop('disabled', true).after(
+			$(document.createElement('span')).addClass('spinner')
+		);
 
 		var postopts = {
 			clf: osmium_compress_json(osmium_clf)
@@ -102,14 +105,11 @@ osmium_init_control = function() {
 			data: postopts,
 			dataType: "json",
 			error: function(xhr, error, httperror) {
-				b.prop('value', bval).removeProp('disabled');
 				alert('An error occured: ' + error + ' (' + httperror 
 					  + '). This shouldn\'t normally happen, try again.'); 
 			},
 			success: function(payload) {
 				if("submit-error" in payload) {
-					b.prop('value', bval).removeProp('disabled');
-
 					if("submit-tab" in payload) {
 						$("a[href='#"  + payload['submit-tab'] +  "']").click();
 					}
@@ -137,6 +137,10 @@ osmium_init_control = function() {
 				} else if("submit-loadout-uri" in payload) {
 					window.location.replace(payload['submit-loadout-uri']);
 				}
+			},
+			complete: function() {
+				b.prop('disabled', false)
+					.parent().find('span.spinner').remove();
 			}
 		});
 	});
