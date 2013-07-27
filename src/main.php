@@ -19,37 +19,6 @@
 namespace Osmium\Page\Main;
 
 require __DIR__.'/../inc/root.php';
-require \Osmium\ROOT.'/inc/atom_common.php';
-require \Osmium\ROOT.'/inc/ajax_common.php';
-
-function get_popular_tags() {
-	$ptags = \Osmium\State\get_cache_memory('main_popular_tags', null);
-	if($ptags !== null) return $ptags;
-
-	$sem = \Osmium\State\semaphore_acquire('main_popular_tags');
-	$ptags = \Osmium\State\get_cache_memory('main_popular_tags', null);
-	if($ptags !== null) {
-		\Osmium\State\semaphore_release($sem);
-		return $ptags;
-	}
-
-	$query = \Osmium\Db\query(
-		"SELECT tagname, count
-		FROM osmium.tagcount
-		ORDER BY count DESC
-		LIMIT 13"
-	);
-
-	$ptags = array();
-	while($row = \Osmium\Db\fetch_row($query)) {
-		list($name, $count) = $row;
-		$ptags[$name] = $count;
-	}
-
-	\Osmium\State\put_cache_memory('main_popular_tags', $ptags, 3600);
-	\Osmium\State\semaphore_release($sem);
-	return $ptags;
-}
 
 function print_estimated_count($table, $single, $plural) {
 	$n = (int)\Osmium\Db\fetch_row(\Osmium\Db\query_params(
@@ -107,6 +76,10 @@ $a = \Osmium\State\get_state('a', null);
 $now = time();
 $accountid = $a === null ? 0 : $a['accountid'];
 
+
+
+
+
 echo "<div class='mainpcont'>\n<section class='metrics'>\n";
 echo "<h2>Quick stats</h2>\n<ul>\n";
 
@@ -127,225 +100,209 @@ print_cached_count(function() {
 	return (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
 		'SELECT count(accountid) FROM accounts WHERE apiverified = true'
 	))[0];
-}, "verified_accounts", 3600, "verified account", "verified accounts");
+}, "verified_accounts", 3601, "verified account", "verified accounts");
 
 print_cached_count(function() {
 	return (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
 		'SELECT sum(reputation) FROM accounts'
 	))[0];
-}, "reputation_total", 3600, "total reputation points", "total reputation points");
+}, "reputation_total", 3602, "total reputation points", "total reputation points");
 
 print_cached_count(function() {
 	return max(1, \Osmium\State\count_memory_cache_entries(array(), 'Activity_'));
 }, "active_users", 10, "active user", "active users");
 
 echo "</ul>\n";
-echo "</section>\n<section class='populartags'>\n";
-echo "<h2>Popular tags</h2>\n<ul class='tags' id='populartags'>\n";
-
-foreach(get_popular_tags() as $name => $count) {
-	echo "<li><a href='./browse/best?q=".urlencode('@tags "'.$name.'"')
-		."'>{$name}</a> ({$count})</li>\n";
-}
-
-echo "</ul>\n";
-echo "<p class='b_more'><a href='./browse/best'>Browse all popular loadouts…</a></p>\n";
 echo "</section>\n";
 
 
 
 
+echo get_cache_memory_or_gen('popular_tags', 3603, function() {
+	$r = "<section class='populartags'>\n";
+	$r .= "<h2>Common tags</h2>\n<ul class='tags' id='populartags'>\n";
 
-echo "<section class='newfits'>\n";
-echo "<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'><img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
-\Osmium\Search\print_loadout_list(\Osmium\AtomCommon\get_new_fits($accountid),
-                                  '.', 0, 'No loadouts yet! What are you waiting for?');
-echo "<p class='b_more'><a href='./browse/new'>Browse more new loadouts…</a></p>\n";
-echo "</section>\n";
+	$query = \Osmium\Db\query(
+		"SELECT tagname, count
+		FROM osmium.tagcount
+		ORDER BY count DESC
+		LIMIT 15"
+	);
 
-echo "<section class='recentlyupdatedfits'>\n";
-echo "<h2>Recently updated <small><a href='./atom/recentlyupdated.xml' type='application/atom+xml'><img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
-\Osmium\Search\print_loadout_list(
-	\Osmium\AtomCommon\get_recently_updated_fits($accountid),
-	'.');
-echo "</section>\n";
+	$ptags = array();
+	while($row = \Osmium\Db\fetch_row($query)) {
+		$r .= "<li><a href='./browse/best?q=".urlencode('@tags "'.$row[0].'"')
+			."'>{$row[0]}</a> ({$row[1]})</li>\n";
+	}
+
+	$r .= "</ul>\n</section>\n";
+	return $r;
+}, 'Main_');
 
 
 
 
 
-$topkills = \Osmium\State\get_cache_memory('top_kills', null);
-if($topkills === null) {
-	$sem = \Osmium\State\semaphore_acquire('top_kills');
+echo get_cache_memory_or_gen('new_fits', 601, function() {
+	$q = \Osmium\Db\query(
+		'SELECT sl.loadoutid
+		FROM osmium.searchableloadouts AS sl
+		JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = 1
+		WHERE sl.accountid = 0
+		ORDER BY lh.updatedate DESC
+		LIMIT 20'
+	);
+	$ids = array(0);
+	while($row = \Osmium\Db\fetch_row($q)) {
+		$ids[] = (int)$row[0];
+	}
+
+	$r = "<section class='newfits'>\n"
+		."<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'>"
+		."<img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+
+	ob_start();
+	\Osmium\Search\print_loadout_list(
+		$ids, '.', 0, 'No loadouts yet! What are you waiting for?'
+	);
+	$r .= ob_get_clean();
+
+	$r .= "<p class='b_more'><a href='./browse/new'>Browse more new loadouts…</a></p>\n</section>\n";
+	return $r;
+}, 'Main_');
+
+
+
+
+
+echo get_cache_memory_or_gen('popular_fits', 602, function() {
+	$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
+	$r = "<section class='popularfits'>\n<h2>Popular fits</h2>\n";
+
+	ob_start();
+	\Osmium\Search\print_loadout_list(
+		\Osmium\Search\get_search_ids(
+			'', 'AND build >= '.$vercutoff.' ORDER BY score DESC', 0, 20
+		),
+		'.', 0, 'No loadouts yet! What are you waiting for?'
+	);
+	$r .= ob_get_clean();
+
+	$r .= "<p class='b_more'><a href='./browse/best'>Browse more popular loadouts…</a></p>\n</section>\n";
+	return $r;
+}, 'Main_');
+
+
+
+
+
+echo get_cache_memory_or_gen('fotw', 86400, function() {
+	$r = "<section class='fotw'>\n";
+	$r .= "<h2>Flavors of the week <small>data from <a href='https://zkillboard.com/'>zKillboard</a></small></h2>\n";
+
 	$topkills = \Osmium\State\get_cache('top_kills', null);
-	if($sem !== false && $topkills === null) {
-		$q = \Osmium\Db\query(
-			'SELECT count, timespan, groupdna
-			FROM recentkillsdnagroup__mv
-			ORDER BY count DESC'
+	if($topkills === null) {
+		$r .= "<p class='placeholder'>Flavors of the week unavailable.</p>\n";
+		return $r."</section>\n";
+	}
+
+	$r .= "<ol>\n";
+
+	foreach($topkills['fotw'] as $f) {
+		list($num, $unit) = explode(' ', \Osmium\Chrome\format_long_duration($f['timespan'], 1));
+		if(ctype_digit($num)) {
+			$num = \Osmium\Chrome\format_integer($num);
+		} else {
+			$num = '—';
+			$unit = 'seconds';
+		}
+		list($shipid, ) = explode(':', $f['dna'], 2);
+		$fname = htmlspecialchars(
+			\Osmium\Fit\get_typename($shipid)." fitting"
+			.($f['tags'] ? ": ".implode(", ", $f['tags']) : ''),
+			ENT_QUOTES
 		);
 
-		$topkills = [ 'fotw' => [], 'doctrine' => [] ];
-		$fotwc = 0;
-		$doctrinec = 0;
+		$r .= "<li><a href='./loadout/dna/".$f['dna']."'>"
+			."<img class='abs' src='//image.eveonline.com/Render/"
+			.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
+			."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
+			."</strong><small>lost</small></span></div>\n"
+			."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
+			.\Osmium\Chrome\format_integer($num)
+			."</strong><small>{$unit}</small></span></div>\n"
+			."</a></li>\n";
+	}
+	$r .= "</ol>\n";
 
-		$numrows = 10;
-		while($row = \Osmium\Db\fetch_row($q)) {
-			if($fotwc >= 3 * $numrows & $doctrinec >= 2 * $numrows) break;
+	if($topkills['fotw'] === []) {
+		$r .= "<p class='placeholder'>No flavors of the week.</p>\n";
+	}
 
-			$bestdna = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-				'SELECT dna
-				FROM recentkillsdna
-				WHERE groupdna = $1
-				GROUP BY dna
-				ORDER BY count(DISTINCT characterid) DESC
-				LIMIT 1',
-				array($row[2])
-			))[0];
+	return $r."</section>\n";
+}, 'Main_');
 
-			$fit = \Osmium\Fit\try_parse_fit_from_shipdna($bestdna, 'DNA', $err);
-			if($fit === false) continue;
-			$slots = \Osmium\AjaxCommon\get_slot_usage($fit);
-			$emptyslots = 0;
-			$totalslots = 0;
-			foreach($slots as $type => $max) {
-				$totalslots += $max;
-				$emptyslots += ($max - (isset($fit['modules'][$type]) ? count($fit['modules'][$type]) : 0));
-			}
-			if($emptyslots >= ($totalslots >> 1)) {
-				/* More than half of the slots are empty, assume this is a shitfit™ */
-				continue;
-			}
 
-			if($doctrinec < 2 * $numrows) {
-				$alliancesq = \Osmium\Db\query_params(
-					'SELECT count(DISTINCT characterid), allianceid, alliancename
-					FROM recentkillsdna
-					WHERE groupdna = $1 AND allianceid > 0
-					GROUP BY allianceid, alliancename
-					ORDER BY count DESC
-					LIMIT 4',
-					array($row[2])
-				);
 
-				$alliances = array();
-				$proportion = 0;
-				while($proportion < .5 && $a = \Osmium\Db\fetch_row($alliancesq)) {
-					$alliances[] = $a;
-					$proportion += $a[0] / $row[0];
-				}
 
-				if($proportion >= .5) {
-					$topkills['doctrine'][] = [
-						'dna' => $bestdna,
-						'timespan' => (int)$row[1],
-						'count' => (int)$row[0],
-						'tags' => $fit['metadata']['tags'],
-						'alliances' => $alliances,
-					];
-					++$doctrinec;
-					continue;
-				}
-			}
 
-			if($fotwc < 3 * $numrows) {
-				$topkills['fotw'][] = [
-					'dna' => $bestdna,
-					'timespan' => (int)$row[1],
-					'count' => (int)$row[0],
-					'tags' => $fit['metadata']['tags'],
-				];
-				++$fotwc;
-				continue;
-			}
+echo get_cache_memory_or_gen('doctrines', 86401, function() {
+	$r = "<section class='doctrines'>\n";
+	$r .= "<h2>Popular alliance doctrines <small>data from <a href='https://zkillboard.com/'>zKillboard</a></small></h2>\n";
+
+	$topkills = \Osmium\State\get_cache('top_kills', null);
+	if($topkills === null) {
+		$r .= "<p class='placeholder'>Alliance doctrines unavailable.</p>\n";
+		return $r."</section>\n";
+	}
+
+	$r .= "<ol>\n";
+
+	foreach($topkills['doctrine'] as $f) {
+		list($num, $unit) = explode(' ', \Osmium\Chrome\format_long_duration($f['timespan'], 1));
+		if(ctype_digit($num)) {
+			$num = \Osmium\Chrome\format_integer($num);
+		} else {
+			$num = '—';
+			$unit = 'seconds';
+		}
+		list($shipid, ) = explode(':', $f['dna'], 2);
+		$fname = htmlspecialchars(
+			\Osmium\Fit\get_typename($shipid)." fitting"
+			.($f['tags'] ? ": ".implode(", ", $f['tags']) : ''),
+			ENT_QUOTES
+		);
+
+		$anames = array();
+		$alogos = "";
+		foreach($f['alliances'] as $a) {
+			list($count, $id, $name) = $a;
+			$name = htmlspecialchars($name, ENT_QUOTES);
+			$anames[] = $name.' ('.round(100 * $count / $f['count']).' %)';
+			$alogos .= "<img class='abs' src='//image.eveonline.com/Alliance/{$id}_128.png' alt='{$name}' />\n";
 		}
 
-		\Osmium\State\put_cache_memory('top_kills', $topkills, 1800);
-		\Osmium\State\semaphore_release($sem);
+		$aname = "mainly flown by: &#10;".implode(", &#10;", $anames);
+
+		$r .= "<li><a href='./loadout/dna/".$f['dna']."'>"
+			."<img class='abs' src='//image.eveonline.com/Render/"
+			.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
+			."<div title='{$aname}' class='abs alogos n".(count($f['alliances']))."'>\n{$alogos}</div>\n"
+			."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
+			."</strong><small>lost</small></span></div>\n"
+			."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
+			.$num
+			."</strong><small>{$unit}</small></span></div>\n"
+			."</a></li>\n";
 	}
-}
+	$r .= "</ol>\n";
 
-echo "<section class='fotw'>\n";
-echo "<h2>Flavors of the week <small>data from <a href='https://zkillboard.com/'>zKillboard</a></small></h2>\n<ol>\n";
-foreach($topkills['fotw'] as $f) {
-	list($num, $unit) = explode(' ', \Osmium\Chrome\format_long_duration($f['timespan'], 1));
-	if(ctype_digit($num)) {
-		$num = \Osmium\Chrome\format_integer($num);
-	} else {
-		$num = '—';
-		$unit = 'seconds';
-	}
-	list($shipid, ) = explode(':', $f['dna'], 2);
-	$fname = htmlspecialchars(
-		\Osmium\Fit\get_typename($shipid)." fitting"
-		.($f['tags'] ? ": ".implode(", ", $f['tags']) : ''),
-		ENT_QUOTES
-	);
-
-	echo "<li><a href='./loadout/dna/".$f['dna']."'>"
-		."<img class='abs' src='//image.eveonline.com/Render/"
-		.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
-		."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
-		."</strong><small>lost</small></span></div>\n"
-		."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
-		.\Osmium\Chrome\format_integer($num)
-		."</strong><small>{$unit}</small></span></div>\n"
-		."</a></li>\n";
-}
-echo "</ol>\n";
-
-if($topkills['fotw'] === []) {
-	echo "<p class='placeholder'>No flavors of the week. Maybe there is a problem with the zKillboard API, or the cache is still filling up.</p>\n";
-}
-
-echo "</section>\n";
-
-echo "<section class='doctrines'>\n";
-echo "<h2>Popular alliance doctrines <small>data from <a href='https://zkillboard.com/'>zKillboard</a></small></h2>\n<ol>\n";
-foreach($topkills['doctrine'] as $f) {
-	list($num, $unit) = explode(' ', \Osmium\Chrome\format_long_duration($f['timespan'], 1));
-	if(ctype_digit($num)) {
-		$num = \Osmium\Chrome\format_integer($num);
-	} else {
-		$num = '—';
-		$unit = 'seconds';
-	}
-	list($shipid, ) = explode(':', $f['dna'], 2);
-	$fname = htmlspecialchars(
-		\Osmium\Fit\get_typename($shipid)." fitting"
-		.($f['tags'] ? ": ".implode(", ", $f['tags']) : ''),
-		ENT_QUOTES
-	);
-
-	$anames = array();
-	$alogos = "";
-	foreach($f['alliances'] as $a) {
-		list($count, $id, $name) = $a;
-		$name = htmlspecialchars($name, ENT_QUOTES);
-		$anames[] = $name.' ('.round(100 * $count / $f['count']).' %)';
-		$alogos .= "<img class='abs' src='//image.eveonline.com/Alliance/{$id}_128.png' alt='{$name}' />\n";
+	if($topkills['doctrine'] === []) {
+		$r .= "<p class='placeholder'>No alliance doctrines. Maybe there is a problem with the zKillboard API, or the cache is still filling up.</p>\n";
 	}
 
-	$aname = "mainly flown by: &#10;".implode(", &#10;", $anames);
-
-	echo "<li><a href='./loadout/dna/".$f['dna']."'>"
-		."<img class='abs' src='//image.eveonline.com/Render/"
-		.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
-		."<div title='{$aname}' class='abs alogos n".(count($f['alliances']))."'>\n{$alogos}</div>\n"
-		."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
-		."</strong><small>lost</small></span></div>\n"
-		."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
-		.$num
-		."</strong><small>{$unit}</small></span></div>\n"
-		."</a></li>\n";
-}
-echo "</ol>\n";
-
-if($topkills['doctrine'] === []) {
-	echo "<p class='placeholder'>No alliance doctrines. Maybe there is a problem with the zKillboard API, or the cache is still filling up.</p>\n";
-}
-
-echo "</section>\n";
+	return $r."</section>\n";
+}, 'Main_');
 
 
 

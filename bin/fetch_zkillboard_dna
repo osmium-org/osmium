@@ -243,11 +243,90 @@ for($i = $cutoffpage; $i > 0; --$i) {
 	echo "\n";
 }
 
-\Osmium\Db\query('BEGIN');
-\Osmium\Db\query('TRUNCATE recentkillsdnagroup__mv');
-\Osmium\Db\query(
-	'INSERT INTO recentkillsdnagroup__mv (groupdna, count, timespan)
-	SELECT groupdna, count, timespan from recentkillsdnagroup'
+
+
+$q = \Osmium\Db\query(
+	'SELECT count(DISTINCT characterid), max(killtime) - min(killtime) as timespan, groupdna
+	FROM recentkillsdna
+	GROUP BY groupdna
+	ORDER BY count DESC'
 );
-\Osmium\Db\query('COMMIT');
-\Osmium\Db\query('VACUUM ANALYZE recentkillsdnagroup__mv');
+
+$topkills = [ 'fotw' => [], 'doctrine' => [] ];
+$fotwc = 0;
+$doctrinec = 0;
+
+$numrows = 10;
+while($row = \Osmium\Db\fetch_row($q)) {
+	if($fotwc >= 3 * $numrows & $doctrinec >= 2 * $numrows) break;
+
+	$bestdna = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT dna
+		FROM recentkillsdna
+		WHERE groupdna = $1
+		GROUP BY dna
+		ORDER BY count(DISTINCT characterid) DESC
+		LIMIT 1',
+		array($row[2])
+	))[0];
+
+	$fit = \Osmium\Fit\try_parse_fit_from_shipdna($bestdna, 'DNA', $err);
+	if($fit === false) continue;
+	$slots = \Osmium\AjaxCommon\get_slot_usage($fit);
+	$emptyslots = 0;
+	$totalslots = 0;
+	foreach($slots as $type => $max) {
+		$totalslots += $max;
+		$emptyslots += ($max - (isset($fit['modules'][$type]) ? count($fit['modules'][$type]) : 0));
+	}
+	if($emptyslots >= ($totalslots >> 1)) {
+		/* More than half of the slots are empty, assume this is a shitfit™ */
+		continue;
+	}
+
+	if($doctrinec < 2 * $numrows) {
+		$alliancesq = \Osmium\Db\query_params(
+			'SELECT count(DISTINCT characterid), allianceid, alliancename
+			FROM recentkillsdna
+			WHERE groupdna = $1 AND allianceid > 0
+			GROUP BY allianceid, alliancename
+			ORDER BY count DESC
+			LIMIT 4',
+			array($row[2])
+		);
+
+		$alliances = array();
+		$proportion = 0;
+		while($proportion < .5 && $a = \Osmium\Db\fetch_row($alliancesq)) {
+			$alliances[] = $a;
+			$proportion += $a[0] / $row[0];
+		}
+
+		if($proportion >= .5) {
+			$topkills['doctrine'][] = [
+				'dna' => $bestdna,
+				'timespan' => (int)$row[1],
+				'count' => (int)$row[0],
+				'tags' => $fit['metadata']['tags'],
+				'alliances' => $alliances,
+			];
+			++$doctrinec;
+			continue;
+		}
+	}
+
+	if($fotwc < 3 * $numrows) {
+		$topkills['fotw'][] = [
+			'dna' => $bestdna,
+			'timespan' => (int)$row[1],
+			'count' => (int)$row[0],
+			'tags' => $fit['metadata']['tags'],
+		];
+		++$fotwc;
+		continue;
+	}
+}
+
+\Osmium\State\put_cache('top_kills', $topkills, 86400);
+\Osmium\State\invalidate_cache_memory('fotw', 'Main_');
+\Osmium\State\invalidate_cache_memory('doctrines', 'Main_');

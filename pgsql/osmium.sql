@@ -807,25 +807,6 @@ CREATE TABLE recentkillsdna (
 
 
 --
--- Name: recentkillsdnagroup; Type: VIEW; Schema: osmium; Owner: -
---
-
-CREATE VIEW recentkillsdnagroup AS
-    SELECT count(DISTINCT recentkillsdna.characterid) AS count, (max(recentkillsdna.killtime) - min(recentkillsdna.killtime)) AS timespan, recentkillsdna.groupdna FROM recentkillsdna GROUP BY recentkillsdna.groupdna;
-
-
---
--- Name: recentkillsdnagroup__mv; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE TABLE recentkillsdnagroup__mv (
-    groupdna text NOT NULL,
-    count integer NOT NULL,
-    timespan integer NOT NULL
-);
-
-
---
 -- Name: tagcount; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -1201,14 +1182,6 @@ ALTER TABLE ONLY notifications
 
 ALTER TABLE ONLY recentkillsdna
     ADD CONSTRAINT recentkillsdna_pkey PRIMARY KEY (killid);
-
-
---
--- Name: recentkillsdnagroup__mv_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY recentkillsdnagroup__mv
-    ADD CONSTRAINT recentkillsdnagroup__mv_pkey PRIMARY KEY (groupdna);
 
 
 --
@@ -1764,20 +1737,6 @@ CREATE INDEX recentkillsdna_groupdna_idx ON recentkillsdna USING btree (groupdna
 --
 
 CREATE INDEX recentkillsdna_killtime_idx ON recentkillsdna USING btree (killtime);
-
-
---
--- Name: recentkillsdnagroup__mv_count_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE INDEX recentkillsdnagroup__mv_count_idx ON recentkillsdnagroup__mv USING btree (count);
-
-
---
--- Name: recentkillsdnagroup__mv_timespan_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE INDEX recentkillsdnagroup__mv_timespan_idx ON recentkillsdnagroup__mv USING btree (timespan);
 
 
 --

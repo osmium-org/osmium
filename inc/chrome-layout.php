@@ -118,7 +118,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
  * should be printed after calling this.
  */
 function print_footer() {
-	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code;
+	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code, $__start;
 
 	\Osmium\Chrome\print_js_snippet('notifications');
 	\Osmium\Chrome\print_js_code(
@@ -174,6 +174,7 @@ function print_footer() {
 	}
 
 	echo "</body>\n</html>\n";
+	echo "<!-- ".(microtime(true) - $__start)." -->\n";
 }
 
 function get_navigation_link($dest, $label) {

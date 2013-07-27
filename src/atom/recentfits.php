@@ -19,23 +19,37 @@
 namespace Osmium\Atom\NewFits;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/atom_common.php';
 
 define('Osmium\ACTIVITY_IGNORE', true);
 
 $type = isset($_GET['type']) ? $_GET['type'] : '';
 
 if($type == 'newfits') {
-	$ids = \Osmium\AtomCommon\get_new_fits(0, 15);
+	$q = 'SELECT sl.loadoutid
+	FROM osmium.searchableloadouts AS sl
+	JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = 1
+	WHERE sl.accountid = 0
+	ORDER BY lh.updatedate DESC
+	LIMIT 15';
 	$titlestr = 'New fits';
 } else if($type == 'recentlyupdated') {
-	$ids = \Osmium\AtomCommon\get_recently_updated_fits(0, 15);
+	$q = 'SELECT sl.loadoutid
+	FROM osmium.searchableloadouts AS sl
+	JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = sl.loadoutid AND llr.latestrevision >= 2
+	JOIN osmium.loadouthistory lh ON lh.loadoutid = sl.loadoutid AND lh.revision = llr.latestrevision
+	WHERE sl.accountid = 0
+	ORDER BY lh.updatedate DESC
+	LIMIT 15';
 	$titlestr = 'Updated recently';
 } else {
 	\Osmium\fatal(404, 'Unknown feed type');
 }
 
-$ids[] = 0; /* If $ids is empty, don't break the query */
+$q = \Osmium\Db\query($q);
+$ids = array(0);
+while($row = \Osmium\Db\fetch_row($q)) {
+	$ids[] = (int)$row[0];
+}
 
 $fpath = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
 $fpath = explode('/', $fpath);
