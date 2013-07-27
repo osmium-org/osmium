@@ -627,7 +627,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 
 	case 124: /* Modifier relative percent */
 		$unitdisplayname = '%';
-		$rounded = ($number >= 0 ? '+' : '').round_sd($number, 2);
+		$rounded = ($number >= 0 ? '+' : '').$number;
 		break;
 
 	case 127: /* Absolute percent */
@@ -680,7 +680,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		break;
 
 	case 139: /* Bonus */
-		$rounded = (($number >= 0) ? '+' : '').round_sd($number, 2);
+		$rounded = (($number >= 0) ? '+' : '').$number;
 		break;
 
 	case 140: /* Level */
