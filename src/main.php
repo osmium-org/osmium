@@ -235,17 +235,17 @@ if($topkills === null) {
 					$proportion += $a[0] / $row[0];
 				}
 
-				if($proportion < .5) continue;
-
-				$topkills['doctrine'][] = [
-					'dna' => $bestdna,
-					'timespan' => (int)$row[1],
-					'count' => (int)$row[0],
-					'tags' => $fit['metadata']['tags'],
-					'alliances' => $alliances,
-				];
-				++$doctrinec;
-				continue;
+				if($proportion >= .5) {
+					$topkills['doctrine'][] = [
+						'dna' => $bestdna,
+						'timespan' => (int)$row[1],
+						'count' => (int)$row[0],
+						'tags' => $fit['metadata']['tags'],
+						'alliances' => $alliances,
+					];
+					++$doctrinec;
+					continue;
+				}
 			}
 
 			if($fotwc < 3 * $numrows) {
