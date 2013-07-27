@@ -304,19 +304,19 @@ $fresult['attributes'] .= "</tbody>\n</table>\n";
 $variations = array();
 $fvariations = array();
 $variationsq = \Osmium\Db\query_params(
-	'SELECT invmetatypes.typeid, metagroupid, mg.value::integer as metalevel
-	FROM eve.invmetatypes
-	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = invmetatypes.typeid
-	WHERE parenttypeid IN ($1, ( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 ))
-
+	'SELECT t.typeid, metagroupid, mg.value::integer as metalevel
+	FROM (
+	SELECT typeid FROM eve.invmetatypes WHERE parenttypeid IN ($1,
+	( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 )
+	)
 	UNION
-
-	SELECT invtypes.typeid, 1::integer as metagroupid, 0::integer as metalevel
-	FROM eve.invtypes
-	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = invtypes.typeid
-	WHERE invtypes.typeid = ( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 )
-
-	ORDER BY metalevel DESC, typeid ASC',
+	SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1
+	UNION
+	SELECT $1
+	) t
+	LEFT JOIN eve.invmetatypes ON invmetatypes.typeid = t.typeid
+	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = t.typeid
+	ORDER BY metalevel DESC, t.typeid ASC',
 	array($typeid)
 );
 while($r = \Osmium\Db\fetch_assoc($variationsq)) {
