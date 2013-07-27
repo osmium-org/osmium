@@ -18,15 +18,26 @@ div.mainpcont > section {
 	vertical-align: top;
 	margin: 0 2em;
 	margin-bottom: 2em;
+	border: 1px solid $subsection-border-color;
 
-	&> h2 > small:last-child > a > img {
-		width: 0.8em;
-		height: 0.8em;
-		padding-bottom: 0.125em;
-		opacity: 0.5;
+	&> h2 {
+		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);
+		border: 0;
+		padding: 0.3em 0.6em;
+		margin: 0.1em;
 
-		&:hover {
-			opacity: 1.0;
+		&> small {
+			bottom: 0.6em;
+			right: 0.6em;
+
+			opacity: 0.5;
+			&:hover { opacity: 1.0; }
+
+			&> a > img {
+				width: 1em;
+				heiht: 1em;
+				vertical-align: middle;
+			}
 		}
 	}
 
@@ -75,6 +86,11 @@ div.mainpcont > section {
 
 	&> ol.loadout_sr {
 		text-align: center;
+
+		&> li {
+			margin-left: 5em;
+			margin-right: 2em;
+		}
 	}
 
 	&.fotw, &.doctrines {

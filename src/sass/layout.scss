@@ -11,19 +11,15 @@ $nav-height: 2.5em;
 	max-width: 60em;
 	margin: auto;
 
-	border: 1px solid $subsection-border-color;
-
 	&> header > h2, &> section > h2, &> h2 {
-		padding: 0.3em 0.6em;
-		margin: 0.1em;
+		margin: 1em 0 0.5em 0;
+		border-bottom: 1px solid $title-border-color;
 		position: relative;
-
-		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);
 
 		&> small {
 			position: absolute;
-			right: 0.6em;
-			bottom: 0.3em;
+			right: 0;
+			bottom: 0;
 			color: $aside-text-color;
 		}
 	}
