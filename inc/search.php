@@ -92,6 +92,11 @@ function index($loadout) {
 	if($goodstandings === array()) $goodstandings = array(0);
 	if($excellentstandings === array()) $excellentstandings = array(0);
 
+	$goodstandings[] = $loadout['restrictedtocorporationid'];
+	$excellentstandings[] = $loadout['restrictedtocorporationid'];
+	$goodstandings[] = $loadout['restrictedtoallianceid'];
+	$excellentstandings[] = $loadout['restrictedtoallianceid'];
+
 	return query(
 		'INSERT INTO osmium_loadouts (
 		id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
