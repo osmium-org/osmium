@@ -118,6 +118,7 @@ div.mainpcont > section {
 				display: inline-block;
 				margin: 1em;
 				padding: 0.25em;
+				padding-left: 0;
 				vertical-align: top;
 
 				img.abs {
@@ -146,6 +147,13 @@ div.mainpcont > section {
 							font-size: 1.5em;
 						}
 					}
+				}
+
+				div.abs.dogmaattrs {
+					text-align: right;
+					width: 4.25em;
+					@include ellipsis;
+					padding-top: 0.625em;
 				}
 
 				&> a {

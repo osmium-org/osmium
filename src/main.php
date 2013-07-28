@@ -209,13 +209,6 @@ echo get_cache_memory_or_gen('fotw', 86400, function() {
 	$r .= "<ol>\n";
 
 	foreach($topkills['fotw'] as $f) {
-		list($num, $unit) = explode(' ', \Osmium\Chrome\format_long_duration($f['timespan'], 1));
-		if(ctype_digit($num)) {
-			$num = \Osmium\Chrome\format_integer($num);
-		} else {
-			$num = '—';
-			$unit = 'seconds';
-		}
 		list($shipid, ) = explode(':', $f['dna'], 2);
 		$fname = htmlspecialchars(
 			\Osmium\Fit\get_typename($shipid)." fitting"
@@ -224,13 +217,15 @@ echo get_cache_memory_or_gen('fotw', 86400, function() {
 		);
 
 		$r .= "<li><a href='./loadout/dna/".$f['dna']."'>"
+			."<div class='abs dogmaattrs'>\n"
+			."<strong>".\Osmium\Chrome\format($f['dps'], 2)."</strong> <small>DPS</small><br />"
+			."<strong>".\Osmium\Chrome\format($f['ehp'], 2, 'k')."</strong> <small>EHP</small><br />"
+			."<strong>".\Osmium\Chrome\format($f['price'], 2)."</strong> <small>ISK</small>"
+			."</div>"
 			."<img class='abs' src='//image.eveonline.com/Render/"
 			.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
 			."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
 			."</strong><small>lost</small></span></div>\n"
-			."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
-			.\Osmium\Chrome\format_integer($num)
-			."</strong><small>{$unit}</small></span></div>\n"
 			."</a></li>\n";
 	}
 	$r .= "</ol>\n";
@@ -259,13 +254,6 @@ echo get_cache_memory_or_gen('doctrines', 86401, function() {
 	$r .= "<ol>\n";
 
 	foreach($topkills['doctrine'] as $f) {
-		list($num, $unit) = explode(' ', \Osmium\Chrome\format_long_duration($f['timespan'], 1));
-		if(ctype_digit($num)) {
-			$num = \Osmium\Chrome\format_integer($num);
-		} else {
-			$num = '—';
-			$unit = 'seconds';
-		}
 		list($shipid, ) = explode(':', $f['dna'], 2);
 		$fname = htmlspecialchars(
 			\Osmium\Fit\get_typename($shipid)." fitting"
@@ -285,14 +273,16 @@ echo get_cache_memory_or_gen('doctrines', 86401, function() {
 		$aname = "mainly flown by: &#10;".implode(", &#10;", $anames);
 
 		$r .= "<li><a href='./loadout/dna/".$f['dna']."'>"
+			."<div class='abs dogmaattrs'>\n"
+			."<strong>".\Osmium\Chrome\format($f['dps'], 2)."</strong> <small>DPS</small><br />"
+			."<strong>".\Osmium\Chrome\format($f['ehp'], 2, 'k')."</strong> <small>EHP</small><br />"
+			."<strong>".\Osmium\Chrome\format($f['price'], 2)."</strong> <small>ISK</small>"
+			."</div>"
 			."<img class='abs' src='//image.eveonline.com/Render/"
 			.$shipid."_256.png' alt='{$fname}' title='{$fname}' />"
 			."<div title='{$aname}' class='abs alogos n".(count($f['alliances']))."'>\n{$alogos}</div>\n"
 			."<div class='absnum losscount'><span><strong>".\Osmium\Chrome\format_integer($f['count'])
 			."</strong><small>lost</small></span></div>\n"
-			."<div class='absnum timespan'><span title='Time span of the losses'><strong>"
-			.$num
-			."</strong><small>{$unit}</small></span></div>\n"
 			."</a></li>\n";
 	}
 	$r .= "</ol>\n";
