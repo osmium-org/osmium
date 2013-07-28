@@ -245,11 +245,14 @@ for($i = $cutoffpage; $i > 0; --$i) {
 
 
 
-$q = \Osmium\Db\query(
-	'SELECT count(DISTINCT characterid), groupdna
-	FROM recentkillsdna
+$q = \Osmium\Db\query_params(
+	'SELECT count(characterid), groupdna, sum(exp(-($1 - lastkill) / (2 * 86400))) AS score
+	FROM (
+	SELECT groupdna, max(killtime) AS lastkill, characterid FROM recentkillsdna GROUP BY groupdna, characterid
+	) g
 	GROUP BY groupdna
-	ORDER BY count DESC'
+	ORDER BY score DESC',
+	array(time())
 );
 
 $topkills = [ 'fotw' => [], 'doctrine' => [] ];
