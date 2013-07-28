@@ -32,7 +32,7 @@ $schema = $docset->appendChild($xml->createElement('sphinx:schema'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('typename2'));
+$name->appendChild($xml->createTextNode('typename'));
 
 $field = $schema->appendChild($xml->createElement('sphinx:field'));
 $name = $field->appendChild($xml->createAttribute('name'));
@@ -56,7 +56,7 @@ $name->appendChild($xml->createTextNode('parentsynonyms'));
 
 $attr = $schema->appendChild($xml->createElement('sphinx:attr'));
 $name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('metagroupid'));
+$name->appendChild($xml->createTextNode('mg'));
 $type = $attr->appendChild($xml->createAttribute('type'));
 $type->appendChild($xml->createTextNode('int'));
 $bits = $attr->appendChild($xml->createAttribute('bits'));
@@ -64,36 +64,18 @@ $bits->appendChild($xml->createTextNode('32'));
 
 $attr = $schema->appendChild($xml->createElement('sphinx:attr'));
 $name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('metalevel'));
+$name->appendChild($xml->createTextNode('ml'));
 $type = $attr->appendChild($xml->createAttribute('type'));
 $type->appendChild($xml->createTextNode('int'));
 $bits = $attr->appendChild($xml->createAttribute('bits'));
 $bits->appendChild($xml->createTextNode('32'));
-
-$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
-$name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('category'));
-$type = $attr->appendChild($xml->createAttribute('type'));
-$type->appendChild($xml->createTextNode('string'));
-
-$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
-$name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('subcategory'));
-$type = $attr->appendChild($xml->createAttribute('type'));
-$type->appendChild($xml->createTextNode('string'));
-
-$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
-$name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('typename'));
-$type = $attr->appendChild($xml->createAttribute('type'));
-$type->appendChild($xml->createTextNode('string'));
 
 while($row = \Osmium\Db\fetch_assoc($q)) {
 	$document = $docset->appendChild($xml->createElement('sphinx:document'));
 	$id = $document->appendChild($xml->createAttribute('id'));
 	$id->appendChild($xml->createTextNode($row['typeid']));
 
-	$typename = $document->appendChild($xml->createElement('typename2'));
+	$typename = $document->appendChild($xml->createElement('typename'));
 	$typename->appendChild($xml->createTextNode($row['typename']));
 
 	$typename = $document->appendChild($xml->createElement('parenttypename'));
@@ -111,20 +93,11 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$synonyms = $document->appendChild($xml->createElement('parentsynonyms'));
 	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['parenttypename'])));
 
-	$metagroupid = $document->appendChild($xml->createElement('metagroupid'));
+	$metagroupid = $document->appendChild($xml->createElement('mg'));
 	$metagroupid->appendChild($xml->createTextNode($row['metagroupid']));
 
-	$metalevel = $document->appendChild($xml->createElement('metalevel'));
+	$metalevel = $document->appendChild($xml->createElement('ml'));
 	$metalevel->appendChild($xml->createTextNode($row['metalevel']));
-
-	$slottype = $document->appendChild($xml->createElement('category'));
-	$slottype->appendChild($xml->createTextNode($row['category']));
-
-	$slottype = $document->appendChild($xml->createElement('subcategory'));
-	$slottype->appendChild($xml->createTextNode($row['subcategory']));
-
-	$typename2 = $document->appendChild($xml->createElement('typename'));
-	$typename2->appendChild($xml->createTextNode($row['typename']));
 }
 
 $xml->formatOutput = true;

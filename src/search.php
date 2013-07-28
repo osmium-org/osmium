@@ -20,7 +20,7 @@ namespace Osmium\Page\Search;
 
 require __DIR__.'/../inc/root.php';
 
-if(isset($_GET['q']) && !empty($_GET['q'])) {
+if(isset($_GET['q'])) {
 	$query = $_GET['q'];
 } else {
 	$query = false;

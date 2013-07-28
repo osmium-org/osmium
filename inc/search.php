@@ -33,11 +33,14 @@ function get_link() {
 }
 
 function query_select_searchdata($cond, array $params = array()) {
-	return \Osmium\Db\query_params('SELECT loadoutid, restrictedtoaccountid, restrictedtocorporationid,
-	restrictedtoallianceid, tags, modules, author, name, description,
-	shipid, upvotes, downvotes, score, ship, groups, creationdate,
-	updatedate, evebuildnumber, comments FROM
-	osmium.loadoutssearchdata '.$cond, $params);
+	return \Osmium\Db\query_params(
+		'SELECT loadoutid, restrictedtoaccountid, restrictedtocorporationid,
+		restrictedtoallianceid, tags, modules, author, name, description,
+		shipid, upvotes, downvotes, score, ship, groups, creationdate,
+		updatedate, evebuildnumber, comments, dps, ehp, estimatedprice
+		FROM osmium.loadoutssearchdata '.$cond,
+		$params
+	);
 }
 
 function query($q) {
@@ -59,11 +62,12 @@ function index($loadout) {
 	unindex($loadout['loadoutid']);
 	
 	return query(
-		'INSERT INTO osmium_loadouts (id, restrictedtoaccountid,
-		restrictedtocorporationid, restrictedtoallianceid, shipid,
-		upvotes, downvotes, score, creationdate, updatedate, build,
-		comments, ship, groups, author, name, description, tags,
-		modules) VALUES ('
+		'INSERT INTO osmium_loadouts (
+		id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
+		shipid, upvotes, downvotes, score, creationdate, updatedate, build,
+		comments, dps, ehp, estimatedprice,
+		ship, groups, author, name, description, tags, types
+		) VALUES ('
 		.$loadout['loadoutid'].','
 		.$loadout['restrictedtoaccountid'].','
 		.$loadout['restrictedtocorporationid'].','
@@ -76,6 +80,9 @@ function index($loadout) {
 		.$loadout['updatedate'].','
 		.$loadout['evebuildnumber'].','
 		.$loadout['comments'].','
+		.$loadout['dps'].','
+		.$loadout['ehp'].','
+		.$loadout['estimatedprice'].','
 		.'\''.escape($loadout['ship']).'\','
 		.'\''.escape($loadout['groups']).'\','
 		.'\''.escape($loadout['author']).'\','
@@ -85,6 +92,40 @@ function index($loadout) {
 		.'\''.escape($loadout['modules']).'\''
 		.')'
 	);
+}
+
+function parse_search_query_attr_filters(&$search_query, array $intattrs = array(), array $floatattrs = array()) {
+	$and = [];
+
+	$search_query = preg_replace_callback(
+		$regex = '%(\s|^)@('
+		.'(?<intattr>'.implode('|', $intattrs).')'
+		.'|(?<floatattr>'.implode('|', $floatattrs).')'
+		.')\s+(?<operator>(>=|<=|<>|!=|=|>|<)?)'
+		.'\s*(?<value>[+-]?[0-9]*(\.[0-9]+)?([eE][+-]?[0-9]+)?)'
+		.'(?<modifier>[kmb]?)%',
+		function($m) use(&$and) {
+			$value = (float)$m['value'];
+			if($m['modifier'] === 'k') $value *= 1e3;
+			else if($m['modifier'] === 'm') $value *= 1e6;
+			else if($m['modifier'] === 'b') $value *= 1e9;
+
+			if(!$m['operator']) $m['operator'] = '=';
+
+			if($m['intattr']) {
+				$and[] = $m['intattr'].' '.$m['operator'].' '.(int)$value;
+			} else if($m['floatattr']) {
+				$and[] = $m['floatattr'].' '.$m['operator'].' '.sprintf("%.14f", $value);
+			}
+
+			return '';
+		},
+		$search_query
+	);
+
+	$fand = '';
+	foreach($and as $a) $fand .= ' AND '.$a;
+	return $fand;
 }
 
 function get_search_query($search_query) {
@@ -102,11 +143,25 @@ function get_search_query($search_query) {
 		}
 	}
 
+	$fand = parse_search_query_attr_filters(
+		$search_query,
+		[
+			'loadoutid', 'restrictedtoaccountid',
+			'restrictedtocorporationid', 'restrictedtoallianceid',
+			'shipid', 'upvotes', 'downvotes',
+			'creationdate', 'updatedate',
+			'build', 'comments',
+		],
+		[
+			'score', 'dps', 'ehp', 'estimatedprice',
+		]
+	);
+
 	return 'SELECT id FROM osmium_loadouts
 	WHERE MATCH(\''.escape($search_query).'\')
 	AND restrictedtoaccountid IN ('.implode(',', $accountids).')
 	AND restrictedtocorporationid IN ('.implode(',', $corporationids).')
-	AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
+	AND restrictedtoallianceid IN ('.implode(',', $allianceids).')'.$fand;
 }
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
@@ -114,7 +169,7 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 		get_search_query($search_query)
 		.' '.$more_cond
 		.' LIMIT '.$offset.','.$limit
-		.' OPTION field_weights=(ship=100,groups=80,author=100,name=70,description=10,tags=150,modules=30)'
+		.' OPTION field_weights=(ship=100,groups=80,author=100,name=70,description=10,tags=150,types=30)'
 	);
 	if($q === false) return false; /* Invalid query */
 
@@ -289,8 +344,11 @@ function get_search_cond_from_advanced() {
 	static $orderby = array(
 		//"relevance" => "relevance", /* Does not match to an ORDER BY statement as this is the default */
 		"creationdate" => "creation date",
-		"score" => "score",
+		"score" => "score (votes)",
 		"comments" => "comments",
+		"dps" => "damage per second",
+		"ehp" => "effective hitpoints",
+		"estimatedprice" => "estimated price",
 	);
 
 	$cond = '';
@@ -319,8 +377,11 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 	static $orderby = array(
 		"relevance" => "relevance",
 		"creationdate" => "creation date",
-		"score" => "score",
+		"score" => "score (votes)",
 		"comments" => "comments",
+		"dps" => "damage per second",
+		"ehp" => "effective hitpoints",
+		"estimatedprice" => "estimated price",
 	);
 
 	if($icon === null) $icon = [ 2, 12, 64, 64 ];
@@ -375,12 +436,13 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 			echo ">{$label}</option>\n";
 		}
 		echo "</select>\n<input type='hidden' name='ad' value='1' />\n";
+		echo "<br />\n<a href='{$relative}/help/search'><small>Help</small></a>\n";
 	} else {
 		$get = 'ad=1';
 		foreach($_GET as $k => $v) {
 			$get .= "&amp;".htmlspecialchars($k, ENT_QUOTES)."=".htmlspecialchars($v, ENT_QUOTES);
 		}
-		echo "<a href='{$uri}?{$get}'><small>{$advanced}</small></a>";
+		echo "<a href='{$uri}?{$get}'><small>{$advanced}</small></a> — <a href='{$relative}/help/search'><small>Help</small></a>\n";
 	}
 
 	echo"</p>\n";

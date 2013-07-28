@@ -7,8 +7,11 @@ The sphinx type index has been updated. You must:
 * run `sphinx-indexer osmium_types`;
 * start sphinx-searchd.
 
-The sphinx loadout index view has been updated. You must:
+The sphinx loadout index has been updated. You must:
 
+* stop sphinx-searchd;
+* delete all index.* files;
+* start sphinx-searchd;
 * run ./bin/reindex_loadouts.
 
 The config.ini file has changed, the [branding] section has been

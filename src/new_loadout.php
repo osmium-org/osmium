@@ -201,7 +201,7 @@ $searchexamples = array(
 	'sni', 'rni', 'sfi', 'pirate frig',
 
 	/* Meta level filter */
-	'gyro @meta 4', 'web @meta 4', 'hml @meta 4', 'eanm @meta 1',
+	'gyro @ml 4', 'web @ml 4', 'hml @ml 4', 'eanm @ml 1',
 
 	/* Implants synonyms */
 	'lg snake', 'crystal implant',

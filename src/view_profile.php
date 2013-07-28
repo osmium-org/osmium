@@ -50,8 +50,8 @@ if($row['apiverified'] === 't') {
 	$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
 
 	echo "<p>\n<img src='http://image.eveonline.com/Character/".$row['characterid']."_512.jpg' alt='portrait' /><br />";
-	echo "<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_256.png' alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' />";
-	echo "<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></p>\n";
+	echo "<a href='../search?q=".urlencode("@restrictedtocorporationid ".$row['corporationid'])."'><img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_256.png' alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' /></a>";
+	echo "<a href='../search?q=".urlencode("@restrictedtoallianceid ".$row['allianceid'])."'><img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></a></p>\n";
 }
 
 echo "<table>\n<tbody>\n";

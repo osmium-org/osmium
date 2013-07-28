@@ -66,7 +66,11 @@ $osmium_dispatch_rules = array(
 	'%^/settings$%D' => '/src/settings.php',
 	'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
 	'%^/reset_password$%D' => '/src/reset_password.php',
-	'%^/notifications%D' => '/src/view_notifications.php',
+	'%^/notifications$%D' => '/src/view_notifications.php',
+
+	'%^/help/search$%D' => [ '/src/mdstatic.php',
+	                         ['relative' => '..', 'title' => 'Search help', 'f' => 'search.md']
+	],
 
 	'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
 	'%^/editcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'commentreply']],

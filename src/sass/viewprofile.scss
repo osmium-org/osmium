@@ -12,11 +12,11 @@ div#vprofile {
 		}
 
 		&> p > img {
-			width: $portrait-width / 2;
+			width: $portrait-width;
+		}
 
-			&:first-child {
-				width: $portrait-width;
-			}
+		&> p > a > img {
+			width: $portrait-width / 2;
 		}
 
 		&> table > tbody {
