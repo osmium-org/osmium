@@ -57,11 +57,72 @@ function unindex($loadoutid) {
 
 function index($loadout) {
 	unindex($loadout['loadoutid']);
+	$goodstandings = '';
+	$excellentstandings = '';
+	
+	$qs = \Osmium\Db\query_params(
+	'SELECT restrictedtostanding
+	FROM osmium.loadoutssearchdata WHERE loadoutid = $1',
+	array(
+		$loadout['loadoutid']
+		)
+	);
+	
+	$restrictedtostanding = \Osmium\Db\fetch_row($qs)[0];
+	// Standing > 0
+	if($restrictedtostanding == 0)
+	{
+		$excellentstandings = 0;
+		
+		$q = \Osmium\Db\query_params(
+		'SELECT contactid
+		FROM osmium.contactsverification WHERE loadoutid = $1 AND standing > 0',
+		array(
+			$loadout['loadoutid']
+			)
+		);
+		
+		while($row = \Osmium\Db\fetch_row($q)) {
+			if($goodstandings == '') {
+				$goodstandings = $row[0];
+			}
+			else {
+				$goodstandings = $goodstandings.','.$row[0];
+			}
+		}
+	}
+	// Standing > 5
+	elseif($restrictedtostanding == 5)
+	{
+		$goodstandings = 0;
+		
+		$q = \Osmium\Db\query_params(
+		'SELECT contactid
+		FROM osmium.contactsverification WHERE loadoutid = $1 AND standing > 5',
+		array(
+			$loadout['loadoutid']
+			)
+		);
+		
+		while($row = \Osmium\Db\fetch_row($q)) {
+			if($excellentstandings == '') {
+				$excellentstandings = $row[0];
+			}
+			else {
+				$excellentstandings = $excellentstandings.','.$row[0];
+			}
+		}
+	}
+	else
+	{
+		$goodstandings = 0;
+		$excellentstandings = 0;
+	}
 
 	return query('INSERT INTO osmium_loadouts 
   (id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
   shipid, upvotes, downvotes, score, creationdate, updatedate, accountid,
-  ship, groups, author, name, description, tags, modules)
+  ship, groups, author, name, description, tags, modules, goodstandingids, excellentstandingids)
   VALUES ('
 	             .$loadout['loadoutid'].','
 	             .$loadout['restrictedtoaccountid'].','
@@ -80,7 +141,9 @@ function index($loadout) {
 	             .'\''.escape($loadout['name']).'\','
 	             .'\''.escape($loadout['description']).'\','
 	             .'\''.escape($loadout['tags']).'\','
-	             .'\''.escape($loadout['modules']).'\''
+	             .'\''.escape($loadout['modules']).'\','
+				 .'('.$goodstandings.')'.','
+				 .'('.$excellentstandings.')'
 	             .')');
 }
 
@@ -88,6 +151,7 @@ function get_search_query($search_query) {
 	$accountids = array(0);
 	$corporationids = array(0);
 	$allianceids = array(0);
+	$characterids = array(0);
 
 	if(\Osmium\State\is_logged_in()) {
 		$a = \Osmium\State\get_state('a');
@@ -95,11 +159,12 @@ function get_search_query($search_query) {
 
 		if($a['apiverified'] === 't') {
 			$corporationids[] = intval($a['corporationid']);
+			$characterids[] = intval($a['characterid']);
 			if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
 		}
 	}
-	
-	return 'SELECT id, restrictedtostanding FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtoaccountid IN ('.implode(',', $accountids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).')';
+
+	return 'SELECT id, restrictedtostanding FROM osmium_loadouts WHERE MATCH(\''.escape($search_query).'\') AND restrictedtoaccountid IN ('.implode(',', $accountids).') AND restrictedtocorporationid IN ('.implode(',', $corporationids).') AND restrictedtoallianceid IN ('.implode(',', $allianceids).') AND goodstandingids IN ('.implode(',', $allianceids).','.implode(',', $corporationids).','.implode(',', $characterids).') AND excellentstandingids IN ('.implode(',', $allianceids).','.implode(',', $corporationids).','.implode(',', $characterids).')';
 }
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
@@ -108,28 +173,19 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 	$ids = array();
 	while($row = fetch_row($q)) {
-		if($row[2] <> -1)
-		{
-			if(\Osmium\State\can_view_fit($row[0]))
-			{
-				$ids[] = $row[0];
-			}
-		}
-		else
-		{
 			$ids[] = $row[0];
-		}
 	}
 
 	return $ids;
 }
 
 function get_total_matches($search_query, $more_cond = '') {
-	$q = get_search_ids($search_query, $more_cond);
+	$q = query(get_search_query($search_query).' '.$more_cond);
 	
 	if($q === false) return 0;
 
-	return count($q);
+	$meta = get_meta();
+	return $meta['total_found'];
 }
 
 function fetch_assoc($result) {

@@ -86,8 +86,8 @@ function final_settings() {
 										\Osmium\Fit\VIEW_PASSWORD_PROTECTED => 'everyone but require a password',
 										\Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
 										\Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
-										\Osmium\Fit\VIEW_GOOD_STANDING => 'my good standings only (includes alliance and corp)',
-										\Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my excellent standings only (includes alliance and corp)',
+										\Osmium\Fit\VIEW_GOOD_STANDING => 'my contacts with good standing (≥0.01, includes corporation and alliance)',
+										\Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my contacts with excellent standing (≥5.01, includes corporation and alliance)',
 										\Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
 										), null, 'view_perms',
 										\Osmium\Forms\FIELD_REMEMBER_VALUE);

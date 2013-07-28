@@ -487,11 +487,15 @@ function get_character_contactlist($character_id, $a) {
 		foreach($rowset->children() as $row) {
 			$contactid = (int)$row['contactID'];
 			$standing = (int)$row['standing'];
-			array_push($list_contact, array($contactid, $standing));
 			
-			list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(contactid) FROM osmium.contacts WHERE accountid = $1 AND contactid = $2 AND standing = $3', array($a['accountid'], $contactid, $standing)));
-			if($c == 0) {
-				\Osmium\Db\query_params('INSERT INTO osmium.contacts (accountid, contactid, standing) VALUES ($1, $2, $3)', array($a['accountid'], $contactid, $standing));
+			if($standing > 0)
+			{
+				array_push($list_contact, array($contactid, $standing));
+				
+				list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(contactid) FROM osmium.contacts WHERE accountid = $1 AND contactid = $2 AND standing = $3', array($a['accountid'], $contactid, $standing)));
+				if($c == 0) {
+					\Osmium\Db\query_params('INSERT INTO osmium.contacts (accountid, contactid, standing) VALUES ($1, $2, $3)', array($a['accountid'], $contactid, $standing));
+				}
 			}
 		}
 	}
@@ -501,13 +505,17 @@ function get_character_contactlist($character_id, $a) {
 	foreach ($list_contact as $contact)
 	{
 		if($where_clause == '') {
-			$where_clause = 'accountid = '.$a['accountid'].' AND NOT (contactid = '.$contact[0].' AND standing = '.$contact[1].')';
+			$where_clause = 'NOT (contactid = '.$contact[0].' AND standing = '.$contact[1];
 		}
 		else
 		{
-			$where_clause = $where_clause. ' AND NOT (contactid = '.$contact[0].' AND standing = '.$contact[1].')';
+			$where_clause = $where_clause. ' OR contactid = '.$contact[0].' AND standing = '.$contact[1];
 		}
 	}
+	
+	$where_clause = $where_clause. ') AND accountid = '.$a['accountid'];
+
+	\Osmium\Db\query_params('DELETE FROM osmium.contacts WHERE '.$where_clause, array());
 }
 
 /**
