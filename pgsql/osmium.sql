@@ -142,11 +142,22 @@ CREATE VIEW allowedloadoutsanonymous AS
 
 
 --
+-- Name: contacts; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE contacts (
+    accountid integer NOT NULL,
+    contactid integer NOT NULL,
+    standing double precision NOT NULL
+);
+
+
+--
 -- Name: allowedloadoutsbyaccount; Type: VIEW; Schema: osmium; Owner: -
 --
 
 CREATE VIEW allowedloadoutsbyaccount AS
-    SELECT accounts.accountid, loadouts.loadoutid FROM ((loadouts JOIN accounts author ON ((author.accountid = loadouts.accountid))) JOIN accounts ON ((((((loadouts.viewpermission = 0) OR (loadouts.viewpermission = 1)) OR ((((loadouts.viewpermission = 2) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.allianceid = author.allianceid))) OR ((((loadouts.viewpermission = 3) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid))) OR (accounts.accountid = author.accountid))));
+    SELECT DISTINCT a.accountid, l.loadoutid FROM (((loadouts l JOIN accounts author ON ((author.accountid = l.accountid))) LEFT JOIN contacts c ON ((((author.apiverified = true) AND (author.accountid = c.accountid)) AND (l.viewpermission = ANY (ARRAY[5, 6]))))) JOIN accounts a ON ((((((((l.viewpermission = 0) OR (l.viewpermission = 1)) OR ((((l.viewpermission = 2) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.allianceid = author.allianceid))) OR ((((l.viewpermission = 3) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.corporationid = author.corporationid))) OR (a.accountid = author.accountid)) OR ((l.viewpermission = 5) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (0)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid)))))) OR ((l.viewpermission = 6) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (5)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid))))))));
 
 
 --
@@ -703,7 +714,7 @@ CREATE VIEW loadoutsmodulelist AS
 --
 
 CREATE VIEW loadoutssearchdata AS
-    SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE (-1) END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE (-1) END ELSE 0 END AS restrictedtoallianceid, fittingaggtags.taglist AS tags, fittingfittedtypes.typelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittingdescriptions.descriptions AS description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate, ls.upvotes, ls.downvotes, ls.score, (invgroups.groupname)::text AS groups, fittings.evebuildnumber, COALESCE(lcc.count, (0)::bigint) AS comments FROM ((((((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN loadoutscores ls ON ((ls.loadoutid = searchableloadouts.loadoutid))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid))) LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = searchableloadouts.loadoutid))) LEFT JOIN fittingaggtags ON ((fittingaggtags.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingfittedtypes ON ((fittingfittedtypes.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingdescriptions ON ((fittingdescriptions.fittinghash = loadouthistory.fittinghash))) LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)));
+    SELECT searchableloadouts.loadoutid, CASE loadouts.viewpermission WHEN 4 THEN accounts.accountid ELSE 0 END AS restrictedtoaccountid, CASE loadouts.viewpermission WHEN 3 THEN CASE accounts.apiverified WHEN true THEN accounts.corporationid ELSE (-1) END ELSE 0 END AS restrictedtocorporationid, CASE loadouts.viewpermission WHEN 2 THEN CASE accounts.apiverified WHEN true THEN accounts.allianceid ELSE (-1) END ELSE 0 END AS restrictedtoallianceid, fittingaggtags.taglist AS tags, fittingfittedtypes.typelist AS modules, CASE accounts.apiverified WHEN true THEN accounts.charactername ELSE accounts.nickname END AS author, fittings.name, fittingdescriptions.descriptions AS description, fittings.hullid AS shipid, invtypes.typename AS ship, fittings.creationdate, loadouthistory.updatedate, ls.upvotes, ls.downvotes, ls.score, (invgroups.groupname)::text AS groups, fittings.evebuildnumber, COALESCE(lcc.count, (0)::bigint) AS comments, COALESCE(lda.dps, (0)::double precision) AS dps, COALESCE(lda.ehp, (0)::double precision) AS ehp, COALESCE(lda.estimatedprice, (0)::double precision) AS estimatedprice, loadouts.viewpermission FROM (((((((((((((searchableloadouts JOIN loadoutslatestrevision ON ((searchableloadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouts ON ((loadoutslatestrevision.loadoutid = loadouts.loadoutid))) JOIN accounts ON ((loadouts.accountid = accounts.accountid))) JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN loadoutscores ls ON ((ls.loadoutid = searchableloadouts.loadoutid))) JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid))) LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = searchableloadouts.loadoutid))) LEFT JOIN fittingaggtags ON ((fittingaggtags.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingfittedtypes ON ((fittingfittedtypes.fittinghash = loadouthistory.fittinghash))) LEFT JOIN fittingdescriptions ON ((fittingdescriptions.fittinghash = loadouthistory.fittinghash))) LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid))) LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = searchableloadouts.loadoutid)));
 
 
 --

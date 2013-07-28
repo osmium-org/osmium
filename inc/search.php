@@ -35,7 +35,8 @@ function get_link() {
 function query_select_searchdata($cond, array $params = array()) {
 	return \Osmium\Db\query_params(
 		'SELECT loadoutid, restrictedtoaccountid, restrictedtocorporationid,
-		restrictedtoallianceid, tags, modules, author, name, description,
+		restrictedtoallianceid, viewpermission,
+		tags, modules, author, name, description,
 		shipid, upvotes, downvotes, score, ship, groups, creationdate,
 		updatedate, evebuildnumber, comments, dps, ehp, estimatedprice
 		FROM osmium.loadoutssearchdata '.$cond,
@@ -60,10 +61,41 @@ function unindex($loadoutid) {
 
 function index($loadout) {
 	unindex($loadout['loadoutid']);
+	$goodstandings = array();
+	$excellentstandings = array();
+
+	if($loadout['viewpermission'] == \Osmium\Fit\VIEW_GOOD_STANDING
+	|| $loadout['viewpermission'] == \Osmium\Fit\VIEW_EXCELLENT_STANDING) {
+		if($loadout['viewpermission'] == \Osmium\Fit\VIEW_GOOD_STANDING) {
+			/* Good standings */
+			$cutoff = 0;
+			$dest =& $goodstandings;
+		} else if($restrictedtostanding == 5) {
+			/* Excellent standings */
+			$cutoff = 5;
+			$dest =& $excellentstandings;
+		}
 	
+		$q = \Osmium\Db\query_params(
+			'SELECT contactid
+			FROM osmium.loadouts
+			JOIN osmium.contacts ON contacts.accountid = loadouts.accountid
+			WHERE loadoutid = $1 AND standing > $2',
+			array($loadout['loadoutid'], $cutoff)
+		);
+
+		while($row = \Osmium\Db\fetch_row($q)) {
+			$dest[] = $row[0];
+		}
+	}
+
+	if($goodstandings === array()) $goodstandings = array(0);
+	if($excellentstandings === array()) $excellentstandings = array(0);
+
 	return query(
 		'INSERT INTO osmium_loadouts (
 		id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
+		goodstandingids, excellentstandingids,
 		shipid, upvotes, downvotes, score, creationdate, updatedate, build,
 		comments, dps, ehp, estimatedprice,
 		ship, groups, author, name, description, tags, types
@@ -72,6 +104,8 @@ function index($loadout) {
 		.$loadout['restrictedtoaccountid'].','
 		.$loadout['restrictedtocorporationid'].','
 		.$loadout['restrictedtoallianceid'].','
+		.'('.implode(', ', $goodstandings).')'.','
+		.'('.implode(', ', $excellentstandings).'),'
 		.$loadout['shipid'].','
 		.$loadout['upvotes'].','
 		.$loadout['downvotes'].','
@@ -132,6 +166,7 @@ function get_search_query($search_query) {
 	$accountids = array(0);
 	$corporationids = array(0);
 	$allianceids = array(0);
+	$characterids = array(0);
 
 	if(\Osmium\State\is_logged_in()) {
 		$a = \Osmium\State\get_state('a');
@@ -139,6 +174,7 @@ function get_search_query($search_query) {
 
 		if($a['apiverified'] === 't') {
 			$corporationids[] = intval($a['corporationid']);
+			$characterids[] = intval($a['characterid']);
 			if($a['allianceid'] > 0) $allianceids[] = intval($a['allianceid']);
 		}
 	}
@@ -157,11 +193,19 @@ function get_search_query($search_query) {
 		]
 	);
 
-	return 'SELECT id FROM osmium_loadouts
-	WHERE MATCH(\''.escape($search_query).'\')
-	AND restrictedtoaccountid IN ('.implode(',', $accountids).')
-	AND restrictedtocorporationid IN ('.implode(',', $corporationids).')
-	AND restrictedtoallianceid IN ('.implode(',', $allianceids).')'.$fand;
+	$ac_ids = implode(', ', $accountids);
+	$ch_ids = implode(', ', $characterids);
+	$co_ids = implode(', ', $corporationids);
+	$al_ids = implode(', ', $allianceids);
+
+	return "SELECT id FROM osmium_loadouts
+	WHERE MATCH('".escape($search_query)."')
+	AND restrictedtoaccountid IN ({$ac_ids})
+	AND restrictedtocorporationid IN ({$co_ids})
+	AND restrictedtoallianceid IN ({$al_ids})
+	AND goodstandingids IN ({$ch_ids}, {$co_ids}, {$al_ids})
+	AND excellentstandingids IN ({$ch_ids}, {$co_ids}, {$al_ids})
+	".$fand;
 }
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
@@ -175,7 +219,7 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 	$ids = array();
 	while($row = fetch_row($q)) {
-		$ids[] = $row[0];
+			$ids[] = $row[0];
 	}
 
 	return $ids;
@@ -183,6 +227,7 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 function get_total_matches($search_query, $more_cond = '') {
 	$q = query(get_search_query($search_query).' '.$more_cond);
+	
 	if($q === false) return 0;
 
 	$meta = get_meta();

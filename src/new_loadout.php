@@ -316,6 +316,8 @@ if(\Osmium\State\is_logged_in()) {
 			\Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
 			\Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
 			\Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
+			\Osmium\Fit\VIEW_GOOD_STANDING => 'my contacts with good standing (≥0.01, includes corporation and alliance)',
+			\Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my contacts with excellent standing (≥5.01, includes corporation and alliance)',
 			), null, 'view_perms');
 
 	\Osmium\Forms\print_select(

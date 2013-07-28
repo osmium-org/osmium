@@ -53,6 +53,11 @@ const VIEW_CORPORATION_ONLY = 3;
 /** The loadout can only be viewed by its author. */
 const VIEW_OWNER_ONLY = 4;
 
+/** The loadout can only be viewed by contacts with good standing with the author. */
+const VIEW_GOOD_STANDING = 5;
+
+/** The loadout can only be viewed by contacts with excellent standing with the author. */
+const VIEW_EXCELLENT_STANDING = 6;
 
 
 /** The loadout can only be edited by its author. */
@@ -840,6 +845,8 @@ function sanitize(&$fit, &$errors = null, $interactive = false) {
 		             VIEW_ALLIANCE_ONLY,
 		             VIEW_CORPORATION_ONLY,
 		             VIEW_OWNER_ONLY,
+		             VIEW_GOOD_STANDING,
+		             VIEW_EXCELLENT_STANDING,
 		             ))) {
 		$errors[] = 'Incorrect view permission, reset to viewable by everyone.';
 		$fit['metadata']['view_permission'] = VIEW_EVERYONE;
