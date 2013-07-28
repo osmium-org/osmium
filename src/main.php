@@ -142,55 +142,93 @@ echo get_cache_memory_or_gen('popular_tags', 3603, function() {
 
 
 
+$a = \Osmium\State\get_state('a');
+if(isset($a['accountid']) && $a['accountid'] > 0) {
+		$q = \Osmium\Db\query_params(
+			'SELECT sl.loadoutid
+			FROM osmium.searchableloadouts AS sl
+			JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = 1
+			WHERE sl.accountid IN (0, $1)
+			ORDER BY lh.updatedate DESC
+			LIMIT 20',
+			array($a['accountid'])
+		);
+		$ids = array(0);
+		while($row = \Osmium\Db\fetch_row($q)) {
+			$ids[] = (int)$row[0];
+		}
 
-echo get_cache_memory_or_gen('new_fits', 601, function() {
-	$q = \Osmium\Db\query(
-		'SELECT sl.loadoutid
-		FROM osmium.searchableloadouts AS sl
-		JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = 1
-		WHERE sl.accountid = 0
-		ORDER BY lh.updatedate DESC
-		LIMIT 20'
-	);
-	$ids = array(0);
-	while($row = \Osmium\Db\fetch_row($q)) {
-		$ids[] = (int)$row[0];
-	}
+		echo "<section class='newfits'>\n"
+			."<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'>"
+			."<img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
 
-	$r = "<section class='newfits'>\n"
-		."<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'>"
-		."<img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+		\Osmium\Search\print_loadout_list(
+			$ids, '.', 0, 'No loadouts yet! What are you waiting for?'
+		);
 
-	ob_start();
-	\Osmium\Search\print_loadout_list(
-		$ids, '.', 0, 'No loadouts yet! What are you waiting for?'
-	);
-	$r .= ob_get_clean();
-
-	$r .= "<p class='b_more'><a href='./browse/new'>Browse more new loadouts…</a></p>\n</section>\n";
-	return $r;
-}, 'Main_');
+		echo "<p class='b_more'><a href='./browse/new'>Browse more new loadouts…</a></p>\n</section>\n";
 
 
 
+		$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
+		echo "<section class='popularfits'>\n<h2>Popular fits</h2>\n";
+
+		\Osmium\Search\print_loadout_list(
+			\Osmium\Search\get_search_ids(
+				'', 'AND build >= '.$vercutoff.' ORDER BY score DESC', 0, 20
+			),
+			'.', 0, 'No loadouts yet! What are you waiting for?'
+		);
+
+		echo "<p class='b_more'><a href='./browse/best'>Browse more popular loadouts…</a></p>\n</section>\n";
+} else {
+	echo get_cache_memory_or_gen('new_fits', 601, function() {
+		$q = \Osmium\Db\query(
+			'SELECT sl.loadoutid
+			FROM osmium.searchableloadouts AS sl
+			JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = 1
+			WHERE sl.accountid = 0
+			ORDER BY lh.updatedate DESC
+			LIMIT 20'
+		);
+		$ids = array(0);
+		while($row = \Osmium\Db\fetch_row($q)) {
+			$ids[] = (int)$row[0];
+		}
+
+		$r = "<section class='newfits'>\n"
+			."<h2>New fits <small><a href='./atom/newfits.xml' type='application/atom+xml'>"
+			."<img src='./static-".\Osmium\STATICVER."/icons/feed.svg' alt='Atom feed' /></a></small></h2>\n";
+
+		ob_start();
+		\Osmium\Search\print_loadout_list(
+			$ids, '.', 0, 'No loadouts yet! What are you waiting for?'
+		);
+		$r .= ob_get_clean();
+
+		$r .= "<p class='b_more'><a href='./browse/new'>Browse more new loadouts…</a></p>\n</section>\n";
+		return $r;
+	}, 'Main_');
 
 
-echo get_cache_memory_or_gen('popular_fits', 602, function() {
-	$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
-	$r = "<section class='popularfits'>\n<h2>Popular fits</h2>\n";
 
-	ob_start();
-	\Osmium\Search\print_loadout_list(
-		\Osmium\Search\get_search_ids(
-			'', 'AND build >= '.$vercutoff.' ORDER BY score DESC', 0, 20
-		),
-		'.', 0, 'No loadouts yet! What are you waiting for?'
-	);
-	$r .= ob_get_clean();
+	echo get_cache_memory_or_gen('popular_fits', 602, function() {
+		$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
+		$r = "<section class='popularfits'>\n<h2>Popular fits</h2>\n";
 
-	$r .= "<p class='b_more'><a href='./browse/best'>Browse more popular loadouts…</a></p>\n</section>\n";
-	return $r;
-}, 'Main_');
+		ob_start();
+		\Osmium\Search\print_loadout_list(
+			\Osmium\Search\get_search_ids(
+				'', 'AND build >= '.$vercutoff.' ORDER BY score DESC', 0, 20
+			),
+			'.', 0, 'No loadouts yet! What are you waiting for?'
+		);
+		$r .= ob_get_clean();
+
+		$r .= "<p class='b_more'><a href='./browse/best'>Browse more popular loadouts…</a></p>\n</section>\n";
+		return $r;
+	}, 'Main_');
+}
 
 
 
