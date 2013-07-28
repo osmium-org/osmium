@@ -148,7 +148,8 @@ CREATE VIEW allowedloadoutsanonymous AS
 CREATE TABLE contacts (
     accountid integer NOT NULL,
     contactid integer NOT NULL,
-    standing double precision NOT NULL
+    standing double precision NOT NULL,
+    CONSTRAINT contacts_standing_check CHECK (((standing >= ((-10))::double precision) AND (standing <= (10)::double precision)))
 );
 
 
@@ -1324,6 +1325,20 @@ CREATE INDEX clients_useragent_idx ON clients USING btree (useragent);
 
 
 --
+-- Name: contacts_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX contacts_accountid_idx ON contacts USING btree (accountid);
+
+
+--
+-- Name: contacts_standing_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX contacts_standing_idx ON contacts USING btree (standing);
+
+
+--
 -- Name: cookietokens_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1865,6 +1880,14 @@ ALTER TABLE ONLY accountsettings
 
 ALTER TABLE ONLY clients
     ADD CONSTRAINT clients_loggedinaccountid_fkey FOREIGN KEY (loggedinaccountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: contacts_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY contacts
+    ADD CONSTRAINT contacts_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
 
 
 --
