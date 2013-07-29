@@ -98,7 +98,7 @@ echo "</ul>\n";
 
 echo "<section id='ploadouts' class='psection'>\n";
 echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.htmlspecialchars($rname, ENT_QUOTES).'"')."\">(browse all)</a></small></h2>\n";
-\Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 5, 'p', htmlspecialchars($rname).' does not have submitted any loadouts.');
+\Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 20, 'p', htmlspecialchars($rname).' does not have submitted any loadouts.');
 echo "</section>\n";
 
 
