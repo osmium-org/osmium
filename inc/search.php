@@ -70,32 +70,54 @@ function index($loadout) {
 			/* Good standings */
 			$cutoff = 0;
 			$dest =& $goodstandings;
-		} else if($restrictedtostanding == 5) {
+			$excellentstandings[] = 0;
+		} else if($loadout['viewpermission'] == \Osmium\Fit\VIEW_EXCELLENT_STANDING) {
 			/* Excellent standings */
 			$cutoff = 5;
 			$dest =& $excellentstandings;
+			$goodstandings[] = 0;
 		}
+
+		$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT l.accountid, a.apiverified, a.characterid, a.corporationid, a.allianceid
+			FROM osmium.loadouts l
+			JOIN osmium.accounts a ON a.accountid = l.accountid
+			WHERE loadoutid = $1',
+			array($loadout['loadoutid'])
+		));
 	
 		$q = \Osmium\Db\query_params(
 			'SELECT contactid
-			FROM osmium.loadouts
-			JOIN osmium.contacts ON contacts.accountid = loadouts.accountid
-			WHERE loadoutid = $1 AND standing > $2',
-			array($loadout['loadoutid'], $cutoff)
+			FROM osmium.contacts
+			WHERE accountid = $1 AND standing > $2',
+			array($author['accountid'], $cutoff)
 		);
 
 		while($row = \Osmium\Db\fetch_row($q)) {
 			$dest[] = $row[0];
 		}
+
+		/* As a safety for non API verified accounts, always add the
+		 * author account ID to the list of authorized contacts. It's
+		 * probably safe to assume that the low range of account IDs
+		 * will not overlap with character, corporation or alliance
+		 * IDs. */
+		$dest[] = $author['accountid'];
+
+		if($author['apiverified'] === 't') {
+			if($author['corporationid'] > 0) {
+				/* Add the author's corporation to the authorized contacts */
+				$dest[] = $author['corporationid'];
+			}
+			if($author['allianceid'] > 0) {
+				/* Add the author's alliance to the authorized contacts */
+				$dest[] = $author['allianceid'];
+			}
+		}
+	} else {
+		$goodstandings[] = 0;
+		$excellentstandings[] = 0;
 	}
-
-	if($goodstandings === array()) $goodstandings = array(0);
-	if($excellentstandings === array()) $excellentstandings = array(0);
-
-	$goodstandings[] = $loadout['restrictedtocorporationid'];
-	$excellentstandings[] = $loadout['restrictedtocorporationid'];
-	$goodstandings[] = $loadout['restrictedtoallianceid'];
-	$excellentstandings[] = $loadout['restrictedtoallianceid'];
 
 	return query(
 		'INSERT INTO osmium_loadouts (
@@ -208,8 +230,8 @@ function get_search_query($search_query) {
 	AND restrictedtoaccountid IN ({$ac_ids})
 	AND restrictedtocorporationid IN ({$co_ids})
 	AND restrictedtoallianceid IN ({$al_ids})
-	AND goodstandingids IN ({$ch_ids}, {$co_ids}, {$al_ids})
-	AND excellentstandingids IN ({$ch_ids}, {$co_ids}, {$al_ids})
+	AND goodstandingids IN ({$ac_ids}, {$ch_ids}, {$co_ids}, {$al_ids})
+	AND excellentstandingids IN ({$ac_ids}, {$ch_ids}, {$co_ids}, {$al_ids})
 	".$fand;
 }
 
