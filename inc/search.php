@@ -450,7 +450,7 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 		.\Osmium\Chrome\sprite($relative, '', $icon[0], $icon[1], $icon[2], $icon[3], 64)
 		.$label."</label></h1>\n";
 
-	echo "<p>\n<input id='search' type='search' autofocus='autofocus' placeholder='{$placeholder}' name='q' $val/> <input type='submit' value='Go!' /><br />\n";
+	echo "<p>\n<input id='search' type='search' placeholder='{$placeholder}' name='q' $val/> <input type='submit' value='Go!' /><br />\n";
 
 	if(isset($_GET['ad']) && $_GET['ad']) {
 		echo "for \n";
