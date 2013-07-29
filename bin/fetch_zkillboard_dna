@@ -287,6 +287,73 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		continue;
 	}
 
+	/* Try and make the fit look good */
+
+	/* Sort out drones by damage */
+	$drones = array();
+
+	foreach($fit['drones'] as $typeid => $d) {
+		if($d['quantityinspace'] > 0) {
+			$drones[$typeid] = [
+				'damage' => \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'damageMultiplier') * (
+					\Osmium\Dogma\get_drone_attribute($fit, $typeid, 'emDamage')
+					+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'explosiveDamage')
+					+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'kineticDamage')
+					+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'thermalDamage')
+				),
+				'volume' => \Osmium\Fit\get_volume($typeid),
+			];
+		}
+
+		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $d['quantityinbay']);
+		\Osmium\Fit\remove_drone($fit, $typeid, 'space', $d['quantityinspace']);
+	}
+
+	uasort($drones, function($x, $y) {
+		$ret = $y['volume'] - $x['volume'];
+		return $ret ?: ($y['damage'] - $x['damage']);
+	});
+
+	$scandidates = array(); /* Array([ typeid, quantity]) */
+	$bcandidates = array(); /* Array([ typeid, quantity]) */
+
+	foreach($drones as $typeid => $d) {
+		$scandidates[] = [ $typeid, 3 ];
+		$bcandidates[] = [ $typeid, 5 ];
+	}
+
+	foreach($drones as $typeid => $d) {
+		$scandidates[] = [ $typeid, 1 ];
+		$bcandidates[] = [ $typeid, 1 ];
+	}
+
+	foreach($scandidates as $i => $d) {
+		list($typeid, $qty) = $d;
+		\Osmium\Fit\add_drone_auto($fit, $typeid, 50);
+		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $fit['drones'][$typeid]['quantityinbay']);
+		if(isset($fit['drones'][$typeid]) && $fit['drones'][$typeid]['quantityinspace'] < $qty) {
+			\Osmium\Fit\remove_drone($fit, $typeid, 'space', $fit['drones'][$typeid]['quantityinspace']);
+		} else if(isset($fit['drones'][$typeid]) && $qty > 1) {
+			unset($bcandidates[$i]);
+		}
+	}
+
+	$capacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity');
+	do {
+		$added = false;
+		foreach($bcandidates as $d) {
+			list($typeid, $qty) = $d;
+			\Osmium\Fit\add_drone($fit, $typeid, $qty, 0);
+
+			if(\Osmium\Fit\get_used_drone_capacity($fit) > $capacity) {
+				\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $qty);
+				continue;
+			}
+
+			$added = true;
+		}
+	} while($added === true);
+
 	$entry = array(
 		'dna' => \Osmium\Fit\export_to_dna($fit),
 		'count' => (int)$row['count'],
