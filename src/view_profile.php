@@ -49,9 +49,16 @@ if($row['apiverified'] === 't') {
 	$allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
 	$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
 
-	echo "<p>\n<img src='http://image.eveonline.com/Character/".$row['characterid']."_512.jpg' alt='portrait' /><br />";
-	echo "<a href='../search?q=".urlencode("@restrictedtocorporationid ".$row['corporationid'])."'><img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_256.png' alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' /></a>";
-	echo "<a href='../search?q=".urlencode("@restrictedtoallianceid ".$row['allianceid'])."'><img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png' alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></a></p>\n";
+	echo "<p>\n"
+		."<a href='../search?q=".urlencode("@restrictedtoaccountid > 0")."'>"
+		."<img src='http://image.eveonline.com/Character/".$row['characterid']."_512.jpg' alt='portrait' />"
+		."</a><br />\n"
+		."<a href='../search?q=".urlencode("@restrictedtocorporationid > 0")."'>"
+		."<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_256.png'"
+		." alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' /></a>"
+		."<a href='../search?q=".urlencode("@restrictedtoallianceid > 0")."'>"
+		."<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png'"
+		." alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></a></p>\n";
 }
 
 echo "<table>\n<tbody>\n";
