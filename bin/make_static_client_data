@@ -29,7 +29,8 @@ $q = \Osmium\Db\query(
 	mg1.marketgroupid AS mgid1, mg1.marketgroupname AS mgname1,
 	mg2.marketgroupid AS mgid2, mg2.marketgroupname AS mgname2,
 	mg3.marketgroupid AS mgid3, mg3.marketgroupname AS mgname3,
-	mg4.marketgroupid AS mgid4, mg4.marketgroupname AS mgname4
+	mg4.marketgroupid AS mgid4, mg4.marketgroupname AS mgname4,
+	ml.value::integer AS metalevel
 	FROM osmium.typessearchdata tsd
 	LEFT JOIN eve.invmarketgroups mg0 ON mg0.marketgroupid = tsd.marketgroupid
 	LEFT JOIN eve.invmarketgroups mg1 ON mg1.marketgroupid = mg0.parentgroupid
@@ -37,6 +38,7 @@ $q = \Osmium\Db\query(
 	LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
 	LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
 	LEFT JOIN eve.invmetatypes mt ON mt.typeid = tsd.typeid
+	LEFT JOIN eve.dgmtypeattribs ml ON ml.typeid = tsd.typeid AND ml.attributeid = 633
 	ORDER BY mgname4, mgname3, mgname2, mgname1, mgname0, category, metagroupid, typename'
 	);
 
@@ -93,6 +95,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		$row['groupname'],
 		$row['other'],
 		(int)$row['parenttypeid'],
+		(int)$row['metalevel'], /* Will be popped after sorting */
 	);
 }
 
@@ -105,10 +108,44 @@ foreach($flatgroups as $k => $g) {
 		});
 	}
 	if(isset($g['types'])) {
-		usort($flatgroups[$k]['types'], function($x, $y) use($flatgroups) {
-			return strnatcmp($flatgroups['types'][$x][1], $flatgroups['types'][$y][1]);
+		$maxmetalevels = array();
+
+		foreach($g['types'] as $t) {
+			$t = $flatgroups['types'][$t];
+
+			if(!isset($maxmetalevels[$t[4]])
+			   || $maxmetalevels[$t[4]] < $t[8]) {
+				$maxmetalevels[$t[4]] = $t[8];
+			}
+		}
+
+		usort($flatgroups[$k]['types'], function($x, $y) use($flatgroups, $maxmetalevels) {
+			$x = $flatgroups['types'][$x];
+			$y = $flatgroups['types'][$y];
+
+			/* First sort by the name of the parent type */
+			$ret = strnatcmp($flatgroups['types'][$x[7] ?: $x[0]][1], $flatgroups['types'][$y[7] ?: $y[0]][1]);
+			if($ret !== 0) return $ret;
+
+			/* Then sort the variations of the same type by meta group */
+			if($x[4] !== $y[4]) {
+				$ret = $maxmetalevels[$x[4]] - $maxmetalevels[$y[4]];
+				if($ret !== 0) return $ret;
+				return $y[4] - $x[4];
+			}
+
+			/* Then sort the meta groups by meta level */
+			$ret = $x[8] - $y[8];
+			if($ret !== 0) return $ret;
+
+			/* Finally, sort by name */
+			return strnatcmp($x[1], $y[1]);
 		});
 	}
+}
+
+foreach($flatgroups['types'] as &$t) {
+	array_pop($t); /* Get rid of meta level */
 }
 
 $static['groups'] = $flatgroups;
