@@ -92,10 +92,18 @@ echo "<li><a href='#votes'>Votes</a></li>\n";
 //echo "<li><a href='#comment'>Comments</a></li>\n";
 echo "</ul>\n";
 
+
+
+
+
 echo "<section id='ploadouts' class='psection'>\n";
 echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.htmlspecialchars($rname, ENT_QUOTES).'"')."\">(browse all)</a></small></h2>\n";
 \Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 5, 'p', htmlspecialchars($rname).' does not have submitted any loadouts.');
 echo "</section>\n";
+
+
+
+
 
 if($myprofile) {
 	$a = \Osmium\State\get_state('a');
@@ -143,6 +151,10 @@ if($myprofile) {
 	\Osmium\Search\print_loadout_list($hidden, '..', 0, 'You have no hidden loadouts.');	
 	echo "</section>\n";
 }
+
+
+
+
 
 echo "<section id='reputation' class='psection'>\n";
 echo "<h2>Reputation changes this month <small>".\Osmium\Chrome\format_reputation($row['reputation'])." reputation</small></h2>\n";
@@ -238,6 +250,10 @@ echo "</ul>\n";
 if($first) echo "<p class='placeholder'>No reputation changes this month.</p>\n";
 echo "</section>\n";
 
+
+
+$__time = microtime(true);
+
 echo "<section id='votes' class='psection'>\n";
 
 list($total) = \Osmium\Db\fetch_row(
@@ -253,18 +269,23 @@ echo $result;
 $votesq = \Osmium\Db\query_params(
 	'SELECT v.creationdate, type, targettype, targetid1, targetid2, targetid3, sl.loadoutid, f.name
 	FROM osmium.votes AS v
-	LEFT JOIN osmium.searchableloadouts AS sl ON ((v.targettype = $2 AND v.targetid1 = sl.loadoutid
+	LEFT JOIN osmium.searchableloadouts AS sl ON sl.accountid IN (0, $5) AND (
+		((v.targettype = $2 AND v.targetid1 = sl.loadoutid
 		AND v.targetid2 IS NULL AND v.targetid3 IS NULL)
 		OR (v.targettype = $3 AND v.targetid2 = sl.loadoutid AND v.targetid3 IS NULL))
+	)
 	LEFT JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = sl.loadoutid
 	LEFT JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = llr.latestrevision
 	LEFT JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
 	WHERE fromaccountid = $1 ORDER BY v.creationdate DESC LIMIT 25 OFFSET $4',
-	array($_GET['accountid'],
-	      \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
-	      \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
-	      $offset
-		));
+	array(
+		$_GET['accountid'],
+		\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+		\Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+		$offset,
+		isset($a['accountid']) ? $a['accountid'] : 0,
+	)
+);
 echo "<table class='d'>\n<tbody>\n";
 $first = true;
 while($v = \Osmium\Db\fetch_assoc($votesq)) {
@@ -284,6 +305,10 @@ while($v = \Osmium\Db\fetch_assoc($votesq)) {
 echo "</tbody>\n</table>\n";
 if($first) echo "<p class='placeholder'>No votes cast.</p>\n";
 echo "</section>\n";
+
+
+
+
 
 echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('tabs');
