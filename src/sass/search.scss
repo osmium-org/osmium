@@ -121,6 +121,13 @@ ol.loadout_sr {
 			}
 		}
 
+		&> div.sideicons {
+			position: absolute;
+			left: -5.25em;
+			top: 0.5em;
+			width: 16px;
+		}
+
 		&> small, &> small > a {
 			color: $loadout-search-metadata-text-color;
 			text-decoration: none;

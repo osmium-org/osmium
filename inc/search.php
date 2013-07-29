@@ -312,7 +312,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query('SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments, lda.dps, lda.ehp, lda.estimatedprice
+	$lquery = \Osmium\Db\query($q = 'SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments, lda.dps, lda.ehp, lda.estimatedprice
 FROM osmium.loadouts 
 JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
 JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
@@ -354,12 +354,59 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		echo "<div title='Estimated price of this loadout' class='absnum esp'><span><strong>"
 			.$esp."</strong><small>ISK</small></span></div>\n";
 
-		echo "<a class='fitname' href='$relative/".$uri."'>";
-		\Osmium\Chrome\print_loadout_title(
-			$loadout['name'], $loadout['viewpermission'], $loadout['visibility'],
-			$loadout, $relative
-		);
-		echo "</a>\n";
+		echo "<a class='fitname' href='{$relative}/{$uri}'>"
+			.htmlspecialchars($loadout['name'])."</a>\n";
+
+		echo "<div class='sideicons'>\n";
+
+		$vp = $loadout['viewpermission'];
+		$vpsize = 16;
+		if($vp > 0) {
+			switch((int)$vp) {
+
+			case \Osmium\Fit\VIEW_PASSWORD_PROTECTED:
+				echo \Osmium\Chrome\sprite($relative, '(password-protected)', 0, 25, 32, 32, $vpsize);
+				break;
+
+			case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
+				$aname = ($loadout['apiverified'] === 't' && $loadout['allianceid'] > 0) ?
+					$loadout['alliancename'] : 'My alliance';
+				echo \Osmium\Chrome\sprite($relative, "({$aname} only)", 2, 13, 64, 64, $vpsize);
+				break;
+
+			case \Osmium\Fit\VIEW_CORPORATION_ONLY:
+				$cname = ($loadout['apiverified'] === 't') ? $loadout['corporationname'] : 'My corporation';
+				echo \Osmium\Chrome\sprite($relative, "({$cname} only)", 3, 13, 64, 64, $vpsize);
+				break;
+
+			case \Osmium\Fit\VIEW_OWNER_ONLY:
+				echo \Osmium\Chrome\sprite($relative, "(only visible by me)", 1, 25, 32, 32, $vpsize);
+				break;
+
+			case \Osmium\Fit\VIEW_GOOD_STANDING:
+				echo \Osmium\Chrome\sprite(
+					$relative,
+					"(only visible by my corporation, alliance and contacts with good standing)",
+					5, 28, 32, 32, $vpsize
+				);
+				break;
+
+			case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
+				echo \Osmium\Chrome\sprite(
+					$relative,
+					"(only visible by my corporation, alliance and contacts with excellent standing)",
+					4, 28, 32, 32, $vpsize
+				);
+				break;
+
+			}
+		}
+
+		if((int)$loadout['visibility'] === \Osmium\Fit\VISIBILITY_PRIVATE) {
+			echo \Osmium\Chrome\sprite($relative, "(hidden loadout)", 4, 13, 64, 64, $vpsize);
+		}
+
+		echo "</div>\n";
 
 		echo "<small>".\Osmium\Chrome\format_character_name($loadout, $relative);
 		echo " (".\Osmium\Chrome\format_reputation($loadout['reputation']).")</small>\n";

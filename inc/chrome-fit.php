@@ -22,41 +22,7 @@ const USE_RELOAD_TIME_FOR_CAPACITOR = 1;
 const USE_RELOAD_TIME_FOR_DPS = 2;
 const USE_RELOAD_TIME_FOR_TANK = 4;
 
-/**
- * Print the title of a loadout with additional state pictures.
- *
- * @param $name the name of the loadout (will be escaped).
- *
- * @param $viewpermission one of the VIEW_* contsants.
- *
- * @param $visibility one of the VISIBILITY_* constants.
- *
- * @param $author array containing the loadout author's info
- * (alliancename/id, corporationname/id).
- *
- * @param $relative relative path to the main page
- */
-function print_loadout_title($name, $viewpermission, $visibility, $author, $relative = '.') {
-	$pic = '';
-	if($viewpermission == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
-		$pic = sprite($relative, '(password-protected)', 0, 25, 32, 32, 16);
-	} else if($viewpermission == \Osmium\Fit\VIEW_ALLIANCE_ONLY) {
-		$aname = ($author['apiverified'] === 't' && $author['allianceid'] > 0) ?
-			$author['alliancename'] : 'My alliance';
-		$pic = sprite($relative, "({$aname} only)", 2, 13, 64, 64, 16);
-	} else if($viewpermission == \Osmium\Fit\VIEW_CORPORATION_ONLY) {
-		$cname = ($author['apiverified'] === 't') ? $author['corporationname'] : 'My corporation';
-		$pic = sprite($relative, "({$cname} only)", 3, 13, 64, 64, 16);
-	} else if($viewpermission == \Osmium\Fit\VIEW_OWNER_ONLY) {
-		$pic = sprite($relative, "(only visible by me)", 1, 25, 32, 32, 16);
-	}
 
-	if($visibility == \Osmium\Fit\VISIBILITY_PRIVATE) {
-		$pic .= sprite($relative, "(hidden loadout)", 4, 13, 64, 64, 16);
-	}
-  
-	echo "<span class='fitname'>".htmlspecialchars($name).$pic."</span>";
-}
 
 function print_formatted_attribute_category($identifier, $title, $titledata, $titleclass, $contents) {
 	if($titleclass) $titleclass = " class='$titleclass'";

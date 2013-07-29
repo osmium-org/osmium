@@ -93,6 +93,20 @@ case \Osmium\Fit\VIEW_OWNER_ONLY:
 	];
 	break;
 
+case \Osmium\Fit\VIEW_GOOD_STANDING:
+	$perms[] = [
+		[ 5, 28, 32, 32 ],
+		"This loadout can be view by its owner and his contacts with <strong>good standings</strong> only (includes corporation and alliance)."
+	];
+	break;
+
+case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
+	$perms[] = [
+		[ 4, 28, 32, 32 ],
+		"This loadout can be view by its owner and his contacts with <strong>excellent standings</strong> only (includes corporation and alliance)."
+	];
+	break;
+
 }
 
 if($loadoutid !== false) {

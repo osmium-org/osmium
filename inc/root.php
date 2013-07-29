@@ -23,7 +23,7 @@ if(!defined('Osmium\ROOT')) {
 }
 
 /** Bump this when static files (icons, etc.) are updated */
-const STATICVER = 10;
+const STATICVER = 11;
 
 /** Bump this when CSS files are updated */
 const CSS_STATICVER = 12;
