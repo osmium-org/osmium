@@ -417,7 +417,7 @@ function get_search_cond_from_advanced() {
  * Print a basic seach form. Pre-fills the search form from $_GET data
  * if present.
  */
-function print_search_form($uri = null, $relative = '.', $label = 'Search loadouts', $icon = null, $advanced = 'Advanced search', $placeholder = 'Search by name, description, ship, modules or tags…') {
+function print_search_form($uri = null, $relative = '.', $label = 'Search loadouts', $icon = null, $advanced = 'Advanced search') {
 	static $operands = array(
 		"gt" => "or newer",
 		"eq" => "exactly",
@@ -434,6 +434,16 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 		"estimatedprice" => "estimated price",
 	);
 
+	static $examples = array(
+		"@ship Drake | Tengu @tags missile-boat",
+		"@groups Cruiser -Strategic -Heavy @dps >= 500",
+		"@tags -armor-tank",
+		"@dps >= 400 @ehp >= 40k @tags pvp",
+		"battlecruiser @types \"stasis webifier\"",
+		"@tags cheap low-sp @estimatedprice <= 10m",
+		"battleship @tags pve|l4|missions",
+	);
+
 	if($icon === null) $icon = [ 2, 12, 64, 64 ];
 
 	$val = '';
@@ -444,6 +454,8 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 	if($uri === null) {
 		$uri = htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0], ENT_QUOTES);
 	}
+
+	$placeholder = htmlspecialchars($examples[mt_rand(0, count($examples) - 1)], ENT_QUOTES);
 
 	echo "<form method='get' action='{$uri}'>\n";
 	echo "<h1><label for='search'>"

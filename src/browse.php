@@ -37,8 +37,7 @@ $advq = \Osmium\Search\get_search_cond_from_advanced();
 
 \Osmium\Chrome\print_header($t, '..', false);
 echo "<div id='search_mini'>\n";
-\Osmium\Search\print_search_form(null, '..', 'Filter loadouts', [ 3, 12, 64, 64 ], 'Advanced filters',
-                                 'Filter by name, description, ship, modules or tags…');
+\Osmium\Search\print_search_form(null, '..', 'Filter loadouts', [ 3, 12, 64, 64 ], 'Advanced filters');
 echo "</div>\n";
 if(!isset($_GET['sort'])) {
 	$advq .= ' '.$more;
