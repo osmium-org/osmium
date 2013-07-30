@@ -113,8 +113,8 @@ function get_zkb_dna_page($page) {
 		$c = curl_init();
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($c, CURLOPT_HEADER, 1);
-		curl_setopt($c, CURLOPT_TIMEOUT, 20);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+		curl_setopt($c, CURLOPT_TIMEOUT, 60);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
 	}
 
 	echo "$page";
@@ -124,7 +124,7 @@ function get_zkb_dna_page($page) {
 	$reply = curl_exec($c);
 	if($reply === false) {
 		fwrite(STDERR, "Requesting {$uri} failed");
-		die();
+		die(1);
 	}
 
 	list($header, $body) = explode("\r\n\r\n", $reply, 2);
@@ -138,7 +138,12 @@ function get_zkb_dna_page($page) {
 	$json = json_decode($body, true);
 	if(json_last_error() !== JSON_ERROR_NONE) {
 		fwrite(STDERR, "Got invalid JSON: ".json_last_error()."\n");
-		die();
+		die(1);
+	}
+
+	if(!is_array($json) || !isset($json[0]['killID'])) {
+		fwrite(STDERR, "Got valid JSON, but not in expected format\n");
+		die(1);
 	}
 
 	\Osmium\State\put_cache('dna_page_'.$page, $json, 1800, 'API_ZKB_');
