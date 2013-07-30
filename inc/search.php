@@ -414,9 +414,11 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 		echo "<small> — ".date('Y-m-d', $loadout['updatedate'])."</small><br />\n";
       
 		$votes = (abs($loadout['votes']) == 1) ? 'vote' : 'votes';
-		echo "<small title='".\Osmium\Chrome\format($loadout['upvotes'], -1)
-			." upvote(s), ".\Osmium\Chrome\format($loadout['downvotes'], -1)
-			." downvote(s)'>".\Osmium\Chrome\format($loadout['votes'], -1)." {$votes}</small>\n";
+		$upvotes = \Osmium\Chrome\format($loadout['upvotes'], -1);
+		$downvotes = \Osmium\Chrome\format($loadout['downvotes'], -1);
+		echo "<small>"
+			.\Osmium\Chrome\format($loadout['votes'], -1)
+			." {$votes} <small>(+{$upvotes}|-{$downvotes})</small></small>\n";
 
 		$comments = ($loadout['comments'] == 1) ? 'comment' : 'comments';
 		echo "<small> — <a href='$relative/".$uri."#comments'>"
