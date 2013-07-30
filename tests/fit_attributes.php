@@ -250,38 +250,12 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	public function testCapacitorStabilityWithCapBooster() {
 		\Osmium\Fit\create($fit);
 		\Osmium\Fit\select_ship($fit, 24692); /* Abaddon */
-		\Osmium\Fit\add_modules_batch(
-			$fit,
-			array(
-				/* Full rack of Mega Pulse Laser IIs */
-				'high' => array(
-					0 => 3057,
-					1 => 3057,
-					2 => 3057,
-					3 => 3057,
-					4 => 3057,
-					5 => 3057,
-					6 => 3057,
-					7 => 3057,
-					),
-				)
-			);
-		\Osmium\Fit\add_charges_batch(
-			$fit,
-			array(
-				/* Multifrequency L */
-				'high' => array(
-					0 => 262,
-					1 => 262,
-					2 => 262,
-					3 => 262,
-					4 => 262,
-					5 => 262,
-					6 => 262,
-					7 => 262,
-					),
-				)
-			);
+
+		for($i = 0; $i < 8; ++$i) {
+			/* MPL II + Multifrequency L */
+			\Osmium\Fit\add_module($fit, $i, 3057);
+			\Osmium\Fit\add_charge($fit, 'high', $i, 262);
+		}
 
 		/* Source: Pyfa-c67034e (2013-07-01) */
 

@@ -103,8 +103,6 @@ const STATE_OVERLOADED = 3;
 
 
 
-/* ----------------------------------------------------- */
-
 /**
  * Get the different module slot categories.
  *
@@ -134,6 +132,10 @@ function get_state_names() {
 		STATE_OVERLOADED => array('Overloaded', [ 0, 29, 32, 32 ], 'overloaded'),
 		);
 }
+
+
+
+/* ----------------------------------------------------- */
 
 
 
@@ -170,18 +172,22 @@ function get_state_names() {
  *
  * dronepresets => array(<presetid> => array(name, description, drones))
  *
+ * fleet => array('booster' => $fit, 'wingbooster' => $fit, 'squadbooster' => $fit)
+ *
  * metadata => array(name, description, tags, evebuildnumber,
  *					 view_permission, edit_permission, visibility,
  *					 password, loadoutid, hash, revision,
  *					 privatetoken, skillset)
  *
  * __dogma_context => (Dogma context resource)
+ * __dogma_fleet_context => (Dogma fleet context resource)
  */
 function create(&$fit) {
 	$fit = array(
 		'ship' => array(),
 		'presets' => array(),
 		'dronepresets' => array(),
+		'fleet' => array(),
 		'metadata' => array(
 			'name' => 'Unnamed loadout',
 			'description' => '',
@@ -220,6 +226,12 @@ function reset(&$fit) {
 	create($fit);
 }
 
+
+
+/* ----------------------------------------------------- */
+
+
+
 /**
  * Change the ship of a fitting. This can be done anytime, even when
  * there are fitted modules and whatnot.
@@ -243,27 +255,11 @@ function select_ship(&$fit, $new_typeid) {
 	return true;
 }
 
-/**
- * Add several modules to the fit.
- *
- * @param $modules array of modules to add, should be of the form
- * array(slot_type => array(index => typeid)), or array(slot_type =>
- * array(index => array(typeid, modulestate))).
- */
-function add_modules_batch(&$fit, $modules) {
-	foreach($modules as $type => $a) {
-		foreach($a as $index => $magic) {
-			if(is_array($magic)) {
-				/* Got a typeid + state */
-				list($typeid, $state) = $magic;
-				add_module($fit, $index, $typeid, $state);
-			} else {
-				/* Got a typeid */
-				add_module($fit, $index, $magic);
-			}
-		}
-	}
-}
+
+
+/* ----------------------------------------------------- */
+
+
 
 /**
  * Add a module to the fit at a specific index. This will gracefully
@@ -465,19 +461,11 @@ function get_module_states(&$fit, $typeid) {
 	return array($activable, false);
 }
 
-/**
- * Add several charges at once to the current charge preset.
- *
- * @param $charges an array of the form array(<slot_type> =>
- * array(<index> => <typeid>))
- */
-function add_charges_batch(&$fit, $charges) {
-	foreach($charges as $slottype => $a) {
-		foreach($a as $index => $typeid) {
-			add_charge($fit, $slottype, $index, $typeid);
-		}
-	}
-}
+
+
+/* ----------------------------------------------------- */
+
+
 
 /**
  * Add a charge to the currently selected charge preset.
@@ -528,24 +516,11 @@ function remove_charge(&$fit, $slottype, $index) {
 	unset($fit['charges'][$slottype][$index]);
 }
 
-/**
- * Add several different drones to a fitting. If drones with the same
- * typeid are already present on the fitting, this will add them to
- * the existing drones instead of replacing them.
- *
- * @param $drones array of structure array(<typeid> =>
- * array(quantityinbay, quantityinspace))
- */
-function add_drones_batch(&$fit, $drones) {
-	foreach($drones as $typeid => $quantities) {
-		$quantityinbay = isset($quantities['quantityinbay']) ? $quantities['quantityinbay'] : 0;
-		$quantityinspace = isset($quantities['quantityinspace']) ? $quantities['quantityinspace'] : 0;
 
-		if($quantityinbay > 0 || $quantityinspace > 0) {
-			add_drone($fit, $typeid, $quantityinbay, $quantityinspace);
-		}
-	}
-}
+
+/* ----------------------------------------------------- */
+
+
 
 /**
  * Add a drone type to a fitting. If drones of the same typeid already
@@ -690,6 +665,12 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
 }
 
+
+
+/* ----------------------------------------------------- */
+
+
+
 /** Add an implant to a $fit. Boosters are considered to be implants,
  * and can be added using add_implant() as well. Will not add
  * duplicate implants. */
@@ -755,7 +736,11 @@ function toggle_implant_side_effect(&$fit, $typeid, $effectid, $toggled = null) 
 	);
 }
 
+
+
 /* ----------------------------------------------------- */
+
+
 
 /**
  * Get all the fitted modules of the current preset.
@@ -808,7 +793,11 @@ function get_module_slottype(&$fit, $typeid) {
 	return false;
 }
 
+
+
 /* ----------------------------------------------------- */
+
+
 
 /**
  * Try to auto-magically fix issues of a loadout.
@@ -886,6 +875,12 @@ function sanitize(&$fit, &$errors = null, $interactive = false) {
 	}
 }
 
+
+
+/* ----------------------------------------------------- */
+
+
+
 /**
  * Generate a delta (diff) between two fittings.
  *
@@ -906,6 +901,12 @@ function delta($old, $new) {
 	return $renderer->render($diff);
 }
 
+
+
+/* ----------------------------------------------------- */
+
+
+
 /**
  * Use a custom skillset for this fitting (default is all skills to
  * V).
@@ -921,6 +922,12 @@ function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
 		dogma_set_skill_level($fit['__dogma_context'], (int)$typeid, (int)$level);
 	}
 }
+
+
+
+/* ----------------------------------------------------- */
+
+
 
 /**
  * Get the URI of this loadout (relative to the main page).

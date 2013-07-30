@@ -214,6 +214,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		$h = implode(',', array_map(function($x) { return "'$x'"; }, $this->hashes));
 
 		\Osmium\Db\query('BEGIN;');
+		\Osmium\Db\query('DELETE FROM osmium.loadoutdogmaattribs WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.accountfavorites WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.loadouthistory WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.loadouts WHERE loadoutid IN ('.$l.')');

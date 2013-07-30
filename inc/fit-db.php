@@ -470,7 +470,7 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	}
 
 	\Osmium\State\invalidate_cache_memory('main_popular_tags');
-	\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
+	insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
 
 	$type = ($revision == 1) ? \Osmium\Log\LOG_TYPE_CREATE_LOADOUT : \Osmium\Log\LOG_TYPE_UPDATE_LOADOUT;
 	\Osmium\Log\add_log_entry($type, null, $loadoutid, $revision);
@@ -660,18 +660,16 @@ function get_fit($loadoutid, $revision = null) {
 			use_preset($fit, $presetid);
 		}
 
-		$modules = array();
 		$modulesq = \Osmium\Db\query_params(
-			'SELECT slottype, typeid, state
+			'SELECT index, typeid, state
 			FROM osmium.fittingmodules
 			WHERE fittinghash = $1 AND presetid = $2
 			ORDER BY index ASC',
 			array($fit['metadata']['hash'], $preset['presetid'])
 		);
 		while($row = \Osmium\Db\fetch_row($modulesq)) {
-			$modules[$row[0]][] = array($row[1], (int)$row[2]);
+			add_module($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
 		}
-		add_modules_batch($fit, $modules);
 
 		$firstchargepreset = true;
 		$chargepresetsq = \Osmium\Db\query_params(
@@ -692,18 +690,16 @@ function get_fit($loadoutid, $revision = null) {
 				use_charge_preset($fit, $chargepresetid);
 			}
 
-			$charges = array();
 			$chargesq = \Osmium\Db\query_params(
-				'SELECT slottype, typeid, index
+				'SELECT slottype, index, typeid
 				FROM osmium.fittingcharges
 				WHERE fittinghash = $1 AND presetid = $2 AND chargepresetid = $3
-				ORDER BY index ASC',
+				ORDER BY slottype ASC, index ASC',
 				array($fit['metadata']['hash'], $preset['presetid'], $chargepreset['chargepresetid'])
 			);
 			while($row = \Osmium\Db\fetch_row($chargesq)) {
-				$charges[$row[0]][$row[2]] = $row[1];
+				add_charge($fit, $row[0], (int)$row[1], (int)$row[2]);
 			}
-			add_charges_batch($fit, $charges);
 		}
 
 		$implantsq = \Osmium\Db\query_params(
@@ -737,7 +733,6 @@ function get_fit($loadoutid, $revision = null) {
 			use_drone_preset($fit, $dronepresetid);
 		}
 
-		$drones = array();
 		$dronesq = \Osmium\Db\query_params(
 			'SELECT typeid, quantityinbay, quantityinspace
 			FROM osmium.fittingdrones
@@ -745,9 +740,8 @@ function get_fit($loadoutid, $revision = null) {
 			array($fit['metadata']['hash'], $dronepreset['dronepresetid'])
 		);
 		while($row = \Osmium\Db\fetch_row($dronesq)) {
-			$drones[$row[0]] = array('quantityinbay' => $row[1], 'quantityinspace' => $row[2]);
+			add_drone($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
 		}
-		add_drones_batch($fit, $drones);
 	}
 
 	/* Use the 1st presets */

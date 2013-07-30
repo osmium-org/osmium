@@ -23,3 +23,4 @@ CREATE INDEX contacts_standing_idx
   ON contacts
   USING btree
   (standing);
+

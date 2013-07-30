@@ -1,4 +1,4 @@
-﻿DROP VIEW invmodulestates;
+DROP VIEW invmodulestates;
 DROP VIEW typessearchdata;
 
 CREATE VIEW typessearchdata AS
