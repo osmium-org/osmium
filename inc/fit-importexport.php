@@ -1599,7 +1599,7 @@ function export_to_dna($fit) {
  * than calling try_parse_fit_from_common_loadout_format if $fit is
  * already a fitting somewhat close to the result.
  */
-function synchronize_from_clf_1(&$fit, $clf) {
+function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 	if(!isset($clf['clf-version']) || (int)$clf['clf-version'] !== 1) {
 		// @codeCoverageIgnoreStart
 		trigger_error(__FUNCTION__.'(): expected CLF version 1, got '
@@ -1790,6 +1790,42 @@ function synchronize_from_clf_1(&$fit, $clf) {
 		}
 	}
 
+	if(isset($clf['X-Osmium-fleet'])) {
+		foreach($clf['X-Osmium-fleet'] as $k => $booster) {
+			if($k !== 'fleet' && $k !== 'wing' && $k !== 'squad') continue;
+			$ss = isset($booster['skillset']) ? $booster['skillset'] : 'All V';
+			$fitting = isset($booster['fitting']) ? $booster['fitting'] : '';
+			$a = \Osmium\State\get_state('a');
+
+			if(isset($fit['fleet'][$k]) && $fit['fleet'][$k]['__id'] === $fitting) {
+				use_skillset_by_name($fit['fleet'][$k], $ss, $a);
+				continue;
+			}
+
+			if($fitting) {
+				if(!isset($errors['fleet'][$k])) $errors['fleet'][$k] = array();
+				$boosterfit = try_get_fit_from_remote_format($fitting, $errors['fleet'][$k]);
+
+				if($boosterfit === false) {
+					create($boosterfit);
+				}
+			} else {
+				create($boosterfit);
+			}
+
+			$boosterfit['__id'] = $fitting;
+			use_skillset_by_name($boosterfit, $ss, $a);
+
+			call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, $boosterfit));
+		}
+	}
+
+	foreach($fit['fleet'] as $k => $booster) {
+		if(!isset($clf['X-Osmium-fleet'][$k])) {
+			call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, NULL));
+		}
+	}
+
 	return true;
 }
 
@@ -1937,4 +1973,72 @@ function synchronize_drone_preset_from_clf_1(&$fit, $clfp) {
 			}
 		}
 	}
+}
+
+/** @internal */
+function try_get_fit_from_remote_format($remote, array &$errors = array()) {
+	/* Try and parse a DNA fit */
+	if(preg_match('%(?P<dna>'.\Osmium\Fit\DNA_REGEX.')%', $remote, $match)) {
+		$fit = try_parse_fit_from_shipdna($match['dna'], '', $errors);
+		if($fit === false) return false;
+		\Osmium\Dogma\late_init($fit);
+		return $fit;
+	}
+
+	/* Try and get a fit from its URI */
+	$parts = parse_url($remote);
+	if($parts === false) {
+		$errors[] = "Input is neither a DNA string nor an URI.";
+		return false;
+	}
+	if(!isset($parts['host']) || $parts['host'] !== $_SERVER['HTTP_HOST']) {
+		$errors[] = "Only local URIs (".$_SERVER['HTTP_HOST'].") are supported.";
+		return false;
+	}
+	if(!isset($parts['path'])) {
+		$errors[] = "Couldn't make sense of the supplied URI path.";
+		return false;
+	}
+
+	if(!preg_match(
+		'%/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?$%D',
+		$parts['path'],
+		$match
+	) && !preg_match(
+		'%/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)$%D',
+		$parts['path'],
+		$match
+	)) {
+		$errors[] = "Supplied URI isn't a loadout URI.";
+		return false;
+	}
+
+	if(!\Osmium\State\can_view_fit($match['loadoutid'])) {
+		$errors[] = "Loadout not found.";
+		return false;
+	}
+
+	$fit = \Osmium\Fit\get_fit(
+		$match['loadoutid'], 
+		(isset($match['revision']) && $match['revision'] > 0) ? $match['revision'] : null
+	);
+
+	if($fit === false) {
+		$errors[] = "get_fit() returned false, please report.";
+		return false;
+	}
+
+	if(!\Osmium\State\can_access_fit($fit)) {
+		$errors[] = "Loadout exists but cannot be accessed.";
+		return false;
+	}
+
+	if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE && (
+		!isset($match['privatetoken']) || $fit['metadata']['privatetoken'] != $match['privatetoken'])
+	) {
+		$errors[] = "This loadout is private, please use the full URI.";
+		return false;
+	}
+
+	return $fit;
 }

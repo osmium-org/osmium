@@ -29,18 +29,27 @@ function get_dogma_states() {
 	);
 }
 
+/** Clear all dogma contexts of a $fit. Includes fleet boosters. */
+function clear(&$fit) {
+	unset($fit['__dogma_fleet_context']);
+	unset($fit['__dogma_context']);
+
+	if(!isset($fit['fleet'])) return;
+
+	foreach($fit['fleet'] as $k => &$fl) {
+		clear($fl);
+	}
+}
 
 /** Create a new dogma context for $fit with all modules, charges and
  * drones of current presets. */
 function late_init(&$fit, $withfleet = true) {
+	clear($fit);
 	dogma_init_context($fit['__dogma_context']);
 
 	if($withfleet) {
 		dogma_init_fleet_context($fit['__dogma_fleet_context']);
 		dogma_add_squad_member($fit['__dogma_fleet_context'], 0, 0, $fit['__dogma_context']);
-		dogma_set_fleet_booster($fit['__dogma_fleet_context'], null);
-		dogma_set_wing_booster($fit['__dogma_fleet_context'], 0, null);
-		dogma_set_squad_booster($fit['__dogma_fleet_context'], 0, 0, null);
 	}
 
 	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] > 0) {
@@ -86,33 +95,13 @@ function late_init(&$fit, $withfleet = true) {
 		}
 	}
 
-	if($fit['fleet'] !== array() && $withfleet) {
-		$fctx =& $fit['__dogma_fleet_context'];
-
-		if(isset($fit['fleet']['fleet'])) {
-			late_init($fit['fleet']['fleet'], false);
-			dogma_add_fleet_commander(
-				$fctx,
-				$fit['fleet']['fleet']['__dogma_context']
-			);
-		}
-
-		if(isset($fit['fleet']['wing'])) {
-			late_init($fit['fleet']['wing'], false);
-			dogma_add_wing_commander(
-			    $fctx,
-				0,
-				$fit['fleet']['wing']['__dogma_context']
-			);
-		}
-
-		if(isset($fit['fleet']['squad'])) {
-			late_init($fit['fleet']['squad'], false);
-			dogma_add_squad_commander(
-				$fctx,
-				0, 0,
-				$fit['fleet']['squad']['__dogma_context']
-			);
+	if($withfleet) {
+		foreach(array('fleet' => [], 'wing' => [0], 'squad' => [0, 0]) as $type => $params) {
+			if(!isset($fit['fleet'][$type])) continue;
+			late_init($fit['fleet'][$type], false);
+			array_unshift($params, $fit['__dogma_fleet_context']);
+			array_push($params, $fit['fleet'][$type]['__dogma_context']);
+			call_user_func_array('dogma_add_'.$type.'_commander', $params);
 		}
 	}
 }

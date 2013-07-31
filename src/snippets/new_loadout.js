@@ -84,6 +84,7 @@ osmium_gen = function() {
 	osmium_gen_fattribs();
 	osmium_gen_drones();
 	osmium_gen_implants();
+	osmium_gen_remote();
 };
 
 /* Set up event listeners that alter the CLF appropriately */
@@ -97,6 +98,7 @@ osmium_init = function() {
 	osmium_init_fattribs();
 	osmium_init_drones();
 	osmium_init_implants();
+	osmium_init_remote();
 };
 
 osmium_add_to_clf = function(item) {

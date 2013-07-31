@@ -32,10 +32,19 @@ function printr($stuff) {
 	echo "</pre>\n";
 }
 
-function fprintr($stuff) {
-	static $f = null;
-	if($f === null) $f = fopen('/tmp/osmium', 'wb');
-	fwrite($f, print_r($stuff, true));
+function debug() {
+	$f = fopen('/tmp/osmium', 'ab');
+	ob_start();
+
+	echo "\n\n===== ".date('c')."  =====\n";
+	debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+	echo "\n";
+
+	foreach(func_get_args() as $thing) var_dump($thing);
+
+	fwrite($f, ob_get_clean());
+	fflush($f);
+	fclose($f);
 }
 
 function get_ini_setting($key) {

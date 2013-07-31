@@ -240,6 +240,7 @@ echo "<div id='nlmain'>
 <li><a href='#modules'>Modules &amp; Charges</a></li>
 <li><a href='#drones'>Drones</a></li>
 <li><a href='#implants'>Implants &amp; Boosters</a></li>
+<li><a href='#remote'>Remote</a></li>
 <li><a href='#presets'>Presets</a></li>
 <li><a href='#metadata'>Metadata</a></li>
 </ul>\n";
@@ -378,7 +379,31 @@ echo "<div class='implants'>\n<h3>Implants</h3>\n<ul></ul>\n</div>\n";
 echo "<div class='boosters'>\n<h3>Boosters</h3>\n<ul></ul>\n</div>\n";
 echo "</section>\n";
 
-echo "</div>\n";
+echo "<section id='remote'>\n";
+echo "<section id='fleet'>\n<h2>Fleet</h2>\n<form>\n<table>\n<tbody>\n";
+
+foreach(array('fleet', 'wing', 'squad') as $ft) {
+	echo "<tr data-type='{$ft}' id='{$ft}booster' class='booster'>\n";
+	echo "<td rowspan='3'><input type='checkbox' id='{$ft}_enabled' name='{$ft}_enabled' class='{$ft} enabled' />";
+	echo " <label for='{$ft}_enabled'><strong>".ucfirst($ft)." booster</strong></label></td>\n";
+	echo "<td><label for='{$ft}_skillset'>Use skills: </label></td>\n";
+	echo "<td><select name='{$ft}_skillset' id='{$ft}_skillset' class='skillset {$ft}'></select></td>\n";
+	echo "</tr>\n";
+
+	echo "<tr>\n";
+	echo "<td rowspan='2'><label for='{$ft}_fit'>Use fitting: </label></td>\n";
+	echo "<td><input type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' placeholder='Enter the URI of a loadout, or a DNA fit' /></td>\n";
+	echo "</tr>\n";
+
+	echo "<tr>\n<td>";
+	echo "<input type='button' class='set {$ft}' value='Set fit' /> <input type='button' class='clear {$ft}' value='Clear fit' />";	
+	echo "</td></tr>\n";
+}
+
+echo "</tbody>\n</table>\n</form>\n</section>\n<section id='projected'>\n";
+echo "</section>\n";
+
+echo "</section>\n</div>\n";
 
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, $tok);
 \Osmium\Chrome\print_js_code(
@@ -394,4 +419,5 @@ echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('new_loadout-drones');
 \Osmium\Chrome\print_js_snippet('new_loadout-implants');
+\Osmium\Chrome\print_js_snippet('new_loadout-remote');
 \Osmium\Chrome\print_footer();

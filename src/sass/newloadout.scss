@@ -278,3 +278,11 @@ section#implants > div {
 		color: $aside-text-color;
 	}
 }
+
+section#remote {
+	@include readable;
+
+	&> section > h2 {
+		border-bottom: 1px solid $section-border-color;
+	}
+}

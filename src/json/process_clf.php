@@ -50,6 +50,7 @@ if($type === 'new') {
 }
 
 $payload = array();
+$errors = array();
 
 if($local === null) {
 	/* Outdated token, generate a new one and send it to client */
@@ -63,7 +64,7 @@ if($local === null) {
 } else {
 	/* Valid token, just update local loadout from client CLF */
 
-	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clf)) {
+	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clf, $errors)) {
 		header('HTTP/1.1 400 Bad Request', true, 400);
 		\Osmium\Chrome\return_json(array());
 	}
@@ -127,7 +128,19 @@ if($type === 'new') {
 	);
 	$payload['rectags'] = \Osmium\Fit\get_recommended_tags($local);
 
-	if(isset($_GET['submit']) && $_GET['submit']) {
+	if(isset($errors['fleet'])) {
+		foreach($errors['fleet'] as $k => $err) {
+			foreach($err as $error) {
+				$payload['form-errors'][] = array(
+					'remote',
+					'input#'.$k.'_fit',
+					$error,
+				);
+			}
+		}
+	}
+
+	if(isset($clf['X-Osmium-submit']) && $clf['X-Osmium-submit']) {
 		if(!\Osmium\State\is_logged_in()) {
 			header('HTTP/1.1 400 Bad Request', true, 400);
 			\Osmium\Chrome\return_json(array());
@@ -141,23 +154,29 @@ if($type === 'new') {
 		} else if(in_array($local['metadata']['name'], array(
 			'', 'Unnamed loadout', 'New DNA-imported loadout',
 		))) {
-			$payload['submit-error'] = 'Please enter a name for your loadout.';
-			$payload['submit-tab'] = 'metadata';
-			$payload['submit-form-error'] = 'input#name';
+			$payload['form-errors'][] = array(
+				'metadata', 'input#name',
+				'Please enter a name for your loadout.',
+			);
 		} else if($local['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
 		          && empty($local['metadata']['password'])) {
-			$payload['submit-error'] = 'If you want your fit to be password-protected, please enter a non-empty password.';
-			$payload['submit-tab'] = 'metadata';
-			$payload['submit-form-error'] = 'input#pw';
+			$payload['form-errors'][] = array(
+				'metadata', 'input#pw',
+				'If you want your fit to be password-protected, please enter a non-empty password.',
+			);
 		} else if($local['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
 		          && $local['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PRIVATE) {
-			$payload['submit-error'] = 'You cannot have a public password-protected fit. Make it private.';
-			$payload['submit-tab'] = 'metadata';
-			$payload['submit-form-error'] = 'input#visibility';
+			$payload['form-errors'][] = array(
+				'metadata', 'input#visibility',
+				'You cannot have a public password-protected fit. Make it private.',
+			);
 		} else if(count($tag_errors) > 0) {
-			$payload['submit-error'] = array_pop($tag_errors);
-			$payload['submit-tab'] = 'metadata';
-			$payload['submit-form-error'] = 'input#tags';
+			foreach($tag_errors as $err) {
+				$payload['form-errors'][] = array(
+					'metadata', 'input#tags',
+					$err,
+				);
+			}
 		}
 
 		else {

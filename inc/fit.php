@@ -209,9 +209,6 @@ function create(&$fit) {
 	dogma_init_context($fit['__dogma_context']);
 	dogma_init_fleet_context($fit['__dogma_fleet_context']);
 	dogma_add_squad_member($fit['__dogma_fleet_context'], 0, 0, $fit['__dogma_context']);
-	dogma_set_fleet_booster($fit['__dogma_fleet_context'], null);
-	dogma_set_wing_booster($fit['__dogma_fleet_context'], 0, null);
-	dogma_set_squad_booster($fit['__dogma_fleet_context'], 0, 0, null);
 }
 
 /**
@@ -747,74 +744,53 @@ function toggle_implant_side_effect(&$fit, $typeid, $effectid, $toggled = null) 
 
 
 
+/** @internal */
+function set_fleet_booster_generic(&$fit, $boosterfit, $type, array $between) {
+	/* Remove the current booster */
+	if(isset($fit['fleet'][$type])) {
+		dogma_remove_fleet_member(
+			$fit['__dogma_fleet_context'],
+			$fit['fleet'][$type]['__dogma_context'],
+			$found
+		);
+		assert($found === true);
+		unset($fit['fleet'][$type]);
+	}
+
+	if($boosterfit === null) {
+		return;
+	}
+
+	/* Set the new booster */
+	$fit['fleet'][$type] = $boosterfit;
+	array_unshift($between, $fit['__dogma_fleet_context']);
+	array_push($between, $fit['fleet'][$type]['__dogma_context']);
+
+	call_user_func_array(
+		'dogma_add_'.$type.'_commander',
+		$between
+	);
+}
+
 /**
  * Set the current fleet booster for this fit. If there is already
  * one, it will be overwritten.
  *
- * @param $boosterfit the fleet booster to use. Set to null to remove
- * the current fleet booster.
+ * @param $boosterfit the fleet booster to use. If $boosterfit is
+ * null, the fleet booster will be removed.
  */
 function set_fleet_booster(&$fit, $boosterfit) {
-	/* Remove current booster */
-	if(isset($fit['fleet']['fleet'])) {
-		dogma_remove_fleet_member(
-			$fit['__dogma_fleet_context'],
-			$fit['fleet']['fleet']['__dogma_context'],
-			$found
-		);
-		unset($fit['fleet']['fleet']);
-	}
-
-	/* Add new booster */
-	if($boosterfit !== null) {
-		$fit['fleet']['fleet'] = $boosterfit;
-		dogma_add_fleet_commander(
-			$fit['__dogma_fleet_context'],
-			$fit['fleet']['fleet']['__dogma_context']
-		);
-	}
+	return set_fleet_booster_generic($fit, $boosterfit, 'fleet', []);
 }
 
 /** @see set_fleet_booster() */
 function set_wing_booster(&$fit, $boosterfit) {
-	if(isset($fit['fleet']['wing'])) {
-		dogma_remove_fleet_member(
-			$fit['__dogma_fleet_context'],
-			$fit['fleet']['wing']['__dogma_context'],
-			$found
-		);
-		unset($fit['fleet']['wing']);
-	}
-
-	if($boosterfit !== null) {
-		$fit['fleet']['wing'] = $boosterfit;
-		dogma_add_wing_commander(
-			$fit['__dogma_fleet_context'],
-			0,
-			$fit['fleet']['wing']['__dogma_context']
-		);
-	}
+	return set_fleet_booster_generic($fit, $boosterfit, 'wing', [ 0 ]);
 }
 
 /** @see set_fleet_booster() */
 function set_squad_booster(&$fit, $boosterfit) {
-	if(isset($fit['fleet']['squad'])) {
-		dogma_remove_fleet_member(
-			$fit['__dogma_fleet_context'],
-			$fit['fleet']['squad']['__dogma_context'],
-			$found
-		);
-		unset($fit['fleet']['squad']);
-	}
-
-	if($boosterfit !== null) {
-		$fit['fleet']['squad'] = $boosterfit;
-		dogma_add_squad_commander(
-			$fit['__dogma_fleet_context'],
-			0, 0,
-			$fit['fleet']['squad']['__dogma_context']
-		);
-	}
+	return set_fleet_booster_generic($fit, $boosterfit, 'squad', [ 0, 0 ]);
 }
 
 

@@ -35,12 +35,12 @@ namespace Osmium\Dispatch;
 $osmium_dispatch_rules = array(
 	/* Very common pages */
 	'%^/$%D' => '/src/main.php',
-	'%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?$%D' => '/src/view_loadout.php',
+	'%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?$%D' => '/src/view_loadout.php', /* Also used in try_get_fit_from_remote_format() */
 	'%^/new(/(?<token>0|[1-9][0-9]*))?$%D' => '/src/new_loadout.php',
 	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 	'%^/search$%D' => '/src/search.php',
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
-	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_loadout.php',
+	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_loadout.php', /* Also used in try_get_fit_from_remote_format() */
 
 	/* Atom feeds */
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
