@@ -470,10 +470,11 @@ div#mdstatic {
 
 div.spinner, span.spinner {
 	text-align: center;
-	font-weight: 2em;
+	font-size: 2em;
 	&:before { content: "↻"; }
 }
 
 span.spinner {
 	display: inline-block;
+	vertical-align: middle;
 }

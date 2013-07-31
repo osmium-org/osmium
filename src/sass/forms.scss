@@ -121,6 +121,10 @@ form > table {
 			width: auto;
 		}
 
+		input[type='checkbox'], input[type='radio'] {
+			height: auto;
+		}
+
 		textarea {
 			@include layout-type(normal) { height: 10em; }
 			@include layout-type(small) { height: 7em; }

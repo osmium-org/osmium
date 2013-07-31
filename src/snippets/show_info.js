@@ -33,12 +33,17 @@ osmium_showinfo_internal = function(opts, onerror) {
 	opts.loadoutsource = osmium_clftype;
 	opts.clftoken = osmium_clftoken;
 
+	osmium_clfspinner_push();
+
 	$.ajax({
 		type: 'GET',
 		url: osmium_relative + '/src/json/show_info.php',
 		data: opts,
 		dataType: 'json',
 		error: onerror,
+		complete: function() {
+			osmium_clfspinner_pop();
+		},
 		success: function(json) {
 			osmium_modal(json['modal']);
 			osmium_tabify($('ul#showinfotabs'), 0);

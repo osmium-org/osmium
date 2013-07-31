@@ -87,61 +87,17 @@ osmium_init_control = function() {
 			$(document.createElement('span')).addClass('spinner')
 		);
 
-		var postopts = {
-			clf: osmium_compress_json(osmium_clf)
-		};
-
-		var getopts = {
-			type: 'new',
-			token: osmium_token,
-			clftoken: osmium_clftoken,
-			submit: 1,
-			relative: osmium_relative
-		};
-
-		$.ajax({
-			type: "POST",
-			url: osmium_relative + "/src/json/process_clf.php?" + $.param(getopts),
-			data: postopts,
-			dataType: "json",
-			error: function(xhr, error, httperror) {
-				alert('An error occured: ' + error + ' (' + httperror 
-					  + '). This shouldn\'t normally happen, try again.'); 
-			},
-			success: function(payload) {
-				if("submit-error" in payload) {
-					if("submit-tab" in payload) {
-						$("a[href='#"  + payload['submit-tab'] +  "']").click();
-					}
-
-					$("section#metadata tr.error").removeClass('error');
-					$("section#metadata tr.error_message").remove();
-					if("submit-form-error" in payload) {
-						/* Use fancy error messages */
-
-						var tr = $(document.createElement('tr'));
-						var td = $(document.createElement('td'));
-						var p = $(document.createElement('p'));
-
-						tr.addClass('error_message');
-						td.attr('colspan', '2');
-						p.text(payload["submit-error"]);
-						td.append(p);
-						tr.append(td);
-
-						$(payload["submit-form-error"]).closest('tr').addClass('error').before(tr);
-					} else {
-						/* Alert the error as a backup */
-						alert(payload['submit-error']);
-					}
-				} else if("submit-loadout-uri" in payload) {
-					window.location.replace(payload['submit-loadout-uri']);
-				}
-			},
-			complete: function() {
-				b.prop('disabled', false)
-					.parent().find('span.spinner').remove();
+		osmium_clf['X-Osmium-submit'] = true;
+		osmium_commit_clf(function(payload) {
+			if("submit-error" in payload) {
+				alert(payload['submit-error']);
+			} else if("submit-loadout-uri" in payload) {
+				window.location.replace(payload['submit-loadout-uri']);
 			}
+		}, function() {
+			b.prop('disabled', false)
+				.parent().find('span.spinner').remove();
+			delete(osmium_clf['X-Osmium-submit']);
 		});
 	});
 };

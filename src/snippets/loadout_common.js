@@ -21,6 +21,9 @@ osmium_user_initiated_stack = [];
 osmium_undo_stack = [];
 osmium_undo_stack_position = 0;
 
+osmium_clfspinner = undefined;
+osmium_clfspinner_level = 0;
+
 osmium_must_send_clf = false;
 osmium_sending_clf = false;
 
@@ -112,17 +115,17 @@ osmium_undo_pop = function() {
  * etc. It is safe to call this function repeatedly in a short amount
  * of time, it has built-in rate limiting. Requires osmium_clftype and
  * osmium_on_clf_payload global variables to be set. */
-osmium_commit_clf = function(onsuccess) {
+osmium_commit_clf = function(onsuccess, oncomplete) {
 	osmium_must_send_clf = true;
 
 	if(osmium_sending_clf) return;
 	osmium_sending_clf = true;
 
-	osmium_send_clf(onsuccess);
+	osmium_send_clf(onsuccess, oncomplete);
 };
 
 /** @internal */
-osmium_send_clf = function(onsuccess) {
+osmium_send_clf = function(onsuccess, oncomplete) {
 	if(!osmium_must_send_clf) {
 		osmium_sending_clf = false;
 		return;
@@ -140,11 +143,19 @@ osmium_send_clf = function(onsuccess) {
 		relative: osmium_relative
 	};
 
+	osmium_clfspinner_push();
+
 	$.ajax({
 		type: 'POST',
 		url: osmium_relative + '/src/json/process_clf.php?' + $.param(getopts),
 		data: postopts,
 		dataType: 'json',
+		complete: function() {
+			osmium_clfspinner_pop();
+			if(typeof oncomplete === "function") {
+				oncomplete();
+			}
+		},
 		error: function(xhr, error, httperror) {
 			alert('Could not sync loadout with remote: ' + error + ' (' + httperror 
 				  + '). This shouldn\'t normally happen, try again or refresh the page. Please report if the problem persists.');
@@ -152,6 +163,30 @@ osmium_send_clf = function(onsuccess) {
 		},
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
+
+			$("section#metadata tr.error").removeClass('error');
+			$("section#metadata tr.error_message").remove();
+
+			if("form-errors" in payload) {
+				for(var i = 0; i < payload['form-errors'].length; ++i) {
+					var err = payload['form-errors'][i];
+
+					var tr = $(document.createElement('tr'));
+					var td = $(document.createElement('td'));
+					var p = $(document.createElement('p'));
+
+					tr.addClass('error_message');
+					td.attr('colspan', '2');
+					p.text(err[2]);
+					td.append(p);
+					tr.append(td);
+
+					$(err[1]).closest('tr').addClass('error').before(tr);
+					if(err[0]) {
+						$("a[href='#"  + err[0] +  "']").click();
+					}
+				}
+			}
 
 			$('div#computed_attributes').html(payload.attributes);
 			osmium_clf_rawattribs = payload.rawattribs;
@@ -228,4 +263,28 @@ osmium_compress_json = function(json) {
 			return "\\u" + ('0000' + m.charCodeAt(0).toString(16)).slice(-4);
 		})
 	));
+};
+
+osmium_clfspinner_push = function() {
+	if(osmium_clfspinner_level === 0) {
+		if(osmium_clfspinner === undefined) {
+			osmium_clfspinner = $(document.createElement('span'))
+				.prop('id', 'clfspinner')
+				.addClass('spinner')
+				.hide();
+			$("body").append(osmium_clfspinner);
+		}
+
+		osmium_clfspinner.fadeIn(100);
+	}
+
+	++osmium_clfspinner_level;
+};
+
+osmium_clfspinner_pop = function() {
+	--osmium_clfspinner_level;
+
+	if(osmium_clfspinner_level === 0) {
+		osmium_clfspinner.fadeOut(250);
+	}
 };
