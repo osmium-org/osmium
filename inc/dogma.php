@@ -32,8 +32,16 @@ function get_dogma_states() {
 
 /** Create a new dogma context for $fit with all modules, charges and
  * drones of current presets. */
-function late_init(&$fit) {
+function late_init(&$fit, $withfleet = true) {
 	dogma_init_context($fit['__dogma_context']);
+
+	if($withfleet) {
+		dogma_init_fleet_context($fit['__dogma_fleet_context']);
+		dogma_add_squad_member($fit['__dogma_fleet_context'], 0, 0, $fit['__dogma_context']);
+		dogma_set_fleet_booster($fit['__dogma_fleet_context'], null);
+		dogma_set_wing_booster($fit['__dogma_fleet_context'], 0, null);
+		dogma_set_squad_booster($fit['__dogma_fleet_context'], 0, 0, null);
+	}
 
 	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] > 0) {
 		dogma_set_ship($fit['__dogma_context'], $fit['ship']['typeid']);
@@ -75,6 +83,36 @@ function late_init(&$fit) {
 					true
 				);
 			}
+		}
+	}
+
+	if($fit['fleet'] !== array() && $withfleet) {
+		$fctx =& $fit['__dogma_fleet_context'];
+
+		if(isset($fit['fleet']['fleet'])) {
+			late_init($fit['fleet']['fleet'], false);
+			dogma_add_fleet_commander(
+				$fctx,
+				$fit['fleet']['fleet']['__dogma_context']
+			);
+		}
+
+		if(isset($fit['fleet']['wing'])) {
+			late_init($fit['fleet']['wing'], false);
+			dogma_add_wing_commander(
+			    $fctx,
+				0,
+				$fit['fleet']['wing']['__dogma_context']
+			);
+		}
+
+		if(isset($fit['fleet']['squad'])) {
+			late_init($fit['fleet']['squad'], false);
+			dogma_add_squad_commander(
+				$fctx,
+				0, 0,
+				$fit['fleet']['squad']['__dogma_context']
+			);
 		}
 	}
 }
