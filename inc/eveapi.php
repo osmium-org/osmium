@@ -32,8 +32,8 @@ const API_CURL_TIMEOUT = 10000;
  * @param $params an array of POST parameters to send
  *
  * @returns a SimpleXMLElement if the call was successful (although
- * the XML contents itself may be an error), or false in case of
- * network error or unparseable XML.
+ * the XML contents itself may be an error), false if the key is
+ * invalid, or null on network/other error.
  */
 function fetch($name, array $params) {
 	libxml_use_internal_errors(true);
@@ -51,7 +51,7 @@ function fetch($name, array $params) {
 
 	/* Avoid concurrent accesses to the same API call */
 	$sem = \Osmium\State\semaphore_acquire('API_'.$key);
-	if($sem === false) return false;
+	if($sem === false) return null;
 
 	/* See if another process already cached the call while
 	 * semaphore_acquire() blocked */
@@ -69,18 +69,22 @@ function fetch($name, array $params) {
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT_MS, API_TIMEOUT);
 	curl_setopt($c, CURLOPT_TIMEOUT_MS, API_CURL_TIMEOUT);
 	$raw_xml = curl_exec($c);
+	$http_code = curl_getinfo($c, CURLINFO_HTTP_CODE);
 	curl_close($c);
+
+	if($http_code === 403) return false;
   
 	$xml = false;
 	try {
 		$xml = new \SimpleXMLElement($raw_xml);
 	} catch(\Exception $e) {
+		trigger_error('Got unparseable XML from the API, HTTP code was '.$http_code, E_USER_WARNING);
 		$xml = false;
 	}
 
 	if($xml === false || $raw_xml === false) {
 		\Osmium\State\semaphore_release($sem);
-		return false;
+		return null;
 	}
 
 	$expires = strtotime((string)$xml->cachedUntil);

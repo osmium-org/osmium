@@ -301,6 +301,10 @@ function try_recover() {
 function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, &$charactername = null) {
 	$api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $keyid, 'vCode' => $vcode));
 
+	if($api === false) {
+		return "API server returned a 403. Invalid credentials?";
+	}
+
 	if(!($api instanceof \SimpleXMLElement)) {
 		/* Aouch */
 		return "API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!";
@@ -351,7 +355,9 @@ function check_api_key($a, $initial = false) {
 	$info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx',
 	                             array('keyID' => $key_id, 'vCode' => $v_code));
 
-	if(!($info instanceof \SimpleXMLElement)) {
+	if($info === false) {
+		$must_renew = true;
+	} else if(!($info instanceof \SimpleXMLElement)) {
 		/* Could be anything major, ignore */
 		return null;
 	}
@@ -367,13 +373,15 @@ function check_api_key($a, $initial = false) {
 		}
 	}
 
-	if(!$must_renew
-	   && (string)$info->result->key["type"] !== 'Character'
-	   || (
-		   (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
-		   && (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
-	   )
-	   || (!$initial && (int)$info->result->key->rowset->row['characterID'] != $a['characterid'])) {
+	if(!$must_renew && (
+		(string)$info->result->key["type"] !== 'Character'
+		|| (
+			(int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
+			&& (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
+		) || (
+			!$initial && (int)$info->result->key->rowset->row['characterID'] != $a['characterid']
+		)
+	)) {
 		$must_renew = true;
 	}
 
@@ -454,7 +462,7 @@ function check_api_key($a, $initial = false) {
 
 function get_character_info($character_id, $a) {
 	$char_info = \Osmium\EveApi\fetch('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
-	if($char_info === false) return false;
+	if($char_info === null || $char_info === false) return false;
   
 	$character_name = (string)$char_info->result->characterName;
 	$corporation_id = (int)$char_info->result->corporationID;
@@ -472,7 +480,7 @@ function get_character_info($character_id, $a) {
 		                                   'vCode' => $a['verificationcode'],
 		                                   ));
 
-	if($char_sheet === false) {
+	if($char_sheet === null || $char_sheet === false) {
 		return false;
 	}
 
@@ -505,7 +513,7 @@ function update_character_contactlist($a) {
 		)
 	);
 
-	if($char_contactlist === false) {
+	if($char_contactlist === null || $char_contactlist === false) {
 		return false;
 	}
 
