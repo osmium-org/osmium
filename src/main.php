@@ -254,7 +254,7 @@ echo get_cache_memory_or_gen('fotw', 86400, function() {
 			ENT_QUOTES
 		);
 
-		$r .= "<li><a href='./loadout/dna/".$f['dna']."'>"
+		$r .= "<li><a rel='nofollow' href='./loadout/dna/".$f['dna']."'>"
 			."<div class='abs dogmaattrs'>\n"
 			."<strong>".\Osmium\Chrome\format($f['dps'], 2)."</strong> <small>DPS</small><br />"
 			."<strong>".\Osmium\Chrome\format($f['ehp'], 2, 'k')."</strong> <small>EHP</small><br />"
@@ -310,7 +310,7 @@ echo get_cache_memory_or_gen('doctrines', 86401, function() {
 
 		$aname = "mainly flown by: &#10;".implode(", &#10;", $anames);
 
-		$r .= "<li><a href='./loadout/dna/".$f['dna']."'>"
+		$r .= "<li><a rel='nofollow' href='./loadout/dna/".$f['dna']."'>"
 			."<div class='abs dogmaattrs'>\n"
 			."<strong>".\Osmium\Chrome\format($f['dps'], 2)."</strong> <small>DPS</small><br />"
 			."<strong>".\Osmium\Chrome\format($f['ehp'], 2, 'k')."</strong> <small>EHP</small><br />"
