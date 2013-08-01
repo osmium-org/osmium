@@ -764,10 +764,14 @@ function set_fleet_booster_generic(&$fit, $boosterfit, $type, array $between) {
 	/* Set the new booster */
 	$fit['fleet'][$type] = $boosterfit;
 	unset($fit['fleet'][$type]['fleet']);
-	$fit['fleet'][$type]['__id'] = 'gzclf://'.export_to_gzclf_raw(
-		$fit['fleet'][$type],
-		CLF_EXPORT_MINIFY | CLF_EXPORT_STRIP_METADATA | CLF_EXPORT_SELECTED_PRESETS_ONLY
-	);
+	if(isset($fit['fleet'][$type]['ship']['typeid']) && $fit['fleet'][$type]['ship']['typeid']) {
+		$fit['fleet'][$type]['__id'] = 'gzclf://'.export_to_gzclf_raw(
+			$fit['fleet'][$type],
+			CLF_EXPORT_MINIFY | CLF_EXPORT_STRIP_METADATA | CLF_EXPORT_SELECTED_PRESETS_ONLY
+		);
+	} else {
+		$fit['fleet'][$type]['__id'] = '(empty fitting)';
+	}
 	array_unshift($between, $fit['__dogma_fleet_context']);
 	array_push($between, $fit['fleet'][$type]['__dogma_context']);
 

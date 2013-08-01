@@ -99,7 +99,7 @@ function get_unique(&$fit) {
 	if(isset($fit['fleet'])) {
 		foreach($fit['fleet'] as $k => $f) {
 			if($k !== 'fleet' && $k !== 'wing' && $k !== 'squad') continue;
-			$unique['fleet'][$k] = $f['__id'];
+			$unique['fleet'][$k] = get_hash($f);
 		}
 	}
 
@@ -132,8 +132,8 @@ function get_hash($fit) {
  * duplicates, so it is safe to call it multiple times even if no
  * changes were made.
  *
- * The process is atomic, that is, all the fit gets inserted or
- * nothing is inserted at all, so integrity is always enforced.
+ * You should whap this call in a transaction and rollback if it
+ * fails.
  *
  * @returns false on failure
  */
@@ -148,7 +148,6 @@ function commit_fitting(&$fit, &$error = null) {
 	}
 
 	/* Insert the new fitting */
-	\Osmium\Db\query('BEGIN;');
 	$ret = \Osmium\Db\query_params(
 		'INSERT INTO osmium.fittings (fittinghash, name, description, evebuildnumber, hullid, creationdate) VALUES ($1, $2, $3, $4, $5, $6)',
 		array(
@@ -161,8 +160,6 @@ function commit_fitting(&$fit, &$error = null) {
 		)
 	);
 	if($ret === false) {
-		$error = \Osmium\Db\last_error();
-		\Osmium\Db\query('ROLLBACK;');
 		return false;
 	}
   
@@ -172,8 +169,6 @@ function commit_fitting(&$fit, &$error = null) {
 			array($fittinghash, $tag)
 		);
 		if($ret === false) {
-			$error = \Osmium\Db\last_error();
-			\Osmium\Db\query('ROLLBACK;');
 			return false;
 		}
 	}
@@ -191,8 +186,6 @@ function commit_fitting(&$fit, &$error = null) {
 		);
 
 		if($ret === false) {
-			$error = \Osmium\Db\last_error();
-			\Osmium\Db\query('ROLLBACK;');
 			return false;
 		}
 
@@ -215,8 +208,6 @@ function commit_fitting(&$fit, &$error = null) {
 				);
 
 				if($ret === false) {
-					$error = \Osmium\Db\last_error();
-					\Osmium\Db\query('ROLLBACK;');
 					return false;
 				}
 
@@ -238,8 +229,6 @@ function commit_fitting(&$fit, &$error = null) {
 			);
 
 			if($ret === false) {
-				$error = \Osmium\Db\last_error();
-				\Osmium\Db\query('ROLLBACK;');
 				return false;
 			}
 
@@ -261,8 +250,6 @@ function commit_fitting(&$fit, &$error = null) {
 					);
 
 					if($ret === false) {
-						$error = \Osmium\Db\last_error();
-						\Osmium\Db\query('ROLLBACK;');
 						return false;
 					}
 				}
@@ -282,8 +269,6 @@ function commit_fitting(&$fit, &$error = null) {
 			);
 
 			if($ret === false) {
-				$error = \Osmium\Db\last_error();
-				\Osmium\Db\query('ROLLBACK;');
 				return false;
 			}
 		}
@@ -304,8 +289,6 @@ function commit_fitting(&$fit, &$error = null) {
 		);
 
 		if($ret === false) {
-			$error = \Osmium\Db\last_error();
-			\Osmium\Db\query('ROLLBACK;');
 			return false;
 		}
 
@@ -322,16 +305,59 @@ function commit_fitting(&$fit, &$error = null) {
 			);
 
 			if($ret === false) {
-				$error = \Osmium\Db\last_error();
-				\Osmium\Db\query('ROLLBACK;');
 				return false;
 			}
 		}
 
 		++$dpid;
 	}
-  
-	return \Osmium\Db\query('COMMIT;');
+
+	if(isset($fit['fleet'])) {
+		$hashes = array();
+		$boostcount = 0;
+
+		foreach(array('fleet', 'wing', 'squad') as $t) {
+			if(!isset($fit['fleet'][$t])) {
+				$hashes[$t] = [ 'f', null ];
+				continue;
+			}
+
+			++$boostcount;
+
+			if(!isset($fit['fleet'][$t]['ship']['typeid']) || !$fit['fleet'][$t]['ship']['typeid']) {
+				$hashes[$t] = [ 't', null ];
+				continue;
+			}
+
+			$ret = commit_fitting($fit['fleet'][$t]);
+			if($ret === false) {
+				return false;
+			}
+
+			$hashes[$t] = [ 't', $ret ];
+		}
+
+		if($boostcount > 0) {
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingfleetboosters (
+				fittinghash, hasfleetbooster, fleetboosterfittinghash,
+				haswingbooster, wingboosterfittinghash,
+				hassquadbooster, squadboosterfittinghash
+				) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+				array(
+					$fittinghash,
+					$hashes['fleet'][0],
+					$hashes['fleet'][1],
+					$hashes['wing'][0],
+					$hashes['wing'][1],
+					$hashes['squad'][0],
+					$hashes['squad'][1],
+				)
+			);
+		}
+	}
+
+	return $fittinghash;
 }
 
 /**
@@ -348,12 +374,15 @@ function commit_fitting(&$fit, &$error = null) {
  * @returns false on failure
  */
 function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
+	\Osmium\Db\query('BEGIN;');
+
 	$ret = commit_fitting($fit, $error);
+
 	if($ret === false) {
+		$error = \Osmium\Db\last_error();
+		\Osmium\Db\query('ROLLBACK;');
 		return false;
 	}
-
-	\Osmium\Db\query('BEGIN;');
 
 	$loadoutid = null;
 	$password = ($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) ?
@@ -538,6 +567,193 @@ function commit_loadout_dogma_attribs(&$fit) {
 }
 
 /**
+ * Get a fitting by its fittinghash from the database. Fittings,
+ * unlike loadouts, are immutable and are referenced by their fitting
+ * hash.
+ *
+ * @returns a $fit-compatible variable, or false on error.
+ */
+function get_fitting($fittinghash) {
+	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT name, description,
+		evebuildnumber, hullid, creationdate
+		FROM osmium.fittings
+		WHERE fittinghash = $1',
+		array($fittinghash)
+	));
+
+	if($fitting === false) {
+		return false;
+	}
+
+	create($fit);
+	select_ship($fit, $fitting['hullid']);
+
+	$fit['metadata']['hash'] = $fittinghash;
+	$fit['metadata']['name'] = $fitting['name'];
+	$fit['metadata']['description'] = $fitting['description'];
+	$fit['metadata']['evebuildnumber'] = $fitting['evebuildnumber'];
+	$fit['metadata']['creation_date'] = $fitting['creationdate'];
+
+	$fit['metadata']['tags'] = array();
+	$tagq = \Osmium\Db\query_params(
+		'SELECT tagname FROM osmium.fittingtags WHERE fittinghash = $1',
+		array($fittinghash)
+	);
+	while($r = \Osmium\Db\fetch_row($tagq)) {
+		$fit['metadata']['tags'][] = $r[0];
+	}
+
+	/* It can be done with only one query, but the code would be
+	 * monstrously complex. The result is cached anyway, so
+	 * performance isn't an absolute requirement as long as it's fast
+	 * enough. */
+
+	$firstpreset = true;
+	$presetsq = \Osmium\Db\query_params(
+		'SELECT presetid, name, description
+		FROM osmium.fittingpresets
+		WHERE fittinghash = $1
+		ORDER BY presetid ASC',
+		array($fittinghash)
+	);
+	while($preset = \Osmium\Db\fetch_assoc($presetsq)) {
+		if($firstpreset === true) {
+			/* Edit the default preset instead of creating a new preset */
+			$fit['modulepresetname'] = $preset['name'];
+			$fit['modulepresetdesc'] = $preset['description'];
+
+			$firstpreset = false;
+		} else {
+			$presetid = create_preset($fit, $preset['name'], $preset['description']);
+			use_preset($fit, $presetid);
+		}
+
+		$modulesq = \Osmium\Db\query_params(
+			'SELECT index, typeid, state
+			FROM osmium.fittingmodules
+			WHERE fittinghash = $1 AND presetid = $2
+			ORDER BY index ASC',
+			array($fittinghash, $preset['presetid'])
+		);
+		while($row = \Osmium\Db\fetch_row($modulesq)) {
+			add_module($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
+		}
+
+		$firstchargepreset = true;
+		$chargepresetsq = \Osmium\Db\query_params(
+			'SELECT chargepresetid, name, description
+			FROM osmium.fittingchargepresets
+			WHERE fittinghash = $1 AND presetid = $2
+			ORDER BY chargepresetid ASC',
+			array($fittinghash, $preset['presetid'])
+		);
+		while($chargepreset = \Osmium\Db\fetch_assoc($chargepresetsq)) {
+			if($firstchargepreset === true) {
+				$fit['chargepresetname'] = $chargepreset['name'];
+				$fit['chargepresetdesc'] = $chargepreset['description'];
+
+				$firstchargepreset = false;
+			} else {
+				$chargepresetid = create_charge_preset($fit, $chargepreset['name'], $chargepreset['description']);
+				use_charge_preset($fit, $chargepresetid);
+			}
+
+			$chargesq = \Osmium\Db\query_params(
+				'SELECT slottype, index, typeid
+				FROM osmium.fittingcharges
+				WHERE fittinghash = $1 AND presetid = $2 AND chargepresetid = $3
+				ORDER BY slottype ASC, index ASC',
+				array($fittinghash, $preset['presetid'], $chargepreset['chargepresetid'])
+			);
+			while($row = \Osmium\Db\fetch_row($chargesq)) {
+				add_charge($fit, $row[0], (int)$row[1], (int)$row[2]);
+			}
+		}
+
+		$implantsq = \Osmium\Db\query_params(
+			'SELECT typeid
+			FROM osmium.fittingimplants
+			WHERE fittinghash = $1 AND presetid = $2',
+			array($fittinghash, $preset['presetid'])
+		);
+		while($implant = \Osmium\Db\fetch_row($implantsq)) {
+			add_implant($fit, $implant[0]);
+		}
+	}
+	
+	$firstdronepreset = true;
+	$dronepresetsq = \Osmium\Db\query_params(
+		'SELECT dronepresetid, name, description
+		FROM osmium.fittingdronepresets
+		WHERE fittinghash = $1
+		ORDER BY dronepresetid ASC',
+		array($fittinghash)
+	);
+	while($dronepreset = \Osmium\Db\fetch_assoc($dronepresetsq)) {
+		if($firstdronepreset === true) {
+			/* Edit the default preset instead of creating a new preset */
+			$fit['dronepresetname'] = $dronepreset['name'];
+			$fit['dronepresetdesc'] = $dronepreset['description'];
+
+			$firstdronepreset = false;
+		} else {
+			$dronepresetid = create_drone_preset($fit, $dronepreset['name'], $dronepreset['description']);
+			use_drone_preset($fit, $dronepresetid);
+		}
+
+		$dronesq = \Osmium\Db\query_params(
+			'SELECT typeid, quantityinbay, quantityinspace
+			FROM osmium.fittingdrones
+			WHERE fittinghash = $1 AND dronepresetid = $2',
+			array($fittinghash, $dronepreset['dronepresetid'])
+		);
+		while($row = \Osmium\Db\fetch_row($dronesq)) {
+			add_drone($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
+		}
+	}
+
+	$fleet = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT hasfleetbooster,
+		fleetboosterfittinghash AS fleet,
+		haswingbooster,
+		wingboosterfittinghash AS wing,
+		hassquadbooster,
+		squadboosterfittinghash AS squad
+		FROM osmium.fittingfleetboosters
+		WHERE fittinghash = $1',
+		array($fittinghash)
+	));
+
+	if($fleet !== false) {
+		foreach(array('fleet', 'wing', 'squad') as $t) {
+			if($fleet['has'.$t.'booster'] !== 't') continue;
+			$flhash = $fleet[$t];
+
+			if($flhash === null) {
+				create($fl);
+			} else {
+				$fl = get_fitting($flhash);
+			}
+			call_user_func_array(
+				__NAMESPACE__.'\set_'.$t.'_booster',
+				array(&$fit, $fl)
+			);
+		}
+	}
+
+	/* Use the 1st presets */
+	\reset($fit['presets']);
+	\Osmium\Fit\use_preset($fit, key($fit['presets']));
+	\reset($fit['chargepresets']);
+	\Osmium\Fit\use_charge_preset($fit, key($fit['chargepresets']));
+	\reset($fit['dronepresets']);
+	\Osmium\Fit\use_drone_preset($fit, key($fit['dronepresets']));
+
+	return $fit;
+}
+
+/**
  * Get a loadout from the database, given its loadoutid. Returns an
  * array that can be used with all functions using $fit.
  *
@@ -602,169 +818,35 @@ function get_fit($loadoutid, $revision = null) {
 		return false;
 	}
 
-	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT fittings.fittinghash AS hash, name, description,
-		evebuildnumber, hullid, creationdate, revision
+	$hash = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT loadouthistory.fittinghash
 		FROM osmium.loadouthistory
-		JOIN osmium.fittings ON loadouthistory.fittinghash = fittings.fittinghash
 		WHERE loadoutid = $1 AND revision = $2',
 		array($loadoutid, $revision)
 	));
 
-	if($fitting === false) {
+	if($hash === false) {
 		\Osmium\State\semaphore_release($sem);
 		return false;
 	}
 
-	create($fit);
-	select_ship($fit, $fitting['hullid']);
+	$fit = get_fitting($hash[0]);
 
 	$fit['metadata']['loadoutid'] = $loadoutid;
 	$fit['metadata']['privatetoken'] = $loadout['privatetoken'];
-	$fit['metadata']['hash'] = $fitting['hash'];
-	$fit['metadata']['name'] = $fitting['name'];
-	$fit['metadata']['description'] = $fitting['description'];
-	$fit['metadata']['evebuildnumber'] = $fitting['evebuildnumber'];
 	$fit['metadata']['view_permission'] = $loadout['viewpermission'];
 	$fit['metadata']['edit_permission'] = $loadout['editpermission'];
 	$fit['metadata']['visibility'] = $loadout['visibility'];
 	$fit['metadata']['password'] = $loadout['passwordhash'];
-	$fit['metadata']['revision'] = $fitting['revision'];
-	$fit['metadata']['creation_date'] = $fitting['creationdate'];
+	$fit['metadata']['revision'] = $revision;
 	$fit['metadata']['accountid'] = $loadout['accountid'];
 
-	$fit['metadata']['tags'] = array();
-	$tagq = \Osmium\Db\query_params(
-		'SELECT tagname FROM osmium.fittingtags WHERE fittinghash = $1',
-		array($fit['metadata']['hash'])
-	);
-	while($r = \Osmium\Db\fetch_row($tagq)) {
-		$fit['metadata']['tags'][] = $r[0];
-	}
-
-	/* It can be done with only one query, but the code would be
-	 * monstrously complex. The result is cached anyway, so
-	 * performance isn't an absolute requirement as long as it's fast
-	 * enough. */
-
-	$firstpreset = true;
-	$presetsq = \Osmium\Db\query_params(
-		'SELECT presetid, name, description
-		FROM osmium.fittingpresets
-		WHERE fittinghash = $1
-		ORDER BY presetid ASC',
-		array($fit['metadata']['hash'])
-	);
-	while($preset = \Osmium\Db\fetch_assoc($presetsq)) {
-		if($firstpreset === true) {
-			/* Edit the default preset instead of creating a new preset */
-			$fit['modulepresetname'] = $preset['name'];
-			$fit['modulepresetdesc'] = $preset['description'];
-
-			$firstpreset = false;
-		} else {
-			$presetid = create_preset($fit, $preset['name'], $preset['description']);
-			use_preset($fit, $presetid);
-		}
-
-		$modulesq = \Osmium\Db\query_params(
-			'SELECT index, typeid, state
-			FROM osmium.fittingmodules
-			WHERE fittinghash = $1 AND presetid = $2
-			ORDER BY index ASC',
-			array($fit['metadata']['hash'], $preset['presetid'])
-		);
-		while($row = \Osmium\Db\fetch_row($modulesq)) {
-			add_module($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
-		}
-
-		$firstchargepreset = true;
-		$chargepresetsq = \Osmium\Db\query_params(
-			'SELECT chargepresetid, name, description
-			FROM osmium.fittingchargepresets
-			WHERE fittinghash = $1 AND presetid = $2
-			ORDER BY chargepresetid ASC',
-			array($fit['metadata']['hash'], $preset['presetid'])
-		);
-		while($chargepreset = \Osmium\Db\fetch_assoc($chargepresetsq)) {
-			if($firstchargepreset === true) {
-				$fit['chargepresetname'] = $chargepreset['name'];
-				$fit['chargepresetdesc'] = $chargepreset['description'];
-
-				$firstchargepreset = false;
-			} else {
-				$chargepresetid = create_charge_preset($fit, $chargepreset['name'], $chargepreset['description']);
-				use_charge_preset($fit, $chargepresetid);
-			}
-
-			$chargesq = \Osmium\Db\query_params(
-				'SELECT slottype, index, typeid
-				FROM osmium.fittingcharges
-				WHERE fittinghash = $1 AND presetid = $2 AND chargepresetid = $3
-				ORDER BY slottype ASC, index ASC',
-				array($fit['metadata']['hash'], $preset['presetid'], $chargepreset['chargepresetid'])
-			);
-			while($row = \Osmium\Db\fetch_row($chargesq)) {
-				add_charge($fit, $row[0], (int)$row[1], (int)$row[2]);
-			}
-		}
-
-		$implantsq = \Osmium\Db\query_params(
-			'SELECT typeid
-			FROM osmium.fittingimplants
-			WHERE fittinghash = $1 AND presetid = $2',
-			array($fit['metadata']['hash'], $preset['presetid'])
-		);
-		while($implant = \Osmium\Db\fetch_row($implantsq)) {
-			add_implant($fit, $implant[0]);
-		}
-	}
-	
-	$firstdronepreset = true;
-	$dronepresetsq = \Osmium\Db\query_params(
-		'SELECT dronepresetid, name, description
-		FROM osmium.fittingdronepresets
-		WHERE fittinghash = $1
-		ORDER BY dronepresetid ASC',
-		array($fit['metadata']['hash'])
-	);
-	while($dronepreset = \Osmium\Db\fetch_assoc($dronepresetsq)) {
-		if($firstdronepreset === true) {
-			/* Edit the default preset instead of creating a new preset */
-			$fit['dronepresetname'] = $dronepreset['name'];
-			$fit['dronepresetdesc'] = $dronepreset['description'];
-
-			$firstdronepreset = false;
-		} else {
-			$dronepresetid = create_drone_preset($fit, $dronepreset['name'], $dronepreset['description']);
-			use_drone_preset($fit, $dronepresetid);
-		}
-
-		$dronesq = \Osmium\Db\query_params(
-			'SELECT typeid, quantityinbay, quantityinspace
-			FROM osmium.fittingdrones
-			WHERE fittinghash = $1 AND dronepresetid = $2',
-			array($fit['metadata']['hash'], $dronepreset['dronepresetid'])
-		);
-		while($row = \Osmium\Db\fetch_row($dronesq)) {
-			add_drone($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
-		}
-	}
-
-	/* Use the 1st presets */
-	\reset($fit['presets']);
-	\Osmium\Fit\use_preset($fit, key($fit['presets']));
-	\reset($fit['chargepresets']);
-	\Osmium\Fit\use_charge_preset($fit, key($fit['chargepresets']));
-	\reset($fit['dronepresets']);
-	\Osmium\Fit\use_drone_preset($fit, key($fit['dronepresets']));
-  
 	if(isset($latest_revision) && $latest_revision === true) {
 		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, 0, 'Loadout_Cache_');
 	}
+
 	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit, 0, 'Loadout_Cache_');
 	\Osmium\State\semaphore_release($sem);
-	\Osmium\Dogma\late_init($fit);
 	return $fit;
 }
 

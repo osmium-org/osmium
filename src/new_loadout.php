@@ -382,7 +382,9 @@ echo "<div class='boosters'>\n<h3>Boosters</h3>\n<ul></ul>\n</div>\n";
 echo "</section>\n";
 
 echo "<section id='remote'>\n";
-echo "<section id='fleet'>\n<h2>Fleet</h2>\n<form>\n<table>\n<tbody>\n";
+echo "<section id='fleet'>\n<h2>Fleet</h2>\n";
+echo "<p>The fittings you use as fleet, wing or squad boosters will be visible by anyone who also has access to this loadout.<br />\nThe skills will be reset to \"All V\" when saving the loadout.</p>\n";
+echo "<form>\n<table>\n<tbody>\n";
 
 foreach(array('fleet', 'wing', 'squad') as $ft) {
 	echo "<tr data-type='{$ft}' id='{$ft}booster' class='booster'>\n";
