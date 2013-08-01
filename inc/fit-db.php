@@ -31,7 +31,7 @@ function get_unique(&$fit) {
 	sanitize($fit);
 
 	$unique = array();
-	$unique['ship'] = (int)$fit['ship']['typeid'];
+	$unique['ship'] = isset($fit['ship']['typeid']) ? (int)$fit['ship']['typeid'] : 0;
 
 	$unique['metadata'] = array(
 		'name' => $fit['metadata']['name'],
@@ -94,6 +94,13 @@ function get_unique(&$fit) {
 		}
 
 		$unique['dronepresets'][unique_key($uniquedp)] = $uniquedp;
+	}
+
+	if(isset($fit['fleet'])) {
+		foreach($fit['fleet'] as $k => $f) {
+			if($k !== 'fleet' && $k !== 'wing' && $k !== 'squad') continue;
+			$unique['fleet'][$k] = $f['__id'];
+		}
 	}
 
 	/* Ensure equality if key ordering is different */
@@ -804,7 +811,10 @@ function fetch_fit_uri($loadoutid) {
  * @see use_skillset()
  */
 function use_skillset_by_name(&$fit, $ssname, $a = null) {
-	if($fit['metadata']['skillset'] === $ssname) return;
+	if(isset($fit['metadata']['skillset'])
+	   && $fit['metadata']['skillset'] === $ssname) {
+		return;
+	}
 
 	if($ssname == 'All V') {
 		use_skillset($fit, array(), 5);

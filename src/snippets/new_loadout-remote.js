@@ -29,6 +29,15 @@ osmium_gen_remote = function() {
 
 	$("section#fleet").find('input, select')
 		.not("[type='checkbox']").prop('disabled', true);
+
+	if(!("X-Osmium-fleet" in osmium_clf)) return;
+
+	for(var t in osmium_clf['X-Osmium-fleet']) {
+		$("section#fleet select.skillset." + t).val(osmium_clf['X-Osmium-fleet'][t].skillset);
+		$("section#fleet input.fit." + t).val(osmium_clf['X-Osmium-fleet'][t].fitting);
+		$("section#fleet input.enabled." + t).prop('checked', true).change();
+		$("section#fleet").find("input, select").filter("." + t).prop('disabled', false);
+	}
 };
 
 osmium_init_remote = function() {
@@ -56,8 +65,10 @@ osmium_init_remote = function() {
 				.prop('disabled', true);
 		}
 
-		osmium_undo_push();
-		osmium_commit_clf();
+		if(osmium_user_initiated) {
+			osmium_undo_push();
+			osmium_commit_clf();
+		}
 	}).on('change', 'select', function() {
 		var s = $(this);
 		var tr = s.closest('tr');

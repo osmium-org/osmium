@@ -21,6 +21,26 @@ namespace Osmium\Fit;
 const CLF_PATH = '/../lib/common-loadout-format/validators/php/lib.php';
 const DNA_REGEX = '([0-9]+)(:([0-9]+)(;([0-9]+))?)*::';
 
+/* Minify generated JSON (default is to pretty indent). */
+const CLF_EXPORT_MINIFY = 1;
+
+/* Include non-standard properties. */
+const CLF_EXPORT_EXTRA_PROPERTIES = 2;
+
+/* Include Osmium-specific non-standard properties. */
+const CLF_EXPORT_INTERNAL_PROPERTIES = 4;
+
+/* Only export the presets currently selected. */
+const CLF_EXPORT_SELECTED_PRESETS_ONLY = 8;
+
+/* Strip all metadata from the generated JSON. This includes
+ * descriptions, author names, etc. Is superseeded by the other
+ * options like EXPORT_INTERNAL_PROPERTIES. */
+const CLF_EXPORT_STRIP_METADATA = 16;
+
+/* The default options used when none are explicitely given. */
+const CLF_EXPORT_DEFAULT_OPTS = 2;
+
 /**
  * Get a list of available export formats, with a human-readable name,
  * the content-type of the exported data, and a function taking a $fit
@@ -31,8 +51,9 @@ function get_export_formats() {
 		'clf' => array(
 			'CLF', 'application/json',
 			function($fit, $opts = array()) {
-				$minify = isset($opts['minify']) && $opts['minify'];
-				return export_to_common_loadout_format($fit, $minify);
+				$clfopts = (isset($opts['minify']) && $opts['minify']) ?
+					CLF_EXPORT_MINIFY : 0;
+				return export_to_common_loadout_format($fit, $clfopts);
 			}),
 		'md' => array(
 			'Markdown+gzCLF', 'text/plain',
@@ -618,7 +639,11 @@ function try_parse_fit_from_gzclf($source, &$errors) {
 		return false;
 	}
 
-	$gzclf = $source[0];
+	return try_parse_fit_from_gzclf_raw($source[0]);
+}
+
+/** @internal */
+function try_parse_fit_from_gzclf_raw($gzclf, &$errors) {
 	$clf = @gzuncompress(base64_decode(html_entity_decode($gzclf, ENT_XML1)));
 	if($clf === false) {
 		$errors[] = 'Error parsing the gzCLF block.';
@@ -984,13 +1009,15 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
  * Export a fit to the common loadout format (CLF), latest supported
  * version.
  *
+ * @param $opts a bitwise OR-d list of CLF_EXPORT_* constants.
+ *
  * @returns a string containing the JSON data.
  */
-function export_to_common_loadout_format($fit, $minify = false, $extraprops = true, $osmiumextraprops = false) {
+function export_to_common_loadout_format($fit, $opts = CLF_EXPORT_DEFAULT_OPTS) {
 	return json_encode(
-		export_to_common_loadout_format_1($fit, $minify, $extraprops),
-		$minify ? 0 : JSON_PRETTY_PRINT
-		);
+		export_to_common_loadout_format_1($fit, $opts),
+		($opts & CLF_EXPORT_MINIFY) ? 0 : JSON_PRETTY_PRINT
+	);
 }
 
 /**
@@ -998,29 +1025,38 @@ function export_to_common_loadout_format($fit, $minify = false, $extraprops = tr
  *
  * @returns the array to be serialized to JSON with json_encode().
  */
-function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = true, $osmiumextraprops = false) {
+function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS) {
 	static $statenames = null;
 	if($statenames === null) $statenames = get_state_names();
 
-	$json = array(
-		'clf-version' => 1,
-		'client-version' => (int)$fit['metadata']['evebuildnumber'],
-	);
+	$minify = $opts & CLF_EXPORT_MINIFY;
+	$extraprops = $opts & CLF_EXPORT_EXTRA_PROPERTIES;
+	$osmiumextraprops = $opts & CLF_EXPORT_INTERNAL_PROPERTIES;
+	$allpresets = ~$opts & CLF_EXPORT_SELECTED_PRESETS_ONLY;
+	$hasmeta = ~$opts & CLF_EXPORT_STRIP_METADATA;
+
+	$json = array('clf-version' => 1);
+
+	if($hasmeta) {
+		$json['client-version'] = (int)$fit['metadata']['evebuildnumber'];
+	}
 
 	if($extraprops) {
 		$json['X-generatedby'] = 'Osmium-'.\Osmium\get_osmium_version();
 	}
 
-	if(isset($fit['metadata']['name'])) {
-		$json['metadata']['title'] = $fit['metadata']['name'];
-	}
+	if($hasmeta) {
+		if(isset($fit['metadata']['name'])) {
+			$json['metadata']['title'] = $fit['metadata']['name'];
+		}
 
-	if(isset($fit['metadata']['description'])) {
-		$json['metadata']['description'] = $fit['metadata']['description'];
-	}
+		if(isset($fit['metadata']['description'])) {
+			$json['metadata']['description'] = $fit['metadata']['description'];
+		}
 
-	if(isset($fit['metadata']['creation_date'])) {
-		$json['metadata']['creationdate'] = gmdate('r', $fit['metadata']['creation_date']);
+		if(isset($fit['metadata']['creation_date'])) {
+			$json['metadata']['creationdate'] = gmdate('r', $fit['metadata']['creation_date']);
+		}
 	}
 
 	if($extraprops && isset($fit['metadata']['tags'])
@@ -1078,10 +1114,20 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 		$json['metadata']['X-Osmium-tankreloadtime'] = false;
 
 		$json['X-damage-profile'] = array("Uniform", [ .25, .25, .25, .25 ]);
+
+		if(isset($fit['fleet'])) {
+			foreach($fit['fleet'] as $k => $f) {
+				$json['X-Osmium-fleet'][$k] = [
+					'fitting' => $f['__id'],
+					'skillset' => $f['metadata']['skillset'],
+				];
+			}
+		}
 	}
 
 	if(isset($fit['ship']['typeid'])) {
-		/* Allow exporting incomplete loadouts (for internal use), even though it is forbidden by the spec*/
+		/* Allow exporting incomplete loadouts (for internal use),
+		 * even though it is forbidden by the spec */
 		$json['ship']['typeid'] = (int)$fit['ship']['typeid'];
 		if(!$minify) {
 			$json['ship']['typename'] = $fit['ship']['typename'];
@@ -1089,10 +1135,16 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 	}
 
 	foreach($fit['presets'] as $pid => $preset) {
+		if(!$allpresets && $pid != $fit['modulepresetid']) continue;
+
 		$jsonpreset = array();
 
-		$jsonpreset['presetname'] = $preset['name'];
-		if($preset['description'] != '') $jsonpreset['presetdescription'] = $preset['description'];
+		if($hasmeta) {
+			$jsonpreset['presetname'] = $preset['name'];
+			if($preset['description'] != '') {
+				$jsonpreset['presetdescription'] = $preset['description'];
+			}
+		}
 
 		foreach($preset['modules'] as $type => $a) {
 			foreach($a as $index => $module) {
@@ -1118,6 +1170,7 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 				}
 
 				foreach($preset['chargepresets'] as $cpid => $chargepreset) {
+					if(!$allpresets && $cpid != $fit['chargepresetid']) continue;
 					if(!isset($chargepreset['charges'][$type][$index])) continue;
 
 					$charge = $chargepreset['charges'][$type][$index];
@@ -1127,7 +1180,9 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 					if(!$minify) {
 						$jsoncharge['typename'] = $charge['typename'];
 					}
-					$jsoncharge['cpid'] = (int)$cpid;
+					if((int)$cpid !== 0) {
+						$jsoncharge['cpid'] = (int)$cpid;
+					}
 
 					$jsonmodule['charges'][] = $jsoncharge;
 				}
@@ -1137,12 +1192,20 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 		}
 
 		foreach($preset['chargepresets'] as $cpid => $chargepreset) {
+			if(!$allpresets && $cpid != $fit['chargepresetid']) continue;
+
 			$jsoncp = array();
 
 			$jsoncp['id'] = (int)$cpid;
-			$jsoncp['name'] = $chargepreset['name'];
-			if($chargepreset['description'] != '') {
-				$jsoncp['description'] = $chargepreset['description'];
+
+			if($hasmeta) {
+				$jsoncp['name'] = $chargepreset['name'];
+				if($chargepreset['description'] != '') {
+					$jsoncp['description'] = $chargepreset['description'];
+				}
+			} else {
+				/* The field is required and must be unique */
+				$jsoncp['name'] = (string)$cpid;
 			}
 
 			$jsonpreset['chargepresets'][] = $jsoncp;
@@ -1155,7 +1218,7 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 				$jsonimplant['slot'] = (int)$i['slot'];
 			}
 
-			if(isset($i['sideeffects'])) {
+			if($extraprops & isset($i['sideeffects'])) {
 				foreach($i['sideeffects'] as $effectid) {
 					$jsonimplant['X-sideeffects'][] = (int)$effectid;
 				}
@@ -1180,12 +1243,16 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
 		$json['presets'][] = $jsonpreset;
 	}
 
-	foreach($fit['dronepresets'] as $dronepreset) {
+	foreach($fit['dronepresets'] as $dpid => $dronepreset) {
+		if(!$allpresets && $dpid != $fit['dronepresetid']) continue;
+
 		$jsondp = array();
 
-		$jsondp['presetname'] = $dronepreset['name'];
-		if($dronepreset['description'] != '') {
-			$jsondp['presetdescription'] = $dronepreset['description'];
+		if($hasmeta) {
+			$jsondp['presetname'] = $dronepreset['name'];
+			if($dronepreset['description'] != '') {
+				$jsondp['presetdescription'] = $dronepreset['description'];
+			}
 		}
 
 		foreach($dronepreset['drones'] as $drone) {
@@ -1218,11 +1285,21 @@ function export_to_common_loadout_format_1($fit, $minify = false, $extraprops = 
  * to recognize/parse by machines, and resilient to user/program
  * stupidity (such as encoding changes, line breaks, added symbols
  * etc.).
+ *
+ * Takes the same arguments as export_to_common_loadout_format().
  */
-function export_to_gzclf($fit) {
+function export_to_gzclf($fit, $opts = CLF_EXPORT_MINIFY) {
+	$rawgzclf = export_to_gzclf_raw($fit, $opts);
+
 	return "BEGIN gzCLF BLOCK\n"
-		.wordwrap(base64_encode(gzcompress(export_to_common_loadout_format($fit, true))), 72, "\n", true)
+		.wordwrap($rawgzclf, 72, "\n", true)
 		."\nEND gzCLF BLOCK\n";
+}
+
+/** @internal */
+function export_to_gzclf_raw($fit, $opts = CLF_EXPORT_MINIFY) {
+	$clfstring = export_to_common_loadout_format($fit, $opts);
+	return base64_encode(gzcompress($clfstring));
 }
 
 /**
@@ -1376,6 +1453,16 @@ function export_to_markdown($fit, $embedclf = true) {
 
 			$md .= "\n";
 		}
+	}
+
+	if(isset($fit['fleet']) && $fit['fleet'] !== array()) {
+		$md .= "# Fleet bonuses\n\n";
+
+		foreach($fit['fleet'] as $k => $f) {
+			$md .= "- {$k} booster: {$f['__id']}\n";
+		}
+
+		$md .= "\n";
 	}
 
 	if($embedclf) {
@@ -1813,10 +1900,9 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 				create($boosterfit);
 			}
 
-			$boosterfit['__id'] = $fitting;
-			use_skillset_by_name($boosterfit, $ss, $a);
-
 			call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, $boosterfit));
+			use_skillset_by_name($fit['fleet'][$k], $ss, $a);
+			$fit['fleet'][$k]['__id'] = $fitting;
 		}
 	}
 
@@ -1980,6 +2066,14 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 	/* Try and parse a DNA fit */
 	if(preg_match('%(?P<dna>'.\Osmium\Fit\DNA_REGEX.')%', $remote, $match)) {
 		$fit = try_parse_fit_from_shipdna($match['dna'], '', $errors);
+		if($fit === false) return false;
+		\Osmium\Dogma\late_init($fit);
+		return $fit;
+	}
+
+	/* Try and parse some gzCLF */
+	if(preg_match('%^gzclf://%', $remote)) {
+		$fit = try_parse_fit_from_gzclf_raw(substr($remote, strlen('gzclf://')), $errors);
 		if($fit === false) return false;
 		\Osmium\Dogma\late_init($fit);
 		return $fit;

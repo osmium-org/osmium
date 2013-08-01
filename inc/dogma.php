@@ -47,6 +47,13 @@ function late_init(&$fit, $withfleet = true) {
 	clear($fit);
 	dogma_init_context($fit['__dogma_context']);
 
+	if(isset($fit['metadata']['skillset'])) {
+		$ss = $fit['metadata']['skillset'];
+		unset($fit['metadata']['skillset']);
+		$a = \Osmium\State\get_state('a');
+		\Osmium\Fit\use_skillset_by_name($fit, $ss, $a);
+	}
+
 	if($withfleet) {
 		dogma_init_fleet_context($fit['__dogma_fleet_context']);
 		dogma_add_squad_member($fit['__dogma_fleet_context'], 0, 0, $fit['__dogma_context']);

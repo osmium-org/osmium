@@ -164,8 +164,8 @@ osmium_send_clf = function(onsuccess, oncomplete) {
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
 
-			$("section#metadata tr.error").removeClass('error');
-			$("section#metadata tr.error_message").remove();
+			$("tr.error.clferror").removeClass('error').removeClass('clferror');
+			$("tr.error_message.clferror").remove();
 
 			if("form-errors" in payload) {
 				for(var i = 0; i < payload['form-errors'].length; ++i) {
@@ -175,13 +175,13 @@ osmium_send_clf = function(onsuccess, oncomplete) {
 					var td = $(document.createElement('td'));
 					var p = $(document.createElement('p'));
 
-					tr.addClass('error_message');
+					tr.addClass('error_message').addClass('clferror');
 					td.attr('colspan', '2');
 					p.text(err[2]);
 					td.append(p);
 					tr.append(td);
 
-					$(err[1]).closest('tr').addClass('error').before(tr);
+					$(err[1]).closest('tr').addClass('error').addClass('clferror').before(tr);
 					if(err[0]) {
 						$("a[href='#"  + err[0] +  "']").click();
 					}

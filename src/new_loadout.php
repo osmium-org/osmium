@@ -394,7 +394,7 @@ foreach(array('fleet', 'wing', 'squad') as $ft) {
 
 	echo "<tr>\n";
 	echo "<td rowspan='2'><label for='{$ft}_fit'>Use fitting: </label></td>\n";
-	echo "<td><input type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' placeholder='Enter the URI of a loadout, or a DNA fit' /></td>\n";
+	echo "<td><input type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' placeholder='Loadout URI, DNA string or gzclf:// data' /></td>\n";
 	echo "</tr>\n";
 
 	echo "<tr>\n<td>";

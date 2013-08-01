@@ -405,7 +405,12 @@ osmium_staticver = ".\Osmium\STATICVER.";
 osmium_relative = '".$relative."';
 osmium_token = '".\Osmium\State\get_token()."';
 osmium_clftoken = '".$clftoken."';
-osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1($fit, true, true, true)).";
+osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1(
+	$fit,
+	\Osmium\Fit\CLF_EXPORT_MINIFY
+	| \Osmium\Fit\CLF_EXPORT_EXTRA_PROPERTIES
+	| \Osmium\Fit\CLF_EXPORT_INTERNAL_PROPERTIES
+)).";
 osmium_custom_damage_profiles = ".$cdp.";
 osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 	);
