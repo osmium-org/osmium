@@ -2040,5 +2040,17 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 		return false;
 	}
 
+	if(isset($match['preset']) && isset($fit['presets'][$match['preset']])) {
+		use_preset($fit, $match['preset']);
+	}
+
+	if(isset($match['chargepreset']) && isset($fit['chargepresets'][$match['chargepreset']])) {
+		use_charge_preset($fit, $match['chargepreset']);
+	}
+
+	if(isset($match['dronepreset']) && isset($fit['dronepresets'][$match['dronepreset']])) {
+		use_drone_preset($fit, $match['dronepreset']);
+	}
+
 	return $fit;
 }
