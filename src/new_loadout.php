@@ -161,16 +161,18 @@ echo "<div id='nlattribs'>
 <form method='GET' action='./".$tok."'>
 <input type='button' name='reset_loadout' id='reset_loadout' value='Reset loadout' />\n";
 
+
+echo "<input type='button' name='export_loadout' id='export_loadout' value='Export loadout' />\n";
+
 if(\Osmium\State\is_logged_in()) {
 	echo "<input type='button' name='submit_loadout' id='submit_loadout' value='Save loadout' />\n";
-} else {
-	echo "<input type='button' name='export_loadout' id='export_loadout' value='Export loadout' /><br />\n";
-	echo "Export format: <select name='export_type' id='export_type'>\n";
-	foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
-		echo "<option value='".htmlspecialchars($k, ENT_QUOTES)."'>".htmlspecialchars($f[0])."</option>\n";
-	}
-	echo "</select>\n";
 }
+
+echo "<br />\nExport format: <select name='export_type' id='export_type'>\n";
+foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
+	echo "<option value='".htmlspecialchars($k, ENT_QUOTES)."'>".htmlspecialchars($f[0])."</option>\n";
+}
+echo "</select>\n";
 
 echo "</form>
 </section>

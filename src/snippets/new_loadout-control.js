@@ -94,11 +94,13 @@ osmium_init_control = function() {
 			} else if("submit-loadout-uri" in payload) {
 				window.location.replace(payload['submit-loadout-uri']);
 			}
-		}, function() {
-			b.prop('disabled', false)
-				.parent().find('span.spinner').remove();
-			delete(osmium_clf['X-Osmium-submit']);
-		});
+		}, (function(b) {
+			return function() {
+				b.prop('disabled', false)
+					.parent().find('span.spinner').remove();
+				delete(osmium_clf['X-Osmium-submit']);
+			};
+		})(b));
 	});
 };
 
