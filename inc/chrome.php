@@ -157,8 +157,8 @@ function format_duration($seconds) {
 }
 
 function format_long_duration($seconds, $precision = 6) {
-	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', time() - $seconds));
-	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', time()));
+	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', 0));
+	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', $seconds));
 
 	$years = $Y - $y;
 	$months = $M - $m;
@@ -166,27 +166,6 @@ function format_long_duration($seconds, $precision = 6) {
 	$hours = $H - $h;
 	$minutes = $I - $i;
 	$seconds = $S - $s;
-
-	while($seconds < 0) {
-		--$minutes;
-		$seconds += 60;
-	}
-	while($minutes < 0) {
-		--$hours;
-		$minutes += 60;
-	}
-	while($hours < 0) {
-		--$days;
-		$hours += 24;
-	}
-	while($days < 0) {
-		--$months;
-		$days += 30;
-	}
-	while($months < 0) {
-		--$years;
-		$months += 12;
-	}
 
 	$out = array(
 		'year' => $years,
