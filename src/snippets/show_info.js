@@ -33,13 +33,12 @@ osmium_showinfo = function(opts) {
 
 osmium_showinfo_internal = function(opts, onerror) {
 	opts.loadoutsource = osmium_clftype;
-	opts.clftoken = osmium_clftoken;
 
 	osmium_clfspinner_push();
 
 	$.ajax({
-		type: 'GET',
-		url: osmium_relative + '/src/json/show_info.php',
+		type: 'POST',
+		url: osmium_relative + '/internal/showinfo/' + osmium_clftoken,
 		data: opts,
 		dataType: 'json',
 		error: onerror,

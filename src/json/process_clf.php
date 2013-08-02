@@ -21,17 +21,17 @@ namespace Osmium\Json\ProcessCLF;
 require __DIR__.'/../../inc/root.php';
 require \Osmium\ROOT.'/inc/ajax_common.php';
 
-if(!isset($_GET['token']) || $_GET['token'] != \Osmium\State\get_token()
-   || !isset($_GET['type']) || !in_array($_GET['type'], array('new', 'view'))
+if(!isset($_POST['token']) || $_POST['token'] != \Osmium\State\get_token()
+   || !isset($_POST['type']) || !in_array($_POST['type'], array('new', 'view'))
    || !isset($_GET['clftoken']) || !isset($_POST['clf'])) {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }
 
-$type = $_GET['type'];
+$type = $_POST['type'];
 $token = $_GET['clftoken'];
 $clftext = gzinflate(base64_decode($_POST['clf']));
-$relative = $_GET['relative'];
+$relative = $_POST['relative'];
 $local = null;
 
 $clf = json_decode($clftext, true);
@@ -140,7 +140,7 @@ if($type === 'new') {
 		}
 	}
 
-	if(isset($_GET['submit']) && $_GET['submit']) {
+	if(isset($_POST['submit']) && $_POST['submit']) {
 		if(!\Osmium\State\is_logged_in()) {
 			header('HTTP/1.1 400 Bad Request', true, 400);
 			\Osmium\Chrome\return_json(array());
@@ -204,14 +204,14 @@ if($type === 'new') {
 					);
 			}
 		}
-	} else if(isset($_GET['export']) && $_GET['export'] && isset($_GET['exportfmt'])) {
+	} else if(isset($_POST['export']) && $_POST['export'] && isset($_POST['exportfmt'])) {
 		$formats = \Osmium\Fit\get_export_formats();
-		if(!isset($formats[$_GET['exportfmt']])) {
+		if(!isset($formats[$_POST['exportfmt']])) {
 			header('HTTP/1.1 400 Bad Request', true, 400);
 			\Osmium\Chrome\return_json(array());
 		}
 
-		$format = $formats[$_GET['exportfmt']];
+		$format = $formats[$_POST['exportfmt']];
 		$payload['export-type'] = $format[1];
 		$payload['export-payload'] = $format[2]($local);
 	}

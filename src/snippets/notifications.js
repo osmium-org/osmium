@@ -17,7 +17,7 @@
 
 osmium_notifications = function(relative) {
 	var fetch = function() {
-		$.get(relative + '/src/ajax/get_notification_count.php', function(cnt) {
+		$.get(relative + '/internal/nc', function(cnt) {
 			var a = $("a#ncount");
 			var rawtitle = document.title.replace(/^\([1-9][0-9]*\) /, "");
 

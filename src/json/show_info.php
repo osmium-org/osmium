@@ -21,10 +21,10 @@ namespace Osmium\Json\ShowInfo;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(isset($_GET['loadoutsource']) && $_GET['clftoken']) {
-	if($_GET['loadoutsource'] === 'new') {
+if(isset($_POST['loadoutsource']) && isset($_GET['clftoken'])) {
+	if($_POST['loadoutsource'] === 'new') {
 		$fit = \Osmium\State\get_new_loadout($_GET['clftoken']);
-	} else if($_GET['loadoutsource'] === 'view') {
+	} else if($_POST['loadoutsource'] === 'view') {
 		$fit = \Osmium\State\get_view_loadout($_GET['clftoken']);
 	}
 } else {
@@ -32,7 +32,7 @@ if(isset($_GET['loadoutsource']) && $_GET['clftoken']) {
 	\Osmium\Chrome\return_json(array());
 }
 
-if(!isset($_GET['type']) || !$fit) {
+if(!isset($_POST['type']) || !$fit) {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }
@@ -88,10 +88,10 @@ function get_attributes($typeid, $getval_callback) {
 	return $attributes;
 }
 
-if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index'])
-   && isset($fit['modules'][$_GET['slottype']][$_GET['index']])) {
-	$st = $_GET['slottype'];
-	$idx = $_GET['index'];
+if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['index'])
+   && isset($fit['modules'][$_POST['slottype']][$_POST['index']])) {
+	$st = $_POST['slottype'];
+	$idx = $_POST['index'];
 	$module = $fit['modules'][$st][$idx];
 
 	$typeid = $module['typeid'];
@@ -100,10 +100,10 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 	$attributes = get_attributes($typeid, function($aname) use(&$fit, $st, $idx) {
 			return \Osmium\Dogma\get_module_attribute($fit, $st, $idx, $aname);
 		});
-} else if($_GET['type'] == 'charge' && isset($_GET['slottype']) && isset($_GET['index'])
-   && isset($fit['charges'][$_GET['slottype']][$_GET['index']])) {
-	$st = $_GET['slottype'];
-	$idx = $_GET['index'];
+} else if($_POST['type'] == 'charge' && isset($_POST['slottype']) && isset($_POST['index'])
+   && isset($fit['charges'][$_POST['slottype']][$_POST['index']])) {
+	$st = $_POST['slottype'];
+	$idx = $_POST['index'];
 	$charge = $fit['charges'][$st][$idx];
 
 	$typeid = $charge['typeid'];
@@ -112,15 +112,15 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 	$attributes = get_attributes($typeid, function($aname) use(&$fit, $st, $idx) {
 			return \Osmium\Dogma\get_charge_attribute($fit, $st, $idx, $aname);
 		});
-} else if($_GET['type'] == 'ship') {
+} else if($_POST['type'] == 'ship') {
 	$typeid = $fit['ship']['typeid'];
 	$typename = $fit['ship']['typename'];
 	$loc = DOGMA_LOC_Ship;
 	$attributes = get_attributes($typeid, function($aname) use(&$fit) {
 			return \Osmium\Dogma\get_ship_attribute($fit, $aname);
 		});
-} else if($_GET['type'] == 'drone' && isset($_GET['typeid']) && isset($fit['drones'][$_GET['typeid']])) {
-	$typeid = $_GET['typeid'];
+} else if($_POST['type'] == 'drone' && isset($_POST['typeid']) && isset($fit['drones'][$_POST['typeid']])) {
+	$typeid = $_POST['typeid'];
 	$typename = $fit['drones'][$typeid]['typename'];
 	$loc = [ DOGMA_LOC_Drone, 'drone_typeid' => (int)$typeid ];
 
@@ -137,17 +137,17 @@ if($_GET['type'] == 'module' && isset($_GET['slottype']) && isset($_GET['index']
 		dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
 		\Osmium\Fit\transfer_drone($fit, $typeid, 'space', 1);
 	}
-} else if(($_GET['type'] === 'implant' || $_GET['type'] === 'booster')
-          && isset($_GET['typeid'])
-          && isset($fit['implants'][$_GET['typeid']])) {
-	$typeid = $_GET['typeid'];
+} else if(($_POST['type'] === 'implant' || $_POST['type'] === 'booster')
+          && isset($_POST['typeid'])
+          && isset($fit['implants'][$_POST['typeid']])) {
+	$typeid = $_POST['typeid'];
 	$typename = $fit['implants'][$typeid]['typename'];
 	$loc = [ DOGMA_LOC_Implant, 'implant_index' => $fit['implants'][$typeid]['dogma_index'] ];
 	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
 		return \Osmium\Dogma\get_implant_attribute($fit, $typeid, $aname);
 	});
-} else if($_GET['type'] === 'generic') {
-	$typeid = (int)$_GET['typeid'];
+} else if($_POST['type'] === 'generic') {
+	$typeid = (int)$_POST['typeid'];
 	$typename = \Osmium\Fit\get_typename($typeid);
 	$attributes = get_attributes($typeid, null);
 	$affectors = false;

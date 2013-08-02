@@ -44,23 +44,37 @@ $osmium_dispatch_rules = array(
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
 	\Osmium\PRIVATE_LOADOUT_RULE => '/src/view_loadout.php',
 
+	'%^/internal/nc$%D' => '/src/ajax/get_notification_count.php',
+	'%^/internal/syncclf/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/process_clf.php',
+	'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
+
+
+
 	/* Atom feeds */
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
 	'%^/atom/recentlyupdated\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'recentlyupdated']],
 
+
+
 	/* Loadout-related operations */
 	'%^/import$%D' => '/src/import_loadouts.php',
 	'%^/convert%D' => '/src/convert.php',
+
 	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
 	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 	'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
+
+
 	/* API calls */
     '%^/loadout/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/view_loadout.php',
     '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
+
     '%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
 	'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],
 	'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
+
+
 
 	/* Less common pages */
 	'%^/register$%D' => '/src/register.php',

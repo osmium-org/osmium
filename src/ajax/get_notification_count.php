@@ -30,7 +30,7 @@ if($a === null) {
 
 $k = 'notification_count_'.$a['accountid'];
 $count = \Osmium\State\get_cache_memory($k, -1);
-if($count >= -1) {
+if($count > -1) {
 	echo $count;
 	die();
 }
@@ -42,7 +42,7 @@ if($sem === false) {
 }
 
 $count = \Osmium\State\get_cache_memory($k, -1);
-if($count >= -1) {
+if($count > -1) {
 	echo $count;
 	die();
 }

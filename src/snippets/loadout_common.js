@@ -157,15 +157,11 @@ osmium_send_clf = function(opts) {
 		opts = {};
 	}
 
-	var postopts = {
-		clf: osmium_compress_json(osmium_clf)
-	};
-
-	var getopts = $.extend({
+	var postopts = $.extend({
 		type: osmium_clftype,
 		token: osmium_token,
-		clftoken: osmium_clftoken,
-		relative: osmium_relative
+		relative: osmium_relative,
+		clf: osmium_compress_json(osmium_clf)
 	}, (("params" in opts) ? opts.params : {}));
 
 	osmium_clfspinner_push();
@@ -174,7 +170,7 @@ osmium_send_clf = function(opts) {
 
 	$.ajax({
 		type: 'POST',
-		url: osmium_relative + '/src/json/process_clf.php?' + $.param(getopts),
+		url: osmium_relative + '/internal/syncclf/' + osmium_clftoken,
 		data: postopts,
 		dataType: 'json',
 		complete: function() {
