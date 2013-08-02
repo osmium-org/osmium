@@ -82,7 +82,8 @@ Assuming your webserver process runs with user `http` and group
 
 7. See Initial database setup below.
 
-8. Setup the cron jobs:
+8. Setup the cron jobs (they will renice their CPU/IO priority, no
+   need to do it yourself):
 
    ~~~~
    sudo crontab -e -u http
