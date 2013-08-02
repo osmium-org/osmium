@@ -40,31 +40,11 @@ osmium_init_control = function() {
 
 	$("section#control input#export_loadout").click(function() {
 		var b = $(this);
-		b.prop('disabled', true).after(
-			$(document.createElement('span')).addClass('spinner')
-		);
 
-		var postopts = {
-			clf: osmium_compress_json(osmium_clf)
-		};
-
-		var getopts = {
-			type: 'new',
-			token: osmium_token,
-			clftoken: osmium_clftoken,
-			'export': 1,
-			exportfmt: $("section#control select#export_type").val(),
-			relative: osmium_relative
-		};
-
-		$.ajax({
-			type: "POST",
-			url: osmium_relative + "/src/json/process_clf.php?" + $.param(getopts),
-			data: postopts,
-			dataType: "json",
-			error: function(xhr, error, httperror) {
-				alert('An error occured: ' + error + ' (' + httperror 
-					  + '). This shouldn\'t normally happen, try again.'); 
+		osmium_commit_clf({
+			params: {
+				'export': true,
+				'exportfmt': $("section#control select#export_type").val()
 			},
 			success: function(payload) {
 				var textarea = $(document.createElement('textarea'));
@@ -74,33 +54,50 @@ osmium_init_control = function() {
 				osmium_modal(textarea);
 				textarea.parent().css('overflow', 'hidden'); /* XXX */
 			},
-			complete: function() {
-				b.prop('disabled', false)
-					.parent().find('span.spinner').remove();
-			}
+			before: (function(b) {
+				return function() {
+					b.prop('disabled', true).parent().after(
+						$(document.createElement('span')).addClass('spinner')
+					);
+				};
+			})(b),
+			after: (function(b) {
+				return function() {
+					b.prop('disabled', false).parent()
+						.parent().find('span.spinner').remove();
+				};
+			})(b)
 		});
 	});
 
 	$("section#control input#submit_loadout").click(function() {
 		var b = $(this);
-		b.prop('disabled', true).after(
-			$(document.createElement('span')).addClass('spinner')
-		);
 
-		osmium_clf['X-Osmium-submit'] = true;
-		osmium_commit_clf(function(payload) {
-			if("submit-error" in payload) {
-				alert(payload['submit-error']);
-			} else if("submit-loadout-uri" in payload) {
-				window.location.replace(payload['submit-loadout-uri']);
-			}
-		}, (function(b) {
-			return function() {
-				b.prop('disabled', false)
-					.parent().find('span.spinner').remove();
-				delete(osmium_clf['X-Osmium-submit']);
-			};
-		})(b));
+		osmium_commit_clf({
+			params: {
+				submit: true,
+			},
+			success: function(payload) {
+				if("submit-error" in payload) {
+					alert(payload['submit-error']);
+				} else if("submit-loadout-uri" in payload) {
+					window.location.replace(payload['submit-loadout-uri']);
+				}
+			},
+			before: (function(b) {
+				return function() {
+					b.prop('disabled', true).parent().after(
+						$(document.createElement('span')).addClass('spinner')
+					);
+				};
+			})(b),
+			after: (function(b) {
+				return function() {
+					b.prop('disabled', false).parent()
+						.parent().find('span.spinner').remove();
+				};
+			})(b)
+		});
 	});
 };
 

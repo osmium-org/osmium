@@ -20,11 +20,13 @@ osmium_showinfo_sprite_position = [ 6, 58, 16, 16 ];
 osmium_showinfo = function(opts) {
 	osmium_showinfo_internal(opts, function() {
 		/* First error… Try committing CLF and retry once */
-		osmium_commit_clf(function() {
-			osmium_showinfo_internal(opts, function(xhr, error, httperror) {
-				alert('Could not show info: ' + error + ' (' + httperror
-					  + '). Try refreshing the page and report if the problem persists.');
-			});
+		osmium_commit_clf({
+			success: function() {
+				osmium_showinfo_internal(opts, function(xhr, error, httperror) {
+					alert('Could not show info: ' + error + ' (' + httperror
+						  + '). Try refreshing the page and report if the problem persists.');
+				});
+			}
 		});
 	});
 };

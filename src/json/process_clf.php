@@ -140,7 +140,7 @@ if($type === 'new') {
 		}
 	}
 
-	if(isset($clf['X-Osmium-submit']) && $clf['X-Osmium-submit']) {
+	if(isset($_GET['submit']) && $_GET['submit']) {
 		if(!\Osmium\State\is_logged_in()) {
 			header('HTTP/1.1 400 Bad Request', true, 400);
 			\Osmium\Chrome\return_json(array());

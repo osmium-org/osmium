@@ -26,6 +26,7 @@ osmium_clfspinner_level = 0;
 
 osmium_must_send_clf = false;
 osmium_sending_clf = false;
+osmium_next_clf_opts = undefined;
 
 osmium_load_static_client_data = function(staticver, onsuccess) {
 	var idx = 'osmium_static_client_data_' + staticver;
@@ -111,39 +112,65 @@ osmium_undo_pop = function() {
 	osmium_undo_trim();
 }
 
-/* Synchronize the CLF with the server and update the attribute list,
+/**
+ * Synchronize the CLF with the server and update the attribute list,
  * etc. It is safe to call this function repeatedly in a short amount
  * of time, it has built-in rate limiting. Requires osmium_clftype and
- * osmium_on_clf_payload global variables to be set. */
-osmium_commit_clf = function(onsuccess, oncomplete) {
+ * osmium_on_clf_payload global variables to be set.
+ *
+ * If specified, opts is an object which can contain any of the following properties:
+ *
+ * - params: send these additional params to process_clf
+ * - before: function(), called before actually sending the CLF
+ * - after: function(), called when process_clf is done
+ * - success: function(payload), called when process_clf is done and didn't throw an error
+ */
+osmium_commit_clf = function(opts) {
 	osmium_must_send_clf = true;
 
-	if(osmium_sending_clf) return;
+	if(osmium_sending_clf) {
+		if(opts !== undefined) {
+			osmium_next_clf_opts = opts;
+		}
+
+		return;
+	}
 	osmium_sending_clf = true;
 
-	osmium_send_clf(onsuccess, oncomplete);
+	osmium_send_clf(opts);
 };
 
 /** @internal */
-osmium_send_clf = function(onsuccess, oncomplete) {
+osmium_send_clf = function(opts) {
 	if(!osmium_must_send_clf) {
 		osmium_sending_clf = false;
 		return;
 	}
 	osmium_must_send_clf = false;
 
+	if(opts === undefined) {
+		opts = osmium_next_clf_opts;
+		osmium_next_clf_opts = undefined;
+	}
+
+	if(opts === undefined) {
+		opts = {};
+	}
+
 	var postopts = {
 		clf: osmium_compress_json(osmium_clf)
 	};
 
-	var getopts = {
+	var getopts = $.extend({
 		type: osmium_clftype,
 		token: osmium_token,
 		clftoken: osmium_clftoken,
 		relative: osmium_relative
-	};
+	}, (("params" in opts) ? opts.params : {}));
 
 	osmium_clfspinner_push();
+
+	if("before" in opts) opts.before();
 
 	$.ajax({
 		type: 'POST',
@@ -152,8 +179,8 @@ osmium_send_clf = function(onsuccess, oncomplete) {
 		dataType: 'json',
 		complete: function() {
 			osmium_clfspinner_pop();
-			if(typeof oncomplete === "function") {
-				oncomplete();
+			if("after" in opts) {
+				opts.after();
 			}
 		},
 		error: function(xhr, error, httperror) {
@@ -249,7 +276,7 @@ osmium_send_clf = function(onsuccess, oncomplete) {
 			osmium_clf_rawattribs.activedrones = ndrones;
 
 			osmium_on_clf_payload(payload);
-			if((typeof onsuccess) === "function") onsuccess(payload);
+			if("success" in opts) opts.success(payload);
 			setTimeout(osmium_send_clf, 500);
 		}
 	});
