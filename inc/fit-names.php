@@ -94,3 +94,11 @@ function get_average_market_price($typeid) {
 		'eve.averagemarketprices', 'averageprice', 'typeid', (int)$typeid
 	);
 }
+
+function get_parent_typeid($typeid) {
+	$parent = get_cached_thing_generic(
+		'eve.invmetatypes', 'parenttypeid', 'typeid', (int)$typeid
+	);
+
+	return $parent ?: $typeid;
+}

@@ -574,7 +574,6 @@ function get_used_drone_bandwidth($fit) {
 
 	foreach($fit['drones'] as $drone) {
 		if(($q = $drone['quantityinspace']) == 0) continue; /* Don't calculate the attribute for nothing */
-
 		$used += $q * \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'droneBandwidthUsed');
 	}
 

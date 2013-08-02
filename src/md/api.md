@@ -31,6 +31,12 @@ you follow the following simple rules:
 
 View a loadout from a DNA string.
 
+By default, the supplied DNA will be mangled into a smaller, slightly
+altered version to make up for bad formatting. If your DNA setup
+relies heavily on module ordering (like placing passive modules
+between active modules for overheating), you can pass the `?mangle=0`
+parameter to disable this behaviour.
+
 
 
 

@@ -534,9 +534,9 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 
 	if(!isset($fit['drones'][$typeid])) {
 		$fit['drones'][$typeid] = array(
-			'typeid' => $typeid,
+			'typeid' => (int)$typeid,
 			'typename' => get_typename($typeid),
-			'volume' => get_volume($typeid),
+			'volume' => (float)get_volume($typeid),
 			'quantityinbay' => 0,
 			'quantityinspace' => 0,
 		);

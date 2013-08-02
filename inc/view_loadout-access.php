@@ -24,6 +24,20 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
     $dna = $_GET['dna'];
     $ckey = 'dnafit_'.$dna;
 
+    if(!isset($_GET['mangle']) || $_GET['mangle']) {
+	    $mangled = \Osmium\Fit\mangle_dna($dna);
+
+	    if($mangled === false) {
+		    \Osmium\Fatal(400, "Nonsensical DNA string");
+	    }
+
+	    if($mangled !== $dna) {
+		    header('Location: ./'.$mangled, true, 303);
+		    die();
+		    $dna = $mangled;
+	    }
+    }
+
     $fit = \Osmium\State\get_cache_memory_fb($ckey, null);
     if($fit === null) {
 	    $fit = \Osmium\Fit\try_parse_fit_from_shipdna($dna, 'New DNA-imported loadout', $errors);
