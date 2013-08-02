@@ -20,143 +20,99 @@
 namespace Osmium\CLI\FetchZKillboardDNA;
 
 require __DIR__.'/../inc/root.php';
-require \Osmium\ROOT.'/inc/ajax_common.php';
+
+/* The zKillboard documentation doesn't say if the dates are in UTC,
+ * but they probably are */
+date_default_timezone_set('UTC');
 
 const GROUP_Capsule = 29;
+const MIN_WALK = 7200; /* Always reinsert the kills from the last 2
+                        * hours, to make up for (EVE) API cache times
+                        * and stuff */
+
+$c = curl_init();
+curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($c, CURLOPT_HEADER, 1);
+curl_setopt($c, CURLOPT_TIMEOUT, 60);
+curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
+$cver = curl_version();
+$over = ltrim(\Osmium\get_osmium_version(), 'v');
+$pver = phpversion();
+curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} (PHP/{$pver}; libcurl/{$cver['version']}; {$cver['ssl_version']}; +http://artefact2.com/osmium/)");
 
 
-
-function get_parent_typeid($typeid) {
-	$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT parenttypeid FROM eve.invmetatypes
-		WHERE typeid = $1',
-		array($typeid)
-	));
-
-	if($row === false) return $typeid;
-	return $row[0];
-}
-
-/* The same fit can have multiple DNA representation. This function
- * tries to correct this by converting all DNA to their "canonical"
- * form, where types are sorted by category and by ID. */
-function uniquify_dna($dna) {
-	require_once __DIR__.\Osmium\Fit\CLF_PATH;
-
-	$types = array(
-		'module' => [],
-		'charge' => [],
-		'drone' => [],
-		'implant' => [],
-		'booster' => [],
-	);
-
-	$dnaparts = explode(':', rtrim($dna, ':'));
-	$ship = (int)array_shift($dnaparts);
-
-	if(!\CommonLoadoutFormat\check_typeof_type($ship, 'ship')) return false;
-	$shipgroup = (int)\Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT groupid FROM eve.invtypes WHERE typeid = $1',
-		array($ship)
-	))[0];
-	if($shipgroup === GROUP_Capsule) return false;
-
-	foreach($dnaparts as &$dnapart) {
-		if(strpos(';', $dnapart) !== false) {
-			list($typeid, $qty) = explode(';', $dnapart, 2);
-		} else {
-			$typeid = $dnapart;
-			$qty = 1;
-		}
-
-		$typeid = (int)$typeid;
-		$qty = (int)$qty;
-
-		foreach($types as $t => &$a) {
-			if(\CommonLoadoutFormat\check_typeof_type($typeid, $t)) {
-				if(!isset($a[$typeid])) $a[$typeid] = 0;
-				$a[$typeid] += $qty;
-				break;
-			}
-		}
-	}
-
-	$return = $ship;
-
-	foreach($types as &$a) {
-		ksort($a);
-
-		foreach($a as $typeid => $qty) {
-			$return .= ':'.$typeid.';'.$qty;
-		}
-	}
-
-	$groupdna = $ship;
-
-	foreach($types['module'] as $typeid => $qty) {
-		$groupdna .= ':'.get_parent_typeid($typeid).';'.$qty;
-	}
-
-	return [ $return.'::', $groupdna.'::' ];
-}
 
 function get_zkb_dna_page($page) {
 	$json = \Osmium\State\get_cache('dna_page_'.$page, null, 'API_ZKB_');
+	$uri = "https://zkillboard.com/api/dna/page/{$page}/";
 	if($json !== null) {
-		echo "{$page} (C)\n";
+		echo "Requesting {$uri} -\n";
 		return $json;
 	}
 
-	static $c = null;
+	static $hashes = array();
 	static $next_request_time = 0;
-	if($c === null) {
-		$c = curl_init();
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($c, CURLOPT_HEADER, 1);
-		curl_setopt($c, CURLOPT_TIMEOUT, 60);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
+	static $retries = [ 0, 10, 15, 30, 60 ];
+	global $c;
+
+	echo "Requesting {$uri} ";
+
+	foreach($retries as $ret) {
+		sleep($ret);
+		usleep(max(1, ($next_request_time - microtime(true)) * 1e6));
+
+		curl_setopt($c, CURLOPT_URL, $uri);
+		$reply = curl_exec($c);
+
+		echo ".";
+		if($reply === false) {
+			continue;
+		}
+
+		list($header, $body) = explode("\r\n\r\n", $reply, 2);
+		if(preg_match("%^X-Time-Between-Req: (.+)$%m", $header, $match)) {
+			$wait = $match[1] + 1;
+		} else {
+			$wait = 10;
+		}
+
+		$next_request_time = microtime(true) + $wait;
+		$json = json_decode($body, true);
+		if(json_last_error() !== JSON_ERROR_NONE) {
+			continue;
+		}
+
+		if(!is_array($json) || !isset($json[0]['killID'])) {
+			continue;
+		}
+
+		$hash = sha1(serialize($json));
+		unset($hashes[$page]);
+		if(($index = array_search($hash, $hashes, true)) !== false) {
+			echo "\n";
+			fwrite(STDERR, "Pages {$index} and {$page} returned the same dataset! Giving up.\n");
+			die(666);
+		}
+		$hashes[$page] = $hash;
+
+		\Osmium\State\put_cache('dna_page_'.$page, $json, 600, 'API_ZKB_');
+		echo "\n";
+		return $json;
 	}
 
-	echo "$page";
-
-	curl_setopt($c, CURLOPT_URL, $uri = "https://zkillboard.com/api/dna/page/{$page}/");
-	usleep(max(1, ($next_request_time - microtime(true)) * 1e6));
-	$reply = curl_exec($c);
-	if($reply === false) {
-		fwrite(STDERR, "Requesting {$uri} failed");
-		die(1);
-	}
-
-	list($header, $body) = explode("\r\n\r\n", $reply, 2);
-	if(preg_match("%^X-Time-Between-Req: (.+)$%m", $header, $match)) {
-		$wait = $match[1] + 1;
-	} else {
-		$wait = 10;
-	}
-
-	$next_request_time = microtime(true) + $wait;
-	$json = json_decode($body, true);
-	if(json_last_error() !== JSON_ERROR_NONE) {
-		fwrite(STDERR, "Got invalid JSON: ".json_last_error()."\n");
-		die(1);
-	}
-
-	if(!is_array($json) || !isset($json[0]['killID'])) {
-		fwrite(STDERR, "Got valid JSON, but not in expected format\n");
-		die(1);
-	}
-
-	\Osmium\State\put_cache('dna_page_'.$page, $json, 1800, 'API_ZKB_');
 	echo "\n";
-	return $json;
+	fwrite(STDERR, "Could not request {$uri} after ".count($retries)." attempts, giving up.\n");
+	die(1);
 }
 
 function get_page_position($json, $cutoff) {
 	$last = strtotime($json[0]['killtime']);
 	$first = strtotime($json[count($json) - 1]['killtime']);
 
-	if($cutoff > $last) return -1; /* Need to fetch a page before */
-	if($cutoff < $last) return 1; /* Need to fetch a page after */
+	assert($first < $last);
+
+	if($cutoff > $last) return -1; /* Need to fetch a page before (more recent kills) */
+	if($cutoff < $first) return 1; /* Need to fetch a page after (older kills) */
 	return 0;
 }
 
@@ -168,58 +124,92 @@ function lerp($x1, $y1, $x2, $y2, $y) {
 
 $cutoff = max(
 	$hardcutoff = time() - 7 * 86400,
-	(int)\Osmium\Db\fetch_row(\Osmium\Db\query(
+	$localcutoff = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
 		'SELECT max(killtime) FROM recentkillsdna'
 	))[0]
 );
-$cutoffid = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
-	'SELECT max(killid) FROM recentkillsdna'
-))[0];
 
-\Osmium\Db\query_params(
-	'DELETE FROM recentkillsdna
-	WHERE killtime < $1',
-	array($hardcutoff)
-);
+if($localcutoff < $hardcutoff) {
+	echo "NOTICE: fetching kills for the first time. This will take a long time.\n";
+} else {
+	echo "Local kills are ".\Osmium\Chrome\format_long_duration(time() - $localcutoff, 2)." old.\n";
+}
 
-$cutoffpage = 1;
+if(($t = time()) - $cutoff < MIN_WALK) {
+	$cutoff = $t - MIN_WALK;
+}
 
-$p1 = get_zkb_dna_page(1);
-if(get_page_position($p1, $cutoff) !== 0) {
-	$p128 = get_zkb_dna_page(128);
 
-	$start = strtotime($p128[count($p128) - 1]['killtime']);
-	$end = strtotime($p1[0]['killtime']);
-	$cutoffpage = ceil(lerp(1, $end, 128, $start, $cutoff));
-	$cp = get_zkb_dna_page($cutoffpage);
-	while(get_page_position($cp, $cutoff) === 1) {
-		$cnt = count($cp);
-		$start = strtotime($cp[$cnt - 1]['killtime']);
-		$end = strtotime($cp[0]['killtime']);
-		$cutoffpage = ceil(lerp($cutoffpage, $end, $cutoffpage + 1 - 1 / $cnt, $start, $cutoff));
-		$cp = get_zkb_dna_page($cutoffpage);
+
+
+
+echo "Spooling up walker…\n";
+
+$page = 1;
+$requests = [];
+while(true) {
+	$cp = get_zkb_dna_page($page);
+	$requests[] = $page;
+
+	$pos = get_page_position($cp, $cutoff);
+	if($pos === 1) {
+		/* Need to go deeper */
+		$page *= 2;
+	} else {
+		break;
 	}
 }
+
+if($pos === -1) {
+	/* Went too far in the past */
+	$max = array_pop($pos);
+	$min = array_pop($pos);
+
+	while($min < $max) {
+		$mid = (int)(($min + $max) * .5);
+		$cp = get_zkb_dna_page($mid);
+		$pos = get_page_position($cp, $cutoff);
+
+		if($pos === 0) {
+			$min = $max = $mid;
+		} else if($pos === 1) {
+			$min = $mid + 1;
+		} else {
+			assert($pos === -1);
+			$max = $mid - 1;
+		}
+	}
+
+	$cutoffpage = $min;
+} else {
+	/* The last page was the right one */
+	$cutoffpage = $page;
+}
+
+
+
+
+
+echo "Importing kills…\n";
 
 for($i = $cutoffpage; $i > 0; --$i) {
 	$page = get_zkb_dna_page($i);
 
 	while($kill = array_pop($page)) {
-		if($kill['killID'] < 0) continue;
+		if($kill['killID'] < 0) continue; /* Verified kills only. */
 
 		$killtime = strtotime($kill['killtime']);
-		if($kill['killID'] <= $cutoffid || $killtime < $cutoff) {
-			continue;
-		}
+		$dna = \Osmium\Fit\mangle_dna($kill['dna']);
+		$groupdna = \Osmium\Fit\uniquify_dna($dna);
+		if($dna === false || $groupdna === false) continue;
 
-		$udna = uniquify_dna($kill['dna']);
-		if($udna === false) continue;
-		list($dna, $groupdna) = $udna;
+		$shipgroup = (int)\Osmium\Fit\get_groupid(explode(':', $groupdna, 2)[0]);
+		if($shipgroup === GROUP_Capsule) continue; /* Pod fittings, bleh */
 
-		/* Unfortunately due to caching and the volume of kills, it's
-		 * possible for kills to appear multiple times in consecutive
-		 * pages. The @ is there to hide the annoying warning. */
-		@\Osmium\Db\query_params(
+		\Osmium\Db\query_params(
+			'DELETE FROM recentkillsdna WHERE killid = $1', array($kill['killID'])
+		);
+		\Osmium\Db\query_params(
 			'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna,
 			solarsystemid, solarsystemname, regionid, regionname,
 			characterid, charactername, corporationid, corporationname, allianceid, alliancename)
@@ -250,167 +240,12 @@ for($i = $cutoffpage; $i > 0; --$i) {
 
 
 
-$q = \Osmium\Db\query_params(
-	'SELECT count(characterid), groupdna, sum(exp(-($1 - lastkill) / (2 * 86400))) AS score
-	FROM (
-	SELECT groupdna, max(killtime) AS lastkill, characterid FROM recentkillsdna GROUP BY groupdna, characterid
-	) g
-	GROUP BY groupdna
-	ORDER BY score DESC',
-	array(time())
+
+
+echo "Pruning old kills…\n";
+
+\Osmium\Db\query_params(
+	'DELETE FROM recentkillsdna
+	WHERE killtime < $1',
+	array($hardcutoff)
 );
-
-$topkills = [ 'fotw' => [], 'doctrine' => [] ];
-$fotwc = 0;
-$doctrinec = 0;
-
-$numrows = 10;
-while($row = \Osmium\Db\fetch_assoc($q)) {
-	if($fotwc >= 3 * $numrows & $doctrinec >= 2 * $numrows) break;
-
-	$bestdna = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT dna
-		FROM recentkillsdna
-		WHERE groupdna = $1
-		GROUP BY dna
-		ORDER BY count(DISTINCT characterid) DESC
-		LIMIT 1',
-		array($row['groupdna'])
-	))[0];
-
-	$fit = \Osmium\Fit\try_parse_fit_from_shipdna($bestdna, 'DNA', $err);
-	if($fit === false) continue;
-	$slots = \Osmium\AjaxCommon\get_slot_usage($fit);
-	$emptyslots = 0;
-	$totalslots = 0;
-	foreach($slots as $type => $max) {
-		$totalslots += $max;
-		$emptyslots += ($max - (isset($fit['modules'][$type]) ? count($fit['modules'][$type]) : 0));
-	}
-	if($emptyslots >= ($totalslots >> 1)) {
-		/* More than half of the slots are empty, assume this is a shitfit™ */
-		continue;
-	}
-
-	/* Try and make the fit look good */
-
-	/* Sort out drones by damage */
-	$drones = array();
-
-	foreach($fit['drones'] as $typeid => $d) {
-		if($d['quantityinspace'] > 0) {
-			$drones[$typeid] = [
-				'damage' => \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'damageMultiplier') * (
-					\Osmium\Dogma\get_drone_attribute($fit, $typeid, 'emDamage')
-					+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'explosiveDamage')
-					+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'kineticDamage')
-					+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'thermalDamage')
-				),
-				'volume' => \Osmium\Fit\get_volume($typeid),
-			];
-		}
-
-		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $d['quantityinbay']);
-		\Osmium\Fit\remove_drone($fit, $typeid, 'space', $d['quantityinspace']);
-	}
-
-	uasort($drones, function($x, $y) {
-		$ret = $y['volume'] - $x['volume'];
-		return $ret ?: ($y['damage'] - $x['damage']);
-	});
-
-	$scandidates = array(); /* Array([ typeid, quantity]) */
-	$bcandidates = array(); /* Array([ typeid, quantity]) */
-
-	foreach($drones as $typeid => $d) {
-		$scandidates[] = [ $typeid, 3 ];
-		$bcandidates[] = [ $typeid, 5 ];
-	}
-
-	foreach($drones as $typeid => $d) {
-		$scandidates[] = [ $typeid, 1 ];
-		$bcandidates[] = [ $typeid, 1 ];
-	}
-
-	foreach($scandidates as $i => $d) {
-		list($typeid, $qty) = $d;
-		\Osmium\Fit\add_drone_auto($fit, $typeid, 50);
-		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $fit['drones'][$typeid]['quantityinbay']);
-		if(isset($fit['drones'][$typeid]) && $fit['drones'][$typeid]['quantityinspace'] < $qty) {
-			\Osmium\Fit\remove_drone($fit, $typeid, 'space', $fit['drones'][$typeid]['quantityinspace']);
-		} else if(isset($fit['drones'][$typeid]) && $qty > 1) {
-			unset($bcandidates[$i]);
-		}
-	}
-
-	$capacity = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity');
-	do {
-		$added = false;
-		foreach($bcandidates as $d) {
-			list($typeid, $qty) = $d;
-			\Osmium\Fit\add_drone($fit, $typeid, $qty, 0);
-
-			if(\Osmium\Fit\get_used_drone_capacity($fit) > $capacity) {
-				\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $qty);
-				continue;
-			}
-
-			$added = true;
-		}
-	} while($added === true);
-
-	$entry = array(
-		'dna' => \Osmium\Fit\export_to_dna($fit),
-		'count' => (int)$row['count'],
-		'tags' => $fit['metadata']['tags'],
-		'dps' => 0,
-	);
-
-	$entry['dps'] += \Osmium\Fit\get_damage_from_turrets($fit)[0];
-	$entry['dps'] += \Osmium\Fit\get_damage_from_missiles($fit)[0];
-	$entry['dps'] += \Osmium\Fit\get_damage_from_drones($fit);
-
-	$entry['ehp'] = \Osmium\Fit\get_ehp_and_resists(
-		$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25 ]
-	)['ehp']['avg'];
-
-	$missing = array();
-	$prices = \Osmium\Fit\get_estimated_price($fit, $missing);
-	$entry['price'] = $missing === array() ? array_sum($prices) : null;
-
-	if($doctrinec < 2 * $numrows) {
-		$alliancesq = \Osmium\Db\query_params(
-			'SELECT count(DISTINCT characterid), allianceid, alliancename
-			FROM recentkillsdna
-			WHERE groupdna = $1 AND allianceid > 0
-			GROUP BY allianceid, alliancename
-			ORDER BY count DESC
-			LIMIT 4',
-			array($row['groupdna'])
-		);
-
-		$alliances = array();
-		$proportion = 0;
-		while($proportion < .5 && $a = \Osmium\Db\fetch_row($alliancesq)) {
-			$alliances[] = $a;
-			$proportion += $a[0] / $row['count'];
-		}
-
-		if($proportion >= .5) {
-			$entry['alliances'] = $alliances;
-			$topkills['doctrine'][] = $entry;
-			++$doctrinec;
-			continue;
-		}
-	}
-
-	if($fotwc < 3 * $numrows) {
-		$topkills['fotw'][] = $entry;
-		++$fotwc;
-		continue;
-	}
-}
-
-\Osmium\State\put_cache('top_kills', $topkills, 86400);
-\Osmium\State\invalidate_cache_memory('fotw', 'Main_');
-\Osmium\State\invalidate_cache_memory('doctrines', 'Main_');
