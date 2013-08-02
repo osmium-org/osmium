@@ -46,6 +46,7 @@ $osmium_dispatch_rules = array(
 
 	'%^/internal/nc$%D' => '/src/ajax/get_notification_count.php',
 	'%^/internal/syncclf/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/process_clf.php',
+	'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 	'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
 
 

@@ -72,10 +72,18 @@ osmium_init_sources = function() {
 				)
 		);
 
+		var data = {};
+		t.find('input[type="hidden"][name][value]').each(function() {
+			var i = $(this);
+			data[i.prop('name')] = i.val();
+		});
+
 		$.ajax({
-			type: 'GET',
+			type: 'POST',
 			dataType: 'json',
-			url: "../../src/json/search_types.php?" + t.serialize(),
+			url: "../../internal/searchtypes/" + encodeURIComponent(t.find("input[name='q']").val())
+				.replace(/%20/g, "+"),
+			data: data,
 			success: function(json) {
 				for(var i in json.payload) {
 					var m = osmium_types[json.payload[i]];

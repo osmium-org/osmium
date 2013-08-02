@@ -22,10 +22,12 @@ require __DIR__.'/../../inc/root.php';
 
 const MAX_TYPES = 10;
 
-$q = $_GET['q'];
+$q = urldecode($_GET['q']);
 
-$filters = array_keys(array_filter(isset($_GET['mg']) && is_array($_GET['mg']) ? $_GET['mg'] : array(),
-                                   function($v) { return $v === '0'; }));
+$filters = array_keys(array_filter(
+	isset($_POST['mg']) && is_array($_POST['mg']) ? $_POST['mg'] : array(),
+	function($v) { return $v === '0'; }
+));
 $filters[] = -1;
 
 $w = \Osmium\Search\parse_search_query_attr_filters(
@@ -39,7 +41,7 @@ FROM osmium_types
 WHERE mg NOT IN ('.implode(',', $filters).')
 AND MATCH(\''.\Osmium\Search\escape($q).'\') '.$w.'
 LIMIT '.(MAX_TYPES + 1).'
-OPTION field_weights=(typename=100,synonyms=100,parenttypename=10,parentsynonyms=10,groupname=10,marketgroupname=10)');
+OPTION field_weights=(typename=1000,synonyms=1000,parenttypename=100,parentsynonyms=100,groupname=100,marketgroupname=100)');
 
 if($query === false) {
 	\Osmium\Chrome\return_json(array('payload' => array(), 'warning' => 'Invalid search query.'));
