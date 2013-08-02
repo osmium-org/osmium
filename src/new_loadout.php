@@ -53,14 +53,16 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
 	if(!\Osmium\State\can_view_fit($loadoutid)) {
 		\Osmium\Fatal(404, "Loadout not found");
 	}
-	if(!\Osmium\State\can_access_fit($loadoutid)) {
-		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
-	}
 	if(!\Osmium\State\can_edit_fit($loadoutid)) {
 		\Osmium\Fatal(403, "Permission is required to edit this loadout");
 	}
 
 	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
+
+	if(!\Osmium\State\can_access_fit($fit)) {
+		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
+	}
+
 	$tok = \Osmium\State\get_unique_new_loadout_token();
 	\Osmium\State\put_new_loadout($tok, $fit);
 
@@ -75,11 +77,13 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	if(!\Osmium\State\can_view_fit($loadoutid)) {
 		\Osmium\Fatal(404, "Loadout not found");
 	}
-	if(!\Osmium\State\can_access_fit($loadoutid)) {
+
+	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
+
+	if(!\Osmium\State\can_access_fit($fit)) {
 		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
 	}
 
-	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
 	$fork = $fit; /* Since $fit is an array, this makes a copy */
 
 	/* Make $fork look like a new loadout */
@@ -108,7 +112,29 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 				$fit['metadata']['loadoutid'],
 				$fit['metadata']['visibility'],
 				0 /* No need to risk showing the real private token here */
-			)."?revision=".(int)$fit['metadata']['revision'].") (revision "
+			)."R".(int)$fit['metadata']['revision'].") (revision "
+			.(int)$fit['metadata']['revision'].").*\n\n"
+			.$fork['metadata']['description']
+		);
+	}
+
+	if(isset($_GET['fleet'])) {
+		$t = htmlspecialchars($_GET['fleet'], ENT_QUOTES);
+
+		if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
+		|| !$fit['fleet'][$t]['ship']['typeid']) {
+			\Osmium\fatal(404, "No such fleet booster.");
+		}
+
+		$fork = $fit['fleet'][$t];
+		/* XXX refactor this */
+		$fork['metadata']['description'] = trim(
+			"*This loadout is a fork of the {$t} booster of loadout [#".(int)$fit['metadata']['loadoutid']
+			."](".\Osmium\get_ini_setting('relative_path').\Osmium\Fit\get_fit_uri(
+				$fit['metadata']['loadoutid'],
+				$fit['metadata']['visibility'],
+				0
+			)."R".(int)$fit['metadata']['revision']."/booster/{$t}) (revision "
 			.(int)$fit['metadata']['revision'].").*\n\n"
 			.$fork['metadata']['description']
 		);

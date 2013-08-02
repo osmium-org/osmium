@@ -15,6 +15,15 @@ you follow the following simple rules:
 * If you can, send a "Accept-Encoding: gzip" header to help save
   bandwidth.
 
+* Set a custom User-Agent which identifies your application and adds a
+  way to contact you. If you don't and your application starts
+  misbehaving, there will be no way to contact you and your
+  IP(s) will be blacklisted. Example:
+
+  ~~~
+  MyApplication/1.0.42 (+http://example.org/contact)
+  ~~~
+
 
 
 
@@ -73,6 +82,9 @@ pretty filename for convenience when saving the file from the browser.
 <tr><td>GET</td><td>revision</td><td>integer</td><td>no</td><td>any</td><td><em>latest</em></td>
 <td>If exporting a loadout from its ID, use this specific revision.</td></tr>
 
+<tr><td>GET</td><td>fleet</td><td>string</td><td>no</td><td>fleet, wing, squad</td><td><em>N/A</em></td>
+<td>If exporting a loadout from its ID, convert its fleet/wing/squad booster instead.</td></tr>
+
 <tr><td>GET</td><td>embedclf</td><td>bool</td><td>no</td><td>0, 1</td><td>1</td>
 <td>Try to embed gzCLF in the output when possible.</td></tr>
 
@@ -106,7 +118,9 @@ The loadout will be returned in the target format (with the correct
 
 * 403: input loadout ID cannot be accessed.
 
-* 404: input loadout ID cannot be found.
+* 404: input loadout ID cannot be found, or fleet parameter was
+  specified and the loadout has no such booster (or it has an empty
+  fitting).
 
 
 

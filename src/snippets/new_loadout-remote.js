@@ -30,7 +30,9 @@ osmium_gen_remote = function() {
 	$("section#fleet").find('input, select')
 		.not("[type='checkbox']").prop('disabled', true);
 
-	if(!("X-Osmium-fleet" in osmium_clf)) return;
+	if(!("X-Osmium-fleet" in osmium_clf)) {
+		osmium_clf['X-Osmium-fleet'] = {};
+	}
 
 	for(var t in osmium_clf['X-Osmium-fleet']) {
 		$("section#fleet select.skillset." + t).val(osmium_clf['X-Osmium-fleet'][t].skillset);

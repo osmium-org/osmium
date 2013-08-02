@@ -260,6 +260,7 @@ echo "<div id='vlmain'>
 <ul class='tabs'>
 <li><a href='#loadout'>Loadout</a></li>
 <li><a href='#presets'>Presets (".(max(count($fit['presets']), count($fit['chargepresets']), count($fit['dronepresets']))).")</a></li>
+<li><a href='#remote'>Remote (".(isset($fit['fleet']) ? count($fit['fleet']) : 0).")</a></li>
 <li><a href='#comments'>Comments (".$commentcount.")</a></li>
 <li><a href='#meta'>Meta</a></li>
 <li><a href='#export'>Export</a></li>
@@ -517,6 +518,49 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 
 
 echo "</section>
+<section id='remote'>\n";
+
+echo "<section id='fleet'>\n<h2>Fleet</h2>\n";
+echo "<form>\n<table>\n<tbody>\n";
+
+foreach(array('fleet', 'wing', 'squad') as $ft) {
+	if(isset($fit['fleet'][$ft])) {
+		$fl = htmlspecialchars($fit['fleet'][$ft]['__id']);
+		$showlink = isset($fit['fleet'][$ft]['ship']['typeid']) && $fit['fleet'][$ft]['ship']['typeid'];
+		$showlink = $showlink && preg_match('%^gzclf://%', $fl);
+		$checked = " checked='checked'";
+	} else {
+		$fl = '';
+		$showlink = false;
+		$checked = '';
+	}
+
+	echo "<tr data-type='{$ft}' id='{$ft}booster' class='booster'>\n";
+	echo "<td rowspan='".($showlink ? 3 : 2)."'><input type='checkbox' id='{$ft}_enabled' name='{$ft}_enabled' class='{$ft} enabled'{$checked} />";
+	echo " <label for='{$ft}_enabled'><strong>".ucfirst($ft)." booster</strong></label></td>\n";
+	echo "<td><label for='{$ft}_skillset'>Use skills: </label></td>\n";
+	echo "<td><select disabled='disabled' name='{$ft}_skillset' id='{$ft}_skillset' class='skillset {$ft}'><option value='All V'>All V</option></select></td>\n";
+	echo "</tr>\n";
+
+	echo "<tr>\n";
+	echo "<td".($showlink ? " rowspan='2'" : '')."><label for='{$ft}_fit'>Use fitting: </label></td>\n";
+	echo "<td><input readonly='readonly' type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' value='{$fl}' placeholder='(empty fitting)' /></td>\n";
+	echo "</tr>\n";
+
+	if($showlink) {
+		$cur = explode('?', $_SERVER['REQUEST_URI'], 2)[0].'/booster/'.$ft;
+		echo "<tr>\n<td>";
+		echo "<a href='".htmlspecialchars($cur, ENT_QUOTES)."'>View fitting</a>";
+		echo "</td></tr>\n";
+	}
+}
+
+echo "</tbody>\n</table>\n</form>\n</section>\n<section id='projected'>\n";
+echo "</section>\n";
+
+
+
+echo "</section>
 <section id='comments'>\n";
 
 /* Prints paginated comments and the "add comment" form. */
@@ -569,4 +613,5 @@ echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('new_loadout-modules');
 \Osmium\Chrome\print_js_snippet('new_loadout-drones');
 \Osmium\Chrome\print_js_snippet('new_loadout-implants');
+\Osmium\Chrome\print_js_snippet('new_loadout-remote');
 \Osmium\Chrome\print_footer();

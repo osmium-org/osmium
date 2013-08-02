@@ -48,11 +48,7 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
     $historyuri = 'javascript:void(0);';
     $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $dna) {
 	    $uri = RELATIVE.'/api/convert/dna/'.$format.'/dna.'.$ext.'?input='.$dna;
-	    if($incpresets) {
-		    $params['preset'] = $fit['modulepresetid'];
-		    $params['chargepreset'] = $fit['chargepresetid'];
-		    $params['dronepreset'] = $fit['dronepresetid'];
-	    }
+
 	    foreach($params as $k => $v) {
 		    $uri .= '&amp;'.$k.'='.$v;
 	    }
@@ -95,7 +91,7 @@ if($latestfit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 		\Osmium\fatal(403, 'This loadout is private.');
 	}
 
-	define('RELATIVE', '../../..');
+	define('RELATIVE', '../../..'.(isset($_GET['fleet']) ? '/../..' : ''));
 } else {
 	if(isset($_GET['privatetoken'])) {
 		/* Accessing a public lodaout using a private-style
@@ -104,7 +100,7 @@ if($latestfit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 		die();
 	}
 
-	define('RELATIVE', '..');
+	define('RELATIVE', '..'.(isset($_GET['fleet']) ? '/../..' : ''));
 }
 
 
@@ -133,15 +129,61 @@ if(!\Osmium\State\can_access_fit($fit)) {
 	}
 }
 
+function slugify($id, $name) {
+	return preg_replace(
+		'%[^0-9a-z-]%', '', ($id !== '' ? $id.'-' : '')
+		.strtr(strtolower($name), '_ ', '--')
+	);
+}
+
+if(isset($_GET['fleet'])) {
+	$t = htmlspecialchars($_GET['fleet'], ENT_QUOTES);
+
+	if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
+	|| !$fit['fleet'][$t]['ship']['typeid']) {
+		\Osmium\Fatal(404, "This loadout has no {$t} booster.");
+	}
+
+	$revision = $fit['metadata']['revision'];
+	$fit = $fit['fleet'][$t];
+	$fit['metadata']['name'] = '#'.$loadoutid.", {$t} booster";
+
+	$forkuri = RELATIVE.'/fork/'.$loadoutid
+		."?tok=".\Osmium\State\get_token()
+		."&amp;revision=".$revision
+		."&amp;fleet=".$t;
+    $historyuri = 'javascript:void(0);';
+    $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $t, $revision, $loadoutid) {
+	    $uri = RELATIVE.'/api/convert/'.$loadoutid.'/'.$format.'/';;
+	    $uri .= slugify('', $fit['metadata']['name']);
+	    $uri .= '.'.$ext.'?revision='.$revision;
+
+	    if($incpresets) {
+		    $params['preset'] = $fit['modulepresetid'];
+		    $params['chargepreset'] = $fit['chargepresetid'];
+		    $params['dronepreset'] = $fit['dronepresetid'];
+	    }
+	    $params['fleet'] = $t;
+	    foreach($params as $k => $v) {
+		    $uri .= '&amp;'.$k.'='.$v;
+	    }
+
+	    return $uri;
+    };
+    $loadoutid = false;
+    $revision_overridden = true;
+    $revision = 1;
+
+	return;
+}
+
 $revision = $fit['metadata']['revision'];
 $forkuri = RELATIVE.'/fork/'.$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$revision;
 $historyuri = RELATIVE.'/loadouthistory/'.$loadoutid;
 $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit) {
 	$uri = RELATIVE.'/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
-	$uri .= preg_replace(
-		'%[^0-9a-z-]%', '', $fit['metadata']['loadoutid'].'-'
-		.strtr(strtolower($fit['metadata']['name']), '_ ', '--')
-	).'.'.$ext.'?revision='.$fit['metadata']['revision'];
+	$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
+	$uri .= '.'.$ext.'?revision='.$fit['metadata']['revision'];
 
 	if($incpresets) {
 		$params['preset'] = $fit['modulepresetid'];

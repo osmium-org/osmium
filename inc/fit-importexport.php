@@ -452,6 +452,7 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 			while(isset($indexes[$type][$index])) ++$index;
 		}
 		$indexes[$type][$index] = true;
+		$m['index'] = $index;
 
 		if(isset($m['state']) && isset($nstates[$m['state']])) {
 			$state = $nstates[$m['state']];
@@ -1930,9 +1931,11 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 		}
 	}
 
-	foreach($fit['fleet'] as $k => $booster) {
-		if(!isset($clf['X-Osmium-fleet'][$k])) {
-			call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, NULL));
+	if(isset($fit['fleet'])) {
+		foreach($fit['fleet'] as $k => $booster) {
+			if(!isset($clf['X-Osmium-fleet'][$k])) {
+				call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, NULL));
+			}
 		}
 	}
 
@@ -2111,11 +2114,11 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 		}
 
 		if(!preg_match(
-			'%/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?$%D',
+			\Osmium\PUBLIC_LOADOUT_RULE,
 			$parts['path'],
 			$match
 		) && !preg_match(
-			'%/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)$%D',
+			\Osmium\PRIVATE_LOADOUT_RULE,
 			$parts['path'],
 			$match
 		)) {
@@ -2150,16 +2153,28 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 			return false;
 		}
 
-		if(isset($match['preset']) && isset($fit['presets'][$match['preset']])) {
-			use_preset($fit, $match['preset']);
-		}
+		if(isset($match['fleet'])) {
+			$t = $match['fleet'];
 
-		if(isset($match['chargepreset']) && isset($fit['chargepresets'][$match['chargepreset']])) {
-			use_charge_preset($fit, $match['chargepreset']);
-		}
+			if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
+			   || !$fit['fleet'][$t]['ship']['typeid']) {
+				$errors[] = "This loadout has no such {$t} booster.";
+				return false;
+			}
 
-		if(isset($match['dronepreset']) && isset($fit['dronepresets'][$match['dronepreset']])) {
-			use_drone_preset($fit, $match['dronepreset']);
+			$fit = $fit['fleet'][$t];
+		} else {
+			if(isset($match['preset']) && isset($fit['presets'][$match['preset']])) {
+				use_preset($fit, $match['preset']);
+			}
+
+			if(isset($match['chargepreset']) && isset($fit['chargepresets'][$match['chargepreset']])) {
+				use_charge_preset($fit, $match['chargepreset']);
+			}
+
+			if(isset($match['dronepreset']) && isset($fit['dronepresets'][$match['dronepreset']])) {
+				use_drone_preset($fit, $match['dronepreset']);
+			}
 		}
 	}
 

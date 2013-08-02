@@ -49,9 +49,6 @@ if(is_numeric($src)) {
 	if(!\Osmium\State\can_view_fit($loadoutid)) {
 		fatal(404, "Loadout not found.");
 	}
-	if(!\Osmium\State\can_access_fit($loadoutid)) {
-		fatal(403, "Can't access loadout, password-protected?");
-	}
 
 	$rev = null;
 	if(isset($_GET['revision'])) $rev = (int)$_GET['revision'];
@@ -59,6 +56,21 @@ if(is_numeric($src)) {
 
 	if($fit === false) {
 		fatal(400, "get_fit() returned false, invalid revision specified?");
+	}
+
+	if(!\Osmium\State\can_access_fit($fit)) {
+		fatal(403, "Can't access loadout, password-protected?");
+	}
+
+	if(isset($_GET['fleet'])) {
+		$t = $_GET['fleet'];
+
+		if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
+		|| !$fit['fleet'][$t]['ship']['typeid']) {
+			fatal(404, "No such fleet booster.");
+		}
+
+		$fit = $fit['fleet'][$t];
 	}
 } else {
 	if(isset($_POST['input'])) {

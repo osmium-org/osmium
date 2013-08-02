@@ -18,6 +18,8 @@
 
 namespace Osmium\Dispatch;
 
+require __DIR__.'/../inc/dispatchroot.php';
+
 /* Dispatch rules, of the form <RegEx> => <Path>;
  *
  * <Path> will be included if <RegEx> matches the current request URI
@@ -35,12 +37,12 @@ namespace Osmium\Dispatch;
 $osmium_dispatch_rules = array(
 	/* Very common pages */
 	'%^/$%D' => '/src/main.php',
-	'%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?$%D' => '/src/view_loadout.php', /* Also used in try_get_fit_from_remote_format() */
+	\Osmium\PUBLIC_LOADOUT_RULE => '/src/view_loadout.php',
 	'%^/new(/(?<token>0|[1-9][0-9]*))?$%D' => '/src/new_loadout.php',
 	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 	'%^/search$%D' => '/src/search.php',
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
-	'%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)$%D' => '/src/view_loadout.php', /* Also used in try_get_fit_from_remote_format() */
+	\Osmium\PRIVATE_LOADOUT_RULE => '/src/view_loadout.php',
 
 	/* Atom feeds */
 	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
@@ -89,8 +91,6 @@ $osmium_dispatch_rules = array(
 	'%^/moderation/$%D' => '/src/moderation/main.php',
 	'%^/moderation/flags$%D' => '/src/moderation/view_flags.php',
 );
-
-require __DIR__.'/../inc/dispatchroot.php';
 
 $relativeroot = \Osmium\get_ini_setting('relative_path');
 $request = '/'.substr(explode('?', $_SERVER['REQUEST_URI'], 2)[0], strlen($relativeroot));

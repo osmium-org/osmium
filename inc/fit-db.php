@@ -135,7 +135,7 @@ function get_hash($fit) {
  * You should whap this call in a transaction and rollback if it
  * fails.
  *
- * @returns false on failure
+ * @returns false on failure, fittinghash on success.
  */
 function commit_fitting(&$fit, &$error = null) {
 	$fittinghash = get_hash($fit);
@@ -144,7 +144,7 @@ function commit_fitting(&$fit, &$error = null) {
 	list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(fittinghash) FROM osmium.fittings WHERE fittinghash = $1', array($fittinghash)));
 	if($count == 1) {
 		/* Do nothing! */
-		return;
+		return $fittinghash;
 	}
 
 	/* Insert the new fitting */
