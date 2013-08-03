@@ -661,11 +661,12 @@ function get_nonce() {
 	return \Osmium\Db\fetch_row($q)[0];
 }
 
-register_shutdown_function(function() {
+function put_activity() {
 	/* Used for getting a rough estimate of the current member of
 	 * users browsing the site. */
 	if(defined('Osmium\ACTIVITY_IGNORE')) return;
 	$a = get_state('a', null);
 	$a = ($a === null) ? get_client_attributes() : $a['accountid'];
 	if($a !== 'CLI') put_cache_memory($a, 0, 65, 'Activity_');
-});
+}
+

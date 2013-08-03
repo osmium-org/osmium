@@ -65,6 +65,22 @@ function pop_cache_enabled() {
 /* Disk cache is persistent and global (ie not isolated per
  * account). It is generally the slowest. */
 
+/** @internal */
+function get_cache_file($key, $prefix = 'OsmiumCache_') {
+	$key = $prefix.$key;
+
+	/* Prevent ultra-long keys which would cause filenames to be too
+	 * long. Most modern filesystems have a 255-character limit for
+	 * filenames, and no limit on the full path name. */
+	if(strlen($key) > 255) {
+		$hash = sha1($key);
+		$key = substr($key, 0, 214).'_'.$hash;
+	}
+
+	$key = strtr($key, '/', '_');
+	return \Osmium\CACHE_DIRECTORY.'/'.$key;
+}
+
 /**
  * Get a cache variable previously set by put_cache().
  *
@@ -75,7 +91,7 @@ function get_cache($key, $default = null, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return $default;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
+	$f = get_cache_file($key, $prefix);
 	if(file_exists($f)) {
 		$mtime = filemtime($f);
 		if($mtime === 0 || $mtime > time()) {
@@ -98,7 +114,7 @@ function put_cache($key, $value, $expires = 0, $prefix = 'OsmiumCache_') {
 
 	if($expires > 0) $expires = time() + $expires;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
+	$f = get_cache_file($key, $prefix);
     return file_put_contents($f, serialize($value)) && touch($f, $expires);
 }
 
@@ -109,7 +125,7 @@ function invalidate_cache($key, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
+	$f = get_cache_file($key, $prefix);
 	if(file_exists($f)) unlink($f);
 }
 
@@ -126,7 +142,7 @@ function get_expiration_date($key, $prefix = 'OsmiumCache_') {
 	 * be expired. */
 	if(!$__osmium_cache_enabled) return 1;
 
-	$f = \Osmium\CACHE_DIRECTORY.'/'.$prefix.str_replace('/', '_', $key);
+	$f = get_cache_file($key, $prefix);
 	return file_exists($f) ? filemtime($f) : 1;
 }
 
@@ -135,7 +151,10 @@ function get_expiration_date($key, $prefix = 'OsmiumCache_') {
  * criteria.
  *
  * @param $filters an array which can contain the following keys:
- * - regex: a regular expression to test the cache key against
+ * 
+ * - regex: a regular expression to test the cache key against (be
+     careful, the key is truncated for very long keys)
+ * 
  * - mmin: entry was modified at least N minutes ago
  */
 function count_cache_entries(array $filters = array(), $prefix = 'OsmiumCache_') {

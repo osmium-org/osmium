@@ -175,6 +175,8 @@ function print_footer() {
 
 	echo "</body>\n</html>\n";
 	echo "<!-- ".(microtime(true) - $__start)." -->\n";
+
+	\Osmium\State\put_activity();
 }
 
 function get_navigation_link($dest, $label) {
