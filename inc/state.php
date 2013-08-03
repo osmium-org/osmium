@@ -271,13 +271,24 @@ function try_recover() {
 	$now = time();
 	$login = false;
 
-	list($has_token) = pg_fetch_row(\Osmium\Db\query_params('SELECT COUNT(token) FROM osmium.cookietokens WHERE token = $1 AND expirationdate >= $2', array($token, $now)));
+	list($has_token) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(token) FROM osmium.cookietokens
+		WHERE token = $1 AND expirationdate >= $2',
+		array($token, $now)
+	));
 
 	if($has_token == 1) {
-		list($account_id, $client_attributes) = pg_fetch_row(\Osmium\Db\query_params('SELECT accountid, clientattributes FROM osmium.cookietokens WHERE token = $1', array($token)));
+		list($account_id, $client_attributes) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT accountid, clientattributes
+			FROM osmium.cookietokens WHERE token = $1',
+			array($token)
+		));
 
 		if(check_client_attributes($client_attributes)) {
-			$k = pg_fetch_row(\Osmium\Db\query_params('SELECT accountname FROM osmium.accounts WHERE accountid = $1', array($account_id)));
+			$k = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+				'SELECT accountname FROM osmium.accounts WHERE accountid = $1',
+				array($account_id)
+			));
 			if($k !== false) {
 				list($name) = $k;
 				do_post_login($name, true);
@@ -299,7 +310,10 @@ function try_recover() {
  * @returns true, or a string containing an error message.
  */
 function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, &$charactername = null) {
-	$api = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', array('keyID' => $keyid, 'vCode' => $vcode));
+	$api = \Osmium\EveApi\fetch(
+		'/account/APIKeyInfo.xml.aspx',
+		array('keyID' => $keyid, 'vCode' => $vcode)
+	);
 
 	if($api === false) {
 		return "API server returned a 403. Invalid credentials?";
@@ -344,7 +358,7 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
  * @returns null on serious error, or a boolean indicating if the user
  * must revalidate his API key.
  */
-function check_api_key($a, $initial = false) {
+function check_api_key($a, $initial = false, $timeout = null) {
 	if(!isset($a['keyid']) || !isset($a['verificationcode'])
 	   || $a['keyid'] === null || $a['verificationcode'] === null) return null;
 
@@ -352,8 +366,11 @@ function check_api_key($a, $initial = false) {
 	$v_code = $a['verificationcode'];
 	$must_renew = false;
 
-	$info = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx',
-	                             array('keyID' => $key_id, 'vCode' => $v_code));
+	$info = \Osmium\EveApi\fetch(
+		'/account/APIKeyInfo.xml.aspx',
+		array('keyID' => $key_id, 'vCode' => $v_code),
+		$timeout
+	);
 
 	if($info === false) {
 		$must_renew = true;
@@ -403,7 +420,7 @@ function check_api_key($a, $initial = false) {
 	} else if(isset($a['apiverified']) && $a['apiverified'] === 't') {
 		$character_id = (int)$info->result->key->rowset->row['characterID'];
 
-		$cinfo = \Osmium\State\get_character_info($character_id, $a);
+		$cinfo = \Osmium\State\get_character_info($character_id, $a, $timeout);
 		if($cinfo === false) {
 			/* API unavailable? */
 			return null;
@@ -444,7 +461,7 @@ function check_api_key($a, $initial = false) {
 
 		if((int)$info->result->key['accessMask'] === REQUIRED_ACCESS_MASK_WITH_CONTACTS) {
 			/* Only update the contact list if the key actually allows it */
-			$ret = update_character_contactlist($a);
+			$ret = update_character_contactlist($a, $timeout);
 			if($ret === false) return null;
 		} else {
 			/* Be safe, the access mask may have changed since the
@@ -460,8 +477,12 @@ function check_api_key($a, $initial = false) {
 	return $must_renew;
 }
 
-function get_character_info($character_id, $a) {
-	$char_info = \Osmium\EveApi\fetch('/eve/CharacterInfo.xml.aspx', array('characterID' => $character_id));
+function get_character_info($character_id, $a, $timeout = null) {
+	$char_info = \Osmium\EveApi\fetch(
+		'/eve/CharacterInfo.xml.aspx',
+		array('characterID' => $character_id),
+		$timeout
+	);
 	if($char_info === null || $char_info === false) return false;
   
 	$character_name = (string)$char_info->result->characterName;
@@ -473,12 +494,15 @@ function get_character_info($character_id, $a) {
 	if($alliance_id == 0) $alliance_id = null;
 	if($alliance_name == '') $alliance_name = null;
 
-	$char_sheet = \Osmium\EveApi\fetch('/char/CharacterSheet.xml.aspx', 
-	                                   array(
-		                                   'characterID' => $character_id, 
-		                                   'keyID' => $a['keyid'],
-		                                   'vCode' => $a['verificationcode'],
-		                                   ));
+	$char_sheet = \Osmium\EveApi\fetch(
+		'/char/CharacterSheet.xml.aspx',
+		array(
+			'characterID' => $character_id,
+			'keyID' => $a['keyid'],
+			'vCode' => $a['verificationcode'],
+		),
+		$timeout
+	);
 
 	if($char_sheet === null || $char_sheet === false) {
 		return false;
@@ -503,14 +527,15 @@ function get_character_info($character_id, $a) {
 	return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, (int)$is_fitting_manager);
 }
 
-function update_character_contactlist($a) {
+function update_character_contactlist($a, $timeout = null) {
 	$char_contactlist = \Osmium\EveApi\fetch(
 		'/char/ContactList.xml.aspx',
 		array(
 			'characterID' => $a['characterid'],
 			'keyID' => $a['keyid'],
 			'vCode' => $a['verificationcode'],
-		)
+		),
+		$timeout
 	);
 
 	if($char_contactlist === null || $char_contactlist === false) {
@@ -600,7 +625,9 @@ function get_eveaccount_id(&$error = null) {
 		array(
 			'keyID' => $a['keyid'],
 			'vCode' => $a['verificationcode'],
-			));
+		)
+	);
+
 	if(!($accountstatus instanceof \SimpleXMLElement)
 	   || !isset($accountstatus->result->createDate)) {
 		$error = 'Unexpected EVE API error.';

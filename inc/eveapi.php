@@ -21,8 +21,15 @@ namespace Osmium\EveApi;
 /* Change this if you want to use an API proxy. BEWARE: whoever
  * controls the proxy will be able to impersonate any character. */
 const API_ROOT = 'https://api.eveonline.com';
-const API_TIMEOUT = 5000;
-const API_CURL_TIMEOUT = 10000;
+
+/* Set a default timeout of 5 seconds for API calls. Higher values can
+ * mean longer login times if the API server is busy. */
+const DEFAULT_API_TIMEOUT = 5;
+
+if(!function_exists('curl_strerror')) {
+	/* Fallback for PHP < 5.5 users */
+	function curl_strerror($no) { return $no; }
+}
 
 /**
  * Make an EVE API call. Handles caching.
@@ -35,7 +42,7 @@ const API_CURL_TIMEOUT = 10000;
  * the XML contents itself may be an error), false if the key is
  * invalid, or null on network/other error.
  */
-function fetch($name, array $params) {
+function fetch($name, array $params, $timeout = null) {
 	libxml_use_internal_errors(true);
 
 	/* We sort the $params array to always have the same hash even when
@@ -61,24 +68,32 @@ function fetch($name, array $params) {
 		return new \SimpleXMLElement($xmltext);
 	}
 
+	if($timeout === null) $timeout = DEFAULT_API_TIMEOUT;
+
 	$c = curl_init(API_ROOT.$name);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($c, CURLOPT_CAINFO, \Osmium\ROOT.'/ext/ca/GeoTrustGlobalCA.pem');
 	curl_setopt($c, CURLOPT_POSTFIELDS, $params);
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT_MS, API_TIMEOUT);
-	curl_setopt($c, CURLOPT_TIMEOUT_MS, API_CURL_TIMEOUT);
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, $timeout);
+	curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
 	$raw_xml = curl_exec($c);
 	$http_code = curl_getinfo($c, CURLINFO_HTTP_CODE);
-	curl_close($c);
-
 	if($http_code === 403) return false;
+
+	if($errno = curl_errno($c)) {
+		trigger_error('Got cURL error '.$errno.': '.curl_strerror($errno).' for call '.$name);
+		\Osmium\State\semaphore_release($sem);
+		return null;
+	}
+
+	curl_close($c);
   
 	$xml = false;
 	try {
 		$xml = new \SimpleXMLElement($raw_xml);
 	} catch(\Exception $e) {
-		trigger_error('Got unparseable XML from the API, HTTP code was '.$http_code, E_USER_WARNING);
+		trigger_error('Got unparseable XML from the API, HTTP code was '.$http_code.' for call '.$name, E_USER_WARNING);
 		$xml = false;
 	}
 
