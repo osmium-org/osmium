@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -72,6 +72,14 @@ if(isset($_POST['account_name'])) {
 \Osmium\Chrome\print_header('Account creation', '.');
 
 echo "<h1>Account creation</h1>\n";
+
+echo "<p>Creating an account allows you to:</p>
+<ul>
+<li>Save and create public loadouts;</li>
+<li>Comment on loadouts;</li>
+<li>Cast votes and flags to help moderation;</li>
+<li>Access and create corporation or alliance-only loadouts <small>(requires API verification)</small>.</li>
+</ul>\n";
 
 \Osmium\Forms\print_form_begin();
 

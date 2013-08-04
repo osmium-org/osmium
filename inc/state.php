@@ -28,11 +28,6 @@ const MINIMUM_PASSWORD_ENTROPY = 40;
  * FIXME: get rid of this */
 $__osmium_state =& $_SESSION['__osmium_state'];
 
-/** Global variable that stores all login-related errors.
- *
- * FIXME: get rid of this */
-$__osmium_login_state = array();
-
 /** Default expire duration for the token cookie. 7 days. */
 const COOKIE_AUTH_DURATION = 604800;
 
@@ -60,6 +55,11 @@ function is_logged_in() {
 function do_post_login($account_name, $use_cookie = false) {
 	global $__osmium_state;
 
+	/* Get rid of old $_SESSION */
+	$__osmium_state = null;
+	$_SESSION = array();
+	session_write_close();
+
 	$q = \Osmium\Db\query_params('SELECT accountid, accountname, nickname,
 	creationdate, lastlogindate,
 	keyid, verificationcode, apiverified,
@@ -67,6 +67,10 @@ function do_post_login($account_name, $use_cookie = false) {
 	ismoderator, isfittingmanager FROM osmium.accounts WHERE accountname = $1', array($account_name));
 	$a = \Osmium\Db\fetch_assoc($q);
 	check_api_key($a);
+
+	session_id("Account-".$a['accountid']."-".session_id());
+	session_start();
+	$__osmium_state =& $_SESSION['__osmium_state'];
 	$__osmium_state['a'] = $a;
 
 	if($use_cookie) {
@@ -95,11 +99,25 @@ function logoff($global = false) {
 
 	if($global) {
 		$account_id = $__osmium_state['a']['accountid'];
+
+		/* Invalidate all cookie tokens */
 		\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE accountid = $1', array($account_id));
 	}
 
 	setcookie('Osmium', false, 0, '/');
-	unset($__osmium_state['a']);
+
+	$__osmium_state = null;
+	$_SESSION = array();
+	session_regenerate_id(true);
+	$__osmium_state =& $_SESSION['__osmium_state'];
+
+	if($global) {
+		/* Remove all the other sessions with the same account ID */
+		shell_exec(
+			'find '.escapeshellarg(\Osmium\CACHE_DIRECTORY)
+			.' -maxdepth 1 -type f -name "sess_Account-'.(int)$account_id.'-*" -delete'
+		);
+	}
 }
 
 /**
@@ -142,20 +160,18 @@ function print_login_or_logout_box($relative, $notifications) {
 
 /** @internal */
 function print_login_box($relative) {
-	$value = isset($_POST['account_name']) ? "value='".htmlspecialchars($_POST['account_name'], ENT_QUOTES)."' " : '';
-	$remember = (isset($_POST['account_name']) && (!isset($_POST['remember']) || $_POST['remember'] !== 'on')) ? '' : "checked='checked' ";
-  
-	global $__osmium_login_state;
-	if(isset($__osmium_login_state['error'])) {
-		$error = "<p class='error_box'>\n".$__osmium_login_state['error']."\n</p>\n";
-	} else $error = '';
-
-	echo "<div id='state_box' class='login'>\n";
-	echo "<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n";
-	echo "$error<p>\n<input type='text' name='account_name' placeholder='Account name' $value/>\n";
-	echo "<input type='password' name='password' placeholder='Password' />\n";
-	echo "<input type='submit' name='__osmium_login' value='Login' /> (<small><input type='checkbox' name='remember' id='remember' $remember/> <label for='remember'>Remember me</label></small>) or <a href='$relative/register'>create an account</a> <small>(<a href='$relative/reset_password'>reset password?</a>)</small><br />\n";
-	echo "</p>\n</form>\n</div>\n";
+	echo "<div id='state_box' class='login'>\n"
+		."<form method='post' action='{$relative}/login'>\n"
+		."<p>\n<span class='wide'>\n<input type='text' name='account_name' placeholder='Account name' />\n"
+		."<input type='password' name='password' placeholder='Password' />\n"
+		."<input type='submit' name='__osmium_login' value='Login' />"
+		." (<small><input type='checkbox' name='remember' id='remember' checked='checked' />"
+		." <label for='remember'>Remember me</label></small>)</span>\n"
+		."<span class='narrow'><a href='{$relative}/login'>Login</a></span>"
+		." or <a href='$relative/register'>Register</a>\n"
+		."<input type='hidden' name='request_uri' value='"
+		.htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' />\n"
+		."</p>\n</form>\n</div>\n";
 }
 
 /** @internal */
@@ -171,7 +187,17 @@ function print_logoff_box($relative, $notifications) {
 		$portrait = "<img src='http://image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
 	}
 
-	echo "<div id='state_box' class='logout'>\n<p>\nLogged in as $portrait<strong>".\Osmium\Chrome\format_character_name($a, $relative)."</strong> (<a class='rep' href='$relative/profile/".$a['accountid']."#reputation'>".\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications' title='$notifications new notification(s)'>$notifications</a> <a href='$relative/logout?tok=$tok'>Logout</a> (<a href='$relative/logout?tok=$tok'>this session</a> / <a href='$relative/logout?tok=$tok&amp;global=1'>all sessions</a>)\n</p>\n</div>\n";
+	echo "<div id='state_box' class='logout'>\n<p>\n"
+		."<span class='wide'>Logged in as </span>$portrait<strong>"
+		.\Osmium\Chrome\format_character_name($a, $relative)
+		."</strong> (<a class='rep' href='$relative/profile/"
+		.$a['accountid']."#reputation'>"
+		.\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())
+		."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications'"
+		." title='$notifications new notification(s)'>$notifications</a>"
+		." <a href='$relative/logout?tok=$tok' title='Logs you out on this browser only.'>Logout</a>"
+		." <small>(<a href='$relative/logout?tok=$tok&amp;global=1' title='Logs you out on all the machines where you are currently logged in, and also invalidates all cookies issued in the past.'>all</a>)</small>\n"
+		."</p>\n</div>\n";
 }
 
 /** @internal */
@@ -241,6 +267,8 @@ function check_password($pw, $hash) {
 /**
  * Try to login the current visitor, taking credentials directly from
  * $_POST.
+ *
+ * @returns true on success, or a string containing an error message.
  */
 function try_login() {
 	if(is_logged_in()) return;
@@ -249,13 +277,16 @@ function try_login() {
 	$pw = $_POST['password'];
 	$remember = isset($_POST['remember']) && $_POST['remember'] === 'on';
 
-	list($hash) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT passwordhash FROM osmium.accounts WHERE accountname = $1', array($account_name)));
+	$hash = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT passwordhash FROM osmium.accounts WHERE accountname = $1',
+		array($account_name)
+	));
 
-	if(check_password($pw, $hash)) {
+	if($hash !== false && check_password($pw, $hash[0])) {
 		do_post_login($account_name, $remember);
+		return true;
 	} else {
-		global $__osmium_login_state;
-		$__osmium_login_state['error'] = 'Invalid credentials. Please check your account name and password.';
+		return 'Invalid credentials. Please check your account name and password.';
 	}
 }
 

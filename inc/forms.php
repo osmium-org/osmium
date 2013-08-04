@@ -96,6 +96,7 @@ function print_generic_row($name, $td1, $td2, $id = '') {
 	if(isset($__osmium_form_errors[$name]) && count($__osmium_form_errors[$name]) > 0) {
 		$class = 'error';
 		foreach($__osmium_form_errors[$name] as $msg) {
+			if(!$msg) continue;
 			echo "<tr class='error_message'>\n<td colspan='2'><p>".$msg."</p></td>\n</tr>\n";
 		}
 	}

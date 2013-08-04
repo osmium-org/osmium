@@ -36,7 +36,6 @@ if($tok != \Osmium\State\get_token()) {
 $global = isset($_GET['global']) && $_GET['global'];
 
 \Osmium\State\logoff($global);
-$_SESSION = array();
 
 header('HTTP/1.1 303 See Other', true, 303);
 header('Location: ./', true, 303);

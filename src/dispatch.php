@@ -49,6 +49,7 @@ $osmium_dispatch_rules = array(
 	'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 	'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
 
+	'%^/login$%D' => '/src/login.php',
 
 
 	/* Atom feeds */
@@ -82,7 +83,7 @@ $osmium_dispatch_rules = array(
 	'%^/logout$%D' => '/src/logout.php',
 	'%^/settings$%D' => '/src/settings.php',
 	'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
-	'%^/reset_password$%D' => '/src/reset_password.php',
+	'%^/resetpassword$%D' => '/src/reset_password.php',
 	'%^/notifications$%D' => '/src/view_notifications.php',
 
 	'%^/help/search$%D' => [ '/src/mdstatic.php',

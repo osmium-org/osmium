@@ -41,6 +41,7 @@ if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 }
 
 session_save_path(CACHE_DIRECTORY);
+session_name("SID");
 session_start();
 
 require ROOT.'/inc/chrome.php';
@@ -57,10 +58,6 @@ require ROOT.'/inc/notification.php';
 require ROOT.'/inc/reputation.php';
 
 \Osmium\Forms\post_redirect_get();
-
-if(isset($_POST['__osmium_login'])) {
-	\Osmium\State\try_login();
-}
 
 if(!\Osmium\State\is_logged_in()) {
 	\Osmium\State\try_recover();
