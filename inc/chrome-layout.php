@@ -92,18 +92,38 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	\Osmium\State\print_login_or_logout_box($relative, $notifications);
 
 	echo "<ul>\n";
-	echo get_navigation_link($relative.'/', "Main page");
-	echo get_navigation_link($relative.'/search', "Search loadouts");
-	echo get_navigation_link($relative.'/new', "New loadout");
-	echo get_navigation_link($relative.'/import', "Import");
-	echo get_navigation_link($relative.'/convert', "Convert");
+	echo get_navigation_link(
+		$relative.'/', $osmium, $osmium,
+		"Go back to the home page"
+	);
+	echo get_navigation_link(
+		$relative.'/search', "Search loadouts", "Search",
+		"Search fittings by ship, by fitted modules, by tags, etc."
+	);
+	echo get_navigation_link(
+		$relative.'/new', "Create loadout", "Create",
+		"Create a new fitting"
+	);
+	echo get_navigation_link(
+		$relative.'/import', "Import", "Import",
+		"Import one of more fittings from various formats"
+	);
+	echo get_navigation_link(
+		$relative.'/convert', "Convert", "Convert",
+		"Perform a quick conversion of fittings from one format to another"
+	);
+
 	if(\Osmium\State\is_logged_in()) {
 		$a = \Osmium\State\get_state('a');
 
 		echo get_navigation_link($relative.'/settings', "Settings");
 
 		if($a['ismoderator'] === 't') {
-			echo get_navigation_link($relative.'/moderation/', \Osmium\Flag\MODERATOR_SYMBOL);
+			echo get_navigation_link(
+				$relative.'/moderation/',
+				\Osmium\Flag\MODERATOR_SYMBOL.'Moderation',
+				\Osmium\Flag\MODERATOR_SYMBOL
+			);
 		}
 	}
 	echo "</ul>\n";
@@ -179,18 +199,41 @@ function print_footer() {
 	\Osmium\State\put_activity();
 }
 
-function get_navigation_link($dest, $label) {
-	if(is_current($dest)) {
-		return "<li><strong><a href='$dest'>$label</a></strong></li>\n";
+function get_navigation_link($dest, $label, $shortlabel = null, $title = null) {
+	if($shortlabel === null) {
+		$shortlabel = $label;
 	}
 
-	return "<li><a href='$dest'>$label</a></li>\n";
+	if($title === null) {
+		$core = "<span class='full'>{$label}</span>"
+			."<span class='mini' title='{$label}'>{$shortlabel}</span>";
+	} else {
+		$core = "<span class='full' title='{$title}'>{$label}</span>"
+			."<span class='mini' title='{$label} — {$title}'>{$shortlabel}</span>";
+	}
+
+	if(is_current($dest)) {
+		return "<li><strong><a href='$dest'>{$core}</a></strong></li>\n";
+	}
+
+	return "<li><a href='$dest'>{$core}</a></li>\n";
 }
 
 /** @internal */
 function is_current($relativeuri) {
+	static $absoluteparts = null;
+	static $currenturi;
+
+	if($absoluteparts === null) {
+		$absoluteparts = explode(
+			'/',
+			$currenturi = explode('?', $_SERVER['REQUEST_URI'], 2)[0]
+		);
+
+		$currenturi = ltrim($currenturi, '/');
+	}
+
 	$relativeparts = explode('/', explode('?', $relativeuri, 2)[0]);
-	$absoluteparts = explode('/', $uri = explode('?', $_SERVER['REQUEST_URI'], 2)[0]);
 
 	foreach($relativeparts as $p) {
 		if($p === '.') {
@@ -206,7 +249,16 @@ function is_current($relativeuri) {
 		}
 	}
 
-	return ltrim(implode('/', $absoluteparts), '/') == ltrim($uri, '/');
+	$absolute = ltrim(implode('/', $absoluteparts), '/');
+
+	if($absolute === "") return $currenturi === "";
+
+	if(strpos($currenturi, $absolute) !== 0) {
+		return false;
+	}
+
+	$l = strlen($absolute);
+	return !isset($currenturi[$l]) || $currenturi[$l] === '/';
 }
 
 /**

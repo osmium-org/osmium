@@ -1,14 +1,15 @@
-$layout-small: 320px;
-$layout-large: 1024px;
+$layout-small: 321px;
+$layout-normal: 1000px;
+$layout-large: 1570px;
 
 @mixin layout-type($type) {
 	@if $type == extrasmall {
 		@media (max-width: $layout-small) { @content; }
 	} @else if $type == small {
-		@media (max-width: $layout-large - 1px) and (min-width: $layout-small + 1px) { @content; }
-	} @else if $type == smallandextrasmall {
-		@media (max-width: $layout-large - 1px) { @content; }
+		@media (max-width: $layout-normal) { @content; }
 	} @else if $type == normal {
+		@media (max-width: $layout-large) { @content; }
+	} @else if $type == large {
 		@media (min-width: $layout-large) { @content; }
 	}
 }
