@@ -347,7 +347,7 @@ $desc = \Osmium\Chrome\trim($desc);
 if($desc === '') {
 	$desc = '<p class="placeholder">This type has no description.</p>';
 } else {
-	$desc = \Osmium\Chrome\format_sanitize_md(nl2br($desc));
+	$desc = \Osmium\Chrome\sanitize_html_trust(\Osmium\Chrome\format_md(nl2br($desc)));
 }
 
 $lis = array(

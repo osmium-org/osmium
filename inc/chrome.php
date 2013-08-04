@@ -479,6 +479,20 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	return $offset;
 }
 
+function sanitize_html_trust($html) {
+	static $purifier = null;
+	require_once 'HTMLPurifier.includes.php';
+	require_once 'HTMLPurifier.auto.php';
+
+	if($purifier === null) {
+		$config = \HTMLPurifier_Config::createDefault();
+		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
+		$purifier = new \HTMLPurifier($config);
+	}
+
+	return $purifier->purify($html);
+}
+
 function sanitize_html($html) {
 	static $purifier = null;
 	require_once 'HTMLPurifier.includes.php';
@@ -490,10 +504,13 @@ function sanitize_html($html) {
 		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
 		$config->set('HTML.DefinitionID', 'Osmium-full');
 		$config->set('HTML.DefinitionRev', 1);
+		$config->set('HTML.Doctype', 'XHTML 1.1');
 
 		$config->set('Attr.AllowedClasses', array());
 		$config->set('HTML.Nofollow', true);
 		$config->set('CSS.AllowedProperties', array());
+		$config->set('AutoFormat.DisplayLinkURI', true);
+		$config->set('AutoFormat.Linkify', true);
 
 		$purifier = new \HTMLPurifier($config);
 	}
@@ -512,11 +529,14 @@ function sanitize_html_phrasing($html) {
 		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
 		$config->set('HTML.DefinitionID', 'Osmium-phrasing');
 		$config->set('HTML.DefinitionRev', 1);
+		$config->set('HTML.Doctype', 'XHTML 1.1');
 
 		$config->set('Attr.AllowedClasses', array());
 		$config->set('HTML.Nofollow', true);
 		$config->set('CSS.AllowedProperties', array());
 		$config->set('HTML.AllowedElements', 'a, abbr, b, cite, code, del, em, i, ins, kbd, q, s, samp, small, span, strong, sub, sup');
+		$config->set('AutoFormat.DisplayLinkURI', true);
+		$config->set('AutoFormat.Linkify', true);
 
 		$purifier = new \HTMLPurifier($config);
 	}

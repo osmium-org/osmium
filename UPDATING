@@ -21,6 +21,9 @@ config.ini while updating.
 The osmium schema has been updated. After applying the patches, you
 must run `make post-eve-schema-update`.
 
+The HTML sanitizer has been slightly changed. To update the formatted
+comments, you can run `./bin/reformat_sanitized_html`.
+
 v0.9.1, released 2013-07-22
 ===========================
 
