@@ -39,8 +39,7 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
 	$formatted = format_used(
-		$slotsTotal - $slotsLeft, $slotsTotal,
-		'', 0,
+		$slotsTotal - $slotsLeft, $slotsTotal, 0,
 		F_USED_SHOW_ABSOLUTE
 	);
 	$overturrets = $slotsLeft < 0 ? 'overflow' : '';
@@ -51,8 +50,7 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
 	$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
 	$formatted = format_used(
-		$slotsTotal - $slotsLeft, $slotsTotal,
-		'', 0,
+		$slotsTotal - $slotsLeft, $slotsTotal, 0,
 		F_USED_SHOW_ABSOLUTE
 	);
 	$overlaunchers = $slotsLeft < 0 ? 'overflow' : '';
@@ -63,13 +61,12 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	list($captime, $capdelta) = \Osmium\Chrome\format_capacitor($capacitor);
 	echo "<p>"
 		.sprite($relative, 'Capacitor', 2, 0, 64, 64, 32)
-		."<span id='capacitor'><span>".$captime."</span><br /><span>".$capdelta."</span></span></p>\n";
+		."<span id='capacitor'><span title='Capacitor stability percentage / depletion time (estimated)'>".$captime."</span><br /><span title='Capacitor delta at peak recharge rate'>".$capdelta."</span></span></p>\n";
 
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
 	$formatted = format_used(
-		$cpuUsed, $cpuTotal,
-		'tf', 2,
+		$cpuUsed, $cpuTotal, 2,
 		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR
 	);
 	$overcpu = $cpuUsed > $cpuTotal ? 'overflow' : '';
@@ -80,8 +77,7 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$powerUsed = \Osmium\Dogma\get_ship_attribute($fit, 'powerLoad');
 	$powerTotal = \Osmium\Dogma\get_ship_attribute($fit, 'powerOutput');
 	$formatted = format_used(
-		$powerUsed, $powerTotal,
-		'MW', 2,
+		$powerUsed, $powerTotal, 2,
 		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR
 	);
 	$overpower = $powerUsed > $powerTotal ? 'overflow' : '';
@@ -92,8 +88,7 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	$upgradeCapacityUsed = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeLoad');
 	$upgradeCapacityTotal = \Osmium\Dogma\get_ship_attribute($fit, 'upgradeCapacity');
 	$formatted = format_used(
-		$upgradeCapacityUsed, $upgradeCapacityTotal,
-		'', 2,
+		$upgradeCapacityUsed, $upgradeCapacityTotal, 2,
 		F_USED_SHOW_DIFFERENCE | F_USED_SHOW_PERCENTAGE | F_USED_SHOW_PROGRESS_BAR
 	);
 	$overupgrade = $upgradeCapacityUsed > $upgradeCapacityTotal ? 'overflow' : '';
@@ -103,7 +98,7 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 
 	print_formatted_attribute_category(
 		'engineering', 'Engineering',
-		"<span title='Capacitor stability'>".$captime.' </span>',
+		"<span title='Capacitor stability percentage / depletion time (estimated)'>".$captime.' </span>',
 		$overturrets || $overlaunchers || $overcpu || $overpower || $overupgrade ? 'overflow' : '',
 		ob_get_clean()
 	);
