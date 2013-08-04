@@ -230,6 +230,14 @@ div#nlmain > section#metadata, div#nlmain > section#presets {
 	}
 }
 
+section#fleet, section#projected {
+	&> form > table > tbody > tr {
+		&> td input[type="text"], &> td select {
+			min-width: 30em;
+		}
+	}
+}
+
 div#nlmain > section#presets {
 	&> form > table > tbody > tr > td {
 		&> input.createpreset, &> input.renamepreset, &> input.clonepreset, &> input.deletepreset {

@@ -146,7 +146,8 @@ if($revision_overridden) {
 	$title, RELATIVE,
 	($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 	 && !$revision_overridden
-	 && !$preset_overridden)
+	 && !$preset_overridden),
+	"<link rel='canonical' href='".htmlspecialchars($canonicaluri, ENT_QUOTES)."' />"
 );
 
 echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'>"

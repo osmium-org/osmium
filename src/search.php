@@ -29,9 +29,13 @@ if(isset($_GET['q'])) {
 $cond = \Osmium\Search\get_search_cond_from_advanced();
 
 if($query === false) {
-	\Osmium\Chrome\print_header('Search loadouts', '.');
+	$title = (isset($_GET['ad']) && $_GET['ad'] == 1) ? 'Advanced search' : 'Search lodaouts';
+	\Osmium\Chrome\print_header(
+		$title, '.', true,
+		"<link rel='canonical' href='./search' />"
+	);
 	echo "<div id='search_full'>\n";
-	\Osmium\Search\print_search_form();
+	\Osmium\Search\print_search_form(null, '.', $title);
 	echo "</div>\n";
 	\Osmium\Chrome\print_footer();
 	die();
@@ -40,9 +44,12 @@ if($query === false) {
 	if($query !== false && strlen($query) > 0) {
 		$title .= ' / '.htmlspecialchars($query);
 	}
-	\Osmium\Chrome\print_header($title, '.', false);
+	\Osmium\Chrome\print_header(
+		$title, '.', false,
+		"<link rel='canonical' href='./search' />"
+	);
 	echo "<div id='search_mini'>\n";
-	\Osmium\Search\print_search_form();
+	\Osmium\Search\print_search_form(null, '.', $title);
 	echo "</div>\n";
 
 	\Osmium\Search\print_pretty_results('.', $query, $cond, true, 15);

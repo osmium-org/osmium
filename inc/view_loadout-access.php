@@ -60,6 +60,7 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
     $revision = 1;
     $forkuri = RELATIVE.'/new/dna/'.$_GET['dna'];
     $historyuri = 'javascript:void(0);';
+    $canonicaluri = RELATIVE.'/loadout/dna/'.$_GET['dna'];
     $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $dna) {
 	    $uri = RELATIVE.'/api/convert/dna/'.$format.'/dna.'.$ext.'?input='.$dna;
 
@@ -149,6 +150,10 @@ function slugify($id, $name) {
 		.strtr(strtolower($name), '_ ', '--')
 	);
 }
+
+$canonicaluri = RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
+	$loadoutid, $fit['metadata']['visibility'], $fit['metadata']['privatetoken']
+);
 
 if(isset($_GET['fleet'])) {
 	$t = htmlspecialchars($_GET['fleet'], ENT_QUOTES);
