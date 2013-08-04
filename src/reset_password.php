@@ -42,7 +42,11 @@ if(isset($_POST['key_id'])) {
 		$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, accountname FROM osmium.accounts WHERE apiverified = true AND characterid = $1', array($characterid)));
 
 		if($a === false) {
-			\Osmium\Forms\add_field_error('key_id', "Character <strong>".htmlspecialchars($charactername)."</strong> is not used by any API-validated account.");
+			\Osmium\Forms\add_field_error(
+				'key_id',
+				"Character <strong>".\Osmium\Chrome\escape($charactername)
+				."</strong> is not used by any API-validated account."
+			);
 		} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
 			\Osmium\Forms\add_field_error('password_0', $s);
 		} else if($pw !== $pw1) {
@@ -53,7 +57,7 @@ if(isset($_POST['key_id'])) {
 			\Osmium\Db\query_params('UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
 			                        array($hash, $a['accountid']));
 
-			echo "<p class='notice_box'>\nPassword reset was successful. You can now login on the account <strong>".htmlspecialchars($a['accountname'])."</strong> using your new password.\n</p>\n";
+			echo "<p class='notice_box'>\nPassword reset was successful. You can now login on the account <strong>".\Osmium\Chrome\escape($a['accountname'])."</strong> using your new password.\n</p>\n";
 		}
 	}
 }

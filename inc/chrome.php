@@ -18,6 +18,13 @@
 
 namespace Osmium\Chrome;
 
+define(
+	__NAMESPACE__.'\XHTML',
+	isset($_SERVER['HTTP_ACCEPT']) && (
+		strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false
+	)
+);
+
 const F_USED_SHOW_ABSOLUTE = 1;
 const F_USED_SHOW_DIFFERENCE = 2;
 const F_USED_SHOW_PERCENTAGE = 4;
@@ -25,6 +32,20 @@ const F_USED_SHOW_PROGRESS_BAR = 8;
 
 require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
+
+
+/**
+ * Escape a string.
+ */
+function escape($s) {
+	if(\Osmium\Chrome\XHTML) {
+		return htmlspecialchars($s, ENT_QUOTES | ENT_XML1);
+	}
+
+	/* ENT_HTML5 should be used, but some old old browsers won't
+	 * understand &apos; */
+	return htmlspecialchars($s, ENT_QUOTES);
+}
 
 /* Format a number with a fixed number of significant digits.
  *
@@ -95,13 +116,13 @@ function format_used($rawused, $rawtotal, $digits, $opts = F_USED_SHOW_ABSOLUTE)
 		format_number($rawused - $rawtotal).' over';
 
 	if($opts & F_USED_SHOW_ABSOLUTE) {
-		$lines[] = "<span title='".htmlspecialchars($diff, ENT_QUOTES)."'>"
-			.htmlspecialchars($used)
+		$lines[] = "<span title='".escape($diff)."'>"
+			.escape($used)
 			."</span>";
 	}
 	if($opts & F_USED_SHOW_DIFFERENCE) {
-		$lines[] = "<span title='".htmlspecialchars($used, ENT_QUOTES)."'>"
-			.htmlspecialchars($diff)
+		$lines[] = "<span title='".escape($used)."'>"
+			.escape($diff)
 			."</span>";
 	}
 
@@ -292,9 +313,9 @@ function get_name($a, &$rawname) {
 	if(isset($a['accountid']) && $a['accountid'] > 0) {
 		if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
 		   isset($a['characterid']) && $a['characterid'] > 0) {
-			$name = '<span class="apiverified">'.htmlspecialchars($rawname = $a['charactername']).'</span>';
+			$name = '<span class="apiverified">'.escape($rawname = $a['charactername']).'</span>';
 		} else {
-			$name = '<span class="normalaccount">'.htmlspecialchars($rawname = $a['nickname']).'</span>';
+			$name = '<span class="normalaccount">'.escape($rawname = $a['nickname']).'</span>';
 		}
 	}
 
@@ -647,7 +668,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 			if($row[1] !== null) {
 				$image = "<img src='http://image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
 			}
-			return $image.htmlspecialchars($row[0]);
+			return $image.escape($row[0]);
 		}
 		$unitdisplayname = 'Group ID';
 		break;
@@ -656,7 +677,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		$typename = \Osmium\Fit\get_typename($number);
 		if($typename !== false) {
 			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> "
-				.htmlspecialchars($typename);
+				.escape($typename);
 		}
 		$unitdisplayname = 'Type ID';
 		break;
@@ -696,7 +717,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 	}
 
 	return '<span title="'.sprintf("%.14f", $number).'">'
-		.$rounded.' '.htmlspecialchars($unitdisplayname)
+		.$rounded.' '.escape($unitdisplayname)
 		.'</span>';
 }
 
@@ -710,7 +731,7 @@ function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = n
 	$imgwidth = $width / $grid_width * 1024;
 	$imgheight = $height / $grid_height * 1024;
 
-	$alt = htmlspecialchars($alt, ENT_QUOTES);
+	$alt = escape($alt);
 
 	return "<span class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></span>";
 }

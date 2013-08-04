@@ -231,7 +231,7 @@ addcomment:
 echo "<h2>Add a comment</h2>\n";
 
 if($commentsallowed && $loggedin) {
-	\Osmium\Forms\print_form_begin(htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES).'#comments');
+	\Osmium\Forms\print_form_begin(\Osmium\Chrome\escape($_SERVER['REQUEST_URI']).'#comments');
 	\Osmium\Forms\print_textarea(
 		'Comment body<br /><small>(Markdown and some HTML allowed)</small>',
 		'commentbody',

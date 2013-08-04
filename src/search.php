@@ -42,7 +42,7 @@ if($query === false) {
 } else {
 	$title = 'Search results';
 	if($query !== false && strlen($query) > 0) {
-		$title .= ' / '.htmlspecialchars($query);
+		$title .= ' / '.\Osmium\Chrome\escape($query);
 	}
 	\Osmium\Chrome\print_header(
 		$title, '.', false,

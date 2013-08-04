@@ -170,7 +170,7 @@ function print_login_box($relative) {
 		."<span class='narrow'><a href='{$relative}/login'>Login</a></span>"
 		." or <a href='$relative/register'>Register</a>\n"
 		."<input type='hidden' name='request_uri' value='"
-		.htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."' />\n"
+		.\Osmium\Chrome\escape($_SERVER['REQUEST_URI'])."' />\n"
 		."</p>\n</form>\n</div>\n";
 }
 
@@ -356,7 +356,7 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	}
 
 	if(isset($api->error) && !empty($api->error)) {
-		return '('.((int)$api->error['code']).') '.htmlspecialchars((string)$api->error);
+		return '('.((int)$api->error['code']).') '.\Osmium\Chrome\escape((string)$api->error);
 	}
 
 	if((string)$api->result->key["type"] !== 'Character') {
@@ -375,7 +375,7 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	if($accountid !== null) {
 		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)', array($accountid, $characterid, $charactername)));
 		if($c > 0) {
-			return "Character <strong>".htmlspecialchars($charactername)."</strong> is already used by another account.";
+			return "Character <strong>".\Osmium\Chrome\escape($charactername)."</strong> is already used by another account.";
 		}
 	}
 

@@ -137,7 +137,7 @@ if(count($fit['metadata']['tags']) > 0) {
 	$tags = '';
 }
 
-$title = htmlspecialchars($fit['metadata']['name'].$tags.' / '.$fit['ship']['typename'].' fitting');
+$title = \Osmium\Chrome\escape($fit['metadata']['name'].$tags.' / '.$fit['ship']['typename'].' fitting');
 if($revision_overridden) {
 	$title .= ' (R'.$revision.')';
 }
@@ -147,11 +147,11 @@ if($revision_overridden) {
 	($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 	 && !$revision_overridden
 	 && !$preset_overridden),
-	"<link rel='canonical' href='".htmlspecialchars($canonicaluri, ENT_QUOTES)."' />"
+	"<link rel='canonical' href='".\Osmium\Chrome\escape($canonicaluri)."' />"
 );
 
 echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'>"
-.htmlspecialchars($fit['metadata']['name'])."</strong>";
+.\Osmium\Chrome\escape($fit['metadata']['name'])."</strong>";
 
 if(count($fit['metadata']['tags']) > 0) {
 	echo "\n<ul class='tags'>\n";
@@ -185,9 +185,9 @@ echo "<div id='vlattribs'>
 <section id='ship' data-loadoutid='".(int)$loadoutid."'>
 <h1>
 <img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />
-<small class='groupname'>".htmlspecialchars($groupname)."</small>
-<strong>".htmlspecialchars($fit['ship']['typename'])."</strong>
-<small class='dbver'>".htmlspecialchars(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
+<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>
+<strong>".\Osmium\Chrome\escape($fit['ship']['typename'])."</strong>
+<small class='dbver'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
 </h1>\n";
 
 if($loadoutid === false) {
@@ -222,9 +222,9 @@ if($loadoutid !== false) {
 	echo "<div class='author'>\n";
 	if($author['apiverified'] === 't') {
 		if($author['allianceid'] > 0) {
-			echo "<img class='alliance' src='http://image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='' title='member of ".htmlspecialchars($author['alliancename'], ENT_QUOTES)."' />";
+			echo "<img class='alliance' src='http://image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='' title='member of ".\Osmium\Chrome\escape($author['alliancename'])."' />";
 		} else {
-			echo "<img class='corporation' src='http://image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='' title='member of ".htmlspecialchars($author['corporationname'], ENT_QUOTES)."' />";
+			echo "<img class='corporation' src='http://image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='' title='member of ".\Osmium\Chrome\escape($author['corporationname'])."' />";
 		}
 		if($author['characterid'] > 0) {
 			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='' />";
@@ -301,7 +301,7 @@ foreach($stypes as $type => $tdata) {
 	}
 
 	echo "<div class='slots $type $groupstatus'>\n<h3>";
-	echo htmlspecialchars($tdata[0])." <span>$groupedcharges";
+	echo \Osmium\Chrome\escape($tdata[0])." <span>$groupedcharges";
 	$u = count($sub);
 	$overflow = $u > $slotusage[$type] ? ' overflow' : '';
 	echo "<small class='counts$overflow'>".$u." / ".$slotusage[$type]."</small></span>";
@@ -329,7 +329,7 @@ foreach($stypes as $type => $tdata) {
 			.$type."' data-index='".$index."' data-state='".$s[2]."' data-chargetypeid='"
 			.($c === null ? 'null' : $c['typeid'])."'>\n";
 		echo "<img src='//image.eveonline.com/Type/".$m['typeid']."_64.png' alt='' />";
-		echo htmlspecialchars($m['typename'])."\n";
+		echo \Osmium\Chrome\escape($m['typename'])."\n";
 
 		if($c !== null) {
 			dogma_get_number_of_module_cycles_before_reload(
@@ -338,7 +338,7 @@ foreach($stypes as $type => $tdata) {
 
 			echo "<span class='charge".($ncycles !== -1 ? ' hasncycles' : '')."'>,<br />";
 			echo "<img src='//image.eveonline.com/Type/".$c['typeid']."_64.png' alt='' />";
-			echo "<span class='name'>".htmlspecialchars($c['typename'])."</span>";
+			echo "<span class='name'>".\Osmium\Chrome\escape($c['typename'])."</span>";
 			if($ncycles !== -1) {
 				echo "<span class='ncycles' title='Number of module cycles before having to reload'>"
 					.$ncycles."</span>";
@@ -353,9 +353,9 @@ foreach($stypes as $type => $tdata) {
 		}
 
 		if(isset($ia[$type][$index])) {
-			echo "<small class='attribs' title='".htmlspecialchars(
-				$ia[$type][$index][3], ENT_QUOTES
-			)."'>".htmlspecialchars($ia[$type][$index][2])."</small>\n";
+			echo "<small class='attribs' title='".\Osmium\Chrome\escape(
+				$ia[$type][$index][3]
+			)."'>".\Osmium\Chrome\escape($ia[$type][$index][2])."</small>\n";
 		}
 
 		echo "</li>\n";
@@ -390,7 +390,7 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 	if($dbw == 0 && $dronesin['space'] === 0 && $dronesin['bay'] === 0) continue;
 
 	echo "<div class='drones ".$k."'>\n";
-	echo "<h3>".htmlspecialchars($v)." <span>";
+	echo "<h3>".\Osmium\Chrome\escape($v)." <span>";
 
 	if($k === 'space') {
 		$dbw = \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth');
@@ -458,7 +458,7 @@ foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) 
 
 	foreach($imps as $i) {
 		echo "<li><img src='//image.eveonline.com/Type/".$i['typeid']."_64.png' alt='' />"
-			.htmlspecialchars($i['typename'])
+			.\Osmium\Chrome\escape($i['typename'])
 			.'<span class="slot">, '.substr($k, 0, -1).' slot '.$i['slot'].'</span>'
 			."</li>\n";
 	}
@@ -526,7 +526,7 @@ echo "<form>\n<table>\n<tbody>\n";
 
 foreach(array('fleet', 'wing', 'squad') as $ft) {
 	if(isset($fit['fleet'][$ft])) {
-		$fl = htmlspecialchars($fit['fleet'][$ft]['__id']);
+		$fl = \Osmium\Chrome\escape($fit['fleet'][$ft]['__id']);
 		$showlink = isset($fit['fleet'][$ft]['ship']['typeid']) && $fit['fleet'][$ft]['ship']['typeid'];
 		$showlink = $showlink && preg_match('%^gzclf://%', $fl);
 		$checked = " checked='checked'";
@@ -551,7 +551,7 @@ foreach(array('fleet', 'wing', 'squad') as $ft) {
 	if($showlink) {
 		$cur = explode('?', $_SERVER['REQUEST_URI'], 2)[0].'/booster/'.$ft;
 		echo "<tr>\n<td>";
-		echo "<a href='".htmlspecialchars($cur, ENT_QUOTES)."'>View fitting</a>";
+		echo "<a href='".\Osmium\Chrome\escape($cur)."'>View fitting</a>";
 		echo "</td></tr>\n";
 	}
 }

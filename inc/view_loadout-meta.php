@@ -61,7 +61,7 @@ case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
 		$perms[] = [
 			[ 2, 13, 64, 64 ],
 			"This loadout can only be viewed by members of <strong>"
-			.htmlspecialchars($author['alliancename'])."</strong> only"
+			.\Osmium\Chrome\escape($author['alliancename'])."</strong> only"
 		];
 	} else {
 		$perms[] = [
@@ -76,7 +76,7 @@ case \Osmium\Fit\VIEW_CORPORATION_ONLY:
 		$perms[] = [
 			[ 3, 13, 64, 64 ],
 			"This loadout can only be viewed by members of <strong>"
-			.htmlspecialchars($author['corporationname'])."</strong> only."
+			.\Osmium\Chrome\escape($author['corporationname'])."</strong> only."
 		];
 	} else {
 		$perms[] = [
@@ -124,7 +124,7 @@ if($loadoutid !== false) {
 			$perms[] = [
 				[ 3, 13, 64, 64 ],
 				"This loadout can be edited by its <strong>owner</strong> or by people in <strong>"
-				.htmlspecialchars($author['corporationname'])
+				.\Osmium\Chrome\escape($author['corporationname'])
 				."</strong> with the <strong>fitting manager</strong> role."
 			];
 		} else {
@@ -140,7 +140,7 @@ if($loadoutid !== false) {
 			$perms[] = [
 				[ 3, 13, 64, 64 ],
 				"This loadout can be edited by any person in <strong>"
-				.htmlspecialchars($author['corporationname'])."</strong>."
+				.\Osmium\Chrome\escape($author['corporationname'])."</strong>."
 			];
 		} else {
 			$perms[] = [
@@ -155,7 +155,7 @@ if($loadoutid !== false) {
 			$perms[] = [
 				[ 2, 13, 64, 64 ],
 				"This loadout can be edited by any person in <strong>"
-				.htmlspecialchars($author['alliancename'])."</strong>."
+				.\Osmium\Chrome\escape($author['alliancename'])."</strong>."
 			];
 		} else {
 			$perms[] = [
@@ -232,12 +232,14 @@ if($loggedin && $loadoutid !== false) {
 	];
 }
 
-$shipname = htmlspecialchars($fit['ship']['typename']);
+$shipname = \Osmium\Chrome\escape($fit['ship']['typename']);
 $actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')
 	."'>Browse all ".$shipname." loadouts</a>";
 
 if(isset($rauthorname)) {
-	$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@author "'.htmlspecialchars($rauthorname, ENT_QUOTES).'"')."'>Browse loadouts from the same author</a>";
+	$actions[] = "<a href='".RELATIVE."/search?q="
+		.urlencode('@author "'.\Osmium\Chrome\escape($rauthorname).'"')
+		."'>Browse loadouts from the same author</a>";
 }
 
 $actions[] = [

@@ -154,7 +154,7 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 		if(!($keyinfo instanceof \SimpleXMLElement)) {
 			echo "<p class='error_box'>Error occured while fetching API key info.</p>\n";
 		} else if(isset($keyinfo->error)) {
-			echo "<p class='error_box'>(".((int)$keyinfo->error['code']).") ".htmlspecialchars((string)$keyinfo->error)."</p>\n";
+			echo "<p class='error_box'>(".((int)$keyinfo->error['code']).") ".\Osmium\Chrome\escape((string)$keyinfo->error)."</p>\n";
 		} else if(!((int)$keyinfo->result->key['accessMask'] & \Osmium\State\CHARACTER_SHEET_ACCESS_MASK)) {
 			echo "<p class='error_box'>API key does not allow accessing the character sheet. Please tick the CharacterSheet box!</p>\n";
 		} else {
@@ -175,7 +175,7 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 			}
 
 			if($apicharid === null) {
-				echo "<p class='error_box'>Could not find character <strong>".htmlspecialchars($piname)."</strong> in this API key. Leave the import character blank to use the first character available.</p>\n";
+				echo "<p class='error_box'>Could not find character <strong>".\Osmium\Chrome\escape($piname)."</strong> in this API key. Leave the import character blank to use the first character available.</p>\n";
 			} else {
 				\Osmium\Db\query_params('UPDATE osmium.accountcharacters SET keyid = $1, verificationcode = $2, importname = $3 WHERE accountid = $4 AND name = $5',
 				                        array(
@@ -196,7 +196,7 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 				if(!($sheet instanceof \SimpleXMLElement)) {
 					echo "<p class='error_box'>Error occured while fetching the character sheet.</p>\n";
 				} else if(isset($sheet->error)) {
-					echo "<p class='error_box'>(".((int)$sheet->error['code']).") ".htmlspecialchars((string)$sheet->error)."</p>\n";
+					echo "<p class='error_box'>(".((int)$sheet->error['code']).") ".\Osmium\Chrome\escape((string)$sheet->error)."</p>\n";
 				} else {
 					$skills = array();
 					foreach($sheet->result->rowset as $rowset) {
@@ -228,7 +228,7 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 	die();
 }
 
-echo "<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n";
+echo "<form method='post' action='".\Osmium\Chrome\escape($_SERVER['REQUEST_URI'])."'>\n";
 echo "<table class='d scharacters'>\n<thead>\n";
 echo "<tr>\n<th>Name</th>\n<th>Key ID</th>\n<th>Verification code</th>\n<th>Import character name</th>\n<th>Last import date</th>\n<th>Actions</th>\n</tr>\n";
 echo "</thead>\n<tfoot></tfoot>\n<tbody>\n";
@@ -238,7 +238,7 @@ $haschars = false;
 while($c = \Osmium\Db\fetch_assoc($cq)) {
 	$haschars = true;
 
-	$cname = htmlspecialchars($c['name'], ENT_QUOTES);
+	$cname = \Osmium\Chrome\escape($c['name']);
 
 	$vcode = $c['verificationcode'];
 	if($vcode === null) $vcode = '';
@@ -247,8 +247,8 @@ while($c = \Osmium\Db\fetch_assoc($cq)) {
 	echo "<tr>\n";
 	echo "<td><strong>".$cname."</strong></td>\n";
 	echo "<td><input type='text' name='keyid[$cname]' value='".$c['keyid']."' /></td>\n";
-	echo "<td><input type='text' name='vcode[$cname]' value='".htmlspecialchars($vcode, ENT_QUOTES)."' /></td>\n";
-	echo "<td><input type='text' name='iname[$cname]' value='".htmlspecialchars($c['importname'], ENT_QUOTES)."' /></td>\n";
+	echo "<td><input type='text' name='vcode[$cname]' value='".\Osmium\Chrome\escape($vcode)."' /></td>\n";
+	echo "<td><input type='text' name='iname[$cname]' value='".\Osmium\Chrome\escape($c['importname'])."' /></td>\n";
 	echo "<td>".($c['lastimportdate'] === null ? '<em>never</em>' : \Osmium\Chrome\format_relative_date($c['lastimportdate']))."</td>\n";
 	echo "<td>\n";
 	echo "<input type='submit' name='fetch[$cname]' value='Fetch skillset from API' /> ";

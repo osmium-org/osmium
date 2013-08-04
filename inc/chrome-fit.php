@@ -334,7 +334,7 @@ function print_formatted_misc(&$fit) {
 	if(count($missing) > 0) {
 		$missing = implode(",&#10;", array_unique(array_map('Osmium\Fit\get_typename', $missing)));
 		$fprices = "<span title='Estimate of the following items unavailable:&#10;"
-			.htmlspecialchars($missing, ENT_QUOTES)."'>".$fprices.'</span>';
+			.escape($missing)."'>".$fprices.'</span>';
 	}
 
 	echo "<tr><th>Estimated price:</th><td>{$fprices}</td></tr>\n";

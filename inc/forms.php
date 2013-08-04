@@ -74,7 +74,7 @@ function post_redirect_get() {
 }
 
 function print_form_begin($action = null, $id = '', $enctype = 'application/x-www-form-urlencoded') {
-	if($action === null) $action = htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES);
+	if($action === null) $action = \Osmium\Chrome\escape($_SERVER['REQUEST_URI']);
 	if($id !== '') $id = " id='$id'";
 
 	echo "<form method='post' accept-charset='utf-8' enctype='$enctype' action='$action'$id>\n<table>\n<tbody>\n";
@@ -118,25 +118,34 @@ function print_generic_row($name, $td1, $td2, $id = '') {
 function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
 	if($id === null) $id = $name;
 	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
-		$value = "value='".htmlspecialchars($_POST[$name], ENT_QUOTES)."' ";
+		$value = "value='".\Osmium\Chrome\escape($_POST[$name])."' ";
 	} else $value = '';
 	if($flags & FIELD_DISABLED) {
 		$disabled = "disabled='disabled' ";
 	} else $disabled = '';
 
-	print_generic_row($name, "<label for='$id'>".$label."</label>", "<input type='$type' name='$name' id='$id' {$value}{$disabled}/>");
+	print_generic_row(
+		$name,
+		"<label for='$id'>".$label."</label>",
+		"<input type='$type' name='$name' id='$id' {$value}{$disabled}/>"
+	);
 }
 
 function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = '') {
 	if($id === null) $id = $name;
 	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
-		$value = htmlspecialchars($_POST[$name]);
+		$value = \Osmium\Chrome\escape($_POST[$name]);
 	} else $value = '';
 	if($flags & FIELD_DISABLED) {
 		$disabled = " disabled='disabled'";
 	} else $disabled = '';
 
-	print_generic_row($name, "<label for='$id'>$label</label>", "<textarea placeholder='".htmlspecialchars($placeholder, ENT_QUOTES)."' name='$name' id='$id'{$disabled}>$value</textarea>");
+	print_generic_row(
+		$name,
+		"<label for='$id'>$label</label>",
+		"<textarea placeholder='".\Osmium\Chrome\escape($placeholder)
+		."' name='$name' id='$id'{$disabled}>$value</textarea>"
+	);
 }
 
 function print_file($label, $name, $maxsize, $id = null) {
@@ -152,7 +161,7 @@ function print_file($label, $name, $maxsize, $id = null) {
 
 function print_submit($value = '', $name = '') {
 	if($value !== '') {
-		$value = "value='".htmlspecialchars($value, ENT_QUOTES)."' ";
+		$value = "value='".\Osmium\Chrome\escape($value)."' ";
 	}
 	if($name !== '') {
 		$name = "name='$name' ";
@@ -226,7 +235,7 @@ function print_checkbox_or_radio($type, $label, $name, $id = null, $checked = nu
 	} else $disabled = '';
 
 	if($value !== null) {
-		$value = 'value="'.htmlspecialchars($value, ENT_QUOTES).'" ';
+		$value = 'value="'.\Osmium\Chrome\escape($value).'" ';
 	} else $value = '';
 
 	print_generic_row($name, "", "<input type='$type' name='$name' id='$id' {$value}{$checked}{$disabled}/> <label for='$id'>$label</label>");

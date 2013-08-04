@@ -50,20 +50,17 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 		$title .= ' / '.$osmium;
 	}
 
-	$xhtml = isset($_SERVER['HTTP_ACCEPT']) && 
-		(strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false);
-
 	$notifications = \Osmium\Notification\get_new_notification_count();
 	if($notifications > 0) {
 		$title = "({$notifications}) ".$title;
 	}
 
-	if($xhtml) {
+	if(XHTML) {
 		header('Content-Type: application/xhtml+xml; charset=utf-8');
 		echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 	}
 	echo "<!DOCTYPE html>\n<html xmlns='http://www.w3.org/1999/xhtml'>\n<head>\n";
-	if(!$xhtml) echo "<meta charset='UTF-8' />\n";
+	if(!XHTML) echo "<meta charset='UTF-8' />\n";
 	if(!$index) echo "<meta name='robots' content='noindex' />\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
 
@@ -179,7 +176,7 @@ function print_footer() {
 			}
 		}
 
-		echo "<script type='application/javascript' src='".htmlspecialchars($cacheuri, ENT_QUOTES)."'></script>\n";
+		echo "<script type='application/javascript' src='".escape($cacheuri)."'></script>\n";
 	}
 
 	if($__osmium_js_code !== '') {

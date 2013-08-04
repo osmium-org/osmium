@@ -78,7 +78,7 @@ while($flag = \Osmium\Db\fetch_assoc($flagsq)) {
 	echo "<tr class='status".$flag['status']."'>\n";
 	echo "<td>".$flag['flagid']."</td>\n";
 	echo "<td>".\Osmium\Chrome\format_relative_date($flag['createdat'])."</td>\n";
-	echo "<td title='".htmlspecialchars($flag['other'], ENT_QUOTES)."'>".$types[$flag['type']]."</td>\n<td>".$subtypes[$flag['subtype']]."</td>\n";
+	echo "<td title='".\Osmium\Chrome\escape($flag['other'])."'>".$types[$flag['type']]."</td>\n<td>".$subtypes[$flag['subtype']]."</td>\n";
 	echo "<td>".$statuses[$flag['status']]."</td>\n";
 	echo "<td>";
 	if($flag['type'] == \Osmium\Flag\FLAG_TYPE_LOADOUT) {

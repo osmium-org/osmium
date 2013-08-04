@@ -161,7 +161,7 @@ else {
 
 $fresult = array(
 	'header' => "<img src='http://image.eveonline.com/Type/".$typeid."_64.png' alt='' /> "
-	.htmlspecialchars($typename),
+	.\Osmium\Chrome\escape($typename),
 );
 
 if(!isset($affectors)) {
@@ -226,7 +226,7 @@ if($affectors !== false) {
 
 	$fresult['affectors_per_type'] = "<ul>\n";
 	foreach($affectors_per_type as $a_typeid => &$a) {
-		$typename = htmlspecialchars($a[0][2]);
+		$typename = \Osmium\Chrome\escape($a[0][2]);
 		$fresult['affectors_per_type'] .= "<li><img src='http://image.eveonline.com/Type/"
 			.$a_typeid."_64.png' alt='' /> ".$typename.":\n";
 		$fresult['affectors_per_type'] .= "<ul>\n";
@@ -253,7 +253,7 @@ if($affectors !== false) {
 
 	$fresult['affectors_per_att'] .= "<ul>\n";
 	foreach($affectors_per_att as $attid => &$a) {
-		$attname = htmlspecialchars($a[0][1]);
+		$attname = \Osmium\Chrome\escape($a[0][1]);
 		$fresult['affectors_per_att'] .= "<li>".$attname.":\n";
 		$fresult['affectors_per_att'] .= "<ul>\n";
 
@@ -264,7 +264,7 @@ if($affectors !== false) {
 			$op = $aff['operator'];
 
 			$fresult['affectors_per_att'] .= "<li><label><img src='//image.eveonline.com/Type/".$aff['id']
-				."_64.png' alt='' /> ".htmlspecialchars($source)."</label> {$op}{$fval}</li>\n";
+				."_64.png' alt='' /> ".\Osmium\Chrome\escape($source)."</label> {$op}{$fval}</li>\n";
 		}
 		$fresult['affectors_per_att'] .= "</ul>\n</li>\n";
 	}
@@ -292,7 +292,7 @@ foreach($attributes as $a) {
 	} else $class = '';
 
 	$fresult['attributes'] .= "<tr$class><td><strong>"
-		.htmlspecialchars($dname)
+		.\Osmium\Chrome\escape($dname)
 		."</strong></td><td>".$value."</td></tr>\n";
 }
 $fresult['attributes'] .= "</tbody>\n</table>\n";

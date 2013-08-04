@@ -75,7 +75,7 @@ $rows = "<tr>\n<th>Flag ID</th>\n<th>Creation date</th>\n<th>Reported by</th>\n<
 echo $meta;
 echo $result;
 
-$action = htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES);
+$action = \Osmium\Chrome\escape($_SERVER['REQUEST_URI']);
 echo "<form method='POST' action='$action'>\n<table class='d'>\n";
 echo "<thead>\n$rows</thead>\n<tfoot>\n$rows</tfoot>\n<tbody>\n";
 
@@ -100,7 +100,7 @@ while($flag = \Osmium\Db\fetch_assoc($flagsq)) {
 	echo "<td>".$flag['flagid']."</td>\n";
 	echo "<td>".\Osmium\Chrome\format_relative_date($flag['createdat'])."</td>\n";
 	echo "<td>".($flag['accountid'] !== null ? \Osmium\Chrome\format_character_name($flag, '..').' ('.$flag['flagweight'].')' : 'N/A')."</td>\n";
-	echo "<td title='".htmlspecialchars($flag['other'], ENT_QUOTES)."'>".$types[$flag['type']]."</td>\n<td>".$subtypes[$flag['subtype']]."</td>\n";
+	echo "<td title='".\Osmium\Chrome\escape($flag['other'])."'>".$types[$flag['type']]."</td>\n<td>".$subtypes[$flag['subtype']]."</td>\n";
 	echo "<td>".$statuses[$flag['status']]."</td>\n";
 	echo "<td>";
 	if($flag['type'] == \Osmium\Flag\FLAG_TYPE_LOADOUT) {

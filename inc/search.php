@@ -355,7 +355,7 @@ WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
 			.$esp."</strong><small>ISK</small></span></div>\n";
 
 		echo "<a class='fitname' href='{$relative}/{$uri}'>"
-			.htmlspecialchars($loadout['name'])."</a>\n";
+			.\Osmium\Chrome\escape($loadout['name'])."</a>\n";
 
 		echo "<div class='sideicons'>\n";
 
@@ -519,14 +519,14 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 
 	$val = '';
 	if(isset($_GET['q']) && strlen($_GET['q']) > 0) {
-		$val = "value='".htmlspecialchars($_GET['q'], ENT_QUOTES)."' ";
+		$val = "value='".\Osmium\Chrome\escape($_GET['q'])."' ";
 	}
 
 	if($uri === null) {
-		$uri = htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0], ENT_QUOTES);
+		$uri = \Osmium\Chrome\escape(explode('?', $_SERVER['REQUEST_URI'], 2)[0]);
 	}
 
-	$placeholder = htmlspecialchars($examples[mt_rand(0, count($examples) - 1)], ENT_QUOTES);
+	$placeholder = \Osmium\Chrome\escape($examples[mt_rand(0, count($examples) - 1)]);
 
 	echo "<form method='get' action='{$uri}'>\n";
 	echo "<h1><label for='search'>"
@@ -546,7 +546,7 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 				echo " selected='selected'";
 			}
 
-			echo ">".htmlspecialchars($v['name'])."</option>\n";
+			echo ">".\Osmium\Chrome\escape($v['name'])."</option>\n";
 		}
 		echo "</select>\n";
 
@@ -573,7 +573,7 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 	} else {
 		$get = 'ad=1';
 		foreach($_GET as $k => $v) {
-			$get .= "&amp;".htmlspecialchars($k, ENT_QUOTES)."=".htmlspecialchars($v, ENT_QUOTES);
+			$get .= "&amp;".\Osmium\Chrome\escape($k)."=".\Osmium\Chrome\escape($v);
 		}
 		echo "<a href='{$uri}?{$get}'><small>{$advanced}</small></a> — <a href='{$relative}/help/search'><small>Help</small></a>\n";
 	}

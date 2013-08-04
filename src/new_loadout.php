@@ -119,7 +119,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	}
 
 	if(isset($_GET['fleet'])) {
-		$t = htmlspecialchars($_GET['fleet'], ENT_QUOTES);
+		$t = \Osmium\Chrome\escape($_GET['fleet']);
 
 		if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
 		|| !$fit['fleet'][$t]['ship']['typeid']) {
@@ -196,7 +196,7 @@ if(\Osmium\State\is_logged_in()) {
 
 echo "<br />\nExport format: <select name='export_type' id='export_type'>\n";
 foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
-	echo "<option value='".htmlspecialchars($k, ENT_QUOTES)."'>".htmlspecialchars($f[0])."</option>\n";
+	echo "<option value='".\Osmium\Chrome\escape($k)."'>".\Osmium\Chrome\escape($f[0])."</option>\n";
 }
 echo "</select>\n";
 
@@ -239,7 +239,7 @@ echo "<section id='search'>
 <ul class='filters'></ul>
 <div class='query'>
 <div><input type='search' name='q' placeholder='Example query: ".
-htmlspecialchars($searchexamples[mt_rand(0, count($searchexamples) - 1)], ENT_QUOTES)
+\Osmium\Chrome\escape($searchexamples[mt_rand(0, count($searchexamples) - 1)])
 ."' title='Search items by name, by group, by abbreviation' /></div>
 <input type='submit' value='Search' />
 </div>
@@ -381,7 +381,7 @@ foreach($stypes as $type => $tdata) {
         $groupedcharges = "";
     }
 
-	echo "<div class='slots $type $groupstatus'>\n<h3>".htmlspecialchars($tdata[0])
+	echo "<div class='slots $type $groupstatus'>\n<h3>".\Osmium\Chrome\escape($tdata[0])
 		." <span>$groupedcharges<small class='counts'></small></span></h3>\n";
 	echo "<ul></ul>\n";
 	echo "</div>\n";
@@ -390,7 +390,7 @@ echo "</section>\n";
 
 echo "<section id='drones'>\n";
 foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
-	echo "<div class='drones $type'>\n<h3>".htmlspecialchars($fname)." <span>";
+	echo "<div class='drones $type'>\n<h3>".\Osmium\Chrome\escape($fname)." <span>";
 	if($type === 'space') {
 		echo "<small title='Maximum number of drones in space' class='maxdrones'></small>";
 		echo "<small> — </small>";

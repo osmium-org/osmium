@@ -156,7 +156,7 @@ $canonicaluri = RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
 );
 
 if(isset($_GET['fleet'])) {
-	$t = htmlspecialchars($_GET['fleet'], ENT_QUOTES);
+	$t = \Osmium\Chrome\escape($_GET['fleet']);
 
 	if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
 	|| !$fit['fleet'][$t]['ship']['typeid']) {

@@ -49,11 +49,11 @@ $levels = array(
 $imported = $row['importedskillset'] !== null ? json_decode($row['importedskillset'], true) : array();
 $overridden = $row['overriddenskillset'] !== null ? json_decode($row['overriddenskillset'], true) : array();
 
-$t = 'Edit skills of '.htmlspecialchars($name);
+$t = 'Edit skills of '.\Osmium\Chrome\escape($name);
 \Osmium\Chrome\print_header($t, '..');
 echo "<h1>$t</h1>\n";
 
-echo "<form method='post' action='".htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES)."'>\n<table id='e_skillset' class='d'>\n<tbody>\n";
+echo "<form method='post' action='".\Osmium\Chrome\escape($_SERVER['REQUEST_URI'])."'>\n<table id='e_skillset' class='d'>\n<tbody>\n";
 
 $q = \Osmium\Db\query('SELECT typeid, typename, groupname FROM osmium.invskills ORDER BY groupname ASC, typename ASC');
 $lastgroup = null;
@@ -72,12 +72,12 @@ while($s = \Osmium\Db\fetch_assoc($q)) {
 
 	if($lastgroup !== $s['groupname']) {
 		$lastgroup = $s['groupname'];
-		echo "<th class='groupname' colspan='3'>".htmlspecialchars($s['groupname'])."</th>\n</tr>\n";
+		echo "<th class='groupname' colspan='3'>".\Osmium\Chrome\escape($s['groupname'])."</th>\n</tr>\n";
 		echo "<tr>\n<th>Skill</th>\n<th>Imported level</th>\n<th>Overridden level</th>\n</tr>\n";
 		echo "<tr>\n";
 	}
 
-	echo "<td>".htmlspecialchars($s['typename'])."</td>\n";
+	echo "<td>".\Osmium\Chrome\escape($s['typename'])."</td>\n";
 
 	$ilevel = isset($imported[$s['typeid']]) ? min(5, max(0, $imported[$s['typeid']])) : null;
 	$olevel = isset($overridden[$s['typeid']]) ? min(5, max(0, $overridden[$s['typeid']])) : null;

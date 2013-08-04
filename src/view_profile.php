@@ -35,7 +35,7 @@ $myprofile = \Osmium\State\is_logged_in() && $a['accountid'] == $_GET['accountid
 $ismoderator = isset($a['ismoderator']) && $a['ismoderator'] === 't';
 
 $name = \Osmium\Chrome\get_name($row, $rname);
-\Osmium\Chrome\print_header(htmlspecialchars($rname)."'s profile", '..');
+\Osmium\Chrome\print_header(\Osmium\Chrome\escape($rname)."'s profile", '..');
 
 echo "<div id='vprofile'>\n";
 echo "<header>\n";
@@ -55,16 +55,16 @@ if($row['apiverified'] === 't') {
 		."</a><br />\n"
 		."<a href='../search?q=".urlencode("@restrictedtocorporationid > 0")."'>"
 		."<img src='http://image.eveonline.com/Corporation/".$row['corporationid']."_256.png'"
-		." alt='corporation logo' title='".htmlspecialchars($row['corporationname'], ENT_QUOTES)."' /></a>"
+		." alt='corporation logo' title='".\Osmium\Chrome\escape($row['corporationname'])."' /></a>"
 		."<a href='../search?q=".urlencode("@restrictedtoallianceid > 0")."'>"
 		."<img src='http://image.eveonline.com/Alliance/".$allianceid."_128.png'"
-		." alt='alliance logo' title='".htmlspecialchars($alliancename, ENT_QUOTES)."' /></a></p>\n";
+		." alt='alliance logo' title='".\Osmium\Chrome\escape($alliancename)."' /></a></p>\n";
 }
 
 echo "<table>\n<tbody>\n";
 
 if($row['apiverified'] === 't') {
-	echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".htmlspecialchars($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".htmlspecialchars($alliancename)."</td>\n</tr>\n";
+	echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".\Osmium\Chrome\escape($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".\Osmium\Chrome\escape($alliancename)."</td>\n</tr>\n";
 	echo $sep;
 }
 
@@ -97,8 +97,8 @@ echo "</ul>\n";
 
 
 echo "<section id='ploadouts' class='psection'>\n";
-echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.htmlspecialchars($rname, ENT_QUOTES).'"')."\">(browse all)</a></small></h2>\n";
-\Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 20, 'p', htmlspecialchars($rname).' does not have submitted any loadouts.');
+echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.\Osmium\Chrome\escape($rname).'"')."\">(browse all)</a></small></h2>\n";
+\Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 20, 'p', \Osmium\Chrome\escape($rname).' does not have submitted any loadouts.');
 echo "</section>\n";
 
 
@@ -186,13 +186,13 @@ $data = array();
 function print_target($d) {
 	if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT) {
 		if($d['name'] !== null) {
-			echo "<a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
+			echo "<a href='../loadout/".$d['loadoutid']."'>".\Osmium\Chrome\escape($d['name'])."</a>";
 		} else {
 			echo "<small>Private/hidden loadout</small>";
 		}
 	} else if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT) {
 		if($d['name'] !== null) {
-			echo "Comment <a href='../loadout/".$d['loadoutid']."?jtc=".$d['targetid1']."#c".$d['targetid1']."'>#".$d['targetid1']."</a> on <a href='../loadout/".$d['loadoutid']."'>".htmlspecialchars($d['name'])."</a>";
+			echo "Comment <a href='../loadout/".$d['loadoutid']."?jtc=".$d['targetid1']."#c".$d['targetid1']."'>#".$d['targetid1']."</a> on <a href='../loadout/".$d['loadoutid']."'>".\Osmium\Chrome\escape($d['name'])."</a>";
 		} else {
 			echo "<small>Comment on a private/hidden loadout</small>";
 		}

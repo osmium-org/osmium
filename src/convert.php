@@ -46,7 +46,7 @@ if($source !== false) {
 		echo "<h1>Conversion errors</h1>\n";
 		echo "<div id='import_errors'>\n<ol>\n";
 		foreach($errors as $e) {
-			echo "<li><code>".htmlspecialchars($e)."</code></li>\n";
+			echo "<li><code>".\Osmium\Chrome\escape($e)."</code></li>\n";
 		}
 		echo "</ol>\n</div>\n";
 	}
@@ -58,7 +58,7 @@ echo "<h1>Convert loadouts</h1>\n";
 
 $formats = array();
 foreach(\Osmium\Fit\get_import_formats() as $k => $f) {
-	$formats[$k] = $f[0].' ('.htmlspecialchars($f[1]).')';
+	$formats[$k] = $f[0].' ('.\Osmium\Chrome\escape($f[1]).')';
 }
 \Osmium\Forms\print_select('Input format', 'inputformat', $formats, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
@@ -82,7 +82,7 @@ if($source !== false && $fits !== false && $exportfunc !== false) {
 	echo "<form action='./convert' method='POST' id='exportresults'>\n";
 	foreach($fits as &$fit) {
 		echo "<p>\n";
-		echo '<textarea readonly="readonly">'.htmlspecialchars($exportfunc($fit, $_POST))."</textarea>\n";
+		echo '<textarea readonly="readonly">'.\Osmium\Chrome\escape($exportfunc($fit, $_POST))."</textarea>\n";
 		echo "</p>\n";
 	}
 	echo "</form>";
