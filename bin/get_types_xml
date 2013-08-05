@@ -189,11 +189,13 @@ function get_synonyms($name) {
 			'Afterburner',
 			'Microwarpdrive',
 			'Low-grade',
+			'Smartbomb',
 			),
 		array(
 			'AB',
 			'MWD',
 			'LG',
+			'SB',
 			),
 		$name);
 
