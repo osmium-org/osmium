@@ -28,7 +28,7 @@ if(!isset($_GET['tok'])) {
 	\Osmium\fatal(403, "No token.");
 }
 
-$tok = urldecode($_GET['tok']);
+$tok = $_GET['tok'];
 if($tok != \Osmium\State\get_token()) {
 	\Osmium\fatal(403, "Invalid token.");
 }

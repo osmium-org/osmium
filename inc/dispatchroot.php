@@ -18,6 +18,8 @@
 
 namespace Osmium;
 
+usleep(120000);
+
 /* This file will be included before inc/root.php and is the only file
  * included before dispatching the URI. */
 
@@ -88,6 +90,15 @@ function get_osmium_version() {
 	\Osmium\State\put_cache_memory('git_version', $version, 600);
 	\Osmium\State\semaphore_release($sem);
 	return $version;
+}
+
+function curl_init_branded() {
+	$c = curl_init();
+	$cver = curl_version();
+	$over = ltrim(get_osmium_version(), 'v');
+	$pver = phpversion();
+	curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} (PHP/{$pver}; libcurl/{$cver['version']}; {$cver['ssl_version']}; +http://artefact2.com/osmium/)");
+	return $c;
 }
 
 function fatal($code, $message) {

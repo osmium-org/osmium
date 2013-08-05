@@ -116,7 +116,7 @@ foreach($osmium_dispatch_rules as $rule => $target) {
 
 	foreach($matches as $k => $v) {
 		if(is_int($k)) continue;
-		$_GET[$k] = $v;
+		$_GET[$k] = urldecode($v);
 	}
 
 	if(is_array($target)) {

@@ -22,7 +22,7 @@ require __DIR__.'/../../inc/root.php';
 
 const MAX_TYPES = 10;
 
-$q = urldecode($_GET['q']);
+$q = $_GET['q'];
 
 $filters = array_keys(array_filter(
 	isset($_POST['mg']) && is_array($_POST['mg']) ? $_POST['mg'] : array(),
