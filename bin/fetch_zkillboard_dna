@@ -1,0 +1,247 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\FetchZKillboardDNA;
+
+require __DIR__.'/../inc/root.php';
+
+/* The zKillboard documentation doesn't say if the dates are in UTC,
+ * but they probably are */
+date_default_timezone_set('UTC');
+
+const GROUP_Capsule = 29;
+const MIN_WALK = 7200; /* Always reinsert the kills from the last 2
+                        * hours, to make up for (EVE) API cache times
+                        * and stuff */
+
+$c = \Osmium\curl_init_branded();
+curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($c, CURLOPT_HEADER, 1);
+curl_setopt($c, CURLOPT_TIMEOUT, 60);
+curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
+
+
+
+function get_zkb_dna_page($page) {
+	$json = \Osmium\State\get_cache('dna_page_'.$page, null, 'API_ZKB_');
+	$uri = "https://zkillboard.com/api/dna/page/{$page}/";
+	if($json !== null) {
+		echo "Requesting {$uri} -\n";
+		return $json;
+	}
+
+	static $hashes = array();
+	static $next_request_time = 0;
+	static $retries = [ 0, 10, 15, 30, 60 ];
+	global $c;
+
+	echo "Requesting {$uri} ";
+
+	foreach($retries as $ret) {
+		sleep($ret);
+		usleep(max(1, ($next_request_time - microtime(true)) * 1e6));
+
+		curl_setopt($c, CURLOPT_URL, $uri);
+		$reply = curl_exec($c);
+
+		echo ".";
+		if($reply === false) {
+			continue;
+		}
+
+		list($header, $body) = explode("\r\n\r\n", $reply, 2);
+		if(preg_match("%^X-Time-Between-Req: (.+)$%m", $header, $match)) {
+			$wait = $match[1] + 1;
+		} else {
+			$wait = 10;
+		}
+
+		$next_request_time = microtime(true) + $wait;
+		$json = json_decode($body, true);
+		if(json_last_error() !== JSON_ERROR_NONE) {
+			continue;
+		}
+
+		if(!is_array($json) || !isset($json[0]['killID'])) {
+			continue;
+		}
+
+		$hash = sha1(serialize($json));
+		unset($hashes[$page]);
+		if(($index = array_search($hash, $hashes, true)) !== false) {
+			echo "\n";
+			fwrite(STDERR, "Pages {$index} and {$page} returned the same dataset! Giving up.\n");
+			die(666);
+		}
+		$hashes[$page] = $hash;
+
+		\Osmium\State\put_cache('dna_page_'.$page, $json, 600, 'API_ZKB_');
+		echo "\n";
+		return $json;
+	}
+
+	echo "\n";
+	fwrite(STDERR, "Could not request {$uri} after ".count($retries)." attempts, giving up.\n");
+	die(1);
+}
+
+function get_page_position($json, $cutoff) {
+	$last = strtotime($json[0]['killtime']);
+	$first = strtotime($json[count($json) - 1]['killtime']);
+
+	assert($first < $last);
+
+	if($cutoff > $last) return -1; /* Need to fetch a page before (more recent kills) */
+	if($cutoff < $first) return 1; /* Need to fetch a page after (older kills) */
+	return 0;
+}
+
+function lerp($x1, $y1, $x2, $y2, $y) {
+	$m = ($y2 - $y1) / ($x2 - $x1);
+	$b = $y1 - $x1 * $m;
+	return ($y - $b) / $m;
+}
+
+$cutoff = max(
+	$hardcutoff = time() - 7 * 86400,
+	$localcutoff = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
+		'SELECT max(killtime) FROM recentkillsdna'
+	))[0]
+);
+
+if($localcutoff < $hardcutoff) {
+	echo "NOTICE: fetching kills for the first time. This will take a long time.\n";
+} else {
+	echo "Local kills are ".\Osmium\Chrome\format_long_duration(time() - $localcutoff, 2)." old.\n";
+}
+
+if(($t = time()) - $cutoff < MIN_WALK) {
+	$cutoff = $t - MIN_WALK;
+}
+
+
+
+
+
+echo "Spooling up walker…\n";
+
+$page = 1;
+$requests = [];
+while(true) {
+	$cp = get_zkb_dna_page($page);
+	$requests[] = $page;
+
+	$pos = get_page_position($cp, $cutoff);
+	if($pos === 1) {
+		/* Need to go deeper */
+		$page *= 2;
+	} else {
+		break;
+	}
+}
+
+if($pos === -1) {
+	/* Went too far in the past */
+	$max = array_pop($pos);
+	$min = array_pop($pos);
+
+	while($min < $max) {
+		$mid = (int)(($min + $max) * .5);
+		$cp = get_zkb_dna_page($mid);
+		$pos = get_page_position($cp, $cutoff);
+
+		if($pos === 0) {
+			$min = $max = $mid;
+		} else if($pos === 1) {
+			$min = $mid + 1;
+		} else {
+			assert($pos === -1);
+			$max = $mid - 1;
+		}
+	}
+
+	$cutoffpage = $min;
+} else {
+	/* The last page was the right one */
+	$cutoffpage = $page;
+}
+
+
+
+
+
+echo "Importing kills…\n";
+
+for($i = $cutoffpage; $i > 0; --$i) {
+	$page = get_zkb_dna_page($i);
+
+	while($kill = array_pop($page)) {
+		if($kill['killID'] < 0) continue; /* Verified kills only. */
+
+		$killtime = strtotime($kill['killtime']);
+		$dna = \Osmium\Fit\mangle_dna($kill['dna']);
+		$groupdna = \Osmium\Fit\uniquify_dna($dna);
+		if($dna === false || $groupdna === false) continue;
+
+		$shipgroup = (int)\Osmium\Fit\get_groupid(explode(':', $groupdna, 2)[0]);
+		if($shipgroup === GROUP_Capsule) continue; /* Pod fittings, bleh */
+
+		\Osmium\Db\query_params(
+			'DELETE FROM recentkillsdna WHERE killid = $1', array($kill['killID'])
+		);
+		\Osmium\Db\query_params(
+			'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna,
+			solarsystemid, solarsystemname, regionid, regionname,
+			characterid, charactername, corporationid, corporationname, allianceid, alliancename)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
+			array(
+				$kill['killID'],
+				$killtime,
+				$dna,
+				$groupdna,
+				$kill['solarSystemID'],
+				$kill['SolarSystemName'],
+				$kill['regionID'],
+				$kill['regionName'],
+				$kill['victimCharacterID'],
+				$kill['victimCharacterName'],
+				$kill['victimCorporationID'],
+				$kill['victimCorporationName'],
+				$kill['victimAllianceName'] !== null ? $kill['victimAllianceID'] : null,
+				$kill['victimAllianceName'],
+			)
+		);
+
+		echo ".";
+	}
+
+	echo "\n";
+}
+
+
+
+
+
+echo "Pruning old kills…\n";
+
+\Osmium\Db\query_params(
+	'DELETE FROM recentkillsdna
+	WHERE killtime < $1',
+	array($hardcutoff)
+);
