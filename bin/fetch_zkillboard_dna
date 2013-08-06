@@ -30,15 +30,11 @@ const MIN_WALK = 7200; /* Always reinsert the kills from the last 2
                         * hours, to make up for (EVE) API cache times
                         * and stuff */
 
-$c = curl_init();
+$c = \Osmium\curl_init_branded();
 curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($c, CURLOPT_HEADER, 1);
 curl_setopt($c, CURLOPT_TIMEOUT, 60);
 curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
-$cver = curl_version();
-$over = ltrim(\Osmium\get_osmium_version(), 'v');
-$pver = phpversion();
-curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} (PHP/{$pver}; libcurl/{$cver['version']}; {$cver['ssl_version']}; +http://artefact2.com/osmium/)");
 
 
 
