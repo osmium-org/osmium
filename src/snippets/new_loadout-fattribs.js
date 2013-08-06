@@ -33,7 +33,7 @@ osmium_gen_fattribs = function() {
 
 	for(var i = 0; i < osmium_targetclass.length; ++i) {
 		if(!osmium_targetclass[i][1]) continue;
-		t += "\n" + osmium_targetclass[i][0] + ": "
+		t += "\n" + osmium_targetclass[i][0] + " (" + osmium_targetclass[i][3].toFixed(0) + " m): "
 			+ osmium_targeting_time(sr, osmium_targetclass[i][3]).toFixed(1) + " s"
 	}
 
@@ -43,7 +43,7 @@ osmium_gen_fattribs = function() {
 
 	for(var i = 0; i < osmium_targetclass.length; ++i) {
 		if(!osmium_targetclass[i][2]) continue;
-		t += "\n" + osmium_targetclass[i][0] + ": "
+		t += "\n" + osmium_targetclass[i][0] + " (" + osmium_targetclass[i][4].toFixed(0) + " mm) : "
 			+ osmium_targeting_time(osmium_targetclass[i][4], sig).toFixed(1) + " s"
 	}
 
@@ -63,8 +63,14 @@ osmium_init_fattribs = function() {
 						var ssmenu = osmium_ctxmenu_create();
 
 						for(var z in profiles) {
+							var s = profiles[z][0] + profiles[z][1] + profiles[z][2] + profiles[z][3];
+
 							var opts = {
-								toggled: z === osmium_clf['X-damage-profile'][0]
+								toggled: z === osmium_clf['X-damage-profile'][0],
+								title: (100 * profiles[z][0] / s).toFixed(1) + "% EM, "
+									+ (100 * profiles[z][1] / s).toFixed(1) + "% Explosive, "
+									+ (100 * profiles[z][2] / s).toFixed(1) + "% Kinetic, "
+									+ (100 * profiles[z][3] / s).toFixed(1) + "% Thermal"
 							};
 
 							if(profiles[z].length >= 5) {
