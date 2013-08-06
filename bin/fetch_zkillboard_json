@@ -25,7 +25,8 @@ require __DIR__.'/../inc/root.php';
  * but they probably are */
 date_default_timezone_set('UTC');
 
-$c = \Osmium\curl_init_branded();
+//$c = \Osmium\curl_init_branded();
+$c = curl_init();
 curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($c, CURLOPT_HEADER, 1);
 curl_setopt($c, CURLOPT_TIMEOUT, 60);
@@ -46,27 +47,94 @@ while(true) {
 	if($groupids === array()) break;
 	$groupids = implode(',', $groupids);
 
-	$cutoff = \Osmium\Db\fetch_row(\Osmium\Db\query(
+	$cutoff = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
 		"SELECT max(killtime) FROM recentkillsdna rkd
 		JOIN osmium.invships ON invships.typeid = split_part(rkd.dna, ':', 1)::integer
 		WHERE invships.groupid IN ({$groupids})"
-	));
+	))[0] - 3600;
 
-	if($cutoff !== false) {
-		$cutoff = time() - $cutoff[0];
-	} else {
-		$cutoff = 86400 * 7;
-	}
+	$now = time();
+	$cutoff = max($cutoff, $now - 2 * 86400);
+	$uri = null;
 
-	$cutoff = max(7200, min(86400 * 7, $cutoff));
+	do {
+		$inserted = 0;
+		$datetime = date('YmdHi', $cutoff);
 
-	$page = 1;
-	while(($json = zkillboard_api(
-		"/groupID/{$groupids}/no-attackers/api-only/pastSeconds/{$cutoff}/orderDirection/asc/page/{$page}/"
-	)) !== array()) {
+		$prevuri = $uri;
+		$json = zkillboard_api(
+			$uri = "/groupID/{$groupids}/startTime/{$datetime}/orderDirection/asc/no-attackers/api-only/"
+		);
 
-		++$page;
-	}
+		foreach($json as $k) {
+			++$inserted;
+
+			if($k['killID'] <= 0) {
+				echo "k";
+				continue;
+			}
+
+			$cutoff = $killtime = strtotime($k['killTime']);
+			$dna = $k['victim']['shipTypeID'];
+
+			foreach($k['items'] as $item) {
+				$f = (int)$item['flag'];
+				if(!(
+					/* See invflags */
+					($f >= 11 && $f <= 34) /* Low, medium, high slots */
+					|| ($f >= 92 && $f <= 99) /* Rig slots */
+					|| ($f >= 125 && $f <= 132) /* Subsystem slots */
+					|| ($f === 87) /* Drone bay */
+					|| ($f === 88) /* Booster */
+					|| ($f === 89) /* Implant */
+				)) {
+					continue;
+				}
+
+				$typeid = (int)$item['typeID'];
+				$qty = (int)$item['qtyDropped'] + (int)$item['qtyDestroyed'];
+				if($qty === 0) continue;
+				$dna .= ':'.$typeid.';'.$qty;
+			}
+
+			$dna .= '::';
+
+			$dna = \Osmium\Fit\mangle_dna($dna);
+			$gdna = \Osmium\Fit\uniquify_dna($dna);
+
+			if($dna === false || $gdna === false) {
+				echo "d";
+				continue;
+			}
+
+			\Osmium\Db\query_params(
+				'DELETE FROM recentkillsdna WHERE killid = $1', array($k['killID'])
+			);
+			\Osmium\Db\query_params(
+				'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna, solarsystemid,
+				characterid, charactername, corporationid, corporationname, allianceid, alliancename)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+				array(
+					$k['killID'],
+					$killtime,
+					$dna,
+					$gdna,
+					$k['solarSystemID'],
+					$k['victim']['characterID'],
+					$k['victim']['characterName'],
+					$k['victim']['corporationID'],
+					$k['victim']['corporationName'],
+					$k['victim']['allianceID'] > 0 ? $k['victim']['allianceID'] : null,
+					$k['victim']['allianceID'] > 0 ? $k['victim']['allianceName'] : null,
+				)
+			);
+
+			echo ".";
+		}
+
+		echo "\n";
+
+	} while($inserted > 0 && $prevuri !== $uri);
 }
 
 
@@ -126,7 +194,7 @@ function zkillboard_api($call) {
 		}
 		$hashes[$call] = $hash;
 
-		\Osmium\State\put_cache($call, $json, 600, 'API_ZKB_');
+		\Osmium\State\put_cache($call, $json, 3500, 'API_ZKB_');
 		echo "\n";
 		return $json;
 	}

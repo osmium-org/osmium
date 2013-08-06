@@ -11,7 +11,7 @@ require __DIR__.'/../inc/cron.php';
 	function() {
 		passthru('./bin/update_lscores');
 		passthru('./bin/prune_cache');
-		passthru('./bin/fetch_zkillboard_dna');
+		passthru('./bin/fetch_zkillboard_json');
 		passthru('./bin/cache_top_kills');
 	},
 	20 * 60,

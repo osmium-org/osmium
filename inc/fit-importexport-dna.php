@@ -224,7 +224,6 @@ function uniquify_dna($dna) {
 
 		if(!isset($modules[$typeid])) $modules[$typeid] = 0;
 		$modules[$typeid] += $qty;
-		break;
 	}
 
 	$unique = $ship;

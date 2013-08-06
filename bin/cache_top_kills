@@ -84,8 +84,11 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 			];
 		}
 
-		\Osmium\Fit\remove_drone($fit, $typeid, 'bay', $d['quantityinbay']);
-		\Osmium\Fit\remove_drone($fit, $typeid, 'space', $d['quantityinspace']);
+		foreach(array('bay', 'space') as $loc) {
+			if(isset($d['quantityin'.$loc]) && $d['quantityin'.$loc] > 0) {
+				\Osmium\Fit\remove_drone($fit, $typeid, $loc, $d['quantityin'.$loc]);
+			}
+		}
 	}
 
 	uasort($drones, function($x, $y) {
