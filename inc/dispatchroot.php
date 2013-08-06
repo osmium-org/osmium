@@ -105,90 +105,41 @@ function fatal($code, $message) {
 	if(!headers_sent()) {
 		http_response_code($code);
 	}
-	$message = htmlspecialchars($message)."<span id='caret'>_</span>";
-	$code = $code.'!';
 
-	$fcode = '';
-	$len = strlen($code);
-	for($i = 0; $i < $len; ++$i) {
-		$fcode .= $code[$i].'&#8203;';
-	}
+	$message = "It appears you have reached a fatal error.\n\n"
+		."The provided message was: {$message}.\n"
+		."The returned HTTP code is: {$code}.\n\n"
+		."If you believe this is a bug in the code or a system issue, please report it.\n\n"
+		."If you decide to report the issue, please include the following debug backtrace:";
 
-	echo <<<EOFATAL
-<!DOCTYPE html>
-<head>
-<title>$code / Osmium</title>
-<style type='text/css'>
-body {
-	font-family: monospace;
-	font-size: 2em;
-	color: white;
-	background-color: black;
-}
+	$l = strlen($message);
+	for($i = 0; $i < $l; ++$i) {
+		for($j = 0; $j < 8; ++$j) {
+			$z = 1;
 
-div#bg {
-	color: #222;
-	overflow: hidden;
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-}
+			if((mt_rand() % 1024) === 0) {
+				$message[$i] = chr(ord($message[$i]) ^ $z);
+			}
 
-div#bg, div#bg > strong {
-	user-select: none;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
-
-	cursor: default;
-}
-
-div#bg > strong {
-	color: red;
-	outline: 1px solid red;
-	font-weight: normal;
-}
-
-h1 {
-	position: absolute;
-	top: 50%;
-	margin-top: -1em;
-	left: 0;
-	width: 100%;
-	text-align: center;
-}
-</style>
-</head>
-<body>
-<div unselectable='on' id='bg'></div>
-<h1>
-$message
-</h1>
-<script type='text/javascript'>
-osmium_fancy_error = function(string) {
-	var f = '';
-
-	for(var i = 0; i < 5000; ++i) {
-		if(Math.random() < 0.01) {
-			f = f + "<strong unselectable='on'>" + string + "</strong>";
-		} else {
-			f = f + string;
+			$z <<= 1;
 		}
 	}
 
-	document.getElementById('bg').innerHTML = f;
+	$message .= "\n";
 
-	setTimeout(function() { osmium_fancy_error(string); }, Math.random() * 1500 + 500);
-};
+	$k = 0;
+	foreach(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10) as $c) {
+		$message .= '\\'.$c['function'].'() called from '.$c['file'].':'.$c['line']."\n";
+	}
 
-osmium_fancy_error("$fcode");
-</script>
-</body>
-</html>
+	$message .= "\n".date('c')."\n";
 
-EOFATAL;
+	echo "<!DOCTYPE html>\n<html>\n<head>\n"
+		."<title>{$code} / Osmium</title>\n"
+		."</head>\n<body>\n<pre>"
+		.htmlspecialchars($message)
+		."</pre>\n"
+		."</body>\n</html>\n";
 
-	die();
+	die((int)$code);
 }
