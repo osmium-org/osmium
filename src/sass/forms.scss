@@ -111,7 +111,7 @@ form > table {
 			line-height: $field-height;
 			height: $field-height;
 
-			@include layout-type(normal) { min-width: 30em; }
+			min-width: 30em;
 			@include layout-type(small) { min-width: 20em; }
 			@include layout-type(extrasmall) { min-width: 10em; }
 		}
@@ -126,7 +126,7 @@ form > table {
 		}
 
 		textarea {
-			@include layout-type(normal) { height: 10em; }
+			height: 10em;
 			@include layout-type(small) { height: 7em; }
 			@include layout-type(extrasmall) { height: 5em; }
 		}
