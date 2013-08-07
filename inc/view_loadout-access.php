@@ -58,6 +58,7 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
     $loadoutid = false;
     $revision_overridden = true;
     $revision = 1;
+    $maxrev = false;
     $forkuri = RELATIVE.'/new/dna/'.$_GET['dna'];
     $historyuri = 'javascript:void(0);';
     $canonicaluri = RELATIVE.'/loadout/dna/'.$_GET['dna'];
@@ -82,6 +83,7 @@ if(!\Osmium\State\can_view_fit($loadoutid)) {
 }
 
 $latestfit = \Osmium\Fit\get_fit($loadoutid);
+$maxrev = $latestfit['metadata']['revision'];
 if($latestfit === false) {
 	\Osmium\fatal(500, 'Internal error, please report.');
 }
@@ -192,6 +194,7 @@ if(isset($_GET['fleet'])) {
     $loadoutid = false;
     $revision_overridden = true;
     $revision = 1;
+    $maxrev = false;
 
 	return;
 }

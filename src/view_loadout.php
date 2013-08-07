@@ -264,9 +264,13 @@ echo "<div id='vlmain'>
 <li><a href='#remote'>Remote (".(isset($fit['fleet']) ? count($fit['fleet']) : 0).")</a></li>
 <li><a href='#comments'>Comments (".$commentcount.")</a></li>
 <li><a href='#meta'>Meta</a></li>
-<li><a href='#export'>Export</a></li>
-<li class='external'><a href='".$historyuri."' title='View the different revisions of the loadout and compare the changes that were made'>History (".($revision - 1).")</a></li>
-<li class='external'><a rel='nofollow' href='".$forkuri."' title='Make a private copy of this loadout and edit it immediately'>Fork</a></li>\n";
+<li><a href='#export'>Export</a></li>\n";
+
+if($maxrev !== false) {
+	echo "<li class='external'><a href='".$historyuri."' title='View the different revisions of the loadout and compare the changes that were made'>History (".($maxrev - 1).")</a></li>\n";
+}
+
+echo "<li class='external'><a rel='nofollow' href='".$forkuri."' title='Make a private copy of this loadout and edit it immediately'>Fork</a></li>\n";
 
 if($can_edit) {
 	echo "<li class='external'><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'>Edit</a></li>\n";
