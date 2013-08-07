@@ -164,7 +164,58 @@ osmium_gen_drones = function() {
 };
 
 osmium_init_drones = function() {
+	$("section#drones > div.drones > ul").sortable({
+		items: "li:not(.placeholder)",
+		placeholder: "sortable-placeholder",
+		connectWith: "section#drones > div.drones > ul",
+		remove: function(e, ui) {
+			var d = ui.item;
+			var t = d.data('typeid');
+			var loc = d.data('location');
+			var q = d.data('quantity');
 
+			var drones = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']]['in' + loc];
+
+			for(var i = 0; i < drones.length; ++i) {
+				if(drones[i].typeid != t) continue;
+
+				drones[i].quantity -= q;
+				if(drones[i].quantity <= 0) {
+					drones.splice(i, 1);
+				}
+			}
+		},
+		receive: function(e, ui) {
+			var d = ui.item;
+			var t = d.data('typeid');
+			var loc = (d.data('location') === 'bay') ? 'space' : 'bay';
+			var q = d.data('quantity');
+			var dp = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
+			var key = 'in' + loc;
+
+			if(!(key in dp)) dp[key] = [];
+			drones = dp[key];
+			d.data('location', loc);
+
+			for(var i = 0; i < drones.length; ++i) {
+				if(drones[i].typeid != t) continue;
+
+				drones[i].quantity += q;
+				osmium_gen_drones();
+				osmium_commit_clf();
+				osmium_undo_push();
+				return;
+			}
+
+			drones.push({
+				typeid: t,
+				quantity: q
+			});
+			osmium_gen_drones();
+			osmium_commit_clf();
+			osmium_undo_push();
+		}
+	});
 };
 
 osmium_remove_drone_from_clf = function(typeid, qty, location) {
