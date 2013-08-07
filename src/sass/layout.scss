@@ -318,7 +318,8 @@ body > div#modalbg {
 }
 
 body > div#modal {
-	border: 1px solid $modal-border-color;
+	border: 1em solid $modal-border-color;
+	border-radius: 0.5em;
 	position: fixed;
 	top: 50%;
 	left: 50%;
@@ -326,12 +327,13 @@ body > div#modal {
 	height: 30em;
 	z-index: 70001;
 	background-color: $modal-bg-color;
+	background-clip: padding-box;
 	overflow: auto;
 
 	&> a#closemodal {
-		position: fixed;
-		top: 50%;
-		left: 50%;
+		position: absolute;
+		top: 0.25em;
+		right: 0.25em;
 		z-index: 70002;
 		color: $close-modal-text-color;
 		border: 1px solid $close-modal-border-color;
@@ -342,6 +344,17 @@ body > div#modal {
 		display: block;
 		text-align: center;
 		background-color: $close-modal-bg-color;
+	}
+
+	&> header:first-child {
+		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);
+		padding: 0.3em 0.6em;
+		margin: 0.1em;
+
+		&> h2 {
+			margin: 0;
+			@include ellipsis;
+		}
 	}
 }
 

@@ -40,19 +40,42 @@ osmium_init_control = function() {
 
 	$("section#control input#export_loadout").click(function() {
 		var b = $(this);
+		var exporttype = $("section#control select#export_type").val();
 
 		osmium_commit_clf({
 			params: {
 				'export': true,
-				'exportfmt': $("section#control select#export_type").val()
+				'exportfmt': exporttype
 			},
 			success: function(payload) {
+				var m = $(document.createElement('div'));
+				var h = $(document.createElement('header'));
 				var textarea = $(document.createElement('textarea'));
+
+				h.append($(document.createElement('h2')).text('Exported loadout (' + exporttype + ')'));
+				m.append(h);
+
 				textarea.text(payload['export-payload']);
 				textarea.prop('readonly', 'readonly');
-				textarea.css('width', '100%').css('height', '100%');
-				osmium_modal(textarea);
-				textarea.parent().css('overflow', 'hidden'); /* XXX */
+				textarea.css({
+					position: 'absolute',
+					top: '0',
+					left: '0',
+					width: '100%',
+					height: '100%',
+					'font-size': '0.7em'
+				});
+				m.append($(document.createElement('div')).css({
+					position: 'absolute',
+					top: '2.75em',
+					left: '0.5em',
+					right: '0.5em',
+					bottom: '0.5em'
+				}).append(textarea));
+
+				osmium_modal(m.children());
+
+				textarea.focus();
 			},
 			before: (function(b) {
 				return function() {

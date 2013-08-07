@@ -375,6 +375,7 @@ if(count($fvariations) > 1) {
 }
 
 \Osmium\Chrome\return_json(array(
-	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
+	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n"
+	."<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
 	'variations' => $fvariations,
 ));
