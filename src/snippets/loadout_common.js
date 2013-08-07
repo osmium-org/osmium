@@ -102,10 +102,12 @@ osmium_undo_push = function() {
 
 osmium_undo_pop = function() {
 	if(osmium_undo_stack_position < 1) {
-		alert("No more history for undoing.");
+		/* No more history to undo */
 		return;
 	}
 
+	/*  Very similar to the "undo" feature of Emacs. Powerful and
+	 *  cannot lose data by undoing stuff then doing modifications. */
 	--osmium_undo_stack_position;
 	osmium_clf = $.extend(true, {}, osmium_undo_stack[osmium_undo_stack_position]);
 	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
