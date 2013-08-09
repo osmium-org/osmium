@@ -86,6 +86,10 @@ $osmium_dispatch_rules = array(
 	'%^/resetpassword$%D' => '/src/reset_password.php',
 	'%^/notifications$%D' => '/src/view_notifications.php',
 
+	'%^/about$%D' => '/src/about.php',
+	'%^/changelog$%D' => [ '/src/mdstatic.php',
+	                         ['relative' => '.', 'title' => 'Changelog', 'f' => '../../CHANGELOG.md']
+	],
 	'%^/help/search$%D' => [ '/src/mdstatic.php',
 	                         ['relative' => '..', 'title' => 'Search help', 'f' => 'search.md']
 	],

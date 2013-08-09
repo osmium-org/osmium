@@ -410,6 +410,7 @@ osmium_custom_damage_profiles = ".$cdp.";
 osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 	);
 
+	/* If this script changes, update the license info in about.php */
 	echo "<script type='application/javascript' src='".$relative."/static-1/rawdeflate.min.js'></script>";
 
 	\Osmium\Chrome\print_js_snippet('tabs');

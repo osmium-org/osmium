@@ -143,37 +143,43 @@ function print_footer() {
 	);
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
-	echo "<a href='http://artefact2.com/osmium/'><strong>Osmium "
-		.\Osmium\get_osmium_version()." @ ".gethostname()."</strong></a> –\n";
-	echo "<a href='".$__osmium_chrome_relative."/api'>API</a> –\n";
-	echo "<a href='https://github.com/Artefact2/osmium'>Browse source</a>\n";
-	echo "(<a href='http://www.gnu.org/licenses/agpl.html'>AGPLv3</a>)\n";
+	echo "<a href='".$__osmium_chrome_relative."/changelog'><code>".\Osmium\get_osmium_version()."</code></a> –\n";
+	echo "<a href='".$__osmium_chrome_relative."/about' rel='jslicense'>About</a> –\n";
+	echo "<a href='".$__osmium_chrome_relative."/api'>API</a>\n";
 	echo "</p>\n</footer>\n";
 
+	/* If these scripts are changed, also change the license
+	 * information in about.php */
 	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>\n";
 	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";
 
 	if(count($__osmium_js_snippets) > 0) {
-		$name = 'JS_'.sha1(implode("\n", $__osmium_js_snippets)).'.js';
+		$name = 'JS_'.substr(sha1(implode("\n", $__osmium_js_snippets)), 0, 7);
 		$cache = '/static/cache/'.$name;
 		$cachefile = \Osmium\ROOT.$cache;
-		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\JS_STATICVER.'/cache/'.$name;
+		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\JS_STATICVER.'/cache/'.$name.'.min.js';
 
-		if(!file_exists($cachefile)) {
-			if($min = \Osmium\get_ini_setting('minify_js')) {
-				$command = \Osmium\get_ini_setting('minify_command');
-
-				/* Concatenate & minify */
+		if(!file_exists($cachefile.'.min.js')) {
+			$sem = \Osmium\State\semaphore_acquire('JS_'.$cachefile.'.js');
+			if(!file_exists($cachefile.'.min.js')) {
 				shell_exec('cat '.implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
-				           .' | '.$command.' > '.escapeshellarg($cachefile));
-			}
+				           .' >> '.escapeshellarg($cachefile.'.js'));
 
-			if(!$min || !file_exists($cachefile)) {
-				/* Not minifying, or minifier failed for some reason */
-				/* Just concatenate the files together */
-				shell_exec('cat '.implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
-				           .' > '.escapeshellarg($cachefile));
+				if($min = \Osmium\get_ini_setting('minify_js')) {
+					$command = \Osmium\get_ini_setting('minify_command');
+
+					/* Concatenate & minify */
+					shell_exec('cat '.implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
+					           .' | '.$command.' >> '.escapeshellarg($cachefile.'.min.js'));
+				}
+
+				if(!$min || !file_exists($cachefile)) {
+					/* Not minifying, or minifier failed for some reason */
+					shell_exec('ln -s '.escapeshellarg($cachefile.'.js')
+					           .' '.escapeshellarg($cachefile.'.min.js'));
+				}
 			}
+			\Osmium\State\semaphore_release($sem);
 		}
 
 		echo "<script type='application/javascript' src='".escape($cacheuri)."'></script>\n";

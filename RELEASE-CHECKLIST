@@ -11,7 +11,8 @@ SCM organization
 
 * Other branches:
   * experimental-* for code that may never be merged at all;
-  * staging-vX for specific staging branches
+  * staging-vX for specific staging branches;
+  * vX-hotfixes for last-minute trivial fixes.
 
 * production branch is always on a tagged commit (vA.B.C-foo).
 
@@ -25,6 +26,8 @@ The list
 * Bump STATICVER if needed in inc/root.php
 
 * Put relevant info in UPDATING
+
+* Update CHANGELOG.md
 
 * Commit
   git commit -m "Version X.Y.Z."
@@ -41,4 +44,4 @@ The list
    git push origin master:master
    git push --tags
 
-* Update mdcms changelog, topic on #osmium, forum post
+* Update #osmium topic, forum thread
