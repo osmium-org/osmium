@@ -28,6 +28,7 @@ namespace Osmium\Fit;
  * the stable percentage level (between 0 and 100).
  */
 function get_capacitor_stability(&$fit, $reload = true) {
+	\Osmium\Dogma\auto_init($fit);
 	dogma_get_capacitor($fit['__dogma_context'], $reload, $delta, $stable, $p);
 	return array($delta, $stable, $stable ? $p : ($p / 1000.0));
 }
@@ -55,6 +56,8 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
 			'max' => 0,
 			),
 		);
+
+	\Osmium\Dogma\auto_init($fit);
 
 	foreach($layers as $a) {
 		list($name, $attributename, $resistprefix) = $a;
@@ -115,6 +118,8 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile, $reload = false) {
 		'shield' => [ [ EFFECT_ShieldBoosting, 'shieldBonus' ],
 		              [ EFFECT_FueledShieldBoosting, 'shieldBonus' ] ]
 	);
+
+	\Osmium\Dogma\auto_init($fit);
 
 	$modules = array();
 	$out = array();
@@ -258,6 +263,8 @@ function get_damage_from_attack_effect(&$fit, $attackeffectid,
                                        $modulemultiplierattribute = null,
                                        $globalmultiplier = 1,
                                        $reload = false) {
+	\Osmium\Dogma\auto_init($fit);
+
 	$dps = 0;
 	$alpha = 0;
 
@@ -347,6 +354,7 @@ function get_damage_from_turrets(&$fit, $reload = false) {
  * Get DPS from active drones (drones "in space").
  */
 function get_damage_from_drones(&$fit) {
+	\Osmium\Dogma\auto_init($fit);
 	$dps = 0;
 
 	foreach($fit['drones'] as $drone) {
@@ -389,6 +397,8 @@ function get_damage_from_drones(&$fit) {
  * missile range)
  */
 function get_module_interesting_attributes($fit, $type, $index) {
+	\Osmium\Dogma\auto_init($fit);
+
 	$attributes = array();
 	$typeid = $fit['modules'][$type][$index]['typeid'];
 	$state = $fit['modules'][$type][$index]['state'];
@@ -522,6 +532,7 @@ function get_estimated_price(&$fit, array &$missing) {
  * per millisecond).
  */
 function get_mining_yield(&$fit) {
+	\Osmium\Dogma\auto_init($fit);
 	$total = 0;
 
 	foreach($fit['modules'] as $type => $a) {

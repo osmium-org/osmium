@@ -38,7 +38,7 @@ $osmium_dispatch_rules = array(
 	/* Very common pages */
 	'%^/$%D' => '/src/main.php',
 	\Osmium\PUBLIC_LOADOUT_RULE => '/src/view_loadout.php',
-	'%^/new(/(?<token>0|[1-9][0-9]*))?$%D' => '/src/new_loadout.php',
+	\Osmium\NEW_LOADOUT_RULE => '/src/new_loadout.php',
 	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 	'%^/search$%D' => '/src/search.php',
 	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',

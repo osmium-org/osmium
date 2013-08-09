@@ -32,20 +32,22 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 	if(isset($fit['modulepresetid'])) {
 		if($presetid === $fit['modulepresetid']) return;
 
-		foreach($fit['modules'] as $type => $a) {
-			foreach($a as $index => $module) {
-				dogma_remove_module(
+		if(\Osmium\Dogma\has_context($fit)) {
+			foreach($fit['modules'] as $type => $a) {
+				foreach($a as $index => $module) {
+					dogma_remove_module(
+						$fit['__dogma_context'],
+						$module['dogma_index']
+					);
+				}
+			}
+
+			foreach($fit['implants'] as $typeid => $i) {
+				dogma_remove_implant(
 					$fit['__dogma_context'],
-					$module['dogma_index']
+					$i['dogma_index']
 				);
 			}
-		}
-
-		foreach($fit['implants'] as $typeid => $i) {
-			dogma_remove_implant(
-				$fit['__dogma_context'],
-				$i['dogma_index']
-			);
 		}
 	}
 
@@ -63,14 +65,16 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 		create_charge_preset($fit, 'Default charge preset', '');
 	}
 
-	foreach($fit['modules'] as $type => &$a) {
-		foreach($a as $index => &$module) {
-			dogma_add_module_s(
-				$fit['__dogma_context'],
-				$module['typeid'],
-				$module['dogma_index'],
-				\Osmium\Dogma\get_dogma_states()[$module['state']]
-			);
+	if(\Osmium\Dogma\has_context($fit)) {
+		foreach($fit['modules'] as $type => &$a) {
+			foreach($a as $index => &$module) {
+				dogma_add_module_s(
+					$fit['__dogma_context'],
+					$module['typeid'],
+					$module['dogma_index'],
+					\Osmium\Dogma\get_dogma_states()[$module['state']]
+				);
+			}
 		}
 	}
 
@@ -81,12 +85,14 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 		use_charge_preset($fit, key($fit['chargepresets']));
 	}
 
-	foreach($fit['implants'] as $typeid => &$i) {
-		dogma_add_implant(
-			$fit['__dogma_context'],
-			$i['typeid'],
-			$i['dogma_index']
-		);
+	if(\Osmium\Dogma\has_context($fit)) {
+		foreach($fit['implants'] as $typeid => &$i) {
+			dogma_add_implant(
+				$fit['__dogma_context'],
+				$i['typeid'],
+				$i['dogma_index']
+			);
+		}
 	}
 }
 
@@ -106,12 +112,14 @@ function use_charge_preset(&$fit, $cpid) {
 	if(isset($fit['chargepresetid'])) {
 		if($cpid === $fit['chargepresetid']) return;
 
-		foreach($fit['charges'] as $type => $a) {
-			foreach($a as $index => $charge) {
-				dogma_remove_charge(
-					$fit['__dogma_context'],
-					$fit['modules'][$type][$index]['dogma_index']
-				);
+		if(\Osmium\Dogma\has_context($fit)) {
+			foreach($fit['charges'] as $type => $a) {
+				foreach($a as $index => $charge) {
+					dogma_remove_charge(
+						$fit['__dogma_context'],
+						$fit['modules'][$type][$index]['dogma_index']
+					);
+				}
 			}
 		}
 	}
@@ -121,13 +129,15 @@ function use_charge_preset(&$fit, $cpid) {
 	$fit['chargepresetdesc'] =& $fit['chargepresets'][$cpid]['description'];
 	$fit['charges'] =& $fit['chargepresets'][$cpid]['charges'];
 
-	foreach($fit['charges'] as $type => $a) {
-		foreach($a as $index => $charge) {
-			dogma_add_charge(
-				$fit['__dogma_context'],
-				$fit['modules'][$type][$index]['dogma_index'],
-				$charge['typeid']
-			);
+	if(\Osmium\Dogma\has_context($fit)) {
+		foreach($fit['charges'] as $type => $a) {
+			foreach($a as $index => $charge) {
+				dogma_add_charge(
+					$fit['__dogma_context'],
+					$fit['modules'][$type][$index]['dogma_index'],
+					$charge['typeid']
+				);
+			}
 		}
 	}
 }
@@ -143,7 +153,7 @@ function use_drone_preset(&$fit, $dpid) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	if(isset($fit['drones'])) {
+	if(isset($fit['drones']) && \Osmium\Dogma\has_context($fit)) {
 		foreach($fit['drones'] as $typeid => $d) {
 			dogma_remove_drone($fit['__dogma_context'], $typeid);
 		}
@@ -154,9 +164,11 @@ function use_drone_preset(&$fit, $dpid) {
 	$fit['dronepresetdesc'] =& $fit['dronepresets'][$dpid]['description'];
 	$fit['drones'] =& $fit['dronepresets'][$dpid]['drones'];
 
-	foreach($fit['drones'] as $typeid => $d) {
-		if($d['quantityinspace'] == 0) continue;
-		dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
+	if(\Osmium\Dogma\has_context($fit)) {
+		foreach($fit['drones'] as $typeid => $d) {
+			if($d['quantityinspace'] == 0) continue;
+			dogma_add_drone($fit['__dogma_context'], $typeid, $d['quantityinspace']);
+		}
 	}
 }
 

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -33,6 +33,9 @@ const PUBLIC_LOADOUT_RULE = '%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[
 
 /* Also used in try_get_fit_from_remote_format() */
 const PRIVATE_LOADOUT_RULE = '%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)(/booster/(?<fleet>(fleet|wing|squad)))?$%D';
+
+/* Also used in try_get_fit_from_remote_format() */
+const NEW_LOADOUT_RULE = '%^/new(/(?<token>0|[1-9][0-9]*))?$%D';
 
 function printr($stuff) {
 	echo "<pre>\n";

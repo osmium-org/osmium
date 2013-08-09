@@ -29,6 +29,20 @@ function get_dogma_states() {
 	);
 }
 
+function has_context(&$fit) {
+	return isset($fit['__dogma_context'])
+		&& is_resource($fit['__dogma_context'])
+		&& get_resource_type($fit['__dogma_context']) === 'Dogma context';
+}
+
+function auto_init(&$fit) {
+	if(has_context($fit)) {
+		return;
+	}
+
+	late_init($fit);
+}
+
 /** Clear all dogma contexts of a $fit. Includes fleet boosters. */
 function clear(&$fit) {
 	unset($fit['__dogma_fleet_context']);
@@ -129,6 +143,8 @@ function get_att($att) {
  * Get the final value of a chararacter attribute.
  */
 function get_char_attribute(&$fit, $att) {
+	auto_init($fit);
+
 	$ret = dogma_get_character_attribute(
 		$fit['__dogma_context'],
 		get_att($att),
@@ -142,6 +158,8 @@ function get_char_attribute(&$fit, $att) {
  * Get the final value of a ship attribute.
  */
 function get_ship_attribute(&$fit, $att) {
+	auto_init($fit);
+
 	switch($att) {
 
 	case 'upgradeLoad':
@@ -205,9 +223,11 @@ function get_ship_attribute(&$fit, $att) {
  * Get the final value of a module attribute (of the current preset).
  */
 function get_module_attribute(&$fit, $slottype, $index, $att) {
-	if(!isset($fit['modules'][$slottype][$index]['dogma_index'])) {
+	if(!isset($fit['modules'][$slottype][$index])) {
 		return false;
 	}
+
+	auto_init($fit);
 
 	$ret = dogma_get_module_attribute(
 		$fit['__dogma_context'],
@@ -223,9 +243,11 @@ function get_module_attribute(&$fit, $slottype, $index, $att) {
  * Get the final value of a charge attribute (of the current charge preset).
  */
 function get_charge_attribute(&$fit, $slottype, $index, $att) {
-	if(!isset($fit['modules'][$slottype][$index]['dogma_index'])) {
+	if(!isset($fit['modules'][$slottype][$index])) {
 		return false;
 	}
+
+	auto_init($fit);
 
 	$ret = dogma_get_charge_attribute(
 		$fit['__dogma_context'],
@@ -241,6 +263,8 @@ function get_charge_attribute(&$fit, $slottype, $index, $att) {
  * Get the final value of a drone attribute (of the current drone preset).
  */
 function get_drone_attribute(&$fit, $typeid, $att) {
+	auto_init($fit);
+
 	$ret = dogma_get_drone_attribute(
 		$fit['__dogma_context'],
 		$typeid,
@@ -255,9 +279,11 @@ function get_drone_attribute(&$fit, $typeid, $att) {
  * Get the final value of an implant attribute (of the current preset).
  */
 function get_implant_attribute(&$fit, $typeid, $att) {
-	if(!isset($fit['implants'][$typeid]['dogma_index'])) {
+	if(!isset($fit['implants'][$typeid])) {
 		return false;
 	}
+
+	auto_init($fit);
 
 	$ret = dogma_get_implant_attribute(
 		$fit['__dogma_context'],

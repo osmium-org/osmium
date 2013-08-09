@@ -1185,36 +1185,48 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 			\Osmium\PRIVATE_LOADOUT_RULE,
 			$parts['path'],
 			$match
+		) && !preg_match(
+		   \Osmium\NEW_LOADOUT_RULE,
+		   $parts['path'],
+		   $match
 		)) {
 			$errors[] = "Supplied URI isn't a loadout URI.";
 			return false;
 		}
 
-		if(!\Osmium\State\can_view_fit($match['loadoutid'])) {
-			$errors[] = "Loadout not found.";
-			return false;
-		}
+		if(isset($match['token'])) {
+			$fit = \Osmium\State\get_new_loadout($match['token']);
+			if(!$fit) {
+				$errors[] = "Loadout not found.";
+				return false;
+			}
+		} else {
+			if(!\Osmium\State\can_view_fit($match['loadoutid'])) {
+				$errors[] = "Loadout not found.";
+				return false;
+			}
 
-		$fit = \Osmium\Fit\get_fit(
-			$match['loadoutid'], 
-			(isset($match['revision']) && $match['revision'] > 0) ? $match['revision'] : null
-		);
+			$fit = \Osmium\Fit\get_fit(
+				$match['loadoutid'], 
+				(isset($match['revision']) && $match['revision'] > 0) ? $match['revision'] : null
+			);
 
-		if($fit === false) {
-			$errors[] = "get_fit() returned false, please report.";
-			return false;
-		}
+			if($fit === false) {
+				$errors[] = "get_fit() returned false, please report.";
+				return false;
+			}
 
-		if(!\Osmium\State\can_access_fit($fit)) {
-			$errors[] = "Loadout exists but cannot be accessed.";
-			return false;
-		}
+			if(!\Osmium\State\can_access_fit($fit)) {
+				$errors[] = "Loadout exists but cannot be accessed.";
+				return false;
+			}
 
-		if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE && (
-			!isset($match['privatetoken']) || $fit['metadata']['privatetoken'] != $match['privatetoken'])
-		) {
-			$errors[] = "This loadout is private, please use the full URI.";
-			return false;
+			if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE && (
+				!isset($match['privatetoken']) || $fit['metadata']['privatetoken'] != $match['privatetoken'])
+			) {
+				$errors[] = "This loadout is private, please use the full URI.";
+				return false;
+			}
 		}
 
 		if(isset($match['fleet'])) {
@@ -1253,9 +1265,5 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 		$fit,
 		CLF_EXPORT_STRIP_METADATA | CLF_EXPORT_SELECTED_PRESETS_ONLY
 	);
-	$fit = try_parse_fit_from_common_loadout_format($stripped, $errors);
-
-	if($fit === false) return false;
-	\Osmium\Dogma\late_init($fit);
-	return $fit;
+	return try_parse_fit_from_common_loadout_format($stripped, $errors);
 }

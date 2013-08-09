@@ -772,7 +772,6 @@ function get_fit($loadoutid, $revision = null) {
 	if($revision === null && (
 		$cache = \Osmium\State\get_cache('loadout-'.$loadoutid, null, 'Loadout_Cache_')
 	) !== null) {
-		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 
@@ -793,7 +792,6 @@ function get_fit($loadoutid, $revision = null) {
 			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache, 0, 'Loadout_Cache_');
 		}
 
-		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 
@@ -803,7 +801,6 @@ function get_fit($loadoutid, $revision = null) {
 	$cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null, 'Loadout_Cache_');
 	if($cache !== null) {
 		\Osmium\Dogma\semaphore_release($sem);
-		\Osmium\Dogma\late_init($cache);
 		return $cache;
 	}
 

@@ -205,10 +205,6 @@ function create(&$fit) {
 
 	$dpid = create_drone_preset($fit, 'Default drone preset', '');
 	use_drone_preset($fit, $dpid);
-
-	dogma_init_context($fit['__dogma_context']);
-	dogma_init_fleet_context($fit['__dogma_fleet_context']);
-	dogma_add_squad_member($fit['__dogma_fleet_context'], 0, 0, $fit['__dogma_context']);
 }
 
 /**
@@ -252,7 +248,9 @@ function select_ship(&$fit, $new_typeid) {
 		'typename' => $row[0],
 	);
 
-	dogma_set_ship($fit['__dogma_context'], $new_typeid);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_set_ship($fit['__dogma_context'], $new_typeid);
+	}
 
 	return true;
 }
@@ -299,12 +297,14 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 		'state' => $state
 	);
 
-	dogma_add_module_s(
-		$fit['__dogma_context'],
-		$typeid,
-		$fit['modules'][$type][$index]['dogma_index'],
-		\Osmium\Dogma\get_dogma_states()[$state]
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_add_module_s(
+			$fit['__dogma_context'],
+			$typeid,
+			$fit['modules'][$type][$index]['dogma_index'],
+			\Osmium\Dogma\get_dogma_states()[$state]
+		);
+	}
 }
 
 /**
@@ -334,7 +334,10 @@ function remove_module(&$fit, $index, $typeid) {
 		}
 	}
 
-	dogma_remove_module($fit['__dogma_context'], $fit['modules'][$type][$index]['dogma_index']);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_remove_module($fit['__dogma_context'], $fit['modules'][$type][$index]['dogma_index']);
+	}
+
 	unset($fit['modules'][$type][$index]);
 }
 
@@ -370,11 +373,14 @@ function change_module_state_by_location(&$fit, $type, $index, $state) {
 	$m =& $fit['modules'][$type][$index];
 	if($m['state'] === $state) return;
 
-	dogma_set_module_state(
-		$fit['__dogma_context'],
-	    $m['dogma_index'],
-		\Osmium\Dogma\get_dogma_states()[$state]
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_set_module_state(
+			$fit['__dogma_context'],
+			$m['dogma_index'],
+			\Osmium\Dogma\get_dogma_states()[$state]
+		);
+	}
+
 	$m['state'] = $state;
 }
 
@@ -493,11 +499,13 @@ function add_charge(&$fit, $slottype, $index, $typeid) {
 		'typename' => get_typename($typeid)
 	);
 
-	dogma_add_charge(
-		$fit['__dogma_context'],
-		$fit['modules'][$slottype][$index]['dogma_index'],
-		$typeid
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_add_charge(
+			$fit['__dogma_context'],
+			$fit['modules'][$slottype][$index]['dogma_index'],
+			$typeid
+		);
+	}
 }
 
 /**
@@ -511,10 +519,13 @@ function remove_charge(&$fit, $slottype, $index) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	dogma_remove_charge(
-		$fit['__dogma_context'],
-		$fit['modules'][$slottype][$index]['dogma_index']
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_remove_charge(
+			$fit['__dogma_context'],
+			$fit['modules'][$slottype][$index]['dogma_index']
+		);
+	}
+
 	unset($fit['charges'][$slottype][$index]);
 }
 
@@ -545,11 +556,13 @@ function add_drone(&$fit, $typeid, $quantityinbay = 1, $quantityinspace = 0) {
 	$fit['drones'][$typeid]['quantityinbay'] += $quantityinbay;
 	$fit['drones'][$typeid]['quantityinspace'] += $quantityinspace;
 
-	dogma_add_drone(
-		$fit['__dogma_context'],
-		$typeid,
-		$quantityinspace
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_add_drone(
+			$fit['__dogma_context'],
+			$typeid,
+			$quantityinspace
+		);
+	}
 }
 
 /**
@@ -604,13 +617,13 @@ function remove_drone(&$fit, $typeid, $from, $quantity = 1) {
 		// @codeCoverageIgnoreStart
 		trigger_error('remove_drone(): not enough drones to remove', E_USER_WARNING);
 		$fit['drones'][$typeid]['quantityin'.$from] = 0;
-		if($from === 'space') {
+		if($from === 'space' && \Osmium\Dogma\has_context($fit)) {
 			dogma_remove_drone($fit['__dogma_context'], $typeid);
 		}
 		// @codeCoverageIgnoreEnd
 	} else {
 		$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
-		if($from === 'space') {
+		if($from === 'space' && \Osmium\Dogma\has_context($fit)) {
 			dogma_remove_drone_partial($fit['__dogma_context'], $typeid, $quantity);
 		}
 	}
@@ -657,10 +670,12 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 		// @codeCoverageIgnoreEnd
 	}
 
-	if($from === 'space') {
-		dogma_remove_drone_partial($fit['__dogma_context'], $typeid, $quantity);
-	} else {
-		dogma_add_drone($fit['__dogma_context'], $typeid, $quantity);
+	if(\Osmium\Dogma\has_context($fit)) {
+		if($from === 'space') {
+			dogma_remove_drone_partial($fit['__dogma_context'], $typeid, $quantity);
+		} else {
+			dogma_add_drone($fit['__dogma_context'], $typeid, $quantity);
+		}
 	}
 
 	$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
@@ -684,7 +699,9 @@ function add_implant(&$fit, $typeid) {
 		'typename' => get_typename($typeid),
 	);
 
-	dogma_add_implant($fit['__dogma_context'], (int)$typeid, $fit['implants'][$typeid]['dogma_index']);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_add_implant($fit['__dogma_context'], (int)$typeid, $fit['implants'][$typeid]['dogma_index']);
+	}
 
 	if(get_groupid($typeid) == GROUP_Booster) {
 		$fit['implants'][$typeid]['slot'] = 
@@ -699,7 +716,10 @@ function add_implant(&$fit, $typeid) {
 function remove_implant(&$fit, $typeid) {
 	if(!isset($fit['implants'][$typeid])) return;
 
-	dogma_remove_implant($fit['__dogma_context'], $fit['implants'][$typeid]['dogma_index']);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_remove_implant($fit['__dogma_context'], $fit['implants'][$typeid]['dogma_index']);
+	}
+
 	unset($fit['implants'][$typeid]);
 }
 
@@ -730,12 +750,14 @@ function toggle_implant_side_effect(&$fit, $typeid, $effectid, $toggled = null) 
 		unset($i['sideeffects'][$currentindex]);
 	}
 
-	dogma_toggle_chance_based_effect(
-		$fit['__dogma_context'],
-		[ DOGMA_LOC_Implant, "implant_index" => $i['dogma_index'] ],
-		$effectid,
-	    $want
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_toggle_chance_based_effect(
+			$fit['__dogma_context'],
+			[ DOGMA_LOC_Implant, "implant_index" => $i['dogma_index'] ],
+			$effectid,
+			$want
+		);
+	}
 }
 
 
@@ -748,12 +770,14 @@ function toggle_implant_side_effect(&$fit, $typeid, $effectid, $toggled = null) 
 function set_fleet_booster_generic(&$fit, $boosterfit, $type, array $between) {
 	/* Remove the current booster */
 	if(isset($fit['fleet'][$type])) {
-		dogma_remove_fleet_member(
-			$fit['__dogma_fleet_context'],
-			$fit['fleet'][$type]['__dogma_context'],
-			$found
-		);
-		assert($found === true);
+		if(\Osmium\Dogma\has_context($fit)) {
+			dogma_remove_fleet_member(
+				$fit['__dogma_fleet_context'],
+				$fit['fleet'][$type]['__dogma_context'],
+				$found
+			);
+			assert($found === true);
+		}
 		unset($fit['fleet'][$type]);
 	}
 
@@ -772,13 +796,16 @@ function set_fleet_booster_generic(&$fit, $boosterfit, $type, array $between) {
 	} else {
 		$fit['fleet'][$type]['__id'] = '(empty fitting)';
 	}
-	array_unshift($between, $fit['__dogma_fleet_context']);
-	array_push($between, $fit['fleet'][$type]['__dogma_context']);
 
-	call_user_func_array(
-		'dogma_add_'.$type.'_commander',
-		$between
-	);
+	if(\Osmium\Dogma\has_context($fit)) {
+		array_unshift($between, $fit['__dogma_fleet_context']);
+		array_push($between, $fit['fleet'][$type]['__dogma_context']);
+
+		call_user_func_array(
+			'dogma_add_'.$type.'_commander',
+			$between
+		);
+	}
 }
 
 /**
@@ -981,6 +1008,8 @@ function delta($old, $new) {
  * @param $defaultlevel level to use for skills not in $skillset
  */
 function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
+	\Osmium\Dogma\auto_init($fit);
+
 	dogma_reset_skill_levels($fit['__dogma_context']);
 	dogma_set_default_skill_level($fit['__dogma_context'], (int)$defaultlevel);
 

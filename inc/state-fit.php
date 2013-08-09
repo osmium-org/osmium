@@ -115,10 +115,7 @@ function is_fit_green($loadoutid) {
  * Get a loadout being currently edited (null in case of invalid token).
  */
 function get_new_loadout($token) {
-	$fit = get_cache_memory_fb(/* session_id(). */$token, null, 'Loadout_New_');
-	if($fit === null) return null;
-	\Osmium\Dogma\late_init($fit);
-	return $fit;
+	return get_cache_memory_fb(/* session_id(). */$token, null, 'Loadout_New_');
 }
 
 /**
@@ -132,10 +129,7 @@ function put_new_loadout($token, $fit) {
  * Get a loadout being currently viewed.
  */
 function get_view_loadout($token) {
-	$fit = get_cache_memory(/* session_id(). */$token, null, 'Loadout_View_');
-	if($fit === null) return null;
-	\Osmium\Dogma\late_init($fit);
-	return $fit;
+	return get_cache_memory(/* session_id(). */$token, null, 'Loadout_View_');
 }
 
 /**
