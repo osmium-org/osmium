@@ -147,6 +147,12 @@ function commit_fitting(&$fit, &$error = null) {
 		return $fittinghash;
 	}
 
+	if(!isset($fit['ship']['typeid'])) {
+		/* Not inserting an incomplete fitting */
+		$error = 'Refusing to commit an incomplete fitting.';
+		return false;
+	}
+
 	/* Insert the new fitting */
 	$ret = \Osmium\Db\query_params(
 		'INSERT INTO osmium.fittings (fittinghash, name, description, evebuildnumber, hullid, creationdate) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -379,7 +385,9 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	$ret = commit_fitting($fit, $error);
 
 	if($ret === false) {
-		$error = \Osmium\Db\last_error();
+		if($error === null) {
+			$error = \Osmium\Db\last_error();
+		}
 		\Osmium\Db\query('ROLLBACK;');
 		return false;
 	}

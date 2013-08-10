@@ -137,7 +137,11 @@ if(count($fit['metadata']['tags']) > 0) {
 	$tags = '';
 }
 
-$title = \Osmium\Chrome\escape($fit['metadata']['name'].$tags.' / '.$fit['ship']['typename'].' fitting');
+$title = \Osmium\Chrome\escape($fit['metadata']['name'].$tags);
+
+if(isset($fit['ship']['typename'])) {
+	$title .= \Osmium\Chrome\escape(' / '.$fit['ship']['typename'].' fitting');
+}
 if($revision_overridden) {
 	$title .= ' (R'.$revision.')';
 }
@@ -162,13 +166,16 @@ if(count($fit['metadata']['tags']) > 0) {
 }
 echo "</h1>\n";
 
-
-list($groupname) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-	'SELECT groupname FROM eve.invtypes
-	JOIN eve.invgroups ON invtypes.groupid = invgroups.groupid
-	WHERE typeid = $1',
-	array($fit['ship']['typeid'])
-));
+if(isset($fit['ship']['typeid'])) {
+	list($groupname) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT groupname FROM eve.invtypes
+		JOIN eve.invgroups ON invtypes.groupid = invgroups.groupid
+		WHERE typeid = $1',
+		array($fit['ship']['typeid'])
+	));
+} else {
+	$groupname = '';
+}
 
 
 list($commentcount) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
@@ -183,11 +190,19 @@ $commentcount = (int)$commentcount;
 
 echo "<div id='vlattribs'>
 <section id='ship' data-loadoutid='".(int)$loadoutid."'>
-<h1>
-<img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />
-<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>
-<strong>".\Osmium\Chrome\escape($fit['ship']['typename'])."</strong>
-<small class='dbver'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
+<h1>\n";
+
+if(isset($fit['ship']['typeid'])) {
+	echo "<img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />\n";
+	echo "<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>\n";
+	echo "<strong>".\Osmium\Chrome\escape($fit['ship']['typename'])."</strong>\n";
+} else {
+	echo "<div class='notype'></div>\n";
+	echo "<small class='groupname'></small>\n";
+	echo "<strong>N/A</strong>\n";
+}
+
+echo "<small class='dbver'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
 </h1>\n";
 
 if($loadoutid === false) {
@@ -583,8 +598,13 @@ require __DIR__.'/../inc/view_loadout-meta.php';
 
 $dna = \Osmium\Fit\export_to_dna($fit);
 echo "</section>
-<section id='export'>
-<h2>Lossless formats (recommended)</h2>
+<section id='export'>\n";
+
+if(!isset($fit['ship']['typeid'])) {
+	echo "<p class='warning'>You are exporting an incomplete loadout. Be careful, other programs may not accept to import such loadouts.</p>\n";
+}
+
+echo "<h2>Lossless formats (recommended)</h2>
 <ul>
 <li><a href='".$exporturi('clf', 'json')."' type='application/json' rel='nofollow'><strong>Export to CLF (Common Loadout Format)</strong></a>: recommended for archival and for usage with other programs supporting it.</li>
 <li><a href='".$exporturi('clf', 'json', false, ['minify' => 1])."' type='application/json' rel='nofollow'>Export to minified CLF</a>: same as above, minus all the redundant information. Not readable by humans.</li>

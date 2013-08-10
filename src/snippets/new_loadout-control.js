@@ -20,10 +20,6 @@ osmium_gen_control = function() {
 		.prop('disabled', 'disabled')
 		.prop('title', 'Select a ship before submitting your loadout.')
 	;
-	$("section#control input#export_loadout")
-		.prop('disabled', 'disabled')
-		.prop('title', 'Select a ship before exporting your loadout.')
-	;
 };
 
 osmium_init_control = function() {
@@ -125,7 +121,7 @@ osmium_init_control = function() {
 };
 
 osmium_loadout_can_be_submitted = function() {
-	$("section#control input#submit_loadout, section#control input#export_loadout")
+	$("section#control input#submit_loadout")
 		.removeProp('disabled')
 		.prop('title', '')
 	;

@@ -516,7 +516,11 @@ function export_to_markdown($fit, $embedclf = true) {
 	static $statenames = null;
 	if($statenames === null) $statenames = get_state_names();
 
-	$md = "## ".$fit['ship']['typename']." loadout\n";
+	if(isset($fit['ship']['typename'])) {
+		$md = "## ".$fit['ship']['typename']." loadout\n";
+	} else {
+		$md = "## Shipless partial loadout\n";
+	}
 
 	$quote = function($text) {
 		if((string)$text === "") return "";
@@ -729,11 +733,13 @@ function export_to_eve_xml_single(\DOMDocument $f, $fit, $embedclf = true) {
 	$edesc->appendChild($avalue);
 	$e->appendChild($edesc);
 
-	$eshiptype = $f->createElement('shipType');
-	$avalue = $f->createAttribute('value');
-	$avalue->appendChild($f->createTextNode($fit['ship']['typename']));
-	$eshiptype->appendChild($avalue);
-	$e->appendChild($eshiptype);
+	if(isset($fit['ship']['typename'])) {
+		$eshiptype = $f->createElement('shipType');
+		$avalue = $f->createAttribute('value');
+		$avalue->appendChild($f->createTextNode($fit['ship']['typename']));
+		$eshiptype->appendChild($avalue);
+		$e->appendChild($eshiptype);
+	}
 
 	foreach($fit['modules'] as $type => $a) {
 		ksort($a);
@@ -790,7 +796,14 @@ function export_to_eft($fit) {
 		'rig' => false,
 		'subsystem' => ' subsystem',
 	);
-	$r = '['.$fit['ship']['typename'];
+
+	$r = '[';
+
+	if(isset($fit['ship']['typename'])) {
+		$r .= $fit['ship']['typename'];
+	} else {
+		$r .= 'No ship';
+	}
 
 	$name = isset($fit['metadata']['name']) ? $fit['metadata']['name'] : 'unnamed';
 	$r .= ', '.$name."]\n";

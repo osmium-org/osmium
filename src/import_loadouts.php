@@ -114,6 +114,7 @@ function post_import(&$fit, &$ids, $a, &$errors) {
 	$ret = \Osmium\Fit\commit_loadout($fit, $a['accountid'], $a['accountid'], $err);
 	if($ret === false) {
 		$errors[] = 'Error while committing loadout, please report: '.$err;
+		return;
 	}
 
 	$ids[] = $fit['metadata']['loadoutid'];

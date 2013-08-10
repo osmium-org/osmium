@@ -232,9 +232,11 @@ if($loggedin && $loadoutid !== false) {
 	];
 }
 
-$shipname = \Osmium\Chrome\escape($fit['ship']['typename']);
-$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')
-	."'>Browse all ".$shipname." loadouts</a>";
+if(isset($fit['ship']['typename'])) {
+	$shipname = \Osmium\Chrome\escape($fit['ship']['typename']);
+	$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')
+		."'>Browse all ".$shipname." loadouts</a>";
+}
 
 if(isset($rauthorname)) {
 	$actions[] = "<a href='".RELATIVE."/search?q="
@@ -242,9 +244,11 @@ if(isset($rauthorname)) {
 		."'>Browse loadouts from the same author</a>";
 }
 
-$actions[] = [
-	"external.svg",
-	"<a href='http://zkillboard.com/ship/".$fit['ship']['typeid']."/'>".$shipname." activity on zKillboard</a>"
-];
+if(isset($fit['ship']['typeid'])) {
+	$actions[] = [
+		"external.svg",
+		"<a href='http://zkillboard.com/ship/".$fit['ship']['typeid']."/'>".$shipname." activity on zKillboard</a>"
+	];
+}
 
 print_list("Actions", $actions);

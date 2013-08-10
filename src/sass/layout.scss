@@ -491,7 +491,7 @@ ul#ctxmenu, ul.subctxmenu {
 		text-align: justify;
 	}
 
-	p.placeholder {
+	p.placeholder, p.warning {
 		text-align: center;
 	}
 }
@@ -514,4 +514,12 @@ div.spinner, span.spinner {
 span.spinner {
 	display: inline-block;
 	vertical-align: middle;
+}
+
+p.warning {
+	padding: 1em;
+	border: 1px solid $warning-border-color;
+	&:before { content: "⚠"; font-size: 2em; vertical-align: middle; padding-right: 0.25em; }
+	color: $warning-text-color;
+	background-color: $warning-bg-color;
 }

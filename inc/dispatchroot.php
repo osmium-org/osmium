@@ -18,8 +18,6 @@
 
 namespace Osmium;
 
-usleep(120000);
-
 /* This file will be included before inc/root.php and is the only file
  * included before dispatching the URI. */
 

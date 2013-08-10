@@ -51,7 +51,8 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
 
     define('RELATIVE', '../..');
 
-    $fit['metadata']['name'] = 'DNA '.$fit['ship']['typename'];
+    $fit['metadata']['name'] = 'DNA '
+	    .(isset($fit['ship']['typename']) ? $fit['ship']['typename'] : 'Fragments');
 
     $loadoutid = false;
     $revision_overridden = true;

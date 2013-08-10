@@ -80,8 +80,9 @@ $contextmenu-entry-active-bg-color: $subsection-active-bg-color;
 $error-text-color: hsl(0, 100%, 40%);
 $error-border-color: $error-text-color;
 
-$warning-text-color: hsl(60, 100%, 40%);
-$warning-border-color: $warning-text-color;
+$warning-text-color: $main-text-color;
+$warning-border-color: $main-text-color;
+$warning-bg-color: hsla(60, 100%, 60%, 0.25);
 
 $notice-text-color: $main-text-color;
 

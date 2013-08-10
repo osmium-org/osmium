@@ -18,7 +18,7 @@
 
 namespace Osmium\Fit;
 
-const DNA_REGEX = '([0-9]+)(:([0-9]+)(;([0-9]+))?)*::';
+const DNA_REGEX = '([1-9][0-9]*(;[0-9]*)?:)*:+';
 
 /**
  * Try to parse a fit in the ShipDNA format. Since the only
@@ -34,15 +34,8 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 	}
 
 	$dnaparts = explode(':', rtrim($dnastring, ':'));
-	$shipid = (int)array_shift($dnaparts);
-
-	if(!\CommonLoadoutFormat\check_typeof_type($shipid, "ship")) {
-		$errors[] = 'Typeid "'.$shipid.'" is not a ship.';
-		return false;
-	}
 
 	create($fit);
-	select_ship($fit, $shipid);
 
 	$fit['metadata']['name'] = $name;
 	$fit['metadata']['description'] = '';
@@ -118,6 +111,9 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 			}
 			add_implant($fit, $typeid);
 		}
+		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'ship')) {
+			select_ship($fit, $typeid);
+		}
 	}
 
 	$fit['metadata']['tags'] = get_recommended_tags($fit);
@@ -143,6 +139,7 @@ function mangle_dna($dna) {
 	require_once __DIR__.CLF_PATH;
 
 	$types = array(
+		'ship' => [],
 		'module' => [],
 		'charge' => [],
 		'drone' => [],
@@ -151,9 +148,6 @@ function mangle_dna($dna) {
 	);
 
 	$dnaparts = explode(':', rtrim($dna, ':'));
-	$ship = (int)array_shift($dnaparts);
-
-	if(!\CommonLoadoutFormat\check_typeof_type($ship, 'ship')) return false;
 
 	foreach($dnaparts as $dnapart) {
 		if(strpos($dnapart, ';') !== false) {
@@ -177,7 +171,9 @@ function mangle_dna($dna) {
 		}
 	}
 
-	$return = $ship;
+	$return = '';
+	$types['ship'] = array_slice($types['ship'], -1, 1, true);
+	foreach($types['ship'] as &$qty) { $qty = 1; }
 
 	foreach($types as &$a) {
 		ksort($a);
@@ -187,7 +183,7 @@ function mangle_dna($dna) {
 		}
 	}
 
-	return $return.'::';
+	return substr($return, 1).'::';
 }
 
 /**
@@ -201,11 +197,12 @@ function mangle_dna($dna) {
 function uniquify_dna($dna) {
 	require_once __DIR__.CLF_PATH;
 
-	$modules = array();
-	$dnaparts = explode(':', rtrim($dna, ':'));
-	$ship = (int)array_shift($dnaparts);
+	$types = array(
+		'ship' => [],
+		'module' => [],
+	);
 
-	if(!\CommonLoadoutFormat\check_typeof_type($ship, 'ship')) return false;
+	$dnaparts = explode(':', rtrim($dna, ':'));
 
 	foreach($dnaparts as $dnapart) {
 		if(strpos($dnapart, ';') !== false) {
@@ -218,22 +215,30 @@ function uniquify_dna($dna) {
 		$typeid = (int)get_parent_typeid($typeid);
 		$qty = (int)$qty;
 
-		if(!\CommonLoadoutFormat\check_typeof_type($typeid, "module")) {
-			continue;
+		foreach($types as $t => &$a) {
+			if(!\CommonLoadoutFormat\check_typeof_type($typeid, $t)) {
+				continue;
+			}
+
+			if(!isset($a[$typeid])) $a[$typeid] = 0;
+			$a[$typeid] += $qty;
+			break;
 		}
-
-		if(!isset($modules[$typeid])) $modules[$typeid] = 0;
-		$modules[$typeid] += $qty;
 	}
 
-	$unique = $ship;
-	ksort($modules);
+	$return = '';
+	$types['ship'] = array_slice($types['ship'], -1, 1, true);
+	foreach($types['ship'] as &$qty) { $qty = 1; }
 
-	foreach($modules as $typeid => $qty) {
-		$unique .= ':'.$typeid.(($qty > 1) ? ';'.$qty : '');
+	foreach($types as &$a) {
+		ksort($a);
+
+		foreach($a as $typeid => $qty) {
+			$return .= ':'.$typeid.(($qty > 1) ? ';'.$qty : '');
+		}
 	}
 
-	return $unique.'::';
+	return substr($return, 1).'::';
 }
 
 
@@ -246,7 +251,11 @@ function uniquify_dna($dna) {
 function export_to_dna($fit) {
 	static $slotorder = array('high', 'medium', 'low', 'rig', 'subsystem');
 
-	$dna = $fit['ship']['typeid'];
+	if(isset($fit['ship']['typeid'])) {
+		$dna = $fit['ship']['typeid'];
+	} else {
+		$dna = '';
+	}
 
 	$tids = array();
 
@@ -301,5 +310,5 @@ function export_to_dna($fit) {
 
 	$dna .= ':'.implode(':', $ftids);
 
-	return $dna.'::';
+	return ltrim($dna, ':').'::';
 }
