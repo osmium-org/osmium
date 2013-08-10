@@ -27,6 +27,7 @@ $(function() {
 
 	osmium_init_votes();
 	osmium_init_comment_replies();
+	osmium_init_export();
 });
 
 osmium_loadout_readonly = true;
@@ -130,5 +131,28 @@ osmium_init_comment_replies = function() {
 	});
 	$("section#comments > div.comment > ul.replies > li.new > form > a.cancel").click(function() {
 		$(this).parent().parent().hide().find('textarea').val('');
+	});
+};
+
+osmium_init_export = function() {
+	$("section#export a[type]").click(function(e) {
+		e.preventDefault();
+
+		var t = $(this);
+
+		osmium_clfspinner_push();
+		$.ajax({
+			url: t.attr('href'),
+			dataType: 'text',
+			success: function(payload) {
+				osmium_modal_rotextarea(t.text(), payload);
+			},
+			error: function() {
+				window.location.assign(t.attr('href'));
+			},
+			complete: function() {
+				osmium_clfspinner_pop();
+			}
+		});
 	});
 };
