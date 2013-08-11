@@ -60,7 +60,7 @@ osmium_init_sources = function() {
 		if(s.prop('disabled')) return false;
 		s.prop('disabled', true);
 		ul.empty();
-		t.parent().children('p.warning').remove();
+		t.parent().children('p.notice').remove();
 		ul.after(
 			spinner = $(document.createElement('p'))
 				.addClass('loading')
@@ -109,7 +109,7 @@ osmium_init_sources = function() {
 				if('warning' in json) {
 					p = $(document.createElement('p'));
 					p.addClass('placeholder');
-					p.addClass('warning');
+					p.addClass('notice');
 					p.html(json.warning);
 
 					ul.after(p);

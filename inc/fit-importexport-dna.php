@@ -18,7 +18,7 @@
 
 namespace Osmium\Fit;
 
-const DNA_REGEX = '([1-9][0-9]*(;[0-9]*)?:)*:+';
+const DNA_REGEX = '([1-9][0-9]*(;[0-9]*)?:)+:+';
 
 /**
  * Try to parse a fit in the ShipDNA format. Since the only

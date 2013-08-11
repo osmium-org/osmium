@@ -35,9 +35,9 @@ osmium_gen_remote = function() {
 	}
 
 	for(var t in osmium_clf['X-Osmium-fleet']) {
-		$("section#fleet select.skillset." + t).val(osmium_clf['X-Osmium-fleet'][t].skillset);
-		$("section#fleet input.fit." + t).val(osmium_clf['X-Osmium-fleet'][t].fitting);
-		$("section#fleet input.enabled." + t).prop('checked', true).change();
+		$("section#fleet select#" + t + "_skillset").val(osmium_clf['X-Osmium-fleet'][t].skillset);
+		$("section#fleet input#" + t + "_fit").val(osmium_clf['X-Osmium-fleet'][t].fitting);
+		$("section#fleet input#" + t + "_enabled").prop('checked', true).change();
 		$("section#fleet").find("input, select").filter("." + t).prop('disabled', false);
 	}
 };
@@ -46,6 +46,7 @@ osmium_init_remote = function() {
 	$("section#fleet").on('change', "input[type='checkbox']", function() {
 		var c = $(this);
 		var tr = c.closest('tr');
+		var table = tr.closest('table');
 		var type = tr.data('type');
 
 		if(!("X-Osmium-fleet" in osmium_clf)) {
@@ -55,14 +56,14 @@ osmium_init_remote = function() {
 
 		if(c.is(':checked')) {
 			fleet[type] = {
-				skillset: tr.find('select').val(),
-				fitting: tr.parent().find('input.fit.' + type).val()
+				skillset: table.find('select#' + type + '_skillset').val(),
+				fitting: table.find('input#' + type + '_fit').val()
 			};
-			tr.parent().find('input, select')
+			table.find('input, select')
 				.filter('.' + type).prop('disabled', false);
 		} else {
 			delete(fleet[type]);
-			tr.parent().find('input, select')
+			table.find('input, select')
 				.filter('.' + type).not("[type='checkbox']")
 				.prop('disabled', true);
 		}
@@ -74,7 +75,8 @@ osmium_init_remote = function() {
 	}).on('change', 'select', function() {
 		var s = $(this);
 		var tr = s.closest('tr');
-		var checkbox = tr.find("input[type='checkbox']");
+		var table = tr.closest('table');
+		var checkbox = table.find("input#" + tr.data('type') + "_enabled");
 
 		if(!checkbox.is(':checked')) {
 			return;
@@ -82,10 +84,10 @@ osmium_init_remote = function() {
 
 		checkbox.trigger('change');
 	}).on('click', 'input.set', function() {
-		var b = $(this);
-		var tr = b.closest('tr');
-		tr = tr.parent().find('tr').eq(tr.index() - (tr.index() % 3));
-		var checkbox = tr.find("input[type='checkbox']");
+		var s = $(this);
+		var tr = s.closest('tr');
+		var table = tr.closest('table');
+		var checkbox = table.find("input#" + tr.data('type') + "_enabled");
 
 		if(!checkbox.is(':checked')) {
 			return;
@@ -93,28 +95,28 @@ osmium_init_remote = function() {
 
 		checkbox.trigger('change');
 	}).on('click', 'input.clear', function() {
-		var b = $(this);
-		var tr = b.closest('tr');
-		tr = tr.parent().find('tr').eq(tr.index() - (tr.index() % 3));
-		var checkbox = tr.find("input[type='checkbox']");
+		var s = $(this);
+		var tr = s.closest('tr');
+		var table = tr.closest('table');
+		var checkbox = table.find("input#" + tr.data('type') + "_enabled");
 
 		if(!checkbox.is(':checked')) {
 			return;
 		}
 
-		tr.parent().find('input.fit.' + tr.data('type')).val('');
+		table.find('input#' + tr.data('type') + '_fit').val('');
 		checkbox.trigger('change');
 	}).on('keypress', 'input.fit', function(e) {
 		if(e.which != 13) return;
 		e.preventDefault();
 
-		var i = $(this);
-		var tr = i.closest('tr');
-		tr = tr.parent().find('tr').eq(tr.index() - (tr.index() % 3));
-		var checkbox = tr.find("input[type='checkbox']");
+		var s = $(this);
+		var tr = s.closest('tr');
+		var table = tr.closest('table');
+		var checkbox = table.find("input#" + tr.data('type') + "_enabled");
 
 		if(!checkbox.is(':checked')) {
-			return;
+			return false;
 		}
 
 		checkbox.trigger('change');

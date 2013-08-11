@@ -205,7 +205,7 @@ echo "</form>
 <section id='attributes'>
 <div class='compact' id='computed_attributes'>
 <p class='placeholder loading'>
-Loading attributes…<div class='spinner'></div>
+Loading attributes…<span class='spinner'></span>
 </p>
 </div>
 </section>
@@ -250,14 +250,14 @@ echo "<section id='search'>
 echo "<section id='browse'>
 <ul class='filters'></ul>
 <p class='placeholder loading'>
-Fetching the list of types…<div class='spinner'></div>
+Fetching the list of types…<span class='spinner'></span>
 </p>
 </section>\n";
 
 echo "<section id='shortlist'>
 <ul class='filters'></ul>
 <p class='placeholder loading'>
-Fetching shortlist…<div class='spinner'></div>
+Fetching shortlist…<span class='spinner'></span>
 </p>
 </section>\n";
 
@@ -408,24 +408,24 @@ echo "<div class='boosters'>\n<h3>Boosters</h3>\n<ul></ul>\n</div>\n";
 echo "</section>\n";
 
 echo "<section id='remote'>\n";
-echo "<section id='fleet'>\n<h2>Fleet</h2>\n";
+echo "<section id='fleet'>\n<h2>Fleet boosters</h2>\n";
 echo "<p>The fittings you use as fleet, wing or squad boosters will be visible by anyone who also has access to this loadout.<br />\nThe skills will be reset to \"All V\" when saving the loadout.</p>\n";
 echo "<form>\n<table>\n<tbody>\n";
 
 foreach(array('fleet', 'wing', 'squad') as $ft) {
-	echo "<tr data-type='{$ft}' id='{$ft}booster' class='booster'>\n";
+	echo "<tr data-type='{$ft}'>\n";
 	echo "<td rowspan='3'><input type='checkbox' id='{$ft}_enabled' name='{$ft}_enabled' class='{$ft} enabled' />";
 	echo " <label for='{$ft}_enabled'><strong>".ucfirst($ft)." booster</strong></label></td>\n";
 	echo "<td><label for='{$ft}_skillset'>Use skills: </label></td>\n";
 	echo "<td><select name='{$ft}_skillset' id='{$ft}_skillset' class='skillset {$ft}'></select></td>\n";
 	echo "</tr>\n";
 
-	echo "<tr>\n";
+	echo "<tr data-type='{$ft}'>\n";
 	echo "<td rowspan='2'><label for='{$ft}_fit'>Use fitting: </label></td>\n";
 	echo "<td><input type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' placeholder='Loadout URI, DNA string or gzclf:// data' /></td>\n";
 	echo "</tr>\n";
 
-	echo "<tr>\n<td>";
+	echo "<tr data-type='{$ft}'>\n<td>";
 	echo "<input type='button' class='set {$ft}' value='Set fit' /> <input type='button' class='clear {$ft}' value='Clear fit' />";	
 	echo "</td></tr>\n";
 }

@@ -601,7 +601,7 @@ echo "</section>
 <section id='export'>\n";
 
 if(!isset($fit['ship']['typeid'])) {
-	echo "<p class='warning'>You are exporting an incomplete loadout. Be careful, other programs may not accept to import such loadouts.</p>\n";
+	echo "<p class='warning_box'>You are exporting an incomplete loadout. Be careful, other programs may not accept to import such loadouts.</p>\n";
 }
 
 echo "<h2>Lossless formats (recommended)</h2>

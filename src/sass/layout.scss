@@ -515,11 +515,3 @@ span.spinner {
 	display: inline-block;
 	vertical-align: middle;
 }
-
-p.warning {
-	padding: 1em;
-	border: 1px solid $warning-border-color;
-	&:before { content: "⚠"; font-size: 2em; vertical-align: middle; padding-right: 0.25em; }
-	color: $warning-text-color;
-	background-color: $warning-bg-color;
-}

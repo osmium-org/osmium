@@ -191,6 +191,8 @@ osmium_send_clf = function(opts) {
 
 			$("tr.error.clferror").removeClass('error').removeClass('clferror');
 			$("tr.error_message.clferror").remove();
+			$("p.error_box.clferror").remove();
+			$(".clferror").removeClass('clferror');
 
 			if("form-errors" in payload) {
 				for(var i = 0; i < payload['form-errors'].length; ++i) {
@@ -207,6 +209,20 @@ osmium_send_clf = function(opts) {
 					tr.append(td);
 
 					$(err[1]).closest('tr').addClass('error').addClass('clferror').before(tr);
+					if(err[0]) {
+						$("a[href='#"  + err[0] +  "']").click();
+					}
+				}
+			}
+
+			if("p-errors" in payload) {
+				for(var i = 0; i < payload['p-errors'].length; ++i) {
+					var err = payload['p-errors'][i];
+
+					var p = $(document.createElement('p'));
+					p.addClass('error_box').addClass('clferror').text(err[2]);
+
+					$(err[1]).before(p);
 					if(err[0]) {
 						$("a[href='#"  + err[0] +  "']").click();
 					}

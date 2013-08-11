@@ -9,6 +9,7 @@
 	@include error;
 	border-color: $warning-border-color;
 	color: $warning-text-color;
+	background-color: $warning-bg-color;
 }
 
 @mixin notice {
