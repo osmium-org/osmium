@@ -61,11 +61,15 @@ function late_init(&$fit, $withfleet = true) {
 	clear($fit);
 	dogma_init_context($fit['__dogma_context']);
 
-	if(isset($fit['metadata']['skillset'])) {
-		$ss = $fit['metadata']['skillset'];
-		unset($fit['metadata']['skillset']);
-		$a = \Osmium\State\get_state('a');
-		\Osmium\Fit\use_skillset_by_name($fit, $ss, $a);
+	if($fit['skillset']['name'] !== 'All V'
+	   || $fit['skillset']['default'] !== 5
+	   || $fit['skillset']['override'] !== []) {
+		dogma_reset_skill_levels($fit['__dogma_context']);
+		dogma_set_default_skill_level($fit['__dogma_context'], (int)$fit['skillset']['default']);
+
+		foreach($fit['skillset']['override'] as $typeid => $level) {
+			dogma_set_skill_level($fit['__dogma_context'], (int)$typeid, (int)$level);
+		}
 	}
 
 	if($withfleet) {

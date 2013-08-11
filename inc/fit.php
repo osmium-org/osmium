@@ -174,10 +174,12 @@ function get_state_names() {
  *
  * fleet => array('fleet' => $fit, 'wing' => $fit, 'squad' => $fit)
  *
+ * skillset => array(name, default, override)
+ *
  * metadata => array(name, description, tags, evebuildnumber,
  *					 view_permission, edit_permission, visibility,
  *					 password, loadoutid, hash, revision,
- *					 privatetoken, skillset)
+ *					 privatetoken)
  *
  * __dogma_context => (Dogma context resource)
  * __dogma_fleet_context => (Dogma fleet context resource)
@@ -188,6 +190,11 @@ function create(&$fit) {
 		'presets' => array(),
 		'dronepresets' => array(),
 		'fleet' => array(),
+		'skillset' => array(
+			'name' => 'All V',
+			'default' => 5,
+			'override' => [],
+		),
 		'metadata' => array(
 			'name' => 'Unnamed loadout',
 			'description' => '',
@@ -196,7 +203,6 @@ function create(&$fit) {
 			'view_permission' => VIEW_EVERYONE,
 			'edit_permission' => EDIT_OWNER_ONLY,
 			'visibility' => VISIBILITY_PUBLIC,
-			'skillset' => 'All V',
 			)
 		);
 
@@ -1007,14 +1013,20 @@ function delta($old, $new) {
  * @param $skillset array(skilltypeid => skilllevel)
  * @param $defaultlevel level to use for skills not in $skillset
  */
-function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5) {
-	\Osmium\Dogma\auto_init($fit);
+function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5, $name = null) {
+	$fit['skillset'] = [ 
+		'name' =>$name,
+		'default' => $defaultlevel,
+		'override' => $skillset
+	];
 
-	dogma_reset_skill_levels($fit['__dogma_context']);
-	dogma_set_default_skill_level($fit['__dogma_context'], (int)$defaultlevel);
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_reset_skill_levels($fit['__dogma_context']);
+		dogma_set_default_skill_level($fit['__dogma_context'], (int)$defaultlevel);
 
-	foreach($skillset as $typeid => $level) {
-		dogma_set_skill_level($fit['__dogma_context'], (int)$typeid, (int)$level);
+		foreach($skillset as $typeid => $level) {
+			dogma_set_skill_level($fit['__dogma_context'], (int)$typeid, (int)$level);
+		}
 	}
 }
 

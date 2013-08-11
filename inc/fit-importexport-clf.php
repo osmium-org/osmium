@@ -568,7 +568,7 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 			$json['X-Osmium-current-dronepresetid'] = $i;
 		}
 
-		$json['metadata']['X-Osmium-skillset'] = $fit['metadata']['skillset'];
+		$json['metadata']['X-Osmium-skillset'] = $fit['skillset']['name'];
 		$json['metadata']['X-Osmium-capreloadtime'] = true;
 		$json['metadata']['X-Osmium-dpsreloadtime'] = false;
 		$json['metadata']['X-Osmium-tankreloadtime'] = false;
@@ -579,7 +579,7 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 			foreach($fit['fleet'] as $k => $f) {
 				$json['X-Osmium-fleet'][$k] = [
 					'fitting' => $f['__id'],
-					'skillset' => $f['metadata']['skillset'],
+					'skillset' => $f['skillset']['name'],
 				];
 			}
 		}
