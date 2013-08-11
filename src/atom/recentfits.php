@@ -57,7 +57,7 @@ array_pop($fpath);
 array_pop($fpath);
 $fpath = implode('/', $fpath);
 
-$proto = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https': 'http';
+$proto = \Osmium\HTTPS ? 'https': 'http';
 $host = $_SERVER['HTTP_HOST'];
 $abs = rtrim($proto.'://'.$host.'/'.$fpath, '/');
 

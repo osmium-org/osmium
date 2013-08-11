@@ -85,7 +85,7 @@ function do_post_login($account_name, $use_cookie = false) {
 			'Osmium', $token, $expiration_date,
 			\Osmium\get_ini_setting('relative_path'),
 			$_SERVER['HTTP_HOST'],
-			isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+			\Osmium\HTTPS,
 			true
 		);
 	}

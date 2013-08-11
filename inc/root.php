@@ -43,7 +43,7 @@ if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 session_set_cookie_params(
 	0, get_ini_setting('relative_path'),
 	isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'local',
-	isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+	HTTPS,
 	true
 );
 session_save_path(CACHE_DIRECTORY);
