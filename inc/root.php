@@ -40,6 +40,12 @@ if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 	fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
 
+session_set_cookie_params(
+	0, get_ini_setting('relative_path'),
+	isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'local',
+	isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+	true
+);
 session_save_path(CACHE_DIRECTORY);
 session_name("SID");
 session_start();

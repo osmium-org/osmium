@@ -81,7 +81,13 @@ function do_post_login($account_name, $use_cookie = false) {
 
 		\Osmium\Db\query_params('INSERT INTO osmium.cookietokens (token, accountid, clientattributes, expirationdate) VALUES ($1, $2, $3, $4)', array($token, $account_id, $attributes, $expiration_date));
 
-		setcookie('Osmium', $token, $expiration_date, '/');
+		setcookie(
+			'Osmium', $token, $expiration_date,
+			\Osmium\get_ini_setting('relative_path'),
+			$_SERVER['HTTP_HOST'],
+			isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+			true
+		);
 	}
 
 	\Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
