@@ -85,6 +85,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	}
 
 	$flatgroups[$mgid]['types'][] = (int)$row['typeid'];
+	dogma_type_has_projectable_effects((int)$row['typeid'], $projectable);
 
 	$flatgroups['types'][(int)$row['typeid']] = array(
 		(int)$row['typeid'],
@@ -95,6 +96,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		$row['groupname'],
 		$row['other'],
 		(int)$row['parenttypeid'],
+		(int)$projectable,
 		(int)$row['metalevel'], /* Will be popped after sorting */
 	);
 }
@@ -114,8 +116,8 @@ foreach($flatgroups as $k => $g) {
 			$t = $flatgroups['types'][$t];
 
 			if(!isset($maxmetalevels[$t[4]])
-			   || $maxmetalevels[$t[4]] < $t[8]) {
-				$maxmetalevels[$t[4]] = $t[8];
+			   || $maxmetalevels[$t[4]] < $t[9]) {
+				$maxmetalevels[$t[4]] = $t[9];
 			}
 		}
 
@@ -135,7 +137,7 @@ foreach($flatgroups as $k => $g) {
 			}
 
 			/* Then sort the meta groups by meta level */
-			$ret = $x[8] - $y[8];
+			$ret = $x[9] - $y[9];
 			if($ret !== 0) return $ret;
 
 			/* Finally, sort by name */
