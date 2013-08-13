@@ -308,22 +308,19 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 		return;		
 	}
 
-	$orderby = implode(',', array_map(function($id) { return 'loadouts.loadoutid='.$id.' DESC'; }, $ids));
+	$orderby = implode(',', array_map(function($id) { return 'lsr.loadoutid='.$id.' DESC'; }, $ids));
 	$in = implode(',', $ids);
 	$first = true;
     
-	$lquery = \Osmium\Db\query($q = 'SELECT loadouts.loadoutid, privatetoken, latestrevision, viewpermission, visibility, hullid, typename, fittings.creationdate, updatedate, name, fittings.evebuildnumber, accounts.accountid, nickname, apiverified, charactername, characterid, corporationname, corporationid, alliancename, allianceid, loadouts.accountid, taglist, reputation, votes, upvotes, downvotes, COALESCE(lcc.count, 0) AS comments, lda.dps, lda.ehp, lda.estimatedprice
-FROM osmium.loadouts 
-JOIN osmium.loadoutslatestrevision ON loadouts.loadoutid = loadoutslatestrevision.loadoutid 
-JOIN osmium.loadouthistory ON (loadoutslatestrevision.latestrevision = loadouthistory.revision AND loadouthistory.loadoutid = loadouts.loadoutid) 
-JOIN osmium.fittings ON fittings.fittinghash = loadouthistory.fittinghash 
-JOIN osmium.accounts ON accounts.accountid = loadouts.accountid 
-JOIN eve.invtypes ON hullid = invtypes.typeid
-JOIN osmium.loadoutupdownvotes ON loadoutupdownvotes.loadoutid = loadouts.loadoutid
-LEFT JOIN osmium.fittingaggtags ON fittingaggtags.fittinghash = loadouthistory.fittinghash
-LEFT JOIN osmium.loadoutcommentcount lcc ON lcc.loadoutid = loadouts.loadoutid
-LEFT JOIN osmium.loadoutdogmaattribs lda ON lda.loadoutid = loadouts.loadoutid
-WHERE loadouts.loadoutid IN ('.$in.') ORDER BY '.$orderby);
+	$lquery = \Osmium\Db\query(
+		'SELECT loadoutid, privatetoken, latestrevision, viewpermission, visibility,
+		hullid, typename, creationdate, updatedate, name, evebuildnumber, nickname,
+		apiverified, charactername, characterid, corporationname, corporationid,
+		alliancename, allianceid, accountid, taglist, reputation,
+		votes, upvotes, downvotes, comments, dps, ehp, estimatedprice
+		FROM osmium.loadoutssearchresults lsr
+		WHERE lsr.loadoutid IN ('.$in.') ORDER BY '.$orderby
+	);
 
 	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
 		if($first === true) {
