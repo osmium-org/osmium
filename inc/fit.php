@@ -152,7 +152,7 @@ function get_state_names() {
  * modulepresetid => (integer) 
  * modulepresetname => (string)
  * modulepresetdesc => (string)
- * modules => array(<slot_type> => array(<index> => array(typeid, typename, dogma_index, state)))
+ * modules => array(<slot_type> => array(<index> => array(typeid, typename, dogma_index, state, target)))
  *
  * chargepresetid => (integer) 
  * chargepresetname => (string)
@@ -174,6 +174,8 @@ function get_state_names() {
  *
  * fleet => array('fleet' => $fit, 'wing' => $fit, 'squad' => $fit)
  *
+ * remote => array(<key> => $fit)
+ *
  * skillset => array(name, default, override)
  *
  * metadata => array(name, description, tags, evebuildnumber,
@@ -190,6 +192,7 @@ function create(&$fit) {
 		'presets' => array(),
 		'dronepresets' => array(),
 		'fleet' => array(),
+		'remote' => array(),
 		'skillset' => array(
 			'name' => 'All V',
 			'default' => 5,
@@ -205,6 +208,8 @@ function create(&$fit) {
 			'visibility' => VISIBILITY_PUBLIC,
 			)
 		);
+
+	$fit['remote']['local'] =& $fit;
 
 	$presetid = create_preset($fit, 'Default preset', '');
 	use_preset($fit, $presetid);
@@ -228,6 +233,19 @@ function destroy(&$fit) {
 function reset(&$fit) {
 	destroy($fit);
 	create($fit);
+}
+
+/** @internal */
+function get_gzclf_id(&$fit) {
+	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid']) {
+		return 'gzclf://'.export_to_gzclf_raw(
+		    $fit,
+		    CLF_EXPORT_MINIFY | CLF_EXPORT_INTERNAL_PROPERTIES
+		);
+	} else {
+		/* XXX: properly check for an empty fitting */
+		return '(empty fitting)';
+	}
 }
 
 
@@ -793,17 +811,15 @@ function set_fleet_booster_generic(&$fit, $boosterfit, $type, array $between) {
 
 	/* Set the new booster */
 	$fit['fleet'][$type] = $boosterfit;
+	unset($fit['fleet'][$type]['remote']);
 	unset($fit['fleet'][$type]['fleet']);
-	if(isset($fit['fleet'][$type]['ship']['typeid']) && $fit['fleet'][$type]['ship']['typeid']) {
-		$fit['fleet'][$type]['__id'] = 'gzclf://'.export_to_gzclf_raw(
-			$fit['fleet'][$type],
-			CLF_EXPORT_MINIFY | CLF_EXPORT_STRIP_METADATA | CLF_EXPORT_SELECTED_PRESETS_ONLY
-		);
-	} else {
-		$fit['fleet'][$type]['__id'] = '(empty fitting)';
-	}
+	\Osmium\Dogma\clear($fit['fleet'][$type]);
+
+	$fit['fleet'][$type]['__id'] = get_gzclf_id($fit['fleet'][$type]);
 
 	if(\Osmium\Dogma\has_context($fit)) {
+		\Osmium\Dogma\auto_init($fit['fleet'][$type], 0);
+
 		array_unshift($between, $fit['__dogma_fleet_context']);
 		array_push($between, $fit['fleet'][$type]['__dogma_context']);
 
@@ -833,6 +849,117 @@ function set_wing_booster(&$fit, $boosterfit) {
 /** @see set_fleet_booster() */
 function set_squad_booster(&$fit, $boosterfit) {
 	return set_fleet_booster_generic($fit, $boosterfit, 'squad', [ 0, 0 ]);
+}
+
+
+
+/* ----------------------------------------------------- */
+
+
+
+/**
+ * Add a fit to the list of remote fits. Remote fits can be used to
+ * project effects on one another.
+ *
+ * @param $key the identifier for the remote fit. Cannot be the string
+ * "local". If null, a new unique key will be generated and returned.
+ */
+function add_remote(&$fit, $key = null, $remote) {
+	if($key === 'local') {
+		trigger_error('Invalid key', E_USER_WARNING);
+		return false;
+	}
+
+	if($key === null) {
+		$key = 1;
+		while(isset($fit['remote'][$key])) ++$key;
+	}
+
+	$fit['remote'][$key] = $remote;
+	unset($fit['remote'][$key]['remote']);
+	\Osmium\Dogma\clear($fit['remote'][$key]);
+
+	$fit['remote'][$key]['__id'] = get_gzclf_id($fit['remote'][$key]);
+
+	if(\Osmium\Dogma\has_context($fit)) {
+		\Osmium\Dogma\auto_init(
+			$fit['remote'][$key],
+			\Osmium\Dogma\DOGMA_INIT_DEFAULT_OPTS & (~\Osmium\Dogma\DOGMA_INIT_REMOTE)
+		);
+	}
+
+	return $key;
+}
+
+/**
+ * Remove a fit from the list of remote fits. Use the same key you
+ * used with add_remote().
+ */
+function remove_remote(&$fit, $key) {
+	if($key === 'local' || $key === null) {
+		trigger_error('Invalid key', E_USER_WARNING);
+		return false;
+	}
+
+	if(!isset($fit['remote'][$key])) return;
+	unset($fit['remote'][$key]);
+
+	/* libdogma should clean up stale targets on its own. */
+}
+
+/**
+ * Set the target of a module. Use $targetkey = null to remove a target.
+ */
+function set_module_target_by_location(&$fit, $sourcekey, $type, $index, $targetkey) {
+	if(!isset($fit['remote'][$sourcekey])) {
+		trigger_error('Source does not exist', E_USER_WARNING);
+		return false;
+	}
+
+	if(!isset($fit['remote'][$sourcekey]['modules'][$type][$index])) {
+		trigger_error('Module does not exist', E_USER_WARNING);
+		return false;
+	}
+
+	$m =& $fit['remote'][$sourcekey]['modules'][$type][$index];
+
+	if(($hasctx = \Osmium\Dogma\has_context($fit)) && isset($m['target']) && $m['target'] !== null) {
+		dogma_clear_target(
+			$fit['remote'][$sourcekey]['__dogma_context'],
+			[ DOGMA_LOC_Module, 'module_index' => $m['dogma_index'] ]
+		);
+	}
+
+	if($targetkey === null) {
+		unset($m['target']);
+		return;
+	}
+
+	if(!isset($fit['remote'][$targetkey])) {
+		trigger_error('Target does not exist', E_USER_WARNING);
+		return false;
+	}
+
+	$m['target'] = $targetkey;
+
+	if($hasctx) {
+		dogma_target(
+			$fit['remote'][$sourcekey]['__dogma_context'],
+			[ DOGMA_LOC_Module, 'module_index' => $m['dogma_index'] ],
+			$fit['remote'][$targetkey]['__dogma_context']
+		);
+	}
+}
+
+/** @see set_module_target_by_location() */
+function set_module_target_by_typeid(&$fit, $sourcekey, $index, $typeid, $targetkey) {
+	return set_module_target_by_location(
+		$fit,
+		$sourcekey,
+		get_module_slottype($fit, $typeid),
+		$typeid,
+		$targetkey
+	);
 }
 
 

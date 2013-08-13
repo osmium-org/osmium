@@ -6,6 +6,7 @@
 	  <file>tests/fit_db_commit.php</file>
 	  <file>tests/fit_presets.php</file>
 	  <file>tests/fit_importexport.php</file>
+	  <file>tests/fit_remote.php</file>
 	</testsuite>
   </testsuites>
 </phpunit>

@@ -52,12 +52,9 @@ function fetch_assoc($resource) {
 	return pg_fetch_assoc($resource);
 }
 
-function escape_string($str) {
-	return pg_escape_string($str);
-}
-
 function last_error() {
-	return pg_last_error();
+	global $__osmium_pg_link;
+	return pg_last_error($__osmium_pg_link);
 }
 
 function prepare($name, $query) {
