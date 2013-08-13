@@ -25,15 +25,16 @@ require __DIR__.'/../inc/root.php';
  * but they probably are */
 date_default_timezone_set('UTC');
 
-//$c = \Osmium\curl_init_branded();
-$c = curl_init();
-curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($c, CURLOPT_HEADER, 1);
-curl_setopt($c, CURLOPT_TIMEOUT, 60);
-curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
-
 $groupsq = \Osmium\Db\query(
 	'SELECT DISTINCT groupid FROM osmium.invships ORDER BY groupid ASC'
+);
+
+\Osmium\Db\prepare('delkill', 'DELETE FROM recentkillsdna WHERE killid = $1');
+\Osmium\Db\prepare(
+	'inskill',
+	'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna, solarsystemid,
+	characterid, charactername, corporationid, corporationname, allianceid, alliancename)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)'
 );
 
 while(true) {
@@ -69,7 +70,7 @@ while(true) {
 		foreach($json as $k) {
 			++$inserted;
 
-			if($k['killID'] <= 0) {
+			if(!isset($k['killID']) || $k['killID'] <= 0) {
 				echo "k";
 				continue;
 			}
@@ -107,13 +108,9 @@ while(true) {
 				continue;
 			}
 
-			\Osmium\Db\query_params(
-				'DELETE FROM recentkillsdna WHERE killid = $1', array($k['killID'])
-			);
-			\Osmium\Db\query_params(
-				'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna, solarsystemid,
-				characterid, charactername, corporationid, corporationname, allianceid, alliancename)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+			\Osmium\Db\execute('delkill', array($k['killID']));
+			\Osmium\Db\execute(
+				'inskill',
 				array(
 					$k['killID'],
 					$killtime,
@@ -142,19 +139,25 @@ while(true) {
 
 
 function zkillboard_api($call) {
-	$json = \Osmium\State\get_cache($call, null, 'API_ZKB_');
 	$uri = "https://zkillboard.com/api".$call;
+	echo "Requesting {$uri} ";
+
+	$json = \Osmium\State\get_cache($call, null, 'API_ZKB_');
 	if($json !== null) {
-		echo "Requesting {$uri} -\n";
+		echo "c\n";
 		return $json;
 	}
 
 	static $hashes = array();
 	static $next_request_time = 0;
-	static $retries = [ 0, 10, 15, 30, 60 ];
-	global $c;
+	static $retries = [ 0, 15, 30, 60, 60 ];
 
-	echo "Requesting {$uri} ";
+	//$c = \Osmium\curl_init_branded();
+	$c = curl_init();
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($c, CURLOPT_HEADER, 1);
+	curl_setopt($c, CURLOPT_TIMEOUT, 60);
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
 
 	foreach($retries as $ret) {
 		sleep($ret);
@@ -163,8 +166,8 @@ function zkillboard_api($call) {
 		curl_setopt($c, CURLOPT_URL, $uri);
 		$reply = curl_exec($c);
 
-		echo ".";
 		if($reply === false) {
+			echo curl_error().' ';
 			continue;
 		}
 
@@ -178,10 +181,12 @@ function zkillboard_api($call) {
 		$next_request_time = microtime(true) + $wait;
 		$json = json_decode($body, true);
 		if(json_last_error() !== JSON_ERROR_NONE) {
+			echo "j";
 			continue;
 		}
 
-		if(!is_array($json) || !isset($json[0]['killID'])) {
+		if(!is_array($json)) {
+			echo "e";
 			continue;
 		}
 
@@ -193,6 +198,8 @@ function zkillboard_api($call) {
 			die(666);
 		}
 		$hashes[$call] = $hash;
+
+		echo ".";
 
 		\Osmium\State\put_cache($call, $json, 3500, 'API_ZKB_');
 		echo "\n";

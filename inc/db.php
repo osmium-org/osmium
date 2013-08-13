@@ -59,3 +59,17 @@ function escape_string($str) {
 function last_error() {
 	return pg_last_error();
 }
+
+function prepare($name, $query) {
+	global $__osmium_pg_link;
+	if($__osmium_pg_link === null && !connect()) {
+		\Osmium\fatal(500, 'Could not connect to the database.');
+	}
+
+	return pg_prepare($__osmium_pg_link, $name, $query);
+}
+
+function execute($name, array $params = array()) {
+	global $__osmium_pg_link;
+	return pg_execute($__osmium_pg_link, $name, $params);
+}
