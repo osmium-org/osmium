@@ -88,6 +88,8 @@ function get_attributes($typeid, $getval_callback) {
 	return $attributes;
 }
 
+\Osmium\Dogma\auto_init($fit);
+
 if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['index'])
    && isset($fit['modules'][$_POST['slottype']][$_POST['index']])) {
 	$st = $_POST['slottype'];
