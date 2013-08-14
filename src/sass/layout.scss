@@ -104,6 +104,11 @@ footer, div#push {
 	clear: both;
 }
 
+footer {
+	position: relative;
+	z-index: 1000;
+}
+
 div#wrapper > nav:first-child {
 	min-height: $nav-height;
 	width: 100%;

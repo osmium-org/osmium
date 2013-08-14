@@ -410,15 +410,16 @@ osmium_custom_damage_profiles = ".$cdp.";
 osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
 	);
 
-	/* If this script changes, update the license info in about.php */
-	echo "<script type='application/javascript' src='".$relative."/static-1/rawdeflate.min.js'></script>";
+	/* If these scripts change, update the license info in about.php */
+	include_js("//cdnjs.cloudflare.com/ajax/libs/jsPlumb/1.4.1/jquery.jsPlumb-1.4.1-all.js");
+	include_js($relative."/static-1/rawdeflate.min.js");
 
-	\Osmium\Chrome\print_js_snippet('tabs');
-	\Osmium\Chrome\print_js_snippet('modal');
-	\Osmium\Chrome\print_js_snippet('context_menu');
-	\Osmium\Chrome\print_js_snippet('loadout_common');
-	\Osmium\Chrome\print_js_snippet('sprite');
-	\Osmium\Chrome\print_js_snippet('show_info');
-	\Osmium\Chrome\print_js_snippet('formatted_attributes');
-	\Osmium\Chrome\print_js_snippet('new_loadout-fattribs');
+	print_js_snippet('tabs');
+	print_js_snippet('modal');
+	print_js_snippet('context_menu');
+	print_js_snippet('loadout_common');
+	print_js_snippet('sprite');
+	print_js_snippet('show_info');
+	print_js_snippet('formatted_attributes');
+	print_js_snippet('new_loadout-fattribs');
 }

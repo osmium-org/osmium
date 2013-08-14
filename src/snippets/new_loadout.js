@@ -160,6 +160,10 @@ osmium_add_to_clf = function(item) {
 			++index;
 		}
 
+		if(osmium_types[typeid][8] === 1) {
+			osmium_projected_regen_local();
+		}
+
 		osmium_update_slotcounts();
 		osmium_undo_push();
 	} else if(cat === 'charge') {

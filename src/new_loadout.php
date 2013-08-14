@@ -430,8 +430,22 @@ foreach(array('fleet', 'wing', 'squad') as $ft) {
 	echo "</td></tr>\n";
 }
 
-echo "</tbody>\n</table>\n</form>\n</section>\n<section id='projected'>\n";
-echo "</section>\n";
+echo "</tbody>\n</table>\n</form>\n</section>\n";
+
+echo "<section id='projected'>
+<h2>Projected effects
+<form>
+<input type='button' value='Toggle fullscreen' id='projectedfstoggle' />
+<input type='button' value='Add projected fit' id='createprojected' />
+</form>
+</h2>
+<p id='rearrange'>
+Rearrange loadouts: <a href='javascript:void(0);' id='rearrange-grid'>grid</a>,
+<a href='javascript:void(0);' id='rearrange-circle'>circle</a>
+</p>
+<form id='projected-list'>
+</form>
+</section>\n";
 
 echo "</section>\n</div>\n";
 

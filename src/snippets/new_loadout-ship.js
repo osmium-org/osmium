@@ -92,6 +92,7 @@ osmium_init_ship = function() {
 						osmium_clf.metadata['X-Osmium-skillset'] = sname;
 						osmium_undo_push();
 						osmium_commit_clf();
+						osmium_projected_regen_local();
 					};
 				})(osmium_skillsets[i]), {
 					toggled: osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i]

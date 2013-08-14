@@ -81,6 +81,7 @@ osmium_gen_modules = function() {
 	}
 
 	osmium_update_slotcounts();
+	osmium_projected_regen_local();
 };
 
 osmium_init_modules = function() {
@@ -411,6 +412,10 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 			slotsdiv.find('li.overflow').first().removeClass('overflow');
 		} else {
 			osmium_add_placeholder_module(slotsdiv);
+		}
+
+		if(osmium_types[typeid][8] === 1) {
+			osmium_projected_regen_local();
 		}
 	});
 

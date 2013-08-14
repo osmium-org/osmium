@@ -75,7 +75,6 @@ function clear(&$fit) {
 
 	if(isset($fit['remote'])) {
 		foreach($fit['remote'] as $k => &$rf) {
-			if($k === 'local') continue;
 			clear($rf);
 		}
 	}
@@ -160,9 +159,19 @@ function late_init(&$fit, $opts = DOGMA_INIT_DEFAULT_OPTS) {
 	}
 
 	if($withremote && isset($fit['remote'])) {
-		foreach($fit['remote'] as $k => $rf) {
-			if($k === 'local') continue;
+		foreach($fit['remote'] as $k => &$rf) {
 			late_init($fit['remote'][$k], DOGMA_INIT_DEFAULT_OPTS & (~DOGMA_INIT_REMOTE));
+		}
+
+		foreach($fit['modules'] as &$sub) {
+			foreach($sub as &$m) {
+				if(!isset($m['target']) || $m['target'] === null) continue;
+				dogma_target(
+					$fit['__dogma_context'],
+					[ DOGMA_LOC_Module, 'module_index' => $m['dogma_index'] ],
+					\Osmium\Fit\get_remote($fit, $m['target'])['__dogma_context']
+				);
+			}
 		}
 
 		foreach($fit['remote'] as $k => &$rf) {
@@ -172,7 +181,7 @@ function late_init(&$fit, $opts = DOGMA_INIT_DEFAULT_OPTS) {
 					dogma_target(
 						$rf['__dogma_context'],
 						[ DOGMA_LOC_Module, 'module_index' => $m['dogma_index'] ],
-						$fit['remote'][$m['target']]['__dogma_context']
+						\Osmium\Fit\get_remote($fit, $m['target'])['__dogma_context']
 					);
 				}
 			}

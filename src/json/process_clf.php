@@ -214,6 +214,15 @@ if($type === 'new') {
 		$format = $formats[$_POST['exportfmt']];
 		$payload['export-type'] = $format[1];
 		$payload['export-payload'] = $format[2]($local);
+	} else if(isset($_POST['remoteclf']) && isset($local['remote'][$_POST['remoteclf']])) {
+		$key = $_POST['remoteclf'];
+		$payload['remote-clf'] = \Osmium\Fit\export_to_common_loadout_format_1(
+			$local['remote'][$key],
+			\Osmium\Fit\CLF_EXPORT_MINIFY
+			| \Osmium\Fit\CLF_EXPORT_EXTRA_PROPERTIES
+			| \Osmium\Fit\CLF_EXPORT_INTERNAL_PROPERTIES
+		);
+		$payload['remote-clf']['fitting'] = $local['remote'][$key]['__id'];
 	}
 }
 

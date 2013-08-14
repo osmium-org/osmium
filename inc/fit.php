@@ -209,8 +209,6 @@ function create(&$fit) {
 			)
 		);
 
-	$fit['remote']['local'] =& $fit;
-
 	$presetid = create_preset($fit, 'Default preset', '');
 	use_preset($fit, $presetid);
 
@@ -907,25 +905,40 @@ function remove_remote(&$fit, $key) {
 	/* libdogma should clean up stale targets on its own. */
 }
 
+/** @internal */
+function &get_remote(&$fit, $key) {
+	if($key === 'local') return $fit;
+
+	if(!isset($fit['remote'][$key])) {
+		trigger_error('Fitting has no such remote', E_USER_WARNING);
+
+		/* This isn't pretty. One downside of returning a
+		 * reference. */
+		static $false;
+		$false = false;
+		return $false;
+	}
+
+	return $fit['remote'][$key];
+}
+
 /**
  * Set the target of a module. Use $targetkey = null to remove a target.
  */
 function set_module_target_by_location(&$fit, $sourcekey, $type, $index, $targetkey) {
-	if(!isset($fit['remote'][$sourcekey])) {
-		trigger_error('Source does not exist', E_USER_WARNING);
-		return false;
-	}
+	$src =& get_remote($fit, $sourcekey);
+	if($src === false) return false;
 
-	if(!isset($fit['remote'][$sourcekey]['modules'][$type][$index])) {
+	if(!isset($src['modules'][$type][$index])) {
 		trigger_error('Module does not exist', E_USER_WARNING);
 		return false;
 	}
 
-	$m =& $fit['remote'][$sourcekey]['modules'][$type][$index];
+	$m =& $src['modules'][$type][$index];
 
 	if(($hasctx = \Osmium\Dogma\has_context($fit)) && isset($m['target']) && $m['target'] !== null) {
 		dogma_clear_target(
-			$fit['remote'][$sourcekey]['__dogma_context'],
+			$src['__dogma_context'],
 			[ DOGMA_LOC_Module, 'module_index' => $m['dogma_index'] ]
 		);
 	}
@@ -935,18 +948,16 @@ function set_module_target_by_location(&$fit, $sourcekey, $type, $index, $target
 		return;
 	}
 
-	if(!isset($fit['remote'][$targetkey])) {
-		trigger_error('Target does not exist', E_USER_WARNING);
-		return false;
-	}
+	$target =& get_remote($fit, $targetkey);
+	if($target === false) return false;
 
 	$m['target'] = $targetkey;
 
 	if($hasctx) {
 		dogma_target(
-			$fit['remote'][$sourcekey]['__dogma_context'],
+			$src['__dogma_context'],
 			[ DOGMA_LOC_Module, 'module_index' => $m['dogma_index'] ],
-			$fit['remote'][$targetkey]['__dogma_context']
+			$target['__dogma_context']
 		);
 	}
 }
@@ -957,7 +968,7 @@ function set_module_target_by_typeid(&$fit, $sourcekey, $index, $typeid, $target
 		$fit,
 		$sourcekey,
 		get_module_slottype($fit, $typeid),
-		$typeid,
+		$index,
 		$targetkey
 	);
 }

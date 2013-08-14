@@ -21,6 +21,9 @@ namespace Osmium\Chrome;
 /** Relative path to Osmium root */
 $__osmium_chrome_relative = '.';
 
+/** Javascript scripts to add just before </body> */
+$__osmium_js_scripts = array();
+
 /** Javascript snippets to add just before </body> */
 $__osmium_js_snippets = array();
 
@@ -135,7 +138,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
  * should be printed after calling this.
  */
 function print_footer() {
-	global $__osmium_chrome_relative, $__osmium_js_snippets, $__osmium_js_code, $__start;
+	global $__osmium_chrome_relative, $__osmium_js_scripts, $__osmium_js_snippets, $__osmium_js_code, $__start;
 
 	\Osmium\Chrome\print_js_snippet('notifications');
 	\Osmium\Chrome\print_js_code(
@@ -150,8 +153,12 @@ function print_footer() {
 
 	/* If these scripts are changed, also change the license
 	 * information in about.php */
-	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>\n";
-	echo "<script type='application/javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'></script>\n";
+	echo "<script type='application/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js'></script>\n";
+	echo "<script type='application/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js'></script>\n";
+
+	foreach($__osmium_js_scripts as $script) {
+		echo "<script type='application/javascript' src='{$script}'></script>\n";
+	}
 
 	if(count($__osmium_js_snippets) > 0) {
 		$name = 'JS_'.substr(sha1(implode("\n", $__osmium_js_snippets)), 0, 7);
@@ -262,6 +269,14 @@ function is_current($relativeuri) {
 
 	$l = strlen($absolute);
 	return !isset($currenturi[$l]) || $currenturi[$l] === '/';
+}
+
+/**
+ * Include a Javascript script in the current document.
+ */
+function include_js($uri) {
+	global $__osmium_js_scripts;
+	$__osmium_js_scripts[] = $uri;
 }
 
 /**

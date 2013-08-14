@@ -583,6 +583,14 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 				];
 			}
 		}
+
+		if(isset($fit['remote'])) {
+			foreach($fit['remote'] as $k => $r) {
+				$json['X-Osmium-remote'][$k] = export_to_common_loadout_format_1($r, $opts);
+				$json['X-Osmium-remote'][$k]['fitting'] = $r['__id'];
+				$json['X-Osmium-remote'][$k]['skilset'] = $r['skillset']['name'];
+			}
+		}
 	}
 
 	if(isset($fit['ship']['typeid'])) {
@@ -645,6 +653,10 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 					}
 
 					$jsonmodule['charges'][] = $jsoncharge;
+				}
+
+				if($osmiumextraprops && isset($module['target']) && $module['target'] !== null) {
+					$jsonmodule['X-Osmium-target'] = $module['target'];
 				}
 
 				$jsonpreset['modules'][] = $jsonmodule;
@@ -966,8 +978,8 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 		}
 	}
 
+	$a = \Osmium\State\get_state('a');
 	if(isset($clf['X-Osmium-fleet'])) {
-		$a = \Osmium\State\get_state('a');
 		foreach($clf['X-Osmium-fleet'] as $k => $booster) {
 			if($k !== 'fleet' && $k !== 'wing' && $k !== 'squad') continue;
 			$ss = isset($booster['skillset']) ? $booster['skillset'] : 'All V';
@@ -991,7 +1003,10 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 
 			call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, $boosterfit));
 			use_skillset_by_name($fit['fleet'][$k], $ss, $a);
-			$fit['fleet'][$k]['__id'] = $fitting;
+
+			if(!isset($errors['fleet'][$k]) || $errors['fleet'][$k] === array()) {
+				$fit['fleet'][$k]['__id'] = $fitting;
+			}
 		}
 	}
 
@@ -999,6 +1014,64 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 		foreach($fit['fleet'] as $k => $booster) {
 			if(!isset($clf['X-Osmium-fleet'][$k])) {
 				call_user_func_array(__NAMESPACE__.'\set_'.$k.'_booster', array(&$fit, NULL));
+			}
+		}
+	}
+
+	if(isset($clf['X-Osmium-remote'])) {
+		foreach($clf['X-Osmium-remote'] as $key => $remote) {
+			$ss = isset($remote['skillset']) ? $remote['skillset'] : 'All V';
+			$fitting = isset($remote['fitting']) ? $remote['fitting'] : '';
+
+			if(isset($fit['remote'][$key]['__id']) && $fit['remote'][$key]['__id'] === $fitting) {
+				use_skillset_by_name($fit['remote'][$key], $ss, $a);
+				continue;
+			}
+
+			if($fitting) {
+				if(!isset($errors['remote'][$key])) $errors['remote'][$key] = array();
+				$rfit = try_get_fit_from_remote_format($fitting, $errors['remote'][$key]);
+
+				if($rfit === false) {
+					create($rfit);
+				}
+			} else {
+				create($rfit);
+			}
+
+			add_remote($fit, $key, $rfit);
+			use_skillset_by_name($fit['remote'][$key], $ss, $a);
+
+			if(!isset($errors['remote'][$key]) || $errors['remote'][$key] === array()) {
+				$fit['remote'][$key]['__id'] = $fitting;
+			}
+		}
+	}
+
+	if(isset($fit['remote'])) {
+		foreach($fit['remote'] as $k => $r) {
+			if(!isset($clf['X-Osmium-remote'][$k])) {
+				remove_remote($fit, $k);
+			}
+		}
+	}
+
+	if(isset($clf['X-Osmium-remote'])) {
+		$remotes = [];
+		$remotes['local'] =& $clf;
+		foreach($clf['X-Osmium-remote'] as $k => $pclf) {
+			$remotes[$k] =& $pclf;
+		}
+
+		foreach($remotes as $k => &$pclf) {
+			if(!isset($pclf['X-Osmium-current-presetid'])
+			   || !isset($pclf['presets'][$pclf['X-Osmium-current-presetid']]['modules'])) continue;
+
+			$modules = $pclf['presets'][$pclf['X-Osmium-current-presetid']]['modules'];
+			foreach($modules as $m) {
+				if(!isset($m['X-Osmium-target'])) continue;
+				$target = $m['X-Osmium-target'] === false ? null : $m['X-Osmium-target'];
+				set_module_target_by_typeid($fit, $k, $m['index'], $m['typeid'], $target);
 			}
 		}
 	}
