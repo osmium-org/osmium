@@ -873,6 +873,10 @@ function add_remote(&$fit, $key = null, $remote) {
 		while(isset($fit['remote'][$key])) ++$key;
 	}
 
+	if(isset($fit['remote'][$key])) {
+		remove_remote($fit, $key);
+	}
+
 	$fit['remote'][$key] = $remote;
 	unset($fit['remote'][$key]['remote']);
 	\Osmium\Dogma\clear($fit['remote'][$key]);
@@ -900,9 +904,26 @@ function remove_remote(&$fit, $key) {
 	}
 
 	if(!isset($fit['remote'][$key])) return;
-	unset($fit['remote'][$key]);
 
-	/* libdogma should clean up stale targets on its own. */
+	foreach($fit['modules'] as $type => &$sub) {
+		foreach($sub as $index => &$m) {
+			if(isset($m['target']) && $m['target'] == $key) {
+				set_module_target_by_location($fit, 'local', $type, $index, null);
+			}
+		}
+	}
+
+	foreach($fit['remote'] as $skey => &$rfit) {
+		foreach($rfit['modules'] as $type => &$sub) {
+			foreach($sub as $index => &$m) {
+				if(isset($m['target']) && $m['target'] == $key) {
+					set_module_target_by_location($fit, $skey, $type, $index, null);
+				}
+			}
+		}
+	}
+
+	unset($fit['remote'][$key]);
 }
 
 /** @internal */

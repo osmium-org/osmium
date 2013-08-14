@@ -143,6 +143,55 @@ function clf_parse_1(array $json, &$errors) {
 		}
 	}
 
+	if(isset($json['X-Osmium-remote'])) {
+		foreach($json['X-Osmium-remote'] as $key => $remoteclf) {
+			if($key === 'local') continue;
+			$ss = isset($remoteclf['skillset']) ? $remoteclf['skillset'] : 'All V';
+
+			/* If the remote looks like CLF, use it */
+			if(isset($remoteclf['clf-version'])) {
+				$remote = clf_parse_1($remoteclf, $errors);
+			}
+
+			/* Or try to import a remote fitting */
+			else if(isset($remoteclf['fitting'])) {
+				$remote = try_get_fit_from_remote_format($remoteclf['fitting'], $errors);
+			}
+
+			else {
+				/* Don't know what to do */
+				continue;
+			}
+
+			if($remote === false) {
+				create($remote);
+			}
+
+			add_remote($fit, $key, $remote);
+		}
+
+		$remotes = [];
+		$remotes['local'] =& $fit;
+
+		if(isset($fit['remote'])) {
+			foreach($fit['remote'] as $key => &$rfit) {
+				$remotes[$key] =& $rfit;
+			}
+		}
+
+		foreach($remotes as $key => &$rfit) {
+			foreach($rfit['modules'] as $type => &$sub) {
+				foreach($sub as $index => &$m) {
+					if(!isset($m['target'])) continue;
+					$tgt = $m['target'];
+					unset($m['target']);
+					if($tgt !== 'local' && !isset($fit['remote'][$tgt])) continue;
+					set_module_target_by_location($fit, $key, $type, $index, $tgt);
+				}
+			}
+		}
+	}
+
 	return $fit;
 }
 
@@ -244,6 +293,10 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 
 		add_module($fit, $index, $m['typeid'], $state);
 		$m['slottype'] = $type;
+
+		if(isset($m['X-Osmium-target'])) {
+			$fit['modules'][$type][$index]['target'] = $m['X-Osmium-target'];
+		}
 	}
 }
 
