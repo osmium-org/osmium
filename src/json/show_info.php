@@ -37,6 +37,10 @@ if(!isset($_POST['type']) || !$fit) {
 	\Osmium\Chrome\return_json(array());
 }
 
+if(isset($_POST['remote'])) {
+	\Osmium\Fit\set_local($fit, $_POST['remote']);
+}
+
 function get_attributes($typeid, $getval_callback) {
 	$attributes = array();
 
@@ -156,6 +160,7 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 }
 
 else {
+	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }
 

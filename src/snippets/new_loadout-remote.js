@@ -523,6 +523,17 @@ osmium_create_projected = function(key, clf, index) {
 						jsPlumb.select({ source: source }).detach();
 					}, { default: true });
 
+					osmium_ctxmenu_add_separator(menu);
+
+					osmium_ctxmenu_add_option(menu, "Show module info", function() {
+						osmium_showinfo({
+							remote: key,
+							type: "module",
+							slottype: osmium_types[source.data('typeid')][3],
+							index: source.data('index')
+						});
+					}, { icon: osmium_showinfo_sprite_position });
+
 					return menu;
 				}
 			})(source, p[i]));
@@ -568,6 +579,19 @@ osmium_create_projected = function(key, clf, index) {
 	} else {
 		jsPlumb.toggleDraggable(proj);
 	}
+
+	osmium_ctxmenu_bind(hdr, function() {
+		var menu = osmium_ctxmenu_create();
+
+		osmium_ctxmenu_add_option(menu, "Show ship info", function() {
+			osmium_showinfo({
+				remote: key,
+				type: "ship"
+			});
+		}, { icon: osmium_showinfo_sprite_position });
+
+		return menu;
+	});
 
 	return proj;
 };

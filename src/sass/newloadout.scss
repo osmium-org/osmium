@@ -346,6 +346,7 @@ section#remote > section#projected {
 
 			&> header {
 				padding: 0.25em;
+				padding-left: 1.25em;
 				@include linear-gradient-lighten-top(rgba($subsection-bg-color, 0.5), 20%);
 				position: relative;
 
@@ -358,6 +359,13 @@ section#remote > section#projected {
 					position: absolute;
 					right: 0;
 					top: 0;
+				}
+
+				&> span.contextmenuindicator {
+					position: absolute;
+					left: 0.125em;
+					bottom: 0.175em;
+					font-size: 1.5em;
 				}
 			}
 

@@ -944,6 +944,49 @@ function &get_remote(&$fit, $key) {
 }
 
 /**
+ * Swap the local fit and a remote fit, making it the new local. The
+ * old local will take the key of the old remote.
+ */
+function set_local(&$fit, $localkey) {
+	if($localkey === 'local') {
+		return;
+	}
+
+	if(!isset($fit['remote'][$localkey])) {
+		trigger_error('Invalid key', E_USER_WARNING);
+		return false;
+	}
+
+	$remotes = $fit['remote'];
+	$remotes['local'] = $fit;
+	unset($fit['local']['remote']);
+
+	/* Swap target keys */
+	foreach($remotes as $rkey => &$rfit) {
+		foreach($rfit['presets'] as &$mp) {
+			foreach($mp['modules'] as &$sub) {
+				foreach($sub as &$m) {
+					if(!isset($m['target'])) continue;
+
+					if($m['target'] === 'local') {
+						$m['target'] = $localkey;
+					} else if($m['target'] == $localkey) {
+						$m['target'] = 'local';
+					}
+				}
+			}
+		}
+	}
+
+	$new = $remotes[$localkey];
+	$remotes[$localkey] = $remotes['local'];
+	unset($remotes['local']);
+	$new['remote'] = $remotes;
+
+	$fit = $new;
+}
+
+/**
  * Set the target of a module. Use $targetkey = null to remove a target.
  */
 function set_module_target_by_location(&$fit, $sourcekey, $type, $index, $targetkey) {
