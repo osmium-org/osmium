@@ -143,6 +143,7 @@ osmium_init_ship = function() {
 	$(document).keydown(function(e) {
 		/* Chromium doesn't issue a keypress event */
 		if(!e.ctrlKey || e.which != 189) return true;
+		e.preventDefault();
 
 		osmium_undo_pop();
 		osmium_commit_clf();
@@ -154,6 +155,7 @@ osmium_init_ship = function() {
 	}).keypress(function(e) {
 		/* Firefox behaves as expected */
 		if(!e.ctrlKey || e.which != 95) return true;
+		e.preventDefault();
 
 		osmium_undo_pop();
 		osmium_commit_clf();

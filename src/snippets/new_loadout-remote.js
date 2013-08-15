@@ -96,12 +96,12 @@ osmium_gen_projected = function() {
 		for(var i = 0; i < m.length; ++i) {
 			if(m[i].typeid === stid && m[i].index === sidx) {
 				m[i]['X-Osmium-target'] = tkey;
-				osmium_commit_clf();
+				osmium_commit_undo_deferred();
 				return;
 			}
 		}
 
-		alert('Could not translate connection in CLF- please report!');
+		alert('Could not create connection in CLF – please report!');
 	});
 	jsPlumb.bind("connectionDetached", function(info) {
 		/* Delete the target in CLF */
@@ -120,12 +120,12 @@ osmium_gen_projected = function() {
 		for(var i = 0; i < m.length; ++i) {
 			if(m[i].typeid === stid && m[i].index === sidx) {
 				m[i]['X-Osmium-target'] = false;
-				osmium_commit_clf();
+				osmium_commit_undo_deferred();
 				return;
 			}
 		}
 
-		alert('Could not translate connection in CLF- please report!');	
+		alert('Could not delete connection in CLF – please report!');
 	});
 
 	var list = $("section#projected form#projected-list");
@@ -135,7 +135,7 @@ osmium_gen_projected = function() {
 	list.append(local);
 
 	if(!("X-Osmium-remote" in osmium_clf)) {
-		return;
+		osmium_clf['X-Osmium-remote'] = {};
 	}
 
 	var c = 0;
@@ -160,17 +160,25 @@ osmium_gen_projected = function() {
 
 		for(var i = 0; i < modules.length; ++i) {
 			var m = modules[i];
-			if("X-Osmium-target" in m) {
+			if("X-Osmium-target" in m && m['X-Osmium-target'] !== false) {
 				var source = $('section#projected div.pr-loadout.projected-' + key)
 					.find('li').filter(function() {
 						var li = $(this);
 						return li.data('typeid') === m.typeid && li.data('index') === m.index
 					}).first();
 
-				jsPlumb.connect({
-					source: source,
-					target: $('section#projected div.pr-loadout.projected-' + m['X-Osmium-target']),
-				});
+				var target = $('section#projected div.pr-loadout.projected-' + m['X-Osmium-target']);
+
+				if(source.length !== 1) {
+					alert('Could not find source from CLF connection, please report!');
+					continue;
+				}
+				if(target.length !== 1) {
+					alert('Could not find target from CLF connection, please report!');
+					continue;
+				}
+
+				jsPlumb.connect({ source: source, target: target });
 			}
 		}
 	}
@@ -282,8 +290,7 @@ osmium_init_projected = function() {
 			)
 		);
 
-		osmium_commit_clf();
-		osmium_undo_push();
+		osmium_commit_undo_deferred();
 	});
 
 	$("section#projected input#projectedfstoggle").on('click', function() {
@@ -374,20 +381,20 @@ osmium_create_projected = function(key, clf, index) {
 			$(document.createElement('input'))
 				.prop('type', 'button')
 				.prop('value', 'Remove')
-			.on('click', function() {
-				var t = $(this).closest('div');
+				.on('click', function() {
+					var t = $(this).closest('div.pr-loadout');
+					var key = t.data('key');
 
-				delete osmium_clf['X-Osmium-remote'][t.data('key')];
-				osmium_undo_push();
-				osmium_commit_clf();
-
-				jsPlumb.doWhileSuspended(function() {
-					jsPlumb.detachAllConnections(t);
-					t.find('ul > li').each(function() {
-						jsPlumb.detachAllConnections($(this));
+					jsPlumb.doWhileSuspended(function() {
+						jsPlumb.detachAllConnections(t);
+						t.find('ul > li').each(function() {
+							jsPlumb.detachAllConnections($(this));
+						});
+						t.remove();
 					});
-					t.remove();
-				});
+
+					delete osmium_clf['X-Osmium-remote'][key];
+					osmium_commit_undo_deferred();
 			})
 		)
 	;
@@ -662,4 +669,24 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 			jsPlumb.connect(newconnections[i]);
 		}
 	});
+};
+
+osmium_commit_undo_deferred_timeoutid = undefined;
+osmium_commit_undo_deferred = function(delay) {
+	if(!osmium_user_initiated) return;
+
+	if(delay === undefined) delay = 100;
+
+	if(osmium_commit_undo_deferred_timeoutid !== undefined) {
+		clearTimeout(osmium_commit_undo_deferred_timeoutid);
+	} else {
+		osmium_clfspinner_push();
+	}
+
+	osmium_commit_undo_deferred_timeoutid = setTimeout(function() {
+		osmium_commit_undo_deferred_timeoutid = undefined;
+		osmium_commit_clf();
+		osmium_undo_push();
+		osmium_clfspinner_pop();
+	}, delay);
 };
