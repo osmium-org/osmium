@@ -271,26 +271,40 @@ osmium_init_fleet = function() {
 	});
 };
 
+osmium_add_projected = function(remotefit, target) {
+	if(!("X-Osmium-remote" in osmium_clf)) {
+		osmium_clf['X-Osmium-remote'] = {};
+	}
+
+	var key = 1;
+	while((key + '') in osmium_clf['X-Osmium-remote']) ++key;
+	key = key + '';
+
+	osmium_clf['X-Osmium-remote'][key] = {};
+
+	var newproj = osmium_create_projected(
+		key, { },
+		$("section#projected > form#projected-list > div.pr-loadout").length
+	);
+
+	$("section#projected > form#projected-list").append(newproj);
+
+	if(remotefit !== '') {
+		var target = $("section#projected div.pr-loadout.projected-" + target);
+		newproj.find('div > input[type="text"]').val(remotefit);
+		osmium_projected_regen_remote(key, function() {
+			$("section#projected div.pr-loadout.projected-" + key).find('ul > li').each(function() {
+				jsPlumb.connect({ source: $(this), target: target });
+			});
+		});
+	} else {
+		osmium_commit_undo_deferred();
+	}
+};
+
 osmium_init_projected = function() {
 	$("section#projected input#createprojected").on('click', function() {
-		if(!("X-Osmium-remote" in osmium_clf)) {
-			osmium_clf['X-Osmium-remote'] = {};
-		}
-
-		var key = 1;
-		while((key + '') in osmium_clf['X-Osmium-remote']) ++key;
-		key = key + '';
-
-		osmium_clf['X-Osmium-remote'][key] = {};
-
-		$("section#projected > form#projected-list").append(
-			osmium_create_projected(
-				key, {},
-				$("section#projected > form#projected-list > div.pr-loadout").length
-			)
-		);
-
-		osmium_commit_undo_deferred();
+		osmium_add_projected('');
 	});
 
 	$("section#projected input#projectedfstoggle").on('click', function() {
@@ -423,28 +437,7 @@ osmium_create_projected = function(key, clf, index) {
 			.prop('type', 'button')
 			.prop('value', 'Set fit')
 		.on('click', function() {
-			var t = $(this).parent().parent();
-			osmium_clf['X-Osmium-remote'][t.data('key')].fitting = t.find('input[type="text"]').val();
-			osmium_clf['X-Osmium-remote'][t.data('key')].skillset = t.find('select').val();
-
-			osmium_commit_clf({
-				params: { "remoteclf": t.data('key') },
-				success: function(payload) {
-					if(!("remote-clf" in payload)) return;
-
-					osmium_clf['X-Osmium-remote'][t.data("key")] = payload['remote-clf'];
-					osmium_undo_push();
-
-					osmium_projected_replace_graceful(
-						proj,
-						osmium_create_projected(
-							t.data('key'),
-							osmium_clf['X-Osmium-remote'][t.data('key')],
-							proj.index()
-						)
-					);
-				}
-			});
+			osmium_projected_regen_remote($(this).closest('div.pr-loadout').data('key'));
 		})
 	);
 

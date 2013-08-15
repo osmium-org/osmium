@@ -272,6 +272,7 @@ osmium_add_add_to_fit_option = function(menu, source, opts) {
 
 	var name;
 	var cat = source.data('category');
+	var typeid = source.data('typeid');
 
 	if(cat === 'ship') name = 'Use ship';
 	else if(cat === 'module') name = 'Fit module';
@@ -303,6 +304,13 @@ osmium_add_add_to_fit_option = function(menu, source, opts) {
 		osmium_ctxmenu_add_option(menu, 'Add 5 to space', function() {
 			source.data({ qty: 5, dest: 'space' });
 			osmium_add_to_clf(source);
+		}, { });
+	}
+
+	if(cat === 'module' && osmium_types[typeid][8] === 1) {
+		osmium_ctxmenu_add_option(menu, 'Project on local', function() {
+			$("a[href='#remote']").click();
+			osmium_add_projected(typeid + '::', 'local');
 		}, { });
 	}
 
