@@ -344,6 +344,10 @@ osmium_init_projected = function() {
 			});
 		});
 	});
+
+	$("section#remote").on('made_visible', function() {
+		jsPlumb.repaintEverything();
+	});
 };
 
 osmium_create_projected = function(key, clf, index) {
