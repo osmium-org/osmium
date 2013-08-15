@@ -330,7 +330,7 @@ CREATE TABLE fittings (
     fittinghash character(40) NOT NULL,
     name character varying(255) NOT NULL,
     description text,
-    hullid integer NOT NULL,
+    hullid integer,
     creationdate integer NOT NULL,
     evebuildnumber integer NOT NULL
 );
@@ -388,6 +388,49 @@ CREATE TABLE fittingmodules (
 
 CREATE VIEW fittingfittedtypes AS
     SELECT t.fittinghash, ((((string_agg(DISTINCT (invtypes.typename)::text, ', '::text) || ', '::text) || COALESCE(string_agg(DISTINCT (pt.typename)::text, ', '::text), ' '::text)) || ', '::text) || COALESCE(string_agg(DISTINCT (invgroups.groupname)::text, ', '::text), ' '::text)) AS typelist FROM (((((((SELECT fittingmodules.fittinghash, fittingmodules.typeid FROM fittingmodules UNION SELECT fittingcharges.fittinghash, fittingcharges.typeid FROM fittingcharges) UNION SELECT fittingdrones.fittinghash, fittingdrones.typeid FROM fittingdrones) UNION SELECT fittingimplants.fittinghash, fittingimplants.typeid FROM fittingimplants) t JOIN eve.invtypes ON ((t.typeid = invtypes.typeid))) LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid))) LEFT JOIN eve.invmetatypes imt ON ((imt.typeid = t.typeid))) LEFT JOIN eve.invtypes pt ON ((pt.typeid = imt.parenttypeid))) GROUP BY t.fittinghash;
+
+
+--
+-- Name: fittingfleetboosters; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingfleetboosters (
+    fittinghash character(40) NOT NULL,
+    hasfleetbooster boolean NOT NULL,
+    fleetboosterfittinghash character(40),
+    haswingbooster boolean NOT NULL,
+    wingboosterfittinghash character(40),
+    hassquadbooster boolean NOT NULL,
+    squadboosterfittinghash character(40),
+    CONSTRAINT fittingfleetboosters_danglinghashes_check CHECK ((((hasfleetbooster OR (fleetboosterfittinghash IS NULL)) AND (haswingbooster OR (wingboosterfittinghash IS NULL))) AND (hassquadbooster OR (squadboosterfittinghash IS NULL))))
+);
+
+
+--
+-- Name: fittingmoduletargets; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingmoduletargets (
+    fittinghash character(40) NOT NULL,
+    source text NOT NULL,
+    sourcefittinghash character(40) NOT NULL,
+    presetid integer NOT NULL,
+    slottype character varying(127) NOT NULL,
+    index integer NOT NULL,
+    target text NOT NULL
+);
+
+
+--
+-- Name: fittingremotes; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingremotes (
+    fittinghash character(40) NOT NULL,
+    key text NOT NULL,
+    remotefittinghash character(40) NOT NULL,
+    CONSTRAINT fittingremotes_local_check CHECK (((key <> 'local'::text) OR (fittinghash = remotefittinghash)))
+);
 
 
 --
@@ -727,6 +770,14 @@ CREATE VIEW loadoutupdownvotes AS
 
 
 --
+-- Name: loadoutssearchresults; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW loadoutssearchresults AS
+    SELECT loadouts.loadoutid, loadouts.privatetoken, loadoutslatestrevision.latestrevision, loadouts.viewpermission, loadouts.visibility, fittings.hullid, invtypes.typename, fittings.creationdate, loadouthistory.updatedate, fittings.name, fittings.evebuildnumber, accounts.nickname, accounts.apiverified, accounts.charactername, accounts.characterid, accounts.corporationname, accounts.corporationid, accounts.alliancename, accounts.allianceid, loadouts.accountid, fittingaggtags.taglist, accounts.reputation, loadoutupdownvotes.votes, loadoutupdownvotes.upvotes, loadoutupdownvotes.downvotes, COALESCE(lcc.count, (0)::bigint) AS comments, lda.dps, lda.ehp, lda.estimatedprice FROM (((((((((loadouts JOIN loadoutslatestrevision ON ((loadouts.loadoutid = loadoutslatestrevision.loadoutid))) JOIN loadouthistory ON (((loadoutslatestrevision.latestrevision = loadouthistory.revision) AND (loadouthistory.loadoutid = loadouts.loadoutid)))) JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash))) JOIN accounts ON ((accounts.accountid = loadouts.accountid))) JOIN eve.invtypes ON ((fittings.hullid = invtypes.typeid))) JOIN loadoutupdownvotes ON ((loadoutupdownvotes.loadoutid = loadouts.loadoutid))) LEFT JOIN fittingaggtags ON ((fittingaggtags.fittinghash = loadouthistory.fittinghash))) LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = loadouts.loadoutid))) LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = loadouts.loadoutid)));
+
+
+--
 -- Name: log; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -806,9 +857,6 @@ CREATE TABLE recentkillsdna (
     dna text NOT NULL,
     groupdna text NOT NULL,
     solarsystemid integer NOT NULL,
-    solarsystemname character varying(255) NOT NULL,
-    regionid integer NOT NULL,
-    regionname character varying(255) NOT NULL,
     characterid integer NOT NULL,
     charactername character varying(255) NOT NULL,
     corporationid integer NOT NULL,
@@ -1069,6 +1117,14 @@ ALTER TABLE ONLY fittingdrones
 
 
 --
+-- Name: fittingfleetboosters_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY fittingfleetboosters
+    ADD CONSTRAINT fittingfleetboosters_pkey PRIMARY KEY (fittinghash);
+
+
+--
 -- Name: fittingimplants_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1085,6 +1141,14 @@ ALTER TABLE ONLY fittingmodules
 
 
 --
+-- Name: fittingmoduletargets_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY fittingmoduletargets
+    ADD CONSTRAINT fittingmoduletargets_pkey PRIMARY KEY (fittinghash, source, sourcefittinghash, presetid, slottype, index);
+
+
+--
 -- Name: fittingpresets_fittinghash_name_unique; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1098,6 +1162,22 @@ ALTER TABLE ONLY fittingpresets
 
 ALTER TABLE ONLY fittingpresets
     ADD CONSTRAINT fittingpresets_pkey PRIMARY KEY (fittinghash, presetid);
+
+
+--
+-- Name: fittingremotes_fittinghash_key_remotefittinghash_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY fittingremotes
+    ADD CONSTRAINT fittingremotes_fittinghash_key_remotefittinghash_uniq UNIQUE (fittinghash, key, remotefittinghash);
+
+
+--
+-- Name: fittingremotes_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY fittingremotes
+    ADD CONSTRAINT fittingremotes_pkey PRIMARY KEY (fittinghash, key);
 
 
 --
@@ -1427,6 +1507,27 @@ CREATE INDEX fittingdrones_fittinghash_dronepresetid_idx ON fittingdrones USING 
 --
 
 CREATE INDEX fittingdrones_typeid_idx ON fittingdrones USING btree (typeid);
+
+
+--
+-- Name: fittingfleetboosters_fleetboosterfittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX fittingfleetboosters_fleetboosterfittinghash_idx ON fittingfleetboosters USING btree (fleetboosterfittinghash);
+
+
+--
+-- Name: fittingfleetboosters_squadboosterfittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX fittingfleetboosters_squadboosterfittinghash_idx ON fittingfleetboosters USING btree (squadboosterfittinghash);
+
+
+--
+-- Name: fittingfleetboosters_wingboosterfittinghash_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX fittingfleetboosters_wingboosterfittinghash_idx ON fittingfleetboosters USING btree (wingboosterfittinghash);
 
 
 --
@@ -1971,6 +2072,30 @@ ALTER TABLE ONLY fittingdrones
 
 
 --
+-- Name: fittingfleetboosters_fleetboosterfittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingfleetboosters
+    ADD CONSTRAINT fittingfleetboosters_fleetboosterfittinghash_fkey FOREIGN KEY (fleetboosterfittinghash) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittingfleetboosters_squadboosterfittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingfleetboosters
+    ADD CONSTRAINT fittingfleetboosters_squadboosterfittinghash_fkey FOREIGN KEY (squadboosterfittinghash) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittingfleetboosters_wingboosterfittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingfleetboosters
+    ADD CONSTRAINT fittingfleetboosters_wingboosterfittinghash_fkey FOREIGN KEY (wingboosterfittinghash) REFERENCES fittings(fittinghash);
+
+
+--
 -- Name: fittingimplants_fittinghash_presetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -2003,11 +2128,59 @@ ALTER TABLE ONLY fittingmodules
 
 
 --
+-- Name: fittingmoduletargets_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingmoduletargets
+    ADD CONSTRAINT fittingmoduletargets_fittinghash_fkey FOREIGN KEY (fittinghash) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittingmoduletargets_module_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingmoduletargets
+    ADD CONSTRAINT fittingmoduletargets_module_fkey FOREIGN KEY (sourcefittinghash, presetid, slottype, index) REFERENCES fittingmodules(fittinghash, presetid, slottype, index);
+
+
+--
+-- Name: fittingmoduletargets_source_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingmoduletargets
+    ADD CONSTRAINT fittingmoduletargets_source_fkey FOREIGN KEY (fittinghash, source, sourcefittinghash) REFERENCES fittingremotes(fittinghash, key, remotefittinghash);
+
+
+--
+-- Name: fittingmoduletargets_target_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingmoduletargets
+    ADD CONSTRAINT fittingmoduletargets_target_fkey FOREIGN KEY (fittinghash, target) REFERENCES fittingremotes(fittinghash, key);
+
+
+--
 -- Name: fittingpresets_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
 ALTER TABLE ONLY fittingpresets
     ADD CONSTRAINT fittingpresets_fittinghash_fkey FOREIGN KEY (fittinghash) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittingremotes_fittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingremotes
+    ADD CONSTRAINT fittingremotes_fittinghash_fkey FOREIGN KEY (fittinghash) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittingremotes_remotefittinghash_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingremotes
+    ADD CONSTRAINT fittingremotes_remotefittinghash_fkey FOREIGN KEY (remotefittinghash) REFERENCES fittings(fittinghash);
 
 
 --

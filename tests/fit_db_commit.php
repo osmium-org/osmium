@@ -227,6 +227,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		\Osmium\Db\query('DELETE FROM osmium.fittingdrones WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingdronepresets WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingtags WHERE fittinghash IN ('.$h.')');
+		\Osmium\Db\query('DELETE FROM osmium.fittingremotes WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittings WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('COMMIT;');
 

@@ -35,8 +35,8 @@ function get_export_formats() {
 		'clf' => array(
 			'CLF', 'application/json',
 			function($fit, $opts = array()) {
-				$clfopts = (isset($opts['minify']) && $opts['minify']) ?
-					CLF_EXPORT_MINIFY : 0;
+				$clfopts = CLF_EXPORT_DEFAULT_OPTS
+					| ((isset($opts['minify']) && $opts['minify']) ? CLF_EXPORT_MINIFY : 0);
 				return export_to_common_loadout_format($fit, $clfopts);
 			}),
 		'md' => array(
@@ -571,6 +571,10 @@ function export_to_markdown($fit, $embedclf = true) {
 					$md .= " (".$statenames[$state][2].")";
 				}
 
+				if(isset($module['target']) && $module['target'] !== null) {
+					$md .= ', applied on remote fit #'.$module['target'];
+				}
+
 				$md .= "\n";
 			}
 
@@ -673,6 +677,46 @@ function export_to_markdown($fit, $embedclf = true) {
 		}
 
 		$md .= "\n";
+	}
+
+	if(isset($fit['remote']) && $fit['remote'] !== array()) {
+		$md .= "# Remote fits\n\n";
+
+		foreach($fit['remote'] as $k => $rf) {
+			$md .= "- Remote fit #{$k}: `fittinghash ".get_hash($rf)."`\n\n";
+
+			foreach($rf['presets'] as $preset) {
+				$hastitle = false;
+
+				foreach($preset['modules'] as $type => $sub) {
+					$z = 0;
+					foreach($sub as $m) {
+						if(!isset($m['target']) || $m['target'] === null) {
+							++$z;
+							continue;
+						}
+						if(!$hastitle) {
+							$hastitle = true;
+							$md .= "  ### ".$preset['name']."\n\n";
+						}
+
+						if($m['target'] === 'local') {
+							$tgt = 'the local fit';
+						} else {
+							$tgt = 'remote fit #'.$m['target'];
+						}
+
+						$md .= "  - ".$m['typename']." ({$type} slot #{$z}) applied on {$tgt}\n";
+
+						++$z;
+					}
+				}
+
+				if($hastitle) {
+					$md .= "\n";
+				}
+			}
+		}
 	}
 
 	if($embedclf) {

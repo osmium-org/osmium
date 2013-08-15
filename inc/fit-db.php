@@ -31,7 +31,10 @@ function get_unique(&$fit) {
 	sanitize($fit);
 
 	$unique = array();
-	$unique['ship'] = isset($fit['ship']['typeid']) ? (int)$fit['ship']['typeid'] : 0;
+
+	if(isset($fit['ship']['typeid'])) {
+		$unique['ship'] = (int)$fit['ship']['typeid'];
+	}
 
 	$unique['metadata'] = array(
 		'name' => $fit['metadata']['name'],
@@ -53,6 +56,10 @@ function get_unique(&$fit) {
 				/* Use the actual order of the array, discard indexes */
 				$newindexes[$type][$index] = ($z++);
 				$newmodule = array((int)$module['typeid'], (int)$module['state']);
+
+				/* Target info is stored separately on the "local" fit
+				 * only */
+
 				$uniquep['modules'][$type][unique_key($newmodule)] = $newmodule;
 			}
 		}
@@ -103,6 +110,27 @@ function get_unique(&$fit) {
 		}
 	}
 
+	if(isset($fit['remote'])) {
+		foreach($fit['remote'] as $k => $rf) {
+			if($k === 'local' || $k === null) continue;
+			$unique['remote'][$k] = get_hash($rf);
+		}
+
+		$remotes = $fit['remote'];
+		$remotes['local'] = $fit;
+
+		foreach($remotes as $key => $rfit) {
+			foreach($rfit['presets'] as $pid => $preset) {
+				foreach($preset['modules'] as $type => $sub) {
+					foreach($sub as $index => $m) {
+						if(!isset($m['target']) || $m['target'] === null) continue;
+						$unique['targets']['modules'][$pid][$type][$index] = (string)$m['target'];
+					}
+				}
+			}
+		}
+	}
+
 	/* Ensure equality if key ordering is different */
 	ksort_rec($unique);
 	sort($unique['metadata']['tags']); /* tags should be ordered by value */
@@ -132,7 +160,7 @@ function get_hash($fit) {
  * duplicates, so it is safe to call it multiple times even if no
  * changes were made.
  *
- * You should whap this call in a transaction and rollback if it
+ * You must wrap this call in a transaction and rollback if it
  * fails.
  *
  * @returns false on failure, fittinghash on success.
@@ -147,12 +175,6 @@ function commit_fitting(&$fit, &$error = null) {
 		return $fittinghash;
 	}
 
-	if(!isset($fit['ship']['typeid'])) {
-		/* Not inserting an incomplete fitting */
-		$error = 'Refusing to commit an incomplete fitting.';
-		return false;
-	}
-
 	/* Insert the new fitting */
 	$ret = \Osmium\Db\query_params(
 		'INSERT INTO osmium.fittings (fittinghash, name, description, evebuildnumber, hullid, creationdate) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -161,14 +183,14 @@ function commit_fitting(&$fit, &$error = null) {
 			$fit['metadata']['name'],
 			$fit['metadata']['description'],
 			$fit['metadata']['evebuildnumber'],
-			$fit['ship']['typeid'],
+			isset($fit['ship']['typeid']) ? $fit['ship']['typeid'] : null,
 			time(),
 		)
 	);
 	if($ret === false) {
 		return false;
 	}
-  
+
 	foreach($fit['metadata']['tags'] as $tag) {
 		$ret = \Osmium\Db\query_params(
 			'INSERT INTO osmium.fittingtags (fittinghash, tagname) VALUES ($1, $2)',
@@ -180,7 +202,7 @@ function commit_fitting(&$fit, &$error = null) {
 	}
   
 	$presetid = 0;
-	foreach($fit['presets'] as $presetid => $preset) {
+	foreach($fit['presets'] as $preset) {
 		$ret = \Osmium\Db\query_params(
 			'INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)',
 			array(
@@ -360,6 +382,101 @@ function commit_fitting(&$fit, &$error = null) {
 					$hashes['squad'][1],
 				)
 			);
+
+			if($ret === false) {
+				return false;
+			}
+		}
+	}
+
+	if(isset($fit['remote'])) {
+		$nremotes = 0;
+		$hashes = [ 'local' => $fittinghash ];
+
+		foreach($fit['remote'] as $k => $rf) {
+			if($k === 'local' || $k === null) continue;
+
+			$remotehash = commit_fitting($fit['remote'][$k]);
+			if($remotehash === false) {
+				return false;
+			}
+
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingremotes (
+				fittinghash, key, remotefittinghash
+				) VALUES ($1, $2, $3)',
+				array(
+					$fittinghash,
+					$k,
+					$remotehash,
+				)
+			);
+
+			if($ret === false) {
+				return false;
+			}
+
+			$hashes[$k] = $remotehash;
+			++$nremotes;
+		}
+
+		if($nremotes !== 0) {
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingremotes (
+				fittinghash, key, remotefittinghash
+				) VALUES ($1, $2, $3)',
+				array(
+					$fittinghash,
+					'local',
+					$fittinghash,
+				)
+			);
+
+			if($ret === false) {
+				return false;
+			}
+
+			$remotes = $fit['remote'];
+			$remotes['local'] = $fit;
+
+			foreach($remotes as $k => $rf) {
+				$presetid = 0;
+				foreach($rf['presets'] as $p) {
+					foreach($p['modules'] as $type => $sub) {
+						$z = 0;
+						foreach($sub as $m) {
+							if(!isset($m['target']) || $m['target'] === null) {
+								++$z;
+								continue;
+							}
+
+							$ret = \Osmium\Db\query_params(
+								'INSERT INTO osmium.fittingmoduletargets (
+							    fittinghash, source, sourcefittinghash,
+								presetid, slottype, index, target
+								) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+								array(
+									$fittinghash,
+									$k,
+									$hashes[$k],
+									$presetid,
+									$type,
+									$z,
+									$m['target'],
+								)
+							);
+
+							if($ret === false) {
+								return false;
+							}
+
+							++$z;
+						}
+					}
+
+					++$presetid;
+				}
+			}
 		}
 	}
 
@@ -486,7 +603,10 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	commit_loadout_dogma_attribs($fit);
 
 	$ret = \Osmium\Db\query('COMMIT;');
-	if($ret === false) return false;
+	if($ret === false) {
+		$error = \Osmium\Db\last_error();
+		return false;
+	}
 
 	/* Assume commit_loadout() was successful, do the post-commit
 	 * stuff */
@@ -625,6 +745,9 @@ function get_fitting($fittinghash) {
 		ORDER BY presetid ASC',
 		array($fittinghash)
 	);
+
+	$presetsmap = array();
+
 	while($preset = \Osmium\Db\fetch_assoc($presetsq)) {
 		if($firstpreset === true) {
 			/* Edit the default preset instead of creating a new preset */
@@ -636,6 +759,8 @@ function get_fitting($fittinghash) {
 			$presetid = create_preset($fit, $preset['name'], $preset['description']);
 			use_preset($fit, $presetid);
 		}
+
+		$presetsmap[$preset['presetid']] = $fit['modulepresetid'];
 
 		$modulesq = \Osmium\Db\query_params(
 			'SELECT index, typeid, state
@@ -748,6 +873,39 @@ function get_fitting($fittinghash) {
 				array(&$fit, $fl)
 			);
 		}
+	}
+
+	$remote = \Osmium\Db\query_params(
+		'SELECT key, remotefittinghash
+		FROM osmium.fittingremotes
+		WHERE fittinghash = $1 AND key <> $2',
+		array($fittinghash, 'local')
+	);
+
+	while($row = \Osmium\Db\fetch_row($remote)) {
+		$rfit = get_fitting($row[1]);
+
+		if($rfit === false) {
+			return false;
+		}
+
+		add_remote($fit, $row[0], $rfit);
+	}
+
+	$mtargets = \Osmium\Db\query_params(
+		'SELECT source, presetid, slottype, index, target
+		FROM osmium.fittingmoduletargets
+		WHERE fittinghash = $1',
+		array($fittinghash)
+	);
+
+	while($mtgt = \Osmium\Db\fetch_assoc($mtargets)) {
+		use_preset($fit, $presetsmap[$mtgt['presetid']]);
+		set_module_target_by_location(
+			$fit,
+			$mtgt['source'], $mtgt['slottype'], $mtgt['index'],
+			$mtgt['target']
+		);
 	}
 
 	/* Use the 1st presets */
