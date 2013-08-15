@@ -140,6 +140,18 @@ if($type === 'new') {
 		}
 	}
 
+	if(isset($errors['remote'])) {
+		foreach($errors['remote'] as $k => $err) {
+			foreach($err as $error) {
+				$payload['p-errors'][] = array(
+					'remote',
+					'section#projected div.pr-loadout.projected-'.$k.' > div',
+					$error
+				);
+			}
+		}
+	}
+
 	if(isset($_POST['submit']) && $_POST['submit']) {
 		if(!\Osmium\State\is_logged_in()) {
 			header('HTTP/1.1 400 Bad Request', true, 400);

@@ -611,10 +611,48 @@ osmium_projected_regen_local = function() {
 	osmium_projected_replace_graceful(oldlocal, local);
 };
 
+osmium_projected_regen_remote = function(key, onsuccess) {
+	var t = $("section#projected div.pr-loadout.projected-" + key);
+
+	osmium_clf['X-Osmium-remote'][t.data('key')].fitting = t.find('input[type="text"]').val();
+	osmium_clf['X-Osmium-remote'][t.data('key')].skillset = t.find('select').val();
+
+	osmium_commit_clf({
+		params: { "remoteclf": t.data('key') },
+		success: function(payload) {
+			if(!("remote-clf" in payload)) return;
+
+			osmium_clf['X-Osmium-remote'][t.data("key")] = payload['remote-clf'];
+			osmium_undo_push();
+
+			osmium_projected_replace_graceful(
+				t,
+				osmium_create_projected(
+					t.data('key'),
+					osmium_clf['X-Osmium-remote'][t.data('key')],
+					t.index()
+				)
+			);
+
+			if(typeof onsuccess === 'function') onsuccess(payload);
+		}
+	});
+};
+
 osmium_projected_replace_graceful = function(stale, fresh) {
 	var cssprops = [ "position", "left", "top", "right", "bottom" ];
 	for(var i = 0; i < cssprops.length; ++i) {
 		fresh.css(cssprops[i], stale.css(cssprops[i]));
+	}
+
+	/* Transfer errors */
+	fresh.children('div').before(stale.children('p.clferror.error_box'));
+
+	if(fresh.data('key') !== 'local') {
+		/* Transfer the fitting */
+		var fitting = stale.find('div > input[type="text"]').val();
+		fresh.find('div > input[type="text"]').val(fitting);
+		osmium_clf['X-Osmium-remote'][fresh.data('key')].fitting = fitting;
 	}
 
 	jsPlumb.doWhileSuspended(function() {

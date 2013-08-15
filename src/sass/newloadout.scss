@@ -369,6 +369,10 @@ section#remote > section#projected {
 				}
 			}
 
+			&> p.clferror.error_box {
+				margin: 0 0 0.25em 0;
+			}
+
 			&> div {
 				position: relative;
 				height: 1.6em;

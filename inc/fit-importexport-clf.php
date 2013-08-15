@@ -50,13 +50,15 @@ const CLF_EXPORT_DEFAULT_OPTS = 2;
  *
  * Returns false if there was an unrecoverable error, or a $fit.
  */
-function try_parse_fit_from_common_loadout_format($jsonstring, &$errors) {
+function try_parse_fit_from_common_loadout_format($jsonstring, &$errors, $validate = true) {
 	require_once __DIR__.CLF_PATH;
 
-	$status = \CommonLoadoutFormat\validate_clf($jsonstring, $errors);
-	if($status !== \CommonLoadoutFormat\OK && $status !== \CommonLoadoutFormat\OK_WITH_WARNINGS) {
-		$errors[] = 'validate_clf() found fatal errors.';
-		return false;
+	if($validate) {
+		$status = \CommonLoadoutFormat\validate_clf($jsonstring, $errors);
+		if($status !== \CommonLoadoutFormat\OK && $status !== \CommonLoadoutFormat\OK_WITH_WARNINGS) {
+			$errors[] = 'validate_clf() found fatal errors.';
+			return false;
+		}
 	}
 
 	$json = json_decode($jsonstring, true);
@@ -72,7 +74,10 @@ function try_parse_fit_from_common_loadout_format($jsonstring, &$errors) {
 /** @internal */
 function clf_parse_1(array $json, &$errors) {
 	create($fit);
-	select_ship($fit, $json['ship']['typeid']);
+
+	if(isset($json['ship']['typeid'])) {
+		select_ship($fit, $json['ship']['typeid']);
+	}
 
 	if(isset($json['presets']) && is_array($json['presets'])) {
 		clf_parse_presets_1($fit, $json['presets'], $errors);
@@ -1391,5 +1396,5 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 		$fit,
 		CLF_EXPORT_STRIP_METADATA | CLF_EXPORT_SELECTED_PRESETS_ONLY
 	);
-	return try_parse_fit_from_common_loadout_format($stripped, $errors);
+	return try_parse_fit_from_common_loadout_format($stripped, $errors, false);
 }
