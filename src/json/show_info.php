@@ -54,7 +54,8 @@ function get_attributes($typeid, $getval_callback) {
 
 		UNION
 
-		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname, invtypes.volume as value, dgmattribs.unitid,
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname,
+		invtypes.volume as value, dgmattribs.unitid,
 		dgmunits.displayname AS udisplayname, categoryid
 		FROM eve.invtypes
 		JOIN eve.dgmattribs ON dgmattribs.attributeid = 161
@@ -63,10 +64,21 @@ function get_attributes($typeid, $getval_callback) {
 
 		UNION
 
-		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname, invtypes.capacity as value, dgmattribs.unitid,
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname,
+		invtypes.capacity as value, dgmattribs.unitid,
 		dgmunits.displayname AS udisplayname, categoryid
 		FROM eve.invtypes
 		JOIN eve.dgmattribs ON dgmattribs.attributeid = 38
+		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
+		WHERE typeid = $1
+
+		UNION
+
+		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname,
+		invtypes.mass as value, dgmattribs.unitid,
+		dgmunits.displayname AS udisplayname, categoryid
+		FROM eve.invtypes
+		JOIN eve.dgmattribs ON dgmattribs.attributeid = 4
 		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
 		WHERE typeid = $1
 
@@ -188,23 +200,27 @@ if($affectors !== false) {
 
 		$dest = $attributes[$affector['destid']][0];
 		$source = \Osmium\Fit\get_typename($affector['id']);
+		$fval = $affector['value'];
 
 		switch($affector['operator']) {
 
 		case '*':
-			$affector['operator'] = '×';
 			if(abs($affector['value'] - 1.0) < 1e-300) continue 2;
+			$affector['operator'] = '×';
+			$fval = "<span title='".sprintf("%.14f", $fval)."'>".\Osmium\Chrome\format($fval, 3).'</span>';
 			break;
 
 		case '-':
-			$affector['value'] = -$affector['value'];
+			$fval = -$fval;
+
 		case '+':
 			if(abs($affector['value']) < 1e-300) continue 2;
+
+		case '=':
+			$fval = \Osmium\Chrome\format($fval, -1);
 			break;
 
 		}
-
-		$fval = $affector['value'];
 
 		if($affector['flags'] > 0) {
 			$flags = array();

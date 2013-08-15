@@ -63,7 +63,7 @@ function format($number, $sd = 3, $min = '') {
 		'' => 1
 	];
 
-	if($number < 0) return '-'.format($number, $sd, $min);
+	if($number < 0) return '-'.format(-$number, $sd, $min);
 
 	if($sd < 0) return number_format($number / $suffixes[$min]).$min;
 
