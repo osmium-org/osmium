@@ -30,7 +30,7 @@ echo \Osmium\Chrome\format_md(
 	file_get_contents(__DIR__.'/md/about.md')
 );
 
-echo "<h2>Contact</h2>\n";
+echo "<h2 id='contact'>Contact</h2>\n";
 
 echo \Osmium\Chrome\format_md(
 	\Osmium\get_ini_setting('contact')

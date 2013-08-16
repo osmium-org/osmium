@@ -4,7 +4,7 @@
 **Osmium** is both a browser-based fitting tool and a platform to
 create and share fittings.
 
-## The Osmium project
+## The Osmium project {#project}
 
 You…
 

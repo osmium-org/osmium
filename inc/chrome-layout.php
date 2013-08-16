@@ -61,11 +61,18 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	if(XHTML) {
 		header('Content-Type: application/xhtml+xml; charset=utf-8');
 		echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+		echo "<html xmlns='http://www.w3.org/1999/xhtml'>\n";
+	} else {
+		header('Content-Type: text/html; charset=utf-8');
+		echo "<!DOCTYPE html>\n<html>\n";
 	}
-	echo "<!DOCTYPE html>\n<html xmlns='http://www.w3.org/1999/xhtml'>\n<head>\n";
+
+	echo "<head>\n";
 	if(!XHTML) echo "<meta charset='UTF-8' />\n";
 	if(!$index) echo "<meta name='robots' content='noindex' />\n";
 	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
+
+	echo "<link rel='help' href='{$relative}/help' />\n";
 
 	/* Guess the current theme and put it first (to avoid blinking). */
 	static $themes = array('Dark' => 'dark.css', 'Light' => 'light.css');
@@ -148,7 +155,7 @@ function print_footer() {
 	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
 	echo "<a href='".$__osmium_chrome_relative."/changelog'><code>".\Osmium\get_osmium_version()."</code></a> –\n";
 	echo "<a href='".$__osmium_chrome_relative."/about' rel='jslicense'>About</a> –\n";
-	echo "<a href='".$__osmium_chrome_relative."/api'>API</a>\n";
+	echo "<a href='".$__osmium_chrome_relative."/help' rel='help'>Help</a>\n";
 	echo "</p>\n</footer>\n";
 
 	/* If these scripts are changed, also change the license

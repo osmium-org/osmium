@@ -86,12 +86,18 @@ $osmium_dispatch_rules = array(
 	'%^/resetpassword$%D' => '/src/reset_password.php',
 	'%^/notifications$%D' => '/src/view_notifications.php',
 
+	'%^/help$%D' => [ '/src/mdstatic.php',
+	                  ['relative' => '..', 'title' => 'Osmium help', 'f' => 'help.md']
+	],
 	'%^/about$%D' => '/src/about.php',
 	'%^/changelog$%D' => [ '/src/mdstatic.php',
-	                         ['relative' => '.', 'title' => 'Changelog', 'f' => '../../CHANGELOG.md']
+	                       ['relative' => '.', 'title' => 'Changelog', 'f' => '../../CHANGELOG.md']
 	],
 	'%^/help/search$%D' => [ '/src/mdstatic.php',
 	                         ['relative' => '..', 'title' => 'Search help', 'f' => 'search.md']
+	],
+	'%^/help/formats%D' => [ '/src/mdstatic.php',
+	                         ['relative' => '..', 'title' => 'Loadout formats', 'f' => 'formats.md']
 	],
 
 	'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
