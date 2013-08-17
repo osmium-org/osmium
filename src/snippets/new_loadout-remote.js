@@ -303,9 +303,11 @@ osmium_add_projected = function(remotefit, target) {
 };
 
 osmium_init_projected = function() {
-	$("section#projected input#createprojected").on('click', function() {
-		osmium_add_projected('');
-	});
+	if(!osmium_loadout_readonly) {
+		$("section#projected input#createprojected").on('click', function() {
+			osmium_add_projected('');
+		});
+	}
 
 	$("section#projected input#projectedfstoggle").on('click', function() {
 		var section = $("section#projected");
@@ -393,9 +395,10 @@ osmium_create_projected = function(key, clf, index) {
 		);
 	}
 
-	hdr
-		.append(h)
-		.append(
+	hdr.append(h);
+
+	if(!osmium_loadout_readonly) {
+		hdr.append(
 			$(document.createElement('input'))
 				.prop('type', 'button')
 				.prop('value', 'Remove')
@@ -413,9 +416,9 @@ osmium_create_projected = function(key, clf, index) {
 
 					delete osmium_clf['X-Osmium-remote'][key];
 					osmium_commit_undo_deferred();
-			})
-		)
-	;
+				})
+		);
+	}
 
 	proj.append(hdr);
 
@@ -429,22 +432,33 @@ osmium_create_projected = function(key, clf, index) {
 			return false;
 		});
 
+	if(osmium_loadout_readonly) {
+		fittinginput
+			.prop('readonly', true)
+			.prop('placeholder', '(empty fitting)')
+		;
+	}
+
 	if("X-Osmium-remote" in osmium_clf && key in osmium_clf['X-Osmium-remote']
 	   && "fitting" in osmium_clf['X-Osmium-remote'][key]) {
 		fittinginput.val(osmium_clf['X-Osmium-remote'][key].fitting);
 	}
 
-	fdiv.append(
-		fittinginput
-	).append(
-		$(document.createElement('input'))
-			.prop('type', 'button')
-			.prop('value', 'Set fit')
+	fdiv.append(fittinginput);
+
+	var setfitbutton = $(document.createElement('input'))
+		.prop('type', 'button')
+		.prop('value', 'Set fit')
 		.on('click', function() {
 			osmium_projected_regen_remote($(this).closest('div.pr-loadout').data('key'));
 		})
-	);
+	;
 
+	if(osmium_loadout_readonly) {
+		setfitbutton.prop('disabled', true);
+	}
+
+	fdiv.append(setfitbutton);
 	proj.append(fdiv);
 
 	for(var i = 0; i < osmium_skillsets.length; ++i) {

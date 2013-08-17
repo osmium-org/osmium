@@ -312,3 +312,8 @@ function export_to_dna($fit) {
 
 	return ltrim($dna, ':').'::';
 }
+
+/** @internal */
+function export_to_augmented_dna($fit) {
+	return mangle_dna(export_to_dna($fit));
+}

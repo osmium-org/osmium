@@ -240,8 +240,17 @@ Technically not a real format, the remote format is used by Osmium to
 describe remote fittings (used to define fleet boosters, or remote
 projected fittings).
 
-When exporting a fitting to the remote format, Osmium will always use
-the `gzclf://` form.
+When exporting a fitting to the remote format, Osmium will preferably
+use augmented DNA, unless:
+
+- The fitting has more than one preset (same with charge or drone
+  presets);
+- The fitting has fleet boosts;
+- The fitting has remote fittings;
+- The fitting has boosters with side effects.
+
+If either of these conditions are verified, Osmium will use the
+`gzclf://` form to avoid losing information.
 
 When importing a fitting from the remote format, Osmium will proceed
 as follows:

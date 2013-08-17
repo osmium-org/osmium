@@ -235,15 +235,53 @@ function reset(&$fit) {
 
 /** @internal */
 function get_gzclf_id(&$fit) {
-	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid']) {
-		return 'gzclf://'.export_to_gzclf_raw(
-		    $fit,
-		    CLF_EXPORT_MINIFY | CLF_EXPORT_INTERNAL_PROPERTIES
-		);
-	} else {
-		/* XXX: properly check for an empty fitting */
-		return '(empty fitting)';
+	if(isset($fit['ship']['typeid'])) {
+		goto nempty;
 	}
+
+	foreach($fit['presets'] as $p) {
+		foreach($p['modules'] as $sub) {
+			foreach($sub as $m) {
+				goto nempty;
+			}
+		}
+
+		foreach($p['implants'] as $i) {
+			if(isset($i['sideeffects'])) {
+				foreach($i['sideeffects'] as $se) {
+					goto gzclf;
+				}
+			}
+
+			goto nempty;
+		}
+	}
+
+	foreach($fit['dronepresets'] as $dp) {
+		foreach($dp['drones'] as $d) {
+			if($d['quantityinbay'] > 0 || $d['quantityinspace'] > 0) {
+				goto nempty;
+			}
+		}
+	}
+
+	return '(empty fitting)';
+
+nempty:
+	if(count($fit['presets']) <= 1
+	   && count($fit['chargepresets']) <= 1
+	   && count($fit['dronepresets']) <= 1
+	   && (!isset($fit['fleet']) || $fit['fleet'] === [])
+	   && (!isset($fit['remote']) || $fit['remote'] === [])
+	) {
+		return export_to_augmented_dna($fit);
+	}
+
+gzclf:
+	return 'gzclf://'.export_to_gzclf_raw(
+		$fit,
+		CLF_EXPORT_MINIFY | CLF_EXPORT_INTERNAL_PROPERTIES
+	);
 }
 
 

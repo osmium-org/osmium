@@ -276,7 +276,9 @@ echo "<div id='vlmain'>
 <ul class='tabs'>
 <li><a href='#loadout'>Loadout</a></li>
 <li><a href='#presets'>Presets (".(max(count($fit['presets']), count($fit['chargepresets']), count($fit['dronepresets']))).")</a></li>
-<li><a href='#remote'>Remote (".(isset($fit['fleet']) ? count($fit['fleet']) : 0).")</a></li>
+<li><a href='#remote'>Remote (".
+((isset($fit['fleet']) ? count($fit['fleet']) : 0) + (isset($fit['remote']) ? count($fit['remote']) : 0))
+.")</a></li>
 <li><a href='#comments'>Comments (".$commentcount.")</a></li>
 <li><a href='#meta'>Meta</a></li>
 <li><a href='#export'>Export</a></li>\n";
@@ -575,9 +577,23 @@ foreach(array('fleet', 'wing', 'squad') as $ft) {
 	}
 }
 
-echo "</tbody>\n</table>\n</form>\n</section>\n<section id='projected'>\n";
-echo "</section>\n";
+echo "</tbody>\n</table>\n</form>\n</section>\n";
 
+echo "<section id='projected'>
+<h2>Projected effects
+<form>
+<input type='button' value='Toggle fullscreen' id='projectedfstoggle' />
+</form>
+</h2>
+<p id='rearrange'>
+Rearrange loadouts: <a href='javascript:void(0);' id='rearrange-grid'>grid</a>,
+<a href='javascript:void(0);' id='rearrange-circle'>circle</a>
+</p>
+<form id='projected-list'>
+<p class='placeholder'>Loading remote fittings…<br />
+<span class='spinner'></span></p>
+</form>
+</section>\n";
 
 
 echo "</section>
