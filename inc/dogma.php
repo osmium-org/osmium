@@ -356,3 +356,26 @@ function get_implant_attribute(&$fit, $typeid, $att) {
 
 	return $ret === DOGMA_OK ? $val : false;
 }
+
+/**
+ * Get the attribute of an arbitrary location of a remote loadout.
+ */
+function get_remote_attribute(&$fit, $key, $loc, $att) {
+	auto_init($fit);
+
+	if($key === 'local') $ctx = $fit['__dogma_context'];
+	else {
+		if(!isset($fit['remote'][$key])) {
+			trigger_error('No such remote', E_USER_WARNING);
+			return false;
+		}
+
+		$ctx = $fit['remote'][$key]['__dogma_context'];
+	}
+
+	$ret = dogma_get_location_attribute(
+		$ctx, $loc, get_att($att), $out
+	);
+
+	return $ret === DOGMA_OK ? $out : false;
+}

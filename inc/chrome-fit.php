@@ -24,6 +24,19 @@ const USE_RELOAD_TIME_FOR_TANK = 4;
 
 
 
+function get_remotes() {
+	static $types = array(
+		'hull' => [ "Raw hull hitpoints repaired per second", 524 ],
+		'armor' => [ "Raw armor hitpoints repaired per second", 523 ],
+		'shield' => [ "Raw shield hitpoints transferred per second", 405 ],
+		'capacitor' => [ "Giga joules transferred per second", 529 ],
+		'neutralization' => [ "Giga joules neutralized per second", 533 ],
+		'leech' => [ "Giga joules leeched per second (in the best case)", 530 ],
+	);
+
+	return $types;
+}
+
 function print_formatted_attribute_category($identifier, $title, $titledata, $titleclass, $contents) {
 	if($titleclass) $titleclass = " class='$titleclass'";
 	echo "<section id='$identifier'>\n";
@@ -222,23 +235,67 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 	print_formatted_attribute_category('defense', 'Defense <span class="pname">Uniform</span>', implode(' – ', $subtitles), '', ob_get_clean());
 }
 
-function print_formatted_outgoing(&$fit, $relative) {
+function print_formatted_incoming(&$fit, $relative, $ehp, $damageprofile) {
 	ob_start();
 
-	static $types = array(
-		'hull' => [ "Raw hull hitpoints repaired per second", 524 ],
-		'armor' => [ "Raw armor hitpoints repaired per second", 523 ],
-		'shield' => [ "Raw shield hitpoints transferred per second", 405 ],
-		'capacitor' => [ "Giga joules transferred per second", 529 ],
-		'neutralization' => [ "Giga joules neutralized per second", 533 ],
-		'leech' => [ "Giga joules leeched per second (in the best case)", 530 ],
-	);
+	$incoming = \Osmium\Fit\get_incoming($fit);
+	$best = 0;
+	$fbest = '';
+
+	foreach(get_remotes() as $t => $info) {
+		if(!isset($incoming[$t])) continue;
+		list($amount, $unit) = $incoming[$t];
+		list($title, $img) = $info;
+		if($amount < 1e-300) continue;
+
+		if(isset($ehp[$t]) && $unit === 'HP') {
+			$avgresonance = 0;
+			$sum = 0;
+
+			foreach($damageprofile as $type => $dmg) {
+				$avgresonance += $dmg * $ehp[$t]['resonance'][$type];
+				$sum += $dmg;
+			}
+
+			$avgresonance /= $sum;
+			$amount /= $avgresonance;
+			$unit = 'EHP';
+			$title = str_replace('Raw ', 'Effective ', $title);
+		}
+
+		$unit .= '/s';
+		$amount *= 1000;
+		$famount = format($amount).' '.$unit;
+
+		if($amount > $best) {
+			$best = $amount;
+			$fbest = "<span title='{$title}'>{$t}: {$famount}</span>";
+		}
+
+		echo "<p title='{$title}'>"
+			."<img src='//image.eveonline.com/Type/{$img}_64.png' alt='{$t}' />"
+			.$famount
+			."</p>\n";
+	}
+
+	$contents = ob_get_clean();
+
+	if($contents) {
+		print_formatted_attribute_category(
+			'incoming', 'Incoming', $fbest,
+			'', $contents
+		);
+	}
+}
+
+function print_formatted_outgoing(&$fit, $relative) {
+	ob_start();
 
 	$outgoing = \Osmium\Fit\get_outgoing($fit);
 	$best = 0;
 	$fbest = '';
 
-	foreach($types as $t => $info) {
+	foreach(get_remotes() as $t => $info) {
 		if(!isset($outgoing[$t])) continue;
 		list($amount, $unit) = $outgoing[$t];
 		list($title, $img) = $info;
@@ -422,6 +479,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null
 	print_formatted_engineering($fit, $relative, $cap);
 	print_formatted_offense($fit, $relative, $opts & USE_RELOAD_TIME_FOR_DPS);
 	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile, $opts & USE_RELOAD_TIME_FOR_TANK);
+	print_formatted_incoming($fit, $relative, $ehp, $dmgprofile);
 	print_formatted_outgoing($fit, $relative);
 	print_formatted_navigation($fit, $relative);
 	print_formatted_targeting($fit, $relative);

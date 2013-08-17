@@ -240,10 +240,8 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile, $reload = false) {
 	return $out;
 }
 
-/**
- * Get the outgoing repair and capacitor numbers.
- */
-function get_outgoing(&$fit) {
+/** @internal */
+function get_remote_effects() {
 	static $remoteeffects = array(
 		'hull' => [ [ [ EFFECT_RemoteHullRepair, 'structureDamageAmount' ] ], 'HP' ],
 		'armor' => [ [ [ EFFECT_TargetArmorRepair, 'armorDamageAmount' ] ], 'HP' ],
@@ -253,9 +251,63 @@ function get_outgoing(&$fit) {
 		'leech' => [ [ [ EFFECT_Leech, 'powerTransferAmount' ] ], "GJ" ],
 	);
 
+	return $remoteeffects;
+}
+
+/**
+ * Get the incoming repair and capacitor numbers.
+ */
+function get_incoming(&$fit, $targetkey = 'local') {
+	$incoming = array();
+
+	$remotes = isset($fit['remote']) ? $fit['remote'] : array();
+	$remotes['local'] = $fit;
+
+	foreach(get_remote_effects() as $key => $effects) {
+		$incoming[$key] = [ 0, $effects[1] ];
+
+		foreach($effects[0] as $e) {
+			list($eid, $aname) = $e;
+
+			foreach($remotes as $rkey => $rfit) {
+				foreach($rfit['modules'] as $type => $sub) {
+					foreach($sub as $index => $m) {
+						if(!isset($m['target']) || $m['target'] != $targetkey) continue;
+
+						$ret = dogma_type_has_effect(
+							$m['typeid'], \Osmium\Dogma\get_dogma_states()[$m['state']],
+							$eid, $hasit
+						);
+
+						if($ret !== DOGMA_OK || $hasit !== true) continue;
+
+						dogma_get_location_effect_attributes(
+							$rfit['__dogma_context'],
+							$loc = [ DOGMA_LOC_Module, "module_index" => $m['dogma_index'] ],
+							$eid,
+							$duration, $tracking, $discharge,
+							$range, $falloff, $usagechance
+						);
+
+						$incoming[$key][0] += \Osmium\Dogma\get_remote_attribute(
+							$fit, $rkey, $loc, $aname
+						) / $duration;
+					}
+				}
+			}
+		}
+	}
+
+	return $incoming;
+}
+
+/**
+ * Get the outgoing repair and capacitor numbers.
+ */
+function get_outgoing(&$fit) {
 	$outgoing = array();
 
-	foreach($remoteeffects as $key => $effects) {
+	foreach(get_remote_effects() as $key => $effects) {
 		$outgoing[$key] = [ 0, $effects[1] ];
 
 		foreach($effects[0] as $e) {
@@ -272,7 +324,7 @@ function get_outgoing(&$fit) {
 
 					dogma_get_location_effect_attributes(
 						$fit['__dogma_context'],
-						[ DOGMA_LOC_Module, "module_index" => $m['dogma_index'] ],
+						$loc = [ DOGMA_LOC_Module, "module_index" => $m['dogma_index'] ],
 						$eid,
 						$duration, $tracking, $discharge,
 						$range, $falloff, $usagechance
