@@ -4,6 +4,9 @@
 
 * Fleet bonuses are now fully supported.
 
+* Projected effects are supported, using remote loadouts. Per-module
+  targets and complex setups (including loops) are possible.
+
 * Revamped home page:
 
   * Shows some metrics like number of current users, number of fits,
@@ -38,6 +41,9 @@
   the tooltip).
 
 * Show variations of modules in the "show info" dialog.
+
+* Outgoing effects (repairs, energy transfers, neutralizers and
+  nosferatus) are now recapped in the attribute side bar.
 
 # Version 0.9
 

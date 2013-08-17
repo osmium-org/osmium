@@ -241,6 +241,79 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile, $reload = false) {
 }
 
 /**
+ * Get the outgoing repair and capacitor numbers.
+ */
+function get_outgoing(&$fit) {
+	static $remoteeffects = array(
+		'hull' => [ [ [ EFFECT_RemoteHullRepair, 'structureDamageAmount' ] ], 'HP' ],
+		'armor' => [ [ [ EFFECT_TargetArmorRepair, 'armorDamageAmount' ] ], 'HP' ],
+		'shield' => [ [ [ EFFECT_ShieldTransfer, 'shieldBonus' ] ], 'HP' ],
+		'capacitor' => [ [ [ EFFECT_EnergyTransfer, 'powerTransferAmount' ] ], 'GJ' ],
+		'neutralization' => [ [ [ EFFECT_EnergyDestabilizationNew, 'energyDestabilizationAmount' ] ], "GJ" ],
+		'leech' => [ [ [ EFFECT_Leech, 'powerTransferAmount' ] ], "GJ" ],
+	);
+
+	$outgoing = array();
+
+	foreach($remoteeffects as $key => $effects) {
+		$outgoing[$key] = [ 0, $effects[1] ];
+
+		foreach($effects[0] as $e) {
+			list($eid, $aname) = $e;
+
+			foreach($fit['modules'] as $type => $sub) {
+				foreach($sub as $index => $m) {
+					$ret = dogma_type_has_effect(
+						$m['typeid'], \Osmium\Dogma\get_dogma_states()[$m['state']],
+						$eid, $hasit
+					);
+
+					if($ret !== DOGMA_OK || $hasit !== true) continue;
+
+					dogma_get_location_effect_attributes(
+						$fit['__dogma_context'],
+						[ DOGMA_LOC_Module, "module_index" => $m['dogma_index'] ],
+						$eid,
+						$duration, $tracking, $discharge,
+						$range, $falloff, $usagechance
+					);
+
+					$outgoing[$key][0] += \Osmium\Dogma\get_module_attribute(
+						$fit, $type, $index,
+						$aname
+					) / $duration;
+				}
+			}
+
+			foreach($fit['drones'] as $typeid => $d) {
+				if($d['quantityinspace'] <= 0) continue;
+
+				$ret = dogma_type_has_effect(
+					$typeid, DOGMA_STATE_Active,
+					$eid, $hasit
+				);
+
+				if($ret !== DOGMA_OK || $hasit !== true) continue;
+
+				dogma_get_location_effect_attributes(
+					$fit['__dogma_context'],
+					[ DOGMA_LOC_Drone, "drone_typeid" => $typeid ],
+					$eid,
+					$duration, $tracking, $discharge,
+					$range, $falloff, $usagechance
+				);
+
+				$outgoing[$key][0] += $d['quantityinspace'] * \Osmium\Dogma\get_drone_attribute(
+					$fit, $typeid, $aname
+				) / $duration;
+			}
+		}
+	}
+
+	return $outgoing;
+}
+
+/**
  * Get DPS and volley damage. Returns an array of the two values (dps,
  * volley) in this order.
  *
