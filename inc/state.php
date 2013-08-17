@@ -110,7 +110,13 @@ function logoff($global = false) {
 		\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE accountid = $1', array($account_id));
 	}
 
-	setcookie('Osmium', false, 0, '/');
+	setcookie(
+		'Osmium', false, 0,
+		\Osmium\get_ini_setting('relative_path'),
+		$_SERVER['HTTP_HOST'],
+		\Osmium\HTTPS,
+		true
+	);
 
 	$__osmium_state = null;
 	$_SESSION = array();
