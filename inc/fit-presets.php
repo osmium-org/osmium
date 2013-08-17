@@ -35,6 +35,13 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 		if(\Osmium\Dogma\has_context($fit)) {
 			foreach($fit['modules'] as $type => $a) {
 				foreach($a as $index => $module) {
+					if(isset($module['target']) && $module['target'] !== null) {
+						dogma_clear_target(
+							$fit['__dogma_context'],
+							[ DOGMA_LOC_Module, 'module_index' => $module['dogma_index'] ]
+						);
+					}
+
 					dogma_remove_module(
 						$fit['__dogma_context'],
 						$module['dogma_index']
@@ -74,6 +81,15 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 					$module['dogma_index'],
 					\Osmium\Dogma\get_dogma_states()[$module['state']]
 				);
+
+				if(isset($module['target']) && $module['target'] !== null) {
+					$targetctx = get_remote($fit, $module['target'])['__dogma_context'];
+					dogma_target(
+						$fit['__dogma_context'],
+						[ DOGMA_LOC_Module, 'module_index' => $module['dogma_index'] ],
+						$targetctx
+					);
+				}
 			}
 		}
 	}

@@ -47,19 +47,23 @@ osmium_gen_fleet = function() {
 	}
 };
 
+osmium_projected_clean = function() {
+	jsPlumb.unbind();
+	jsPlumb.doWhileSuspended(function() {
+		jsPlumb.detachEveryConnection();
+		jsPlumb.deleteEveryEndpoint();
+		jsPlumb.unmakeEverySource();
+		jsPlumb.unmakeEveryTarget();
+	});
+}
+
 osmium_gen_projected = function() {
 	jsPlumb.Defaults.Container = $("section#projected");
 	jsPlumb.Defaults.Endpoints = [ "Rectangle", "Rectangle" ];
 	jsPlumb.Defaults.Anchors = [ [ 0.5, 0.5, 0, 1 ], [ 0.5, 0, 0, -1 ] ];
 
-	jsPlumb.doWhileSuspended(function() {
-		jsPlumb.detachAllConnections();
-		jsPlumb.deleteEveryEndpoint();
-		jsPlumb.unmakeEverySource();
-		jsPlumb.unmakeEveryTarget();
-	});
+	osmium_projected_clean();
 
-	jsPlumb.unbind();
 	jsPlumb.bind("connection", function(info) {
 		if(info.source.closest('div.pr-loadout').get(0) === info.target.get(0)) {
 			/* Disallow self-projection. While libdogma can handle it

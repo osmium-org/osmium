@@ -39,6 +39,7 @@ osmium_init_presets = function() {
 	});
 
 	$('section#presets tr#rpresets select#spreset').change(function() {
+		osmium_pre_preset_change();
 		osmium_clf['X-Osmium-current-presetid'] = $(this).val();
 		$('section#presets textarea#tpresetdesc').val(
 			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].presetdescription
@@ -86,6 +87,7 @@ osmium_init_presets = function() {
 		var name = osmium_get_unique_preset_name('New preset', preset_name_exists);
 		name = prompt('Enter the new preset name:', name);
 		if(name !== null) {
+			osmium_pre_preset_change();
 			name = osmium_get_unique_preset_name(name, preset_name_exists);
 			var id = osmium_clf.presets.push({
 				presetname: name,
@@ -118,6 +120,7 @@ osmium_init_presets = function() {
 		}
 	});
 	$('section#presets tr#rpresets input.clonepreset').click(function() {
+		osmium_pre_preset_change();
 		var name = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].presetname;
 		var id = osmium_clf.presets.push($.extend(
 			true, {},
@@ -131,6 +134,7 @@ osmium_init_presets = function() {
 		osmium_undo_push();
 	});
 	$('section#presets tr#rpresets input.deletepreset').click(function() {
+		osmium_pre_preset_change();
 		osmium_clf.presets.splice(osmium_clf['X-Osmium-current-presetid'], 1);
 		if(osmium_clf['X-Osmium-current-presetid'] >= osmium_clf.presets.length) {
 			osmium_clf['X-Osmium-current-presetid'] = osmium_clf.presets.length - 1;
@@ -391,8 +395,13 @@ osmium_gen_drone_presets_only = function() {
 	$('section#presets tr#rdronepresets input.deletepreset').prop('disabled', osmium_clf.drones.length < 2);	
 };
 
+osmium_pre_preset_change = function() {
+	osmium_projected_clean();
+};
+
 osmium_post_preset_change = function() {
 	osmium_user_initiated_push(false);
 	osmium_gen_modules();
+	osmium_gen_projected();
 	osmium_user_initiated_pop();
 };
