@@ -214,11 +214,19 @@ if(function_exists('apc_store')) {
 
 	/** @see count_cache_entries() */
 	function count_memory_cache_entries(array $filters = array(), $prefix = '') {
-		$iter = new \APCIterator(
-			'user', '%^Osmium_'.preg_quote($prefix).'%',
-			APC_ITER_KEY | APC_ITER_MTIME,
-			128, APC_LIST_ACTIVE
+		if(extension_loaded('apcu')) {
+			$iter = new \APCIterator(
+				'%^Osmium_'.preg_quote($prefix).'%',
+				APC_ITER_KEY | APC_ITER_MTIME,
+				128, APC_LIST_ACTIVE
 			);
+		} else {
+			$iter = new \APCIterator(
+				'user', '%^Osmium_'.preg_quote($prefix).'%',
+				APC_ITER_KEY | APC_ITER_MTIME,
+				128, APC_LIST_ACTIVE
+			);
+		}
 		$count = 0;
 		$strip = strlen('Osmium_'.$prefix);
 		$mcutoff = isset($filters['mmin']) ? (time() - 60 * $filters['mmin']) : 0;
