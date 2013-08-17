@@ -97,6 +97,12 @@ div#wrapper {
 	&> p {
 		padding-left: 1em;
 	}
+
+	padding-top: $nav-height;
+
+	@include layout-type(extrasmall) {
+		padding-top: 0;
+	}
 }
 
 footer, div#push {
@@ -110,9 +116,18 @@ footer {
 }
 
 div#wrapper > nav:first-child {
-	min-height: $nav-height;
+	height: $nav-height;
 	width: 100%;
 	border-bottom: 1px solid $top-navigation-border-color;
+
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 2000;
+
+	@include layout-type(extrasmall) {
+		position: static;
+	}
 
 	@include linear-gradient-lighten-top($top-navigation-bg-color, 15%);
 
@@ -513,6 +528,8 @@ div#mdstatic {
 div.spinner, span.spinner {
 	text-align: center;
 	font-size: 2em;
+	font-style: normal !important;
+	font-weight: normal !important;
 	&:before { content: "↻"; }
 }
 
