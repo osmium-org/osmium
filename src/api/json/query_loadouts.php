@@ -94,7 +94,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$rows[$row['loadoutid']] = $row;
 }
 
-$uriprefix = 'http://'.$_SERVER['HTTP_HOST'];
+$uriprefix = (\Osmium\HTTPS ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST'];
 $uripath = explode('/', $_SERVER['REQUEST_URI']);
 array_pop($uripath);
 array_pop($uripath);

@@ -36,16 +36,15 @@ const CLIENT_DATA_STATICVER = 24;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
+define(__NAMESPACE__.'\HOST',
+       isset($_SERVER['HTTP_HOST']) ? explode(':', $_SERVER['HTTP_HOST'], 2)[0] : 'local'
+);
+
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 	fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
 
-session_set_cookie_params(
-	0, get_ini_setting('relative_path'),
-	isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'local',
-	HTTPS,
-	true
-);
+session_set_cookie_params(0, get_ini_setting('relative_path'), HOST, HTTPS, true);
 session_save_path(CACHE_DIRECTORY);
 session_name("SID");
 session_start();

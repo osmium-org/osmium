@@ -1299,8 +1299,8 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 
 	/* Try and get a fit from its URI */
 	else if(($parts = parse_url($remote)) !== false) {
-		if(!isset($parts['host']) || $parts['host'] !== $_SERVER['HTTP_HOST']) {
-			$errors[] = "Only local URIs (".$_SERVER['HTTP_HOST'].") are supported.";
+		if(!isset($parts['host']) || $parts['host'] !== \Osmium\HOST) {
+			$errors[] = "Only local URIs (".\Osmium\HOST.") are supported.";
 			return false;
 		}
 		if(!isset($parts['path'])) {
