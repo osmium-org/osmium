@@ -386,7 +386,32 @@ osmium_create_projected = function(key, clf, index) {
 	proj.addClass('pr-loadout');
 	proj.css('border-color', proj.data('color'));
 
-	h.text((key === 'local') ? 'Local' : ('Remote loadout #' + key));
+	if(key === 'local') {
+		h.text('Local');
+	} else {
+		var a = $(document.createElement('a'));
+		if(osmium_loadout_readonly) {
+			var loc = window.location.href.split("#")[0];
+			var match = loc.match(/^(.+?)\/remote\/(.+)$/);
+
+			if(match !== null) {
+				var localkey;
+
+				if(key.toString() === match[2]) {
+					localkey = 'local';
+				} else {
+					localkey = key;
+				}
+
+				a.prop('href', match[1] + "/remote/" + encodeURIComponent(localkey));
+			} else {
+				a.prop('href', loc + '/remote/' + encodeURIComponent(key));
+			}
+		}
+		a.text('Remote loadout #' + key);
+		h.append(a);
+	}
+
 	if("ship" in clf && "typeid" in clf.ship) {
 		h.append(
 			$(document.createElement('span'))
@@ -584,7 +609,7 @@ osmium_create_projected = function(key, clf, index) {
 	if(key === "local") {
 		proj.children('header').children('input').remove();
 		proj.find('div > input, select').prop('disabled', true);
-		proj.children('div').find('input[type="text"]').val(window.location.toString());
+		proj.children('div').find('input[type="text"]').val(window.location.href.split("#")[0]);
 	}
 
 	jsPlumb.makeTarget(proj, {

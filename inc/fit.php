@@ -995,6 +995,10 @@ function set_local(&$fit, $localkey) {
 		return false;
 	}
 
+	if(!isset($fit['__id'])) {
+		$fit['__id'] = get_gzclf_id($fit);
+	}
+
 	$remotes = $fit['remote'];
 	$remotes['local'] = $fit;
 	unset($fit['local']['remote']);

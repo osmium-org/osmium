@@ -32,10 +32,10 @@ define(
 );
 
 /* Also used in try_get_fit_from_remote_format() */
-const PUBLIC_LOADOUT_RULE = '%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?(/booster/(?<fleet>(fleet|wing|squad)))?$%D';
+const PUBLIC_LOADOUT_RULE = '%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?(/booster/(?<fleet>(fleet|wing|squad)))?(/remote/(?<remote>.+))?$%D';
 
 /* Also used in try_get_fit_from_remote_format() */
-const PRIVATE_LOADOUT_RULE = '%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)(/booster/(?<fleet>(fleet|wing|squad)))?$%D';
+const PRIVATE_LOADOUT_RULE = '%^/loadout/private/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?/(?<privatetoken>0|[1-9][0-9]*)(/booster/(?<fleet>(fleet|wing|squad)))?(/remote/(?<remote>.+))?$%D';
 
 /* Also used in try_get_fit_from_remote_format() */
 const NEW_LOADOUT_RULE = '%^/new(/(?<token>0|[1-9][0-9]*))?$%D';
@@ -138,7 +138,8 @@ function fatal($code, $message) {
 		$message .= '\\'.$c['function'].'() called from '.$c['file'].':'.$c['line']."\n";
 	}
 
-	$message .= "\n".date('c')."\n";
+	list($msec, $sec) = explode(' ', microtime(), 2);
+	$message .= "\n".gethostname().' '.date('Y-m-d H:i:s', $sec).rtrim(substr($msec, 1), "0")."\n";
 
 	echo "<!DOCTYPE html>\n<html>\n<head>\n"
 		."<title>{$code} / Osmium</title>\n"

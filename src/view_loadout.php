@@ -548,8 +548,7 @@ echo "<form>\n<table>\n<tbody>\n";
 foreach(array('fleet', 'wing', 'squad') as $ft) {
 	if(isset($fit['fleet'][$ft])) {
 		$fl = \Osmium\Chrome\escape($fit['fleet'][$ft]['__id']);
-		$showlink = isset($fit['fleet'][$ft]['ship']['typeid']) && $fit['fleet'][$ft]['ship']['typeid'];
-		$showlink = $showlink && preg_match('%^gzclf://%', $fl);
+		$showlink = ($fl !== "(empty fitting)");
 		$checked = " checked='checked'";
 	} else {
 		$fl = '';

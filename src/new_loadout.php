@@ -114,7 +114,29 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 				0 /* No need to risk showing the real private token here */
 			)."R".(int)$fit['metadata']['revision'].") (revision "
 			.(int)$fit['metadata']['revision'].").*\n\n"
-			.$fork['metadata']['description']
+			.$fit['metadata']['description']
+		);
+	}
+
+	if(isset($_GET['remote'])) {
+		$key = $_GET['remote'];
+
+		if($key !== 'local' && !isset($fit['remote'][$key])) {
+			\Osmium\fatal(404, "No such remote.");
+		}
+
+		\Osmium\Fit\set_local($fork, $key);
+		/* XXX refactor this */
+		$fork['metadata']['description'] = trim(
+			"*This loadout is a fork of remote loadout #".\Osmium\Chrome\escape($key)
+			." of loadout [#".(int)$fit['metadata']['loadoutid']
+			."](".\Osmium\get_ini_setting('relative_path').\Osmium\Fit\get_fit_uri(
+				$fit['metadata']['loadoutid'],
+				$fit['metadata']['visibility'],
+				0
+			)."R".(int)$fit['metadata']['revision']."/remote/".urlencode($key).") (revision "
+			.(int)$fit['metadata']['revision'].").*\n\n"
+			.$fit['metadata']['description']
 		);
 	}
 
@@ -136,7 +158,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 				0
 			)."R".(int)$fit['metadata']['revision']."/booster/{$t}) (revision "
 			.(int)$fit['metadata']['revision'].").*\n\n"
-			.$fork['metadata']['description']
+			.$fit['metadata']['description']
 		);
 	}
 

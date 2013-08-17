@@ -62,6 +62,16 @@ if(is_numeric($src)) {
 		fatal(403, "Can't access loadout, password-protected?");
 	}
 
+	if(isset($_GET['remote'])) {
+		$key = $_GET['remote'];
+
+		if($key !== 'local' && !isset($fit['remote'][$key])) {
+			fatal(404, "No such remote.");
+		}
+
+		\Osmium\Fit\set_local($fit, $key);
+	}
+
 	if(isset($_GET['fleet'])) {
 		$t = $_GET['fleet'];
 

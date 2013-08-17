@@ -155,8 +155,36 @@ function slugify($id, $name) {
 $canonicaluri = RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
 	$loadoutid, $fit['metadata']['visibility'], $fit['metadata']['privatetoken']
 );
+$forkuri = RELATIVE.'/fork/'.$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision'];
+$historyuri = RELATIVE.'/loadouthistory/'.$loadoutid;
+$exportparams = array();
 
-if(isset($_GET['fleet'])) {
+if(isset($_GET['remote']) && $_GET['remote']) {
+	$key = $_GET['remote'];
+
+	if($key !== 'local') {
+		if(!isset($fit['remote'][$key])) {
+			\Osmium\Fatal(404, "This loadout has no such remote.");
+		}
+
+		$revision = $fit['metadata']['revision'];
+		\Osmium\Fit\set_local($fit, $key);
+		$fit['metadata']['name'] = "#{$loadoutid}, remote loadout #".\Osmium\Chrome\escape($key);
+		$fit['metadata']['loadoutid'] = $loadoutid;
+		$fit['metadata']['revision'] = $revision;
+	}
+
+	$forkuri .= "&amp;remote=".urlencode($key);
+    $historyuri = 'javascript:void(0);';
+    $exportparams['remote'] = urlencode($key);
+
+    $loadoutid = false;
+    $revision_overridden = true;
+    $revision = 1;
+    $maxrev = false;
+}
+
+if(isset($_GET['fleet']) && $_GET['fleet']) {
 	$t = \Osmium\Chrome\escape($_GET['fleet']);
 
 	if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
@@ -167,53 +195,41 @@ if(isset($_GET['fleet'])) {
 	$revision = $fit['metadata']['revision'];
 	$fit = $fit['fleet'][$t];
 	$fit['metadata']['name'] = '#'.$loadoutid.", {$t} booster";
+	$fit['metadata']['loadoutid'] = $loadoutid;
+	$fit['metadata']['revision'] = $revision;
 
-	$forkuri = RELATIVE.'/fork/'.$loadoutid
-		."?tok=".\Osmium\State\get_token()
-		."&amp;revision=".$revision
-		."&amp;fleet=".$t;
+	$forkuri .= "&amp;fleet=".$t;
     $historyuri = 'javascript:void(0);';
-    $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $t, $revision, $loadoutid) {
-	    $uri = RELATIVE.'/api/convert/'.$loadoutid.'/'.$format.'/';;
-	    $uri .= slugify('', $fit['metadata']['name']);
-	    $uri .= '.'.$ext.'?revision='.$revision;
+    $exportparams['fleet'] = $t;
 
-	    if($incpresets) {
-		    $params['preset'] = $fit['modulepresetid'];
-		    $params['chargepreset'] = $fit['chargepresetid'];
-		    $params['dronepreset'] = $fit['dronepresetid'];
-	    }
-	    $params['fleet'] = $t;
-	    foreach($params as $k => $v) {
-		    $uri .= '&amp;'.$k.'='.$v;
-	    }
-
-	    return $uri;
-    };
     $loadoutid = false;
     $revision_overridden = true;
     $revision = 1;
     $maxrev = false;
-
-	return;
 }
 
-$revision = $fit['metadata']['revision'];
-$forkuri = RELATIVE.'/fork/'.$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$revision;
-$historyuri = RELATIVE.'/loadouthistory/'.$loadoutid;
-$exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit) {
-	$uri = RELATIVE.'/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
-	$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
-	$uri .= '.'.$ext.'?revision='.$fit['metadata']['revision'];
+if(!isset($revision)) {
+	$revision = $fit['metadata']['revision'];
+}
 
-	if($incpresets) {
-		$params['preset'] = $fit['modulepresetid'];
-		$params['chargepreset'] = $fit['chargepresetid'];
-		$params['dronepreset'] = $fit['dronepresetid'];
-	}
-	foreach($params as $k => $v) {
-		$uri .= '&amp;'.$k.'='.$v;
-	}
+if(!isset($exporturi)) {
+	$exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $exportparams) {
+		$uri = RELATIVE.'/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
+		$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
+		$uri .= '.'.$ext.'?revision='.$fit['metadata']['revision'];
 
-	return $uri;
-};
+		if($incpresets) {
+			$params['preset'] = $fit['modulepresetid'];
+			$params['chargepreset'] = $fit['chargepresetid'];
+			$params['dronepreset'] = $fit['dronepresetid'];
+		}
+		foreach($params as $k => $v) {
+			$uri .= '&amp;'.$k.'='.$v;
+		}
+		foreach($exportparams as $k => $v) {
+			$uri .= '&amp;'.$k.'='.$v;
+		}
+
+		return $uri;
+	};
+}
