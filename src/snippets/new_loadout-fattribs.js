@@ -25,6 +25,8 @@ osmium_targeting_time = function(targeter_scanres, targetee_sigradius) {
 };
 
 osmium_gen_fattribs = function() {
+	osmium_fattribs_load();
+
 	$("section#defense > h4 > span.pname").text(osmium_clf['X-damage-profile'][0]);
 
 	var t = "Scan resolution\n\nTime to lock…";
