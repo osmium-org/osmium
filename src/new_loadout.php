@@ -457,8 +457,8 @@ echo "</tbody>\n</table>\n</form>\n</section>\n";
 echo "<section id='projected'>
 <h2>Projected effects
 <form>
-<input type='button' value='Toggle fullscreen' id='projectedfstoggle' />
 <input type='button' value='Add projected fit' id='createprojected' />
+<input type='button' value='Toggle fullscreen' id='projectedfstoggle' />
 </form>
 </h2>
 <p id='rearrange'>

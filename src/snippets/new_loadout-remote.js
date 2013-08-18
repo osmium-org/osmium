@@ -317,6 +317,16 @@ osmium_init_projected = function() {
 		var section = $("section#projected");
 		var fs = section.hasClass('fs');
 
+		$("body").scrollTop(0);
+
+		if(fs) {
+			$("div#fsbg").remove();
+		} else {
+			var bg = $(document.createElement('div'));
+			bg.prop('id', 'fsbg');
+			$("section#projected").append(bg);
+		}
+
 		jsPlumb.doWhileSuspended(function() {
 			jsPlumb.toggleDraggable(
 				section.find('div.pr-loadout')
@@ -325,6 +335,15 @@ osmium_init_projected = function() {
 			);
 
 			section.toggleClass('fs');
+
+			var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
+			if(!localtop || localtop === 'auto') {
+				if($("section#projected div.pr-loadout").length <= 8) {
+					$("section#projected a#rearrange-circle").click();
+				} else {
+					$("section#projected a#rearrange-grid").click();
+				}
+			}
 		});
 	});
 
@@ -332,20 +351,86 @@ osmium_init_projected = function() {
 		var s = $("section#projected");
 		var f = s.children("form#projected-list");
 
-		var mx = s.width() / 2;
-		var my = s.height() / 2;
-		var alx = Math.max(250, mx - 250);
-		var aly = Math.max(150, my - 150);
+		var so = s.offset();
+		var mx = ($(window).width() - so.left) / 2;
+		var my = ($(window).height() - so.top) / 2;
 		var divs = f.find('div.pr-loadout');
 
 		jsPlumb.doWhileSuspended(function() {
 			divs.each(function() {
 				var d = $(this);
 				var angle = d.index() / divs.length * 2 * Math.PI;
+				var w = d.width();
+				var h = d.height();
 
 				d.offset({
-					top: my - aly * Math.cos(angle) - d.height() / 2,
-					left: mx - alx * Math.sin(angle) - d.width() / 2,
+					left: (so.left + mx - (mx - d.outerWidth() / 2 - 32) * Math.cos(angle) - w / 2).toFixed(0),
+					top: (so.top + my - (my - d.outerHeight() / 2 - 32) * Math.sin(angle) - h / 2).toFixed(0)
+				});
+			});
+		});
+	});
+
+	$("section#projected a#rearrange-grid").on('click', function() {
+		var s = $("section#projected");
+		var f = s.children("form#projected-list");
+
+		var so = s.offset();
+		var mx = ($(window).width() - so.left);
+		var my = ($(window).height() - so.top - 30);
+		var divs = f.find('div.pr-loadout');
+
+		var maxw = 1, maxh = 1;
+		var rows = 1, cols = 1;
+		var cellw = 1, cellh = 1;
+
+		divs.each(function() {
+			var d = $(this);
+			var w = d.outerWidth();
+			var h = d.outerHeight();
+
+			if(w > maxw) maxw = w;
+			if(h > maxh) maxh = h;
+		});
+
+		/* Add some padding */
+		maxw += 50;
+		maxh += 50;
+
+		var maxrows = Math.max(1, Math.floor(my / maxh));
+		var maxcols = Math.max(1, Math.floor(mx / maxw));
+
+		while((rows * cols) < divs.length) {
+			if(cols < maxcols) {
+				++cols;
+			}
+
+			if((rows * cols) >= divs.length) break;
+
+			++rows;
+		}
+
+		if(rows <= maxrows) {
+			/* Everything can fit */
+			cellw = Math.floor(mx / cols);
+			cellh = Math.floor(my / rows);
+		} else {
+			/* Not enough space, use vertical scrolling */
+			cols = Math.max(1, Math.floor(mx / maxw));
+			cellw = Math.floor(mx / cols);
+			cellh = maxh;
+		}
+
+		jsPlumb.doWhileSuspended(function() {
+			divs.each(function() {
+				var d = $(this);
+				var i = d.index();
+
+				d.offset({
+					left: (so.left + (i % cols) * cellw + 10 * Math.cos(7 * i)
+						   + cellw / 2 - d.width() / 2).toFixed(0),
+					top: (so.top + 30 + Math.floor(i / cols) * cellh + 10 * Math.sin(7 * i)
+						  + cellh / 2 - d.height() / 2).toFixed(0)
 				});
 			});
 		});
