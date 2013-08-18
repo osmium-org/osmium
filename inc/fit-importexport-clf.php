@@ -1360,7 +1360,18 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 			}
 		}
 
-		if(isset($match['fleet'])) {
+		if(isset($match['remote']) && $match['remote'] !== '') {
+			$key = $match['remote'];
+
+			if($key !== 'local' && !isset($fit['remote'][$key])) {
+				$errors[] = "This loadout has no such remote.";
+				return false;
+			}
+
+			set_local($fit, $key);
+		}
+
+		if(isset($match['fleet']) && $match['fleet'] !== '') {
 			$t = $match['fleet'];
 
 			if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
@@ -1370,18 +1381,18 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 			}
 
 			$fit = $fit['fleet'][$t];
-		} else {
-			if(isset($match['preset']) && isset($fit['presets'][$match['preset']])) {
-				use_preset($fit, $match['preset']);
-			}
+		}
 
-			if(isset($match['chargepreset']) && isset($fit['chargepresets'][$match['chargepreset']])) {
-				use_charge_preset($fit, $match['chargepreset']);
-			}
+		if(isset($match['preset']) && isset($fit['presets'][$match['preset']])) {
+			use_preset($fit, $match['preset']);
+		}
 
-			if(isset($match['dronepreset']) && isset($fit['dronepresets'][$match['dronepreset']])) {
-				use_drone_preset($fit, $match['dronepreset']);
-			}
+		if(isset($match['chargepreset']) && isset($fit['chargepresets'][$match['chargepreset']])) {
+			use_charge_preset($fit, $match['chargepreset']);
+		}
+
+		if(isset($match['dronepreset']) && isset($fit['dronepresets'][$match['dronepreset']])) {
+			use_drone_preset($fit, $match['dronepreset']);
 		}
 	}
 
