@@ -59,7 +59,7 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
     $revision = 1;
     $maxrev = false;
     $forkuri = RELATIVE.'/new/dna/'.$_GET['dna'];
-    $historyuri = 'javascript:void(0);';
+    $historyuri = false;
     $canonicaluri = RELATIVE.'/loadout/dna/'.$_GET['dna'];
     $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $dna) {
 	    $uri = RELATIVE.'/api/convert/dna/'.$format.'/dna.'.$ext.'?input='.$dna;
@@ -175,7 +175,7 @@ if(isset($_GET['remote']) && $_GET['remote']) {
 	}
 
 	$forkuri .= "&amp;remote=".urlencode($key);
-    $historyuri = 'javascript:void(0);';
+	$historyuri = false;
     $exportparams['remote'] = urlencode($key);
 
     $loadoutid = false;
@@ -199,7 +199,7 @@ if(isset($_GET['fleet']) && $_GET['fleet']) {
 	$fit['metadata']['revision'] = $revision;
 
 	$forkuri .= "&amp;fleet=".$t;
-    $historyuri = 'javascript:void(0);';
+	$historyuri = false;
     $exportparams['fleet'] = $t;
 
     $loadoutid = false;

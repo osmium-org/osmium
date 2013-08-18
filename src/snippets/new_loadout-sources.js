@@ -31,7 +31,6 @@ osmium_init_sources = function() {
 			li.append(input);
 
 			a = $(document.createElement('a'));
-			a.prop('href', 'javascript:void(0);');
 			a.addClass('metagroup');
 			a.addClass('mg' + id);
 			a.text(osmium_metagroups[id]);

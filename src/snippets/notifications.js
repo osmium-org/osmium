@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -39,3 +39,9 @@ osmium_notifications = function(relative) {
 
 	setTimeout(fetch, 60000);
 };
+
+$(function() {
+	osmium_notifications(
+		$("div#osmium-data").data('relative')
+	);
+});

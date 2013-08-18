@@ -16,6 +16,9 @@
  */
 
 $(function() {
+	osmium_load_common_data();
+	osmium_shortlist = $("div#osmium-data").data('shortlist');
+
 	$('div#nlsources > ul.tabs, div#nlmain > ul.tabs').each(function() {
 		osmium_tabify($(this), 0);
 	});
@@ -56,7 +59,6 @@ osmium_on_clf_payload = function(payload) {
 		for(var i = 0; i < payload.rectags.length; ++i) {
 			var li = $(document.createElement('li'));
 			var a = $(document.createElement('a'));
-			a.prop('href', 'javascript:void(0);');
 			a.prop('title', 'Add this tag');
 			a.text(payload.rectags[i]);
 			li.append(a);

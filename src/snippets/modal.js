@@ -34,7 +34,6 @@ osmium_modal = function(inside) {
 	modal.prop('id', 'modal');
 
 	var close = $(document.createElement('a'));
-	close.prop('href', 'javascript:void(0);');
 	close.prop('title', 'Close this dialog (Escape)');
 	close.prop('id', 'closemodal');
 	close.text('X');

@@ -304,7 +304,6 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		a = $(document.createElement('a'));
 		stateimg = $(document.createElement('img'));
 		a.addClass('toggle_state');
-		a.prop('href', 'javascript:void(0);');
 		stateimg.prop('alt', '');
 		a.append(stateimg);
 		li.append(a);

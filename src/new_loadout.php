@@ -343,7 +343,7 @@ $commontags = array(
 	.implode(
 		' ',
 		array_map(
-			function($tag) { return '<li><a href="javascript:void(0);" title="Add this tag">'.$tag.'</a></li>'; },
+			function($tag) { return '<li><a title="Add this tag">'.$tag.'</a></li>'; },
 			$commontags
 		)
 	).'</ul>',
@@ -462,8 +462,8 @@ echo "<section id='projected'>
 </form>
 </h2>
 <p id='rearrange'>
-Rearrange loadouts: <a href='javascript:void(0);' id='rearrange-grid'>grid</a>,
-<a href='javascript:void(0);' id='rearrange-circle'>circle</a>
+Rearrange loadouts: <a id='rearrange-grid'>grid</a>,
+<a id='rearrange-circle'>circle</a>
 </p>
 <form id='projected-list'>
 </form>
@@ -472,9 +472,8 @@ Rearrange loadouts: <a href='javascript:void(0);' id='rearrange-grid'>grid</a>,
 echo "</section>\n</div>\n";
 
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, $tok);
-\Osmium\Chrome\print_js_code(
-	"osmium_shortlist = ".json_encode(\Osmium\AjaxCommon\get_module_shortlist()).";"
-);
+
+\Osmium\Chrome\add_js_data('shortlist', json_encode(\Osmium\AjaxCommon\get_module_shortlist()));
 
 \Osmium\Chrome\print_js_snippet('new_loadout');
 \Osmium\Chrome\print_js_snippet('new_loadout-control');

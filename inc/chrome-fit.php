@@ -500,21 +500,21 @@ function print_loadout_common_footer(&$fit, $relative, $clftoken) {
 		$cdp = json_encode($cdp);
 	}
 
-	\Osmium\Chrome\print_js_code(
-		"osmium_cdatastaticver = ".\Osmium\CLIENT_DATA_STATICVER.";
-osmium_staticver = ".\Osmium\STATICVER.";
-osmium_relative = '".$relative."';
-osmium_token = '".\Osmium\State\get_token()."';
-osmium_clftoken = '".$clftoken."';
-osmium_clf = ".json_encode(\Osmium\Fit\export_to_common_loadout_format_1(
-	$fit,
-	\Osmium\Fit\CLF_EXPORT_MINIFY
-	| \Osmium\Fit\CLF_EXPORT_EXTRA_PROPERTIES
-	| \Osmium\Fit\CLF_EXPORT_INTERNAL_PROPERTIES
-)).";
-osmium_custom_damage_profiles = ".$cdp.";
-osmium_skillsets = ".json_encode(\Osmium\Fit\get_available_skillset_names_for_account()).";"
-	);
+	add_js_data('cdatastaticver', \Osmium\CLIENT_DATA_STATICVER);
+	add_js_data('staticver', \Osmium\STATICVER);
+	add_js_data('relative', $relative);
+	add_js_data('token', \Osmium\State\get_token());
+	add_js_data('clftoken', $clftoken);
+	add_js_data('clf', \Osmium\Fit\export_to_common_loadout_format(
+		$fit,
+		\Osmium\Fit\CLF_EXPORT_MINIFY
+		| \Osmium\Fit\CLF_EXPORT_EXTRA_PROPERTIES
+		| \Osmium\Fit\CLF_EXPORT_INTERNAL_PROPERTIES
+	));
+	add_js_data('customdamageprofiles', $cdp);
+	add_js_data('skillsets', json_encode(
+		\Osmium\Fit\get_available_skillset_names_for_account()
+	));
 
 	/* If these scripts change, update the license info in about.php */
 	include_js("//cdnjs.cloudflare.com/ajax/libs/jsPlumb/1.4.1/jquery.jsPlumb-1.4.1-all.js");

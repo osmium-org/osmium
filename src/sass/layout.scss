@@ -214,6 +214,9 @@ img {
 }
 
 a {
+	cursor: pointer;
+	text-decoration: underline;
+
 	&, &:visited {
 		color: $link-text-color;
 		border-color: $link-border-color;
@@ -531,4 +534,8 @@ div.spinner, span.spinner {
 span.spinner {
 	display: inline-block;
 	vertical-align: middle;
+}
+
+body > div#osmium-data {
+	display: none;
 }

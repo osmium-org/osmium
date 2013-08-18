@@ -283,7 +283,7 @@ echo "<div id='vlmain'>
 <li><a href='#meta'>Meta</a></li>
 <li><a href='#export'>Export</a></li>\n";
 
-if($maxrev !== false) {
+if($maxrev !== false && $historyuri !== false) {
 	echo "<li class='external'><a href='".$historyuri."' title='View the different revisions of the loadout and compare the changes that were made'>History (".($maxrev - 1).")</a></li>\n";
 }
 
@@ -368,7 +368,7 @@ foreach($stypes as $type => $tdata) {
 		}
 
 		if($tdata[2]) {
-			echo "<a class='toggle_state' href='javascript:void(0);' title='".$s[0]."'>"
+			echo "<a class='toggle_state' title='".$s[0]."'>"
 				.\Osmium\Chrome\sprite(RELATIVE, $s[2], $s[1][0], $s[1][1], $s[1][2], $s[1][3], 16)
 				."</a>\n";
 		}
@@ -585,8 +585,8 @@ echo "<section id='projected'>
 </form>
 </h2>
 <p id='rearrange'>
-Rearrange loadouts: <a href='javascript:void(0);' id='rearrange-grid'>grid</a>,
-<a href='javascript:void(0);' id='rearrange-circle'>circle</a>
+Rearrange loadouts: <a id='rearrange-grid'>grid</a>,
+<a id='rearrange-circle'>circle</a>
 </p>
 <form id='projected-list'>
 <p class='placeholder'>Loading remote fittings…<br />
@@ -632,7 +632,7 @@ echo "<h2>Lossless formats (recommended)</h2>
 <li><a href='".$exporturi('evexml', 'xml', true, ['embedclf' => 0])."' type='application/xml' rel='nofollow'>Export to XML</a>: same as XML+gzCLF, minus the description.</li>
 <li><a href='".$exporturi('eft', 'txt', true)."' type='text/plain' rel='nofollow'>Export to EFT</a>: the <em>de-facto</em> format used by the fitting tool EFT.</li>
 <li><a href='".$exporturi('dna', 'txt', true)."' type='text/plain' rel='nofollow'>Export to DNA</a>: short format that can be understood by the game client.<br /><small><code>".$dna."</code></small></li>
-<li><a href='javascript:CCPEVE.showFitting(\"".$dna."\");' rel='nofollow'>Export to in-game DNA</a>: use this link to open the loadout window from the in-game browser.</li>
+<li><a data-ccpdna='{$dna}'>Export to in-game DNA</a>: use this link to open the loadout window from the in-game browser.</li>
 </ul>
 </section>\n";
 
@@ -643,9 +643,7 @@ echo "</div>\n";
  * never interacts with the loadout, it never gets cached. */
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, '___demand___');
 
-\Osmium\Chrome\print_js_code(
-	"osmium_clf_slots = ".json_encode(\Osmium\AjaxCommon\get_slot_usage($fit)).";"
-);
+\Osmium\Chrome\add_js_data('clfslots', json_encode(\Osmium\AjaxCommon\get_slot_usage($fit)));
 
 \Osmium\Chrome\print_js_snippet('view_loadout');
 \Osmium\Chrome\print_js_snippet('view_loadout-presets');

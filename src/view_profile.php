@@ -311,7 +311,7 @@ echo "</section>\n";
 
 
 echo "</div>\n";
+\Osmium\Chrome\add_js_data('defaulttab', ($myprofile ? 2 : 0));
 \Osmium\Chrome\print_js_snippet('tabs');
 \Osmium\Chrome\print_js_snippet('view_profile');
-\Osmium\Chrome\print_js_code('$(function() { osmium_tabify($("div#vprofile > ul.tabs"), '.($myprofile ? 2 : 0).'); });');
 \Osmium\Chrome\print_footer();

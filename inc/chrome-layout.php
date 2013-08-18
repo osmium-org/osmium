@@ -27,8 +27,8 @@ $__osmium_js_scripts = array();
 /** Javascript snippets to add just before </body> */
 $__osmium_js_snippets = array();
 
-/** Javascript code to add just before </body> */
-$__osmium_js_code = '';
+/** Javascript data to add just before </body> */
+$__osmium_js_data = array();
 
 /**
  * Print the page header. Nothing should be printed before this call
@@ -45,6 +45,16 @@ $__osmium_js_code = '';
 function print_header($title = '', $relative = '.', $index = true, $add_head = '') {
 	global $__osmium_chrome_relative;
 	$__osmium_chrome_relative = $relative;
+
+	$proto = \Osmium\HTTPS ? 'https' : 'http';
+	header(
+		"Content-Security-Policy: default-src 'none'"
+		." ; style-src 'self' {$proto}://fonts.googleapis.com 'unsafe-inline'"
+		." ; font-src {$proto}://themes.googleusercontent.com"
+		." ; img-src 'self' {$proto}://image.eveonline.com"
+		." ; script-src 'self' {$proto}://cdnjs.cloudflare.com"
+		." ; connect-src 'self'"
+	);
 
 	$osmium = \Osmium\get_ini_setting('name');
 	if($title == '') {
@@ -70,7 +80,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	echo "<head>\n";
 	if(!XHTML) echo "<meta charset='UTF-8' />\n";
 	if(!$index) echo "<meta name='robots' content='noindex' />\n";
-	echo "<link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
+	echo "<link href='//fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
 
 	echo "<link rel='help' href='{$relative}/help' />\n";
 
@@ -138,6 +148,8 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	echo "</nav>\n";
 
 	\Osmium\Chrome\print_js_snippet('persistent_theme');
+	\Osmium\Chrome\print_js_snippet('notifications');
+	\Osmium\Chrome\add_js_data('relative', $__osmium_chrome_relative);
 }
 
 /**
@@ -145,12 +157,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
  * should be printed after calling this.
  */
 function print_footer() {
-	global $__osmium_chrome_relative, $__osmium_js_scripts, $__osmium_js_snippets, $__osmium_js_code, $__start;
-
-	\Osmium\Chrome\print_js_snippet('notifications');
-	\Osmium\Chrome\print_js_code(
-		'$(function() { osmium_notifications("'.str_replace('"', '\"', $__osmium_chrome_relative).'"); });'
-	);
+	global $__osmium_chrome_relative, $__osmium_js_scripts, $__osmium_js_snippets, $__osmium_js_data, $__start;
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
 	echo "<a href='".$__osmium_chrome_relative."/changelog'><code>".\Osmium\get_osmium_version()."</code></a> –\n";
@@ -199,15 +206,14 @@ function print_footer() {
 		echo "<script type='application/javascript' src='".escape($cacheuri)."'></script>\n";
 	}
 
-	if($__osmium_js_code !== '') {
-		echo "<script type='application/javascript'>\n";
-		echo "//<![CDATA[\n";
-		/* Properly "escape" (for lack of a better word) CDATA
-		 * terminators. This looks complicated but actually this is
-		 * all it requires to do it properly. */
-		echo str_replace(']]>', ']]]]><![CDATA[>', $__osmium_js_code);
-		echo "//]]>\n";
-		echo "</script>\n";
+	if($__osmium_js_data !== []) {
+		echo "<div id='osmium-data'";
+
+		foreach($__osmium_js_data as $k => $strv) {
+			echo " data-".$k."='".escape($strv)."'";
+		}
+
+		echo "></div>\n";
 	}
 
 	echo "</body>\n</html>\n";
@@ -298,13 +304,9 @@ function print_js_snippet($js_file) {
 	$__osmium_js_snippets[] = \Osmium\ROOT.'/src/snippets/'.$js_file.'.js';
 }
 
-/**
- * Print Javascript code in the current document.
- */
-function print_js_code($code) {
-	global $__osmium_js_code;
-
-	$__osmium_js_code .= trim($code)."\n";
+function add_js_data($name, $strvalue) {
+	global $__osmium_js_data;
+	$__osmium_js_data[$name] = $strvalue;
 }
 
 /**

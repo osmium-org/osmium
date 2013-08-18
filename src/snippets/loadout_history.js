@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,7 +28,12 @@ toggle_revision_delta = function(li) {
 }
 
 $(function() {
-	$("ol#lhistory > li > p > small.anchor").not(":last").before("<a href='javascript:void(0);' class='toggle'>show changes</a> — ");
+	var togglelink = $(document.createElement('a'))
+		.addClass('toggle')
+		.text('show changes')
+	;
+
+	$("ol#lhistory > li > p > small.anchor").not(":last").before([ togglelink, " — " ]);
 	$("ol#lhistory > li > pre").hide();
 	$("ol#lhistory > li").addClass('hidden');
 

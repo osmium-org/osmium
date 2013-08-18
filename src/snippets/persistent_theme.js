@@ -66,8 +66,11 @@ $(function() {
 		label = 'Paint it white';
 	}
 
-	$("div#wrapper + footer > p").append(' — <a href="javascript:void(0);" id="repaint" data-theme="' + theme + '">' + label + '</a>');
-	$("div#wrapper + footer > p > a#repaint").click(function() {
+	var rlink = $(document.createElement('a'));
+	rlink.prop('id', 'repaint');
+	rlink.data('theme', theme);
+	rlink.text(label);
+	rlink.click(function() {
 		var theme, label, tts;
 		if((tts = $(this).data('theme')) === 'Dark') {
 			theme = 'Light';
@@ -83,4 +86,6 @@ $(function() {
 		$(this).text(label);
 		$(this).blur();
 	});
+
+	$("div#wrapper + footer > p").append(' — ').append(rlink);
 });

@@ -16,6 +16,9 @@
  */
 
 $(function() {
+	osmium_load_common_data();
+	osmium_clf_slots = $("div#osmium-data").data('clfslots');
+
 	osmium_tabify($("div#vlmain > ul.tabs"), 0);
 
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
@@ -154,5 +157,14 @@ osmium_init_export = function() {
 				osmium_clfspinner_pop();
 			}
 		});
+	});
+
+	$("section#export").on('click', 'a:data(ccpdna)', function() {
+		var t = $(this);
+		t.blur();
+
+		if(typeof CCPEVE === 'object' && 'showFitting' in CCPEVE && typeof CCPEVE.showFitting === 'function') {
+			CCPEVE.showFitting(t.data('ccpdna'));
+		}
 	});
 };

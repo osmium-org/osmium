@@ -329,3 +329,16 @@ osmium_clfspinner_pop = function() {
 		osmium_clfspinner.fadeOut(250);
 	}
 };
+
+osmium_load_common_data = function() {
+	var d = $("div#osmium-data");
+
+	osmium_cdatastaticver = d.data('cdatastaticver');
+	osmium_staticver = d.data('staticver');
+	osmium_relative = d.data('relative');
+	osmium_token = d.data('token');
+	osmium_clftoken = d.data('clftoken');
+	osmium_clf = d.data('clf');
+	osmium_custom_damage_profiles = d.data('customdamageprofiles');
+	osmium_skillsets = d.data('skillsets');
+};
