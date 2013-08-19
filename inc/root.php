@@ -26,10 +26,10 @@ if(!defined('Osmium\ROOT')) {
 const STATICVER = 11;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 13;
+const CSS_STATICVER = 14;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 16;
+const JS_STATICVER = 17;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 24;

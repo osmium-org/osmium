@@ -219,12 +219,16 @@ div#computed_attributes > section {
 		width: 8.75em;
 		white-space: nowrap;
 
-		&> img {
+		&> img, &> svg {
 			width: 2em;
 			height: 2em;
 		}
 
-		&> img + span, &> span.mainsprite + span {
+		&> svg {
+			vertical-align: middle;
+		}
+
+		&> img + span, &> span.mainsprite + span, &> svg + span {
 			display: inline-block;
 			vertical-align: middle;
 			width: 6.75em;

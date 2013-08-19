@@ -38,7 +38,10 @@ osmium_settheme = function(title) {
 		}
 	}
 
-	if(foundit) return;
+	if(foundit) {
+		$("svg").trigger('redraw');
+		return;
+	}
 	alert('not found');
 
 	/* If the title was not found, enable the first sheet as a fallback */

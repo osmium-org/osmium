@@ -50,6 +50,11 @@ osmium_gen_fattribs = function() {
 	}
 
 	$("p#signature_radius").prop('title', t);
+
+	var capacitor = $("p#capacitor");
+	capacitor.children("span.mainsprite:first-child, svg:first-child").replaceWith(
+		osmium_gen_capacitor(capacitor.data('capacity'), capacitor.data('usage'))
+	);
 };
 
 osmium_init_fattribs = function() {

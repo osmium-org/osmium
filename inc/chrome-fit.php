@@ -72,9 +72,12 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 		."<span id='launcherhardpoints'>".$formatted."</span></p>\n";
 
 	list($captime, $capdelta) = \Osmium\Chrome\format_capacitor($capacitor);
-	echo "<p>"
+	echo "<p id='capacitor' data-capacity='"
+		.($captotal = \Osmium\Dogma\get_ship_attribute($fit, 'capacitorCapacity'))
+		."' data-usage='"
+		.($capacitor[1] ? ($captotal * $capacitor[2] / 100.0) : 0)."'>"
 		.sprite($relative, 'Capacitor', 2, 0, 64, 64, 32)
-		."<span id='capacitor'><span title='Capacitor stability percentage / depletion time (estimated)'>".$captime."</span><br /><span title='Capacitor delta at peak recharge rate'>".$capdelta."</span></span></p>\n";
+		."<span><span title='Capacitor stability percentage / depletion time (estimated)'>".$captime."</span><br /><span title='Capacitor delta at peak recharge rate'>".$capdelta."</span></span></p>\n";
 
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
@@ -462,7 +465,7 @@ function print_formatted_misc(&$fit) {
 	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
 }
 
-function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null, $dmgprofile = null) {
+function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null, $dmgprofile = null, $cap = null, $ehp = null) {
 	if($opts === null) {
 		/* NB: if you change the defaults here, also change the
 		 * default exported values in CLF export function. */
@@ -473,8 +476,13 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null
 		$dmgprofile = array('em' => .25, 'thermal' => .25, 'explosive' => .25, 'kinetic' => .25);
 	}
 
-	$cap = \Osmium\Fit\get_capacitor_stability($fit, $opts & USE_RELOAD_TIME_FOR_CAPACITOR);
-	$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
+	if($cap === null) {
+		$cap = \Osmium\Fit\get_capacitor_stability($fit, $opts & USE_RELOAD_TIME_FOR_CAPACITOR);
+	}
+
+	if($ehp === null) {
+		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
+	}
 
 	print_formatted_engineering($fit, $relative, $cap);
 	print_formatted_offense($fit, $relative, $opts & USE_RELOAD_TIME_FOR_DPS);
@@ -527,5 +535,6 @@ function print_loadout_common_footer(&$fit, $relative, $clftoken) {
 	print_js_snippet('sprite');
 	print_js_snippet('show_info');
 	print_js_snippet('formatted_attributes');
+	print_js_snippet('capacitor');
 	print_js_snippet('new_loadout-fattribs');
 }
