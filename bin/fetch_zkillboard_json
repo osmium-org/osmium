@@ -167,7 +167,7 @@ function zkillboard_api($call) {
 		$reply = curl_exec($c);
 
 		if($reply === false) {
-			echo curl_error().' ';
+			echo curl_error($c).' ';
 			continue;
 		}
 
