@@ -31,6 +31,10 @@ $(function() {
 	osmium_init_votes();
 	osmium_init_comment_replies();
 	osmium_init_export();
+
+	$('body').on('click', 'a.confirm', function() {
+		return confirm("You are about to do a destructive action.\n\nIt cannot be undone.\n\nContinue?");
+	});
 });
 
 osmium_loadout_readonly = true;

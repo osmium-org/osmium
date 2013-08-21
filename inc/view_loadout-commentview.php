@@ -135,7 +135,7 @@ function format_comment($row) {
 		$tmp = ($loggedin && $row['accountid'] == $a['accountid']) ? '' : $modprefix;
 
 		echo " — <a href='".RELATIVE."/editcomment/".$row['commentid']."'>{$tmp}edit</a>";
-		echo " — <a onclick='return confirm(\"Deleting this comment will also delete all its replies. This operation cannot be undone. Continue?\");' href='".RELATIVE."/deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>{$tmp}delete</a>";
+		echo " — <a href='".RELATIVE."/deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous confirm'>{$tmp}delete</a>";
 	}
 	if($isflaggable) {
 		echo " — <a class='dangerous' href='".RELATIVE."/flagcomment/"
@@ -200,7 +200,7 @@ function format_comment_reply($row) {
 		$tmp = ($loggedin && $row['raccountid'] == $a['accountid']) ? '' : $modprefix;
 
 		echo " — <a href='".RELATIVE."/editcommentreply/".$row['commentreplyid']."'>{$tmp}edit</a>\n";
-		echo " — <a onclick='return confirm(\"You are about to delete a reply. This operation cannot be undone. Continue?\");' href='".RELATIVE."/deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous'>{$tmp}delete</a>\n";
+		echo " — <a href='".RELATIVE."/deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous confirm'>{$tmp}delete</a>\n";
 	}
 	if($isflaggable) {
 		echo " — <a class='dangerous' href='".RELATIVE."/flagcommentreply/"
