@@ -46,15 +46,27 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	global $__osmium_chrome_relative;
 	$__osmium_chrome_relative = $relative;
 
-	$proto = \Osmium\HTTPS ? 'https' : 'http';
-	header(
-		"Content-Security-Policy: default-src 'none'"
-		." ; style-src 'self' {$proto}://fonts.googleapis.com 'unsafe-inline'"
-		." ; font-src {$proto}://themes.googleusercontent.com"
-		." ; img-src 'self' {$proto}://image.eveonline.com"
-		." ; script-src 'self' {$proto}://cdnjs.cloudflare.com"
-		." ; connect-src 'self'"
-	);
+	/* If the user is using TLS, only allow resources from
+	 * https://. If not, allow from both. */
+	if(\Osmium\HTTPS) {
+		header(
+			"Content-Security-Policy: default-src 'none'"
+			." ; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'"
+			." ; font-src https://themes.googleusercontent.com"
+			." ; img-src 'self' https://image.eveonline.com"
+			." ; script-src 'self' https://cdnjs.cloudflare.com"
+			." ; connect-src 'self'"
+		);
+	} else {
+		header(
+			"Content-Security-Policy: default-src 'none'"
+			." ; style-src 'self' https://fonts.googleapis.com http://fonts.googleapis.com 'unsafe-inline'"
+			." ; font-src https://themes.googleusercontent.com http://themes.googleusercontent.com"
+			." ; img-src 'self' https://image.eveonline.com http://image.eveonline.com"
+			." ; script-src 'self' https://cdnjs.cloudflare.com http://cdnjs.cloudflare.com"
+			." ; connect-src 'self'"
+		);
+	}
 
 	$osmium = \Osmium\get_ini_setting('name');
 	if($title == '') {
