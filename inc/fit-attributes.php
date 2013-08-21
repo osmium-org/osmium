@@ -19,18 +19,16 @@
 namespace Osmium\Fit;
 
 /**
- * Get capacitor-related attributes of a given fit.
+ * Get capacitor stability.
  *
- * Returns an array of length 3: the first value is the capacitor
- * usage rate (minus peak recharge rate) in GJ/ms, the second is a
- * boolean indicating whether the capacitor is stable or not and the
- * third is either time in seconds until the capacitor is depleted, or
- * the stable percentage level (between 0 and 100).
+ * @returns an array with the following keys: capacity, stable, delta,
+ * and (depending on stable value) stable_fraction or depletion_time.
  */
 function get_capacitor_stability(&$fit, $reload = true) {
 	\Osmium\Dogma\auto_init($fit);
-	dogma_get_capacitor($fit['__dogma_context'], $reload, $delta, $stable, $p);
-	return array($delta, $stable, $stable ? $p : ($p / 1000.0));
+	dogma_get_capacitor_all($fit['__dogma_context'], $reload, $result);
+
+	return $result[dogma_get_hashcode($fit['__dogma_context'])];
 }
 
 /**
@@ -103,14 +101,13 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
  * @param $ehp array of the same format as the return value of
  * get_ehp_and_resists()
  *
- * @param $capacitor assumes same format as the returned value of
- * get_capacitor_stability()
+ * @param $capdelta capacitor usage, in GJ/ms
  *
  * @param $damageprofile array(damagetype => damageamount)
  *
  * @returns array(repair_type => array(reinforced, sustained))
  */
-function get_tank(&$fit, $ehp, $capacitor, $damageprofile, $reload = false) {
+function get_tank(&$fit, $ehp, $capdelta, $damageprofile, $reload = false) {
 	static $localrepaireffects = array(
 		'hull' => [ [ EFFECT_StructureRepair, 'structureDamageAmount' ] ],
 		'armor' => [ [ EFFECT_ArmorRepair, 'armorDamageAmount' ],
@@ -170,7 +167,7 @@ function get_tank(&$fit, $ehp, $capacitor, $damageprofile, $reload = false) {
 			return $k > 0 ? 1 : ($k < 0 ? -1 : 0);
 		});
 
-	$usage = $capacitor[0];
+	$usage = $capdelta;
 
 	/* First pass: reinforced tank values */
 	foreach($modules as $m) {

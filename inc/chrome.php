@@ -251,16 +251,14 @@ function format_relative_date($date, $now = null) {
  * @param $array array that has the same structure than the return
  * value of get_capacitor_stability().
  */
-function format_capacitor($array) {
-	list($rate, $is_stable, $data) = $array;
-
-	$rate = round(-$rate * 1000, 1).' GJ/s';
+function format_capacitor($arr) {
+	$rate = round(-$arr['delta'] * 1000, 1).' GJ/s';
 	if($rate > 0) $rate = '+'.((string)$rate);
 
-	if($is_stable) {
-		return array(round($data, 1)."%", $rate);
+	if($arr['stable']) {
+		return array(round(100 * $arr['stable_fraction'], 1)."%", $rate);
 	} else {
-		return array(format_duration($data), $rate);
+		return array(format_duration($arr['depletion_time'] / 1000), $rate);
 	}
 }
 

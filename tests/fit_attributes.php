@@ -28,10 +28,14 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 	}
 
 	private function assertCapacitorStatus(&$fit, $rate, $stable, $value) {
-		list($c, $s, $d) = \Osmium\Fit\get_capacitor_stability($fit);
-		$this->assertSame($stable, $s);
-		$this->assertEquals($rate, 1000 * $c, '', 0.1); /* 0.1 GJ/s margin (Pyfa rounding) */
-		$this->assertEquals($value, $d, '', 0.20 * $value); /* 20% margin */
+		$cap = \Osmium\Fit\get_capacitor_stability($fit);
+		$this->assertSame($stable, $cap['stable']);
+		$this->assertEquals($rate, 1000 * $cap['delta'], '', 0.1); /* 0.1 GJ/s margin (Pyfa rounding) */
+		$this->assertEquals(
+			$value,
+			($cap['stable'] ? ($cap['stable_fraction'] * 100) : ($cap['depletion_time'] / 1000)),
+			'', 0.20 * $value /* 20% margin */
+		);
 	}
 
 	private function assertShieldResistances(&$fit, $em, $thermal, $kinetic, $explosive) {
@@ -383,7 +387,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		$uniform = array('em' => 1, 'thermal' => 1, 'explosive' => 1, 'kinetic' => 1);
 		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $uniform);
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
-		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor['delta'], $uniform);
 
 		$this->assertEquals(741.6, 1000 * $tank['shield'][0], '', 0.05);
 		$this->assertEquals(24.8, 1000 * $tank['shield'][1], '', 0.05);
@@ -393,7 +397,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_charge($fit, 'medium', 2, 11283);
 
 		$capacitor = \Osmium\Fit\get_capacitor_stability($fit);
-		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $uniform);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor['delta'], $uniform);
 
 		$this->assertSame($tank['shield'][0], $tank['shield'][1]);
 		$this->assertEquals(741.6, 1000 * $tank['shield'][0], '', 0.05);
@@ -505,7 +509,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* Test with uniform damage profile */
 		$profile = array('em' => 25, 'thermal' => 25, 'explosive' => 25, 'kinetic' => 25);
 		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $profile);
-		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $profile);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor['delta'], $profile);
 
 		/* Pyfa 1.1.8 (reinforced & sustained tank values and EHP) */
 
@@ -522,7 +526,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* Test with a more general profile */
 		$profile = array('em' => 10, 'thermal' => 20, 'explosive' => 30, 'kinetic' => 40);
 		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $profile);
-		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor, $profile);
+		$tank = \Osmium\Fit\get_tank($fit, $ehp, $capacitor['delta'], $profile);
 
 		$this->assertEquals(39132, $ehp['ehp']['avg'], '', 1);
 		$this->assertEquals(19.2, 1000 * $tank['shield_passive'][0], '', 0.05);

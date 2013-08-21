@@ -72,13 +72,13 @@ if($local === null) {
 
 $attribflags = 0;
 if(isset($clf['metadata']['X-Osmium-capreloadtime']) && $clf['metadata']['X-Osmium-capreloadtime']) {
-	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_CAPACITOR;
+	$attribflags |= \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR;
 }
 if(isset($clf['metadata']['X-Osmium-dpsreloadtime']) && $clf['metadata']['X-Osmium-dpsreloadtime']) {
-	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_DPS;
+	$attribflags |= \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_DPS;
 }
 if(isset($clf['metadata']['X-Osmium-tankreloadtime']) && $clf['metadata']['X-Osmium-tankreloadtime']) {
-	$attribflags |= \Osmium\Chrome\USE_RELOAD_TIME_FOR_TANK;
+	$attribflags |= \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_TANK;
 }
 
 $dmgprofile = isset($clf['X-damage-profile']) ? array_combine(

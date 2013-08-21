@@ -18,9 +18,9 @@
 
 namespace Osmium\Chrome;
 
-const USE_RELOAD_TIME_FOR_CAPACITOR = 1;
-const USE_RELOAD_TIME_FOR_DPS = 2;
-const USE_RELOAD_TIME_FOR_TANK = 4;
+const FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR = 1;
+const FATTRIBS_USE_RELOAD_TIME_FOR_DPS = 2;
+const FATTRIBS_USE_RELOAD_TIME_FOR_TANK = 4;
 
 
 
@@ -73,9 +73,9 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 
 	list($captime, $capdelta) = \Osmium\Chrome\format_capacitor($capacitor);
 	echo "<p id='capacitor' data-capacity='"
-		.($captotal = \Osmium\Dogma\get_ship_attribute($fit, 'capacitorCapacity'))
+		.$capacitor['capacity']
 		."' data-usage='"
-		.($capacitor[1] ? ($captotal * $capacitor[2] / 100.0) : 0)."'>"
+		.($capacitor['stable'] ? ($capacitor['capacity'] * $capacitor['stable_fraction']) : 0)."'>"
 		.sprite($relative, 'Capacitor', 2, 0, 64, 64, 32)
 		."<span><span title='Capacitor stability percentage / depletion time (estimated)'>".$captime."</span><br /><span title='Capacitor delta at peak recharge rate'>".$capdelta."</span></span></p>\n";
 
@@ -200,7 +200,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 
 	$rtotal = 0;
 	$stotal = 0;
-	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap, $dmgprofile, $reload) as $lname => $a) {
+	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap['delta'], $dmgprofile, $reload) as $lname => $a) {
 		list($reinforced, $sustained) = $a;
 		if($reinforced == 0) continue;
 
@@ -465,28 +465,43 @@ function print_formatted_misc(&$fit) {
 	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
 }
 
-function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null, $dmgprofile = null, $cap = null, $ehp = null) {
-	if($opts === null) {
-		/* NB: if you change the defaults here, also change the
-		 * default exported values in CLF export function. */
-		$opts = USE_RELOAD_TIME_FOR_CAPACITOR;
+/**
+ * Print every section in the attributes bar for a given $fit.
+ *
+ * @param $opts An associative array, which can contain the following
+ * keys:
+ * 
+ * - flags: a mixture of FATTRIBS_* constants
+ * - dmgprofile: a damage profile to use (if unspecified, defaults to uniform)
+ * - cap: capacitor information to format (if unspecified, generate it on the fly)
+ * - ehp: effective hitpoints to format (if unspecified, generate it on the fly)
+ */
+function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = array()) {
+	/* NB: if you change the defaults here, also change the default
+	 * exported values in CLF export function. */
+	$flags = isset($opts['flags']) ? $opts['flags'] : FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR;
+
+	$dmgprofile = isset($opts['dmgprofile']) ? $opts['dmgprofile'] :
+		array('em' => .25, 'thermal' => .25, 'explosive' => .25, 'kinetic' => .25);
+
+	if(isset($opts['cap'])) {
+		$cap = $opts['cap'];
+	} else {
+		\Osmium\Dogma\auto_init($fit);
+	    dogma_get_capacitor_all(
+			$fit['__dogma_context'],
+			$flags & FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR,
+			$result
+	    );
+	    $cap = $result[dogma_get_hashcode($fit['__dogma_context'])];
 	}
 
-	if($dmgprofile === null) {
-		$dmgprofile = array('em' => .25, 'thermal' => .25, 'explosive' => .25, 'kinetic' => .25);
-	}
-
-	if($cap === null) {
-		$cap = \Osmium\Fit\get_capacitor_stability($fit, $opts & USE_RELOAD_TIME_FOR_CAPACITOR);
-	}
-
-	if($ehp === null) {
-		$ehp = \Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
-	}
+	$ehp = isset($opts['ehp']) ? $opts['ehp'] :
+		\Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
 
 	print_formatted_engineering($fit, $relative, $cap);
-	print_formatted_offense($fit, $relative, $opts & USE_RELOAD_TIME_FOR_DPS);
-	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile, $opts & USE_RELOAD_TIME_FOR_TANK);
+	print_formatted_offense($fit, $relative, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_DPS);
+	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_TANK);
 	print_formatted_incoming($fit, $relative, $ehp, $dmgprofile);
 	print_formatted_outgoing($fit, $relative);
 	print_formatted_navigation($fit, $relative);
@@ -494,9 +509,13 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null
 	print_formatted_misc($fit);
 }
 
-function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = null, $dmgprofile = null) {
+/**
+ * Same usage as print_formatted_loadout_attributes(), but returns the
+ * result as a string instead of printing it.
+ */
+function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = array()) {
 	ob_start();
-	print_formatted_loadout_attributes($fit, $relative, $opts, $dmgprofile);
+	print_formatted_loadout_attributes($fit, $relative, $opts);
 	return ob_get_clean();
 }
 
