@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-osmium_gen_capacitor = function(capacity, usage) {
+osmium_gen_capacitor = function(capacity, current) {
 	var nbranches = Math.min(10, Math.max(2, Math.floor(capacity / 50.0)));
 	var nbubbles = 3;
 	var bubblecapacity = (capacity > 0) ? (capacity / (nbubbles * nbranches)) : 0;
@@ -23,18 +23,10 @@ osmium_gen_capacitor = function(capacity, usage) {
 	var dark = $("head > link[title]").filter(function() {
 		return $(this).get(0).disabled !== true
 	}).first().prop('title') === 'Dark';
-	var mainbubblefullcolor = dark ? '#FDEDE5' : '#77400D';
-	var sidebubblefullcolor = dark ? '#77400D' : '#FDEDE5';
 
 	var colors = {
-		full: {
-			main: [ dark ? '#FDEDE5' : '#77400D', '1' ],
-			side: [ dark ? '#77400D' : '#FDEDE5', '0.8' ]
-		},
-		empty: {
-			main: [ '#888888', '0.8' ],
-			side: [ dark ? '#444444' : '#CCCCCC', '0.6' ]
-		},
+		full: dark ? 'hsl(20, 85%, 95%)' : 'hsl(200, 85%, 35%)',
+		empty: '#888888',
 	};
 
 	var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -58,26 +50,26 @@ osmium_gen_capacitor = function(capacity, usage) {
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
 		stop.setAttribute('offset', '0%');
-		stop.setAttribute('stop-color', colors[t].side[0]);
-		stop.setAttribute('stop-opacity', colors[t].side[1]);
+		stop.setAttribute('stop-color', colors[t]);
+		stop.setAttribute('stop-opacity', 0);
 		lg.appendChild(stop);
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-		stop.setAttribute('offset', '40%');
-		stop.setAttribute('stop-color', colors[t].main[0]);
-		stop.setAttribute('stop-opacity', colors[t].main[1]);
+		stop.setAttribute('offset', '30%');
+		stop.setAttribute('stop-color', colors[t]);
+		stop.setAttribute('stop-opacity', 1);
 		lg.appendChild(stop);
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-		stop.setAttribute('offset', '60%');
-		stop.setAttribute('stop-color', colors[t].main[0]);
-		stop.setAttribute('stop-opacity', colors[t].main[1]);
+		stop.setAttribute('offset', '70%');
+		stop.setAttribute('stop-color', colors[t]);
+		stop.setAttribute('stop-opacity', 1);
 		lg.appendChild(stop);
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
 		stop.setAttribute('offset', '100%');
-		stop.setAttribute('stop-color', colors[t].side[0]);
-		stop.setAttribute('stop-opacity', colors[t].side[1]);
+		stop.setAttribute('stop-color', colors[t]);
+		stop.setAttribute('stop-opacity', 0);
 		lg.appendChild(stop);
 
 		defs.appendChild(lg);
@@ -93,7 +85,7 @@ osmium_gen_capacitor = function(capacity, usage) {
 
 		for(var j = 0; j < nbubbles; ++j) {
 			var bubble = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-			var w = 0.2 + j * 0.07;
+			var w = 0.2 + j * 0.12;
 			bubble.setAttribute('width', w + '');
 			bubble.setAttribute('height', '0.15');
 			bubble.setAttribute('x', (-w / 2) + '');
@@ -101,7 +93,7 @@ osmium_gen_capacitor = function(capacity, usage) {
 			bubble.setAttribute('rx', '0.075');
 			bubble.setAttribute('ry', '0.075');
 			bubble.setAttribute('filter', 'url(#gbf)');
-			bubble.setAttribute('fill', (progress < usage) ? 'url(#gradient-full)' : 'url(#gradient-empty)');
+			bubble.setAttribute('fill', (progress < current) ? 'url(#gradient-full)' : 'url(#gradient-empty)');
 			g.appendChild(bubble);
 
 			progress += bubblecapacity;
@@ -113,12 +105,12 @@ osmium_gen_capacitor = function(capacity, usage) {
 	svg = $(svg);
 
 	svg.data('capacity', capacity);
-	svg.data('usage', usage);
+	svg.data('current', current);
 
 	svg.on('redraw', function() {
 		var t = $(this);
 		t.replaceWith(
-			osmium_gen_capacitor(t.data('capacity'), t.data('usage'))
+			osmium_gen_capacitor(t.data('capacity'), t.data('current'))
 		);
 	});
 
