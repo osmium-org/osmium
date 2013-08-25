@@ -50,7 +50,7 @@ while(true) {
 
 	$cutoff = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
 		"SELECT max(killtime) FROM recentkillsdna rkd
-		JOIN osmium.invships ON invships.typeid = split_part(rkd.dna, ':', 1)::integer
+		JOIN osmium.invships ON invships.typeid::text = split_part(rkd.dna, ':', 1)
 		WHERE invships.groupid IN ({$groupids})"
 	))[0] - 3600;
 
