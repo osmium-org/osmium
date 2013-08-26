@@ -81,13 +81,31 @@ if(isset($clf['metadata']['X-Osmium-tankreloadtime']) && $clf['metadata']['X-Osm
 	$attribflags |= \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_TANK;
 }
 
-$dmgprofile = isset($clf['X-damage-profile']) ? array_combine(
-	[ 'em', 'explosive', 'kinetic', 'thermal' ], $clf['X-damage-profile'][1]
-) : null;
+$attribopts = array(
+	'flags' => $attribflags
+);
+
+if(isset($clf['X-damage-profile'])) {
+	$attribopts['dmgprofile'] = array_combine(
+		[ 'em', 'explosive', 'kinetic', 'thermal' ],
+		$clf['X-damage-profile'][1]
+	);
+}
+
+$capacitors = \Osmium\Fit\get_all_capacitors(
+	$local,
+	$attribopts & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR
+);
+$attribopts['cap'] = $capacitors['local'];
+foreach($capacitors as &$c) {
+	if(isset($c['depletion_time'])) {
+		$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
+	}
+}
 
 $payload = array(
 	'clftoken' => $token,
-	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribflags, $dmgprofile),
+	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribopts),
 	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
 	'ncycles' => array(),
 	'rawattribs' => array(
@@ -97,6 +115,7 @@ $payload = array(
 		'dronecapacityused' => \Osmium\Fit\get_used_drone_capacity($local),
 		'maxactivedrones' => \Osmium\Dogma\get_char_attribute($local, 'maxActiveDrones'),
 	),
+	'capacitors' => $capacitors,
 );
 
 foreach($local['modules'] as $slottype => $sub) {
@@ -135,18 +154,6 @@ if($type === 'new') {
 					'remote',
 					'input#'.$k.'_fit',
 					$error,
-				);
-			}
-		}
-	}
-
-	if(isset($errors['remote'])) {
-		foreach($errors['remote'] as $k => $err) {
-			foreach($err as $error) {
-				$payload['p-errors'][] = array(
-					'remote',
-					'section#projected div.pr-loadout.projected-'.$k.' > div',
-					$error
 				);
 			}
 		}
@@ -235,6 +242,10 @@ if($type === 'new') {
 			| \Osmium\Fit\CLF_EXPORT_INTERNAL_PROPERTIES
 		);
 		$payload['remote-clf']['fitting'] = $local['remote'][$key]['__id'];
+
+		if(isset($errors['remote'][$key]) && $errors['remote'][$key] !== []) {
+			$payload['remote-errors'] = $errors['remote'][$key];
+		}
 	}
 }
 

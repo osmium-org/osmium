@@ -55,6 +55,7 @@ osmium_ctxmenu_bind = function(element, menu_constructor) {
 	element.on('dblclick do_default_ctxmenu_action', function() {
 		var menu = menu_constructor();
 		menu.children('li.default').trigger('do_action');
+		return false;
 	});
 
 	element.on('contextmenu', showmenu);

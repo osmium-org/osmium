@@ -263,9 +263,10 @@ if($loadoutid !== false) {
 	echo "</section>";
 }
 
+$capacitors = \Osmium\Fit\get_all_capacitors($fit);
 echo "<section id='attributes'>
 <div class='compact' id='computed_attributes'>\n";
-\Osmium\Chrome\print_formatted_loadout_attributes($fit, RELATIVE);
+\Osmium\Chrome\print_formatted_loadout_attributes($fit, RELATIVE, [ 'cap' => $capacitors['local'] ]);
 echo "</div>
 </section>
 </div>\n";
@@ -644,6 +645,12 @@ echo "</div>\n";
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, '___demand___');
 
 \Osmium\Chrome\add_js_data('clfslots', json_encode(\Osmium\AjaxCommon\get_slot_usage($fit)));
+
+foreach($capacitors as &$c) {
+	if(!isset($c['depletion_time'])) continue;
+	$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
+}
+\Osmium\Chrome\add_js_data('capacitors', json_encode($capacitors));
 
 \Osmium\Chrome\print_js_snippet('view_loadout');
 \Osmium\Chrome\print_js_snippet('view_loadout-presets');

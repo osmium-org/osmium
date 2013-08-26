@@ -292,6 +292,7 @@ section#remote {
 section#remote > section#projected {
 	position: relative;
 	z-index: 500;
+	@include no-user-select;
 
 	&.fs {
 		position: absolute;
@@ -349,85 +350,75 @@ section#remote > section#projected {
 	&> form#projected-list {
 		&> div.pr-loadout {
 			display: inline-block;
-			vertical-align: top;
-			margin: 1em 3em 7em 1em;
-			padding: 0.25em;
-			width: 30em;
-			border: 1px solid $subsection-border-color;
-			background-color: rgba($main-bg-color, 0.5);
+			vertical-align: middle;
+			margin: 4em;
+			width: 120px;
+			height: 120px;
+			border-radius: 50%;
+			position: relative;
 
-			&> header {
-				padding: 0.25em;
-				padding-left: 1.25em;
-				@include linear-gradient-lighten-top(rgba($subsection-bg-color, 0.5), 20%);
-				position: relative;
+			border: 0.25em solid $subsection-border-color;
+			background-color: rgba($main-bg-color, 0.2);
 
-				&> h3 {
-					margin: 0;
-					@include ellipsis;
-				}
-
-				&> input {
-					position: absolute;
-					right: 0;
-					top: 0;
-				}
-
-				&> span.contextmenuindicator {
-					position: absolute;
-					left: 0.125em;
-					bottom: 0.175em;
-					font-size: 1.5em;
-				}
-			}
-
-			&> p.clferror.error_box {
-				margin: 0 0 0.25em 0;
-			}
-
-			&> div {
-				position: relative;
-				height: 1.6em;
-
-				&> input[type='text'] {
-					position: absolute;
-					left: 0;
-					width: 85.75%;
-				}
-
-				&> input[type='button'] {
-					position: absolute;
-					right: 0;
-					width: 13%;
-				}
-			}
-
-			&> select {
+			&> img.render {
+				position: absolute;
+				top: 0;
+				left: 0;
 				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				z-index: -1;
+				opacity: 0.5;
 			}
 
 			&> ul {
 				margin: 0;
 				padding: 0;
 				list-style-type: none;
+				position: absolute;
+				top: 50%;
+				left: 50%;
 
 				&> li {
 					display: inline-block;
-					position: relative;
-					padding: 0.25em;
+					position: absolute;
+					padding: 0;
+					margin: 0;
+
+					width: 56px;
+					height: 56px;
+					border-radius: 50%;
+					overflow: hidden;
+
+					background-color: rgba($subsection-bg-color, 0.5);
+					border: 0.25em dashed $subsection-border-color;
 
 					&> img:first-child {
+						position: absolute;
+						left: -4px;
+						top: -4px;
 						width: 64px;
 						height: 64px;
 					}
 
 					&> span.contextmenuindicator {
-						position: absolute;
-						top: 0.1em;
-						right: 0.333em;
-						font-size: 1.5em;
+						display: none;
 					}
 				}
+			}
+
+			&> svg {
+				position: absolute;
+				width: 64px;
+				height: 64px;
+				top: 50%;
+				left: 50%;
+				margin-left: -32px;
+				margin-top: -32px;
+			}
+
+			&> span.contextmenuindicator {
+				display: none;
 			}
 		}
 	}
@@ -442,5 +433,29 @@ section#remote > section#projected {
 
 	._jsPlumb_overlay {
 		z-index: -8;
+	}
+}
+
+form#m-remote {
+	position: absolute;
+	top: 3em;
+	left: 3em;
+	right: 3em;
+	bottom: 3em;
+	text-align: center;
+
+	&> table {
+		position: absolute;
+		width: 100%;
+		top: 0;
+
+		td.l { text-align: left; }
+
+		input[type='submit'] {
+			width: 10em;
+			height: 3em;
+			line-height: 3em;
+			font-weight: bold;
+		}
 	}
 }

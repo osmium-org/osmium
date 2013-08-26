@@ -26,7 +26,7 @@ osmium_gen_capacitor = function(capacity, current) {
 
 	var colors = {
 		full: dark ? 'hsl(20, 85%, 95%)' : 'hsl(200, 85%, 35%)',
-		empty: '#888888',
+		empty: dark ? 'hsl(0, 0%, 35%)' : 'hsl(0, 0%, 65%)',
 	};
 
 	var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

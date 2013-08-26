@@ -32,6 +32,46 @@ function get_capacitor_stability(&$fit, $reload = true) {
 }
 
 /**
+ * Get capacitor stability of this fit and all remote fits.
+ */
+function get_all_capacitors(&$fit, $reload = true) {
+	\Osmium\Dogma\auto_init($fit);
+
+	$remotes = array(
+		'local' => $fit
+	);
+
+	if(isset($fit['remote'])) {
+		foreach($fit['remote'] as $key => $rf) {
+			$remotes[$key] = $rf;
+		}
+	}
+
+	$capacitors = array();
+	$hashcodes = array();
+
+	foreach($remotes as $key => $rf) {
+		$hashcodes[dogma_get_hashcode($rf['__dogma_context'])] = $key;
+	}
+
+	foreach($remotes as $key => $rf) {
+		if(isset($capacitors[$key])) continue;
+
+		dogma_get_capacitor_all(
+			$rf['__dogma_context'],
+			$reload,
+			$result
+		);
+
+		foreach($result as $hashcode => $c) {
+			$capacitors[$hashcodes[$hashcode]] = $c;
+		}
+	}
+
+	return $capacitors;
+}
+
+/**
  * Get maximum/average/minimum effective hitpoints and hull, armor and
  * shield resonances (1 - resistances).
  *

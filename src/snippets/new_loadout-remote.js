@@ -59,8 +59,7 @@ osmium_projected_clean = function() {
 
 osmium_gen_projected = function() {
 	jsPlumb.Defaults.Container = $("section#projected");
-	jsPlumb.Defaults.Endpoints = [ "Rectangle", "Rectangle" ];
-	jsPlumb.Defaults.Anchors = [ [ 0.5, 0.5, 0, 1 ], [ 0.5, 0, 0, -1 ] ];
+	jsPlumb.Defaults.Endpoints = [ [ "Dot", { radius: 28 } ], [ "Dot", { radius: 8 } ] ];
 
 	osmium_projected_clean();
 
@@ -293,9 +292,12 @@ osmium_add_projected = function(remotefit, target) {
 
 	$("section#projected > form#projected-list").append(newproj);
 
-	if(remotefit !== '') {
+	if(remotefit !== undefined) {
+		osmium_clf['X-Osmium-remote'][key].fitting = remotefit;
+	}
+
+	if(remotefit !== undefined && target !== undefined) {
 		var target = $("section#projected div.pr-loadout.projected-" + target);
-		newproj.find('div > input[type="text"]').val(remotefit);
 		osmium_projected_regen_remote(key, function() {
 			$("section#projected div.pr-loadout.projected-" + key).find('ul > li').each(function() {
 				jsPlumb.connect({ source: $(this), target: target });
@@ -304,12 +306,14 @@ osmium_add_projected = function(remotefit, target) {
 	} else {
 		osmium_commit_undo_deferred();
 	}
+
+	return newproj;
 };
 
 osmium_init_projected = function() {
 	if(!osmium_loadout_readonly) {
 		$("section#projected input#createprojected").on('click', function() {
-			osmium_add_projected('');
+			osmium_add_projected('').trigger('dblclick');
 		});
 	}
 
@@ -331,13 +335,22 @@ osmium_init_projected = function() {
 			jsPlumb.toggleDraggable(
 				section.find('div.pr-loadout')
 					.draggable("option", "disabled", fs)
-					.css('position', fs ? 'static' : 'absolute')
 			);
 
 			section.toggleClass('fs');
 
+			/* Swap fixed and draggable positions */
+			$("section#projected div.pr-loadout").each(function() {
+				var t = $(this);
+				var otop = t.css('top');
+				var oleft = t.css('left');
+				t.css('top', t.data('top')).data('top', otop);
+				t.css('left', t.data('left')).data('left', oleft);
+			});
+
+			/* Auto-rearrange if necessary */
 			var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
-			if(!localtop || localtop === 'auto') {
+			if(section.hasClass('fs') && (!localtop || localtop === 'auto')) {
 				if($("section#projected div.pr-loadout").length <= 8) {
 					$("section#projected a#rearrange-circle").click();
 				} else {
@@ -354,6 +367,7 @@ osmium_init_projected = function() {
 		var so = s.offset();
 		var mx = ($(window).width() - so.left) / 2;
 		var my = ($(window).height() - so.top) / 2;
+		var m = Math.min(mx, my);
 		var divs = f.find('div.pr-loadout');
 
 		jsPlumb.doWhileSuspended(function() {
@@ -364,8 +378,8 @@ osmium_init_projected = function() {
 				var h = d.height();
 
 				d.offset({
-					left: (so.left + mx - (mx - d.outerWidth() / 2 - 32) * Math.cos(angle) - w / 2).toFixed(0),
-					top: (so.top + my - (my - d.outerHeight() / 2 - 32) * Math.sin(angle) - h / 2).toFixed(0)
+					left: (so.left + mx - (m - d.outerWidth() / 2 - 32) * Math.cos(angle) - w / 2).toFixed(0),
+					top: (so.top + my - (m - d.outerHeight() / 2 - 32) * Math.sin(angle) - h / 2).toFixed(0)
 				});
 			});
 		});
@@ -443,11 +457,7 @@ osmium_init_projected = function() {
 
 osmium_create_projected = function(key, clf, index) {
 	var proj = $(document.createElement('div'));
-	var hdr = $(document.createElement('header'));
 	var ul = $(document.createElement('ul'));
-	var fdiv = $(document.createElement('div'));
-	var select = $(document.createElement('select'));
-	var h = $(document.createElement('h3'));
 
 	var angle;
 	if(index === undefined) {
@@ -468,139 +478,52 @@ osmium_create_projected = function(key, clf, index) {
 		angle = (360 * (2 * (index - low) + 1) / up).toFixed(0);
 	}
 
-	proj.data('color', 'hsl(' + angle + ', 40%, 50%)');
-	proj.data('conn-color', 'hsla(' + angle + ', 40%, 50%, 0.5)');
+	proj.data('hue', angle);
 	proj.addClass('projected-' + key);
 	proj.data('key', key);
 	proj.addClass('pr-loadout');
-	proj.css('border-color', proj.data('color'));
+	proj.css('border-color', 'hsl(' + angle + ', 25%, 50%)');
+	proj.css('background-color', 'hsla(' + angle + ', 25%, 50%, 0.1)');
 
-	if(key === 'local') {
-		h.text('Local');
-	} else {
-		var a = $(document.createElement('a'));
-		if(osmium_loadout_readonly) {
-			var loc = window.location.href.split("#")[0];
-			var match = loc.match(/^(.+?)\/remote\/(.+)$/);
-
-			if(match !== null) {
-				var localkey;
-
-				if(key.toString() === match[2]) {
-					localkey = 'local';
-				} else {
-					localkey = key;
-				}
-
-				a.prop('href', match[1] + "/remote/" + encodeURIComponent(localkey));
-			} else {
-				a.prop('href', loc + '/remote/' + encodeURIComponent(key));
-			}
-		}
-		a.text('Remote loadout #' + key);
-		h.append(a);
-	}
+	proj.data('title', key === 'local' ? 'Local' : ('Remote #' + key));
 
 	if("ship" in clf && "typeid" in clf.ship) {
-		h.append(
-			$(document.createElement('span'))
-				.addClass('ship')
-				.text(' (' + osmium_types[clf.ship.typeid][1] + ')')
-		);
+		var img = $(document.createElement('img'));
+		img.prop('alt', clf.ship.typename);
+		img.prop('src', '//image.eveonline.com/Render/' + clf.ship.typeid + '_512.png');
+		img.addClass('render');
+		proj.append(img);
+		proj.data('shiptypeid', clf.ship.typeid);
+		proj.data('title', proj.data('title') + ': ' + osmium_types[clf.ship.typeid][1]);
 	}
 
-	hdr.append(h);
-
-	if(!osmium_loadout_readonly) {
-		hdr.append(
-			$(document.createElement('input'))
-				.prop('type', 'button')
-				.prop('value', 'Remove')
-				.on('click', function() {
-					var t = $(this).closest('div.pr-loadout');
-					var key = t.data('key');
-
-					jsPlumb.doWhileSuspended(function() {
-						jsPlumb.detachAllConnections(t);
-						t.find('ul > li').each(function() {
-							jsPlumb.detachAllConnections($(this));
-						});
-						t.remove();
-					});
-
-					delete osmium_clf['X-Osmium-remote'][key];
-					osmium_commit_undo_deferred();
-				})
-		);
-	}
-
-	proj.append(hdr);
-
-	var fittinginput = $(document.createElement('input'))
-		.prop('type', 'text')
-		.prop('placeholder', 'Loadout URI, DNA string or gzclf:// data')
-		.on('keypress', function(e) {
-			if(e.which != 13) return;
-			e.preventDefault();
-			$(this).parent().find('input[type="button"]').click();
-			return false;
-		});
-
-	if(osmium_loadout_readonly) {
-		fittinginput
-			.prop('readonly', true)
-			.prop('placeholder', '(empty fitting)')
-		;
-	}
-
-	if("X-Osmium-remote" in osmium_clf && key in osmium_clf['X-Osmium-remote']
-	   && "fitting" in osmium_clf['X-Osmium-remote'][key]) {
-		fittinginput.val(osmium_clf['X-Osmium-remote'][key].fitting);
-	}
-
-	fdiv.append(fittinginput);
-
-	var setfitbutton = $(document.createElement('input'))
-		.prop('type', 'button')
-		.prop('value', 'Set fit')
-		.on('click', function() {
-			osmium_projected_regen_remote($(this).closest('div.pr-loadout').data('key'));
-		})
-	;
-
-	if(osmium_loadout_readonly) {
-		setfitbutton.prop('disabled', true);
-	}
-
-	fdiv.append(setfitbutton);
-	proj.append(fdiv);
-
-	for(var i = 0; i < osmium_skillsets.length; ++i) {
-		select.append(
-			$(document.createElement('option'))
-				.text(osmium_skillsets[i])
-				.prop('value', osmium_skillsets[i])
-		);
-	}
-
-	if("metadata" in clf && "X-Osmium-skillset" in clf.metadata) {
-		select.val(clf.metadata['X-Osmium-skillset']);
-	}
-
-	select.change(function() {
-		$(this).parent().find('div > input[type="button"]').click();
-	});
-
-	proj.append(select);
-
-	var projectable = 0;
 	if("presets" in clf && "X-Osmium-current-presetid" in clf
 	   && "modules" in clf.presets[clf['X-Osmium-current-presetid']]) {
 		var p = clf.presets[clf['X-Osmium-current-presetid']].modules;
+		var projectable = 0;
+		var pindex = 0;
+
 		for(var i = 0; i < p.length; ++i) {
 			var t = osmium_types[p[i].typeid];
 			if(t[8] !== 1) continue;
 			++projectable;
+		}
+
+		var size; /* Also diameter of the circle */
+		if(projectable === 0) {
+			size = 120;
+		} else {
+			size = 80 * Math.max(6, projectable) / Math.PI;
+		}
+
+		proj.css({
+			width: size + 'px',
+			height: size + 'px'
+		});
+
+		for(var i = 0; i < p.length; ++i) {
+			var t = osmium_types[p[i].typeid];
+			if(t[8] !== 1) continue;
 
 			var source = 
 				$(document.createElement('li'))
@@ -613,6 +536,12 @@ osmium_create_projected = function(key, clf, index) {
 						.prop('title', t[1] + ' (#' + p[i].index + ')')
 						.prop('src', '//image.eveonline.com/Type/' + t[0] + '_64.png')
 				);
+
+			var angle = (pindex / projectable) * 2 * Math.PI;
+			var top = -size * .5 * Math.cos(angle) - 28;
+			var left = size * .5 * Math.sin(angle) - 28
+
+			source.css({ top: top + 'px', left: left + 'px' });
 
 			osmium_ctxmenu_bind(source, (function(source, clfsource) {
 				return function() {
@@ -634,7 +563,7 @@ osmium_create_projected = function(key, clf, index) {
 							var tkey = div.data('key');
 							if(tkey === key) return;
 							++ntargets;
-							osmium_ctxmenu_add_option(smenu, div.find('h3').text(), function() {
+							osmium_ctxmenu_add_option(smenu, div.data('title'), function() {
 								jsPlumb.connect({
 									source: source,
 									target: div
@@ -671,9 +600,10 @@ osmium_create_projected = function(key, clf, index) {
 			})(source, p[i]));
 
 			jsPlumb.makeSource(source, {
-				paintStyle: { fillStyle: proj.data('color') },
+				anchor: [ 0.5, 0.5 ],
+				paintStyle: { fillStyle: 'hsl(' + proj.data('hue') + ', 50%, 50%)' },
 				connectorStyle: {
-					strokeStyle: proj.data('conn-color'),
+					strokeStyle: 'hsla(' + proj.data('hue') + ', 50%, 50%, 0.5)',
 					lineWidth: 5
 				}
 			});
@@ -683,44 +613,236 @@ osmium_create_projected = function(key, clf, index) {
 			});
 
 			ul.append(source);
+			++pindex;
 		}
 	}
 
-	if(projectable === 0) {
-		proj.append(
-			$(document.createElement('p')).addClass('placeholder')
-				.text('No projectable modules.')
-		);
-	} else {
-		proj.append(ul);
-	}
-
-	if(key === "local") {
-		proj.children('header').children('input').remove();
-		proj.find('div > input, select').prop('disabled', true);
-		proj.children('div').find('input[type="text"]').val(window.location.href.split("#")[0]);
-	}
+	proj.append(ul);
+	proj.append(osmium_gen_capacitor(1000, 1000));
+	osmium_regen_remote_capacitor(proj);
 
 	jsPlumb.makeTarget(proj, {
-		paintStyle: { fillStyle: proj.data('color') }
+		//anchor: [ "Perimeter", { shape: "Circle" } ],
+		anchor: [ 0.5, 0.5 ],
+		paintStyle: { fillStyle: 'hsl(' + proj.data('hue') + ', 50%, 50%)' }
 	});
 	jsPlumb.draggable(proj);
 
-	if($("section#projected").hasClass('fs')) {
-		proj.css('position', 'absolute');
-	} else {
+	if(!$("section#projected").hasClass('fs')) {
 		jsPlumb.toggleDraggable(proj);
 	}
 
-	osmium_ctxmenu_bind(hdr, function() {
+	osmium_ctxmenu_bind(proj, function() {
 		var menu = osmium_ctxmenu_create();
 
-		osmium_ctxmenu_add_option(menu, "Show ship info", function() {
-			osmium_showinfo({
-				remote: key,
-				type: "ship"
-			});
-		}, { icon: osmium_showinfo_sprite_position });
+		osmium_ctxmenu_add_option(menu, proj.data('title'), function() {}, { enabled: false });
+
+		osmium_ctxmenu_add_separator(menu);
+
+		osmium_ctxmenu_add_subctxmenu(menu, "Use skills", (function(key) {
+			return function() {
+				var smenu = osmium_ctxmenu_create();
+				var clf = key === 'local' ? osmium_clf : osmium_clf['X-Osmium-remote'][key];
+
+				for(var i = 0; i < osmium_skillsets.length; ++i) {
+					osmium_ctxmenu_add_option(smenu, osmium_skillsets[i], (function(sname) {
+						return function() {
+							if(key === 'local') {
+								clf.metadata['X-Osmium-skillset'] = sname;
+							} else {
+								clf.skillset = sname;
+							}
+
+							osmium_undo_push();
+							osmium_commit_clf();
+						};
+					})(osmium_skillsets[i]), {
+						toggled: (key === 'local' && clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i])
+							|| (key !== 'local' && "skillset" in clf && clf.skillset === osmium_skillsets[i])
+					});
+				}
+
+				return smenu;
+			};
+		})(proj.data('key')), { icon: "//image.eveonline.com/Type/3327_64.png" });
+
+		if(proj.data('key') !== 'local') {
+			osmium_ctxmenu_add_separator(menu);
+
+			osmium_ctxmenu_add_option(menu, "Edit fitting…", (function(key) {
+				return function() {
+					var hdr = $(document.createElement('header'));
+					hdr.append($(document.createElement('h2')).text(
+						'Edit remote loadout #' + key
+					));
+
+					var form = $(document.createElement('form'));
+					var tbody = $(document.createElement('tbody'));
+
+					var input = $(document.createElement('input'))
+						.prop('type', 'text')
+						.prop('placeholder', 'Loadout URI, DNA string or gzclf:// data')
+						.prop('name', 'm-remote-fitting')
+						.prop('id', 'm-remote-fitting')
+					;
+
+					if("X-Osmium-remote" in osmium_clf
+					   && key in osmium_clf['X-Osmium-remote']
+					   && 'fitting' in osmium_clf['X-Osmium-remote'][key]) {
+						input.val(osmium_clf['X-Osmium-remote'][key].fitting);
+					}
+
+					tbody.append(
+						$(document.createElement('tr'))
+							.append(
+								$(document.createElement('th'))
+									.append(
+										$(document.createElement('label'))
+											.text('Fitting')
+											.prop('for', 'm-remote-fitting')
+									)
+							)
+							.append(
+								$(document.createElement('td'))
+									.append(input)
+							)
+					);
+
+					var select = $(document.createElement('select'))
+						.prop('name', 'm-remote-skillset')
+						.prop('id', 'm-remote-skillset')
+						.on('change', function() {
+							osmium_clf['X-Osmium-remote'][key].skillset = $(this).val();
+							osmium_undo_push();
+							osmium_commit_clf();
+						})
+					;
+
+					for(var i = 0; i < osmium_skillsets.length; ++i) {
+						select.append(
+							$(document.createElement('option'))
+								.text(osmium_skillsets[i])
+								.prop('value', osmium_skillsets[i])
+						);
+					}
+
+					if("X-Osmium-remote" in osmium_clf
+					   && key in osmium_clf['X-Osmium-remote']
+					   && 'skillset' in osmium_clf['X-Osmium-remote'][key]) {
+						select.val(osmium_clf['X-Osmium-remote'][key].skillset);
+					}
+
+					tbody.append(
+						$(document.createElement('tr'))
+							.append(
+								$(document.createElement('th'))
+									.append(
+										$(document.createElement('label'))
+											.text('Skills')
+											.prop('for', 'm-remote-skillset')
+									)
+							)
+							.append(
+								$(document.createElement('td'))
+									.append(select)
+							)
+					);
+
+					tbody.append(
+						$(document.createElement('tr'))
+							.append($(document.createElement('th')))
+							.append(
+								$(document.createElement('td'))
+									.addClass('l')
+									.append(
+										$(document.createElement('input'))
+											.prop('type', 'submit')
+											.prop('value', 'Use fitting')
+									)
+							)
+					);
+					
+					form
+						.prop('id', 'm-remote')
+						.append(
+							$(document.createElement('table'))
+								.append(tbody)
+						)
+						.on('submit', function(e) {
+							e.preventDefault();
+							var form = $(this);
+
+							form.find('input[type="submit"]')
+								.prop('disabled', true)
+								.after(
+									$(document.createElement('span'))
+										.addClass('spinner')
+								)
+							;
+
+							osmium_clf['X-Osmium-remote'][key].fitting =
+								form.find('input#m-remote-fitting').val();
+							osmium_clf['X-Osmium-remote'][key].skillset =
+								form.find('select#m-remote-skillset').val();
+
+							osmium_projected_regen_remote(key, function() {
+								$("a#closemodal").click();
+							}, function(errors) {
+								form.find('span.spinner').remove();
+								form.find('input[type="submit"]').prop('disabled', false);
+
+								form.find('tr.error_message.clferror').remove();
+								form.find('tr.clferror.error').removeClass('clferror').removeClass('error');
+
+								for(var i = 0; i < errors.length; ++i) {
+									input.closest('tr').addClass('error').addClass('clferror').before(
+										$(document.createElement('tr'))
+											.addClass('clferror').addClass('error_message')
+											.append(
+												$(document.createElement('td'))
+													.prop('colspan', '2')
+													.append(
+														$(document.createElement('p')).text(errors[i])
+													)
+											)
+									);
+								}
+							});
+
+							return false;
+						})
+					;
+
+					osmium_modal([ hdr, form ]);
+				};
+			})(key), { default: true });
+
+			osmium_ctxmenu_add_option(menu, "Remove fitting", function() {
+				jsPlumb.doWhileSuspended(function() {
+					jsPlumb.detachAllConnections(proj);
+					proj.find('ul > li').each(function() {
+						jsPlumb.detachAllConnections($(this));
+					});
+					proj.remove();
+				});
+
+				delete osmium_clf['X-Osmium-remote'][key];
+				osmium_commit_undo_deferred();
+			}, {});
+		}
+
+		if(proj.data('shiptypeid')) {
+			/* No point allowing show ship info on shallow pools */
+
+			osmium_ctxmenu_add_separator(menu);
+
+			osmium_ctxmenu_add_option(menu, "Show ship info", function() {
+				osmium_showinfo({
+					remote: key,
+					type: "ship"
+				});
+			}, { icon: osmium_showinfo_sprite_position });
+		}
 
 		return menu;
 	});
@@ -736,11 +858,8 @@ osmium_projected_regen_local = function() {
 	osmium_projected_replace_graceful(oldlocal, local);
 };
 
-osmium_projected_regen_remote = function(key, onsuccess) {
+osmium_projected_regen_remote = function(key, onsuccess, onerror) {
 	var t = $("section#projected div.pr-loadout.projected-" + key);
-
-	osmium_clf['X-Osmium-remote'][t.data('key')].fitting = t.find('input[type="text"]').val();
-	osmium_clf['X-Osmium-remote'][t.data('key')].skillset = t.find('select').val();
 
 	osmium_commit_clf({
 		params: { "remoteclf": t.data('key') },
@@ -759,25 +878,19 @@ osmium_projected_regen_remote = function(key, onsuccess) {
 				)
 			);
 
-			if(typeof onsuccess === 'function') onsuccess(payload);
+			if('remote-errors' in payload) {
+				if(typeof onerror === 'function') onerror(payload['remote-errors']);
+			} else {
+				if(typeof onsuccess === 'function') onsuccess(payload);	
+			}
 		}
 	});
 };
 
 osmium_projected_replace_graceful = function(stale, fresh) {
-	var cssprops = [ "position", "left", "top", "right", "bottom" ];
+	var cssprops = [ "left", "top", "right", "bottom" ];
 	for(var i = 0; i < cssprops.length; ++i) {
 		fresh.css(cssprops[i], stale.css(cssprops[i]));
-	}
-
-	/* Transfer errors */
-	fresh.children('div').before(stale.children('p.clferror.error_box'));
-
-	if(fresh.data('key') !== 'local') {
-		/* Transfer the fitting */
-		var fitting = stale.find('div > input[type="text"]').val();
-		fresh.find('div > input[type="text"]').val(fitting);
-		osmium_clf['X-Osmium-remote'][fresh.data('key')].fitting = fitting;
 	}
 
 	jsPlumb.doWhileSuspended(function() {
@@ -832,6 +945,41 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 			jsPlumb.connect(newconnections[i]);
 		}
 	});
+};
+
+osmium_regen_remote_capacitor = function(key_or_element) {
+	if(typeof osmium_capacitors !== "object") return;
+
+	var c, s;
+
+	if(typeof key_or_element !== "object") {
+		if(!(key_or_element in osmium_capacitors)) return;
+		s = $("section#projected div.pr-loadout.projected-" + key_or_element);
+		c = osmium_capacitors[key_or_element];
+	} else {
+		s = key_or_element;
+		if(!(s.data('key') in osmium_capacitors)) return;
+		c = osmium_capacitors[s.data('key')];
+	}
+
+	if(s.length !== 1) return;
+	s = s.find('svg');
+
+	if(c.capacity > 0) {
+		s.data({
+			capacity: c.capacity,
+			current: c.stable ? (c.capacity * c.stable_fraction) : 0
+		});
+		s.parent().prop(
+			'title', (1000 * c.delta).toFixed(1) + ' GJ/s, '
+				+ (c.stable ? ((100 * c.stable_fraction).toFixed(1) + '%') : c.depletion_time)
+		);
+	} else {
+		s.data({ capacity: 1000, current: 1000 });
+		s.parent().prop('title', ''); /* XXX: .removeProp() gives "undefined" as tooltip */
+	}
+
+	s.trigger('redraw');
 };
 
 osmium_commit_undo_deferred_timeoutid = undefined;

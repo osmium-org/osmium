@@ -188,6 +188,11 @@ osmium_send_clf = function(opts) {
 		},
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
+			osmium_capacitors = payload.capacitors;
+
+			for(var key in osmium_capacitors) {
+				osmium_regen_remote_capacitor(key);
+			}
 
 			$("tr.error.clferror").removeClass('error').removeClass('clferror');
 			$("tr.error_message.clferror").remove();
