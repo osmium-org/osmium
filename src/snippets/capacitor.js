@@ -19,6 +19,9 @@ osmium_gen_capacitor = function(capacity, current) {
 	var nbranches = Math.min(10, Math.max(2, Math.floor(capacity / 50.0)));
 	var nbubbles = 3;
 	var bubblecapacity = (capacity > 0) ? (capacity / (nbubbles * nbranches)) : 0;
+	/* Avoid using the same IDs on different <svg> elements in the
+	 * same page */
+	var idsuffix = Math.random().toFixed(20).substring(2);
 
 	var dark = $("head > link[title]").filter(function() {
 		return $(this).get(0).disabled !== true
@@ -37,14 +40,14 @@ osmium_gen_capacitor = function(capacity, current) {
 	var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
 
 	var f = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-	f.setAttribute('id', 'gbf');
+	f.setAttribute('id', 'gbf-' + idsuffix);
 	var gb = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
 	gb.setAttribute('stdDeviation', '0.02');
 	defs.appendChild(f).appendChild(gb);
 
 	for(var t in colors) {
 		var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-		lg.setAttribute('id', 'gradient-' + t);
+		lg.setAttribute('id', 'gradient-' + t + '-' + idsuffix);
 
 		var stop;
 
@@ -92,8 +95,13 @@ osmium_gen_capacitor = function(capacity, current) {
 			bubble.setAttribute('y', (-0.9 + 0.8 * (nbubbles - j - 1) / nbubbles) + '');
 			bubble.setAttribute('rx', '0.075');
 			bubble.setAttribute('ry', '0.075');
-			bubble.setAttribute('filter', 'url(#gbf)');
-			bubble.setAttribute('fill', (progress < current) ? 'url(#gradient-full)' : 'url(#gradient-empty)');
+			bubble.setAttribute('filter', 'url(#gbf-' + idsuffix + ')');
+			bubble.setAttribute(
+				'fill',
+				(progress < current) ?
+					('url(#gradient-full-' + idsuffix + ')')
+					: ('url(#gradient-empty-' + idsuffix + ')')
+			);
 			g.appendChild(bubble);
 
 			progress += bubblecapacity;
