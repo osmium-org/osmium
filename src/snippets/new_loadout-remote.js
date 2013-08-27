@@ -777,8 +777,9 @@ osmium_create_projected = function(key, clf, index) {
 							e.preventDefault();
 							var form = $(this);
 
-							form.find('input[type="submit"]')
-								.prop('disabled', true)
+							form.find('input, select').prop('disabled', true);
+							form
+								.find('input[type="submit"]')
 								.after(
 									$(document.createElement('span'))
 										.addClass('spinner')
@@ -794,15 +795,15 @@ osmium_create_projected = function(key, clf, index) {
 								$("a#closemodal").click();
 							}, function(errors) {
 								form.find('span.spinner').remove();
-								form.find('input[type="submit"]').prop('disabled', false);
+								form.find('input, select').prop('disabled', false);
 
-								form.find('tr.error_message.clferror').remove();
-								form.find('tr.clferror.error').removeClass('clferror').removeClass('error');
+								form.find('tr.error_message').remove();
+								form.find('tr.error').removeClass('error');
 
 								for(var i = 0; i < errors.length; ++i) {
-									input.closest('tr').addClass('error').addClass('clferror').before(
+									input.closest('tr').addClass('error').before(
 										$(document.createElement('tr'))
-											.addClass('clferror').addClass('error_message')
+											.addClass('error_message')
 											.append(
 												$(document.createElement('td'))
 													.prop('colspan', '2')
