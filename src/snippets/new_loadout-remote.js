@@ -671,7 +671,9 @@ osmium_create_projected = function(key, clf, index) {
 
 		if(proj.data('key') !== 'local') {
 			osmium_ctxmenu_add_separator(menu);
+		}
 
+		if(proj.data('key') !== 'local' && !osmium_loadout_readonly) {
 			osmium_ctxmenu_add_option(menu, "Edit fitting…", (function(key) {
 				return function() {
 					var hdr = $(document.createElement('header'));
@@ -834,6 +836,28 @@ osmium_create_projected = function(key, clf, index) {
 			}, {});
 		}
 
+		if(proj.data('key') !== 'local' && osmium_loadout_readonly) {
+			osmium_ctxmenu_add_option(menu, "View fitting", function() {
+				var loc = window.location.href.split("#")[0];
+				var match = loc.match(/^(.+?)\/remote\/(.+)$/);
+
+				if(match !== null) {
+					var localkey;
+
+					if(key.toString() === match[2]) {
+						window.location.assign(match[1]);
+						return;
+					} else {
+						localkey = key;
+					}
+
+					window.location.assign(match[1] + "/remote/" + encodeURIComponent(localkey));
+				} else {
+					window.location.assign(loc + '/remote/' + encodeURIComponent(key));
+				}
+			}, {});
+		}
+
 		if(proj.data('shiptypeid')) {
 			/* No point allowing show ship info on shallow pools */
 
@@ -844,7 +868,7 @@ osmium_create_projected = function(key, clf, index) {
 					remote: key,
 					type: "ship"
 				});
-			}, { icon: osmium_showinfo_sprite_position });
+			}, { icon: osmium_showinfo_sprite_position, default: osmium_loadout_readonly });
 		}
 
 		return menu;

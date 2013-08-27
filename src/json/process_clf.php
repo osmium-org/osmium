@@ -25,7 +25,7 @@ if(!isset($_POST['token']) || $_POST['token'] != \Osmium\State\get_token()
    || !isset($_POST['type']) || !in_array($_POST['type'], array('new', 'view'))
    || !isset($_GET['clftoken']) || !isset($_POST['clf'])) {
 	header('HTTP/1.1 400 Bad Request', true, 400);
-	\Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json("Invalid or missing parameters.");
 }
 
 $type = $_POST['type'];
@@ -37,7 +37,7 @@ $local = null;
 $clf = json_decode($clftext, true);
 if(json_last_error() !== JSON_ERROR_NONE) {
 	header('HTTP/1.1 400 Bad Request', true, 400);
-	\Osmium\Chrome\return_json(array());
+	\Osmium\Chrome\return_json([ "Could not decode supplied JSON.", json_last_error() ]);
 }
 
 $local = \Osmium\State\get_loadout($token);
@@ -47,18 +47,18 @@ $errors = array();
 if($local === null) {
 	/* Outdated token, generate a new one and send it to client */
 	$token = \Osmium\State\get_unique_loadout_token();
-	$local = \Osmium\Fit\try_parse_fit_from_common_loadout_format($clftext, $errors);
+	$local = \Osmium\Fit\try_parse_fit_from_common_loadout_format($clftext, $errors, false);
 
 	if(!is_array($local)) {
 		header('HTTP/1.1 400 Bad Request', true, 400);
-		\Osmium\Chrome\return_json(array());
+		\Osmium\Chrome\return_json([ "Could not parse supplied CLF.", $errors ]);
 	}
 } else {
 	/* Valid token, just update local loadout from client CLF */
 
 	if(!\Osmium\Fit\synchronize_from_clf_1($local, $clf, $errors)) {
 		header('HTTP/1.1 400 Bad Request', true, 400);
-		\Osmium\Chrome\return_json(array());
+		\Osmium\Chrome\return_json([ "Could not synchronize supplied CLF with local CLF.", $errors ]);
 	}
 }
 
