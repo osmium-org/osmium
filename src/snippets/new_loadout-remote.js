@@ -283,7 +283,10 @@ osmium_add_projected = function(remotefit, target) {
 	while((key + '') in osmium_clf['X-Osmium-remote']) ++key;
 	key = key + '';
 
-	osmium_clf['X-Osmium-remote'][key] = {};
+	osmium_clf['X-Osmium-remote'][key] = {
+		fitting: '',
+		skillset: 'All V'
+	};
 
 	var newproj = osmium_create_projected(
 		key, { },

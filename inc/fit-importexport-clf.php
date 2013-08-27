@@ -646,7 +646,7 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 			foreach($fit['remote'] as $k => $r) {
 				$json['X-Osmium-remote'][$k] = export_to_common_loadout_format_1($r, $opts);
 				$json['X-Osmium-remote'][$k]['fitting'] = $r['__id'];
-				$json['X-Osmium-remote'][$k]['skilset'] = $r['skillset']['name'];
+				$json['X-Osmium-remote'][$k]['skillset'] = $r['skillset']['name'];
 			}
 		}
 	}
