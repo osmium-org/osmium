@@ -274,7 +274,7 @@ index from a third party source). Since Osmium uses a different schema
 with clear, defined constraints, it is in practice much easier to
 generate it from the client itself.
 
-Use the [`phobos`](http://jira.evefit.org/browse/PHOBOS) dumper to
+Use the [`phobos`](https://github.com/DarkFenX/Phobos) dumper to
 dump the EVE database as JSON files:
 
 ~~~~
