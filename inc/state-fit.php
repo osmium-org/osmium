@@ -21,6 +21,13 @@ namespace Osmium\State;
 /** How long to "remember" the password for protected fits */
 const DEFAULT_PASSWORD_AUTHENTICATION_DURATION = 1800;
 
+/** For a loadout being created or edited. Typically stored for a long
+ * duration somewhere persistent. */
+const LOADOUT_TYPE_NEW = 1;
+
+/** For a loadout being temporarily played with. No big deal if the
+ * cache expires or is lost. */
+const LOADOUT_TYPE_VIEW = 1;
 
 
 /**
@@ -112,41 +119,46 @@ function is_fit_green($loadoutid) {
 }
 
 /**
- * Get a loadout being currently edited (null in case of invalid token).
+ * Get a cached loadout being altered.
+ *
+ * @returns $fit or null if the token is invalid/expired.
  */
-function get_new_loadout($token) {
-	return get_cache_memory_fb(/* session_id(). */$token, null, 'Loadout_New_');
+function get_loadout($token) {
+	$fb = get_cache_memory_fb($token, null, 'Loadout_');
+	if($fb !== null) return $fb;
+
+	$mem = get_cache_memory($token, null, 'Loadout_');
+	return $mem;
 }
 
 /**
- * Update a loadout being currently edited.
+ * Update a loadout being altered.
  */
-function put_new_loadout($token, $fit) {
-	return put_cache_memory_fb(/* session_id(). */$token, $fit, 86400, 'Loadout_New_');
+function put_loadout($token, $fit, $type = LOADOUT_TYPE_NEW) {
+	if($type === LOADOUT_TYPE_NEW) {
+		return put_cache_memory_fb($token, $fit, 86400, 'Loadout_');
+	} else if($type === LOADOUT_TYPE_VIEW) {
+		return put_cache_memory($token, $fit, 600, 'Loadout_');
+	}
+
+	return false;
 }
 
 /**
- * Get a loadout being currently viewed.
+ * Get a new token to be used with get_loadout() and put_loadout(). It
+ * is guaranteed to not collide with other tokens.
  */
-function get_view_loadout($token) {
-	return get_cache_memory(/* session_id(). */$token, null, 'Loadout_View_');
-}
+function get_unique_loadout_token() {
+	/* There is a ridiculously small chance that two identical tokens
+	 * are generated at the same time by two requests and not collide
+	 * with each other. Using a semaphore will enforce a consistent
+	 * order and prevent such issues. */
+	$sem = semaphore_acquire('loadout_token');
 
-/**
- * Like put_new_loadout(), but intended for much shorter-term
- * loadouts. Use get_view_loadout() to retrieve.
- */
-function put_view_loadout($token, $fit) {
-	return put_cache_memory(/* session_id(). */$token, $fit, 600, 'Loadout_View_');
-}
-
-/**
- * Get a token to be used with get_new_loadout() and put_new_loadout().
- */
-function get_unique_new_loadout_token() {
 	do {
 		$token = get_nonce();
-	} while(get_new_loadout($token) !== null);
+	} while(get_loadout($token) !== null);
 
+	semaphore_release($sem);
 	return $token;
 }

@@ -1326,7 +1326,7 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 		}
 
 		if(isset($match['token'])) {
-			$fit = \Osmium\State\get_new_loadout($match['token']);
+			$fit = \Osmium\State\get_loadout($match['token']);
 			if(!$fit) {
 				$errors[] = "Loadout not found.";
 				return false;

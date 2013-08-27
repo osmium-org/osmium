@@ -21,18 +21,14 @@ namespace Osmium\Json\ShowInfo;
 require __DIR__.'/../../inc/root.php';
 require __DIR__.'/../../inc/ajax_common.php';
 
-if(isset($_POST['loadoutsource']) && isset($_GET['clftoken'])) {
-	if($_POST['loadoutsource'] === 'new') {
-		$fit = \Osmium\State\get_new_loadout($_GET['clftoken']);
-	} else if($_POST['loadoutsource'] === 'view') {
-		$fit = \Osmium\State\get_view_loadout($_GET['clftoken']);
-	}
+if(isset($_GET['clftoken'])) {
+	$fit = \Osmium\State\get_loadout($_GET['clftoken']);
 } else {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }
 
-if(!isset($_POST['type']) || !$fit) {
+if(!isset($_POST['type']) || $fit === null) {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
 }

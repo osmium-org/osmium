@@ -40,21 +40,13 @@ if(json_last_error() !== JSON_ERROR_NONE) {
 	\Osmium\Chrome\return_json(array());
 }
 
-if($type === 'new') {
-	$local = \Osmium\State\get_new_loadout($token);
-} else if($type === 'view') {
-	$local = \Osmium\State\get_view_loadout($token);
-} else {
-	header('HTTP/1.1 400 Bad Request', true, 400);
-	\Osmium\Chrome\return_json(array());
-}
-
+$local = \Osmium\State\get_loadout($token);
 $payload = array();
 $errors = array();
 
 if($local === null) {
 	/* Outdated token, generate a new one and send it to client */
-	$token = \Osmium\State\get_unique_new_loadout_token();
+	$token = \Osmium\State\get_unique_loadout_token();
 	$local = \Osmium\Fit\try_parse_fit_from_common_loadout_format($clftext, $errors);
 
 	if(!is_array($local)) {
@@ -133,11 +125,10 @@ foreach($local['modules'] as $slottype => $sub) {
 	}
 }
 
-if($type === 'new') {
-	\Osmium\State\put_new_loadout($token, $local);
-} else if($type === 'view') {
-	\Osmium\State\put_view_loadout($token, $local);
-}
+\Osmium\State\put_loadout(
+	$token, $local,
+	($type === 'new') ? \Osmium\State\LOADOUT_TYPE_NEW : \Osmium\State\LOADOUT_TYPE_VIEW
+);
 
 if($type === 'new') {
 	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);

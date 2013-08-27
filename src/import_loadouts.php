@@ -100,8 +100,8 @@ function post_import(&$fit, &$ids, $a, &$errors) {
 
 	if(isset($_POST['editimport']) && $_POST['editimport']) {
 		/* Do not commit the loadout */
-		$tok = \Osmium\State\get_unique_new_loadout_token();
-		\Osmium\State\put_new_loadout($tok, $fit);
+		$tok = \Osmium\State\get_unique_loadout_token();
+		\Osmium\State\put_loadout($tok, $fit);
 		header('Location: ./new/'.$tok);
 		die();
 	}

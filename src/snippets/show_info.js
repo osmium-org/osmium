@@ -32,8 +32,6 @@ osmium_showinfo = function(opts) {
 };
 
 osmium_showinfo_internal = function(opts, onerror) {
-	opts.loadoutsource = osmium_clftype;
-
 	osmium_clfspinner_push();
 
 	$.ajax({

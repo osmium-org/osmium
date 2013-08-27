@@ -38,8 +38,8 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
 	    \Osmium\State\put_cache_memory_fb($ckey, $fit, 7200);
     }
 
-    $tok = \Osmium\State\get_unique_new_loadout_token();
-    \Osmium\State\put_new_loadout($tok, $fit);
+    $tok = \Osmium\State\get_unique_loadout_token();
+    \Osmium\State\put_loadout($tok, $fit);
 
     header('Location: ../'.$tok);
     die();
@@ -63,8 +63,8 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
 		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
 	}
 
-	$tok = \Osmium\State\get_unique_new_loadout_token();
-	\Osmium\State\put_new_loadout($tok, $fit);
+	$tok = \Osmium\State\get_unique_loadout_token();
+	\Osmium\State\put_loadout($tok, $fit);
 
 	header('Location: ../new/'.$tok);
 	die();
@@ -162,24 +162,24 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 		);
 	}
 
-	$tok = \Osmium\State\get_unique_new_loadout_token();
-	\Osmium\State\put_new_loadout($tok, $fork);
+	$tok = \Osmium\State\get_unique_loadout_token();
+	\Osmium\State\put_loadout($tok, $fork);
 
 	header('Location: ../new/'.$tok);
 	die();
 }
 
 if(!isset($_GET['token'])) {
-	$tok = \Osmium\State\get_unique_new_loadout_token();
+	$tok = \Osmium\State\get_unique_loadout_token();
 
 	\Osmium\Fit\create($fit);
-	\Osmium\State\put_new_loadout($tok, $fit);
+	\Osmium\State\put_loadout($tok, $fit);
 
 	header('Location: ./new/'.$tok);
 	die();
 } else {
 	$tok = $_GET['token'];
-	$fit = \Osmium\State\get_new_loadout($tok);
+	$fit = \Osmium\State\get_loadout($tok);
 
 	if(!is_array($fit)) {
 		/* Invalid token? */
