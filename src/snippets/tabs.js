@@ -143,3 +143,33 @@ osmium_tab_click = function(e) {
 	e.stopPropagation();
 	return false;
 };
+
+osmium_tabify_nohash = function(ul, selected) {
+	ul.find('li > a').on('click', function(e) {
+		var t = $(this);
+		var href = t.attr('href');
+		if(href.substring(0, 1) !== '#') return;
+		var tgt = $(t.attr('href'));
+		var li = t.parent();
+
+		if(li.hasClass('active')) return false;
+		ul.find('li.active > a').each(function() {
+			var a = $(this);
+			var tgt = $(a.attr('href'));
+			tgt.hide().trigger('made_hidden');
+			a.parent().removeClass('active');
+		});
+
+		li.addClass('active');
+		tgt.fadeIn(250).trigger('made_visible');
+
+		return false;
+	}).each(function() {
+		var t = $(this);
+		var href = t.attr('href');
+		if(href.substring(0, 1) !== '#') return;
+		$(t.attr('href')).hide();
+	});
+
+	ul.children('li').eq(selected).children('a').click();
+};
