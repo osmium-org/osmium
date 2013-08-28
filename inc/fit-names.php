@@ -2,6 +2,8 @@
 
 namespace Osmium\Fit;
 
+const CATEGORY_Skill = 16;
+
 const EFFECT_ArmorRepair = 27;
 const EFFECT_EnergyDestabilizationNew = 2303;
 const EFFECT_EnergyTransfer = 31;
@@ -59,6 +61,16 @@ function get_cached_thing_generic($table, $field, $wherename, $whereval) {
 	return $val;
 }
 
+function get_attributedisplayname($attributeid) {
+	return get_cached_thing_generic(
+		'eve.dgmattribs',
+		/* Use display name if available, if not patch up the attribute name */
+		'CASE displayname WHEN \'\' THEN regexp_replace(upper(left(attributename, 1)) || right(attributename, -1), \'([a-z])([A-Z0-9])\', \'\1 \2\', \'g\') ELSE displayname END',
+		'attributeid',
+		(int)$attributeid
+	);
+}
+
 function get_attributename($attributeid) {
 	return get_cached_thing_generic(
 		'eve.dgmattribs', 'attributename', 'attributeid', (int)$attributeid
@@ -68,6 +80,18 @@ function get_attributename($attributeid) {
 function get_attributeid($attributename) {
 	return get_cached_thing_generic(
 		'eve.dgmattribs', 'attributeid', 'attributename', $attributename
+	);
+}
+
+function get_unitid($attributeid) {
+	return get_cached_thing_generic(
+		'eve.dgmattribs', 'unitid', 'attributeid', (int)$attributeid
+	);
+}
+
+function get_unitdisplayname($unitid) {
+	return get_cached_thing_generic(
+		'eve.dgmunits', 'displayname', 'unitid', (int)$unitid
 	);
 }
 
@@ -107,4 +131,13 @@ function get_parent_typeid($typeid) {
 	);
 
 	return $parent ?: $typeid;
+}
+
+function get_categoryid($typeid) {
+	return get_cached_thing_generic(
+		'eve.invtypes JOIN eve.invgroups ON invgroups.groupid = invtypes.groupid',
+		'categoryid',
+		'typeid',
+		(int)$typeid
+	);
 }

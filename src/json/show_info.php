@@ -111,7 +111,7 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typeid = $module['typeid'];
 	$typename = $module['typename'];
 	$loc = [ DOGMA_LOC_Module, 'module_index' => $module['dogma_index'] ];
-	$attributes = get_attributes($typeid, function($aname) use(&$fit, $st, $idx) {
+	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $st, $idx) {
 			return \Osmium\Dogma\get_module_attribute($fit, $st, $idx, $aname);
 		});
 } else if($_POST['type'] == 'charge' && isset($_POST['slottype']) && isset($_POST['index'])
@@ -123,14 +123,14 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typeid = $charge['typeid'];
 	$typename = $charge['typename'];
 	$loc = [ DOGMA_LOC_Charge, 'module_index' => $fit['modules'][$st][$idx]['dogma_index'] ];
-	$attributes = get_attributes($typeid, function($aname) use(&$fit, $st, $idx) {
+	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $st, $idx) {
 			return \Osmium\Dogma\get_charge_attribute($fit, $st, $idx, $aname);
 		});
 } else if($_POST['type'] == 'ship') {
 	$typeid = $fit['ship']['typeid'];
 	$typename = $fit['ship']['typename'];
 	$loc = DOGMA_LOC_Ship;
-	$attributes = get_attributes($typeid, function($aname) use(&$fit) {
+	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit) {
 			return \Osmium\Dogma\get_ship_attribute($fit, $aname);
 		});
 } else if($_POST['type'] == 'drone' && isset($_POST['typeid']) && isset($fit['drones'][$_POST['typeid']])) {
@@ -143,7 +143,7 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 		\Osmium\Fit\transfer_drone($fit, $typeid, 'bay', 1);
 	}
 
-	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
+	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $typeid) {
 			return \Osmium\Dogma\get_drone_attribute($fit, $typeid, $aname);
 		});
 
@@ -157,7 +157,7 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typeid = $_POST['typeid'];
 	$typename = $fit['implants'][$typeid]['typename'];
 	$loc = [ DOGMA_LOC_Implant, 'implant_index' => $fit['implants'][$typeid]['dogma_index'] ];
-	$attributes = get_attributes($typeid, function($aname) use(&$fit, $typeid) {
+	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $typeid) {
 		return \Osmium\Dogma\get_implant_attribute($fit, $typeid, $aname);
 	});
 } else if($_POST['type'] === 'generic') {
@@ -191,8 +191,31 @@ if($affectors !== false) {
 
 
 	foreach($affectors as $affector) {
-		/* Skip affectors affecting non-overridden attributes */
-		if(!isset($attributes[$affector['destid']])) continue;
+		if(!isset($attributes[$affector['destid']])) {
+			if(\Osmium\Fit\get_categoryid($affector['id']) == \Osmium\Fit\CATEGORY_Skill) {
+				/* XXX: some are relevant (thermodynamics for example)
+				 * but hand-filtering them is a pain */
+				continue;
+			}
+
+			$val = $getatt($affector['destid']);
+
+			if($affector['operator'] === '*' && abs($val) < 1e-300) {
+				/* Likely irrelevant since it won't change the final
+				 * value */
+				continue;
+			}
+
+			$attributes[$affector['destid']] = [
+				\Osmium\Fit\get_attributedisplayname($affector['destid']),
+				\Osmium\Chrome\format_number_with_unit(
+					$val,
+					$uid = \Osmium\Fit\get_unitid($affector['destid']),
+					\Osmium\Fit\get_unitdisplayname($uid)
+				),
+				0
+			];
+		}
 
 		$dest = $attributes[$affector['destid']][0];
 		$source = \Osmium\Fit\get_typename($affector['id']);
