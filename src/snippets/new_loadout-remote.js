@@ -994,12 +994,16 @@ osmium_regen_remote_capacitor = function(key_or_element) {
 	s = s.find('svg');
 
 	if(c.capacity > 0) {
+		var delta = -1000 * c.delta;
+		if(delta >= 0) delta = '+' + delta.toFixed(1);
+		else delta = delta.toFixed(1);
+
 		s.data({
 			capacity: c.capacity,
 			current: c.stable ? (c.capacity * c.stable_fraction) : 0
 		});
 		s.parent().prop(
-			'title', (1000 * c.delta).toFixed(1) + ' GJ/s, '
+			'title', delta + ' GJ/s, '
 				+ (c.stable ? ((100 * c.stable_fraction).toFixed(1) + '%') : c.depletion_time)
 		);
 	} else {
