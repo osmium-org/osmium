@@ -392,32 +392,34 @@ if($desc === '') {
 	$desc = \Osmium\Chrome\sanitize_html_trust(\Osmium\Chrome\format_md(nl2br($desc)));
 }
 
+$suffix = number_format(microtime(true), 6, '', '');
+
 $lis = array(
-	"<li><a href='#sidesc'>Description</a></li>",
-	"<li><a href='#siattributes'>Attributes</a></li>\n",
+	"<li><a href='#sidesc-{$suffix}'>Description</a></li>",
+	"<li><a href='#siattributes-{$suffix}'>Attributes</a></li>\n",
 );
 $sections = array(
-	"<section id='sidesc'>".$desc."</section>\n",
-	"<section id='siattributes'>\n".$fresult['attributes']."</section>\n",
+	"<section class='sidesc' id='sidesc-{$suffix}'>".$desc."</section>\n",
+	"<section class='siattributes' id='siattributes-{$suffix}'>\n".$fresult['attributes']."</section>\n",
 );
 
 if($affectors !== false) {
-	$lis[] = "<li><a href='#siafftype'>Affectors by type (".count($affectors_per_type).")</a></li>\n";
-	$lis[] = "<li><a href='#siaffatt'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n";
+	$lis[] = "<li><a href='#siafftype-{$suffix}'>Affectors by type (".count($affectors_per_type).")</a></li>\n";
+	$lis[] = "<li><a href='#siaffatt-{$suffix}'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n";
 
-	$sections[] = "<section id='siafftype'>\n".$fresult['affectors_per_type']."</section>\n";
-	$sections[] = "<section id='siaffatt'>\n".$fresult['affectors_per_att']."</section>\n";
+	$sections[] = "<section class='siaff' id='siafftype-{$suffix}'>\n".$fresult['affectors_per_type']."</section>\n";
+	$sections[] = "<section class='siaff' id='siaffatt-{$suffix}'>\n".$fresult['affectors_per_att']."</section>\n";
 }
 
 if(count($fvariations) > 1) {
-	$lis[] = "<li><a href='#sivariations'>Variations (".count($fvariations).")</a></li>\n";
-	$sections[] = "<section id='sivariations'>\n<ul></ul>\n</section>\n";
+	$lis[] = "<li><a href='#sivariations-{$suffix}'>Variations (".count($fvariations).")</a></li>\n";
+	$sections[] = "<section class='sivariations' id='sivariations-{$suffix}'>\n<ul class='sivariations'></ul>\n</section>\n";
 } else {
 	$fvariations = array();
 }
 
 \Osmium\Chrome\return_json(array(
-	'modal' => "<header id='hsi'><h2>".$fresult['header']."</h2></header>\n"
-	."<ul id='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
+	'modal' => "<header class='hsi'><h2>".$fresult['header']."</h2></header>\n"
+	."<ul class='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
 	'variations' => $fvariations,
 ));

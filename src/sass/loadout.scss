@@ -349,21 +349,21 @@ div#computed_attributes > section#engineering {
 	}
 }
 
-ul#showinfotabs {
+ul.showinfotabs {
 	@include tabs;
 	text-align: left;
 	margin-top: 0.5em;
 	padding-left: 1em;
 }
 
-header#hsi > h2 {
+header.hsi > h2 {
 	&> img {
 		width: 1.75em;
 		height: 1.75em;
 	}
 }
 
-section#siattributes > table > tbody > tr {
+section.siattributes > table > tbody > tr {
 	&> td > img {
 		height: 2em;
 		width: 2em;
@@ -380,7 +380,7 @@ section#siattributes > table > tbody > tr {
 	}
 }
 
-section#siafftype, section#siaffatt {
+section.siaff {
 	&> p {
 		text-align: center;
 	}
@@ -420,7 +420,7 @@ section#siafftype, section#siaffatt {
 	}
 }
 
-section#sidesc {
+section.sidesc {
 	@include readable;
 	padding: 0.5em 1em;
 
@@ -431,7 +431,7 @@ section#sidesc {
 	}
 }
 
-section#sivariations {
+section.sivariations {
 	@include module-list;
 	width: 100%;
 	margin: 0;

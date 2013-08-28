@@ -45,9 +45,9 @@ osmium_showinfo_internal = function(opts, onerror) {
 		},
 		success: function(json) {
 			osmium_modal(json['modal']);
-			osmium_tabify_nohash($('ul#showinfotabs'), 0);
+			osmium_tabify_nohash($('ul.showinfotabs'), 0);
 
-			var ul = $("section#sivariations > ul");
+			var ul = $("ul.sivariations").last();
 
 			for(var i = 0; i < json.variations.length; ++i) {
 				var t = osmium_types[json.variations[i][0]];
