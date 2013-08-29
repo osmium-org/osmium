@@ -27,7 +27,18 @@ osmium_targeting_time = function(targeter_scanres, targetee_sigradius) {
 osmium_gen_fattribs = function() {
 	osmium_fattribs_load();
 
-	$("section#defense > h4 > span.pname").text(osmium_clf['X-damage-profile'][0]);
+	var s = osmium_clf['X-damage-profile'][1][0] + osmium_clf['X-damage-profile'][1][1]
+		+ osmium_clf['X-damage-profile'][1][2] + osmium_clf['X-damage-profile'][1][3];
+
+	$("section#defense > h4 > span.pname")
+		.text(osmium_clf['X-damage-profile'][0])
+		.prop('title',
+			  "EM: \t\t\t" + (100 * osmium_clf['X-damage-profile'][1][0] / s).toFixed(1) + "%\n" +
+			  "Explosive: \t" + (100 * osmium_clf['X-damage-profile'][1][1] / s).toFixed(1) + "%\n" +
+			  "Kinetic: \t\t" + (100 * osmium_clf['X-damage-profile'][1][2] / s).toFixed(1) + "%\n" +
+			  "Thermal: \t\t" + (100 * osmium_clf['X-damage-profile'][1][3] / s).toFixed(1) + "%"
+			 )
+	;
 
 	var t = "Scan resolution\n\nTime to lock…";
 	var sr = parseFloat($("span#scan_resolution").data('value'));
@@ -74,10 +85,10 @@ osmium_init_fattribs = function() {
 
 							var opts = {
 								toggled: z === osmium_clf['X-damage-profile'][0],
-								title: (100 * profiles[z][0] / s).toFixed(1) + "% EM, "
-									+ (100 * profiles[z][1] / s).toFixed(1) + "% Explosive, "
-									+ (100 * profiles[z][2] / s).toFixed(1) + "% Kinetic, "
-									+ (100 * profiles[z][3] / s).toFixed(1) + "% Thermal"
+								title: "EM: \t\t\t" + (100 * profiles[z][0] / s).toFixed(1) + "%\n" +
+									"Explosive: \t" + (100 * profiles[z][1] / s).toFixed(1) + "%\n" +
+									"Kinetic: \t\t" + (100 * profiles[z][2] / s).toFixed(1) + "%\n" +
+									"Thermal: \t\t" + (100 * profiles[z][3] / s).toFixed(1) + "%"
 							};
 
 							if(profiles[z].length >= 5) {
@@ -104,6 +115,9 @@ osmium_init_fattribs = function() {
 				for(var k in osmium_custom_damage_profiles) {
 					++count;
 
+					var profile = osmium_custom_damage_profiles[k];
+					var s = profile[0] + profile[1] + profile[2] + profile[3];
+
 					osmium_ctxmenu_add_subctxmenu(ssmenu, k, (function(k, profile) {
 						return function() {
 							var sssmenu = osmium_ctxmenu_create();
@@ -127,7 +141,11 @@ osmium_init_fattribs = function() {
 							return sssmenu;
 						};
 					})(k, osmium_custom_damage_profiles[k]), {
-						toggled: k === osmium_clf['X-damage-profile'][0]
+						toggled: k === osmium_clf['X-damage-profile'][0],
+						title: "EM: \t\t\t" + (100 * profile[0] / s).toFixed(1) + "%\n" +
+							"Explosive: \t" + (100 * profile[1] / s).toFixed(1) + "%\n" +
+							"Kinetic: \t\t" + (100 * profile[2] / s).toFixed(1) + "%\n" +
+							"Thermal: \t\t" + (100 * profile[3] / s).toFixed(1) + "%"
 					});
 				}
 
