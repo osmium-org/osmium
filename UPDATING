@@ -24,6 +24,10 @@ must run `make post-eve-schema-update`.
 The HTML sanitizer has been slightly changed. To update the formatted
 comments, you can run `./bin/reformat_sanitized_html`.
 
+The Markdown export format has changed, if you want to avoid
+meaningless diffs in view_loadout_history you can regenerate all the
+deltas by running `./bin/reformat_deltas`. This can take a while.
+
 v0.9.1, released 2013-07-22
 ===========================
 
