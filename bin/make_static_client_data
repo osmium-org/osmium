@@ -339,6 +339,46 @@ $static['dmgprofiles'] = array(
 	),
 );
 
+$ammoq = \Osmium\Db\query(
+	'SELECT moduleid, groupid, ic.chargeid, it.typename,
+	COALESCE(em.value, 0) AS emd, COALESCE(ex.value, 0) AS exd,
+	COALESCE(ki.value, 0) AS kid, COALESCE(th.value, 0) AS thd
+	FROM invcharges ic
+	JOIN eve.invtypes it ON it.typeid = ic.chargeid
+	LEFT JOIN eve.invmetatypes imt ON imt.typeid = ic.chargeid
+	LEFT JOIN eve.dgmtypeattribs em ON em.typeid = ic.chargeid AND em.attributeid = 114
+	LEFT JOIN eve.dgmtypeattribs ex ON ex.typeid = ic.chargeid AND ex.attributeid = 116
+	LEFT JOIN eve.dgmtypeattribs ki ON ki.typeid = ic.chargeid AND ki.attributeid = 117
+	LEFT JOIN eve.dgmtypeattribs th ON th.typeid = ic.chargeid AND th.attributeid = 118
+	WHERE ic.moduleid IN (2929, 2961, 3057, 3065, 3090, 3122)
+	AND (imt.parenttypeid IS NULL OR imt.metagroupid = 2)
+	ORDER BY moduleid ASC, groupid ASC, it.typename ASC'
+);
+
+$basegroup = array();
+
+while($row = \Osmium\Db\fetch_row($ammoq)) {
+	list($mid, $gid, $tid, $tn, $em, $ex, $ki, $th) = $row;
+	if(($s = ($em + $ex + $ki + $th)) <= 0) continue;
+
+	$em /= $s;
+	$ex /= $s;
+	$ki /= $s;
+	$th /= $s;
+
+	if(!isset($basegroup[$mid])) {
+		$basegroup[$mid] = \Osmium\Fit\get_groupname($gid);
+	}
+
+	$name = preg_replace('%( (S|M|L|XL))$%D', '', $tn);
+	if(strpos($name, 'Civilian') !== false) continue;
+
+	$static['dmgprofiles'][$basegroup[$mid]][$name] = [
+		$em, $ex, $ki, $th,
+		'//image.eveonline.com/Type/'.$tid.'_64.png'
+	];
+}
+
 /* ---------------------------------------------------------- */
 
 $sideeffectsq = \Osmium\Db\query(

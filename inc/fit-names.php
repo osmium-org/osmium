@@ -141,3 +141,9 @@ function get_categoryid($typeid) {
 		(int)$typeid
 	);
 }
+
+function get_groupname($groupid) {
+	return get_cached_thing_generic(
+		'eve.invgroups', 'groupname', 'groupid', (int)$groupid
+	);
+}

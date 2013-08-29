@@ -46,7 +46,8 @@
   neutralizers and nosferatus) are now recapped in the attribute side
   bar.
 
-* Damage profiles are now persistent.
+* Damage profiles are now persistent. More default damage profiles are
+  available, generated from ammo damage profiles.
 
 # Version 0.9
 
