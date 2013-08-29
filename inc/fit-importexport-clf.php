@@ -642,11 +642,6 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 		$json['metadata']['X-Osmium-dpsreloadtime'] = false;
 		$json['metadata']['X-Osmium-tankreloadtime'] = false;
 
-		$json['X-damage-profile'] = array(
-			$fit['damageprofile']['name'],
-			array_values($fit['damageprofile']['damages'])
-		);
-
 		if(isset($fit['fleet'])) {
 			foreach($fit['fleet'] as $k => $f) {
 				$json['X-Osmium-fleet'][$k] = [
@@ -819,6 +814,13 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 		}
 
 		$json['drones'][] = $jsondp;
+	}
+
+	if(($extraprops && (!$minify || !damage_profile_is_default($fit['damageprofile']))) || $osmiumextraprops) {
+		$json['X-damage-profile'] = array(
+			$fit['damageprofile']['name'],
+			array_values($fit['damageprofile']['damages'])
+		);
 	}
 
 	return $json;

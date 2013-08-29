@@ -23,6 +23,14 @@ function unique_key($stuff) {
 	return sha1(json_encode($stuff));
 }
 
+/** @internal */
+function damage_profile_is_default($dp) {
+	return $dp['name'] === 'Uniform'
+		&& (double)$dp['damages']['em'] === (double)$dp['damages']['explosive']
+		&& (double)$dp['damages']['explosive'] === (double)$dp['damages']['kinetic']
+		&& (double)$dp['damages']['kinetic'] === (double)$dp['damages']['thermal'];
+}
+
 /**
  * Get an array that contains all the significant data of a fit. Used
  * to compare fits.
@@ -131,6 +139,18 @@ function get_unique(&$fit) {
 		}
 	}
 
+	if(!damage_profile_is_default($fit['damageprofile'])) {
+		$unique['damageprofile'] = [
+			'name' => $fit['damageprofile']['name'],
+			'damages' => [
+				'em' => $fit['damageprofile']['damages']['em'],
+				'explosive' => $fit['damageprofile']['damages']['explosive'],
+				'kinetic' => $fit['damageprofile']['damages']['kinetic'],
+				'thermal' => $fit['damageprofile']['damages']['thermal'],
+			],
+		];
+	}
+
 	/* Ensure equality if key ordering is different */
 	ksort_rec($unique);
 	sort($unique['metadata']['tags']); /* tags should be ordered by value */
@@ -154,6 +174,51 @@ function get_hash($fit) {
 	return unique_key(get_unique($fit));
 }
 
+/** @internal */
+function commit_damage_profile($dp, &$error = null) {
+	if(damage_profile_is_default($dp)) {
+		/* Not inserting the default damage profile */
+		return null;
+	}
+
+	$dpq = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT damageprofileid FROM osmium.damageprofiles
+			WHERE name = $1 AND electromagnetic = $2 AND explosive = $3
+			AND kinetic = $4 AND thermal = $5',
+			array(
+				$dp['name'],
+				$dp['damages']['em'],
+				$dp['damages']['explosive'],
+				$dp['damages']['kinetic'],
+				$dp['damages']['thermal'],
+			)
+		)
+	);
+
+	if($dpq !== false) return (int)$dpq[0];
+
+	$q = \Osmium\Db\query_params(
+		'INSERT INTO osmium.damageprofiles (
+		name, electromagnetic, explosive, kinetic, thermal
+		) VALUES ($1, $2, $3, $4, $5)
+		RETURNING damageprofileid',
+		array(
+			$dp['name'],
+			$dp['damages']['em'],
+			$dp['damages']['explosive'],
+			$dp['damages']['kinetic'],
+			$dp['damages']['thermal'],
+		)
+	);
+
+	if($q === false) {
+		return false;
+	}
+
+	return (int)\Osmium\Db\fetch_row($q)[0];
+}
+
 /**
  * Insert a fitting in the database, if necessary. The fitting hash
  * will be updated. The function will try to avoid inserting
@@ -175,9 +240,17 @@ function commit_fitting(&$fit, &$error = null) {
 		return $fittinghash;
 	}
 
+	$damageprofileid = commit_damage_profile($fit['damageprofile'], $error);
+	if($damageprofileid === false) {
+		return false;
+	}
+
 	/* Insert the new fitting */
 	$ret = \Osmium\Db\query_params(
-		'INSERT INTO osmium.fittings (fittinghash, name, description, evebuildnumber, hullid, creationdate) VALUES ($1, $2, $3, $4, $5, $6)',
+		'INSERT INTO osmium.fittings (
+		fittinghash, name, description, evebuildnumber, hullid, creationdate,
+		damageprofileid
+		) VALUES ($1, $2, $3, $4, $5, $6, $7)',
 		array(
 			$fittinghash,
 			$fit['metadata']['name'],
@@ -185,6 +258,7 @@ function commit_fitting(&$fit, &$error = null) {
 			$fit['metadata']['evebuildnumber'],
 			isset($fit['ship']['typeid']) ? $fit['ship']['typeid'] : null,
 			time(),
+			$damageprofileid,
 		)
 	);
 	if($ret === false) {
@@ -704,7 +778,7 @@ function commit_loadout_dogma_attribs(&$fit) {
 function get_fitting($fittinghash) {
 	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT name, description,
-		evebuildnumber, hullid, creationdate
+		evebuildnumber, hullid, creationdate, damageprofileid
 		FROM osmium.fittings
 		WHERE fittinghash = $1',
 		array($fittinghash)
@@ -730,6 +804,26 @@ function get_fitting($fittinghash) {
 	);
 	while($r = \Osmium\Db\fetch_row($tagq)) {
 		$fit['metadata']['tags'][] = $r[0];
+	}
+
+	if($fitting['damageprofileid'] !== null) {
+		$dpq = \Osmium\Db\query_params(
+			'SELECT name, electromagnetic, explosive, kinetic, thermal
+			FROM osmium.damageprofiles
+			WHERE damageprofileid = $1',
+			array($fitting['damageprofileid'])
+		);
+
+		if($dpq === false) {
+			return false;
+		}
+
+		$dp = \Osmium\Db\fetch_row($dpq);
+		set_damage_profile(
+			$fit,
+			$dp[0],
+			$dp[1], $dp[2], $dp[3], $dp[4]
+		);
 	}
 
 	/* It can be done with only one query, but the code would be

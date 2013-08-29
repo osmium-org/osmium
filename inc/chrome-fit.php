@@ -235,7 +235,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $reload = false) 
 		}
 	}
 	
-	print_formatted_attribute_category('defense', 'Defense <span class="pname">Uniform</span>', implode(' – ', $subtitles), '', ob_get_clean());
+	print_formatted_attribute_category('defense', 'Defense <span class="pname">'.escape($fit['damageprofile']['name']).'</span>', implode(' – ', $subtitles), '', ob_get_clean());
 }
 
 function print_formatted_incoming(&$fit, $relative, $ehp) {

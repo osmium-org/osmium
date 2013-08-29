@@ -42,8 +42,11 @@
 
 * Show variations of modules in the "show info" dialog.
 
-* Outgoing effects (repairs, energy transfers, neutralizers and
-  nosferatus) are now recapped in the attribute side bar.
+* Outgoing and incoming effects (repairs, energy transfers,
+  neutralizers and nosferatus) are now recapped in the attribute side
+  bar.
+
+* Damage profiles are now persistent.
 
 # Version 0.9
 

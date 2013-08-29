@@ -539,13 +539,6 @@ function export_to_markdown($fit, $embedclf = true) {
 		if($q !== "") $md .= $q."\n\n";
 	}
 
-	$ver = get_closest_version_by_build($fit['metadata']['evebuildnumber']);
-	$md .= "Designed for: ".$ver['name']." (".$ver['tag']."; build ".$fit['metadata']['evebuildnumber'].")\n\n";
-
-	if(isset($fit['metadata']['tags']) && count($fit['metadata']['tags']) > 0) {
-		$md .= "Tags: ".implode(", ", $fit['metadata']['tags'])."\n\n";
-	}
-
 	if(count($fit['presets']) > 0) $md .= "# Presets\n\n";
 	foreach($fit['presets'] as $pid => $preset) {
 		$md .= "## ".$preset['name']."\n\n";
@@ -668,6 +661,27 @@ function export_to_markdown($fit, $embedclf = true) {
 			$md .= "\n";
 		}
 	}
+
+	$md .= "# Other\n\n";
+
+	$ver = get_closest_version_by_build($fit['metadata']['evebuildnumber']);
+	$md .= "- Designed for: ".$ver['name']." (".$ver['tag']."; build ".$fit['metadata']['evebuildnumber'].")\n";
+
+	$md .= "- Tags: ";
+
+	if(isset($fit['metadata']['tags']) && count($fit['metadata']['tags']) > 0) {
+		$md .= implode(", ", $fit['metadata']['tags'])."\n";
+	} else {
+		$md .= "(none)\n";
+	}
+
+	$md .= "- Damage profile: ".$fit['damageprofile']['name']
+		." (EM: ".\Osmium\Chrome\round_sd(100 * $fit['damageprofile']['damages']['em'], 3)
+		."%, Explosive: ".\Osmium\Chrome\round_sd(100 * $fit['damageprofile']['damages']['explosive'], 3)
+		."%, Kinetic: ".\Osmium\Chrome\round_sd(100 * $fit['damageprofile']['damages']['kinetic'], 3)
+		."%, Thermal: ".\Osmium\Chrome\round_sd(100 * $fit['damageprofile']['damages']['thermal'], 3)."%)\n";
+
+	$md .= "\n";
 
 	if(isset($fit['fleet']) && $fit['fleet'] !== array()) {
 		$md .= "# Fleet bonuses\n\n";

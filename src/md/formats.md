@@ -58,8 +58,11 @@ programs are encouraged to support them when applicable.
   is the proportion of EM damage, the second of Explosive damage, the
   third of Kinetic damage, the fourth of Thermal damage.
 
-  Osmium will not generate this key while explicitely exporting, but
-  uses it internally. It is ignored while importing.
+  Osmium will generate this key while exporting. The only exception is
+  when a minified CLF is requested and when the default uniform damage
+  profile is being used. The key will be used while importing, unless
+  the damage profile is invalid. If invalid or not present, the
+  uniform profile will be used.
 
 - `X-sideeffects`: additional key in a booster element. If present, it
   contains an array of effect IDs representing the side effects of the
