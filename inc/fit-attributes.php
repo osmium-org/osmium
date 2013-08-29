@@ -75,12 +75,10 @@ function get_all_capacitors(&$fit, $reload = true) {
  * Get maximum/average/minimum effective hitpoints and hull, armor and
  * shield resonances (1 - resistances).
  *
- * @param $damageprofile array(damagetype => damageamount)
- *
  * @returns array(ehp => {min, avg, max}, {shield, armor, hull} =>
  * {capacity, resonance => {em, thermal, kinetic, explosive}}).
  */
-function get_ehp_and_resists(&$fit, $damageprofile) {
+function get_ehp_and_resists(&$fit) {
 	static $layers = array(
 		array('shield', 'shieldCapacity', 'shield'),
 		array('armor', 'armorHP', 'armor'),
@@ -113,20 +111,10 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
 		$out['ehp']['min'] += $out[$name]['capacity'] / max($out[$name]['resonance']);
 		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
 
-		$sum = array_sum($damageprofile);
-
-		// @codeCoverageIgnoreStart
-		if($sum == 0) {
-			trigger_error(__FUNCTION__.'(): invalid damage profile', E_USER_WARNING);
-			$sum = 1;
-		}
-		// @codeCoverageIgnoreEnd
-
 		$avgresonance = 0;
-		foreach($damageprofile as $type => $damage) {
-			$avgresonance += $damage * $out[$name]['resonance'][$type];
+		foreach($fit['damageprofile']['damages'] as $type => $dmg) {
+			$avgresonance += $dmg * $out[$name]['resonance'][$type];
 		}
-		$avgresonance /= $sum;
 
 		$out['ehp']['avg'] += $out[$name]['capacity'] / $avgresonance;
 	}
@@ -143,11 +131,9 @@ function get_ehp_and_resists(&$fit, $damageprofile) {
  *
  * @param $capdelta capacitor usage, in GJ/ms
  *
- * @param $damageprofile array(damagetype => damageamount)
- *
  * @returns array(repair_type => array(reinforced, sustained))
  */
-function get_tank(&$fit, $ehp, $capdelta, $damageprofile, $reload = false) {
+function get_tank(&$fit, $ehp, $capdelta, $reload = false) {
 	static $localrepaireffects = array(
 		'hull' => [ [ EFFECT_StructureRepair, 'structureDamageAmount' ] ],
 		'armor' => [ [ EFFECT_ArmorRepair, 'armorDamageAmount' ],
@@ -238,22 +224,14 @@ function get_tank(&$fit, $ehp, $capdelta, $damageprofile, $reload = false) {
 		);
 	}
 
-	$sum = array_sum($damageprofile);
-	if($sum == 0) {
-		trigger_error(__FUNCTION__.'(): invalid damage profile given', E_USER_WARNING);
-		$sum = 1;
-	}
 	$multipliers = array();
-
 	foreach(array('shield', 'armor', 'hull') as $ltype) {
 		$resonances = $ehp[$ltype]['resonance'];
 		$multipliers[$ltype] = 0;
 
-		foreach($damageprofile as $type => $damage) {
-			$multipliers[$ltype] += $damage * $resonances[$type];
+		foreach($fit['damageprofile']['damages'] as $type => $dmg) {
+			$multipliers[$ltype] += $dmg * $resonances[$type];
 		}
-
-		$multipliers[$ltype] /= $sum;
 	}
 
 	foreach($out as $layer => $a) {

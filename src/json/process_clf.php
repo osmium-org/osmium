@@ -77,13 +77,6 @@ $attribopts = array(
 	'flags' => $attribflags
 );
 
-if(isset($clf['X-damage-profile'])) {
-	$attribopts['dmgprofile'] = array_combine(
-		[ 'em', 'explosive', 'kinetic', 'thermal' ],
-		$clf['X-damage-profile'][1]
-	);
-}
-
 $capacitors = \Osmium\Fit\get_all_capacitors(
 	$local,
 	$attribopts & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR

@@ -197,6 +197,17 @@ function clf_parse_1(array $json, &$errors) {
 		}
 	}
 
+	if(isset($json['X-damage-profile'])) {
+		set_damage_profile(
+			$fit,
+			$json['X-damage-profile'][0],
+			$json['X-damage-profile'][1][0],
+			$json['X-damage-profile'][1][1],
+			$json['X-damage-profile'][1][2],
+			$json['X-damage-profile'][1][3]
+		);
+	}
+
 	return $fit;
 }
 
@@ -631,7 +642,10 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 		$json['metadata']['X-Osmium-dpsreloadtime'] = false;
 		$json['metadata']['X-Osmium-tankreloadtime'] = false;
 
-		$json['X-damage-profile'] = array("Uniform", [ .25, .25, .25, .25 ]);
+		$json['X-damage-profile'] = array(
+			$fit['damageprofile']['name'],
+			array_values($fit['damageprofile']['damages'])
+		);
 
 		if(isset($fit['fleet'])) {
 			foreach($fit['fleet'] as $k => $f) {
@@ -1132,6 +1146,17 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 				set_module_target_by_typeid($fit, $k, $m['index'], $m['typeid'], $target);
 			}
 		}
+	}
+
+	if(isset($clf['X-damage-profile'])) {
+		set_damage_profile(
+			$fit,
+			$clf['X-damage-profile'][0],
+			$clf['X-damage-profile'][1][0],
+			$clf['X-damage-profile'][1][1],
+			$clf['X-damage-profile'][1][2],
+			$clf['X-damage-profile'][1][3]
+		);
 	}
 
 	return true;

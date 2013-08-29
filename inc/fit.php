@@ -178,6 +178,8 @@ function get_state_names() {
  *
  * skillset => array(name, default, override)
  *
+ * damageprofile => array(name, damages => array(em, explosive, kinetic, thermal))
+ *
  * metadata => array(name, description, tags, evebuildnumber,
  *					 view_permission, edit_permission, visibility,
  *					 password, loadoutid, hash, revision,
@@ -197,6 +199,15 @@ function create(&$fit) {
 			'name' => 'All V',
 			'default' => 5,
 			'override' => [],
+		),
+		'damageprofile' => array(
+			'name' => 'Uniform',
+			'damages' => array(
+				'em' => .25,
+				'explosive' => .25,
+				'kinetic' => .25,
+				'thermal' => .25,
+			),
 		),
 		'metadata' => array(
 			'name' => 'Unnamed loadout',
@@ -1077,6 +1088,42 @@ function set_module_target_by_typeid(&$fit, $sourcekey, $index, $typeid, $target
 		$index,
 		$targetkey
 	);
+}
+
+
+
+/* ----------------------------------------------------- */
+
+
+
+/** Set the damage profile of this $fit. */
+function set_damage_profile(&$fit, $name, $em, $explosive, $kinetic, $thermal) {
+	if((string)$name === '') {
+		trigger_error('Must supply a non-empty name.', E_USER_WARNING);
+		return false;
+	}
+
+	if($em < 0 || $explosive < 0 || $kinetic < 0 || $thermal < 0) {
+		trigger_error('Nonsensical negative damage values supplied.', E_USER_WARNING);
+		return false;
+	}
+
+	$sum = $em + $explosive + $kinetic + $thermal;
+
+	if($sum <= 0) {
+		trigger_error('Must have at least one nonzero damage type.', E_USER_WARNING);
+		return false;
+	}
+
+	$fit['damageprofile'] = [
+		'name' => $name,
+		'damages' => [
+			'em' => $em / $sum,
+			'explosive' => $explosive / $sum,
+			'kinetic' => $kinetic / $sum,
+			'thermal' => $thermal / $sum,
+		],
+	];
 }
 
 

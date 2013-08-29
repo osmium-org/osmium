@@ -146,7 +146,7 @@ function print_formatted_offense(&$fit, $relative, $reload = false) {
 	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
 }
 
-function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $reload = false) {
+function print_formatted_defense(&$fit, $relative, $ehp, $cap, $reload = false) {
 	ob_start();
 
 	$resists = array();
@@ -200,7 +200,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 
 	$rtotal = 0;
 	$stotal = 0;
-	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap['delta'], $dmgprofile, $reload) as $lname => $a) {
+	foreach(\Osmium\Fit\get_tank($fit, $ehp, $cap['delta'], $reload) as $lname => $a) {
 		list($reinforced, $sustained) = $a;
 		if($reinforced == 0) continue;
 
@@ -238,7 +238,7 @@ function print_formatted_defense(&$fit, $relative, $ehp, $cap, $dmgprofile, $rel
 	print_formatted_attribute_category('defense', 'Defense <span class="pname">Uniform</span>', implode(' – ', $subtitles), '', ob_get_clean());
 }
 
-function print_formatted_incoming(&$fit, $relative, $ehp, $damageprofile) {
+function print_formatted_incoming(&$fit, $relative, $ehp) {
 	ob_start();
 
 	$incoming = \Osmium\Fit\get_incoming($fit);
@@ -253,14 +253,10 @@ function print_formatted_incoming(&$fit, $relative, $ehp, $damageprofile) {
 
 		if(isset($ehp[$t]) && $unit === 'HP') {
 			$avgresonance = 0;
-			$sum = 0;
-
-			foreach($damageprofile as $type => $dmg) {
+			foreach($fit['damageprofile']['damages'] as $type => $dmg) {
 				$avgresonance += $dmg * $ehp[$t]['resonance'][$type];
-				$sum += $dmg;
 			}
 
-			$avgresonance /= $sum;
 			$amount /= $avgresonance;
 			$unit = 'EHP';
 			$title = str_replace('Raw ', 'Effective ', $title);
@@ -472,7 +468,6 @@ function print_formatted_misc(&$fit) {
  * keys:
  * 
  * - flags: a mixture of FATTRIBS_* constants
- * - dmgprofile: a damage profile to use (if unspecified, defaults to uniform)
  * - cap: capacitor information to format (if unspecified, generate it on the fly)
  * - ehp: effective hitpoints to format (if unspecified, generate it on the fly)
  */
@@ -480,9 +475,6 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	/* NB: if you change the defaults here, also change the default
 	 * exported values in CLF export function. */
 	$flags = isset($opts['flags']) ? $opts['flags'] : FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR;
-
-	$dmgprofile = isset($opts['dmgprofile']) ? $opts['dmgprofile'] :
-		array('em' => .25, 'thermal' => .25, 'explosive' => .25, 'kinetic' => .25);
 
 	if(isset($opts['cap'])) {
 		$cap = $opts['cap'];
@@ -497,12 +489,12 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	}
 
 	$ehp = isset($opts['ehp']) ? $opts['ehp'] :
-		\Osmium\Fit\get_ehp_and_resists($fit, $dmgprofile);
+		\Osmium\Fit\get_ehp_and_resists($fit);
 
 	print_formatted_engineering($fit, $relative, $cap);
 	print_formatted_offense($fit, $relative, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_DPS);
-	print_formatted_defense($fit, $relative, $ehp, $cap, $dmgprofile, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_TANK);
-	print_formatted_incoming($fit, $relative, $ehp, $dmgprofile);
+	print_formatted_defense($fit, $relative, $ehp, $cap, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_TANK);
+	print_formatted_incoming($fit, $relative, $ehp);
 	print_formatted_outgoing($fit, $relative);
 	print_formatted_navigation($fit, $relative);
 	print_formatted_targeting($fit, $relative);
