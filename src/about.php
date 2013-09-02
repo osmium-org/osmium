@@ -52,9 +52,11 @@ echo "<thead>\n<tr>\n";
 echo "<th>Script name</th>\n<th>License</th>\n<th>Non-obfuscated source</th>\n";
 echo "</tr>\n</thead>\n<tbody>\n";
 
-echo "<tr><td><a href='//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'>jquery.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.js'>https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.js</a></td></tr>\n";
+echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js'>jquery.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js'>https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js</a></td></tr>\n";
 
-echo "<tr><td><a href='//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js'>jquery-ui.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery-ui/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.js'>https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.js</a></td></tr>\n";
+echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js'>jquery-ui.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery-ui/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js'>https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js</a></td></tr>\n";
+
+echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jsPlumb/1.4.1/jquery.jsPlumb-1.4.1-all-min.js'>jquery.jsPlumb-1.4.1-all-min.js</a></td><td><a href='https://github.com/sporritt/jsPlumb/blob/1.5.1/jsPlumb-MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/1.4.1/jquery.jsPlumb-1.4.1-all.js'>https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/1.4.1/jquery.jsPlumb-1.4.1-all.js</a></td></tr>\n";
 
 echo "<tr><td><a href='./static-1/rawdeflate.min.js'>rawdeflate.min.js</a></td><td><a href='http://opensource.org/licenses/GPL-2.0'>GNU-GPL-2.0-only</a><br /><a href='http://opensource.org/licenses/mit-license'>MIT</a></td><td><a href='https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/rawdeflate.js'>https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/rawdeflate.js</a><br /><a href='https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js'>https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js</a></td></tr>\n";
 
