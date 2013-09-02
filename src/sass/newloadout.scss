@@ -391,7 +391,7 @@ section#remote > section#projected {
 					overflow: hidden;
 
 					background-color: rgba($subsection-bg-color, 0.5);
-					border: 0.25em dashed $subsection-border-color;
+					border: 0.25em solid rgba($subsection-border-color, 0.5);
 
 					&> img:first-child {
 						position: absolute;
@@ -403,6 +403,19 @@ section#remote > section#projected {
 
 					&> span.contextmenuindicator {
 						display: none;
+					}
+
+					&.hastarget {
+						border-color: transparent;
+					}
+
+					&> div.bghue {
+						position: absolute;
+						top: 0;
+						left: 0;
+						width: 100%;
+						height: 100%;
+						z-index: -1;
 					}
 				}
 			}

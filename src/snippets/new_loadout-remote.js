@@ -59,7 +59,7 @@ osmium_projected_clean = function() {
 
 osmium_gen_projected = function() {
 	jsPlumb.Defaults.Container = $("section#projected");
-	jsPlumb.Defaults.Endpoints = [ [ "Dot", { radius: 28 } ], [ "Dot", { radius: 8 } ] ];
+	jsPlumb.Defaults.Endpoints = [ "Blank", "Blank" ];
 
 	osmium_projected_clean();
 
@@ -100,6 +100,12 @@ osmium_gen_projected = function() {
 			if(m[i].typeid === stid && m[i].index === sidx) {
 				m[i]['X-Osmium-target'] = tkey;
 				osmium_commit_undo_deferred();
+				info.source.addClass('hastarget');
+				info.source.append(
+					$(document.createElement('div'))
+						.addClass('bghue')
+						.css('background-color', info.source.closest('div.pr-loadout').css('border-color'))
+				);
 				return;
 			}
 		}
@@ -124,6 +130,8 @@ osmium_gen_projected = function() {
 			if(m[i].typeid === stid && m[i].index === sidx) {
 				m[i]['X-Osmium-target'] = false;
 				osmium_commit_undo_deferred();
+				info.source.children('div.bghue').remove();
+				info.source.removeClass('hastarget');
 				return;
 			}
 		}
@@ -611,21 +619,17 @@ osmium_create_projected = function(key, clf, index) {
 				}
 			});
 
-			source.on('contextmenu', function() {
-				$("section#projected ._jsPlumb_endpoint").last().remove();
-			});
-
 			ul.append(source);
 			++pindex;
 		}
 	}
 
 	proj.append(ul);
-	proj.append(osmium_gen_capacitor(1000, 1000));
+	var cap = osmium_gen_capacitor(1000, 1000);
+	proj.append(cap);
 	osmium_regen_remote_capacitor(proj);
 
 	jsPlumb.makeTarget(proj, {
-		//anchor: [ "Perimeter", { shape: "Circle" } ],
 		anchor: [ 0.5, 0.5 ],
 		paintStyle: { fillStyle: 'hsl(' + proj.data('hue') + ', 50%, 50%)' }
 	});
@@ -924,6 +928,7 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 	jsPlumb.doWhileSuspended(function() {
 		var newconnections = [];
 
+		osmium_user_initiated_push(false);
 		/* Keep all incoming projections */
 		jsPlumb.select({
 			target: stale
@@ -935,7 +940,9 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 				target: fresh
 			});
 		});
+		osmium_user_initiated_pop();
 
+		osmium_user_initiated_push(false);
 		/* Keep outgoing projections if modules match */
 		stale.find('ul > li').each(function() {
 			var source = $(this);
@@ -959,11 +966,14 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 				});
 			} else {
 				/* Drop connections */
+				osmium_user_initiated_pop();
 				connections.detach();
+				osmium_user_initiated_push(false);
 			}
 
 			jsPlumb.unmakeSource(source);
 		});
+		osmium_user_initiated_pop();
 
 		jsPlumb.unmakeTarget(stale);
 		stale.before(fresh);
