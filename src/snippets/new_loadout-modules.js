@@ -398,6 +398,19 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 	li.on('remove_module', function() {
 		var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
 		var slotsdiv = li.closest('div.slots');
+
+		if(osmium_types[typeid][8] === 1) {
+			osmium_user_initiated_push(false);
+			$("section#projected div.pr-loadout.projected-local").find('li').filter(function() {
+				var li = $(this);
+				return li.data('typeid') === typeid && li.data('index') === index;
+			}).each(function() {
+				var li = $(this);
+				jsPlumb.select({ source: $(this) }).detach();
+			}).remove();
+			osmium_user_initiated_pop();
+		}
+
 		for(var i = 0; i < modules.length; ++i) {
 			if(modules[i].index === index && modules[i].typeid === typeid) {
 				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
@@ -414,7 +427,9 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 		}
 
 		if(osmium_types[typeid][8] === 1) {
+			osmium_user_initiated_push(false);
 			osmium_projected_regen_local();
+			osmium_user_initiated_pop();
 		}
 	});
 
