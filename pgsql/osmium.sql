@@ -206,6 +206,40 @@ CREATE TABLE cookietokens (
 
 
 --
+-- Name: damageprofiles; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE damageprofiles (
+    damageprofileid integer NOT NULL,
+    name character varying(255) NOT NULL,
+    electromagnetic double precision NOT NULL,
+    explosive double precision NOT NULL,
+    kinetic double precision NOT NULL,
+    thermal double precision NOT NULL,
+    CONSTRAINT damageprofile_sanity_check CHECK ((((((electromagnetic >= (0)::double precision) AND (explosive >= (0)::double precision)) AND (kinetic >= (0)::double precision)) AND (thermal >= (0)::double precision)) AND ((((electromagnetic + explosive) + kinetic) + thermal) > (0)::double precision)))
+);
+
+
+--
+-- Name: damageprofiles_damageprofileid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE damageprofiles_damageprofileid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: damageprofiles_damageprofileid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE damageprofiles_damageprofileid_seq OWNED BY damageprofiles.damageprofileid;
+
+
+--
 -- Name: editableloadoutsbyaccount; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -332,7 +366,8 @@ CREATE TABLE fittings (
     description text,
     hullid integer,
     creationdate integer NOT NULL,
-    evebuildnumber integer NOT NULL
+    evebuildnumber integer NOT NULL,
+    damageprofileid integer
 );
 
 
@@ -401,8 +436,7 @@ CREATE TABLE fittingfleetboosters (
     haswingbooster boolean NOT NULL,
     wingboosterfittinghash character(40),
     hassquadbooster boolean NOT NULL,
-    squadboosterfittinghash character(40),
-    CONSTRAINT fittingfleetboosters_danglinghashes_check CHECK ((((hasfleetbooster OR (fleetboosterfittinghash IS NULL)) AND (haswingbooster OR (wingboosterfittinghash IS NULL))) AND (hassquadbooster OR (squadboosterfittinghash IS NULL))))
+    squadboosterfittinghash character(40)
 );
 
 
@@ -908,6 +942,13 @@ ALTER TABLE ONLY clients ALTER COLUMN clientid SET DEFAULT nextval('clients_clie
 
 
 --
+-- Name: damageprofileid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY damageprofiles ALTER COLUMN damageprofileid SET DEFAULT nextval('damageprofiles_damageprofileid_seq'::regclass);
+
+
+--
 -- Name: eveaccountid; Type: DEFAULT; Schema: osmium; Owner: -
 --
 
@@ -1042,6 +1083,22 @@ ALTER TABLE ONLY clients
 
 ALTER TABLE ONLY cookietokens
     ADD CONSTRAINT cookietokens_pkey PRIMARY KEY (token);
+
+
+--
+-- Name: damageprofiles_name_damages_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY damageprofiles
+    ADD CONSTRAINT damageprofiles_name_damages_uniq UNIQUE (name, electromagnetic, explosive, kinetic, thermal);
+
+
+--
+-- Name: damageprofiles_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY damageprofiles
+    ADD CONSTRAINT damageprofiles_pkey PRIMARY KEY (damageprofileid);
 
 
 --
@@ -2181,6 +2238,14 @@ ALTER TABLE ONLY fittingremotes
 
 ALTER TABLE ONLY fittingremotes
     ADD CONSTRAINT fittingremotes_remotefittinghash_fkey FOREIGN KEY (remotefittinghash) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittings_damageprofileid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittings
+    ADD CONSTRAINT fittings_damageprofileid_fkey FOREIGN KEY (damageprofileid) REFERENCES damageprofiles(damageprofileid);
 
 
 --

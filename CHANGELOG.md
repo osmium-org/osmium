@@ -1,6 +1,6 @@
 # Version 0.10
 
-## Version 0.10.0, released TBD
+## Version 0.10.0, released 2013-09-03
 
 * Fleet bonuses are now fully supported.
 

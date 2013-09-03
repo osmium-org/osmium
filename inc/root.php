@@ -23,16 +23,16 @@ if(!defined('Osmium\ROOT')) {
 }
 
 /** Bump this when static files (icons, etc.) are updated */
-const STATICVER = 11;
+const STATICVER = 12;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 15;
+const CSS_STATICVER = 16;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 18;
+const JS_STATICVER = 19;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 25;
+const CLIENT_DATA_STATICVER = 26;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
