@@ -23,10 +23,10 @@ namespace Osmium\Fit;
  * database has major updates. */
 function get_eve_db_versions() {
 	return array(
-		392399 => array(
+		592399 => array(
 			'tag' => 'odyssey-11',
 			'name' => 'Odyssey 1.1',
-			'build' => 392399,
+			'build' => 592399,
 			'reldate' => gmmktime(0, 0, 0, 9, 3, 2013),
 		),
 		548234 => array(
