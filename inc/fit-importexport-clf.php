@@ -1132,19 +1132,21 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 
 	if(isset($clf['X-Osmium-remote'])) {
 		$remotes = [];
-		$remotes['local'] =& $clf;
+		$remotes['local'] = $clf;
 		foreach($clf['X-Osmium-remote'] as $k => $pclf) {
-			$remotes[$k] =& $pclf;
+			$remotes[$k] = $pclf;
 		}
 
 		foreach($remotes as $k => &$pclf) {
 			if(!isset($pclf['X-Osmium-current-presetid'])
-			   || !isset($pclf['presets'][$pclf['X-Osmium-current-presetid']]['modules'])) continue;
+			   || !isset($pclf['presets'][$pclf['X-Osmium-current-presetid']]['modules'])) {
+				continue;
+			}
 
 			$modules = $pclf['presets'][$pclf['X-Osmium-current-presetid']]['modules'];
 			foreach($modules as $m) {
 				if(!isset($m['X-Osmium-target'])) continue;
-				$target = $m['X-Osmium-target'] === false ? null : $m['X-Osmium-target'];
+				$target = ($m['X-Osmium-target'] === false) ? null : $m['X-Osmium-target'];
 				set_module_target_by_typeid($fit, $k, $m['index'], $m['typeid'], $target);
 			}
 		}
