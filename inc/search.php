@@ -447,7 +447,7 @@ function get_search_cond_from_advanced() {
 		/* Use sane defaults, ie hide absurdly outdated loadouts by
 		 * default */
 
-		$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
+		$vercutoff = array_values(\Osmium\Fit\get_eve_db_versions())[2]['build'];
 
 		$_GET['op'] = 'gt';
 		$_GET['build'] = $vercutoff;
