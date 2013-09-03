@@ -23,6 +23,10 @@ osmium_showinfo = function(opts) {
 		osmium_commit_clf({
 			success: function() {
 				osmium_showinfo_internal(opts, function(xhr, error, httperror) {
+					if(xhr.readyState === 0 || xhr.status === 0) {
+						return;
+					}
+
 					alert('Could not show info: ' + error + ' (' + httperror
 						  + '). Try refreshing the page and report if the problem persists.');
 				});

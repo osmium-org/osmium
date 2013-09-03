@@ -67,6 +67,12 @@ osmium_load_static_client_data = function(staticver, onsuccess) {
 		url: osmium_relative + '/static-' + staticver + '/cache/clientdata.json',
 		dataType: 'json',
 		error: function(xhr, error, httperror) {
+			if(xhr.readyState === 0 || xhr.status === 0) {
+				/* User probably clicked cancel button or is closing
+				 * the page */
+				return;
+			}
+
 			alert('Could not fetch static client data: ' + error + ' (' + httperror
 				  + '). Try refreshing the page and report if the problem persists.');
 		},
@@ -182,6 +188,10 @@ osmium_send_clf = function(opts) {
 			}
 		},
 		error: function(xhr, error, httperror) {
+			if(xhr.readyState === 0 || xhr.status === 0) {
+				return;
+			}
+
 			alert('Could not sync loadout with remote: ' + error + ' (' + httperror 
 				  + '). This shouldn\'t normally happen, try again or refresh the page. Please report if the problem persists.');
 			setTimeout(osmium_send_clf, 500);
