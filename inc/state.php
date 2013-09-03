@@ -343,7 +343,8 @@ function try_recover() {
 	}
 
 	if(!$login) {
-		logoff(false); /* Delete that erroneous cookie */
+		/* XXX */
+		//logoff(false); /* Delete that erroneous cookie */
 	}
 }
 
