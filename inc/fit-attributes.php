@@ -575,7 +575,7 @@ function get_module_interesting_attributes($fit, $type, $index) {
 	if($ranges !== array()) {
 		$attributes['range'] = min($ranges);
 	}
-	if($trackings !== array()) {
+	if($falloffs !== array()) {
 		$attributes['falloff'] = min($falloffs);
 	}
 

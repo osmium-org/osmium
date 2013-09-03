@@ -25,7 +25,7 @@ if(!\Osmium\State\is_logged_in()) {
 }
 
 $a = \Osmium\State\get_state('a');
-$name = $_GET['name'];
+$name = urldecode($_GET['name']);
 
 $row = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(

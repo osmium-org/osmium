@@ -49,7 +49,7 @@ $hidden-char: '\0025B8';
 		&.hasncycles > span.name {
 			display: inline-block;
 			vertical-align: middle;
-			max-width: $module-width - 6em;
+			max-width: $module-width - 6.5em;
 		}
 	}
 
