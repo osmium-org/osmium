@@ -1,6 +1,6 @@
 THEMES=dark light
 
-default: themes static/cache/clientdata.json
+default: themes static/cache/clientdata.json cache/OsmiumCache_top_kills
 
 themes: $(addprefix static/, $(addsuffix .css, $(THEMES)))
 
@@ -9,6 +9,9 @@ static/%.css: src/sass/themes/%.scss src/sass/*.scss
 
 static/cache/clientdata.json:
 	./bin/make_static_client_data
+
+cache/OsmiumCache_top_kills:
+	./bin/cache_top_kills
 
 tests:
 	@make -s clear-harmless-cache
