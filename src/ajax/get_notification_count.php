@@ -22,6 +22,8 @@ require __DIR__.'/../../inc/root.php';
 
 header('Content-Type: text/plain');
 
+\Osmium\State\put_activity();
+
 $a = \Osmium\State\get_state('a', null);
 if($a === null) {
 	echo "0";
