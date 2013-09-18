@@ -1,4 +1,5 @@
 cache/*
+!cache/.empty_file
 static/cache/*
 !static/cache/.empty_file
 config.ini
