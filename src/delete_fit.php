@@ -50,6 +50,7 @@ if(!$can_edit) {
 \Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouthistory WHERE loadoutid = $1', array($loadoutid));
+\Osmium\Db\query_params('DELETE FROM osmium.loadoutdogmaattribs WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_LOADOUT, null, $loadoutid);
 
