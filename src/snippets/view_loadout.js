@@ -163,13 +163,4 @@ osmium_init_export = function() {
 			}
 		});
 	});
-
-	$("section#export").on('click', 'a:data(ccpdna)', function() {
-		var t = $(this);
-		t.blur();
-
-		if(typeof CCPEVE === 'object' && 'showFitting' in CCPEVE && typeof CCPEVE.showFitting === 'function') {
-			CCPEVE.showFitting(t.data('ccpdna'));
-		}
-	});
 };
