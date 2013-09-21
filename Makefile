@@ -33,7 +33,7 @@ tags:
 	ctags -e -R .
 
 clear-harmless-cache:
-	find ./cache -maxdepth 1 -type f -not \( -name "API_*" -or -name "sess_*" \) -delete
+	find ./cache -maxdepth 1 -type f -not \( -name ".empty_file" -or -name "API_*" -or -name "sess_*" \) -delete
 	find ./static/cache -maxdepth 1 -type f -not -name ".empty_file" -delete
 	make
 
