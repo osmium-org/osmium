@@ -1,0 +1,194 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+define('CHECK_REQUIRED', 1);
+
+function check($label, $checkfunc, $opts = 0) {
+	echo str_pad("checking ".$label.' ', 70, '.').' ';
+	$result = $checkfunc();
+
+	if(is_array($result)) {
+		list($b, $s) = $result;
+	} else {
+		$b = $result;
+		$s = $b ? 'ok' : 'no';
+	}
+
+	if(($opts & CHECK_REQUIRED) && !$b && !defined('FAIL')) {
+		define('FAIL', true);
+	}
+
+	echo "\033[".($b ? '1;32' : ($opts & CHECK_REQUIRED ? '1;31' : '1;33'))."m";
+	echo $s;
+	echo "\033[0m\n";
+}
+
+function check_ext($extname, $opts = 0) {
+	return check("for {$extname} extension", function() use(&$extname) {
+		return array(
+			$hasit = extension_loaded($extname),
+			$hasit ? (phpversion($extname) ?: 'ok') : 'no'
+		);
+	}, $opts);
+}
+
+function check_func($funcname, $opts = 0) {
+	return check("whether {$funcname}() exists", function() use(&$funcname) {
+		return function_exists($funcname);
+	}, $opts);
+}
+
+function check_method($classname, $funcname, $opts = 0) {
+	return check("for \\{$classname}::{$funcname}()", function() use(&$classname, &$funcname) {
+		return method_exists($classname, $funcname);
+	}, $opts);
+}
+
+check('for PHP >= 5.4', function() {
+	$version = phpversion();
+	return array(version_compare($version, '5.4.0', '>='), $version);
+}, CHECK_REQUIRED);
+
+foreach(array(
+	'dogma' => 'dogma_init_context',
+	'pgsql' => 'pg_connect',
+	'mysqli' => 'mysqli_connect',
+	'curl' => 'curl_init',
+	'simplexml' => 'simplexml_load_string',
+	'zlib' => 'gzinflate',
+) as $ext => $func) {
+	check_ext($ext, CHECK_REQUIRED);
+	check_func($func, CHECK_REQUIRED);
+}
+
+foreach(array(
+	'sysvsem' => 'sem_acquire',
+	'iconv' => 'iconv',
+	'apc' => 'apc_store',
+) as $ext => $func) {
+	check_ext($ext);
+	check_func($func);
+}
+
+check_ext('intl');
+check_method('Normalizer', 'normalize');
+
+@include_once 'HTMLPurifier.includes.php';
+@include_once 'HTMLPurifier.auto.php';
+check_method('HTMLPurifier', 'purify', CHECK_REQUIRED);
+
+check('whether config.ini exists', function() {
+	$ini = __DIR__.'/../config.ini';
+	return file_exists($ini) && is_readable($ini);
+}, CHECK_REQUIRED);
+
+check('for missing keys in config.ini', function() {
+	$ini = @parse_ini_file(__DIR__.'/../config.ini');
+	$distini = @parse_ini_file(__DIR__.'/../config-example.ini');
+
+	if($ini === false) return array(false, 'config.ini unparseable');
+	if($distini === false) return array(false, 'config-example.ini unparseable');
+
+	foreach($ini as $k => $v) unset($distini[$k]);
+	$ret = implode(',', array_keys($distini));
+
+	return array($ret === '', $ret ?: 'none');
+}, CHECK_REQUIRED);
+
+check('for dangling keys in config.ini', function() {
+	$ini = @parse_ini_file(__DIR__.'/../config.ini');
+	$distini = @parse_ini_file(__DIR__.'/../config-example.ini');
+
+	if($ini === false) return array(false, 'config.ini unparseable');
+	if($distini === false) return array(false, 'config-example.ini unparseable');
+
+	foreach($distini as $k => $v) unset($ini[$k]);
+	$ret = implode(',', array_keys($ini));
+
+	return array($ret === '', $ret ?: 'none');
+});
+
+check('for Sass >= 3.2', function() {
+	$sassver = preg_split('%\s+%', shell_exec('sass --version'));
+	foreach($sassver as $part) {
+		if(preg_match('%^\d+\.\d+\.\d+$%', $part)) {
+			return array(version_compare($part, '3.2.0', '>='), $part);
+		}
+	}
+
+	return array(false, 'not found');
+}, CHECK_REQUIRED);
+
+check('whether cache directory is writeable', function() {
+	$cdir = __DIR__.'/../cache';
+	return file_exists($cdir) && is_dir($cdir) && is_writable($cdir);
+});
+
+check('whether static/cache directory is writeable', function() {
+	$cdir = __DIR__.'/../static/cache';
+	return file_exists($cdir) && is_dir($cdir) && is_writable($cdir);
+});
+
+if(defined('FAIL')) {
+	echo "\nRequired checks failed. Stopping now.\n";
+	die(1);
+}
+
+require __DIR__.'/../inc/root.php';
+
+check('for some data in the eve PostgreSQL schema', function() {
+	$q = @\Osmium\Db\query_params('SELECT typename FROM eve.invtypes WHERE typeid = $1', array(2048));
+	if($q === false) return false;
+	$r = @\Osmium\Db\fetch_row($q);
+	if($r === false) return false;
+	return isset($r[0]) && $r[0] === 'Damage Control II';
+}, CHECK_REQUIRED);
+
+check('for osmium PostgreSQL schema', function() {
+	$q = @\Osmium\Db\query('SELECT MAX(accountid) FROM osmium.accounts');
+	if($q === false) return false;
+	$r = \Osmium\Db\fetch_row($q);
+	if($r === false) return false;
+	return isset($r[0]) && is_numeric($r[0]);
+}, CHECK_REQUIRED);
+
+check('for Sphinx', function() {
+	$link = @\Osmium\Search\get_link();
+	$error = error_get_last();
+	if($link) {
+		return true;
+	} else if($error !== null) {
+		return array(false, $error['message']);
+	} else {
+		return false;
+	}
+}, CHECK_REQUIRED);
+
+check('for some data in the osmium_types Sphinx index', function() {
+	$q = @\Osmium\Search\query('SELECT id FROM osmium_types WHERE MATCH(\'dc2\')');
+	if($q === false) return false;
+	$r = @\Osmium\Search\fetch_assoc($q);
+	if($r === false) return false;
+	return isset($r['id']) && (int)$r['id'] > 0;
+}, CHECK_REQUIRED);
+
+check('for osmium_loadouts Sphinx RT index', function() {
+	$q = @\Osmium\Search\query('SELECT id FROM osmium_loadouts');
+	return $q;
+}, CHECK_REQUIRED);

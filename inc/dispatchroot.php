@@ -108,6 +108,10 @@ function curl_init_branded() {
 }
 
 function fatal($code, $message) {
+	/* Don't halt script execution if used with the shutup (@)
+	 * operator */
+	if(error_reporting() === 0) return;
+
 	if(!headers_sent()) {
 		http_response_code($code);
 	}
@@ -141,12 +145,16 @@ function fatal($code, $message) {
 	list($msec, $sec) = explode(' ', microtime(), 2);
 	$message .= "\n".gethostname().' '.date('Y-m-d H:i:s', $sec).rtrim(substr($msec, 1), "0")."\n";
 
-	echo "<!DOCTYPE html>\n<html>\n<head>\n"
-		."<title>{$code} / Osmium</title>\n"
-		."</head>\n<body>\n<pre>"
-		.htmlspecialchars($message)
-		."</pre>\n"
-		."</body>\n</html>\n";
+	if(php_sapi_name() === 'cli') {
+		echo $message."\n";
+	} else {
+		echo "<!DOCTYPE html>\n<html>\n<head>\n"
+			."<title>{$code} / Osmium</title>\n"
+			."</head>\n<body>\n<pre>"
+			.htmlspecialchars($message)
+			."</pre>\n"
+			."</body>\n</html>\n";
+	}
 
 	die((int)$code);
 }
