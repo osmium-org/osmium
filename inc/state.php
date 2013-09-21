@@ -142,8 +142,8 @@ function get_client_attributes() {
 
 	return hash('sha256', serialize(array(
 		$_SERVER['REMOTE_ADDR'],
-		$_SERVER['HTTP_USER_AGENT'],
-		$_SERVER['HTTP_ACCEPT'],
+		isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Unknown',
+		isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : 'Unknown',
 		$_SERVER['HTTP_HOST'],
 	)));
 }
