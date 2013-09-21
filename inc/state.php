@@ -23,11 +23,6 @@ require __DIR__.'/state-fit.php';
 
 const MINIMUM_PASSWORD_ENTROPY = 40;
 
-/** Global variable that stores all Osmium-related session state.
- *
- * FIXME: get rid of this */
-$__osmium_state =& $_SESSION['__osmium_state'];
-
 /** Default expire duration for the token cookie. 7 days. */
 const COOKIE_AUTH_DURATION = 604800;
 
@@ -39,8 +34,8 @@ const REQUIRED_ACCESS_MASK_WITH_CONTACTS = 33554456; /* CharacterSheet+AccountSt
  * Checks whether the current user is logged in.
  */
 function is_logged_in() {
-	global $__osmium_state;
-	return isset($__osmium_state['a']['accountid']) && $__osmium_state['a']['accountid'] > 0;
+	$a = get_state('a', array());
+	return isset($a['accountid']) && $a['accountid'] > 0;
 }
 
 /**
@@ -53,10 +48,7 @@ function is_logged_in() {
  * "remember me" feature.
  */
 function do_post_login($account_name, $use_cookie = false) {
-	global $__osmium_state;
-
 	/* Get rid of old $_SESSION */
-	$__osmium_state = null;
 	$_SESSION = array();
 	session_write_close();
 
@@ -70,12 +62,13 @@ function do_post_login($account_name, $use_cookie = false) {
 
 	session_id("Account-".$a['accountid']."-".session_id());
 	session_start();
-	$__osmium_state =& $_SESSION['__osmium_state'];
-	$__osmium_state['a'] = $a;
+	$_SESSION['__osmium_state'] = array(
+		'a' => $a
+	);
 
 	if($use_cookie) {
 		$token = uniqid('Osmium_', true);
-		$account_id = $__osmium_state['a']['accountid'];
+		$account_id = $a['accountid'];
 		$attributes = get_client_attributes();
 		$expiration_date = time() + COOKIE_AUTH_DURATION;
 
@@ -90,7 +83,13 @@ function do_post_login($account_name, $use_cookie = false) {
 		);
 	}
 
-	\Osmium\Db\query_params('UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2', array(time(), $__osmium_state['a']['accountid']));
+	\Osmium\Db\query_params(
+		'UPDATE osmium.accounts SET lastlogindate = $1 WHERE accountid = $2',
+		array(
+			time(),
+			$a['accountid'],
+		)
+	);
 }
 
 /**
@@ -100,14 +99,14 @@ function do_post_login($account_name, $use_cookie = false) {
  * associated with the current account.
  */
 function logoff($global = false) {
-	global $__osmium_state;
 	if($global && !is_logged_in()) return;
 
 	if($global) {
-		$account_id = $__osmium_state['a']['accountid'];
-
 		/* Invalidate all cookie tokens */
-		\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE accountid = $1', array($account_id));
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.cookietokens WHERE accountid = $1',
+			array($account_id = get_state('a')['accountid'])
+		);
 	}
 
 	setcookie(
@@ -118,10 +117,9 @@ function logoff($global = false) {
 		true
 	);
 
-	$__osmium_state = null;
 	$_SESSION = array();
 	session_regenerate_id(true);
-	$__osmium_state =& $_SESSION['__osmium_state'];
+	$_SESSION['__osmium_state'] = array();
 
 	if($global) {
 		/* Remove all the other sessions with the same account ID */
@@ -188,8 +186,7 @@ function print_login_box($relative) {
 
 /** @internal */
 function print_logoff_box($relative, $notifications) {
-	global $__osmium_state;
-	$a = $__osmium_state['a'];
+	$a = get_state('a');
 	$tok = urlencode(get_token());
 
 	$portrait = '';
@@ -617,13 +614,13 @@ function update_character_contactlist($a, $timeout = null) {
  * tokens.)
  */
 function get_token() {
-	global $__osmium_state;
+	$tok = get_state('logouttoken', null);
 
-	if(!isset($__osmium_state['logouttoken'])) {
-		$__osmium_state['logouttoken'] = uniqid('OsmiumTok_', true);
+	if($tok === null) {
+		put_state('logouttoken', $tok = uniqid('OsmiumTok_', true));
 	}
 
-	return $__osmium_state['logouttoken'];
+	return $tok;
 }
 
 /**
