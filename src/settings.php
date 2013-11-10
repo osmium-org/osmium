@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -99,7 +99,7 @@ echo "<h3>Create a new character</h3>\n";
 
 \Osmium\Forms\print_form_begin();
 
-if(isset($_POST['newcharname'])) {
+if(isset($_POST['newcharname']) && $_POST['newcharname'] !== '') {
 	$name = $_POST['newcharname'];
 	list($exists) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2', array($a['accountid'], $name)));
 

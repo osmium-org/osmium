@@ -27,7 +27,7 @@ const LOADOUT_TYPE_NEW = 1;
 
 /** For a loadout being temporarily played with. No big deal if the
  * cache expires or is lost. */
-const LOADOUT_TYPE_VIEW = 1;
+const LOADOUT_TYPE_VIEW = 2;
 
 
 /**

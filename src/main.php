@@ -171,7 +171,7 @@ if(isset($a['accountid']) && $a['accountid'] > 0) {
 
 
 
-	$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
+	$vercutoff = array_values(\Osmium\Fit\get_eve_db_versions())[2]['build'];
 	echo "<section class='popularfits'>\n<h2>Popular fits</h2>\n";
 
 	$ids = \Osmium\Search\get_search_ids(
@@ -215,7 +215,7 @@ if(isset($a['accountid']) && $a['accountid'] > 0) {
 
 
 	echo get_cache_memory_or_gen('popular_fits', 602, function() {
-		$vercutoff = \Osmium\Fit\get_closest_version_by_time(time() - 86400 * 60)['build'];
+		$vercutoff = array_values(\Osmium\Fit\get_eve_db_versions())[2]['build'];
 		$r = "<section class='popularfits'>\n<h2>Popular fits</h2>\n";
 
 		ob_start();

@@ -344,9 +344,7 @@ function put_state($key, $value) {
  */
 function get_setting($key, $default = null) {
 	if(!is_logged_in()) return $default;
-
-	global $__osmium_state;
-	$accountid = $__osmium_state['a']['accountid'];
+	$accountid = get_state('a')['accountid'];
 
 	$k = \Osmium\Db\query_params('SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
 	while($r = \Osmium\Db\fetch_row($k)) {
@@ -362,9 +360,8 @@ function get_setting($key, $default = null) {
  */
 function put_setting($key, $value) {
 	if(!is_logged_in()) return;
+	$accountid = get_state('a')['accountid'];
 
-	global $__osmium_state;
-	$accountid = $__osmium_state['a']['accountid'];
 	\Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
 	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, serialize($value)));
 
