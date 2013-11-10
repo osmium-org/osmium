@@ -743,9 +743,11 @@ function commit_loadout_dogma_attribs(&$fit) {
 		array($fit['metadata']['loadoutid'])
 	);
 
+	$ia = get_modules_interesting_attributes($fit);
+
 	$dps = 0;
-	$dps += get_damage_from_turrets($fit)[0];
-	$dps += get_damage_from_missiles($fit)[0];
+	$dps += get_damage_from_turrets($fit, $ia)[0];
+	$dps += get_damage_from_missiles($fit, $ia)[0];
 	$dps += get_damage_from_drones($fit);
 
 	$ehp = get_ehp_and_resists(

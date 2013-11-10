@@ -264,9 +264,15 @@ if($loadoutid !== false) {
 }
 
 $capacitors = \Osmium\Fit\get_all_capacitors($fit);
+$ia_ = \Osmium\Fit\get_modules_interesting_attributes($fit);
 echo "<section id='attributes'>
 <div class='compact' id='computed_attributes'>\n";
-\Osmium\Chrome\print_formatted_loadout_attributes($fit, RELATIVE, [ 'cap' => $capacitors['local'] ]);
+\Osmium\Chrome\print_formatted_loadout_attributes(
+	$fit, RELATIVE, [
+		'cap' => $capacitors['local'],
+		'ia' => $ia_,
+	]
+);
 echo "</div>
 </section>
 </div>\n";
@@ -303,7 +309,6 @@ echo "<section id='loadout'>
 $stypes = \Osmium\Fit\get_slottypes();
 $slotusage = \Osmium\AjaxCommon\get_slot_usage($fit);
 $states = \Osmium\Fit\get_state_names();
-$ia_ = \Osmium\AjaxCommon\get_modules_interesting_attributes($fit);
 $ia = array();
 foreach($ia_ as $k) { $ia[$k[0]][$k[1]] = $k; }
 $fittedtotal = 0;

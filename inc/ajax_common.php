@@ -62,30 +62,3 @@ function get_slot_usage(&$fit) {
 
 	return $usage;
 }
-
-/**
- * Generate formatted interesting attributes for all the modules in
- * the fit.
- *
- * @returns an array of array(slottype, index, shortformat,
- * longformat).
- */
-function get_modules_interesting_attributes(&$fit) {
-	$attrs = array();
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $m) {
-			$a = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
-			$fashort = \Osmium\Chrome\format_short_range($a);
-
-			if(empty($fashort)) continue;
-			$falong = \Osmium\Chrome\format_long_range($a);
-
-			$attrs[] = array(
-				$type, $index,
-				$fashort, $falong,
-			);
-		}
-	}
-
-	return $attrs;
-}

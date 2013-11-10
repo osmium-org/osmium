@@ -120,17 +120,17 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	);
 }
 
-function print_formatted_offense(&$fit, $relative, $reload = false) {
+function print_formatted_offense(&$fit, $relative, array $ia, $reload = false) {
 	ob_start();
 
-	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit, $reload);
+	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit, $ia, $reload);
 	echo "<p>"
 		.sprite($relative, 'Turret damage', 0, 0, 64, 64, 32)
 		."<span><span title='Turret volley (alpha)'>"
 		.format_number($turretalpha)."</span><br /><span title='Turret DPS'>"
 		.format_number($turretdps)."</span></span></p>\n";
 
-	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit, $reload);
+	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit, $ia, $reload);
 	echo "<p>"
 		.sprite($relative, 'Missile damage', 0, 1, 64, 64, 32)
 		."<span><span title='Missile volley (alpha)'>"
@@ -488,11 +488,13 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	    $cap = $result[dogma_get_hashcode($fit['__dogma_context'])];
 	}
 
+	$ia = isset($opts['ia']) ? $opts['ia'] : \Osmium\Fit\get_modules_interesting_attributes($fit);
+
 	$ehp = isset($opts['ehp']) ? $opts['ehp'] :
 		\Osmium\Fit\get_ehp_and_resists($fit);
 
 	print_formatted_engineering($fit, $relative, $cap);
-	print_formatted_offense($fit, $relative, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_DPS);
+	print_formatted_offense($fit, $relative, $ia, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_DPS);
 	print_formatted_defense($fit, $relative, $ehp, $cap, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_TANK);
 	print_formatted_incoming($fit, $relative, $ehp);
 	print_formatted_outgoing($fit, $relative);

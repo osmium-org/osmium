@@ -74,7 +74,9 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			\Osmium\Fit\add_charge($fit, 'high', $i, $chargeid);
 		}
 
-		list($dps, $volley) = $funcname($fit);
+		$ia = \Osmium\Fit\get_modules_interesting_attributes($fit);
+
+		list($dps, $volley) = $funcname($fit, $ia);
 		$this->assertEquals($expecteddps, $dps, '', 1);
 		$this->assertEquals($expectedvolley, $volley, '', 1);
 
@@ -82,7 +84,7 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			\Osmium\Fit\add_module($fit, $i, $damagemodid);
 		}
 
-		list($dps, $volley) = $funcname($fit);
+		list($dps, $volley) = $funcname($fit, $ia);
 		$this->assertEquals($expecteddps2, $dps, '', 1);
 		$this->assertEquals($expectedvolley2, $volley, '', 1);
 	}
@@ -429,7 +431,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		\Osmium\Fit\add_charge($fit, 'high', 0, 17648); /* Antimatter Charge XL */
 
 		/* Pyfa 1.1.8 */
-		list($dps, $alpha) = \Osmium\Fit\get_damage_from_turrets($fit);
+		$ia = \Osmium\Fit\get_modules_interesting_attributes($fit);
+		list($dps, $alpha) = \Osmium\Fit\get_damage_from_turrets($fit, $ia);
 		$this->assertEquals(465, $dps, '', 0.5);
 		$this->assertEquals(4802.4, $alpha, '', 0.05);
 	}

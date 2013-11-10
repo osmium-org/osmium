@@ -79,7 +79,7 @@ $attribopts = array(
 
 $capacitors = \Osmium\Fit\get_all_capacitors(
 	$local,
-	$attribopts & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR
+	$attribflags & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR
 );
 $attribopts['cap'] = $capacitors['local'];
 foreach($capacitors as &$c) {
@@ -88,10 +88,12 @@ foreach($capacitors as &$c) {
 	}
 }
 
+$ia = $attribopts['ia'] = \Osmium\Fit\get_modules_interesting_attributes($local);
+
 $payload = array(
 	'clftoken' => $token,
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribopts),
-	'mia' => \Osmium\AjaxCommon\get_modules_interesting_attributes($local),
+	'mia' => $ia,
 	'ncycles' => array(),
 	'rawattribs' => array(
 		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($local, 'droneBandwidth'),

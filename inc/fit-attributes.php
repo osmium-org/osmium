@@ -380,114 +380,51 @@ function get_outgoing(&$fit) {
 	return $outgoing;
 }
 
-/**
- * Get DPS and volley damage. Returns an array of the two values (dps,
- * volley) in this order.
- *
- * This function assumes the damage comes from the emDamage,
- * thermalDamage, kineticDamage and explosiveDamage of the charge
- * fitted to the turret which has the attacking attribute.
- *
- * Only active turrets are considered, and the charge of the currently
- * selected charge preset is used.
- *
- * @param $attackeffectname name of the effect that does the attacking
- *
- * @param $modulemultiplierattributename optional name of the turret
- * damage multiplier attribute
- *
- * @param $globalmultiplier optional value of a global damage
- * multiplier
- */
-function get_damage_from_attack_effect(&$fit, $attackeffectid,
-                                       $modulemultiplierattribute = null,
-                                       $globalmultiplier = 1,
-                                       $reload = false) {
+/** @internal */
+function get_damage_from_generic_damagetype(&$fit, array $ia, $damagetype, $reload) {
+	$dps = 0;
+	$volley = 0;
+
 	\Osmium\Dogma\auto_init($fit);
 
-	$dps = 0;
-	$alpha = 0;
+	foreach($ia as $m) {
+		list($type, $index, , , $a) = $m;
 
-	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
-		foreach($a as $index => $module) {
-			$ret = dogma_type_has_effect(
-				$module['typeid'],
-				\Osmium\Dogma\get_dogma_states()[$module['state']],
-				$attackeffectid, $hasit
-			);
-			if($ret !== DOGMA_OK || $hasit !== true) {
-				continue;
-			}
+		if(!isset($a['damagetype']) || $a['damagetype'] !== $damagetype) continue;
 
-			$duration = 0;
-			dogma_get_location_effect_attributes(
-				$fit['__dogma_context'],
-				[ DOGMA_LOC_Module, "module_index" => $module['dogma_index'] ],
-				$attackeffectid,
-				$duration, $tracking, $discharge, $range, $falloff, $usagechance
-			);
+		$v = $a['damage'];
+		$d = $a['duration'];
 
-			if($duration <= 1e-300) continue;
-
-			$damage = 
-				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage');
-
-			$multiplier = $modulemultiplierattribute === null ? 1 :
-				\Osmium\Dogma\get_module_attribute($fit, $type, $index, $modulemultiplierattribute);
-
-			$alpha += $multiplier * $damage;
-			if(!$reload) {
-				$dps += $multiplier * $damage / $duration;
-				continue;
-			}
-
+		if($reload) {
 			dogma_get_number_of_module_cycles_before_reload(
-				$fit['__dogma_context'], $module['dogma_index'], $ncycles
+				$fit['__dogma_context'], $fit['modules'][$type][$index]['dogma_index'], $ncycles
 			);
 
-			if($ncycles === -1) {
-				$dps += $multiplier * $damage / $duration;
-				continue;
+			if($ncycles !== -1) {
+				$reloadtime = \Osmium\Dogma\get_module_attribute($fit, $type, $index, ATT_ReloadTime);
+				$d += $reloadtime / $ncycles;
 			}
-
-			$reloadtime = \Osmium\Dogma\get_module_attribute($fit, $type, $index, ATT_ReloadTime);
-			$dps += $multiplier * $damage / ($duration + $reloadtime / $ncycles);
 		}
+
+		$dps += $v / $d;
+		$volley += $v;
 	}
 
-	return array(1000 * $dps * $globalmultiplier, $alpha * $globalmultiplier);
+	return array(1000 * $dps, $volley);
 }
 
 /**
  * Get DPS/volley damage from active missile launchers.
  */
-function get_damage_from_missiles(&$fit, $reload = false) {
-	return get_damage_from_attack_effect(
-		$fit, EFFECT_UseMissiles, null,
-		\Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier'),
-		$reload
-	);
+function get_damage_from_missiles(&$fit, array $ia, $reload = false) {
+	return get_damage_from_generic_damagetype($fit, $ia, 'missile', $reload);
 }
 
 /**
  * Get DPS/volley damage from active turrets (projectile, hybrids and lasers).
  */
-function get_damage_from_turrets(&$fit, $reload = false) {
-	$projectiles = get_damage_from_attack_effect(
-		$fit, EFFECT_ProjectileFired, 'damageMultiplier', 1.0, $reload
-	);
-
-	$lasers = get_damage_from_attack_effect(
-		$fit, EFFECT_TargetAttack, 'damageMultiplier', 1.0, $reload
-	);
-
-	return array(
-		$projectiles[0] + $lasers[0],
-		$projectiles[1] + $lasers[1],
-	);
+function get_damage_from_turrets(&$fit, array $ia, $reload = false) {
+	return get_damage_from_generic_damagetype($fit, $ia, 'turret', $reload);
 }
 
 /**
@@ -542,9 +479,8 @@ function get_module_interesting_attributes($fit, $type, $index) {
 	$attributes = array();
 	$typeid = $fit['modules'][$type][$index]['typeid'];
 	$state = $fit['modules'][$type][$index]['state'];
+	$dstate = \Osmium\Dogma\get_dogma_states()[$state];
 	$mdindex = $fit['modules'][$type][$index]['dogma_index'];
-
-	if($state < STATE_ONLINE) return array();
 
 	$trackings = array();
 	$ranges = array();
@@ -554,19 +490,73 @@ function get_module_interesting_attributes($fit, $type, $index) {
 	while(dogma_get_nth_type_effect_with_attributes($typeid, $i, $effect) === DOGMA_OK) {
 		++$i;
 
-		$tra = $ran = $fal = 0;
+		$dur = $tra = $ran = $fal = 0;
 
-		/* XXX check effect category? */
 		dogma_get_location_effect_attributes(
 			$fit['__dogma_context'], [ DOGMA_LOC_Module, 'module_index' => $mdindex ], $effect,
 			$dur, $tra, $dis, $ran, $fal, $fua
 		);
+
+		if(dogma_type_has_effect($typeid, $dstate, $effect, $hasit) !== DOGMA_OK || $hasit !== true) {
+			/* Effect is not currently active */
+			continue;
+		}
 
 		/* Sometimes zero values are not exactly zero but a very small
 		 * value, due to floating point precision loss. */
 		if($tra > 1e-300) $trackings[] = $tra;
 		if($ran > 1e-300) $ranges[] = $ran;
 		if($fal > 1e-300) $falloffs[] = $fal;
+
+		if($effect === EFFECT_UseMissiles) {
+			if(!isset($fit['charges'][$type][$index])) continue;
+			if($dur < 1e-300) continue;
+
+			$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
+			$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
+			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
+			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
+
+			if($mass != 0 && $agility != 0) {
+				/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
+				/* Integrate the velocity of the missile from 0 to flighttime: */
+				$K = -1000000 / ($mass * $agility);
+				$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
+			} else {
+				/* Zero mass or zero agility, for example defender missiles */
+				$attributes['maxrange'] = $velocity * $flighttime;
+			}
+
+			$attributes['damagetype'] = 'missile';
+			$attributes['duration'] = $dur;
+			$attributes['damage'] = \Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier') * (
+				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage')
+			);
+			$attributes['expvelocity'] = \Osmium\Dogma\get_charge_attribute(
+				$fit, $type, $index, 'aoeVelocity'
+			);
+			$attributes['expradius'] = \Osmium\Dogma\get_charge_attribute(
+				$fit, $type, $index, 'aoeCloudSize'
+			);
+		} else if($effect === EFFECT_ProjectileFired || $effect === EFFECT_TargetAttack) {
+			if(!isset($fit['charges'][$type][$index])) continue;
+			if($dur < 1e-300) continue;
+
+			$attributes['damagetype'] = 'turret';
+			$attributes['duration'] = $dur;
+			$attributes['damage'] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'damageMultiplier') * (
+				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage')
+			);
+			$attributes['sigradius'] = \Osmium\Dogma\get_module_attribute(
+				$fit, $type, $index, 'optimalSigRadius'
+			);
+		}
 	}
 
 	if($trackings !== array()) {
@@ -579,27 +569,35 @@ function get_module_interesting_attributes($fit, $type, $index) {
 		$attributes['falloff'] = min($falloffs);
 	}
 
-	if(isset($fit['charges'][$type][$index])
-	   && dogma_type_has_effect($typeid, \Osmium\Dogma\get_dogma_states()[$state],
-	                            EFFECT_UseMissiles, $hasit) === DOGMA_OK
-	   && $hasit) {
-		$flighttime = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosionDelay') / 1000;
-		$velocity = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'maxVelocity');
-		$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
-		$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
+	return $attributes;
+}
 
-		if($mass != 0 && $agility != 0) {
-			/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
-			/* Integrate the velocity of the missile from 0 to flighttime: */
-			$K = -1000000 / ($mass * $agility);
-			$attributes['maxrange'] = $velocity * ($flighttime + (1 - exp($K * $flighttime)) / $K);
-		} else {
-			/* Zero mass or zero agility, for example defender missiles */
-			$attributes['maxrange'] = $velocity * $flighttime;
+/**
+ * Generate formatted interesting attributes for all the modules in
+ * the fit.
+ *
+ * @returns an array of array(slottype, index, shortformat,
+ * longformat, rawattributes).
+ */
+function get_modules_interesting_attributes(&$fit) {
+	$attrs = array();
+	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
+		foreach($a as $index => $m) {
+			$a = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
+			$fashort = \Osmium\Chrome\format_short_range($a);
+
+			if(empty($fashort)) continue;
+			$falong = \Osmium\Chrome\format_long_range($a);
+
+			$attrs[] = array(
+				$type, $index,
+				$fashort, $falong,
+				$a
+			);
 		}
 	}
 
-	return $attributes;
+	return $attrs;
 }
 
 /**
