@@ -150,7 +150,6 @@ osmium_init_ship = function() {
 			input = $(document.createElement('input'))
 				.prop('type', 'text')
 				.prop('id', 'm-dpsg-signatureradius')
-				.val('1000')
 			;
 			td.append([ label, input, " m" ]);
 			tr.append(td);
@@ -217,6 +216,30 @@ osmium_init_ship = function() {
 
 				return false;
 			});
+
+			var nturrets = 0, nlaunchers = 0, msr = 1, a;
+
+			for(var i = 0; i < osmium_ia.length; ++i) {
+				a = osmium_ia[i][4];
+				if(!("damagetype" in a)) continue;
+
+				if(a.damagetype === "turret") {
+					++nturrets;
+					msr = Math.max(msr, Math.ceil(a.sigradius * 0.9));
+					continue;
+				}
+
+				if(a.damagetype === "missile") {
+					++nlaunchers;
+					continue;
+				}
+			}
+
+			if(nturrets !== 0 || nlaunchers === 0) {
+				form.find('td.signatureradius input').val(msr.toString());
+			} else {
+				form.find('td.distance input').val("1");
+			}
 
 			osmium_modal([ hdr, form, ctx ]);
 			form.trigger('submit');
@@ -316,7 +339,7 @@ osmium_get_dps_internal = function(ia, args) {
 	return 1000 * dps;
 };
 
-osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, ysteps) {
+osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, ysteps, axisopacity, labelopacity) {
 	var steps = [ 50000, 20000, 10000,
 				  5000, 2000, 1000,
 				  500, 200, 100,
@@ -343,7 +366,7 @@ osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, 
 
 	cctx.beginPath();
 	cctx.font = "1em sans-serif";
-	cctx.fillStyle = "hsla(0, 0%, 50%, 0.5)";
+	cctx.fillStyle = "hsla(0, 0%, 50%, " + labelopacity.toString() + ")";
 
 	cctx.textAlign = "center";
 	cctx.textBaseline = "bottom";
@@ -367,8 +390,74 @@ osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, 
 		cctx.fillText(y.toString(), 2.5, ch - yc);
 	}
 
-	cctx.strokeStyle = "hsla(0, 0%, 50%, 0.15)";
+	cctx.strokeStyle = "hsla(0, 0%, 50%, " + axisopacity.toString() + ")";
 	cctx.stroke();
+};
+
+/** @internal */
+osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
+	var tsrmax = 1, tvmax = 1, tdmax = 1;
+
+	if(isNaN(td)) {
+		for(var j = 0; j < ia.length; ++j) {
+			if(!("damagetype" in ia[j][4])) continue;
+
+			if("range" in ia[j][4] && "falloff" in ia[j][4]) {
+				tdmax = Math.max(tdmax, ia[j][4].range + 3 * ia[j][4].falloff);
+				continue;
+			}
+
+			if("maxrange" in ia[j][4]) {
+				tdmax = Math.max(tdmax, ia[j][4].maxrange * 1.1);
+				continue;
+			}
+		}
+
+		tdmax /= 1000;
+	} else {
+		tdmax = td;
+	}
+
+	if(isNaN(tsr)) {
+		for(var j = 0; j < ia.length; ++j) {
+			if(!("damagetype" in ia[j][4])) continue;
+
+			if("sigradius" in ia[j][4]) {
+				tsrmax = Math.max(tsrmax, ia[j][4].sigradius * 5);
+				continue;
+			}
+
+			if("expradius" in ia[j][4]) {
+				tsrmax = Math.max(tsrmax, ia[j][4].expradius * 2.5);
+				continue;
+			}
+		}
+	} else {
+		tsrmax = tsr;
+	}
+
+	if(isNaN(tv)) {
+		for(var j = 0; j < ia.length; ++j) {
+			if(!("damagetype" in ia[j][4])) continue;
+
+			if("trackingspeed" in ia[j][4]) {
+				tvmax = Math.max(
+					tvmax,
+					Math.min(15000, (isNaN(td) ? tdmax : (td * 3)) * 1000 * ia[j][4].trackingspeed)
+				);
+				continue;
+			}
+
+			if("expvelocity" in ia[j][4]) {
+				tvmax = Math.max(tvmax, ia[j][4].expvelocity * 8);
+				continue;
+			}
+		}
+	} else {
+		tvmax = tv;
+	}
+
+	return [ tsrmax, tvmax, tdmax ];
 };
 
 /* Expects exactly one of the tsr, tv, td parameters to be NaN. */
@@ -378,58 +467,15 @@ osmium_gen_dps_graph_1d = function(ia, ctx, tsr, tv, td) {
 	if(isNaN(tsr)) {
 		genfunc = function(x) { return [ x, tv, td ]; };
 		xlabel = "Target signature radius (m)";
-
-		xmax = 1;
-		for(var j = 0; j < ia.length; ++j) {
-			if(!("damagetype" in ia[j][4])) continue;
-
-			if("sigradius" in ia[j][4]) {
-				xmax = Math.max(xmax, ia[j][4].sigradius * 10);
-				continue;
-			}
-
-			if("expradius" in ia[j][4]) {
-				xmax = Math.max(xmax, ia[j][4].expradius * 2.5);
-				continue;
-			}
-		}
+		xmax = osmium_probe_boundaries_internal(ia, tsr, tv, td)[0];
 	} else if(isNaN(tv)) {
 		genfunc = function(x) { return [ tsr, x, td ]; };
 		xlabel = "Target transversal velocity (m/s)";
-
-		xmax = 0.001;
-		for(var j = 0; j < ia.length; ++j) {
-			if(!("damagetype" in ia[j][4])) continue;
-
-			if("trackingspeed" in ia[j][4]) {
-				xmax = Math.max(xmax, Math.min(20000, (td * 1000) * ia[j][4].trackingspeed * 10));
-				continue;
-			}
-
-			if("expvelocity" in ia[j][4]) {
-				xmax = Math.max(xmax, ia[j][4].expvelocity * 10);
-				continue;
-			}
-		}
+		xmax = osmium_probe_boundaries_internal(ia, tsr, tv, td)[1];
 	} else if(isNaN(td)) {
 		genfunc = function(x) { return [ tsr, tv, x ]; };
 		xlabel = "Target distance (km)";
-
-		xmax = 5000;
-		for(var j = 0; j < ia.length; ++j) {
-			if(!("damagetype" in ia[j][4])) continue;
-
-			if("range" in ia[j][4] && "falloff" in ia[j][4]) {
-				xmax = Math.max(xmax, ia[j][4].range + 3 * ia[j][4].falloff);
-				continue;
-			}
-
-			if("maxrange" in ia[j][4]) {
-				xmax = Math.max(xmax, ia[j][4].maxrange * 1.1);
-				continue;
-			}
-		}
-		xmax /= 1000;
+		xmax = osmium_probe_boundaries_internal(ia, tsr, tv, td)[2];
 	} else return false;
 
 	var xl, yl;
@@ -456,36 +502,23 @@ osmium_gen_dps_graph_1d = function(ia, ctx, tsr, tv, td) {
 		left: cpos.left - yl.height() - 4
 	});
 
-	var x, args, dps, maxdps = 10, px, py;
+	var x, dps, maxdps = 10, px, py;
 
 	for(var i = 0; i <= cw; ++i) {
 		x = (i / cw) * xmax;
-		args = genfunc(x);
-
-		dps = 0;
-		for(var j = 0; j < ia.length; ++j) {
-			dps += osmium_get_dps_from_type_internal(ia[j][4], args[0], args[1], args[2]);
-		}
-		maxdps = Math.max(maxdps, dps * 1000);
+		maxdps = Math.max(maxdps, osmium_get_dps_internal(ia, genfunc(x)));
 	}
 
 	maxdps *= 1.05;
 
-	osmium_graph_draw_grid(cctx, cw, ch, 0, xmax, 8, 0, maxdps, 4);
+	osmium_graph_draw_grid(cctx, cw, ch, 0, xmax, 8, 0, maxdps, 4, 0.15, 0.5);
 
 	cctx.beginPath();
 	cctx.moveTo(0, 0);
 
 	for(var i = 0; i <= cw; ++i) {
 		x = (i / cw) * xmax;
-		args = genfunc(x);
-
-		dps = 0;
-		for(var j = 0; j < ia.length; ++j) {
-			dps += osmium_get_dps_from_type_internal(ia[j][4], args[0], args[1], args[2]);
-		}
-		dps *= 1000;
-
+		dps = osmium_get_dps_internal(ia, genfunc(x));
 		px = i + 0.5;
 		py = Math.min(ch - 2, Math.floor(ch * (1 - dps / maxdps))) + 0.5;
 
@@ -503,5 +536,77 @@ osmium_gen_dps_graph_1d = function(ia, ctx, tsr, tv, td) {
 
 /* Expects exactly two of the tsr, tv, td parameters to be NaN. */
 osmium_gen_dps_graph_2d = function(ia, ctx, tsr, tv, td) {
+	var genfunc, xlabel, ylabel, xmax, ymax, b;
+	b = osmium_probe_boundaries_internal(ia, tsr, tv, td);
 
+	if(!isNaN(tsr)) {
+		genfunc = function(x, y) { return [ tsr, y, x ]; };
+		ylabel = "Target transversal velocity (m/s)";
+		xlabel = "Target distance (km)";
+		ymax = b[1]; xmax = b[2];
+	} else if(!isNaN(tv)) {
+		genfunc = function(x, y) { return [ y, tv, x ]; };
+		ylabel = "Target signature radius (m)";
+		xlabel = "Target distance (km)";
+		ymax = b[0]; xmax = b[2];
+	} else if(!isNaN(td)) {
+		genfunc = function(x, y) { return [ y, x, td ]; };
+		ylabel = "Target signature radius (m)";
+		xlabel = "Target transversal velocity (m/s)";
+		ymax = b[0]; xmax = b[1];
+	} else return false;
+
+	var xl, yl;
+	ctx.append(xl = $(document.createElement('span')).addClass('xlabel').text(xlabel));
+	ctx.append(yl = $(document.createElement('span')).addClass('ylabel').text(ylabel));
+
+	var canvas = document.createElement('canvas');
+	var cctx = canvas.getContext('2d');
+	var cw, ch;
+	canvas = $(canvas);
+	ctx.append($(document.createElement('div')).addClass('cctx').append(canvas));
+	canvas.attr('width', cw = canvas.width());
+	canvas.attr('height', ch = canvas.height());
+
+	var cpos = canvas.offset();
+
+	xl.offset({
+		top: cpos.top + canvas.height() + 4,
+		left: cpos.left + canvas.width() / 2 - xl.width() / 2
+	});
+
+	yl.offset({
+		top: cpos.top + canvas.height() / 2 + yl.width() / 2,
+		left: cpos.left - yl.height() - 4
+	});
+
+	cctx.moveTo(0, ch);
+	var x, y, fracdps, px, py, maxdps = 10, pixelsize = 2;
+
+	for(var i = 0; i <= cw; i += 4) {
+		x = (i / cw) * xmax;
+
+		for(var j = 0; j <= ch; j += 4) {
+			y = (j / ch) * ymax;
+			maxdps = Math.max(maxdps, osmium_get_dps_internal(ia, genfunc(x, y)));
+		}
+	}
+
+	for(var i = 0; i <= cw; i += pixelsize) {
+		x = (i / cw) * xmax;
+
+		for(var j = 0; j <= ch; j += pixelsize) {
+			y = (j / ch) * ymax;
+			fracdps = Math.min(1, osmium_get_dps_internal(ia, genfunc(x, y)) / maxdps);
+
+			cctx.fillStyle = "hsla("
+				+ Math.round((1 - fracdps) * 60).toString()
+				+ ", 100%, 50%, "
+				+ Math.min(1, 2 * fracdps).toFixed(2)
+				+ ")";
+			cctx.fillRect(i, ch - j, pixelsize, pixelsize);
+		}
+	}
+
+	osmium_graph_draw_grid(cctx, cw, ch, 0, xmax, 8, 0, ymax, 4, 0.15, 0.75);
 };
