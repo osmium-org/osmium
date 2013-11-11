@@ -318,12 +318,14 @@ osmium_get_dps_from_type_internal = function(a, tsr, tv, td) {
 	if(a.damagetype === "missile") {
 		/* http://wiki.eveuniversity.org/Missile_Damage */
 
-		if(1000 * td > a.maxrange || tsr == 0) return 0;
+		if(1000 * td > a.maxrange) return 0;
 
 		return a.damage / a.duration * Math.min(
 			1,
 			tsr / a.expradius,
-			Math.pow((tsr / a.expradius) * (a.expvelocity / tv), Math.log(a.drf) / Math.log(a.drs))
+			(tsr != 0 && a.expvelocity != 0) ?
+				Math.pow((tsr / a.expradius) * (a.expvelocity / tv), Math.log(a.drf) / Math.log(a.drs))
+				: 0
 		);
 	}
 
@@ -337,6 +339,25 @@ osmium_get_dps_internal = function(ia, args) {
 		dps += osmium_get_dps_from_type_internal(ia[j][4], args[0], args[1], args[2]);
 	}
 	return 1000 * dps;
+};
+
+osmium_graph_gen_labels = function(ctx, canvas, xlabel, ylabel) {
+	var xl, yl;
+	ctx.append(xl = $(document.createElement('span')).addClass('xlabel').text(xlabel));
+	ctx.append(yl = $(document.createElement('span')).addClass('ylabel').text(ylabel));
+
+	var cpos = canvas.offset();
+
+	xl.offset({
+		top: cpos.top + canvas.height() + 4,
+		left: cpos.left + canvas.width() / 2 - xl.width() / 2
+	});
+
+	/* Rotating first gives different results on Chromium/Firefox */
+	yl.offset({
+		top: cpos.top + canvas.height() / 2 - yl.height() / 2,
+		left: cpos.left - yl.width() / 2 - yl.height() / 2 - 4
+	}).addClass('rotated');
 };
 
 osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, ysteps, axisopacity, labelopacity) {
@@ -365,7 +386,7 @@ osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, 
 	}
 
 	cctx.beginPath();
-	cctx.font = "1em sans-serif";
+	cctx.font = '0.8em "Droid Sans"';
 	cctx.fillStyle = "hsla(0, 0%, 50%, " + labelopacity.toString() + ")";
 
 	cctx.textAlign = "center";
@@ -392,6 +413,15 @@ osmium_graph_draw_grid = function(cctx, cw, ch, xmin, xmax, xsteps, ymin, ymax, 
 
 	cctx.strokeStyle = "hsla(0, 0%, 50%, " + axisopacity.toString() + ")";
 	cctx.stroke();
+};
+
+osmium_heat_color = function(t) {
+	return "hsla("
+		//+ Math.round((1 - t) * 60).toString()
+		+ Math.round((1 - t) * 360).toString()
+		+ ", 100%, 50%, "
+		+ Math.min(1, t).toFixed(2)
+		+ ")";
 };
 
 /** @internal */
@@ -478,10 +508,6 @@ osmium_gen_dps_graph_1d = function(ia, ctx, tsr, tv, td) {
 		xmax = osmium_probe_boundaries_internal(ia, tsr, tv, td)[2];
 	} else return false;
 
-	var xl, yl;
-	ctx.append(xl = $(document.createElement('span')).addClass('xlabel').text(xlabel));
-	ctx.append(yl = $(document.createElement('span')).addClass('ylabel').text("Damage per second"));
-
 	var canvas = document.createElement('canvas');
 	var cctx = canvas.getContext('2d');
 	var cw, ch;
@@ -490,17 +516,7 @@ osmium_gen_dps_graph_1d = function(ia, ctx, tsr, tv, td) {
 	canvas.attr('width', cw = canvas.width());
 	canvas.attr('height', ch = canvas.height());
 
-	var cpos = canvas.offset();
-
-	xl.offset({
-		top: cpos.top + canvas.height() + 4,
-		left: cpos.left + canvas.width() / 2 - xl.width() / 2
-	});
-
-	yl.offset({
-		top: cpos.top + canvas.height() / 2 + yl.width() / 2,
-		left: cpos.left - yl.height() - 4
-	});
+	osmium_graph_gen_labels(ctx, canvas, xlabel, "Damage per second");
 
 	var x, dps, maxdps = 10, px, py;
 
@@ -556,29 +572,15 @@ osmium_gen_dps_graph_2d = function(ia, ctx, tsr, tv, td) {
 		ymax = b[0]; xmax = b[1];
 	} else return false;
 
-	var xl, yl;
-	ctx.append(xl = $(document.createElement('span')).addClass('xlabel').text(xlabel));
-	ctx.append(yl = $(document.createElement('span')).addClass('ylabel').text(ylabel));
-
 	var canvas = document.createElement('canvas');
 	var cctx = canvas.getContext('2d');
 	var cw, ch;
 	canvas = $(canvas);
-	ctx.append($(document.createElement('div')).addClass('cctx').append(canvas));
+	ctx.append($(document.createElement('div')).addClass('cctx').addClass('twodim').append(canvas));
 	canvas.attr('width', cw = canvas.width());
 	canvas.attr('height', ch = canvas.height());
 
-	var cpos = canvas.offset();
-
-	xl.offset({
-		top: cpos.top + canvas.height() + 4,
-		left: cpos.left + canvas.width() / 2 - xl.width() / 2
-	});
-
-	yl.offset({
-		top: cpos.top + canvas.height() / 2 + yl.width() / 2,
-		left: cpos.left - yl.height() - 4
-	});
+	osmium_graph_gen_labels(ctx, canvas, xlabel, ylabel);
 
 	cctx.moveTo(0, ch);
 	var x, y, fracdps, px, py, maxdps = 10, pixelsize = 2;
@@ -592,6 +594,45 @@ osmium_gen_dps_graph_2d = function(ia, ctx, tsr, tv, td) {
 		}
 	}
 
+	var lcanvas = document.createElement('canvas');
+	var lctx = lcanvas.getContext('2d');
+	var lw, lh;
+	lcanvas = $(lcanvas);
+	ctx.append($(document.createElement('div')).addClass('legend').append(lcanvas));
+	lcanvas.attr('width', lw = lcanvas.width());
+	lcanvas.attr('height', lh = lcanvas.height());
+
+	for(var i = 0; i <= lh; ++i) {
+		lctx.fillStyle = osmium_heat_color(i / lh);
+		lctx.fillRect(0, lh - i, 100, 1);
+	}
+
+	var dlabel = $(document.createElement('span')).text('DPS');
+	ctx.append(dlabel);
+	var lpos = lcanvas.parent().offset();
+	dlabel.offset({
+		top: lpos.top + lcanvas.parent().height() + 5,
+		left: lpos.left + lcanvas.parent().width() / 2 - dlabel.width() / 2
+	});
+
+	lpos = lcanvas.offset();
+	var nlabels = 6;
+	for(var i = 0; i <= nlabels; ++i) {
+		dlabel = $(document.createElement('span')).addClass('dpslabel')
+			.text(Math.round((i / nlabels) * maxdps).toString());
+		ctx.append(dlabel);
+		dlabel.offset({
+			top: Math.min(
+				Math.max(
+					lpos.top + lcanvas.height() * (1 - i / nlabels) - dlabel.height() / 2,
+					lpos.top
+				),
+				lpos.top + lcanvas.height() - dlabel.height()
+			),
+			left: lpos.left - dlabel.width() - 4
+		});
+	}
+
 	for(var i = 0; i <= cw; i += pixelsize) {
 		x = (i / cw) * xmax;
 
@@ -599,11 +640,7 @@ osmium_gen_dps_graph_2d = function(ia, ctx, tsr, tv, td) {
 			y = (j / ch) * ymax;
 			fracdps = Math.min(1, osmium_get_dps_internal(ia, genfunc(x, y)) / maxdps);
 
-			cctx.fillStyle = "hsla("
-				+ Math.round((1 - fracdps) * 60).toString()
-				+ ", 100%, 50%, "
-				+ Math.min(1, 2 * fracdps).toFixed(2)
-				+ ")";
+			cctx.fillStyle = osmium_heat_color(fracdps);
 			cctx.fillRect(i, ch - j, pixelsize, pixelsize);
 		}
 	}
