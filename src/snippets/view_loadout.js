@@ -19,6 +19,7 @@ $(function() {
 	osmium_load_common_data();
 	osmium_clf_slots = $("div#osmium-data").data('clfslots');
 	osmium_capacitors = $("div#osmium-data").data('capacitors');
+	osmium_ia = $("div#osmium-data").data('ia');
 
 	osmium_tabify($("div#vlmain > ul.tabs"), 0);
 

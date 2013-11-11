@@ -661,6 +661,7 @@ foreach($capacitors as &$c) {
 	$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
 }
 \Osmium\Chrome\add_js_data('capacitors', json_encode($capacitors));
+\Osmium\Chrome\add_js_data('ia', json_encode($ia_));
 
 \Osmium\Chrome\print_js_snippet('view_loadout');
 \Osmium\Chrome\print_js_snippet('view_loadout-presets');

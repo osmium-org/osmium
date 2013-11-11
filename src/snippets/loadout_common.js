@@ -199,6 +199,7 @@ osmium_send_clf = function(opts) {
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
 			osmium_capacitors = payload.capacitors;
+			osmium_ia = payload.mia;
 
 			for(var key in osmium_capacitors) {
 				osmium_regen_remote_capacitor(key);
