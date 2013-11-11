@@ -547,6 +547,13 @@ function get_module_interesting_attributes($fit, $type, $index) {
 			$attributes['drs'] = \Osmium\Dogma\get_charge_attribute(
 				$fit, $type, $index, 'aoeDamageReductionSensitivity'
 			);
+
+			if(\Osmium\Dogma\get_module_attribute($fit, $type, $index, 'disallowRepeatingActivation')) {
+				$attributes['duration'] += \Osmium\Dogma\get_module_attribute(
+					$fit, $type, $index, 'moduleReactivationDelay'
+				);
+			}
+
 		} else if($effect === EFFECT_ProjectileFired || $effect === EFFECT_TargetAttack) {
 			if(!isset($fit['charges'][$type][$index])) continue;
 			if($dur < 1e-300) continue;
