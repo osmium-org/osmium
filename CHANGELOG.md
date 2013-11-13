@@ -1,3 +1,12 @@
+# Staging
+
+* DPS graphs implemented (accessible via the "ship" context
+  menu). Both one-dimensional and two-dimensional graphs can be made.
+
+* Smartbomb damage is now included in DPS summary.
+
+* Fixed cycle time of bomb launchers in DPS calculations.
+
 # Version 0.10
 
 ## Version 0.10.0, released 2013-09-03

@@ -122,28 +122,52 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 
 function print_formatted_offense(&$fit, $relative, array $ia, $reload = false) {
 	ob_start();
+	$ndtypes = 0;
 
 	list($turretdps, $turretalpha) = \Osmium\Fit\get_damage_from_turrets($fit, $ia, $reload);
-	echo "<p>"
-		.sprite($relative, 'Turret damage', 0, 0, 64, 64, 32)
-		."<span><span title='Turret volley (alpha)'>"
-		.format_number($turretalpha)."</span><br /><span title='Turret DPS'>"
-		.format_number($turretdps)."</span></span></p>\n";
+	if($turretalpha > 0) {
+		++$ndtypes;
+		echo "<p>"
+			.sprite($relative, 'Turret damage', 0, 0, 64, 64, 32)
+			."<span><span title='Turret volley (alpha)'>"
+			.format_number($turretalpha)."</span><br /><span title='Turret DPS'>"
+			.format_number($turretdps)."</span></span></p>\n";
+	}
 
 	list($missiledps, $missilealpha) = \Osmium\Fit\get_damage_from_missiles($fit, $ia, $reload);
-	echo "<p>"
-		.sprite($relative, 'Missile damage', 0, 1, 64, 64, 32)
-		."<span><span title='Missile volley (alpha)'>"
-		.format_number($missilealpha)."</span><br /><span title='Missile DPS'>"
-		.format_number($missiledps)."</span></span></p>\n";
+	if($missilealpha > 0) {
+		++$ndtypes;
+		echo "<p>"
+			.sprite($relative, 'Missile damage', 0, 1, 64, 64, 32)
+			."<span><span title='Missile volley (alpha)'>"
+			.format_number($missilealpha)."</span><br /><span title='Missile DPS'>"
+			.format_number($missiledps)."</span></span></p>\n";
+	}
+
+	list($sbdps, $sbalpha) = \Osmium\Fit\get_damage_from_smartbombs($fit, $ia);
+	if($sbalpha > 0) {
+		++$ndtypes;
+		echo "<p>"
+			.sprite($relative, 'Smartbomb damage', 0, 3, 64, 64, 32)
+			."<span><span title='Smartbomb volley (alpha)'>"
+			.format_number($sbalpha)."</span><br /><span title='Smartbomb DPS'>"
+			.format_number($sbdps)."</span></span></p>\n";
+	}
 
 	$dronedps = \Osmium\Fit\get_damage_from_drones($fit);
-	echo "<p>"
-		.sprite($relative, 'Drone damage', 0, 2, 64, 64, 32)
-		."<span title='Drone DPS'>".format_number($dronedps)."</span></p>\n";	
+	if($dronedps > 0) {
+		++$ndtypes;
+		echo "<p>"
+			.sprite($relative, 'Drone damage', 0, 2, 64, 64, 32)
+			."<span title='Drone DPS'>".format_number($dronedps)."</span></p>\n";
+	}
 
-	$dps = format_number($missiledps + $turretdps + $dronedps, -1);
-	print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
+	if($ndtypes > 0) {
+		$dps = format_number($missiledps + $turretdps + $dronedps + $sbdps, -1);
+		print_formatted_attribute_category('offense', 'Offense', "<span title='Total damage per second'>".$dps." dps</span>", '', ob_get_clean());
+	} else {
+		ob_end_clean();
+	}
 }
 
 function print_formatted_defense(&$fit, $relative, $ehp, $cap, $reload = false) {

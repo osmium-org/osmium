@@ -329,6 +329,11 @@ osmium_get_dps_from_type_internal = function(a, tsr, tv, td) {
 		);
 	}
 
+	if(a.damagetype === "smartbomb") {
+		if(1000 * td > a.maxrange) return 0;
+		return a.damage / a.duration;
+	}
+
 	return 0;
 };
 
@@ -426,7 +431,7 @@ osmium_heat_color = function(t) {
 
 /** @internal */
 osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
-	var tsrmax = 1, tvmax = 1, tdmax = 1;
+	var tsrmax = 50, tvmax = 50, tdmax = 5;
 
 	if(isNaN(td)) {
 		for(var j = 0; j < ia.length; ++j) {

@@ -5,6 +5,7 @@ namespace Osmium\Fit;
 const CATEGORY_Skill = 16;
 
 const EFFECT_ArmorRepair = 27;
+const EFFECT_EMPWave = 38;
 const EFFECT_EnergyDestabilizationNew = 2303;
 const EFFECT_EnergyTransfer = 31;
 const EFFECT_FueledArmorRepair = 5275;

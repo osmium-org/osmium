@@ -428,6 +428,13 @@ function get_damage_from_turrets(&$fit, array $ia, $reload = false) {
 }
 
 /**
+ * Get DPS/volley damage from fitted (and active) smartbombs.
+ */
+function get_damage_from_smartbombs(&$fit, array $ia) {
+	return get_damage_from_generic_damagetype($fit, $ia, 'smartbomb', false);
+};
+
+/**
  * Get DPS from active drones (drones "in space").
  */
 function get_damage_from_drones(&$fit) {
@@ -568,6 +575,16 @@ function get_module_interesting_attributes($fit, $type, $index) {
 			);
 			$attributes['sigradius'] = \Osmium\Dogma\get_module_attribute(
 				$fit, $type, $index, 'optimalSigRadius'
+			);
+		} else if($effect === EFFECT_EMPWave) {
+			$attributes['damagetype'] = 'smartbomb';
+			$attributes['duration'] = $dur;
+			$attributes['damage'] = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'emDamage')
+				+ \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'thermalDamage')
+				+ \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'kineticDamage')
+				+ \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'explosiveDamage');
+			$attributes['maxrange'] = \Osmium\Dogma\get_module_attribute(
+				$fit, $type, $index, 'empFieldRange'
 			);
 		}
 	}
