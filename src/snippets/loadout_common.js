@@ -199,7 +199,7 @@ osmium_send_clf = function(opts) {
 		success: function(payload) {
 			osmium_clftoken = payload.clftoken;
 			osmium_capacitors = payload.capacitors;
-			osmium_ia = payload.mia;
+			osmium_ia = payload.ia;
 
 			for(var key in osmium_capacitors) {
 				osmium_regen_remote_capacitor(key);
@@ -252,14 +252,20 @@ osmium_send_clf = function(opts) {
 
 			$("section#modules div.slots li.hasattribs").removeClass('hasattribs')
 				.children('small.attribs').remove();
-			for(var i = 0; i < payload.mia.length; ++i) {
+			for(var i = 0; i < osmium_ia.length; ++i) {
+				if(osmium_ia[i].location[0] !== "module") continue;
+				if(!("fshort" in osmium_ia[i])) continue;
+
 				var s = $(document.createElement('small'));
-				s.text(payload.mia[i][2]);
-				s.prop('title', payload.mia[i][3]);
+				s.text(osmium_ia[i].fshort);
+				if("flong" in osmium_ia[i]) {
+					s.prop('title', osmium_ia[i].flong);
+				}
+
 				s.addClass('attribs');
 
-				$("section#modules div.slots." + payload.mia[i][0] + " li").filter(function() {
-					return $(this).data('index') == payload.mia[i][1];
+				$("section#modules div.slots." + osmium_ia[i].location[1] + " li").filter(function() {
+					return $(this).data('index') == osmium_ia[i].location[2];
 				}).addClass('hasattribs').append(s);
 			}
 

@@ -264,7 +264,7 @@ if($loadoutid !== false) {
 }
 
 $capacitors = \Osmium\Fit\get_all_capacitors($fit);
-$ia_ = \Osmium\Fit\get_modules_interesting_attributes($fit);
+$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
 echo "<section id='attributes'>
 <div class='compact' id='computed_attributes'>\n";
 \Osmium\Chrome\print_formatted_loadout_attributes(
@@ -310,7 +310,11 @@ $stypes = \Osmium\Fit\get_slottypes();
 $slotusage = \Osmium\AjaxCommon\get_slot_usage($fit);
 $states = \Osmium\Fit\get_state_names();
 $ia = array();
-foreach($ia_ as $k) { $ia[$k[0]][$k[1]] = $k; }
+foreach($ia_ as $k) {
+	if($k['location'][0] === 'module') {
+		$ia[$k['location'][1]][$k['location'][2]] = $k;
+	}
+}
 $fittedtotal = 0;
 foreach($stypes as $type => $tdata) {
 	if($slotusage[$type] == 0 && (
@@ -379,10 +383,13 @@ foreach($stypes as $type => $tdata) {
 				."</a>\n";
 		}
 
-		if(isset($ia[$type][$index])) {
+		if(isset($ia[$type][$index]) && isset($ia[$type][$index]['fshort'])) {
 			echo "<small class='attribs' title='".\Osmium\Chrome\escape(
-				$ia[$type][$index][3]
-			)."'>".\Osmium\Chrome\escape($ia[$type][$index][2])."</small>\n";
+				isset($ia[$type][$index]['flong'])
+				? $ia[$type][$index]['flong'] : ''
+			)."'>".\Osmium\Chrome\escape(
+				$ia[$type][$index]['fshort']
+			)."</small>\n";
 		}
 
 		echo "</li>\n";

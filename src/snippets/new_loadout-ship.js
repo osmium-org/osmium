@@ -220,7 +220,7 @@ osmium_init_ship = function() {
 			var nturrets = 0, nlaunchers = 0, msr = 1, a;
 
 			for(var i = 0; i < osmium_ia.length; ++i) {
-				a = osmium_ia[i][4];
+				a = osmium_ia[i].raw;
 				if(!("damagetype" in a)) continue;
 
 				if(a.damagetype === "turret") {
@@ -341,7 +341,7 @@ osmium_get_dps_from_type_internal = function(a, tsr, tv, td) {
 osmium_get_dps_internal = function(ia, args) {
 	var dps = 0;
 	for(var j = 0; j < ia.length; ++j) {
-		dps += osmium_get_dps_from_type_internal(ia[j][4], args[0], args[1], args[2]);
+		dps += osmium_get_dps_from_type_internal(ia[j].raw, args[0], args[1], args[2]);
 	}
 	return 1000 * dps;
 };
@@ -432,18 +432,20 @@ osmium_heat_color = function(t) {
 /** @internal */
 osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
 	var tsrmax = 50, tvmax = 50, tdmax = 5;
+	var a;
 
 	if(isNaN(td)) {
 		for(var j = 0; j < ia.length; ++j) {
-			if(!("damagetype" in ia[j][4])) continue;
+			a = ia[j].raw;
+			if(!("damagetype" in a)) continue;
 
-			if("range" in ia[j][4] && "falloff" in ia[j][4]) {
-				tdmax = Math.max(tdmax, ia[j][4].range + 3 * ia[j][4].falloff);
+			if("range" in a && "falloff" in a) {
+				tdmax = Math.max(tdmax, a.range + 3 * a.falloff);
 				continue;
 			}
 
-			if("maxrange" in ia[j][4]) {
-				tdmax = Math.max(tdmax, ia[j][4].maxrange * 1.1);
+			if("maxrange" in a) {
+				tdmax = Math.max(tdmax, a.maxrange * 1.1);
 				continue;
 			}
 		}
@@ -455,15 +457,16 @@ osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
 
 	if(isNaN(tsr)) {
 		for(var j = 0; j < ia.length; ++j) {
-			if(!("damagetype" in ia[j][4])) continue;
+			a = ia[j].raw;
+			if(!("damagetype" in a)) continue;
 
-			if("sigradius" in ia[j][4]) {
-				tsrmax = Math.max(tsrmax, ia[j][4].sigradius * 5);
+			if("sigradius" in a) {
+				tsrmax = Math.max(tsrmax, a.sigradius * 5);
 				continue;
 			}
 
-			if("expradius" in ia[j][4]) {
-				tsrmax = Math.max(tsrmax, ia[j][4].expradius * 2.5);
+			if("expradius" in a) {
+				tsrmax = Math.max(tsrmax, a.expradius * 2.5);
 				continue;
 			}
 		}
@@ -473,18 +476,19 @@ osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
 
 	if(isNaN(tv)) {
 		for(var j = 0; j < ia.length; ++j) {
-			if(!("damagetype" in ia[j][4])) continue;
+			a = ia[j].raw;
+			if(!("damagetype" in a)) continue;
 
-			if("trackingspeed" in ia[j][4]) {
+			if("trackingspeed" in a) {
 				tvmax = Math.max(
 					tvmax,
-					Math.min(15000, (isNaN(td) ? tdmax : (td * 3)) * 1000 * ia[j][4].trackingspeed)
+					Math.min(15000, (isNaN(td) ? tdmax : (td * 3)) * 1000 * a.trackingspeed)
 				);
 				continue;
 			}
 
-			if("expvelocity" in ia[j][4]) {
-				tvmax = Math.max(tvmax, ia[j][4].expvelocity * 8);
+			if("expvelocity" in a) {
+				tvmax = Math.max(tvmax, a.expvelocity * 8);
 				continue;
 			}
 		}

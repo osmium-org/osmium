@@ -88,12 +88,12 @@ foreach($capacitors as &$c) {
 	}
 }
 
-$ia = $attribopts['ia'] = \Osmium\Fit\get_modules_interesting_attributes($local);
+$ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
 
 $payload = array(
 	'clftoken' => $token,
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribopts),
-	'mia' => $ia,
+	'ia' => $ia,
 	'ncycles' => array(),
 	'rawattribs' => array(
 		'dronebandwidth' => \Osmium\Dogma\get_ship_attribute($local, 'droneBandwidth'),

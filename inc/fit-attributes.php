@@ -388,20 +388,21 @@ function get_damage_from_generic_damagetype(&$fit, array $ia, $damagetype, $relo
 	\Osmium\Dogma\auto_init($fit);
 
 	foreach($ia as $m) {
-		list($type, $index, , , $a) = $m;
+		$loc = $m['location'];
+		$a = $m['raw'];
 
 		if(!isset($a['damagetype']) || $a['damagetype'] !== $damagetype) continue;
 
 		$v = $a['damage'];
 		$d = $a['duration'];
 
-		if($reload) {
+		if($reload && $loc[0] === 'module') {
 			dogma_get_number_of_module_cycles_before_reload(
-				$fit['__dogma_context'], $fit['modules'][$type][$index]['dogma_index'], $ncycles
+				$fit['__dogma_context'], $fit['modules'][$loc[1]][$loc[2]]['dogma_index'], $ncycles
 			);
 
 			if($ncycles !== -1) {
-				$reloadtime = \Osmium\Dogma\get_module_attribute($fit, $type, $index, ATT_ReloadTime);
+				$reloadtime = \Osmium\Dogma\get_module_attribute($fit, $loc[1], $loc[2], ATT_ReloadTime);
 				$d += $reloadtime / $ncycles;
 			}
 		}
@@ -607,28 +608,37 @@ function get_module_interesting_attributes($fit, $type, $index) {
 }
 
 /**
- * Generate formatted interesting attributes for all the modules in
- * the fit.
+ * Generate formatted interesting attributes for all the fitted things
+ * in the fit.
  *
- * @returns an array of array(slottype, index, shortformat,
- * longformat, rawattributes).
+ * @returns an array of array(
+ * location => array(locationtype, …),
+ * fshort => (short formatted attributes),
+ * flong => (long formatted attributes),
+ * raw => array(attributename => attributevalue…)
+ * )
  */
-function get_modules_interesting_attributes(&$fit) {
+function get_interesting_attributes(&$fit) {
 	$attrs = array();
+
 	foreach(\Osmium\Fit\get_modules($fit) as $type => $a) {
 		foreach($a as $index => $m) {
 			$a = \Osmium\Fit\get_module_interesting_attributes($fit, $type, $index);
-			$fashort = \Osmium\Chrome\format_short_range($a);
-
-			if(empty($fashort)) continue;
-			$falong = \Osmium\Chrome\format_long_range($a);
+			if($a === array()) continue;
 
 			$attrs[] = array(
-				$type, $index,
-				$fashort, $falong,
-				$a
+				'location' => [ 'module', $type, $index ],
+				'raw' => $a,
 			);
 		}
+	}
+
+	foreach($attrs as &$a) {
+		$fshort = \Osmium\Chrome\format_short_range($a['raw']);
+		$flong = \Osmium\Chrome\format_long_range($a['raw']);
+
+		if($fshort) $a['fshort'] = $fshort;
+		if($flong) $a['flong'] = $flong;
 	}
 
 	return $attrs;

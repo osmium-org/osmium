@@ -512,7 +512,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	    $cap = $result[dogma_get_hashcode($fit['__dogma_context'])];
 	}
 
-	$ia = isset($opts['ia']) ? $opts['ia'] : \Osmium\Fit\get_modules_interesting_attributes($fit);
+	$ia = isset($opts['ia']) ? $opts['ia'] : \Osmium\Fit\get_interesting_attributes($fit);
 
 	$ehp = isset($opts['ehp']) ? $opts['ehp'] :
 		\Osmium\Fit\get_ehp_and_resists($fit);
