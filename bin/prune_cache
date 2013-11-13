@@ -25,7 +25,7 @@ touch($cutoff = $cache.'/.cutoff',  $t = (time() - 1));
 passthru(
 	'find '.escapeshellarg($cache)
 	.' -maxdepth 1 -type f'
-	.' \( -not -name "sess_*" \)'
+	.' \( -not \( -name ".empty_file" -o -name "sess_*" \) \)'
 	.' -newer '.escapeshellarg($old)
 	.' \( -not -newer '.escapeshellarg($cutoff).' \)'
 	.' -delete'
