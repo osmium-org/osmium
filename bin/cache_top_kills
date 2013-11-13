@@ -143,10 +143,11 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 		'dps' => 0,
 	);
 
-	$ia = \Osmium\Fit\get_modules_interesting_attributes($fit);
+	$ia = \Osmium\Fit\get_interesting_attributes($fit);
 	$entry['dps'] += \Osmium\Fit\get_damage_from_turrets($fit, $ia)[0];
 	$entry['dps'] += \Osmium\Fit\get_damage_from_missiles($fit, $ia)[0];
-	$entry['dps'] += \Osmium\Fit\get_damage_from_drones($fit);
+	$entry['dps'] += \Osmium\Fit\get_damage_from_smartbombs($fit, $ia)[0];
+	$entry['dps'] += \Osmium\Fit\get_damage_from_drones($fit, $ia)[0];
 
 	$entry['ehp'] = \Osmium\Fit\get_ehp_and_resists(
 		$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25 ]

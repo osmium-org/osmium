@@ -154,7 +154,7 @@ function print_formatted_offense(&$fit, $relative, array $ia, $reload = false) {
 			.format_number($sbdps)."</span></span></p>\n";
 	}
 
-	$dronedps = \Osmium\Fit\get_damage_from_drones($fit);
+	list($dronedps, $dronealpha) = \Osmium\Fit\get_damage_from_drones($fit, $ia);
 	if($dronedps > 0) {
 		++$ndtypes;
 		echo "<p>"

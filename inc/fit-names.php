@@ -8,6 +8,7 @@ const EFFECT_ArmorRepair = 27;
 const EFFECT_EMPWave = 38;
 const EFFECT_EnergyDestabilizationNew = 2303;
 const EFFECT_EnergyTransfer = 31;
+const EFFECT_FighterMissile = 4729;
 const EFFECT_FueledArmorRepair = 5275;
 const EFFECT_FueledShieldBoosting = 4936;
 const EFFECT_HiPower = 12;

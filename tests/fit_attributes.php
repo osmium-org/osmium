@@ -342,7 +342,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 
 		/* Source: Pyfa-c67034e (2013-07-01) */
 
-		$dps = \Osmium\Fit\get_damage_from_drones($fit);
+		$ia = \Osmium\Fit\get_interesting_attributes($fit);
+		$dps = \Osmium\Fit\get_damage_from_drones($fit, $ia)[0];
 		$this->assertSame(0, $dps);
 
 		\Osmium\Fit\add_drone($fit, 28211, 0, 5); /* 5x Garde IIs in space */
@@ -354,7 +355,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			'', 0
 		);
 
-		$dps = \Osmium\Fit\get_damage_from_drones($fit);
+		$ia = \Osmium\Fit\get_interesting_attributes($fit);
+		$dps = \Osmium\Fit\get_damage_from_drones($fit, $ia)[0];
 		$this->assertEquals(781, $dps, '', 1);
 
 		/* Swap the drones */
@@ -364,7 +366,8 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 		/* Add drones that do no damage */
 		\Osmium\Fit\add_drone($fit, 23731, 0,  5);
 
-		$dps = \Osmium\Fit\get_damage_from_drones($fit);
+		$ia = \Osmium\Fit\get_interesting_attributes($fit);
+		$dps = \Osmium\Fit\get_damage_from_drones($fit, $ia)[0];
 		$this->assertEquals(201, $dps, '', 1);
 	}
 

@@ -436,42 +436,10 @@ function get_damage_from_smartbombs(&$fit, array $ia) {
 };
 
 /**
- * Get DPS from active drones (drones "in space").
+ * Get DPS/volley damage from active drones (drones "in space").
  */
-function get_damage_from_drones(&$fit) {
-	\Osmium\Dogma\auto_init($fit);
-	$dps = 0;
-
-	foreach($fit['drones'] as $drone) {
-		if($drone['quantityinspace'] == 0) continue;
-
-		$ret = dogma_type_has_effect($drone['typeid'], DOGMA_STATE_Active, EFFECT_TargetAttack, $hasit);
-		if($ret !== DOGMA_OK || $hasit !== true) {
-			continue;
-		}
-
-		$duration = 0;
-		dogma_get_location_effect_attributes(
-			$fit['__dogma_context'],
-			[ DOGMA_LOC_Drone, "drone_typeid" => $drone['typeid'] ],
-			EFFECT_TargetAttack,
-			$duration, $tracking, $discharge, $range, $falloff, $usagechance
-		);
-
-		if($duration <= 1e-300) continue;
-
-		$damage = 
-			\Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'emDamage')
-			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'thermalDamage')
-			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'kineticDamage')
-			+ \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'explosiveDamage');
-
-		$multiplier = \Osmium\Dogma\get_drone_attribute($fit, $drone['typeid'], 'damageMultiplier');
-
-		$dps += $drone['quantityinspace'] * $multiplier * $damage / $duration;
-	}
-
-	return 1000 * $dps;
+function get_damage_from_drones(&$fit, array $ia) {
+	return get_damage_from_generic_damagetype($fit, $ia, 'drone', false);
 }
 
 /**
@@ -631,6 +599,56 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 		if($tra > 1e-300) $trackings[] = $tra;
 		if($ran > 1e-300) $ranges[] = $ran;
 		if($fal > 1e-300) $falloffs[] = $fal;
+
+		if($dur < 1e-300) continue;
+
+		if($effect === EFFECT_TargetAttack) {
+			$dmg =  (
+				\Osmium\Dogma\get_drone_attribute($fit, $typeid, 'emDamage')
+				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'thermalDamage')
+				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'kineticDamage')
+				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'explosiveDamage')
+			) * \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'damageMultiplier');
+
+			$dmg *= $fit['drones'][$typeid]['quantityinspace'];
+			if($dmg < 1e-300) continue;
+
+			$attributes['damagetype'] = 'drone';
+			$attributes['damage'] = $dmg;
+			$attributes['duration'] = $dur;
+			$attributes['sigradius'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'optimalSigRadius');
+			$attributes['flyrange'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityFlyRange');
+			$attributes['maxvelocity'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'maxVelocity');
+		} else if($effect === EFFECT_FighterMissile) {
+			$dmg =  (
+				\Osmium\Dogma\get_drone_attribute($fit, $typeid, 'emDamage')
+				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'thermalDamage')
+				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'kineticDamage')
+				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'explosiveDamage')
+			) * \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'damageMultiplier');
+
+			$dmg *= $fit['drones'][$typeid]['quantityinspace'];
+			if($dmg < 1e-300) continue;
+
+			$attributes['damagetype'] = 'drone';
+			$attributes['damage'] = $dmg;
+			$attributes['duration'] = $dur;
+			$attributes['expvelocity'] = \Osmium\Dogma\get_drone_attribute(
+				$fit, $typeid, 'aoeVelocity'
+			);
+			$attributes['expradius'] = \Osmium\Dogma\get_drone_attribute(
+				$fit, $typeid, 'aoeCloudSize'
+			);
+			$attributes['drf'] = \Osmium\Dogma\get_drone_attribute(
+				$fit, $typeid, 'aoeDamageReductionFactor'
+			);
+			$attributes['drs'] = \Osmium\Dogma\get_drone_attribute(
+				$fit, $typeid, 'aoeDamageReductionSensitivity'
+			);
+			$attributes['flyrange'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityFlyRange');
+			$attributes['maxvelocity'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'maxVelocity');
+			
+		}
 	}
 
 	if($trackings !== array()) {
@@ -641,6 +659,10 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 	}
 	if($falloffs !== array()) {
 		$attributes['falloff'] = min($falloffs);
+	}
+
+	if($attributes !== array()) {
+		$attributes['controlrange'] = \Osmium\Dogma\get_char_attribute($fit, 'droneControlDistance');
 	}
 
 	return $attributes;
