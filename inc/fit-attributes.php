@@ -607,6 +607,45 @@ function get_module_interesting_attributes($fit, $type, $index) {
 	return $attributes;
 }
 
+/** @see get_module_interesting_attributes */
+function get_drone_interesting_attributes(&$fit, $typeid) {
+	\Osmium\Dogma\auto_init($fit);
+
+	$attributes = array();
+
+	$trackings = array();
+	$ranges = array();
+	$falloffs = array();
+
+	$i = 0;
+	while(dogma_get_nth_type_effect_with_attributes($typeid, $i, $effect) === DOGMA_OK) {
+		++$i;
+
+		$dur = $tra = $ran = $fal = 0;
+
+		dogma_get_location_effect_attributes(
+			$fit['__dogma_context'], [ DOGMA_LOC_Drone, 'drone_typeid' => $typeid ], $effect,
+			$dur, $tra, $dis, $ran, $fal, $fua
+		);
+
+		if($tra > 1e-300) $trackings[] = $tra;
+		if($ran > 1e-300) $ranges[] = $ran;
+		if($fal > 1e-300) $falloffs[] = $fal;
+	}
+
+	if($trackings !== array()) {
+		$attributes['trackingspeed'] = min($trackings);
+	}
+	if($ranges !== array()) {
+		$attributes['range'] = min($ranges);
+	}
+	if($falloffs !== array()) {
+		$attributes['falloff'] = min($falloffs);
+	}
+
+	return $attributes;
+}
+
 /**
  * Generate formatted interesting attributes for all the fitted things
  * in the fit.
@@ -628,6 +667,18 @@ function get_interesting_attributes(&$fit) {
 
 			$attrs[] = array(
 				'location' => [ 'module', $type, $index ],
+				'raw' => $a,
+			);
+		}
+	}
+
+	foreach($fit['drones'] as $typeid => $d) {
+		if($d['quantityinspace'] > 0) {
+			$a = \Osmium\Fit\get_drone_interesting_attributes($fit, $typeid);
+			if($a === array()) continue;
+
+			$attrs[] = array(
+				'location' => [ 'drone', $typeid ],
 				'raw' => $a,
 			);
 		}

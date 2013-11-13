@@ -312,7 +312,9 @@ $states = \Osmium\Fit\get_state_names();
 $ia = array();
 foreach($ia_ as $k) {
 	if($k['location'][0] === 'module') {
-		$ia[$k['location'][1]][$k['location'][2]] = $k;
+		$ia['module'][$k['location'][1]][$k['location'][2]] = $k;
+	} else if($k['location'][0] === 'drone') {
+		$ia['drone'][$k['location'][1]] = $k;
 	}
 }
 $fittedtotal = 0;
@@ -346,7 +348,7 @@ foreach($stypes as $type => $tdata) {
 		} else $c = null;
 
 		$class = [];
-		if(isset($ia[$type][$index])) {
+		if(isset($ia['module'][$type][$index])) {
 			$class[] = 'hasattribs';
 		}
 		if($fittedtype >= $slotusage[$type]) {
@@ -383,12 +385,12 @@ foreach($stypes as $type => $tdata) {
 				."</a>\n";
 		}
 
-		if(isset($ia[$type][$index]) && isset($ia[$type][$index]['fshort'])) {
+		if(isset($ia['module'][$type][$index]) && isset($ia['module'][$type][$index]['fshort'])) {
 			echo "<small class='attribs' title='".\Osmium\Chrome\escape(
-				isset($ia[$type][$index]['flong'])
-				? $ia[$type][$index]['flong'] : ''
+				isset($ia['module'][$type][$index]['flong'])
+				? $ia['module'][$type][$index]['flong'] : ''
 			)."'>".\Osmium\Chrome\escape(
-				$ia[$type][$index]['fshort']
+				$ia['module'][$type][$index]['fshort']
 			)."</small>\n";
 		}
 
@@ -452,9 +454,20 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 		$qty = (int)$d['quantityin'.$k];
 		if($qty === 0) continue;
 
-		echo "<li data-typeid='".$typeid."' data-location='".$k."' data-quantity='".$qty."'>";
+		if($k === 'space' && isset($ia['drone'][$typeid]['fshort'])) {
+			$class = " class='hasattribs'";
+			$attribs = "<small class='attribs' title='".\Osmium\Chrome\escape(
+				isset($ia['drone'][$typeid]['flong'])
+				? $ia['drone'][$typeid]['flong'] : ''
+			)."'>".\Osmium\Chrome\escape(
+				$ia['drone'][$typeid]['fshort']
+			)."</small>\n";
+		} else $class = $attribs = '';
+
+		echo "<li{$class} data-typeid='".$typeid."' data-location='".$k."' data-quantity='".$qty."'>";
 		echo "<img src='//image.eveonline.com/Type/".$typeid."_64.png' alt='' />";
 		echo "<strong class='qty'>".$qty."×</strong>".$d['typename'];
+		echo $attribs;
 		echo "</li>\n";
 	}
 

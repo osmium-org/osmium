@@ -20,6 +20,7 @@ osmium_gen_drones = function() {
 		bay: {},
 		space: {}
 	};
+	var old_ias = {};
 
 	var dronep = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
 
@@ -36,6 +37,11 @@ osmium_gen_drones = function() {
 			map[dronep[p][i].typeid] += dronep[p][i].quantity;
 		}
 	}
+
+	$('section#drones div.drones.space li.hasattribs > small.attribs').each(function() {
+		var s = $(this);
+		old_ias[s.parent().data('typeid')] = s.clone();
+	});
 
 	for(var p in drones) {
 		var dronesdiv = $("section#drones div.drones." + p);
@@ -60,6 +66,11 @@ osmium_gen_drones = function() {
 			img.prop('alt', '');
 
 			li.prepend(img);
+
+			if(t in old_ias) {
+				li.append(old_ias[t]);
+			}
+
 			ul.append(li);
 
 			osmium_ctxmenu_bind(li, (function(t, p, qty, other) {

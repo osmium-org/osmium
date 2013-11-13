@@ -250,23 +250,37 @@ osmium_send_clf = function(opts) {
 			osmium_gen_fattribs();
 			osmium_init_fattribs();
 
-			$("section#modules div.slots li.hasattribs").removeClass('hasattribs')
-				.children('small.attribs').remove();
+			$("section#modules div.slots li.hasattribs, section#drones div.drones li.hasattribs")
+				.removeClass('hasattribs')
+				.children('small.attribs').remove()
+			;
+
+			var s, el;
+
 			for(var i = 0; i < osmium_ia.length; ++i) {
-				if(osmium_ia[i].location[0] !== "module") continue;
 				if(!("fshort" in osmium_ia[i])) continue;
 
-				var s = $(document.createElement('small'));
+				s = $(document.createElement('small'));
 				s.text(osmium_ia[i].fshort);
 				if("flong" in osmium_ia[i]) {
 					s.prop('title', osmium_ia[i].flong);
 				}
-
 				s.addClass('attribs');
 
-				$("section#modules div.slots." + osmium_ia[i].location[1] + " li").filter(function() {
-					return $(this).data('index') == osmium_ia[i].location[2];
-				}).addClass('hasattribs').append(s);
+				if(osmium_ia[i].location[0] === "module") {
+					el = $("section#modules div.slots." + osmium_ia[i].location[1] + " li")
+						.filter(function() {
+							return $(this).data('index') == osmium_ia[i].location[2];
+						});
+				} else if(osmium_ia[i].location[0] === "drone") {
+					el = $("section#drones div.drones.space li").filter(function() {
+						return $(this).data('typeid') == osmium_ia[i].location[1];
+					});
+				} else {
+					continue;
+				}
+
+				el.addClass('hasattribs').append(s);
 			}
 
 			$("section#modules div.slots li > span.charge.hasncycles").removeClass('hasncycles')
