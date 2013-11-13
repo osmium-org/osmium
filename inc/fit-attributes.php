@@ -524,6 +524,15 @@ function get_module_interesting_attributes($fit, $type, $index) {
 			$mass = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'mass');
 			$agility = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'agility');
 
+			$damage = \Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier') * (
+				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
+				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage')
+			);
+
+			if($damage < 1e-300) continue;
+
 			if($mass != 0 && $agility != 0) {
 				/* Source: http://wiki.eveonline.com/en/wiki/Acceleration */
 				/* Integrate the velocity of the missile from 0 to flighttime: */
@@ -536,12 +545,7 @@ function get_module_interesting_attributes($fit, $type, $index) {
 
 			$attributes['damagetype'] = 'missile';
 			$attributes['duration'] = $dur;
-			$attributes['damage'] = \Osmium\Dogma\get_char_attribute($fit, 'missileDamageMultiplier') * (
-				\Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'emDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'thermalDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'kineticDamage')
-				+ \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'explosiveDamage')
-			);
+			$attributes['damage'] = $damage;
 			$attributes['expvelocity'] = \Osmium\Dogma\get_charge_attribute(
 				$fit, $type, $index, 'aoeVelocity'
 			);

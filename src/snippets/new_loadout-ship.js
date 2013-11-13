@@ -318,7 +318,7 @@ osmium_get_dps_from_type_internal = function(a, tsr, tv, td) {
 	if(a.damagetype === "missile") {
 		/* http://wiki.eveuniversity.org/Missile_Damage */
 
-		if(1000 * td > a.maxrange) return 0;
+		if(1000 * td > a.maxrange || a.damage == 0) return 0;
 
 		return a.damage / a.duration * Math.min(
 			1,
