@@ -439,7 +439,14 @@ function get_damage_from_smartbombs(&$fit, array $ia) {
  * Get DPS/volley damage from active drones (drones "in space").
  */
 function get_damage_from_drones(&$fit, array $ia) {
-	return get_damage_from_generic_damagetype($fit, $ia, 'drone', false);
+	$cd = get_damage_from_generic_damagetype($fit, $ia, 'combatdrone', false);
+	$f = get_damage_from_generic_damagetype($fit, $ia, 'fighter', false);
+	$fb = get_damage_from_generic_damagetype($fit, $ia, 'fighterbomber', false);
+
+	return [
+		$cd[0] + $f[0] + $fb[0],
+		$cd[1] + $f[1] + $fb[1],
+	];
 }
 
 /**
@@ -579,6 +586,7 @@ function get_module_interesting_attributes($fit, $type, $index) {
 function get_drone_interesting_attributes(&$fit, $typeid) {
 	\Osmium\Dogma\auto_init($fit);
 
+	$groupid = (int)get_groupid($typeid);
 	$attributes = array();
 
 	$trackings = array();
@@ -613,13 +621,13 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 			$dmg *= $fit['drones'][$typeid]['quantityinspace'];
 			if($dmg < 1e-300) continue;
 
-			$attributes['damagetype'] = 'drone';
+			$attributes['damagetype'] = $groupid === GROUP_FighterDrone ? 'fighter' : 'combatdrone';
 			$attributes['damage'] = $dmg;
 			$attributes['duration'] = $dur;
 			$attributes['sigradius'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'optimalSigRadius');
 			$attributes['flyrange'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityFlyRange');
 			$attributes['maxvelocity'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'maxVelocity');
-		} else if($effect === EFFECT_FighterMissile) {
+		} else if($effect === EFFECT_FighterMissile && $groupid === GROUP_FighterBomber) {
 			$dmg =  (
 				\Osmium\Dogma\get_drone_attribute($fit, $typeid, 'emDamage')
 				+ \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'thermalDamage')
@@ -630,7 +638,7 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 			$dmg *= $fit['drones'][$typeid]['quantityinspace'];
 			if($dmg < 1e-300) continue;
 
-			$attributes['damagetype'] = 'drone';
+			$attributes['damagetype'] = 'fighterbomber';
 			$attributes['damage'] = $dmg;
 			$attributes['duration'] = $dur;
 			$attributes['expvelocity'] = \Osmium\Dogma\get_drone_attribute(
@@ -661,7 +669,7 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 		$attributes['falloff'] = min($falloffs);
 	}
 
-	if($attributes !== array()) {
+	if($attributes !== array() && $groupid !== GROUP_FighterDrone && $groupid !== GROUP_FighterBomber) {
 		$attributes['controlrange'] = \Osmium\Dogma\get_char_attribute($fit, 'droneControlDistance');
 	}
 

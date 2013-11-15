@@ -217,29 +217,8 @@ osmium_init_ship = function() {
 				return false;
 			});
 
-			var nturrets = 0, nlaunchers = 0, msr = 1, a;
-
-			for(var i = 0; i < osmium_ia.length; ++i) {
-				a = osmium_ia[i].raw;
-				if(!("damagetype" in a)) continue;
-
-				if(a.damagetype === "turret") {
-					++nturrets;
-					msr = Math.max(msr, Math.ceil(a.sigradius * 0.9));
-					continue;
-				}
-
-				if(a.damagetype === "missile") {
-					++nlaunchers;
-					continue;
-				}
-			}
-
-			if(nturrets !== 0 || nlaunchers === 0) {
-				form.find('td.signatureradius input').val(msr.toString());
-			} else {
-				form.find('td.distance input').val("1");
-			}
+			var limits = osmium_probe_boundaries_internal(osmium_ia, NaN, NaN, NaN);
+			form.find('td.signatureradius input').val(Math.round(limits[0] / 3).toString());
 
 			osmium_modal([ hdr, form, ctx ]);
 			form.trigger('submit');
@@ -290,7 +269,16 @@ osmium_init_ship = function() {
 osmium_get_dps_from_type_internal = function(a, tsr, tv, td) {
 	if(!("damagetype" in a)) return 0;
 
-	if(a.damagetype === "turret") {
+	if(a.damagetype === "combatdrone") {
+		if("controlrange" in a && 1000 * td > a.controlrange) return 0;
+
+		if(a.maxvelocity > 0) {
+			/* XXX: fixme */
+			return 0;
+		}
+	}
+
+	if(a.damagetype === "turret" || a.damagetype === "combatdrone") {
 		/* http://wiki.eveuniversity.org/Turret_Damage */
 
 		if(tv == 0 && td == 0) {
@@ -431,7 +419,7 @@ osmium_heat_color = function(t) {
 
 /** @internal */
 osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
-	var tsrmax = 50, tvmax = 50, tdmax = 5;
+	var tsrmax = 50, tvmax = 50, tdmax = 5000;
 	var a;
 
 	if(isNaN(td)) {
@@ -439,15 +427,13 @@ osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
 			a = ia[j].raw;
 			if(!("damagetype" in a)) continue;
 
-			if("range" in a && "falloff" in a) {
-				tdmax = Math.max(tdmax, a.range + 3 * a.falloff);
-				continue;
-			}
+			var m = Math.min(
+				("range" in a && "falloff" in a) ? (a.range + 3 * a.falloff) : Infinity,
+				("maxrange" in a) ? (a.maxrange * 1.1) : Infinity,
+				("controlrange" in a) ? (a.controlrange * 1.1) : Infinity
+			);
 
-			if("maxrange" in a) {
-				tdmax = Math.max(tdmax, a.maxrange * 1.1);
-				continue;
-			}
+			if(isFinite(m)) tdmax = Math.max(tdmax, m);
 		}
 
 		tdmax /= 1000;
@@ -461,12 +447,12 @@ osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
 			if(!("damagetype" in a)) continue;
 
 			if("sigradius" in a) {
-				tsrmax = Math.max(tsrmax, a.sigradius * 5);
+				tsrmax = Math.max(tsrmax, a.sigradius * 3);
 				continue;
 			}
 
 			if("expradius" in a) {
-				tsrmax = Math.max(tsrmax, a.expradius * 2.5);
+				tsrmax = Math.max(tsrmax, a.expradius * 3);
 				continue;
 			}
 		}
@@ -479,10 +465,15 @@ osmium_probe_boundaries_internal = function(ia, tsr, tv, td) {
 			a = ia[j].raw;
 			if(!("damagetype" in a)) continue;
 
-			if("trackingspeed" in a) {
+			if("trackingspeed" in a && "range" in a && "falloff" in a) {
+				if(a.damagetype === "combatdrone" && a.maxvelocity > 0) {
+					continue;
+				}
+
 				tvmax = Math.max(
 					tvmax,
-					Math.min(15000, (isNaN(td) ? tdmax : (td * 3)) * 1000 * a.trackingspeed)
+					Math.min(a.damagetype === "combatdrone" ? 2500 : 12000,
+							 (a.range + a.falloff) * a.trackingspeed)
 				);
 				continue;
 			}
