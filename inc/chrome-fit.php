@@ -570,6 +570,7 @@ function print_loadout_common_footer(&$fit, $relative, $clftoken) {
 	print_js_snippet('modal');
 	print_js_snippet('context_menu');
 	print_js_snippet('loadout_common');
+	print_js_snippet('graph_common');
 	print_js_snippet('sprite');
 	print_js_snippet('show_info');
 	print_js_snippet('formatted_attributes');

@@ -626,6 +626,7 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 			$attributes['duration'] = $dur;
 			$attributes['sigradius'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'optimalSigRadius');
 			$attributes['flyrange'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityFlyRange');
+			$attributes['cruisespeed'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityCruiseSpeed');
 			$attributes['maxvelocity'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'maxVelocity');
 		} else if($effect === EFFECT_FighterMissile && $groupid === GROUP_FighterBomber) {
 			$dmg =  (
@@ -654,6 +655,7 @@ function get_drone_interesting_attributes(&$fit, $typeid) {
 				$fit, $typeid, 'aoeDamageReductionSensitivity'
 			);
 			$attributes['flyrange'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityFlyRange');
+			$attributes['cruisespeed'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'entityCruiseSpeed');
 			$attributes['maxvelocity'] = \Osmium\Dogma\get_drone_attribute($fit, $typeid, 'maxVelocity');
 			
 		}
