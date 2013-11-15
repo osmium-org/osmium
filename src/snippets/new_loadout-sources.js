@@ -47,6 +47,7 @@ osmium_init_sources = function() {
 			t.val('1');
 		}
 
+		$(this).closest('form').find('input[type="search"]').trigger('mark-dirty');
 		$(this).blur();
 	});
 
@@ -55,6 +56,12 @@ osmium_init_sources = function() {
 		var s = t.find('input[type="submit"]');
 		var ul = t.parent().children('ul.results');
 		var li, img, p, spinner;
+
+		if(t.data('dirty') === false) {
+			ul.find('li').first().trigger('dblclick');
+			return false;
+		}
+		t.data('dirty', false);
 
 		if(s.prop('disabled')) return false;
 		s.prop('disabled', true);
@@ -117,10 +124,22 @@ osmium_init_sources = function() {
 			complete: function() {
 				s.prop('disabled', false);
 				spinner.remove();
+				s.val('Add');
 			}
 		});
 
 		return false;
+	}).find('input[type="search"]').on('mark-dirty', function() {
+		$(this)
+			.closest('form').data('dirty', true)
+			.find('input[type="submit"]').val('Search')
+		;
+	}).on('change', function() {
+		$(this).trigger('mark-dirty');
+	}).on('keydown', function(e) {
+		if(e.which != 13) {
+			$(this).trigger('mark-dirty');
+		}
 	});
 
 	osmium_add_metagroup_style("div#nlsources > section#browse > ", "div#nlsources > section#browse > div.mgroot");

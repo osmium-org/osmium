@@ -7,6 +7,9 @@
 
 * Fixed cycle time of bomb launchers in DPS calculations.
 
+* Auto-add modules, charges, etc. when searching types by resubmitting
+  the search form (or pressing "Enter" twice).
+
 # Version 0.10
 
 ## Version 0.10.0, released 2013-09-03
