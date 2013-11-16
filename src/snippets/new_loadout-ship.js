@@ -233,7 +233,42 @@ osmium_init_ship = function() {
 						0, null
 					);
 				} else if(nans === 2) {
-					osmium_gen_dps_graph_2d(osmium_ia, ctx, tsr, tv, td);
+					var genfunc, xlabel, ylabel, xmax, ymax, b;
+					b = osmium_probe_boundaries_from_ia(osmium_ia, tsr, tv, td);
+
+					if(!isNaN(tsr)) {
+						genfunc = function(x, y) { return [ tsr, y, x ]; };
+						ylabel = "Target velocity (m/s)";
+						xlabel = "Target distance (km)";
+						ymax = b[1]; xmax = b[2];
+					} else if(!isNaN(tv)) {
+						genfunc = function(x, y) { return [ y, tv, x ]; };
+						ylabel = "Target signature radius (m)";
+						xlabel = "Target distance (km)";
+						ymax = b[0]; xmax = b[2];
+					} else if(!isNaN(td)) {
+						genfunc = function(x, y) { return [ y, x, td ]; };
+						ylabel = "Target signature radius (m)";
+						xlabel = "Target velocity (m/s)";
+						ymax = b[0]; xmax = b[1];
+					}
+
+					var maxdps = osmium_draw_dps_graph_2d(
+						{ foo: { ia: osmium_ia } },
+						function(fracs, cmap) {
+							for(var k in fracs) {
+								return osmium_heat_color(fracs[k][0] / fracs[k][1]);
+							}
+							return osmium_heat_color(0);
+						},
+						ctx,
+						xlabel, 0, xmax,
+						ylabel, 0, ymax,
+						genfunc,
+						4
+					);
+
+					osmium_draw_dps_legend(ctx, maxdps, osmium_heat_color);
 				}
 
 				return false;
@@ -285,104 +320,4 @@ osmium_init_ship = function() {
 
 		return false;
 	});
-};
-
-
-
-/* Expects exactly two of the tsr, tv, td parameters to be NaN. */
-osmium_gen_dps_graph_2d = function(ia, ctx, tsr, tv, td) {
-	var genfunc, xlabel, ylabel, xmax, ymax, b;
-	b = osmium_probe_boundaries_from_ia(ia, tsr, tv, td);
-
-	if(!isNaN(tsr)) {
-		genfunc = function(x, y) { return [ tsr, y, x ]; };
-		ylabel = "Target velocity (m/s)";
-		xlabel = "Target distance (km)";
-		ymax = b[1]; xmax = b[2];
-	} else if(!isNaN(tv)) {
-		genfunc = function(x, y) { return [ y, tv, x ]; };
-		ylabel = "Target signature radius (m)";
-		xlabel = "Target distance (km)";
-		ymax = b[0]; xmax = b[2];
-	} else if(!isNaN(td)) {
-		genfunc = function(x, y) { return [ y, x, td ]; };
-		ylabel = "Target signature radius (m)";
-		xlabel = "Target velocity (m/s)";
-		ymax = b[0]; xmax = b[1];
-	} else return false;
-
-	var canvas = document.createElement('canvas');
-	var cctx = canvas.getContext('2d');
-	var cw, ch;
-	canvas = $(canvas);
-	ctx.append($(document.createElement('div')).addClass('cctx').addClass('twodim').append(canvas));
-	canvas.attr('width', cw = canvas.width());
-	canvas.attr('height', ch = canvas.height());
-
-	osmium_graph_gen_labels(ctx, canvas, xlabel, ylabel);
-
-	cctx.moveTo(0, ch);
-	var x, y, fracdps, px, py, maxdps = 10, pixelsize = 2;
-
-	for(var i = 0; i <= cw; i += 4) {
-		x = (i / cw) * xmax;
-
-		for(var j = 0; j <= ch; j += 4) {
-			y = (j / ch) * ymax;
-			maxdps = Math.max(maxdps, osmium_get_dps_internal(ia, genfunc(x, y)));
-		}
-	}
-
-	var lcanvas = document.createElement('canvas');
-	var lctx = lcanvas.getContext('2d');
-	var lw, lh;
-	lcanvas = $(lcanvas);
-	ctx.append($(document.createElement('div')).addClass('legend').append(lcanvas));
-	lcanvas.attr('width', lw = lcanvas.width());
-	lcanvas.attr('height', lh = lcanvas.height());
-
-	for(var i = 0; i <= lh; ++i) {
-		lctx.fillStyle = osmium_heat_color(i / lh);
-		lctx.fillRect(0, lh - i, 100, 1);
-	}
-
-	var dlabel = $(document.createElement('span')).text('DPS');
-	ctx.append(dlabel);
-	var lpos = lcanvas.parent().offset();
-	dlabel.offset({
-		top: lpos.top + lcanvas.parent().height() + 5,
-		left: lpos.left + lcanvas.parent().width() / 2 - dlabel.width() / 2
-	});
-
-	lpos = lcanvas.offset();
-	var nlabels = 6;
-	for(var i = 0; i <= nlabels; ++i) {
-		dlabel = $(document.createElement('span')).addClass('dpslabel')
-			.text(Math.round((i / nlabels) * maxdps).toString());
-		ctx.append(dlabel);
-		dlabel.offset({
-			top: Math.min(
-				Math.max(
-					lpos.top + lcanvas.height() * (1 - i / nlabels) - dlabel.height() / 2,
-					lpos.top
-				),
-				lpos.top + lcanvas.height() - dlabel.height()
-			),
-			left: lpos.left - dlabel.width() - 4
-		});
-	}
-
-	for(var i = 0; i <= cw; i += pixelsize) {
-		x = (i / cw) * xmax;
-
-		for(var j = 0; j <= ch; j += pixelsize) {
-			y = (j / ch) * ymax;
-			fracdps = Math.min(1, osmium_get_dps_internal(ia, genfunc(x, y)) / maxdps);
-
-			cctx.fillStyle = osmium_heat_color(fracdps);
-			cctx.fillRect(i, ch - j, pixelsize, pixelsize);
-		}
-	}
-
-	osmium_graph_draw_grid(cctx, cw, ch, 0, xmax, 8, 0, ymax, 4, 0.15, 0.75);
 };

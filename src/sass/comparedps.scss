@@ -78,4 +78,28 @@ div#comparedps {
 		right: auto;
 		bottom: auto;
 	}
+
+	ul#colorlegend {
+		width: 100%;
+		display: table;
+		table-layout: fixed;
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+
+		&> li {
+			display: table-cell;
+			width: 100%;
+			text-align: center;
+
+			padding: 0.5em;
+
+			@include ellipsis;
+
+			&> span {
+				font-weight: bold;
+				border-bottom: 0.25em solid $subsection-border-color;
+			}
+		}
+	}
 }

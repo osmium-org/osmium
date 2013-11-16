@@ -390,7 +390,8 @@ osmium_get_dps_internal = function(ia, args) {
  * @param dpsmin the minimum Y value
  * @param dpsmax the maximum Y value, leave null to autodetect
  */
-osmium_draw_dps_graph_1d = function(ia_map, color_map, ctx, xlabel, xmin, xmax, genfunc_x, dpsmin, dpsmax) {
+osmium_draw_dps_graph_1d = function(ia_map, color_map, ctx,
+									xlabel, xmin, xmax, genfunc_x, dpsmin, dpsmax) {
 	ctx.empty();
 
 	var canvas = document.createElement('canvas');
@@ -431,18 +432,7 @@ osmium_draw_dps_graph_1d = function(ia_map, color_map, ctx, xlabel, xmin, xmax, 
 			x = xmin + (i / cw) * (xmax - xmin);
 			dps = osmium_get_dps_internal(ia_map[k].ia, genfunc_x(x));
 			px = i + 0.5;
-			py = Math.min(
-				ch - 2,
-				Math.floor(ch * (
-					1 - Math.min(
-						1,
-						Math.max(
-							0,
-							(dps - dpsmin) / (dpsmax - dpsmin)
-						)
-					)
-				))
-			) + 0.5;
+			py = Math.floor(ch * (1 - (dps - dpsmin) / (dpsmax - dpsmin))) + 0.5;
 
 			if(i === 0) {
 				cctx.moveTo(px, py);
@@ -454,5 +444,129 @@ osmium_draw_dps_graph_1d = function(ia_map, color_map, ctx, xlabel, xmin, xmax, 
 		cctx.strokeStyle = color_map[k];
 		cctx.lineWidth = 3;
 		cctx.stroke();
+	}
+};
+
+/**
+ * Draw a 2d graph. Most parameters are similar to the 1d version.
+ *
+ * @param genfunc_xy a function that takes two parameters (the X,Y
+ * coordinates) and returns an array [ tsr, tv, td ].
+ *
+ * @param cololfunc a function that takes two parameters, a map of
+ * array [ DPS, MaxDPS ] values and the color_map parameter, and
+ * returns a color.
+ *
+ * @param pixelsize the size of the rectangles drawn on the
+ * graph. Higher values means less rectangles to draw, but results in
+ * a blockier graph.
+ *
+ * @returns global maximum dps
+ */
+osmium_draw_dps_graph_2d = function(ia_map, colorfunc, ctx,
+									xlabel, xmin, xmax, ylabel, ymin, ymax,
+									genfunc_xy, pixelsize) {
+	ctx.empty();
+
+	var canvas = document.createElement('canvas');
+	var cctx = canvas.getContext('2d');
+	var cw, ch;
+	canvas = $(canvas);
+	ctx.append($(document.createElement('div')).addClass('cctx').append(canvas));
+	canvas.attr('width', cw = canvas.width());
+	canvas.attr('height', ch = canvas.height());
+
+	osmium_graph_gen_labels(ctx, canvas, xlabel, ylabel);
+
+	cctx.moveTo(0, ch);
+
+	var x, y, px, py, localmax = {}, globalmax = 1, hps = pixelsize / 2;
+
+	for(var k in ia_map) {
+		if(!("ia" in ia_map[k])) continue;
+		var ia = ia_map[k].ia;
+		localmax[k] = 0;
+	
+		for(var i = 0; i <= cw; i += pixelsize) {
+			x = xmin + ((i + hps) / cw) * (xmax - xmin);
+
+			for(var j = 0; j <= ch; j += pixelsize) {
+				y = ymin + ((j + hps) / ch) * (ymax - ymin);
+				localmax[k] = Math.max(localmax[k], osmium_get_dps_internal(ia, genfunc_xy(x, y)));
+			}
+		}
+
+		globalmax = Math.max(localmax[k], globalmax);
+	}
+
+	var dps = {};
+
+	for(var k in ia_map) {
+		dps[k] = [ 0, Math.max(1, localmax[k]) ];
+	}
+
+	for(var i = 0; i <= cw; i += pixelsize) {
+		x = xmin + ((i + hps) / cw) * (xmax - xmin);
+
+		for(var j = 0; j <= ch; j += pixelsize) {
+			y = ymin + ((j + hps) / ch) * (ymax - ymin);
+
+			for(var k in ia_map) {
+				if(!("ia" in ia_map[k])) continue;
+
+				dps[k][0] = osmium_get_dps_internal(ia_map[k].ia, genfunc_xy(x, y));
+			}
+
+			cctx.fillStyle = colorfunc(dps);
+			cctx.fillRect(i, ch - j, pixelsize, pixelsize);
+		}
+	}
+
+	osmium_graph_draw_grid(cctx, cw, ch, xmin, xmax, 8, ymin, ymax, 4, 0.15, 0.75);
+
+	return globalmax;
+};
+
+/** Draw a legend for colored 2d graphs. */
+osmium_draw_dps_legend = function(ctx, maxdps, heatfunc) {
+	ctx.find('div.cctx').addClass('twodim');
+
+	var lcanvas = document.createElement('canvas');
+	var lctx = lcanvas.getContext('2d');
+	var lw, lh;
+	lcanvas = $(lcanvas);
+	ctx.append($(document.createElement('div')).addClass('legend').append(lcanvas));
+	lcanvas.attr('width', lw = lcanvas.width());
+	lcanvas.attr('height', lh = lcanvas.height());
+
+	for(var i = 0; i <= lh; ++i) {
+		lctx.fillStyle = heatfunc(i / lh);
+		lctx.fillRect(0, lh - i, 100, 1);
+	}
+
+	var dlabel = $(document.createElement('span')).text('DPS');
+	ctx.append(dlabel);
+	var lpos = lcanvas.parent().offset();
+	dlabel.offset({
+		top: lpos.top + lcanvas.parent().height() + 5,
+		left: lpos.left + lcanvas.parent().width() / 2 - dlabel.width() / 2
+	});
+
+	lpos = lcanvas.offset();
+	var nlabels = 6;
+	for(var i = 0; i <= nlabels; ++i) {
+		dlabel = $(document.createElement('span')).addClass('dpslabel')
+			.text(Math.round((i / nlabels) * maxdps).toString());
+		ctx.append(dlabel);
+		dlabel.offset({
+			top: Math.min(
+				Math.max(
+					lpos.top + lcanvas.height() * (1 - i / nlabels) - dlabel.height() / 2,
+					lpos.top
+				),
+				lpos.top + lcanvas.height() - dlabel.height()
+			),
+			left: lpos.left - dlabel.width() - 4
+		});
 	}
 };

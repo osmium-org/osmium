@@ -238,8 +238,106 @@ $(function() {
 			);
 		} else {
 			/* Draw a 2d graph */
-			/* XXX: todo */
+			var color_map = {};
+			$("form#lsources input.source").each(function() {
+				var tr = $(this).closest('tr');
+				color_map[(tr.index() - 1).toString()] = tr.data('hue');
+			});
+
+			var xlabel, ylabel, genfunc_xy;
+
+			if(ytype === "tv") {
+				ylabel = "Target velocity (m/s)";
+			} else if(ytype === "tsr") {
+				ylabel = "Target signature radius (m)";
+			}
+
+			if(xtype === "td") {
+				xlabel = "Target distance (km)";
+
+				if(ytype === "tv") {
+					genfunc_xy = function(x, y) { return [ tsrInit, y, x ]; };
+				} else if(ytype === "tsr") {
+					genfunc_xy = function(x, y) { return [ y, tvInit, x ]; };
+				}
+			} else if(xtype === "tv") {
+				xlabel = "Target velocity (m/s)";
+
+				if(ytype === "tsr") {
+					genfunc_xy = function(x, y) { return [ y, x, tdInit ]; };
+				}
+			} else if(xtype === "tsr") {
+				xlabel = "Target signature radius (m)";
+
+				if(ytype === "tv") {
+					genfunc_xy = function(x, y) { return [ x, y, tdInit ]; };
+				}
+			}
+
+			var cfunc = function(hue, t) {
+				var sat = Math.round(Math.max(25, 100 * t * t));
+				var alpha = (t > 0.5) ? 1 : (t * 2)
+				return "hsla(" + hue + ", " + sat + "%, 50%, " + alpha * alpha + ")";
+			};
+			var ctx = $("div#graphcontext");
+			var maxdps = osmium_draw_dps_graph_2d(
+				osmium_ia_map, function(dpsvals) {
+					var kmax = null;
+					var Kmax = null;
+
+					for(var k in dpsvals) {
+						if(kmax === null || dpsvals[kmax][0] < dpsvals[k][0]) {
+							kmax = k;
+						}
+
+						if(Kmax === null || dpsvals[Kmax][1] < dpsvals[k][1]) {
+							Kmax = k;
+						}
+					}
+
+					return cfunc(color_map[kmax], dpsvals[kmax][0] / dpsvals[Kmax][1]);
+				}, 
+				ctx,
+				xlabel, xmin, xmax, ylabel, ymin, ymax,
+				genfunc_xy, 4
+			);
+
+			var colorkeys = [];
+			for(var k in osmium_ia_map) {
+				if(!("ia" in osmium_ia_map[k])) continue;
+				colorkeys.push(color_map[k]);
+			}
+			var cl = colorkeys.length;
+
+			osmium_draw_dps_legend(
+				ctx, maxdps,
+				function(t) {
+					return cfunc(colorkeys[
+						(Math.floor(6 * cl * (1 - t)) % cl + cl) % cl
+					], t);
+				}
+			);
 		}
+
+		$("ul#colorlegend").remove();
+		var ul = $(document.createElement('ul'));
+		ul.prop('id', 'colorlegend');
+		for(var k in osmium_ia_map) {
+			if(!("ia" in osmium_ia_map[k])) continue;
+			var tr = $("form#lsources").find('input#source' + k).closest('tr');
+			var name = $("form#lsources").find('input#legend' + k).val();
+			if(!name) {
+				name = tr.find('label').text();
+			}
+
+			ul.append(
+				$(document.createElement('li')).append(
+					$(document.createElement('span')).text(name)
+						.css('border-color', 'hsl(' + tr.data('hue') + ', 100%, 50%)')
+				)
+			);
+		}
+		$("div#graphcontext").before(ul);
 
 		return false;
 	}).trigger('tick');
@@ -278,4 +376,6 @@ $(function() {
 
 		return false;
 	});
+
+	gpform.submit();
 });
