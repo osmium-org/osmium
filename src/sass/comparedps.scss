@@ -1,0 +1,81 @@
+div#comparedps {
+	@include fixed-width-page;
+
+	form#lsources {
+		&, &> table {
+			width: 100%;
+		}
+
+		td > input[type="text"] {
+			width: 100%;
+			margin-bottom: 0.25em;
+		}
+
+		label {
+			border-bottom: 0.25em solid $subsection-border-color;
+		}
+	}
+
+	form#gparams {
+		&, &> table {
+			width: 100%;
+		}
+
+		tr#xaxistype, tr#yaxistype, tr#initvalues {
+			& > td > ul {
+				width: 100%;
+				margin: 0;
+				padding: 0;
+				list-style-type: none;
+				display: table;
+				table-layout: fixed;
+
+				&> li {
+					display: table-cell;
+					width: 33%;
+					text-align: center;
+
+					&> input[type="text"], &> div > input[type="text"] {
+						width: 8em;
+						min-width: 8em;
+						margin-bottom: 0.25em;
+						text-align: right;
+					}
+
+					&> div {
+						display: inline-block;
+						text-align: right;
+
+						opacity: 0.2;
+					}
+
+					&.selected > div {
+						opacity: 1.0;
+					}
+
+					&.disabled {
+						opacity: 0.2;
+					}
+				}
+			}
+
+			& > th {
+				vertical-align: middle;
+			}
+		}
+
+		input.init {
+			min-width: 16em;
+			width: 16em;
+		}
+	}
+
+	div#graphcontext {
+		@extend div#m-dpsg-ctx;
+		position: relative;
+		top: auto;
+		left: auto;
+		right: auto;
+		bottom: auto;
+	}
+}

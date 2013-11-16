@@ -16,6 +16,41 @@
  */
 
 /**
+ * Try to auto-guess "best" initial values. Returns an array of three
+ * values [ tsrOptimal, tvOptimal, tdOptimal ].
+ */
+osmium_probe_optimals_from_ia = function(ia) {
+	var tsrc = 0, tsrs = 0, tvc = 0, tvs = 0, tdc = 0, tds = 0;
+
+	for(var i = 0; i < ia.length; ++i) {
+		var a = ia[i].raw;
+
+		if(!("damagetype" in a)) continue;
+
+		if("sigradius" in a) {
+			++tsrc;
+			tsrs += a.sigradius;
+		}
+
+		if("expradius" in a) {
+			++tsrc;
+			tsrs += a.expradius;
+		}
+
+		if(a.damagetype === "turret" && "range" in a) {
+			++tdc;
+			tds += a.range / 1000.0;
+		}
+	}
+
+	return [
+		tsrc === 0 ? 250 : Math.round(tsrs / tsrc),
+		tvc === 0 ? 0 : Math.round(tvs / tvc),
+		tdc === 0 ? 1 : Math.round(tds / tdc),
+	];
+};
+
+/**
  * Try to auto-guess graph boundaries with some given
  * constraints. Parameters tsr, tv, td can be filled or left
  * out. Returns an array of three values [ tsrMax, tvMax, tdMax ].
@@ -333,4 +368,91 @@ osmium_get_dps_from_type_internal = function(a, tsr, tv, td) {
 	}
 
 	return 0;
+};
+
+/** @internal */
+osmium_get_dps_internal = function(ia, args) {
+	var dps = 0;
+	for(var j = 0; j < ia.length; ++j) {
+		dps += osmium_get_dps_from_type_internal(ia[j].raw, args[0], args[1], args[2]);
+	}
+	return 1000 * dps;
+};
+
+/**
+ * Draw a line graph for every set of attributes in ia_map, using colors in color_map.
+ *
+ * @param ctx the root element to append the canvas and labels into
+ * @param xlabel the X label
+ * @param xmin the minimum X value
+ * @param xmax the maximum X value
+ * @param genfunc_x a function which takes the X coordinate and returns an array [ tsr, tv, td ]
+ * @param dpsmin the minimum Y value
+ * @param dpsmax the maximum Y value, leave null to autodetect
+ */
+osmium_draw_dps_graph_1d = function(ia_map, color_map, ctx, xlabel, xmin, xmax, genfunc_x, dpsmin, dpsmax) {
+	ctx.empty();
+
+	var canvas = document.createElement('canvas');
+	var cctx = canvas.getContext('2d');
+	var cw, ch;
+	canvas = $(canvas);
+	ctx.append($(document.createElement('div')).addClass('cctx').append(canvas));
+	canvas.attr('width', cw = canvas.width());
+	canvas.attr('height', ch = canvas.height());
+
+	osmium_graph_gen_labels(ctx, canvas, xlabel, "Damage per second");
+
+	var x, dps, px, py;
+
+	if(!dpsmax) {
+		dpsmax = 10;
+
+		for(var i = 0; i <= cw; ++i) {
+			x = xmin + (i / cw) * (xmax - xmin);
+
+			for(var k in ia_map) {
+				if(!("ia" in ia_map[k])) continue;
+				dpsmax = Math.max(dpsmax, osmium_get_dps_internal(ia_map[k].ia, genfunc_x(x)));
+			}
+		}
+
+		dpsmax *= 1.05;
+	}
+
+	osmium_graph_draw_grid(cctx, cw, ch, xmin, xmax, 8, dpsmin, dpsmax, 4, 0.15, 0.5);
+
+	for(var k in ia_map) {
+		if(!("ia" in ia_map[k])) continue;
+		cctx.beginPath();
+		cctx.moveTo(0, 0);
+
+		for(var i = 0; i <= cw; ++i) {
+			x = xmin + (i / cw) * (xmax - xmin);
+			dps = osmium_get_dps_internal(ia_map[k].ia, genfunc_x(x));
+			px = i + 0.5;
+			py = Math.min(
+				ch - 2,
+				Math.floor(ch * (
+					1 - Math.min(
+						1,
+						Math.max(
+							0,
+							(dps - dpsmin) / (dpsmax - dpsmin)
+						)
+					)
+				))
+			) + 0.5;
+
+			if(i === 0) {
+				cctx.moveTo(px, py);
+			} else {
+				cctx.lineTo(px, py);
+			}
+		}
+
+		cctx.strokeStyle = color_map[k];
+		cctx.lineWidth = 3;
+		cctx.stroke();
+	}
 };
