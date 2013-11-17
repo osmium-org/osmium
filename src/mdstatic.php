@@ -23,6 +23,13 @@ require __DIR__.'/../inc/root.php';
 $f = __DIR__.'/md/'.$_GET['f'];
 $data = $_GET;
 
+$allowed = realpath(__DIR__.'/md/');
+$f = realpath($f);
+
+if(strpos($f, $allowed) !== 0) {
+	\Osmium\fatal(404, "File not found");
+}
+
 \Osmium\Chrome\print_header($data['title'], $data['relative']);
 
 echo "<div id='mdstatic'>\n";
