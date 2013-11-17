@@ -41,7 +41,10 @@ osmium_notifications = function(relative) {
 };
 
 $(function() {
+	var prefix = window.location.href.split("/");
+	prefix[prefix.length - 1] = '';
+
 	osmium_notifications(
-		$("div#osmium-data").data('relative')
+		prefix.join('/') + $("div#osmium-data").data('relative')
 	);
 });

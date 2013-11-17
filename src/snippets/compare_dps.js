@@ -16,14 +16,11 @@
  */
 
 osmium_ia_map = {};
-osmium_relative = '..';
 
 $(function() {
 	var labels = $('form#lsources label');
 	var lmaxc = labels.length;
 	var color;
-
-	osmium_relative = $("div#osmium-data").data('relative');
 
 	for(var i = 0; i < lmaxc; ++i) {
 		var hue = Math.round(360 * (i / lmaxc));
@@ -35,6 +32,36 @@ $(function() {
 	graphctx.height(Math.ceil(graphctx.width() / 1.618));
 
 	var gpform = $('form#gparams');
+	var lsform = $("form#lsources");
+
+	var toload = window.location.href.split("/");
+	var load, larray;
+	while((load = toload.pop()) !== "dps") {
+		larray = load.split(",");
+		for(var i = 0; i < larray.length; ++i) {
+			larray[i] = decodeURIComponent(larray[i]);
+		}
+
+		if(larray[0] === "s") {
+			$("input#source" + larray[1]).val(larray[2]);
+			if(larray.length >= 4) {
+				$("input#legend" + larray[1]).val(larray[3]);
+			}
+		} else if(larray[0] === "x") {
+			var li = gpform.find("ul.x").find("li." + larray[1]);
+			li.find('input:radio').click();
+			li.find('input.xmin').val(larray[2]);
+			li.find('input.xmax').val(larray[3]);
+		} else if(larray[0] === "y") {
+			var li = gpform.find("ul.y").find("li." + larray[1]);
+			li.find('input:radio').click();
+			li.find('input.ymin').val(larray[2]);
+			li.find('input.ymax').val(larray[3]);
+		} else if(larray[0] === "td" || larray[0] === "tv" || larray[0] === "tsr") {
+			gpform.find("ul.initvalues").find('li.' + larray[0]).find('input.' + larray[0]).val(larray[1]);
+		}
+	}
+
 	gpform.on('tick', function() {
 		/* Enforce consistency of graph parameters */
 
@@ -212,7 +239,7 @@ $(function() {
 		if(ytype === "dps") {
 			/* Draw a 1d graph */
 			var color_map = {};
-			$("form#lsources input.source").each(function() {
+			lsform.find("input.source").each(function() {
 				var tr = $(this).closest('tr');
 				color_map[(tr.index() - 1).toString()] = "hsla(" + tr.data('hue') + ", 100%, 50%, 0.8)";
 			});
@@ -239,7 +266,7 @@ $(function() {
 		} else {
 			/* Draw a 2d graph */
 			var color_map = {};
-			$("form#lsources input.source").each(function() {
+			lsform.find("input.source").each(function() {
 				var tr = $(this).closest('tr');
 				color_map[(tr.index() - 1).toString()] = tr.data('hue');
 			});
@@ -295,6 +322,10 @@ $(function() {
 						}
 					}
 
+					if(Kmax === null) {
+						return "hsla(0, 100%, 50%, 0)";
+					}
+
 					return cfunc(color_map[kmax], dpsvals[kmax][0] / dpsvals[Kmax][1]);
 				}, 
 				ctx,
@@ -312,6 +343,10 @@ $(function() {
 			osmium_draw_dps_legend(
 				ctx, maxdps,
 				function(t) {
+					if(cl === 0) {
+						return cfunc(0, t);
+					}
+
 					return cfunc(colorkeys[
 						(Math.floor(6 * cl * (1 - t)) % cl + cl) % cl
 					], t);
@@ -324,8 +359,8 @@ $(function() {
 		ul.prop('id', 'colorlegend');
 		for(var k in osmium_ia_map) {
 			if(!("ia" in osmium_ia_map[k])) continue;
-			var tr = $("form#lsources").find('input#source' + k).closest('tr');
-			var name = $("form#lsources").find('input#legend' + k).val();
+			var tr = lsform.find('input#source' + k).closest('tr');
+			var name = lsform.find('input#legend' + k).val();
 			if(!name) {
 				name = tr.find('label').text();
 			}
@@ -339,10 +374,63 @@ $(function() {
 		}
 		$("div#graphcontext").before(ul);
 
+		var urielements = [];
+		for(var k in osmium_ia_map) {
+			if(!("ia" in osmium_ia_map[k])) continue;
+			var s = [ "s", k, $("input#source" + k).val() ];
+			var t = $("input#legend" + k).val();
+			if(t) s.push(t);
+			urielements.push(s);
+		}
+
+		var rawxmin = gpform.find('ul.x input.xmin:not(:disabled)').val();
+		var rawxmax = gpform.find('ul.x input.xmax:not(:disabled)').val();
+		var rawymin = gpform.find('ul.y input.ymin:not(:disabled)').val();
+		var rawymax = gpform.find('ul.y input.ymax:not(:disabled)').val();
+
+		if(xtype !== "td" || rawxmin !== "" || rawxmax !== "") {
+			urielements.push([
+				"x", xtype,
+				gpform.find('ul.x input.xmin:not(:disabled)').val(),
+				gpform.find('ul.x input.xmax:not(:disabled)').val()
+			]);
+		}
+
+		if(ytype !== "dps" || rawymin !== "" || rawymax !== "") {
+			urielements.push([
+				"y", ytype,
+				gpform.find('ul.y input.ymin:not(:disabled)').val(),
+				gpform.find('ul.y input.ymax:not(:disabled)').val()
+			]);
+		}
+
+		gpform.find('ul.initvalues input.init:not(:disabled)').each(function() {
+			var t = $(this);
+			var v = t.val();
+			if(v === "") return;
+			urielements.push([ t.closest('li').attr('class'), v ]);
+		});
+
+		var loc = window.location.href.split("/");
+		while(loc.pop() !== "dps") { }
+		loc.push("dps");
+
+		for(var i = 0; i < urielements.length; ++i) {
+			var esc = [];
+			for(var j = 0; j < urielements[i].length; ++j) {
+				esc.push(encodeURIComponent(urielements[i][j]));
+			}
+
+			loc.push(esc.join(","));
+		}
+
+		loc = loc.join("/");
+		$("p#graphpermalink a").text(loc).prop('href', loc);
+		window.history.replaceState(null, null, loc);
+
 		return false;
 	}).trigger('tick');
 
-	var lsform = $("form#lsources");
 	lsform.on('submit', function(e) {
 		e.preventDefault();
 
@@ -356,9 +444,13 @@ $(function() {
 			$(document.createElement('span')).addClass('spinner')
 		);
 
+		var uri = window.location.href.split("/");
+		while(uri.pop() !== "compare") { }
+		uri.push("internal/compare/dps/ia");
+
 		$.ajax({
 			type: 'POST',
-			url: osmium_relative + '/internal/compare/dps/ia',
+			url: uri.join("/"),
 			data: postopts,
 			dataType: 'json',
 			complete: function() {
@@ -377,5 +469,5 @@ $(function() {
 		return false;
 	});
 
-	gpform.submit();
+	lsform.submit();
 });

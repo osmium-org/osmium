@@ -66,7 +66,7 @@ $osmium_dispatch_rules = array(
 	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 	'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
-	'%^/compare/dps$%D' => '/src/compare_dps.php',
+	'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
 	'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
 
 

@@ -25,6 +25,12 @@ const MAX_LOADOUTS = 6;
 
 $relative = '..';
 
+$uriparts = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
+$uriparts = explode('/', $_SERVER['REQUEST_URI']);
+while(array_pop($uriparts) !== 'dps') {
+	$relative .= '/..';
+}
+
 \Osmium\Chrome\print_header('Compare loadout DPS', $relative);
 echo "<div id='comparedps'>\n";
 
@@ -32,6 +38,7 @@ echo "<h1>Compare loadout DPS</h1>\n";
 
 echo "<h2>Graph output</h2>\n";
 echo "<div id='graphcontext'></div>\n";
+echo "<p id='graphpermalink'><small>Share this graph: <a></a></small></p>\n";
 
 
 
@@ -116,5 +123,4 @@ for($i = 0; $i < MAX_LOADOUTS; ++$i) {
 echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('graph_common');
 \Osmium\Chrome\print_js_snippet('compare_dps');
-\Osmium\Chrome\add_js_data('relative', $relative);
 \Osmium\Chrome\print_footer();

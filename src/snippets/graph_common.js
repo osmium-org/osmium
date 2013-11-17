@@ -453,9 +453,8 @@ osmium_draw_dps_graph_1d = function(ia_map, color_map, ctx,
  * @param genfunc_xy a function that takes two parameters (the X,Y
  * coordinates) and returns an array [ tsr, tv, td ].
  *
- * @param cololfunc a function that takes two parameters, a map of
- * array [ DPS, MaxDPS ] values and the color_map parameter, and
- * returns a color.
+ * @param cololfunc a function that takes one parameter, a map of
+ * array [ DPS, MaxDPS ] values and returns a color.
  *
  * @param pixelsize the size of the rectangles drawn on the
  * graph. Higher values means less rectangles to draw, but results in
@@ -480,7 +479,7 @@ osmium_draw_dps_graph_2d = function(ia_map, colorfunc, ctx,
 
 	cctx.moveTo(0, ch);
 
-	var x, y, px, py, localmax = {}, globalmax = 1, hps = pixelsize / 2;
+	var x, y, px, py, localmax = {}, globalmax = 10, hps = pixelsize / 2;
 
 	for(var k in ia_map) {
 		if(!("ia" in ia_map[k])) continue;
