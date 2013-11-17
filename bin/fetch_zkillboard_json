@@ -29,6 +29,9 @@ $groupsq = \Osmium\Db\query(
 	'SELECT DISTINCT groupid FROM osmium.invships ORDER BY groupid ASC'
 );
 
+/* Purge old kills */
+\Osmium\Db\query_params('DELETE FROM osmium.recentkillsdna WHERE killtime < $1', array(time() - 7*86400));
+
 \Osmium\Db\prepare('delkill', 'DELETE FROM recentkillsdna WHERE killid = $1');
 \Osmium\Db\prepare(
 	'inskill',
