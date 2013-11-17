@@ -28,7 +28,14 @@ if(isset($_GET['sitemap'])) {
 	$_GET['f'] = 'static/cache/sitemap-'.$_GET['sitemap'].'.xml.gz';
 }
 
-$f = @fopen($fname = \Osmium\ROOT.'/'.$_GET['f'], 'rb');
+$allowed = realpath(__DIR__.'/../static/');
+$fname = \Osmium\ROOT.'/'.$_GET['f'];
+
+if(strpos($fname, $allowed) !== 0) {
+	\Osmium\fatal(404, "File not found");
+}
+
+$f = @fopen($fname, 'rb');
 if($f === false) {
 	\Osmium\fatal(404, "File not found");
 }
