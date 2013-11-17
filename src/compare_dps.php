@@ -31,7 +31,7 @@ while(array_pop($uriparts) !== 'dps') {
 	$relative .= '/..';
 }
 
-\Osmium\Chrome\print_header('Compare loadout DPS', $relative);
+\Osmium\Chrome\print_header('Compare loadout DPS', $relative, $relative === '..');
 echo "<div id='comparedps'>\n";
 
 echo "<h1>Compare loadout DPS</h1>\n";

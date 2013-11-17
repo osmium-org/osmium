@@ -132,7 +132,9 @@ osmium_init_ship = function() {
 				$(document.createElement('h2')).text('Damage per second graph ')
 					.append($(document.createElement('a'))
 							.text('(compare and tweak…)')
-							.prop('href', osmium_relative + '/compare/dps/s,0,' + encodeURIComponent(window.location.href)))
+							.prop('href', osmium_relative + '/compare/dps/s,0,'
+								  + encodeURIComponent(window.location.href)
+								  + ',' + encodeURIComponent(osmium_clf.metadata.title)))
 			);
 			var form = $(document.createElement('form'))
 				.prop('id', 'm-dpsg');
