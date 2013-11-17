@@ -119,6 +119,19 @@ $osmium_dispatch_rules = array(
 
 	'%^/moderation/$%D' => '/src/moderation/main.php',
 	'%^/moderation/flags$%D' => '/src/moderation/view_flags.php',
+
+	/* Stuff for robots */
+	'%^/robots\.txt$%D' => [ '/src/staticpassthrough.php', [ 'f' => 'static/robots.txt',
+	                                                         'type' => 'text/plain' ]
+	],
+	'%^/sitemap\.xml\.gz$%D' => [ '/src/staticpassthrough.php', [ 'f' => 'static/cache/sitemap-root.xml.gz',
+	                                                              'type' => 'application/x-gzip',
+	                                                              'dontcompress' => true ]
+	],
+	'%^/sitemap-(?<sitemap>[a-z0-9-]+)\.xml\.gz$%D' => [ '/src/staticpassthrough.php',
+	                                                     [ 'type' => 'application/x-gzip',
+	                                                       'dontcompress' => true ]
+	],
 );
 
 $relativeroot = \Osmium\get_ini_setting('relative_path');

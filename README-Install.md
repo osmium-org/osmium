@@ -29,6 +29,8 @@ below (for example, Debian uses `www-data`).
 3. Copy the `config-example.ini` file to `config.ini`, and tweak the
    settings in `config.ini` to your liking.
 
+   Do the same for `static/robots-example.txt`.
+
 4. Install the depedencies listed below.
 
 5. Make sure Sphinx uses the configuration file

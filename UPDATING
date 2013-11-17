@@ -1,3 +1,12 @@
+staging
+=======
+
+A new key has been added to config.ini: sitemap_root, and you must set
+it correctly (or your sitemaps will be broken) after upgrading.
+
+You should copy static/robots-example.txt to static/robots.txt and
+edit its contents to your liking.
+
 v0.10.0, released 2013-09-03
 ============================
 

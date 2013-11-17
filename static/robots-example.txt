@@ -1,0 +1,4 @@
+# Should match the values in config.ini
+Sitemap: http://my-domain.tld/sitemap.xml.gz
+
+# Add your own rules here…

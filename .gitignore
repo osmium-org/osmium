@@ -6,6 +6,7 @@ config.ini
 sphinx/*
 !sphinx/sphinx.conf
 static/*.css
+static/robots.txt
 .sass-cache
 tests/coverage
 pgsql/osmium-sde-*

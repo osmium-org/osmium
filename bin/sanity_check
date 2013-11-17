@@ -124,6 +124,11 @@ check('for dangling keys in config.ini', function() {
 	return array($ret === '', $ret ?: 'none');
 });
 
+check('whether static/robots.txt exists', function() {
+	$txt = __DIR__.'/../static/robots.txt';
+	return file_exists($txt) && is_readable($txt);
+}, CHECK_REQUIRED);
+
 check('for Sass >= 3.2', function() {
 	$sassver = preg_split('%\s+%', shell_exec('sass --version'));
 	foreach($sassver as $part) {

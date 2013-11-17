@@ -127,7 +127,8 @@ foreach($ids as $id) {
 }
 
 header('Content-Type: application/json; charset=utf-8');
-header('Expires: '.gmdate('r', time() + 3600));
+header('Expires: '.gmdate('r', time() + CACHE_TIMER));
 header('Cache-Control: public');
-header('Pragma:');
+header_remove('Pragma');
+header_remove('Set-Cookie');
 \Osmium\Chrome\return_json($result, JSON_PRETTY_PRINT);
