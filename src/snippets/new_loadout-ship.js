@@ -129,7 +129,10 @@ osmium_init_ship = function() {
 
 		osmium_ctxmenu_add_option(menu, "DPS graphs…", function() {
 			var hdr = $(document.createElement('header')).append(
-				$(document.createElement('h2')).text('Damage per second graph')
+				$(document.createElement('h2')).text('Damage per second graph ')
+					.append($(document.createElement('a'))
+							.text('(compare and tweak…)')
+							.prop('href', osmium_relative + '/compare/dps/s,0,' + encodeURIComponent(window.location.href)))
 			);
 			var form = $(document.createElement('form'))
 				.prop('id', 'm-dpsg');

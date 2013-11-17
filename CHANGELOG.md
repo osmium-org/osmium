@@ -1,7 +1,8 @@
 # Staging
 
 * DPS graphs implemented (accessible via the "ship" context
-  menu). Both one-dimensional and two-dimensional graphs can be made.
+  menu). Both one-dimensional and two-dimensional graphs can be
+  made. DPS of up to 6 loadouts can be compared on a dedicated page.
 
 * Smartbomb damage is now included in DPS summary.
 
