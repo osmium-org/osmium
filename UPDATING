@@ -1,5 +1,5 @@
-staging
-=======
+v0.10.1, released 2013-11-19
+============================
 
 A new key has been added to config.ini: sitemap_root, and you must set
 it correctly (or your sitemaps will be broken) after upgrading.

@@ -1,4 +1,6 @@
-# Staging
+# Version 0.10
+
+## Version 0.10.1, released 2013-11-19
 
 * DPS graphs implemented (accessible via the "ship" context
   menu). Both one-dimensional and two-dimensional graphs can be
@@ -11,7 +13,7 @@
 * Auto-add modules, charges, etc. when searching types by resubmitting
   the search form (or pressing "Enter" twice).
 
-# Version 0.10
+* Update the EVE database to Rubicon 1.0.
 
 ## Version 0.10.0, released 2013-09-03
 
