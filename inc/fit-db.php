@@ -1063,7 +1063,7 @@ function get_fit($loadoutid, $revision = null) {
 
 	$cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null, 'Loadout_Cache_');
 	if($cache !== null) {
-		\Osmium\Dogma\semaphore_release($sem);
+		\Osmium\State\semaphore_release($sem);
 		return $cache;
 	}
 
