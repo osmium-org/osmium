@@ -94,7 +94,7 @@ $osmium_dispatch_rules = array(
 	],
 	'%^/about$%D' => '/src/about.php',
 	'%^/changelog$%D' => [ '/src/mdstatic.php',
-	                       ['relative' => '.', 'title' => 'Changelog', 'f' => '../../CHANGELOG.md']
+	                       ['relative' => '.', 'title' => 'Changelog', 'f' => 'changelog.md']
 	],
 	'%^/help/search$%D' => [ '/src/mdstatic.php',
 	                         ['relative' => '..', 'title' => 'Search help', 'f' => 'search.md']
