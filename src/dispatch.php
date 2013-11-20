@@ -122,15 +122,17 @@ $osmium_dispatch_rules = array(
 
 	/* Stuff for robots */
 	'%^/robots\.txt$%D' => [ '/src/staticpassthrough.php', [ 'f' => 'static/robots.txt',
-	                                                         'type' => 'text/plain' ]
+	                                                         'type' => 'text/plain', ]
 	],
 	'%^/sitemap\.xml\.gz$%D' => [ '/src/staticpassthrough.php', [ 'f' => 'static/cache/sitemap-root.xml.gz',
 	                                                              'type' => 'application/x-gzip',
-	                                                              'dontcompress' => true ]
+	                                                              'dontcompress' => true,
+	                                                              'mexpire' => 93600, ]
 	],
 	'%^/sitemap-(?<sitemap>[a-z0-9-]+)\.xml\.gz$%D' => [ '/src/staticpassthrough.php',
 	                                                     [ 'type' => 'application/x-gzip',
-	                                                       'dontcompress' => true ]
+	                                                       'dontcompress' => true,
+	                                                       'mexpire' => 93600, ]
 	],
 );
 

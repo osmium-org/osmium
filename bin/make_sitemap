@@ -21,7 +21,7 @@ require __DIR__.'/../inc/root.php';
 
 /* Keep in mind, sitemaps should not be bigger than 10 MiB (compressed
  * size), and should not contain more than 50,000 URLs. */
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 50000;
 
 $root = rtrim(\Osmium\get_ini_setting('sitemap_root')
               .\Osmium\get_ini_setting('relative_path'), '/');
@@ -42,7 +42,7 @@ $xmlns->appendChild($idx->createTextNode('http://www.sitemaps.org/schemas/sitema
 
 $s = $si->appendChild($idx->createElement('sitemap'));
 $loc = $s->appendChild($idx->createElement('loc'));
-$loc->appendChild($idx->createTextNode($root.'/static/cache/sitemap-static-'.\Osmium\STATICVER.'.xml.gz'));
+$loc->appendChild($idx->createTextNode($root.'/sitemap-static.xml.gz'));
 $lastmod = $s->appendChild($idx->createElement('lastmod'));
 $lastmod->appendChild($idx->createTextNode($fdate(filemtime(__DIR__.'/../inc/root.php'))));
 
@@ -78,7 +78,7 @@ foreach($static as $spage) {
 
 $subidx->formatOutput = true;
 $subidx->encoding = 'UTF-8';
-file_put_contents(\Osmium\ROOT.'/static/cache/sitemap-static-'.\Osmium\STATICVER.'.xml', $subidx->saveXML());
+file_put_contents(\Osmium\ROOT.'/static/cache/sitemap-static.xml', $subidx->saveXML());
 
 echo ".";
 
@@ -99,7 +99,7 @@ $batchq = \Osmium\Db\query_params(
 );
 while($batch = \Osmium\Db\fetch_row($batchq)) {
 	list($i, $maxts) = $batch;
-	$fname = 'sitemap-loadouts-'.$i.'-'.$maxts.'.xml';
+	$fname = 'sitemap-loadouts-'.$i.'.xml';
 
 	echo ".";
 
@@ -155,7 +155,7 @@ $batchq = \Osmium\Db\query_params(
 );
 while($batch = \Osmium\Db\fetch_row($batchq)) {
 	list($i, $maxts) = $batch;
-	$fname = 'sitemap-profiles-'.$i.'-'.$maxts.'.xml';
+	$fname = 'sitemap-profiles-'.$i.'.xml';
 
 	echo ".";
 
