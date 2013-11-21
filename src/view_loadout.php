@@ -237,12 +237,12 @@ if($loadoutid !== false) {
 	echo "<div class='author'>\n";
 	if($author['apiverified'] === 't') {
 		if($author['allianceid'] > 0) {
-			echo "<img class='alliance' src='http://image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='' title='member of ".\Osmium\Chrome\escape($author['alliancename'])."' />";
+			echo "<img class='alliance' src='//image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='' title='member of ".\Osmium\Chrome\escape($author['alliancename'])."' />";
 		} else {
-			echo "<img class='corporation' src='http://image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='' title='member of ".\Osmium\Chrome\escape($author['corporationname'])."' />";
+			echo "<img class='corporation' src='//image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='' title='member of ".\Osmium\Chrome\escape($author['corporationname'])."' />";
 		}
 		if($author['characterid'] > 0) {
-			echo "<img class='portrait' src='http://image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='' />";
+			echo "<img class='portrait' src='//image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='' />";
 		}
 	}
 	echo "<small>submitted by</small><br />\n";

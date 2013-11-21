@@ -73,6 +73,8 @@ if(isset($_POST['account_name'])) {
 
 echo "<h1>Account creation</h1>\n";
 
+require \Osmium\ROOT.'/inc/login-httpscheck.php';
+
 echo "<p>Creating an account allows you to:</p>
 <ul>
 <li>Save and create public loadouts;</li>

@@ -170,8 +170,15 @@ function print_login_or_logout_box($relative, $notifications) {
 
 /** @internal */
 function print_login_box($relative) {
-	echo "<div id='state_box' class='login'>\n"
-		."<form method='post' action='{$relative}/login'>\n"
+	echo "<div id='state_box' class='login'>\n";
+
+	if(\Osmium\get_ini_setting('https_available')
+	   && !\Osmium\HTTPS
+	   && \Osmium\get_ini_setting('prefer_secure_login')) {
+		$relative = rtrim('https://'.$_SERVER['HTTP_HOST'].\Osmium\get_ini_setting('relative_path'), '/');
+	}
+
+	echo "<form method='post' action='{$relative}/login'>\n"
 		."<p>\n<span class='wide'>\n<input type='text' name='account_name' placeholder='Account name' />\n"
 		."<input type='password' name='password' placeholder='Password' />\n"
 		."<input type='submit' name='__osmium_login' value='Login' />"
@@ -193,7 +200,7 @@ function print_logoff_box($relative, $notifications) {
 	if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
 	   isset($a['characterid']) && $a['characterid'] > 0) {
 		$id = $a['characterid'];
-		$portrait = "<img src='http://image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
+		$portrait = "<img src='//image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
 	}
 
 	echo "<div id='state_box' class='logout'>\n<p>\n"

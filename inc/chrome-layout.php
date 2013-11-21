@@ -57,6 +57,13 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 			." ; script-src 'self' https://cdnjs.cloudflare.com"
 			." ; connect-src 'self'"
 		);
+
+		if(\Osmium\get_ini_setting('https_available') && \Osmium\get_ini_setting('use_hsts')) {
+			$maxage = (int)\Osmium\get_ini_setting('https_cert_expiration') - time() - 86400;
+			if($maxage > 0) {
+				header('Strict-Transport-Policy: max-age='.$maxage);
+			}
+		}
 	} else {
 		header(
 			"Content-Security-Policy: default-src 'none'"

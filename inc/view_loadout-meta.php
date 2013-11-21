@@ -247,7 +247,7 @@ if(isset($rauthorname)) {
 if(isset($fit['ship']['typeid'])) {
 	$actions[] = [
 		"external.svg",
-		"<a href='http://zkillboard.com/ship/".$fit['ship']['typeid']."/'>".$shipname." activity on zKillboard</a>"
+		"<a href='//zkillboard.com/ship/".$fit['ship']['typeid']."/'>".$shipname." activity on zKillboard</a>"
 	];
 }
 

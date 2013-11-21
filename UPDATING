@@ -1,3 +1,10 @@
+staging
+=======
+
+The [https] section has been added to config.ini. Please copy the
+[https] section from the example file, adapt it to your liking and put
+it in your configuration file.
+
 v0.10.1, released 2013-11-19
 ============================
 

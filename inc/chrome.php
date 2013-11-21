@@ -665,7 +665,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		if($row !== false) {
 			$image = '';
 			if($row[1] !== null) {
-				$image = "<img src='http://image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
+				$image = "<img src='//image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
 			}
 			return $image.escape($row[0]);
 		}
@@ -675,7 +675,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 	case 116: /* Type ID */
 		$typename = \Osmium\Fit\get_typename($number);
 		if($typename !== false) {
-			return "<img src='http://image.eveonline.com/Type/".$number."_64.png' alt='' /> "
+			return "<img src='//image.eveonline.com/Type/".$number."_64.png' alt='' /> "
 				.escape($typename);
 		}
 		$unitdisplayname = 'Type ID';

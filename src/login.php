@@ -36,6 +36,8 @@ if(isset($_POST['__osmium_login'])) {
 
 echo "<h1>Login</h1>\n";
 
+require \Osmium\ROOT.'/inc/login-httpscheck.php';
+
 if(\Osmium\State\is_logged_in()) {
 	echo "<p>You are already logged in. You may want to logout first.</p>\n";
 	\Osmium\Chrome\print_footer();

@@ -334,7 +334,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 		);
 
 		echo "<li>\n<a href='$relative/".$uri."'>"
-			."<img class='abs' src='http://image.eveonline.com/Render/"
+			."<img class='abs' src='//image.eveonline.com/Render/"
 			.$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
 
 		$dps = $loadout['dps'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['dps'], 2);

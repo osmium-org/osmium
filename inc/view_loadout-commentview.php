@@ -122,7 +122,7 @@ function format_comment($row) {
 
 	echo "<header>\n<div class='author'>\n";
 	if($row['apiverified'] === 't' && $row['characterid'] > 0) {
-		echo "<img class='portrait' src='http://image.eveonline.com/Character/"
+		echo "<img class='portrait' src='//image.eveonline.com/Character/"
 			.$row['characterid']."_256.jpg' alt='' />";
 	}
 	echo "<small>commented by</small><br />\n";
