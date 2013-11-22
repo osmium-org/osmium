@@ -93,9 +93,11 @@ $batchq = \Osmium\Db\query_params(
 	FROM osmium.allowedloadoutsanonymous ala
 	JOIN osmium.loadoutslatestrevision llr ON llr.loadoutid = ala.loadoutid
 	JOIN osmium.loadouthistory lh ON lh.loadoutid = llr.loadoutid AND lh.revision = llr.latestrevision
+	JOIN osmium.loadouts l ON l.loadoutid = ala.loadoutid
+	WHERE l.visibility = $2
 	GROUP BY floor(ala.loadoutid / $1)
 	ORDER BY floor(ala.loadoutid / $1) ASC',
-	array(BATCH_SIZE)
+	array(BATCH_SIZE, \Osmium\Fit\VISIBILITY_PUBLIC)
 );
 while($batch = \Osmium\Db\fetch_row($batchq)) {
 	list($i, $maxts) = $batch;
@@ -114,9 +116,10 @@ while($batch = \Osmium\Db\fetch_row($batchq)) {
 		FROM osmium.allowedloadoutsanonymous ala
 		JOIN osmium.loadoutslatestrevision llr ON llr.loadoutid = ala.loadoutid
 		JOIN osmium.loadouthistory lh ON lh.loadoutid = llr.loadoutid AND lh.revision = llr.latestrevision
-		WHERE ala.loadoutid >= $1 AND ala.loadoutid < $2
+		JOIN osmium.loadouts l ON l.loadoutid = ala.loadoutid
+		WHERE ala.loadoutid >= $1 AND ala.loadoutid < $2 AND l.visibility = $3
 		ORDER BY ala.loadoutid ASC',
-		array($i * BATCH_SIZE, ($i + 1) * BATCH_SIZE)
+		array($i * BATCH_SIZE, ($i + 1) * BATCH_SIZE, \Osmium\Fit\VISIBILITY_PUBLIC)
 	);
 	while($inner = \Osmium\Db\fetch_row($innerq)) {
 		list($loadoutid, $updatedate) = $inner;
