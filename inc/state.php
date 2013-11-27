@@ -253,7 +253,7 @@ function is_password_sane($pw) {
  */
 function hash_password($pw) {
 	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
-	$pwHash = new \PasswordHash(10, true);
+	$pwHash = new \PasswordHash(10, false);
 	return $pwHash->HashPassword($pw);
 }
 
@@ -269,7 +269,7 @@ function hash_password($pw) {
  */
 function check_password($pw, $hash) {
 	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
-	$pwHash = new \PasswordHash(10, true);
+	$pwHash = new \PasswordHash(10, false);
 	return $pwHash->CheckPassword($pw, $hash);
 }
 
