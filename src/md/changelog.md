@@ -4,6 +4,9 @@
   (finally…). Settings page now has tabbed sections for easier
   browsing.
 
+* Search results can be sorted in ascending order. They can also be
+  sorted by name, ship name, ship group, author or tags.
+
 # Version 0.10
 
 ## Version 0.10.1, released 2013-11-19

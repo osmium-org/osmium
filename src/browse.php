@@ -43,6 +43,6 @@ if(!isset($_GET['sort'])) {
 	$advq .= ' '.$more;
 }
 
-\Osmium\Search\print_pretty_results('..', $_GET['q'], $advq, true, 25,
+\Osmium\Search\print_pretty_results('..', $_GET['q'], $advq, true, 24,
                                     'p', 'No loadouts matched your filter(s).');
 \Osmium\Chrome\print_footer();

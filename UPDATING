@@ -5,6 +5,15 @@ The [https] section has been added to config.ini. Please copy the
 [https] section from the example file, adapt it to your liking and put
 it in your configuration file.
 
+The osmium schema has been updated.
+
+The sphinx loadout index has been updated. You must:
+
+* stop sphinx-searchd;
+* delete all index.* files;
+* start sphinx-searchd;
+* run ./bin/reindex_loadouts.
+
 v0.10.1, released 2013-11-19
 ============================
 
