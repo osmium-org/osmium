@@ -52,11 +52,14 @@ function do_post_login($account_name, $use_cookie = false) {
 	$_SESSION = array();
 	session_write_close();
 
-	$q = \Osmium\Db\query_params('SELECT accountid, accountname, nickname,
-	creationdate, lastlogindate,
-	keyid, verificationcode, apiverified,
-	characterid, charactername, corporationid, corporationname, allianceid, alliancename,
-	ismoderator, isfittingmanager FROM osmium.accounts WHERE accountname = $1', array($account_name));
+	$q = \Osmium\Db\query_params(
+		'SELECT accountid, accountname, nickname,
+		creationdate, lastlogindate, keyid, verificationcode, apiverified,
+		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
+		ismoderator, isfittingmanager
+		FROM osmium.accounts WHERE accountname = $1',
+		array($account_name)
+	);
 	$a = \Osmium\Db\fetch_assoc($q);
 	check_api_key($a);
 
@@ -72,7 +75,17 @@ function do_post_login($account_name, $use_cookie = false) {
 		$attributes = get_client_attributes();
 		$expiration_date = time() + COOKIE_AUTH_DURATION;
 
-		\Osmium\Db\query_params('INSERT INTO osmium.cookietokens (token, accountid, clientattributes, expirationdate) VALUES ($1, $2, $3, $4)', array($token, $account_id, $attributes, $expiration_date));
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.cookietokens
+			(token, accountid, clientattributes, expirationdate)
+			VALUES ($1, $2, $3, $4)',
+			array(
+				$token,
+				$account_id,
+				$attributes,
+				$expiration_date
+			)
+		);
 
 		setcookie(
 			'Osmium', $token, $expiration_date,

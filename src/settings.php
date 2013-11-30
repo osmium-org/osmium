@@ -62,6 +62,48 @@ if(isset($_POST['key_id'])) {
 \Osmium\Chrome\print_header('Account settings', '.');
 echo "<div id='account_settings'>\n";
 
+echo "<section id='s_changepw'>\n<h1>Change password</h1>\n";
+\Osmium\Forms\print_form_begin();
+
+if(isset($_POST['curpw'])) {
+	$cur = $_POST['curpw'];
+	$new = $_POST['newpw'];
+
+	if($new !== $_POST['newpw2']) {
+		\Osmium\Forms\add_field_error('newpw2', 'The two passwords were not equal.');
+	} else if(($s = \Osmium\State\is_password_sane($new)) !== true) {
+		\Osmium\Forms\add_field_error('newpw', $s);
+	} else {
+		$accountid = \Osmium\State\get_state('a')['accountid'];
+		$apw = \Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'SELECT passwordhash FROM osmium.accounts
+				WHERE accountid = $1',
+				array($accountid)
+			)
+		)[0];
+
+		if(!\Osmium\State\check_password($cur, $apw)) {
+			\Osmium\Forms\add_field_error('curpw', 'Incorrect password. If you forgot your password, log out and use the reset password page.');
+		} else {
+			$newhash = \Osmium\State\hash_password($new);
+			\Osmium\Db\query_params(
+				'UPDATE osmium.accounts SET passwordhash = $1
+				WHERE accountid = $2',
+				array($newhash, $accountid)
+			);
+			echo "<p class='notice_box'>Password was successfully changed.</p>\n";
+		}
+	}
+}
+
+\Osmium\Forms\print_generic_field('Current password', 'password', 'curpw');
+\Osmium\Forms\print_generic_field('New password', 'password', 'newpw');
+\Osmium\Forms\print_generic_field('New password (confirm)', 'password', 'newpw2');
+\Osmium\Forms\print_submit();
+\Osmium\Forms\print_form_end();
+echo "</section>\n";
+
 echo "<section id='s_status'>\n<h1>Account status</h1>\n";
 echo "<p>".($a['apiverified'] === 't' ? 'Your account is API-verified.'
             : 'Your account is <strong>not</strong> API-verified.')."</p>\n";
