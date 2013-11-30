@@ -19,6 +19,7 @@ div.mainpcont > section {
 	margin: 0 2em;
 	margin-bottom: 2em;
 	border: 1px solid $subsection-border-color;
+	background-color: rgba($main-bg-color, 0.7);
 
 	&> h2 {
 		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);

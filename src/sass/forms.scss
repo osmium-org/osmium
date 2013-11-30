@@ -3,7 +3,7 @@ $field-height: 1.5em;
 input, select, textarea, button, option {
 	color: $input-text-color;
 	border: 1px solid $input-border-color;
-	background-color: $input-bg-color;
+	background-color: rgba($input-bg-color, 0.8);
 	outline: none;
 
 	&:active {

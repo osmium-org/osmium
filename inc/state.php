@@ -52,11 +52,14 @@ function do_post_login($account_name, $use_cookie = false) {
 	$_SESSION = array();
 	session_write_close();
 
-	$q = \Osmium\Db\query_params('SELECT accountid, accountname, nickname,
-	creationdate, lastlogindate,
-	keyid, verificationcode, apiverified,
-	characterid, charactername, corporationid, corporationname, allianceid, alliancename,
-	ismoderator, isfittingmanager FROM osmium.accounts WHERE accountname = $1', array($account_name));
+	$q = \Osmium\Db\query_params(
+		'SELECT accountid, accountname, nickname,
+		creationdate, lastlogindate, keyid, verificationcode, apiverified,
+		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
+		ismoderator, isfittingmanager
+		FROM osmium.accounts WHERE accountname = $1',
+		array($account_name)
+	);
 	$a = \Osmium\Db\fetch_assoc($q);
 	check_api_key($a);
 
@@ -72,7 +75,17 @@ function do_post_login($account_name, $use_cookie = false) {
 		$attributes = get_client_attributes();
 		$expiration_date = time() + COOKIE_AUTH_DURATION;
 
-		\Osmium\Db\query_params('INSERT INTO osmium.cookietokens (token, accountid, clientattributes, expirationdate) VALUES ($1, $2, $3, $4)', array($token, $account_id, $attributes, $expiration_date));
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.cookietokens
+			(token, accountid, clientattributes, expirationdate)
+			VALUES ($1, $2, $3, $4)',
+			array(
+				$token,
+				$account_id,
+				$attributes,
+				$expiration_date
+			)
+		);
 
 		setcookie(
 			'Osmium', $token, $expiration_date,
@@ -259,8 +272,12 @@ function is_password_sane($pw) {
  * salting internally.
  */
 function hash_password($pw) {
+	if(\PHP_VERSION_ID >= 50500) {
+		return \password_hash($pw, \PASSWORD_DEFAULT);
+	}
+
 	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
-	$pwHash = new \PasswordHash(10, true);
+	$pwHash = new \PasswordHash(10, false);
 	return $pwHash->HashPassword($pw);
 }
 
@@ -275,9 +292,33 @@ function hash_password($pw) {
  * @returns true if $pw matches against $hash.
  */
 function check_password($pw, $hash) {
+	if(\PHP_VERSION_ID >= 50500) {
+		$ok = \password_verify($pw, $hash);
+		if($ok === true) return true;
+		/* If password_verify won't check phpass-generated
+		 * passwords, so don't return false just yet */
+	}
+
 	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
-	$pwHash = new \PasswordHash(10, true);
+	$pwHash = new \PasswordHash(10, false);
 	return $pwHash->CheckPassword($pw, $hash);
+}
+
+/**
+ * Checks whether a password needs a rehash.
+ */
+function password_needs_rehash($hash) {
+	if(\PHP_VERSION_ID >= 50500) {
+		return \password_needs_rehash($hash, \PASSWORD_DEFAULT);
+	}
+
+	require_once \Osmium\ROOT.'/lib/PasswordHash.php';
+	$pwHash = new \PasswordHash(10, false);
+	$foo = $pwHash->HashPassword('foo', $hash);
+
+	$h = substr($hash, 0, strrpos($hash, '$'));
+	$f = substr($foo, 0, strrpos($foo, '$'));
+	return $h !== $f;
 }
 
 /**
@@ -299,6 +340,15 @@ function try_login() {
 	));
 
 	if($hash !== false && check_password($pw, $hash[0])) {
+		if(password_needs_rehash($hash[0])) {
+			$newhash = hash_password($pw);
+			\Osmium\Db\query_params(
+				'UPDATE osmium.accounts SET passwordhash = $1
+				WHERE accountname = $2',
+				array($newhash, $account_name)
+			);
+		}
+
 		do_post_login($account_name, $remember);
 		return true;
 	} else {

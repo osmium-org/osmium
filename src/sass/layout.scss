@@ -72,7 +72,7 @@ html, body {
 	padding: 0;
 	height: 100%;
 	color: $main-text-color;
-	background-color: $main-bg-color;
+	background: url('./bg.png'), $main-bg-color;
 }
 
 section, header, nav {
@@ -84,6 +84,9 @@ div#wrapper {
 	height: auto !important;
 	height: 100%;
 	margin: 0 auto (-$footer-height);
+
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
 
 	&> h1 {
 		padding-left: 0.5em;
@@ -100,9 +103,11 @@ div#wrapper {
 
 	padding-top: $nav-height;
 
-	@include layout-type(extrasmall) {
+	@include layout-type(small) {
 		padding-top: 0;
 	}
+
+	background-color: rgba($main-bg-color, 0.8);
 }
 
 footer, div#push {
@@ -120,7 +125,7 @@ div#wrapper > nav:first-child {
 	left: 0;
 	z-index: 2000;
 
-	@include layout-type(extrasmall) {
+	@include layout-type(small) {
 		position: static;
 	}
 
