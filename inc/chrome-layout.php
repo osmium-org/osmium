@@ -168,6 +168,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 
 	\Osmium\Chrome\print_js_snippet('persistent_theme');
 	\Osmium\Chrome\print_js_snippet('notifications');
+	\Osmium\Chrome\print_js_snippet('feedback');
 	\Osmium\Chrome\add_js_data('relative', $__osmium_chrome_relative);
 }
 

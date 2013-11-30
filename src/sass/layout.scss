@@ -108,6 +108,66 @@ div#wrapper {
 	}
 
 	background-color: rgba($main-bg-color, 0.8);
+
+	&> div#glob_feedback {
+		position: fixed;
+		right: -20em;
+		top: 35%;
+		border: 1px solid $section-border-color;
+		background-color: rgba($main-bg-color, 0.9);
+
+		height: 8em;
+		padding-left: 2em;
+
+		&> span {
+			font-weight: bold;
+			display: block;
+			text-align: center;
+			-webkit-transform: rotate(-90deg);
+			-moz-transform: rotate(-90deg);
+			transform: rotate(-90deg);
+			-webkit-transform-origin: center center;
+			-moz-transform-origin: center center;
+			transform-origin: center center;
+			position: absolute;
+			width: 8em;
+			height: 8em;
+			line-height: 8em;
+			top: 0;
+			left: -3em;
+			cursor: pointer;
+
+			&:before { content: "▲ "; }
+		}
+
+		&.extended {
+			right: -1px;
+
+			&> span:before { content: "▼ "; }
+		}
+
+		&> ul {
+			padding: 0;
+			margin: 0;
+
+			&> li {
+				width: 8em;
+				height: 8em;
+				line-height: 6em;
+				display: inline-block;
+				text-align: center;
+				padding: 1em;
+
+				&> a {
+					vertical-align: middle;
+					display: inline-block;
+					font-size: 1.5em;
+					font-weight: bold;
+					line-height: 1em;
+				}
+			}
+		}
+	}
 }
 
 footer, div#push {
