@@ -29,7 +29,6 @@ $hidden-char: '\0025B8';
 	border-top: 1px dashed $module-border-color;
 	line-height: 2em;
 	position: relative;
-	background-color: $main-bg-color;
 	@include ellipsis;
 
 	&, &> span.charge {
@@ -206,7 +205,7 @@ div#computed_attributes > section {
 	}
 
 	&> div {
-		background-color: $subsection-bg-color;
+		background-color: rgba($subsection-bg-color, 0.8);
 		padding: 0.125em 0.25em;
 	}
 

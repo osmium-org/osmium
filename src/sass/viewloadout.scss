@@ -14,7 +14,7 @@ div#vlattribs {
 	&> div.author {
 		position: relative;
 		margin-left: 0.5em;
-		background-color: $subsection-bg-color;
+		background-color: rgba($subsection-bg-color, 0.8);
 		height: 3.5em;
 		min-width: 7em;
 		display: inline-block;
