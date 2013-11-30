@@ -62,6 +62,12 @@ if(isset($_POST['key_id'])) {
 \Osmium\Chrome\print_header('Account settings', '.');
 echo "<div id='account_settings'>\n";
 
+echo "<ul class='tindex'>\n";
+echo "<li><a href='#s_changepw'>Change password</a></li>\n";
+echo "<li><a href='#s_apiauth'>Account status</a></li>\n";
+echo "<li><a href='#s_characters'>Characters and skills</a></li>\n";
+echo "</ul>\n";
+
 echo "<section id='s_changepw'>\n<h1>Change password</h1>\n";
 \Osmium\Forms\print_form_begin();
 
@@ -104,7 +110,7 @@ if(isset($_POST['curpw'])) {
 \Osmium\Forms\print_form_end();
 echo "</section>\n";
 
-echo "<section id='s_status'>\n<h1>Account status</h1>\n";
+echo "<section id='s_apiauth'>\n<h1>Account status</h1>\n";
 echo "<p>".($a['apiverified'] === 't' ? 'Your account is API-verified.'
             : 'Your account is <strong>not</strong> API-verified.')."</p>\n";
 
@@ -117,9 +123,8 @@ if($a['apiverified'] !== 't') {
 	echo "</ul>\n";
 }
 
-echo "</section>\n";
 
-echo "<section id='s_api_cred'>\n<h1>API credentials</h1>\n";
+echo "<h2>API credentials</h2>\n";
 
 \Osmium\State\print_api_link();
 \Osmium\Forms\print_form_begin();
@@ -308,4 +313,6 @@ echo "</tbody>\n</table>\n</form>\n";
 echo "</section>\n";
 
 echo "</div>\n";
+\Osmium\Chrome\print_js_snippet('tabs');
+\Osmium\Chrome\print_js_snippet('settings');
 \Osmium\Chrome\print_footer();
