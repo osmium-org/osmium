@@ -40,15 +40,50 @@ Most privileges do not apply to private or hidden loadouts.
 
 echo "<h3>How do I get reputation?</h3>\n";
 
+$changes = \Osmium\Reputation\get_updown_vote_reputation();
+$up = $changes[\Osmium\Reputation\VOTE_TYPE_UP];
+$down = $changes[\Osmium\Reputation\VOTE_TYPE_DOWN];
+
+function formatquantities(array $deltas, $type) {
+	$return = [];
+
+	list($destdelta, $srcdelta) = $deltas[$type];
+
+	if($destdelta !== 0) {
+		$unit = ' point'.(abs($destdelta) != 1 ? 's' : '');
+		if($destdelta > 0) $destdelta = '+'.$destdelta;
+		$return[] = $destdelta.$unit;
+	}
+	if($srcdelta !== 0) {
+		$unit = ' point'.(abs($srcdelta) != 1 ? 's' : '');
+		if($srcdelta > 0) $srcdelta = '+'.$srcdelta;
+		$return[] = $srcdelta.$unit.' for the voter';
+	}
+
+	return $return === [] ? '' : ' <small>('.implode('; ', $return).')</small>';
+}
+
 echo "<p>
 You get reputation points when…
 </p>
 <ul>
-<li>Someone upvotes one of your public lodaouts;</li>
-<li>Someone upvotes one of your comments on a public loadout.</li>
+<li>Someone upvotes one of your public lodaouts".formatquantities($up, \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT).";</li>
+<li>Someone upvotes one of your comments on a public loadout".formatquantities($up, \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT).".</li>
 </ul>
 <p>
 If you submit quality content, reputation points will come naturally. Similarly, upvote content when you believe it deserves it.
+</p>
+<h3>Can I lose points?</h3>
+<p>
+It is possible to lose reputation, when…
+</p>
+<ul>
+<li>Someone downvotes one of your public lodaouts".formatquantities($down, \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT).";</li>
+<li>Someone downvotes one of your comments on a public loadout".formatquantities($down, \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT).".</li>
+</ul>
+<h3>So votes are only useful for reputation?</h3>
+<p>
+Not only. The amount of votes is used to determine a <a href='http://www.evanmiller.org/how-not-to-sort-by-average-rating.html'>score</a> which is used to sort results. Entries with a very bad score may not appear in search results at all.
 </p>\n";
 
 if($anonymous) {
