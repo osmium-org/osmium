@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -282,4 +282,47 @@ function cast_updown_vote($type, $targettype, $targetaccountid, $givesreputation
 
 	\Osmium\Db\query('COMMIT;');
 	return true;
+}
+
+/**
+ * Undo the reputation changes from a set of votes, and optionally delete them.
+ *
+ * You should wrap this in a transaction.
+ */
+function nullify_votes($filter, array $filterparams, $alsodelete = false) {
+	$q = \Osmium\Db\query_params(
+		'SELECT voteid, fromaccountid, accountid, reputationgiventosource, reputationgiventodest
+		FROM osmium.votes v
+		WHERE '.$filter,
+		$filterparams
+	);
+
+	while($v = \Osmium\Db\fetch_assoc($q)) {
+		if($v['reputationgiventodest'] != 0 && $v['accountid'] > 0) {
+			\Osmium\Db\query_params(
+				'UPDATE accounts SET reputation = GREATEST($3, reputation - $1)
+				WHERE accountid = $2',
+				array($v['reputationgiventodest'], $v['accountid'], MIN_REPUTATION)
+			);
+		}
+
+		if($v['reputationgiventosource'] != 0 && $v['fromaccountid'] > 0) {
+			\Osmium\Db\query_params(
+				'UPDATE accounts SET reputation = GREATEST($3, reputation - $1)
+				WHERE accountid = $2',
+				array($v['reputationgiventosource'], $v['fromaccountid'], MIN_REPUTATION)
+			);
+		}
+	}
+
+	if($alsodelete) {
+		\Osmium\Db\query_params('DELETE FROM osmium.votes v WHERE '.$filter, $filterparams);
+	} else {
+		\Osmium\Db\query_params(
+			'UPDATE osmium.votes v
+			SET reputationgiventodest = 0, reputationgiventosource = 0
+			WHERE '.$filter,
+			$filterparams
+		);
+	}
 }

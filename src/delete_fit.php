@@ -47,11 +47,35 @@ if(!$can_edit) {
 	AND loadoutcommentrevisions.commentid = loadoutcomments.commentid',
 	array($loadoutid)
 );
+
+$q = \Osmium\Db\query_params(
+	'SELECT commentid FROM loadoutcomments lc WHERE lc.loadoutid = $1',
+	array($loadoutid)
+);
+while($row = \Osmium\Db\fetch_row($q)) {
+	\Osmium\Reputation\nullify_votes(
+		'targettype = $1 AND targetid1 = $2 AND targetid2 = $3 AND targetid3 IS NULL',
+		array(
+			\Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+			$row[0], $loadoutid,
+		),
+		true
+	);
+}
+
 \Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.accountfavorites WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouthistory WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadoutdogmaattribs WHERE loadoutid = $1', array($loadoutid));
 \Osmium\Db\query_params('DELETE FROM osmium.loadouts WHERE loadoutid = $1', array($loadoutid));
+\Osmium\Reputation\nullify_votes(
+	'targettype = $1 AND targetid1 = $2',
+	array(
+		\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+		$loadoutid
+	),
+	true
+);
 \Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_LOADOUT, null, $loadoutid);
 
 \Osmium\Db\query('COMMIT;');
