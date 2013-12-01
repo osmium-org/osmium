@@ -88,6 +88,7 @@ $osmium_dispatch_rules = array(
 	'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
 	'%^/resetpassword$%D' => '/src/reset_password.php',
 	'%^/notifications$%D' => '/src/view_notifications.php',
+	'%^/privileges$%D' => '/src/view_privileges.php',
 
 	'%^/help$%D' => [ '/src/mdstatic.php',
 	                  ['relative' => '..', 'title' => 'Osmium help', 'f' => 'help.md']
