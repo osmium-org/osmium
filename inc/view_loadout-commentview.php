@@ -230,7 +230,11 @@ if($prevcid !== null) {
 addcomment:
 echo "<h2>Add a comment</h2>\n";
 
-if($commentsallowed && $loggedin) {
+$cancomment = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
+	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
+) || (isset($author['accountid']) && $a['accountid'] == $author['accountid']);
+
+if($commentsallowed && $loggedin && $cancomment) {
 	\Osmium\Forms\print_form_begin(\Osmium\Chrome\escape($_SERVER['REQUEST_URI']).'#comments');
 	\Osmium\Forms\print_textarea(
 		'Comment body<br /><small>(Markdown and some HTML allowed)</small>',
@@ -238,6 +242,8 @@ if($commentsallowed && $loggedin) {
 		'commentbody');
 	\Osmium\Forms\print_submit('Submit comment');
 	\Osmium\Forms\print_form_end();
+} else if($loggedin && $commentsallowed) {
+	echo "<p class='placeholder'>You don't have the necessary privilege to comment this loadout.</p>\n";
 } else if(!$loggedin && $commentsallowed) {
 	echo "<p class='placeholder'>You have to log in to comment on this loadout.</p>\n";
 } else if(!$commentsallowed) {

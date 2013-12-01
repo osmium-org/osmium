@@ -183,7 +183,7 @@ if($type === 'new') {
 				);
 			}
 		} else if(\Osmium\Reputation\is_fit_public($local) && !\Osmium\Reputation\has_privilege(
-			\Osmium\Reputation\PRIVILEGE_CREATE_LOADOUT, $accountid
+			\Osmium\Reputation\PRIVILEGE_CREATE_LOADOUT
 		)) {
 			$payload['form-errors'][] = [
 				'metadata', 'select#view_perms',

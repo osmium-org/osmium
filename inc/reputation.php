@@ -80,7 +80,7 @@ function get_privileges() {
 		],
 		PRIVILEGE_COMMENT_LOADOUT => [
 			'name' => 'Comment on loadouts',
-			'desc' => '<p>You can comment public loadouts.<br />Use them to suggest some improvements, or to share your experience of the loadout in the field!</p>',
+			'desc' => '<p>You can comment public loadouts.<br />Use them to suggest some improvements, or to share your experience of the loadout in the field!<br /><small>(You can always comment your own loadouts.)</small></p>',
 			'req' => [ 1, 1 ],
 		],
 		PRIVILEGE_REPLY_TO_COMMENTS => [

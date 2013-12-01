@@ -71,6 +71,9 @@ if(isset($_GET['jtc']) && $_GET['jtc'] > 0) {
 
 if(!$commentsallowed) return;
 if(!$loggedin) return;
+if(\Osmium\Reputation\is_fit_public($fit) && !\Osmium\Reputation\has_privilege(
+	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
+) && $a['accountid'] != $author['accountid']) return;
 
 if(isset($_POST['commentbody'])) {
 	$body = \Osmium\Chrome\trim($_POST['commentbody']);
