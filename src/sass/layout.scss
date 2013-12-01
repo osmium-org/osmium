@@ -72,7 +72,7 @@ html, body {
 	padding: 0;
 	height: 100%;
 	color: $main-text-color;
-	background: url('./bg.png'), $main-bg-color;
+	background: url('./bg.png'), url('./starbg.jpg');
 }
 
 section, header, nav {
@@ -107,7 +107,7 @@ div#wrapper {
 		padding-top: 0;
 	}
 
-	background-color: rgba($main-bg-color, 0.8);
+	background: rgba($main-bg-color, 0.85);
 
 	&> div#glob_feedback {
 		position: fixed;
