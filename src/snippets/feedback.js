@@ -38,6 +38,12 @@ $(function() {
 		)
 	);
 
+	ul.append(
+		$(document.createElement('li')).append(
+			$('footer a[rel="help"]').clone().text('Help & FAQ')
+		)
+	);
+
 	$('div#wrapper').append(fbdiv);
 	fbdiv.children('span').first().on('click', function() {
 		if(fbdiv.hasClass('extended')) {

@@ -178,7 +178,7 @@ $loadout-comment-reply-meta-text-color: $loadout-comment-meta-text-color;
 
 $loadout-comment-reply-active-meta-text-color: $loadout-comment-meta-text-color;
 
-$loadout-list-odd-bg-color: lighten($main-bg-color, 3%);
+$loadout-list-odd-bg-color: rgba(lighten($main-bg-color, 3%), 0.5);
 
 //
 // Notifications
