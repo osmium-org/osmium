@@ -66,14 +66,18 @@ if($bs) {
 echo "<ol>";
 
 foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
-	list($name, $rep_needed, $rep_needed_bs) = $d;
+	$name = $d['name'];
+	$rep_needed = $d['req'][0];
+	$rep_needed_bs = $d['req'][1];
+	$desc = $d['desc'];
+
 	$needed = $bs ? $rep_needed_bs : $rep_needed;
 	$progress = round(min(1, $myrep / $needed) * 100, 2);
 
-	$opacity = round(0.5 + $progress * 0.005, 2);
+	$opacity = ($myrep >= $needed) ? 1.0 : 0.5;
 
-	echo "<li class='".($myrep >= $needed ? 'haveit' : 'donthaveit')."' style='opacity: {$opacity};'>\n";
-	echo "<h2>".\Osmium\Chrome\escape($d[0])." <span>";
+	echo "<li id='p{$p}' class='".($myrep >= $needed ? 'haveit' : 'donthaveit')."' style='opacity: {$opacity};'>\n";
+	echo "<h2><a href='#p{$p}'>".\Osmium\Chrome\escape($name)."</a> <span>";
 
 	if($myrep >= $needed) {
 		echo "got it!";
@@ -91,10 +95,8 @@ foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
 		}
 	}
 	echo "</span></h2>\n";
-
-	echo "<div class='progress'><div class='pinner' style='width: {$progress}%;'> </div>";
-	echo "</div>";
-
+	echo "<div class='progress'><div class='pinner' style='width: {$progress}%;'> </div></div>\n";
+	echo "<div class='desc'>\n{$desc}</div>\n";
 	echo "</li>\n";
 }
 

@@ -571,6 +571,14 @@ function commit_fitting(&$fit, &$error = null) {
  * @returns false on failure
  */
 function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
+	if(\Osmium\Reputation\is_fit_public($fit)
+	   && !\Osmium\Reputation\has_privilege(
+		   \Osmium\Reputation\PRIVILEGE_CREATE_LOADOUT, $accountid)
+	) {
+		$error = 'You lack the privilege to commit public loadouts.';
+		return false;
+	}
+
 	\Osmium\Db\query('BEGIN;');
 
 	$ret = commit_fitting($fit, $error);
