@@ -7,6 +7,9 @@
 * Search results can be sorted in ascending order. They can also be
   sorted by name, ship name, ship group, author or tags.
 
+* New page that explains reputation points and shows a recap of
+  privileges. The link is shown when seeing your own profile.
+
 # Version 0.10
 
 ## Version 0.10.1, released 2013-11-19
