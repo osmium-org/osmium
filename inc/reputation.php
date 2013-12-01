@@ -86,7 +86,7 @@ function get_privileges() {
 		PRIVILEGE_REPLY_TO_COMMENTS => [
 			'name' => 'Reply to comments',
 			'desc' => '<p>You can reply to comments on public loadouts.<br /><small>(You can always reply to your own comments.)</small></p>',
-			'req' => [ 25, 1 ],
+			'req' => [ 10, 1 ],
 		],
 		PRIVILEGE_UPVOTE => [
 			'name' => 'Cast upvotes',
@@ -96,7 +96,7 @@ function get_privileges() {
 		PRIVILEGE_DOWNVOTE => [
 			'name' => 'Cast downvotes',
 			'desc' => '<p>You can cast downvotes on public loadouts and comments.<br /><strong>Downvote loadouts that are badly formatted, show no research effort, or have severe flaws.<br />Downvote troll or otherwise useless comments.<br />You should still flag offensive content, duplicates and spam so the moderation can deal with it.</strong></p>',
-			'req' => [ 75, 25 ],
+			'req' => [ 50, 25 ],
 		],
 		//PRIVILEGE_RETAG_LOADOUTS => array('Retag loadouts', 500, 500),
 		//PRIVILEGE_CREATE_TAG => array('Create tags', 1000, 1),

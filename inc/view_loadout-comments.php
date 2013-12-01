@@ -71,11 +71,12 @@ if(isset($_GET['jtc']) && $_GET['jtc'] > 0) {
 
 if(!$commentsallowed) return;
 if(!$loggedin) return;
-if(\Osmium\Reputation\is_fit_public($fit) && !\Osmium\Reputation\has_privilege(
-	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
-) && $a['accountid'] != $author['accountid']) return;
 
 if(isset($_POST['commentbody'])) {
+	if(\Osmium\Reputation\is_fit_public($fit) && !\Osmium\Reputation\has_privilege(
+		\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
+	) && $a['accountid'] != $author['accountid']) return;
+
 	$body = \Osmium\Chrome\trim($_POST['commentbody']);
 	$formatted = \Osmium\Chrome\format_sanitize_md($body);
 
@@ -143,8 +144,8 @@ if(isset($_POST['commentbody'])) {
 
 
 else if(isset($_POST['replybody']) && isset($_POST['commentid'])) {
-	list($commentexists) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT COUNT(commentid) FROM osmium.loadoutcomments
+	$commentdata = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT commentid, accountid FROM osmium.loadoutcomments
 		WHERE commentid = $1 AND loadoutid = $2 AND revision <= $3',
 		array(
 			intval($_POST['commentid']),
@@ -153,9 +154,13 @@ else if(isset($_POST['replybody']) && isset($_POST['commentid'])) {
 		)
 	));
 
-	if(!$commentexists) {
+	if($commentdata === false) {
 		return;
 	}
+
+	if(\Osmium\Reputation\is_fit_public($fit) && !\Osmium\Reputation\has_privilege(
+		\Osmium\Reputation\PRIVILEGE_REPLY_TO_COMMENTS
+	) && $a['accountid'] != $commentdata['accountid']) return;
 
 	$body = \Osmium\Chrome\trim($_POST['replybody']);
 	$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);

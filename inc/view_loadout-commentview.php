@@ -20,6 +20,13 @@ namespace Osmium\ViewLoadout;
 
 echo "<h2>Comments</h2>\n";
 
+$cancomment = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
+	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
+) || (isset($author['accountid']) && $a['accountid'] == $author['accountid']);
+$canreply = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
+	\Osmium\Reputation\PRIVILEGE_REPLY_TO_COMMENTS
+);
+
 if($commentcount === 0) {
 	echo "<p class='placeholder'>This loadout has no comments.</p>\n";
 	goto addcomment; /* Yeah, this isn't very cool, but it avoid
@@ -153,10 +160,13 @@ function format_comment($row) {
 	echo "</div>\n</header>\n<ul id='creplies".$row['commentid']."' class='replies'>\n";
 }
 
-function format_comment_end($commentid) {
-	global $loggedin, $commentsallowed;
+function format_comment_end($row) {
+	global $loggedin, $commentsallowed, $canreply, $a;
 
-	if($loggedin && $commentsallowed) {
+	$commentid = $row['commentid'];
+	$commentauthorid = $row['accountid'];
+
+	if($loggedin && $commentsallowed && ($canreply || $commentauthorid == $a['accountid'])) {
 		echo "<li class='new'>\n";
 		echo "<form method='post' action='#creplies".$commentid."' accept-charset='utf-8'>\n";
 		echo "<textarea name='replybody' placeholder='Type your reply… (Markdown and some HTML allowed, basic formatting only)'></textarea>\n";
@@ -166,7 +176,7 @@ function format_comment_end($commentid) {
 	}
 
 	echo "</ul>\n";
-	if($loggedin) {
+	if($loggedin && $commentsallowed && ($canreply || $commentauthorid == $a['accountid'])) {
 		echo "<a class='add_comment'>reply to this comment</a>\n";
 	}
 	echo "</div>\n";
@@ -210,13 +220,15 @@ function format_comment_reply($row) {
 }
 
 $prevcid = null;
+$prevrow = null;
 while($row = \Osmium\Db\fetch_assoc($cq)) {
 	if($row['commentid'] !== $prevcid) {
 		if($prevcid !== null) {
-			format_comment_end($prevcid);
+			format_comment_end($prevrow);
 		}
 		format_comment($row);
 		$prevcid = $row['commentid'];
+		$prevrow = $row;
 	}
 
 	if($row['commentreplyid'] !== null) {
@@ -224,15 +236,11 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 	}
 }
 if($prevcid !== null) {
-	format_comment_end($prevcid);
+	format_comment_end($prevrow);
 }
 
 addcomment:
 echo "<h2>Add a comment</h2>\n";
-
-$cancomment = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
-	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
-) || (isset($author['accountid']) && $a['accountid'] == $author['accountid']);
 
 if($commentsallowed && $loggedin && $cancomment) {
 	\Osmium\Forms\print_form_begin(\Osmium\Chrome\escape($_SERVER['REQUEST_URI']).'#comments');
