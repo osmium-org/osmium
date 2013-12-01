@@ -72,7 +72,12 @@ echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chro
 
 echo $sep;
 
-echo "<tr>\n<th rowspan='2'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n<tr>\n<td>reputation score</td>\n<td>".number_format($row['reputation'])."</td>\n</tr>\n";
+echo "<tr>\n<th rowspan='2'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n";
+echo "<tr>\n<td>reputation score</td>\n<td>".number_format($row['reputation']);
+if($myprofile) {
+	echo " <a href='../privileges'>(check my privileges)</a>";
+}
+echo "</td>\n</tr>\n";
 
 if($myprofile || $ismoderator) {
 	echo $sep;

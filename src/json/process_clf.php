@@ -182,6 +182,13 @@ if($type === 'new') {
 					$err,
 				);
 			}
+		} else if(\Osmium\Reputation\is_fit_public($local) && !\Osmium\Reputation\has_privilege(
+			\Osmium\Reputation\PRIVILEGE_CREATE_LOADOUT
+		)) {
+			$payload['form-errors'][] = [
+				'metadata', 'select#view_perms',
+				"You don't have the privilege to create public loadouts. Please select a different view permission or visibility."
+			];
 		}
 
 		else {

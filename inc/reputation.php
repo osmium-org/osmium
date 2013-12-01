@@ -69,16 +69,35 @@ function get_updown_vote_reputation() {
 /**
  * Get all privileges that can be obtained with reputation points.
  *
- * @param array(<privilege_id> => array(privilege_desc, rep_needed,
- * rep_needed_in_bootstrap_mode))
+ * @param array(<privilege_id> => array( name, desc, req => [ <req>, <bs_req> ] ))
  */
 function get_privileges() {
 	return array(
-		PRIVILEGE_CREATE_LOADOUT => array('Create a loadout', 1, 1),
-		PRIVILEGE_COMMENT_LOADOUT => array('Comment on loadouts', 1, 1),
-		PRIVILEGE_REPLY_TO_COMMENTS => array('Reply to comments', 25, 1),
-		PRIVILEGE_UPVOTE => array('Cast upvotes', 25, 1),
-		PRIVILEGE_DOWNVOTE => array('Cast downvotes', 75, 25),
+		PRIVILEGE_CREATE_LOADOUT => [
+			'name' => 'Create loadouts',
+			'desc' => '<p>You can create public loadouts and share them with the rest of the world.<br /><small>(You can always create private or hidden loadouts, regardless of whether you have this privilege or not.)</small></p>',
+			'req' => [ 1, 1 ],
+		],
+		PRIVILEGE_COMMENT_LOADOUT => [
+			'name' => 'Comment on loadouts',
+			'desc' => '<p>You can comment public loadouts.<br />Use them to suggest some improvements, or to share your experience of the loadout in the field!<br /><small>(You can always comment your own loadouts.)</small></p>',
+			'req' => [ 1, 1 ],
+		],
+		PRIVILEGE_REPLY_TO_COMMENTS => [
+			'name' => 'Reply to comments',
+			'desc' => '<p>You can reply to comments on public loadouts.<br /><small>(You can always reply to your own comments.)</small></p>',
+			'req' => [ 10, 1 ],
+		],
+		PRIVILEGE_UPVOTE => [
+			'name' => 'Cast upvotes',
+			'desc' => '<p>You can cast upvotes on public loadouts and comments. Upvote content which you believe belongs to the top.<br /><strong>Upvote loadouts that are creative, effective, fill a well-defined role, and/or are nicely formatted and extensively described.<br />Upvote comments that bring up interesting points.</strong><br /><small>(To prevent cheating, only API-verified accounts can cast votes.)</small></p>',
+			'req' => [ 25, 1 ],
+		],
+		PRIVILEGE_DOWNVOTE => [
+			'name' => 'Cast downvotes',
+			'desc' => '<p>You can cast downvotes on public loadouts and comments.<br /><strong>Downvote loadouts that are badly formatted, show no research effort, or have severe flaws.<br />Downvote troll or otherwise useless comments.<br />You should still flag offensive content, duplicates and spam so the moderation can deal with it.</strong></p>',
+			'req' => [ 50, 25 ],
+		],
 		//PRIVILEGE_RETAG_LOADOUTS => array('Retag loadouts', 500, 500),
 		//PRIVILEGE_CREATE_TAG => array('Create tags', 1000, 1),
 		);
@@ -114,7 +133,7 @@ function get_current_reputation() {
 	return $a['reputation'];
 }
 
-function has_privilege($privilege) {
+function has_privilege($privilege, $accountid = null) {
 	static $bootstrap = null;
 	static $priv = null;
 	if($bootstrap === null) {
@@ -122,11 +141,21 @@ function has_privilege($privilege) {
 		$priv = get_privileges();
 	}
 
-	list(, $req, $reqbs) = $priv[$privilege];
+	$req = $priv[$privilege]['req'];
+	$a = \Osmium\State\get_state('a', []);
 
-	$currentrep = get_current_reputation();
+	if($accountid === null || isset($a['accountid']) && $a['accountid'] == $accountid) {
+		$currentrep = get_current_reputation();
+	} else {
+		$currentrep = (int)\Osmium\Db\fetch_row(
+			\Osmium\Db\query_params(
+				'SELECT reputation FROM osmium.accounts WHERE accountid = $1',
+				array($accountid)
+			)
+		)[0];
+	}
 
-	return $currentrep >= ($bootstrap ? $reqbs : $req);
+	return $currentrep >= ($bootstrap ? $req[1] : $req[0]);
 }
 
 /**

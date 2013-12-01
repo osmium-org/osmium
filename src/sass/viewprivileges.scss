@@ -1,0 +1,59 @@
+div#vprivileges {
+	@include fixed-width-page;
+
+	strong.reptotal {
+		vertical-align: middle;
+		font-size: 2em;
+	}
+
+	&> ol {
+		margin: 0;
+		padding: 0;
+
+		&> li {
+			margin: 0 1em;
+			padding: 2em 0 5em 0;
+
+			border-top: 1px dotted rgba($subsection-border-color, 0.8);
+			&:first-child { border-top: none; }
+
+			&> h2 {
+				margin: 0;
+				position: relative;
+
+				&> span {
+					position: absolute;
+					right: 0;
+				}
+			}
+
+			&> div.progress {
+				width: 100%;
+				height: .5em;
+				text-align: right;
+				border: 1px solid rgba($subsection-border-color, 0.5);
+				background: rgba($privilege-progress-bg-color, 0.5);
+
+				position: relative;
+
+				&> div.pinner {
+					position: absolute;
+					left: 0;
+					top: 0;
+					height: 100%;
+					background: url('./progressbg.png') rgba($privilege-progress-done-bg-color, 0.5);
+					background-size: contain;
+				}
+
+				&> span {
+					position: absolute;
+					display: block;
+					width: 10em;
+					right: 0;
+					text-align: right;
+					z-index: 1;
+				}
+			}
+		}
+	}
+}
