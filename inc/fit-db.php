@@ -631,6 +631,30 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 			\Osmium\Db\query('ROLLBACK;');
 			return false;
 		}
+
+		if(!\Osmium\Reputation\is_fit_public($fit)) {
+			/* Remove reputation changes */
+			$cq = \Osmium\Db\query_params(
+				'SELECT commentid FROM loadoutcomments lc WHERE lc.loadoutid = $1',
+				array($loadoutid)
+			);
+			while($row = \Osmium\Db\fetch_row($cq)) {
+				\Osmium\Reputation\nullify_votes(
+					'targettype = $1 AND targetid1 = $2 AND targetid2 = $3 AND targetid3 IS NULL',
+					array(
+						\Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+						$row[0], $loadoutid,
+					)
+				);
+			}
+			\Osmium\Reputation\nullify_votes(
+				'targettype = $1 AND targetid1 = $2',
+				array(
+					\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+					$loadoutid
+				)
+			);
+		}
 	}
 
 	/* If necessary, insert the appropriate history entry */
