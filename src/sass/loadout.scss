@@ -92,8 +92,8 @@ $hidden-char: '\0025B8';
 
 	&> a.toggle_state {
 		position: absolute;
-		top: 16px;
-		left: 16px;
+		top: 20px;
+		left: 20px;
 
 		&, &> img, &> span.mainsprite {
 			line-height: 16px;

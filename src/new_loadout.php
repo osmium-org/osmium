@@ -312,9 +312,9 @@ echo "</section>\n";
 echo "<section id='metadata'>\n";
 \Osmium\Forms\print_form_begin();
 \Osmium\Forms\print_generic_field('Loadout title', 'text', 'name', 'name');
-\Osmium\Forms\print_textarea('Description<br /><small>(optional)</small>', 'description', 'description');
-\Osmium\Forms\print_generic_field('Tags (space-separated)<br /><small>(between '
-                                  .(int)\Osmium\get_ini_setting('min_tags').' and '
+\Osmium\Forms\print_textarea('Description<br /><small>(optional,<br />Markdown and some HTML allowed)</small>', 'description', 'description');
+\Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated, '
+                                  .(int)\Osmium\get_ini_setting('min_tags').'-'
                                   .(int)\Osmium\get_ini_setting('max_tags').')</small>',
                                   'text', 'tags', 'tags');
 $commontags = array(
