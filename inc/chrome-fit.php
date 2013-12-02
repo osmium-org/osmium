@@ -562,8 +562,7 @@ function print_loadout_common_footer(&$fit, $relative, $clftoken) {
 	));
 
 	/* If these scripts change, update the license info in about.php */
-	/* XXX: update to 1.5.x as soon as possible and restore XHTML mode */
-	include_js("//cdnjs.cloudflare.com/ajax/libs/jsPlumb/1.4.1/jquery.jsPlumb-1.4.1-all-min.js");
+	include_js($relative."/static-1/jquery.jsPlumb-1.5.4-min.js");
 	include_js($relative."/static-1/rawdeflate.min.js");
 
 	print_js_snippet('tabs');

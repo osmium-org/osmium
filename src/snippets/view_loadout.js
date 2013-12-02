@@ -21,11 +21,10 @@ $(function() {
 	osmium_capacitors = $("div#osmium-data").data('capacitors');
 	osmium_ia = $("div#osmium-data").data('ia');
 
-	osmium_tabify($("div#vlmain > ul.tabs"), 0);
-
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
+		osmium_tabify($("div#vlmain > ul.tabs"), 0);
 		osmium_user_initiated_push(true);
 		osmium_undo_push();
 	});

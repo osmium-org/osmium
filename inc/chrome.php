@@ -20,7 +20,6 @@ namespace Osmium\Chrome;
 
 define(
 	__NAMESPACE__.'\XHTML',
-	false && /* XXX: jsPlumb does not play nice with XHTML, fixed in staging */
 	isset($_SERVER['HTTP_ACCEPT']) && (
 		strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false
 	)

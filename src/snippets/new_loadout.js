@@ -19,13 +19,15 @@ $(function() {
 	osmium_load_common_data();
 	osmium_shortlist = $("div#osmium-data").data('shortlist');
 
-	$('div#nlsources > ul.tabs, div#nlmain > ul.tabs').each(function() {
+	$('div#nlsources > ul.tabs').each(function() {
 		osmium_tabify($(this), 0);
 	});
 
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
+
+		osmium_tabify($('div#nlmain > ul.tabs'), 0);
 
 		/* Fetch computed attributes, etc. */
 		osmium_commit_clf();

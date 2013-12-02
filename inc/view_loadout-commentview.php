@@ -22,7 +22,7 @@ echo "<h2>Comments</h2>\n";
 
 $cancomment = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
 	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
-) || (isset($author['accountid']) && $a['accountid'] == $author['accountid']);
+) || (isset($author['accountid']) && isset($a['accountid']) && $a['accountid'] == $author['accountid']);
 $canreply = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
 	\Osmium\Reputation\PRIVILEGE_REPLY_TO_COMMENTS
 );

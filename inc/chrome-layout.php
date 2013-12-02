@@ -90,7 +90,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	if(XHTML) {
 		header('Content-Type: application/xhtml+xml; charset=utf-8');
 		echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-		echo "<html xmlns='http://www.w3.org/1999/xhtml'>\n";
+		echo "<html xmlns='http://www.w3.org/1999/xhtml' xmlns:v='urn:schemas-microsoft-com:vml'>\n";
 	} else {
 		header('Content-Type: text/html; charset=utf-8');
 		echo "<!DOCTYPE html>\n<html>\n";
