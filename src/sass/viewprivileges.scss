@@ -9,13 +9,15 @@ div#vprivileges {
 	&> ol {
 		margin: 0;
 		padding: 0;
+		list-style-type: none;
 
 		&> li {
 			margin: 0 1em;
-			padding: 2em 0 5em 0;
+			padding: 1em 0 6em 0;
 
 			border-top: 1px dotted rgba($subsection-border-color, 0.8);
 			&:first-child { border-top: none; }
+			&:last-child { padding-bottom: 20em !important; }
 
 			&> h2 {
 				margin: 0;
@@ -25,7 +27,17 @@ div#vprivileges {
 					position: absolute;
 					right: 0;
 				}
+
+				cursor: pointer;
+				&:before {
+					color: $aside-text-color;
+					content: '▼';
+					position: absolute;
+					left: -1em;
+				}
 			}
+
+			&.abbrev > h2:before { content: '▶'; }
 
 			&> div.progress {
 				width: 100%;
@@ -41,7 +53,7 @@ div#vprivileges {
 					left: 0;
 					top: 0;
 					height: 100%;
-					background: url('./progressbg.png') rgba($privilege-progress-done-bg-color, 0.5);
+					background: url('./progressbg.png'), rgba($privilege-progress-done-bg-color, 0.5);
 					background-size: contain;
 				}
 
@@ -53,6 +65,16 @@ div#vprivileges {
 					text-align: right;
 					z-index: 1;
 				}
+			}
+
+			&.abbrev {
+				&> div.desc { display: none; }
+				&> div.progress { height: 2px; }
+				padding-bottom: 1em;
+			}
+
+			&.donthaveit {
+				opacity: 0.5;
 			}
 		}
 	}

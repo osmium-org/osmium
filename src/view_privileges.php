@@ -109,10 +109,8 @@ foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
 	$needed = $bs ? $rep_needed_bs : $rep_needed;
 	$progress = round(min(1, $myrep / $needed) * 100, 2);
 
-	$opacity = ($myrep >= $needed) ? 1.0 : 0.5;
-
-	echo "<li id='p{$p}' class='".($myrep >= $needed ? 'haveit' : 'donthaveit')."' style='opacity: {$opacity};'>\n";
-	echo "<h2><a href='#p{$p}'>".\Osmium\Chrome\escape($name)."</a> <span>";
+	echo "<li id='p{$p}' class='".($myrep >= $needed ? 'haveit' : ($anonymous ? '' : 'donthaveit'))."'>\n";
+	echo "<h2>".\Osmium\Chrome\escape($name)." <span>";
 
 	if($myrep >= $needed) {
 		echo "got it!";
@@ -138,4 +136,5 @@ foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
 echo "</ol>\n";
 
 echo "</div>\n";
+\Osmium\Chrome\print_js_snippet('view_privileges');
 \Osmium\Chrome\print_footer();
