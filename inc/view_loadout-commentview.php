@@ -138,15 +138,15 @@ function format_comment($row) {
 		.\Osmium\Chrome\format_relative_date($row['creationdate'])."\n";
 	echo "</div>\n<div class='meta'>\n";
 	echo "<a href='?jtc=".$row['commentid']."' title='permanent link'>#</a>";
+	if($isflaggable) {
+		echo " — <a class='dangerous' href='".RELATIVE."/flagcomment/"
+			.$row['commentid']."' title='This comment requires moderator attention'>⚑</a>";
+	}
 	if($ismoderator || ($loggedin && $row['accountid'] == $a['accountid'])) {
 		$tmp = ($loggedin && $row['accountid'] == $a['accountid']) ? '' : $modprefix;
 
 		echo " — <a href='".RELATIVE."/editcomment/".$row['commentid']."'>{$tmp}edit</a>";
 		echo " — <a href='".RELATIVE."/deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous confirm'>{$tmp}delete</a>";
-	}
-	if($isflaggable) {
-		echo " — <a class='dangerous' href='".RELATIVE."/flagcomment/"
-			.$row['commentid']."' title='This comment requires moderator attention'>flag</a>";
 	}
 	if($row['loadoutrevision'] < $fit['metadata']['revision']) {
 		echo "<br />\n<span class='outdated'>(this comment applies to a previous revision of this loadout:";
@@ -206,15 +206,15 @@ function format_comment_reply($row) {
 
 	echo " — ".\Osmium\Chrome\format_relative_date($row['repcreationdate'])."\n";
 	echo "<span class='meta'>\n— <a href='?jtr=".$row['commentreplyid']."' title='permament link'>#</a>";
+	if($isflaggable) {
+		echo " — <a class='dangerous' href='".RELATIVE."/flagcommentreply/"
+			.$row['commentreplyid']."' title='This comment reply requires moderator attention'>⚑</a>\n";
+	}
 	if($ismoderator || ($loggedin && $row['raccountid'] == $a['accountid'])) {
 		$tmp = ($loggedin && $row['raccountid'] == $a['accountid']) ? '' : $modprefix;
 
 		echo " — <a href='".RELATIVE."/editcommentreply/".$row['commentreplyid']."'>{$tmp}edit</a>\n";
 		echo " — <a href='".RELATIVE."/deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous confirm'>{$tmp}delete</a>\n";
-	}
-	if($isflaggable) {
-		echo " — <a class='dangerous' href='".RELATIVE."/flagcommentreply/"
-			.$row['commentreplyid']."' title='This comment reply requires moderator attention'>flag</a>\n";
 	}
 	echo "</span>\n</li>\n";
 }

@@ -35,8 +35,8 @@ $placeholder-text-color: hsl(0, 0%, 50%);
 
 $overflow-text-color: hsl(0, 80%, 40%);
 
-$anchor-target-highlight-bg-color: hsl(200, 100%, 90%);
-$anchor-target-final-bg-color: $main-bg-color;
+$anchor-target-highlight-bg-color: hsla(200, 100%, 90%, 0.8);
+$anchor-target-final-bg-color: transparent;
 
 $modal-border-color: rgba($main-bg-color, 0.5);
 $modal-bg-color: $main-bg-color;
