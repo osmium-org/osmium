@@ -36,6 +36,63 @@ $(function() {
 	$('body').on('click', 'a.confirm', function() {
 		return confirm("You are about to do a destructive action.\n\nIt cannot be undone.\n\nContinue?");
 	});
+
+	$("h1#vltitle > ul.tags > li.retag").click(function() {
+		var t = $(this);
+		var ul = t.parent();
+		var h1 = ul.parent();
+
+		var form = $(document.createElement('form'));
+		form.addClass('retag');
+		form.prop('method', 'post');
+		form.prop('action', osmium_relative + '/src/json/retag_loadout.php');
+
+		var inp = $(document.createElement('input'));
+		inp.prop('type', 'text');
+		inp.prop('placeholder', 'Space-separated list of tags…');
+		inp.prop('name', 'tags');
+
+		var tags = [];
+		ul.children('li').not('.retag').each(function() {
+			tags.push($(this).text());
+		});
+
+		inp.val(tags.join(' '));
+		form.append(inp);
+
+		form.append([
+			' ',
+			$(document.createElement('input'))
+				.prop('type', 'submit')
+				.val('Update tags')
+		]);
+
+		form.append([
+			' ',
+			$(document.createElement('a'))
+				.addClass('cancel')
+				.text('Cancel')
+				.click(function() {
+					form.remove();
+					ul.show();
+				})
+		]);
+
+		form.submit(function() {
+			form.find('input[type="submit"], a.cancel').remove();
+			form.append([
+				' ',
+				$(document.createElement('span')).addClass('spinner')
+			]);
+			inp.prop('disabled', true);
+		});
+
+		form.hide();
+		h1.append(form);
+		ul.hide();
+		form.show();
+		inp.focus();
+	});
 });
 
 osmium_loadout_readonly = true;

@@ -276,6 +276,41 @@ h1#vltitle > ul.tags {
 	opacity: 0.7;
 	vertical-align: middle;
 	margin: 0;
+
+	&> li.retag {
+		background: transparent;
+		border: none;
+
+		&> a {
+			text-decoration: none;
+
+			&:hover, &:focus, &:active {
+				text-decoration: underline;
+			}
+		}
+	}
+}
+
+h1#vltitle > form.retag {
+	display: inline-block;
+	font-size: 0.6em;
+	font-weight: normal;
+	text-decoration: none;
+	vertical-align: middle;
+	font-family: $sans-font;
+
+	&> input[type="text"] {
+		width: 25em;
+	}
+
+	&> a.cancel {
+		color: $aside-text-color;
+		font-size: 0.7em;
+	}
+
+	&> span.spinner {
+		font-size: 1.1em;
+	}
 }
 
 section#loadout {

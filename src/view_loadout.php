@@ -157,10 +157,20 @@ if($revision_overridden) {
 echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'>"
 .\Osmium\Chrome\escape($fit['metadata']['name'])."</strong>";
 
-if(count($fit['metadata']['tags']) > 0) {
+$canretag = isset($a['accountid']) && isset($author['accountid'])
+	&& ($a['accountid'] == $author['accountid'] || (
+		\Osmium\Reputation\is_fit_public($fit) && \Osmium\Reputation\has_privilege(
+			\Osmium\Reputation\PRIVILEGE_RETAG_LOADOUTS
+		)
+	));
+
+if(count($fit['metadata']['tags']) > 0 || $canretag) {
 	echo "\n<ul class='tags'>\n";
 	foreach($fit['metadata']['tags'] as $tag) {
 		echo "<li><a href='".RELATIVE."/search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n";
+	}
+	if($canretag) {
+		echo "<li class='retag'><a><small>✎ Edit tags</small></a></li>";
 	}
 	echo "</ul>\n";
 }

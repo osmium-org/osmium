@@ -42,8 +42,7 @@ const PRIVILEGE_COMMENT_LOADOUT = 2;
 const PRIVILEGE_REPLY_TO_COMMENTS = 3;
 const PRIVILEGE_UPVOTE = 4;
 const PRIVILEGE_DOWNVOTE = 5;
-const PRIVILEGE_CREATE_TAG = 6;
-const PRIVILEGE_RETAG_LOADOUTS = 7;
+const PRIVILEGE_RETAG_LOADOUTS = 6;
 
 /**
  * Get reputation values of up/down flags.
@@ -98,8 +97,11 @@ function get_privileges() {
 			'desc' => '<p>You can cast downvotes on public loadouts and comments.<br /><strong>Downvote loadouts that are badly formatted, show no research effort, or have severe flaws.<br />Downvote troll or otherwise useless comments.<br />You should still flag offensive content, duplicates and spam so the moderation can deal with it.</strong></p>',
 			'req' => [ 50, 25 ],
 		],
-		//PRIVILEGE_RETAG_LOADOUTS => array('Retag loadouts', 500, 500),
-		//PRIVILEGE_CREATE_TAG => array('Create tags', 1000, 1),
+		PRIVILEGE_RETAG_LOADOUTS => [
+			'name' => 'Re-tag loadouts',
+			'desc' => '<p>You can change tags of all public loadouts by clicking the <strong>✎ Edit tags</strong> link next to the title.<br />Re-tag loadouts which have no tags at all, or that are poorly tagged.<br />Make it easy and consistent for other users to effectively search for loadouts.<br />Re-use common tags if possible.<br /><small>(You can undo your tag changes by viewing the loadout history, and reverting to an older revision.<br />You can obviously always re-tag your own loadouts.)</small></p>',
+			'req' => [ 100, 10 ],
+		],
 		);
 }
 
