@@ -157,7 +157,8 @@ if($revision_overridden) {
 echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'>"
 .\Osmium\Chrome\escape($fit['metadata']['name'])."</strong>";
 
-$canretag = isset($a['accountid']) && isset($author['accountid'])
+$canretag = ($revision_overridden === false)
+	&& isset($a['accountid']) && isset($author['accountid'])
 	&& ($a['accountid'] == $author['accountid'] || (
 		\Osmium\Reputation\is_fit_public($fit) && \Osmium\Reputation\has_privilege(
 			\Osmium\Reputation\PRIVILEGE_RETAG_LOADOUTS
@@ -289,8 +290,13 @@ echo "</div>
 
 
 
-echo "<div id='vlmain'>
-<ul class='tabs'>
+echo "<div id='vlmain'>\n";
+
+if($revision_overridden && isset($lastrev['updatedate'])) {
+	echo "<p class='notice_box'>You are viewing revision {$revision} of this loadout, as it was published the ".date('Y-m-d \a\t H:i', $lastrev['updatedate']).". <a href='".RELATIVE."/".\Osmium\Fit\get_fit_uri($loadoutid, $fit['metadata']['visibility'], $fit['metadata']['privatetoken'])."'>Link to the latest revision.</a></p>";
+}
+
+echo "<ul class='tabs'>
 <li><a href='#loadout'>Loadout</a></li>
 <li><a href='#presets'>Presets (".(max(count($fit['presets']), count($fit['chargepresets']), count($fit['dronepresets']))).")</a></li>
 <li><a href='#remote'>Remote (".
