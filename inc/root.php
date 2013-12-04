@@ -22,6 +22,33 @@ if(!defined('Osmium\ROOT')) {
 	require __DIR__.'/dispatchroot.php';
 }
 
+if(!get_ini_setting('tolerate_errors')) {
+	ob_start();
+	error_reporting(-1);
+	set_error_handler(function($errno, $errstr, $errfile, $errline) {
+		ob_end_clean();
+		ob_start();
+		$errfile = explode('/', $errfile);
+		$errfile = array_pop($errfile);
+		\Osmium\fatal(500, "<code><strong>{$errfile}({$errline})</strong>: {$errstr}</code>", null, null, false);
+
+		/* Don't die just yet, log the original error */
+		restore_error_handler();
+		$bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+		$sbt = '';
+		foreach($bt as $c) {
+			$sbt .= '\\'.$c['function'].'() called from '.$c['file'].':'.$c['line']."\n";
+		}
+		trigger_error(
+			"\n".$errfile.':'.$errline
+				.": ".$errstr
+				."\n".$sbt,
+			E_USER_ERROR
+		);
+		die();
+	}, -1);
+}
+
 /** Bump this when static files (icons, etc.) are updated */
 const STATICVER = 14;
 
@@ -41,7 +68,7 @@ define(__NAMESPACE__.'\HOST',
 );
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
-	fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
+	fatal(500, "Cache directory <code>'".CACHE_DIRECTORY."'</code> is not writeable.");
 }
 
 if(isset($_SERVER['REMOTE_ADDR'])) {

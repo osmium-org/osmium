@@ -2,7 +2,10 @@ THEMES=dark light
 
 default: themes static/cache/clientdata.json cache/OsmiumCache_top_kills
 
-themes: $(addprefix static/, $(addsuffix .css, $(THEMES)))
+themes: $(addprefix static/, $(addsuffix .css, $(THEMES))) static/fatal.css
+
+static/fatal.css: src/sass/fatal.scss
+	sass --unix-newlines -t compact $< | tr -s '\n' > $@
 
 static/%.css: src/sass/themes/%.scss src/sass/*.scss
 	sass --unix-newlines -t compact $< | tr -s '\n' > $@

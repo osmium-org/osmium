@@ -5,6 +5,10 @@ The [https] section has been added to config.ini. Please copy the
 [https] section from the example file, adapt it to your liking and put
 it in your configuration file.
 
+The tolerate_errors setting has been added to [osmium] in
+config.ini. It is recommended to leave it to On in production
+environments.
+
 The osmium schema has been updated.
 
 The sphinx loadout index has been updated. You must:

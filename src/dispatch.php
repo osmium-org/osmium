@@ -155,4 +155,4 @@ foreach($osmium_dispatch_rules as $rule => $target) {
 	die();
 }
 
-\Osmium\Fatal(404, "NOT FOUND (DISPATCHER)");
+\Osmium\Fatal(404, "");
