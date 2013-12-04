@@ -219,8 +219,7 @@ function print_logoff_box($relative, $notifications) {
 	echo "<div id='state_box' class='logout'>\n<p>\n"
 		."<span class='wide'>Logged in as </span>$portrait<strong>"
 		.\Osmium\Chrome\format_character_name($a, $relative)
-		."</strong> (<a class='rep' href='$relative/profile/"
-		.$a['accountid']."#reputation'>"
+		."</strong> (<a class='rep' href='$relative/privileges'>"
 		.\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())
 		."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications'"
 		." title='$notifications new notification(s)'>$notifications</a>"

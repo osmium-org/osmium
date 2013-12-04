@@ -16,12 +16,14 @@
  */
 
 $(function() {
-	$("div#vprivileges > ol > li").filter('.haveit, .donthaveit').addClass('abbrev')
+	var lis = $("div#vprivileges > section#privlist > ol > li");
+
+	lis.filter('.haveit, .donthaveit').addClass('abbrev')
 		.filter('.haveit').last().removeClass('abbrev')
 		.parent().children('li.donthaveit').first().removeClass('abbrev')
 	;
 
-	$("div#vprivileges > ol > li > h2").click(function() {
+	lis.children("h2").click(function() {
 		var t = $(this).parent();
 		if(t.hasClass('abbrev')) {
 			t.switchClass('abbrev', '');

@@ -10,6 +10,9 @@
 * New page that explains reputation points and shows a recap of
   privileges. The link is shown when seeing your own profile.
 
+* Privilege: re-tag any public loadout if you have more than 100
+  reputation points.
+
 # Version 0.10
 
 ## Version 0.10.1, released 2013-11-19

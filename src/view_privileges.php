@@ -28,7 +28,7 @@ $bs = \Osmium\get_ini_setting('bootstrap_mode');
 
 echo "<div id='vprivileges'>\n";
 
-echo "<h2>What is reputation?</h2>\n";
+echo "<section id='repguide'>\n<h2>What is reputation?</h2>\n";
 
 echo "<p>
 Reputation points are a way to roughly measure how much the community trusts you.
@@ -92,7 +92,9 @@ if($anonymous) {
 	echo "<p>\nYou currently have <strong class='reptotal'>".\Osmium\Chrome\format_integer($myrep)."</strong> reputation points.</p>\n";
 }
 
-echo "<h2>Available privileges</h2>\n";
+echo "</section>\n";
+
+echo "<section id='privlist'>\n<h2>Available privileges</h2>\n";
 
 if($bs) {
 	echo "<p class='notice_box'><strong>The site is currently in bootstrap mode.</strong><br />Some privilege requirements may be lowered in bootstrap mode. <br />When this happens, the real requirements will be shown in parentheses.</p>\n";
@@ -135,6 +137,6 @@ foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
 
 echo "</ol>\n";
 
-echo "</div>\n";
+echo "</section>\n</div>\n";
 \Osmium\Chrome\print_js_snippet('view_privileges');
 \Osmium\Chrome\print_footer();
