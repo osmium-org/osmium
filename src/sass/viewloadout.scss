@@ -311,6 +311,13 @@ h1#vltitle > form.retag {
 	&> span.spinner {
 		font-size: 1.1em;
 	}
+
+	&> p.error_box {
+		display: inline;
+		padding: 0.5em;
+		margin: 0.5em;
+		font-size: 0.8em;
+	}
 }
 
 section#loadout {

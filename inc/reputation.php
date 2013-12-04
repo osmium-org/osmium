@@ -100,7 +100,7 @@ function get_privileges() {
 		PRIVILEGE_RETAG_LOADOUTS => [
 			'name' => 'Re-tag loadouts',
 			'desc' => '<p>You can change tags of all public loadouts by clicking the <strong>✎ Edit tags</strong> link next to the title.<br />Re-tag loadouts which have no tags at all, or that are poorly tagged.<br />Make it easy and consistent for other users to effectively search for loadouts.<br />Re-use common tags if possible.<br /><small>(You can undo your tag changes by viewing the loadout history, and reverting to an older revision.<br />You can obviously always re-tag your own loadouts.)</small></p>',
-			'req' => [ 100, 10 ],
+			'req' => [ 100, 100 ],
 		],
 		);
 }

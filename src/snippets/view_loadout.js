@@ -60,6 +60,13 @@ $(function() {
 		inp.val(tags.join(' '));
 		form.append(inp);
 
+		form.append(
+			$(document.createElement('input'))
+				.prop('type', 'hidden')
+				.prop('name', 'loadoutid')
+				.val($("section#ship").data('loadoutid'))
+		);
+
 		form.append([
 			' ',
 			$(document.createElement('input'))
@@ -78,13 +85,42 @@ $(function() {
 				})
 		]);
 
-		form.submit(function() {
-			form.find('input[type="submit"], a.cancel').remove();
-			form.append([
-				' ',
-				$(document.createElement('span')).addClass('spinner')
-			]);
+		form.submit(function(e) {
+			e.preventDefault();
+			var hidden = form.find('input[type="submit"], a.cancel');
+			var spinner = $(document.createElement('span')).addClass('spinner');
+			var postdata = form.serialize();
+
+			hidden.hide();
+			form.append(spinner);
 			inp.prop('disabled', true);
+
+			$.ajax({
+				type: 'POST',
+				url: osmium_relative + '/src/json/retag_loadout.php',
+				data: postdata,
+				dataType: 'json',
+				complete: function() {
+					inp.prop('disabled', false);
+					spinner.remove();
+					hidden.show();
+				},
+				success: function(payload) {
+					form.find('p.error_box').remove();
+
+					if("error" in payload) {
+						form.append(
+							$(document.createElement('p'))
+								.addClass('error_box')
+								.text(payload.error)
+						);
+					}
+
+					if("dest" in payload) {
+						document.location.replace(osmium_relative + '/' + payload.dest);
+					}
+				}
+			});
 		});
 
 		form.hide();
