@@ -767,3 +767,27 @@ function put_activity() {
 	if($a !== 'CLI') put_cache_memory($a, 0, 65, 'Activity_');
 }
 
+/**
+ * Redirect user to login form (which will redirect to the current
+ * page) if not currently logged in.
+ */
+function assume_logged_in($relative) {
+	if(is_logged_in()) return;
+
+	/* TODO: also transfer current postdata */
+
+	header('HTTP/1.1 303 See Other', true, 303);
+	header('Location: '.$relative.'/login?r='.urlencode($_SERVER['REQUEST_URI']), true, 303);
+	die();
+}
+
+/**
+ * Redirect user to main page if logged in.
+ */
+function assume_logged_out($relative) {
+	if(!is_logged_in()) return;
+
+	header('HTTP/1.1 303 See Other', true, 303);
+	header('Location: '.$relative.'/', true, 303);
+	die();
+}

@@ -32,7 +32,7 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
 	    $fit = \Osmium\Fit\try_parse_fit_from_shipdna($dna, 'New DNA-imported loadout', $errors);
 
 	    if($fit === false) {
-		    \Osmium\Fatal(400, "Nonsensical DNA string");
+		    \Osmium\Fatal(400);
 	    }
 
 	    \Osmium\State\put_cache_memory_fb($ckey, $fit, 7200);
@@ -51,16 +51,16 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
 	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
 
 	if(!\Osmium\State\can_view_fit($loadoutid)) {
-		\Osmium\Fatal(404, "Loadout not found");
+		\Osmium\Fatal(404);
 	}
 	if(!\Osmium\State\can_edit_fit($loadoutid)) {
-		\Osmium\Fatal(403, "Permission is required to edit this loadout");
+		\Osmium\Fatal(403);
 	}
 
 	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
 
 	if(!\Osmium\State\can_access_fit($fit)) {
-		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
+		\Osmium\Fatal(403);
 	}
 
 	$tok = \Osmium\State\get_unique_loadout_token();
@@ -75,13 +75,13 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
 
 	if(!\Osmium\State\can_view_fit($loadoutid)) {
-		\Osmium\Fatal(404, "Loadout not found");
+		\Osmium\Fatal(404);
 	}
 
 	$fit = \Osmium\Fit\get_fit($loadoutid, $revision);
 
 	if(!\Osmium\State\can_access_fit($fit)) {
-		\Osmium\Fatal(403, "Can't access loadout, password-protected?");
+		\Osmium\Fatal(403);
 	}
 
 	$fork = $fit; /* Since $fit is an array, this makes a copy */
@@ -122,7 +122,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 		$key = $_GET['remote'];
 
 		if($key !== 'local' && !isset($fit['remote'][$key])) {
-			\Osmium\fatal(404, "No such remote.");
+			\Osmium\fatal(404);
 		}
 
 		\Osmium\Fit\set_local($fork, $key);
@@ -145,7 +145,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 
 		if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
 		|| !$fit['fleet'][$t]['ship']['typeid']) {
-			\Osmium\fatal(404, "No such fleet booster.");
+			\Osmium\fatal(404);
 		}
 
 		$fork = $fit['fleet'][$t];

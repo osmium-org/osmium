@@ -121,7 +121,7 @@ foreach(array('', 'charge', 'drone') as $ptype) {
 	if(isset($_GET[$ptype.'preset']) && $_GET[$ptype.'preset'] !== '') {
 		$p = intval($_GET[$ptype.'preset']);
 		if(!isset($fit[$ptype.'presets'][$p])) {
-			\Osmium\Fatal(400, "Invalid ".$ptype." preset");
+			\Osmium\Fatal(404, "Invalid ".$ptype." preset");
 		}
 		call_user_func_array(
 			'Osmium\Fit\use_'.$ptype.($ptype ? '_' : '').'preset',

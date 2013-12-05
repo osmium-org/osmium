@@ -32,12 +32,12 @@ $allowed = realpath(__DIR__.'/../static/');
 $fname = \Osmium\ROOT.'/'.$_GET['f'];
 
 if(strpos($fname, $allowed) !== 0) {
-	\Osmium\fatal(404, "File not found");
+	\Osmium\fatal(404);
 }
 
 $f = @fopen($fname, 'rb');
 if($f === false) {
-	\Osmium\fatal(404, "File not found");
+	\Osmium\fatal(404);
 }
 
 $etag = '"'.\Osmium\STATICVER.'-'.filemtime($fname).'-'.filesize($fname).'"';

@@ -22,10 +22,7 @@ require __DIR__.'/../inc/root.php';
 
 const MASK = '********';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\fatal(403, "You are not logged in.");
-}
-
+\Osmium\State\assume_logged_in('.');
 $a = \Osmium\State\get_state('a');
 
 if(isset($_POST['key_id'])) {

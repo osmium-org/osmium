@@ -21,13 +21,13 @@ namespace Osmium\Page\ViewProfile;
 require __DIR__.'/../inc/root.php';
 
 if(!isset($_GET['accountid'])) {
-	\Osmium\fatal(404, 'No accountid given.');
+	\Osmium\fatal(404);
 }
 
 $row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight, reputation FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
 
 if($row === false) {
-	\Osmium\fatal(404, 'Invalid accountid.');
+	\Osmium\fatal(404);
 }
 
 $a = \Osmium\State\get_state('a', array());

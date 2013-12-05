@@ -63,6 +63,7 @@ $static = [
 	'/help/formats',
 	'/api',
 	'/compare/dps',
+	'/privileges',
 ];
 
 $subidx = new \DOMDocument();

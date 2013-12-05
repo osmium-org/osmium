@@ -28,7 +28,7 @@ if($type == 'best') {
 	$t = 'Browse new loadouts';
 	$more = 'ORDER BY creationdate DESC';
 } else {
-	\Osmium\Fatal(400, 'Unknown $type');
+	\Osmium\Fatal(400);
 }
 
 unset($_GET['type']);

@@ -20,10 +20,7 @@ namespace Osmium\Page\EditSkillset;
 
 require __DIR__.'/../inc/root.php';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\fatal(403, "You are not logged in.");
-}
-
+\Osmium\State\assume_logged_in('..');
 $a = \Osmium\State\get_state('a');
 $name = urldecode($_GET['name']);
 
@@ -34,7 +31,7 @@ $row = \Osmium\Db\fetch_assoc(
 		));
 
 if($row === false) {
-	\Osmium\fatal(404, "No such character.");
+	\Osmium\fatal(404);
 }
 
 $levels = array(

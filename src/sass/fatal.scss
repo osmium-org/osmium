@@ -29,6 +29,10 @@ div.bg {
 h1 {
 	font-size: 4em;
 	margin-top: 0;
+
+	&.code {
+		font-size: 8em;
+	}
 }
 
 footer {

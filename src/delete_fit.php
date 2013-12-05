@@ -20,15 +20,17 @@ namespace Osmium\Page\DeleteFit;
 
 require __DIR__.'/../inc/root.php';
 
-if(!\Osmium\State\is_logged_in() || $_GET['tok'] != \Osmium\State\get_token()) {
-	\Osmium\fatal(403, "Forbidden.");
+\Osmium\State\assume_logged_in('..');
+
+if($_GET['tok'] != \Osmium\State\get_token()) {
+	\Osmium\fatal(403);
 }
 
 $loadoutid = isset($_GET['loadoutid']) ? $_GET['loadoutid'] : 0;
 
 $can_edit = \Osmium\State\can_edit_fit($loadoutid);
 if(!$can_edit) {
-	\Osmium\fatal(403, "Forbidden.");
+	\Osmium\fatal(403);
 }
 
 \Osmium\Db\query('BEGIN;');

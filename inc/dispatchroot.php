@@ -135,7 +135,7 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 	];
 
 	if($showbt === null) $showbt = ($code >= 500);
-	if($title === null) $title = ($code >= 500) ? $internaltitles[time() % count($internaltitles)] : $code;
+	if($title === null && $code >= 500) $title = $internaltitles[time() % count($internaltitles)];
 	$hue = ($code >= 400 && $code < 500) ? 10 : 210;
 
 	$relprefix = rtrim(get_ini_setting('relative_path'), '/');
@@ -145,10 +145,14 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 	echo "<meta charset='utf-8' />\n";
 	echo "<link href='//fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
 	echo "<link rel='stylesheet' href='".$relprefix."/static-".\Osmium\CSS_STATICVER."/fatal.css' type='text/css' />\n";
-	echo "<title>{$title} / {$code} / Osmium</title>\n";
+	echo "<title>{$code} / Osmium</title>\n";
 	echo "</head>\n<body style='background: hsl({$hue}, 80%, 10%);'><div class='bg'></div>\n<div class='w'>\n";
 
-	echo "<h1>{$title}</h1>\n";
+	if($title) {
+		echo "<h1>{$title}</h1>\n";
+	} else {
+		echo "<h1 class='code'>{$code}</h1>\n";
+	}
 
 	if($message !== '') {
 		echo "<p>{$message}</p>\n";

@@ -20,9 +20,7 @@ namespace Osmium\Page\Register;
 
 require __DIR__.'/../inc/root.php';
 
-if(\Osmium\State\is_logged_in()) {
-	\Osmium\fatal(403, "You are already logged in.");
-}
+\Osmium\State\assume_logged_out();
 
 if(isset($_POST['account_name'])) {
 	$q = \Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountname = $1', array($_POST['account_name']));

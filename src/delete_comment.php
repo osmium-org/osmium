@@ -21,7 +21,7 @@ namespace Osmium\Page\DeleteComment;
 require __DIR__.'/../inc/root.php';
 
 if(!\Osmium\State\is_logged_in() || $_GET['tok'] != \Osmium\State\get_token()) {
-	\Osmium\fatal(403, "Forbidden.");
+	\Osmium\fatal(403);
 }
 
 $id = isset($_GET['id']) ? $_GET['id'] : 0;
@@ -35,11 +35,11 @@ if($type == 'comment') {
 	));
 
 	if($row === false) {
-		\Osmium\fatal(404, "Comment not found.");
+		\Osmium\fatal(404);
 	}
 
 	if($row['accountid'] != $a['accountid'] && $a['ismoderator'] !== 't') {
-		\Osmium\fatal(403, "You cannot delete that comment.");
+		\Osmium\fatal(403);
 	}
 
 	\Osmium\Db\query('BEGIN;');
@@ -68,11 +68,11 @@ if($type == 'comment') {
 	));
 
 	if($row === false) {
-		\Osmium\fatal(404, "Comment reply not found.");
+		\Osmium\fatal(404);
 	}
 
 	if($row['accountid'] != $a['accountid'] && $a['ismoderator'] !== 't') {
-		\Osmium\fatal(403, "You cannot delete that comment reply.");
+		\Osmium\fatal(403);
 	}
 
 	\Osmium\Db\query('BEGIN;');
@@ -88,7 +88,7 @@ if($type == 'comment') {
 
 	$afteruri = '?jtc='.$row['commentid'].'#c'.$row['commentid'];
 } else {
-	\Osmium\fatal(404, "Incorrect type.");
+	\Osmium\fatal(400);
 }
 
 header('Location: ../'.\Osmium\Fit\fetch_fit_uri($row['loadoutid']).$afteruri);
