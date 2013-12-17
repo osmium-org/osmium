@@ -44,9 +44,9 @@ clear-sessions:
 	find ./cache -name "sess_*" -delete
 
 post-eve-schema-update:
-	echo {0..7} | xargs -n 1 -P 8 ./bin/update_loadout_dogma_attribs 8
+	./bin/parallelize 8 ./bin/update_loadout_dogma_attribs
 
 update-charinfo:
-	echo {0..15} | xargs -n 1 -P 16 ./bin/update_charinfo 16
+	./bin/parallelize 16 ./bin/update_charinfo
 
 .PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache post-eve-schema-update
