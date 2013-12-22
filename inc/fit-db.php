@@ -1240,3 +1240,51 @@ function get_available_skillset_names_for_account() {
 
 	return $names;
 }
+
+/**
+ * Takes in an array of item/module type IDs; returns an array with entries like:
+ *     input_type_id => array(
+ *         skill_type_id => required_level,
+ *         ...
+ *     )
+ */
+function get_skill_prereqs_for_items($items) {
+	if (!$items) {
+		return array();
+	}
+	/* XXX SECURITY XXX
+	 * I haven't figured out if there's a way to get postgres to supply a
+	 * list for an IN clause yet. But this cannot be allowed to stand. */
+	$items_str = '('.implode(',',$items).')';
+	$skillsq = \Osmium\Db\query(
+		'SELECT skills.typeid, skills.value, skilllevels.value
+		FROM eve.dgmtypeattribs AS skills
+		INNER JOIN eve.dgmtypeattribs AS skilllevels ON
+			(skills.typeid = skilllevels.typeid AND
+			 ((skills.attributeid = 182 AND skilllevels.attributeid = 277) OR
+			  (skills.attributeid = 183 AND skilllevels.attributeid = 278) OR
+			  (skills.attributeid = 184 AND skilllevels.attributeid = 279)))
+		WHERE skills.typeid IN '.$items_str);
+	$out = array();
+	while ($row = \Osmium\Db\fetch_row($skillsq)) {
+		$typeid = $row[0];
+		$skill = $row[1];
+		$skilllevel = $row[2];
+
+		if (!isset($out[$typeid])) {
+			$out[$typeid] = array();
+		}
+		$out[$typeid][$skill] = $skilllevel;
+	}
+	return $out;
+}
+
+function get_skill_prereqs_for_fit($fit) {
+	$modules = array();
+	foreach ($fit['modules'] as $type => $by_index) {
+		foreach ($by_index as $idx => $module) {
+			$modules[] = $module['typeid'];
+		}
+	}
+	return get_skill_prereqs_for_items($modules);
+}

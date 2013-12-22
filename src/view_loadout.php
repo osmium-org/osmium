@@ -325,6 +325,8 @@ echo "<section id='loadout'>
 $stypes = \Osmium\Fit\get_slottypes();
 $slotusage = \Osmium\AjaxCommon\get_slot_usage($fit);
 $states = \Osmium\Fit\get_state_names();
+$skills_required = \Osmium\Fit\get_skill_prereqs_for_fit($fit);
+error_log(print_r($skills_required, true));
 $ia = array();
 foreach($ia_ as $k) {
 	if($k['location'][0] === 'module') {
@@ -369,6 +371,13 @@ foreach($stypes as $type => $tdata) {
 		}
 		if($fittedtype >= $slotusage[$type]) {
 			$class[] = 'overflow';
+		}
+
+		$skills_missing = \Osmium\Fit\get_missing_prereqs($fit, $skills_required[$m['typeid']]);
+		if ($skills_missing) {
+			error_log("{$m['typename']} missing something...");
+			error_log(print_r($skills_missing, true));
+			error_log("");
 		}
 
 		if($class) $class = " class='".implode(' ', $class)."'";

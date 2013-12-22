@@ -200,9 +200,11 @@ function print_footer() {
 		$cachefile = \Osmium\ROOT.$cache;
 		$cacheuri = $__osmium_chrome_relative.'/static-'.\Osmium\JS_STATICVER.'/cache/'.$name.'.min.js';
 
-		if(!file_exists($cachefile.'.min.js')) {
+		#if(!file_exists($cachefile.'.min.js')) {
+		if (true) {
 			$sem = \Osmium\State\semaphore_acquire('JS_'.$cachefile.'.js');
-			if(!file_exists($cachefile.'.min.js')) {
+			#if(!file_exists($cachefile.'.min.js')) {
+			if (true) {
 				shell_exec('cat '.implode(' ', array_map('escapeshellarg', $__osmium_js_snippets))
 				           .' >> '.escapeshellarg($cachefile.'.js'));
 
