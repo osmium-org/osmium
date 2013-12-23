@@ -250,7 +250,7 @@ osmium_send_clf = function(opts) {
 			console.log("length: " + payload.missingprereqs.length);
 			console.log(payload.missingprereqs);
 			if (payload.missingprereqs.length) {
-				var text = "Missing skills!";
+				var text = "Missing skills!\n";
 				for (var i = 0; i < payload.missingprereqs.length; i++) {
 					console.log("module!");
 					var missing = payload.missingprereqs[i];

@@ -210,12 +210,12 @@ if(isset($fit['ship']['typeid'])) {
 	echo "<small class='firstline'>".\Osmium\Chrome\escape($groupname)." – ";
 	echo \Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>";
 	echo "<strong>".\Osmium\Chrome\escape($fit['ship']['typename'])."</strong>\n";
-	echo "<small class='pilot'>Pilot: <span id='pilotname'>"."PILOT HERE"."</span></small>";
+	echo "<small class='pilot'>Pilot: <span id='pilotname'>"."All V"."</span></small>"; // XXX hardcoded all V
 } else {
 	echo "<div class='notype'></div>\n";
 	echo "<small class='firstline'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>";
 	echo "<strong>N/A</strong>\n";
-	echo "<small class='pilot'>Pilot: <span id='pilotname'>"."PILOT HERE"."</span></small>";
+	echo "<small class='pilot'>Pilot: <span id='pilotname'>"."All V"."</span></small>"; // XXX hardcoded all V
 }
 
 echo "</h1>\n";
