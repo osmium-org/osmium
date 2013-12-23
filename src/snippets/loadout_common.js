@@ -245,6 +245,26 @@ osmium_send_clf = function(opts) {
 				}
 			}
 
+			// XXX escaping ???
+			$('#pilotname').removeClass('missingprereqs').prop('title', '');
+			console.log("length: " + payload.missingprereqs.length);
+			console.log(payload.missingprereqs);
+			if (payload.missingprereqs.length) {
+				var text = "Missing skills!";
+				for (var i = 0; i < payload.missingprereqs.length; i++) {
+					console.log("module!");
+					var missing = payload.missingprereqs[i];
+					text += missing.module + "\n";
+					for (var j = 0; j < missing.skills.length; j++) {
+						console.log("skill!");
+						text += "  " + missing.skills[j].skill + " " + missing.skills[j].level + "\n";
+					}
+				}
+				$('#pilotname').addClass('missingprereqs')
+					.prop('title', text);
+				console.log("hello?");
+			}
+
 			$('div#computed_attributes').html(payload.attributes);
 			osmium_clf_rawattribs = payload.rawattribs;
 			osmium_gen_fattribs();
@@ -296,13 +316,13 @@ osmium_send_clf = function(opts) {
 				}).children('span.charge').addClass('hasncycles').append(s);
 			}
 
-			$("section#modules div.slots li.missingprereqs").removeClass('missingprereqs');
-			for(var i = 0; i < payload.missingprereqs.length; ++i) {
-				console.log("hello");
-				$("section#modules div.slots." + payload.missingprereqs[i][0] + " li").filter(function() {
-					return $(this).data('index') == payload.missingprereqs[i][1];
-				}).addClass('missingprereqs');
-			}
+			//$("section#modules div.slots li.missingprereqs").removeClass('missingprereqs');
+			//for(var i = 0; i < payload.missingprereqs.length; ++i) {
+			//	console.log("hello");
+			//	$("section#modules div.slots." + payload.missingprereqs[i][0] + " li").filter(function() {
+			//		return $(this).data('index') == payload.missingprereqs[i][1];
+			//	}).addClass('missingprereqs');
+			//}
 
 			$("section#drones small.bayusage").text(
 				osmium_clf_rawattribs.dronecapacityused

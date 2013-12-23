@@ -90,6 +90,7 @@ osmium_init_ship = function() {
 				osmium_ctxmenu_add_option(smenu, osmium_skillsets[i], (function(sname) {
 					return function() {
 						osmium_clf.metadata['X-Osmium-skillset'] = sname;
+						$('#pilotname').text(sname); // XXX need any escaping?
 						osmium_undo_push();
 						osmium_commit_clf();
 					};

@@ -88,9 +88,39 @@ foreach($capacitors as &$c) {
 	}
 }
 
+// XXX code copying from edit_skillset.php
+$levels = array(
+	null => 'Untrained',
+	0 => '0',
+	1 => 'I',
+	2 => 'II',
+	3 => 'III',
+	4 => 'IV',
+	5 => 'V',
+	);
+
 $ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
 $skills_required = \Osmium\Fit\get_skill_prereqs_for_fit($local);
 error_log(print_r($skills_required, true));
+$skills_missing = array();
+// XXX escaping?
+foreach ($skills_required as $moduleid => $skills) {
+	$missing = \Osmium\Fit\get_missing_prereqs($local, $skills);
+	if (!$missing) {
+		continue;
+	}
+	$skills_missing_for_module = array();
+	foreach ($missing as $skillid => $level) {
+		$skills_missing_for_module[] = array(
+			'skill' => \Osmium\Fit\get_typename($skillid),
+			'level' => $levels[$level],
+		);
+	}
+	$skills_missing[] = array(
+		"module" => \Osmium\Fit\get_typename($moduleid),
+		"skills" => $skills_missing_for_module,
+	);
+}
 #$all_skills = array();
 #foreach ($skills_required as $typeid => $skills) {
 #	foreach ($skills as $skill => $level) {
@@ -120,7 +150,7 @@ $payload = array(
 		'maxactivedrones' => \Osmium\Dogma\get_char_attribute($local, 'maxActiveDrones'),
 	),
 	'capacitors' => $capacitors,
-	'missingprereqs' => array(),
+	'missingprereqs' => $skills_missing,
 );
 
 foreach($local['modules'] as $slottype => $sub) {
@@ -138,16 +168,16 @@ foreach($local['modules'] as $slottype => $sub) {
 		}
 
 		if (isset($skills_required[$m['typeid']])) {
-			error_log("module requires skills:" . print_r($m, true));
+			//error_log("module requires skills:" . print_r($m, true));
 			$skills_missing = \Osmium\Fit\get_missing_prereqs($local, $skills_required[$m['typeid']]);
 			if ($skills_missing) {
 				$named_skills_missing = array();
 				foreach ($skills_missing as $typeid => $level) {
 					$named_skills_missing[\Osmium\Fit\get_typename($typeid)] = $level;
 				}
-				$payload['missingprereqs'][] = array(
-					$slottype, $index, $named_skills_missing
-				);
+				//$payload['missingprereqs'][] = array(
+				//	$slottype, $index, $named_skills_missing
+				//);
 			}
 		}
 

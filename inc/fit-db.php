@@ -1286,5 +1286,8 @@ function get_skill_prereqs_for_fit($fit) {
 			$modules[] = $module['typeid'];
 		}
 	}
+	if (!empty($fit['ship'])) {
+		$modules[] = $fit['ship']['typeid'];
+	}
 	return get_skill_prereqs_for_items($modules);
 }

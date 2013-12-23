@@ -205,16 +205,20 @@ echo "<div id='vlattribs'>
 
 if(isset($fit['ship']['typeid'])) {
 	echo "<img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />\n";
-	echo "<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>\n";
+	// I'd rather not merge groupname and dbver into one class, but I'm not
+	// enough of a css guru to make them render like this otherwise...
+	echo "<small class='firstline'>".\Osmium\Chrome\escape($groupname)." – ";
+	echo \Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>";
 	echo "<strong>".\Osmium\Chrome\escape($fit['ship']['typename'])."</strong>\n";
+	echo "<small class='pilot'>Pilot: <span id='pilotname'>"."PILOT HERE"."</span></small>";
 } else {
 	echo "<div class='notype'></div>\n";
-	echo "<small class='groupname'></small>\n";
+	echo "<small class='firstline'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>";
 	echo "<strong>N/A</strong>\n";
+	echo "<small class='pilot'>Pilot: <span id='pilotname'>"."PILOT HERE"."</span></small>";
 }
 
-echo "<small class='dbver'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
-</h1>\n";
+echo "</h1>\n";
 
 if($loadoutid === false) {
 	$votesclass = ' dummy';
