@@ -245,26 +245,6 @@ osmium_send_clf = function(opts) {
 				}
 			}
 
-			// XXX escaping ???
-			$('#pilotname').removeClass('missingprereqs').prop('title', '');
-			console.log("length: " + payload.missingprereqs.length);
-			console.log(payload.missingprereqs);
-			if (payload.missingprereqs.length) {
-				var text = "Missing skills!\n";
-				for (var i = 0; i < payload.missingprereqs.length; i++) {
-					console.log("module!");
-					var missing = payload.missingprereqs[i];
-					text += missing.module + "\n";
-					for (var j = 0; j < missing.skills.length; j++) {
-						console.log("skill!");
-						text += "  " + missing.skills[j].skill + " " + missing.skills[j].level + "\n";
-					}
-				}
-				$('#pilotname').addClass('missingprereqs')
-					.prop('title', text);
-				console.log("hello?");
-			}
-
 			$('div#computed_attributes').html(payload.attributes);
 			osmium_clf_rawattribs = payload.rawattribs;
 			osmium_gen_fattribs();

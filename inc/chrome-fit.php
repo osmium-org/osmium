@@ -45,6 +45,58 @@ function print_formatted_attribute_category($identifier, $title, $titledata, $ti
 	echo "</section>\n";
 }
 
+function print_formatted_mastery(&$fit, $relative) {
+	ob_start(); // XXX cargo cult
+	// XXX code copying from edit_skillset.php
+	$levels = array(
+		null => 'Untrained',
+		0 => '0',
+		1 => 'I',
+		2 => 'II',
+		3 => 'III',
+		4 => 'IV',
+		5 => 'V',
+	);
+
+	$skills_required = \Osmium\Fit\get_skill_prereqs_for_fit($fit);
+	$skills_missing = array();
+	// XXX escaping?
+	foreach ($skills_required as $moduleid => $skills) {
+		$missing = \Osmium\Fit\get_missing_prereqs($fit, $skills);
+		if (!$missing) {
+			continue;
+		}
+		$skills_missing_for_module = array();
+		foreach ($missing as $skillid => $level) {
+			$skills_missing_for_module[\Osmium\Fit\get_typename($skillid)] = $levels[$level];
+		}
+		$skills_missing[\Osmium\Fit\get_typename($moduleid)] = $skills_missing_for_module;
+	}
+
+	if (!$skills_missing) {
+		// TODO fancier mastery information here
+		echo "skills in order";
+	} else {
+		echo "Missing skills";
+		echo "<ul class='missingprereqs'>";
+		foreach ($skills_missing as $module => $skills) {
+			echo "<li>$module<ul>";
+			foreach ($skills as $skillname => $level) {
+				echo "<li>$skillname $level</li>";
+			}
+			echo "</ul></li>";
+		}
+		echo "</ul>";
+	}
+
+	print_formatted_attribute_category(
+		'mastery', 'Mastery',
+		"<span title='Effective skillset'>".$fit['skillset']['name']."</span>",
+		$skills_missing ? 'overflow' : '',
+		ob_get_clean()
+	);
+}
+
 function print_formatted_engineering(&$fit, $relative, $capacitor) {
 	ob_start();
 	$overall = '';
@@ -524,6 +576,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	print_formatted_outgoing($fit, $relative);
 	print_formatted_navigation($fit, $relative);
 	print_formatted_targeting($fit, $relative);
+	print_formatted_mastery($fit, $relative);
 	print_formatted_misc($fit);
 }
 

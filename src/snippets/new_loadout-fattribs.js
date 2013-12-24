@@ -69,6 +69,22 @@ osmium_gen_fattribs = function() {
 };
 
 osmium_init_fattribs = function() {
+	osmium_ctxmenu_bind($("div#computed_attributes > section#mastery"), function() {
+		var menu = osmium_ctxmenu_create();
+		for(var i = 0; i < osmium_skillsets.length; ++i) {
+			osmium_ctxmenu_add_option(menu, osmium_skillsets[i], (function(sname) {
+				return function() {
+					osmium_clf.metadata['X-Osmium-skillset'] = sname;
+					osmium_undo_push();
+					osmium_commit_clf();
+				};
+			})(osmium_skillsets[i]), {
+				toggled: osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i]
+			});
+		}
+		return menu;
+	});
+
 	osmium_ctxmenu_bind($("div#computed_attributes > section#defense"), function() {
 		var menu = osmium_ctxmenu_create();
 
