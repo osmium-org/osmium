@@ -46,7 +46,7 @@ function print_formatted_attribute_category($identifier, $title, $titledata, $ti
 }
 
 function print_formatted_mastery(&$fit, $relative) {
-	ob_start(); // XXX cargo cult
+	ob_start();
 	// XXX code copying from edit_skillset.php
 	$levels = array(
 		null => 'Untrained',
@@ -58,31 +58,20 @@ function print_formatted_mastery(&$fit, $relative) {
 		5 => 'V',
 	);
 
-	$skills_required = \Osmium\Fit\get_skill_prereqs_for_fit($fit);
-	$skills_missing = array();
-	// XXX escaping?
-	foreach ($skills_required as $moduleid => $skills) {
-		$missing = \Osmium\Fit\get_missing_prereqs($fit, $skills);
-		if (!$missing) {
-			continue;
-		}
-		$skills_missing_for_module = array();
-		foreach ($missing as $skillid => $level) {
-			$skills_missing_for_module[\Osmium\Fit\get_typename($skillid)] = $levels[$level];
-		}
-		$skills_missing[\Osmium\Fit\get_typename($moduleid)] = $skills_missing_for_module;
-	}
+	$skills_missing_by_moduleid = \Osmium\Fit\get_missing_prereqs_for_fit($fit);
 
-	if (!$skills_missing) {
+	if (!$skills_missing_by_moduleid) {
 		// TODO fancier mastery information here
 		echo "skills in order";
 	} else {
 		echo "Missing skills";
 		echo "<ul class='missingprereqs'>";
-		foreach ($skills_missing as $module => $skills) {
-			echo "<li>$module<ul>";
-			foreach ($skills as $skillname => $level) {
-				echo "<li>$skillname $level</li>";
+		foreach ($skills_missing_by_moduleid as $moduleid => $skills) {
+			echo "<li>".escape(\Osmium\Fit\get_typename($moduleid))."<ul>";
+			foreach ($skills as $skillid => $level) {
+				$skillname = escape(\Osmium\Fit\get_typename($skillid));
+				$fancylevel = $levels[$level];
+				echo "<li>$skillname $fancylevel</li>";
 			}
 			echo "</ul></li>";
 		}
@@ -92,7 +81,7 @@ function print_formatted_mastery(&$fit, $relative) {
 	print_formatted_attribute_category(
 		'mastery', 'Mastery',
 		"<span title='Effective skillset'>".$fit['skillset']['name']."</span>",
-		$skills_missing ? 'overflow' : '',
+		$skills_missing_by_moduleid ? 'overflow' : '',
 		ob_get_clean()
 	);
 }

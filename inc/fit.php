@@ -1370,15 +1370,25 @@ function get_missing_prereqs($fit, $skills) {
 	foreach ($skills as $skill => $level) {
 		if (isset($skillset['override'][$skill])) {
 			if($skillset['override'][$skill] < $level) {
-				error_log("for skill $skill, pilot {$skillset['name']} has {$skillset['override'][$skill]} but $level required");
 				$missing[$skill] = $level;
 			}
 		} else {
 			if ($skillset['default'] < $level) {
-				error_log("for skill $skill, pilot {$skillset['name']} defaults to {$skillset['default']} but $level required");
 				$missing[$skill] = $level;
 			}
 		}
 	}
 	return $missing;
 }
+
+function get_missing_prereqs_for_fit($fit) {
+	$skills = get_skill_prereqs_for_fit($fit);
+	$missing_by_typeid = array();
+	foreach ($skills as $typeid => $required) {
+		$missing = get_missing_prereqs($fit, $required);
+		if ($missing) {
+			$missing_by_typeid[$typeid] = $missing;
+		}
+	}
+	return $missing_by_typeid;
+};

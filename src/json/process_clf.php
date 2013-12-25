@@ -100,28 +100,18 @@ $levels = array(
 	);
 
 $ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
-$skills_required = \Osmium\Fit\get_skill_prereqs_for_fit($local);
 
-$skills_missing = array();
-$skills_mssing_by_module_id = array();
-// XXX escaping?
-foreach ($skills_required as $moduleid => $skills) {
-	$missing = \Osmium\Fit\get_missing_prereqs($local, $skills);
-	if (!$missing) {
-		continue;
-	}
-	$skills_missing_for_module = array();
+$missing_by_moduleid = \osmium\Fit\get_missing_prereqs_for_fit($local);
+$fancy_skills_missing_by_moduleid = array();
+foreach ($missing_by_moduleid as $moduleid => $missing) {
+	$fancy_missing = array();
 	foreach ($missing as $skillid => $level) {
-		$skills_missing_for_module[] = array(
-			'skill' => \Osmium\Fit\get_typename($skillid),
+		$fancy_missing[] = array(
+			'skill' => \Osmium\Chrome\escape(\Osmium\Fit\get_typename($skillid)),
 			'level' => $levels[$level],
 		);
 	}
-	$skills_missing[] = array(
-		"module" => \Osmium\Fit\get_typename($moduleid),
-		"skills" => $skills_missing_for_module,
-	);
-	$skills_missing_by_module_id[$moduleid] = $skills_missing_for_module;
+	$fancy_skills_missing_by_moduleid[$moduleid] = $fancy_missing;
 }
 
 $payload = array(
@@ -154,9 +144,9 @@ foreach($local['modules'] as $slottype => $sub) {
 			}
 		}
 
-		if (!empty($skills_missing_by_module_id[$m['typeid']])) {
+		if (!empty($fancy_skills_missing_by_moduleid[$m['typeid']])) {
 			$payload['missingprereqs'][] = array(
-				$slottype, $index, $skills_missing_by_module_id[$m['typeid']]
+				$slottype, $index, $fancy_skills_missing_by_moduleid[$m['typeid']]
 			);
 		}
 	}

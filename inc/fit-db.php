@@ -1267,7 +1267,7 @@ function get_skill_prereqs_for_items($items) {
 			$skill = $row[0];
 			$skilllevel = $row[1];
 
-			if (!isset($out[$typeid])) {
+			if (empty($out[$typeid])) {
 				$out[$typeid] = array();
 			}
 			$out[$typeid][$skill] = $skilllevel;
