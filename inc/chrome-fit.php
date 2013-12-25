@@ -47,7 +47,7 @@ function print_formatted_attribute_category($identifier, $title, $titledata, $ti
 
 function print_formatted_mastery(&$fit, $relative) {
 	ob_start();
-	// XXX code copying from edit_skillset.php
+	// XXX code duplication
 	$levels = array(
 		null => 'Untrained',
 		0 => '0',

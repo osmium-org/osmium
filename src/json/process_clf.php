@@ -88,7 +88,7 @@ foreach($capacitors as &$c) {
 	}
 }
 
-// XXX code copying from edit_skillset.php
+// XXX code duplication
 $levels = array(
 	null => 'Untrained',
 	0 => '0',
