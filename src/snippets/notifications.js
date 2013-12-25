@@ -16,7 +16,6 @@
  */
 
 osmium_notifications = function(relative) {
-	return; // XXX
 	var fetch = function() {
 		$.get(relative + '/internal/nc', function(cnt) {
 			var a = $("a#ncount");

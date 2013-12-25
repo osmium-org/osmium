@@ -298,7 +298,6 @@ osmium_send_clf = function(opts) {
 
 			$("section#modules div.slots li.missingprereqs").removeClass('missingprereqs');
 			for(var i = 0; i < payload.missingprereqs.length; ++i) {
-				console.log("hello");
 				$("section#modules div.slots." + payload.missingprereqs[i][0] + " li").filter(function() {
 					return $(this).data('index') == payload.missingprereqs[i][1];
 				}).addClass('missingprereqs');
