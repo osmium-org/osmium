@@ -1264,14 +1264,27 @@ function get_skill_prereqs_for_types(array $types) {
 }
 
 function get_skill_prereqs_for_fit($fit) {
-	$modules = array();
+	$types = array();
+
+	if (!empty($fit['ship'])) {
+		$types[$fit['ship']['typeid']] = true;
+	}
+
 	foreach ($fit['modules'] as $type => $by_index) {
 		foreach ($by_index as $idx => $module) {
-			$modules[] = $module['typeid'];
+			$types[$module['typeid']] = true;
 		}
 	}
-	if (!empty($fit['ship'])) {
-		$modules[] = $fit['ship']['typeid'];
+
+	foreach($fit['drones'] as $typeid => $drone) {
+		if($drone['quantityinspace'] + $drone['quantityinbay'] > 0) {
+			$types[$typeid] = true;
+		}
 	}
-	return get_skill_prereqs_for_types($modules);
+
+	foreach($fit['implants'] as $typeid => $i) {
+		$types[$typeid] = true;
+	}
+
+	return get_skill_prereqs_for_types(array_keys($types));
 }
