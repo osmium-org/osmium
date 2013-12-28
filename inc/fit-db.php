@@ -1273,6 +1273,10 @@ function get_skill_prereqs_for_fit($fit) {
 	foreach ($fit['modules'] as $type => $by_index) {
 		foreach ($by_index as $idx => $module) {
 			$types[$module['typeid']] = true;
+
+			if(isset($fit['charges'][$type][$idx]['typeid'])) {
+				$types[$fit['charges'][$type][$idx]['typeid']] = true;
+			}
 		}
 	}
 
