@@ -89,17 +89,6 @@ foreach($capacitors as &$c) {
 	}
 }
 
-// XXX code duplication
-$levels = array(
-	null => 'Untrained',
-	0 => '0',
-	1 => 'I',
-	2 => 'II',
-	3 => 'III',
-	4 => 'IV',
-	5 => 'V',
-	);
-
 $ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
 
 $missing_by_moduleid = \osmium\Fit\get_missing_prereqs_for_fit($local);
@@ -109,7 +98,7 @@ foreach ($missing_by_moduleid as $moduleid => $missing) {
 	foreach ($missing as $skillid => $level) {
 		$fancy_missing[] = array(
 			'skill' => \Osmium\Chrome\escape(\Osmium\Fit\get_typename($skillid)),
-			'level' => $levels[$level],
+			'level' => \Osmium\Chrome\format_skill_level($level),
 		);
 	}
 	$fancy_skills_missing_by_moduleid[$moduleid] = $fancy_missing;

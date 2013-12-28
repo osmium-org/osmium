@@ -48,16 +48,6 @@ function print_formatted_attribute_category($identifier, $title, $titledata, $ti
 
 function print_formatted_mastery(&$fit, $relative) {
 	ob_start();
-	// XXX code duplication
-	$levels = array(
-		null => 'Untrained',
-		0 => '0',
-		1 => 'I',
-		2 => 'II',
-		3 => 'III',
-		4 => 'IV',
-		5 => 'V',
-	);
 
 	$skills_missing_by_moduleid = \Osmium\Fit\get_missing_prereqs_for_fit($fit);
 
@@ -71,7 +61,7 @@ function print_formatted_mastery(&$fit, $relative) {
 			echo "<li>".escape(\Osmium\Fit\get_typename($moduleid))."<ul>";
 			foreach ($skills as $skillid => $level) {
 				$skillname = escape(\Osmium\Fit\get_typename($skillid));
-				$fancylevel = $levels[$level];
+				$fancylevel = \Osmium\Chrome\format_skill_level($level);
 				echo "<li>$skillname $fancylevel</li>";
 			}
 			echo "</ul></li>";
