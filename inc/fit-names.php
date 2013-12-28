@@ -46,6 +46,7 @@ const GROUP_FighterBomber = 1023;
 const GROUP_FighterDrone = 549;
 
 
+
 /** @internal */
 function get_cached_thing_generic($table, $field, $wherename, $whereval) {
 	$key = 'NameCache_'.$table.'_'.$field.'_'.$wherename.'_'.$whereval;
@@ -150,4 +151,39 @@ function get_groupname($groupid) {
 	return get_cached_thing_generic(
 		'eve.invgroups', 'groupname', 'groupid', (int)$groupid
 	);
+}
+
+function get_required_skills($typeid) {
+	$typeid = (int)$typeid;
+	$key = 'NameCache_required_skills_'.$typeid;
+	$cache = \Osmium\State\get_cache_memory($key);
+
+	if($cache !== null) {
+		return $cache;
+	}
+
+	static $rs = [
+		182 => 277, /* RequiredSkill1 => RequiredSkill1Level */
+		183 => 278, /* etc… */
+		184 => 279,
+		1285 => 1286,
+		1289 => 1287,
+		1290 => 1288,
+	];
+
+	$vals = [];
+
+	/* XXX: this is hackish */
+	dogma_init_context($ctx);
+	dogma_set_ship($ctx, $typeid);
+	foreach($rs as $rsattid => $rslattid) {
+		if(dogma_get_ship_attribute($ctx, $rsattid, $skill) === DOGMA_OK
+		   && dogma_get_ship_attribute($ctx, $rslattid, $level) === DOGMA_OK) {
+			$vals[$skill] = $level;
+		}
+	}
+	dogma_free_context($ctx);
+
+	\Osmium\State\put_cache_memory($key, $vals, 86400);
+	return $vals;
 }

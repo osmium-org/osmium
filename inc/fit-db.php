@@ -1249,31 +1249,17 @@ function get_available_skillset_names_for_account() {
  *         ...
  *     )
  */
-function get_skill_prereqs_for_items($items) {
-	if (!$items) {
-		return array();
-	}
+function get_skill_prereqs_for_types(array $types) {
 	$out = array();
-	foreach ($items as $typeid) {
-		$skillsq = \Osmium\Db\query_params(
-			'SELECT skills.value, skilllevels.value
-			FROM eve.dgmtypeattribs AS skills
-			INNER JOIN eve.dgmtypeattribs AS skilllevels ON
-				(skills.typeid = skilllevels.typeid AND
-				 ((skills.attributeid = 182 AND skilllevels.attributeid = 277) OR
-				  (skills.attributeid = 183 AND skilllevels.attributeid = 278) OR
-				  (skills.attributeid = 184 AND skilllevels.attributeid = 279)))
-			WHERE skills.typeid = $1', array($typeid));
-		while ($row = \Osmium\Db\fetch_row($skillsq)) {
-			$skill = $row[0];
-			$skilllevel = $row[1];
 
-			if (empty($out[$typeid])) {
-				$out[$typeid] = array();
-			}
-			$out[$typeid][$skill] = $skilllevel;
+	foreach ($types as $typeid) {
+		$rs = get_required_skills($typeid);
+
+		foreach($rs as $stid => $slevel) {
+			$out[$typeid][$stid] = $slevel;
 		}
 	}
+
 	return $out;
 }
 
@@ -1287,5 +1273,5 @@ function get_skill_prereqs_for_fit($fit) {
 	if (!empty($fit['ship'])) {
 		$modules[] = $fit['ship']['typeid'];
 	}
-	return get_skill_prereqs_for_items($modules);
+	return get_skill_prereqs_for_types($modules);
 }
