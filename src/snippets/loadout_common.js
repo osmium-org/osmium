@@ -297,11 +297,16 @@ osmium_send_clf = function(opts) {
 				}).children('span.charge').addClass('hasncycles').append(s);
 			}
 
-			$("section#modules div.slots li.missingprereqs").removeClass('missingprereqs');
+			$("img.missingskill").removeClass('missingskill').removeProp('title');
 			for(var i = 0; i < payload.missingprereqs.length; ++i) {
-				$("section#modules div.slots." + payload.missingprereqs[i][0] + " li").filter(function() {
+				var li = $("section#modules div.slots." + payload.missingprereqs[i][0] + " li").filter(function() {
 					return $(this).data('index') == payload.missingprereqs[i][1];
-				}).addClass('missingprereqs');
+				});
+
+				li.children('img:first-child')
+					.addClass('missingskill')
+					.prop('title', 'Some skill prerequisites are not met')
+				;
 			}
 
 			$("section#drones small.bayusage").text(

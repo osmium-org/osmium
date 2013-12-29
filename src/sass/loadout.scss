@@ -56,10 +56,6 @@ $hidden-char: '\0025B8';
 		border-top: none;
 	}
 
-	&.missingprereqs {
-		border: 1px dashed $overflow-text-color !important;
-	}
-
 	&> strong.qty {
 		padding-left: 0.1em;
 		padding-right: 0.1em;
@@ -566,4 +562,8 @@ span#clfspinner.spinner {
 	right: 0.25em;
 	bottom: 0.75em;
 	z-index: 1000;
+}
+
+img.missingskill {
+	background-color: rgba($missing-skill-bg-color, 0.5);
 }
