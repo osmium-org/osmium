@@ -26,7 +26,7 @@ if(!get_ini_setting('tolerate_errors')) {
 	ob_start();
 	error_reporting(-1);
 	set_error_handler(function($errno, $errstr, $errfile, $errline) {
-		ob_end_clean();
+		while(ob_end_clean()) { /* Erase ALL levels of output buffering. */ }
 		ob_start();
 		$errfile = explode('/', $errfile);
 		$errfile = array_pop($errfile);

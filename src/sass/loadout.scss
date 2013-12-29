@@ -348,6 +348,29 @@ div#computed_attributes > section#engineering {
 	}
 }
 
+div#computed_attributes > section#mastery > div {
+	&> ul > li {
+		margin-bottom: 0.5em;
+
+		&> div.reqs {
+			font-size: 0.8em;
+			opacity: 0.5;
+			padding-left: 1em;
+		}
+	}
+
+	&> h5 {
+		margin: 0.5em;
+		font-size: 1em;
+
+		margin-top: 1.5em;
+
+		&:first-child {
+			margin-top: 0.5em;
+		}
+	}
+}
+
 ul.showinfotabs {
 	@include tabs;
 	text-align: left;

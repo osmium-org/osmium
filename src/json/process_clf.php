@@ -90,6 +90,8 @@ foreach($capacitors as &$c) {
 }
 
 $ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
+list($prereqs, $missing) = \Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($local);
+$attribopts['prerequisites'] = $prereqs;
 
 $payload = array(
 	'clftoken' => $token,
@@ -104,7 +106,7 @@ $payload = array(
 		'maxactivedrones' => \Osmium\Dogma\get_char_attribute($local, 'maxActiveDrones'),
 	),
 	'capacitors' => $capacitors,
-	'missingprereqs' => \Osmium\Fit\get_missing_prereqs_for_fit($local),
+	'missingprereqs' => $missing,
 );
 
 foreach($local['modules'] as $slottype => $sub) {

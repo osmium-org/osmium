@@ -1352,37 +1352,3 @@ function get_fit_relative($loadoutid, $visibility) {
 		return '..';
 	}
 }
-
-/**
- * Given a fit (for skillset) and an array mapping skills to levels, returns an
- * array mapping skills to levels containing the pairs that the skillset is
- * missing.
- */
-function get_missing_prereqs($fit, $skills) {
-	$skillset = $fit['skillset'];
-	$missing = array();
-	foreach ($skills as $skill => $level) {
-		if (isset($skillset['override'][$skill])) {
-			if($skillset['override'][$skill] < $level) {
-				$missing[$skill] = $level;
-			}
-		} else {
-			if ($skillset['default'] < $level) {
-				$missing[$skill] = $level;
-			}
-		}
-	}
-	return $missing;
-}
-
-function get_missing_prereqs_for_fit($fit) {
-	$skills = get_skill_prereqs_for_fit($fit);
-	$missing_by_typeid = array();
-	foreach ($skills as $typeid => $required) {
-		$missing = get_missing_prereqs($fit, $required);
-		if ($missing) {
-			$missing_by_typeid[$typeid] = $missing;
-		}
-	}
-	return $missing_by_typeid;
-};

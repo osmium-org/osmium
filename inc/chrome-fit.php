@@ -46,33 +46,127 @@ function print_formatted_attribute_category($identifier, $title, $titledata, $ti
 	echo "</section>\n";
 }
 
-function print_formatted_mastery(&$fit, $relative) {
+function print_nested_skill_requirements($typeid, $level, array &$skills, array $tree, array $invtree) {
+	if(isset($tree[$typeid])) {
+		foreach($tree[$typeid] as $stid => $sl) {
+			if(!isset($skills[$stid])) continue;
+			$ml = $skills[$stid];
+			unset($skills[$stid]);
+
+			print_nested_skill_requirements($stid, $ml, $skills, $tree, $invtree);
+		}
+	}
+
+	echo "<li>\n";
+
+	echo \Osmium\Fit\get_typename($typeid)." ".format_skill_level($level);
+
+	if(isset($invtree[$typeid])) {
+		$reqs = [];
+
+		foreach($invtree[$typeid] as $tid) {
+			$reqs[] = escape(\Osmium\Fit\get_typename($tid));
+		}
+
+		if($reqs !== []) {
+			echo "<div class='reqs'>Required by ".implode(', ', $reqs)."</div>";
+		}
+	}
+
+	echo "</li>\n";
+}
+
+function print_formatted_mastery(&$fit, $relative, array $prereqs_per_type) {
 	ob_start();
 
-	$skills_missing_by_moduleid = \Osmium\Fit\get_missing_prereqs_for_fit($fit);
+	$types_per_prereqs = [];
+	$prereqs_unique = [];
+	$missing_unique = [];
+	$missingsp = 0;
+	$totalsp = 0;
 
-	if (!$skills_missing_by_moduleid) {
-		// TODO fancier mastery information here
-		echo "skills in order";
-	} else {
-		echo "Missing skills";
-		echo "<ul class='missingprereqs'>";
-		foreach ($skills_missing_by_moduleid as $moduleid => $skills) {
-			echo "<li>".escape(\Osmium\Fit\get_typename($moduleid))."<ul>";
-			foreach ($skills as $skillid => $level) {
-				$skillname = escape(\Osmium\Fit\get_typename($skillid));
-				$fancylevel = \Osmium\Chrome\format_skill_level($level);
-				echo "<li>$skillname $fancylevel</li>";
+	foreach($prereqs_per_type as $tid => $arr) {
+		foreach($arr as $stid => $level) {
+			if(isset($prereqs_unique[$stid])) {
+				if($prereqs_unique[$stid] < $level) {
+					$prereqs_unique[$stid] = $level;
+				} else {
+					unset($prereqs_per_type[$tid][$stid]);
+				}
+			} else {
+				$prereqs_unique[$stid] = $level;
 			}
-			echo "</ul></li>";
 		}
-		echo "</ul>";
+	}
+
+	foreach($prereqs_per_type as $typeid => $arr) {
+		foreach($arr as $stid => $level) {
+			$types_per_prereqs[$stid][$typeid] = true;
+		}
+	}
+
+	$sp = function($level, $rank) {
+		if($level == 0) return 0;
+		return ceil(pow(2, 2.5 * ($level - 1.0)) * 250.0 * $rank);
+	};
+
+	foreach($prereqs_unique as $stid => $level) {
+		$current = isset($fit['skillset']['override'][$stid])
+			? $fit['skillset']['override'][$stid] : $fit['skillset']['default'];
+
+		$rank = \Osmium\Fit\get_skill_rank($stid);
+		$needed = ceil(250.0 * $rank * pow(2, 2.5 * ($level - 1.0)));
+
+		$totalsp += $needed;
+
+		if($current >= $level) {
+			continue;
+		}
+
+		$missing_unique[$stid] = $level;
+		$missingsp += $needed - ceil(250.0 * $rank * ($current ? pow(2, 2.5 * ($current - 1.0)) : 0));
+	}
+
+	foreach($types_per_prereqs as &$arr) {
+		$arr = array_reverse(array_keys($arr));
+	}
+
+	if($missing_unique === []) {
+		echo "<p class='placeholder'>No missing skills with current skillset ("
+			.escape($fit['skillset']['name']).").</p>\n";
+	}
+
+	if($missing_unique !== []) {
+		echo "<h5>Missing skillpoints</h5>\n";
+		echo "<ul>\n";
+
+		echo "<li>".format_integer($missingsp)." SP missing out of ".format_integer($totalsp)." SP required</li>\n";
+		$secs = $missingsp / (45.0 / 60.0);
+		echo "<li>approximately ".format_long_duration($secs, 2)." of training time</li>\n";
+
+		echo "</ul>\n";
+	}
+
+	if($missing_unique !== []) {
+		echo "<h5>Missing skills</h5>\n";
+		echo "<ul>\n";
+
+		while($missing_unique !== []) {
+			reset($missing_unique);
+			$typeid = key($missing_unique);
+			$level = $missing_unique[$typeid];
+			unset($missing_unique[$typeid]);
+
+			print_nested_skill_requirements($typeid, $level, $missing_unique, $prereqs_per_type, $types_per_prereqs);
+		}
+
+		echo "</ul>\n";
 	}
 
 	print_formatted_attribute_category(
 		'mastery', 'Mastery',
-		"<span title='Effective skillset'>".$fit['skillset']['name']."</span>",
-		$skills_missing_by_moduleid ? 'overflow' : '',
+		"<span title='Effective skillset'>".escape($fit['skillset']['name'])."</span>",
+		($missingsp > 0) ? 'overflow' : '',
 		ob_get_clean()
 	);
 }
@@ -549,6 +643,9 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	$ehp = isset($opts['ehp']) ? $opts['ehp'] :
 		\Osmium\Fit\get_ehp_and_resists($fit);
 
+	$prereqs = isset($opts['prerequisites']) ? $opts['prerequisites'] :
+		\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
+
 	print_formatted_engineering($fit, $relative, $cap);
 	print_formatted_offense($fit, $relative, $ia, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_DPS);
 	print_formatted_defense($fit, $relative, $ehp, $cap, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_TANK);
@@ -556,7 +653,7 @@ function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = arra
 	print_formatted_outgoing($fit, $relative);
 	print_formatted_navigation($fit, $relative);
 	print_formatted_targeting($fit, $relative);
-	print_formatted_mastery($fit, $relative);
+	print_formatted_mastery($fit, $relative, $prereqs);
 	print_formatted_misc($fit);
 }
 
