@@ -63,7 +63,9 @@ osmium_gen_ship = function() {
 	h = $(document.createElement('h1'));
 	h.append(img);
 	h.append($(document.createElement('small')).addClass('groupname').text(groupname));
-	h.append($(document.createElement('strong')).text(shipname).prop('title', shipname));
+	h.append($(document.createElement('strong')).append(
+		$(document.createElement('span')).addClass('name').text(shipname)
+	).prop('title', shipname));
 
 	section.children('h1').remove();
 	section.append(h);

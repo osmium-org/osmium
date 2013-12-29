@@ -37,11 +37,12 @@ osmium_gen_implants = function() {
 			img.prop('src', '//image.eveonline.com/Type/' + t + '_64.png');
 			img.prop('alt', '');
 
-			li.text(imp[1]);
+			li.append($(document.createElement('span')).addClass('name').text(imp[1]));
 			li.prop('title', imp[1]);
 			li.prepend(img);
 			span.text(', implant slot ' + imp[3]).addClass('slot');
 			li.append(span);
+			li.data('typeid', t);
 
 			osmium_ctxmenu_bind(li, (function(li, t) {
 				return function() {

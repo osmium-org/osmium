@@ -564,6 +564,8 @@ span#clfspinner.spinner {
 	z-index: 1000;
 }
 
-img.missingskill {
-	background-color: rgba($missing-skill-bg-color, 0.5);
+section#modules, section#drones, section#ship, section#implants {
+	& span.name.missingskill {
+		color: $missing-skill-text-color;
+	}
 }

@@ -91,19 +91,6 @@ foreach($capacitors as &$c) {
 
 $ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
 
-$missing_by_moduleid = \osmium\Fit\get_missing_prereqs_for_fit($local);
-$fancy_skills_missing_by_moduleid = array();
-foreach ($missing_by_moduleid as $moduleid => $missing) {
-	$fancy_missing = array();
-	foreach ($missing as $skillid => $level) {
-		$fancy_missing[] = array(
-			'skill' => \Osmium\Chrome\escape(\Osmium\Fit\get_typename($skillid)),
-			'level' => \Osmium\Chrome\format_skill_level($level),
-		);
-	}
-	$fancy_skills_missing_by_moduleid[$moduleid] = $fancy_missing;
-}
-
 $payload = array(
 	'clftoken' => $token,
 	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribopts),
@@ -117,7 +104,7 @@ $payload = array(
 		'maxactivedrones' => \Osmium\Dogma\get_char_attribute($local, 'maxActiveDrones'),
 	),
 	'capacitors' => $capacitors,
-	'missingprereqs' => array(),
+	'missingprereqs' => \Osmium\Fit\get_missing_prereqs_for_fit($local),
 );
 
 foreach($local['modules'] as $slottype => $sub) {
@@ -132,12 +119,6 @@ foreach($local['modules'] as $slottype => $sub) {
 					$slottype, $index, $ncycles
 				);
 			}
-		}
-
-		if (!empty($fancy_skills_missing_by_moduleid[$m['typeid']])) {
-			$payload['missingprereqs'][] = array(
-				$slottype, $index, $fancy_skills_missing_by_moduleid[$m['typeid']]
-			);
 		}
 	}
 }

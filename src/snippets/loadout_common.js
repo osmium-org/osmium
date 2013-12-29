@@ -297,16 +297,21 @@ osmium_send_clf = function(opts) {
 				}).children('span.charge').addClass('hasncycles').append(s);
 			}
 
-			$("img.missingskill").removeClass('missingskill').removeProp('title');
-			for(var i = 0; i < payload.missingprereqs.length; ++i) {
-				var li = $("section#modules div.slots." + payload.missingprereqs[i][0] + " li").filter(function() {
-					return $(this).data('index') == payload.missingprereqs[i][1];
-				});
+			$(".missingskill").removeClass('missingskill');
+			$("section#modules div.slots > ul > li, section#drones div.drones > ul > li, section#implants div.implants > ul > li").each(function() {
+				var li = $(this);
 
-				li.children('img:first-child')
-					.addClass('missingskill')
-					.prop('title', 'Some skill prerequisites are not met')
-				;
+				if(li.data('typeid') in payload.missingprereqs) {
+					li.children('span.name').addClass('missingskill');
+				}
+
+				if(li.hasClass('hascharge') && li.data('chargetypeid') in payload.missingprereqs) {
+					li.children('span.charge').children('span.name').addClass('missingskill');
+				}
+			});
+			if("ship" in osmium_clf && "typeid" in osmium_clf.ship
+			   && osmium_clf.ship.typeid in payload.missingprereqs) {
+				$("section#ship h1 > strong > span.name").addClass('missingskill');
 			}
 
 			$("section#drones small.bayusage").text(
