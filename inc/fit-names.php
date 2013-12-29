@@ -27,7 +27,9 @@ const EFFECT_TargetArmorRepair = 592;
 const EFFECT_TargetAttack = 10;
 const EFFECT_UseMissiles = 101;
 
+const ATT_Boosterness = 1087;
 const ATT_HiSlots = 14;
+const ATT_Implantness = 331;
 const ATT_LauncherSlotsLeft = 101;
 const ATT_LowSlots = 12;
 const ATT_MedSlots = 13;
@@ -186,4 +188,29 @@ function get_required_skills($typeid) {
 
 	\Osmium\State\put_cache_memory($key, $vals, 86400);
 	return $vals;
+}
+
+function get_implant_slot($typeid) {
+	$typeid = (int)$typeid;
+	$key = 'NameCache_implantness_'.$typeid;
+	$cache = \Osmium\State\get_cache_memory($key);
+
+	if($cache !== null) {
+		return $cache;
+	}
+
+	/* XXX */
+	dogma_init_context($ctx);
+	dogma_set_ship($ctx, $typeid);
+
+	if(get_groupid($typeid) == GROUP_Booster) {
+		dogma_get_ship_attribute($ctx, ATT_Boosterness, $slot);
+	} else {
+		dogma_get_ship_attribute($ctx, ATT_Implantness, $slot);
+	}
+
+	dogma_free_context($ctx);
+
+	\Osmium\State\put_cache_memory($key, $slot, 86400);
+	return $slot;
 }

@@ -34,7 +34,7 @@ if(!get_ini_setting('tolerate_errors')) {
 
 		/* Don't die just yet, log the original error */
 		restore_error_handler();
-		$bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+		$bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 50);
 		$sbt = '';
 		foreach($bt as $c) {
 			$sbt .= '\\'.$c['function'].'() called from '.$c['file'].':'.$c['line']."\n";

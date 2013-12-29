@@ -769,18 +769,11 @@ function add_implant(&$fit, $typeid) {
 	$fit['implants'][$typeid] = array(
 		'typeid' => (int)$typeid,
 		'typename' => get_typename($typeid),
+		'slot' => get_implant_slot($typeid),
 	);
 
 	if(\Osmium\Dogma\has_context($fit)) {
 		dogma_add_implant($fit['__dogma_context'], (int)$typeid, $fit['implants'][$typeid]['dogma_index']);
-	}
-
-	if(get_groupid($typeid) == GROUP_Booster) {
-		$fit['implants'][$typeid]['slot'] = 
-			\Osmium\Dogma\get_implant_attribute($fit, $typeid, 'boosterness');
-	} else {
-		$fit['implants'][$typeid]['slot'] = 
-			\Osmium\Dogma\get_implant_attribute($fit, $typeid, 'implantness');
 	}
 }
 
@@ -981,7 +974,7 @@ function &get_remote(&$fit, $key) {
 	if($key === 'local') return $fit;
 
 	if(!isset($fit['remote'][$key])) {
-		trigger_error('Fitting has no such remote', E_USER_WARNING);
+		trigger_error('Fitting has no such remote ('.var_export($key, true).')', E_USER_WARNING);
 
 		/* This isn't pretty. One downside of returning a
 		 * reference. */
