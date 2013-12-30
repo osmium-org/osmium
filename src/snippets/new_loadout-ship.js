@@ -63,7 +63,9 @@ osmium_gen_ship = function() {
 	h = $(document.createElement('h1'));
 	h.append(img);
 	h.append($(document.createElement('small')).addClass('groupname').text(groupname));
-	h.append($(document.createElement('strong')).text(shipname).prop('title', shipname));
+	h.append($(document.createElement('strong')).append(
+		$(document.createElement('span')).addClass('name').text(shipname)
+	).prop('title', shipname));
 
 	section.children('h1').remove();
 	section.append(h);
@@ -82,24 +84,6 @@ osmium_init_ship = function() {
 		}, { icon: [ 1, 13, 64, 64 ] });
 
 		osmium_ctxmenu_add_separator(menu);
-
-		osmium_ctxmenu_add_subctxmenu(menu, "Use skills", function() {
-			var smenu = osmium_ctxmenu_create();
-
-			for(var i = 0; i < osmium_skillsets.length; ++i) {
-				osmium_ctxmenu_add_option(smenu, osmium_skillsets[i], (function(sname) {
-					return function() {
-						osmium_clf.metadata['X-Osmium-skillset'] = sname;
-						osmium_undo_push();
-						osmium_commit_clf();
-					};
-				})(osmium_skillsets[i]), {
-					toggled: osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i]
-				});
-			}
-
-			return smenu;
-		}, { icon: "//image.eveonline.com/Type/3327_64.png" });
 
 		osmium_ctxmenu_add_subctxmenu(menu, "Reload times", function() {
 			var smenu = osmium_ctxmenu_create();

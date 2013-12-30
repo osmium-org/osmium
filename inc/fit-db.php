@@ -1,6 +1,7 @@
 <?php
 /* Osmium
  * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -1239,4 +1240,76 @@ function get_available_skillset_names_for_account() {
 	}
 
 	return $names;
+}
+
+/**
+ * Takes in an array of item/module type IDs; fills the $result array with entries like:
+ *     input_type_id => array(
+ *         skill_type_id => required_level,
+ *         ...
+ *     )
+ */
+function get_skill_prerequisites_for_types(array $types, array &$result) {
+	foreach ($types as $typeid) {
+		if(!isset($result[$typeid])) {
+			$result[$typeid] = [];
+		}
+
+		foreach(get_required_skills($typeid) as $stid => $slevel) {
+			if(!isset($result[$stid])) {
+				get_skill_prerequisites_for_types([ $stid ], $result);
+			}
+
+			$result[$typeid][$stid] = $slevel;
+		}
+	}
+}
+
+function get_skill_prerequisites_and_missing_prerequisites($fit) {
+	$types = array();
+
+	if (!empty($fit['ship'])) {
+		$types[$fit['ship']['typeid']] = true;
+	}
+
+	foreach ($fit['modules'] as $type => $by_index) {
+		foreach ($by_index as $idx => $module) {
+			$types[$module['typeid']] = true;
+
+			if(isset($fit['charges'][$type][$idx]['typeid'])) {
+				$types[$fit['charges'][$type][$idx]['typeid']] = true;
+			}
+		}
+	}
+
+	foreach($fit['drones'] as $typeid => $drone) {
+		if($drone['quantityinspace'] + $drone['quantityinbay'] > 0) {
+			$types[$typeid] = true;
+		}
+	}
+
+	foreach($fit['implants'] as $typeid => $i) {
+		$types[$typeid] = true;
+	}
+
+	$types = array_keys($types);
+	$prereqs = $missing = array();
+
+	get_skill_prerequisites_for_types($types, $prereqs);
+
+	foreach($types as $tid) {
+		if(!isset($prereqs[$tid])) continue;
+
+		foreach($prereqs[$tid] as $stid => $level) {
+			$current = isset($fit['skillset']['override'][$stid])
+				? $fit['skillset']['override'][$stid] : $fit['skillset']['default'];
+
+			if($current < $level) {
+				$missing[$tid] = 1;
+				break;
+			}
+		}
+	}
+
+	return [ $prereqs, $missing ];
 }

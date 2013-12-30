@@ -26,7 +26,7 @@ if(!get_ini_setting('tolerate_errors')) {
 	ob_start();
 	error_reporting(-1);
 	set_error_handler(function($errno, $errstr, $errfile, $errline) {
-		ob_end_clean();
+		while(ob_end_clean()) { /* Erase ALL levels of output buffering. */ }
 		ob_start();
 		$errfile = explode('/', $errfile);
 		$errfile = array_pop($errfile);
@@ -34,7 +34,7 @@ if(!get_ini_setting('tolerate_errors')) {
 
 		/* Don't die just yet, log the original error */
 		restore_error_handler();
-		$bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+		$bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 50);
 		$sbt = '';
 		foreach($bt as $c) {
 			$sbt .= '\\'.$c['function'].'() called from '.$c['file'].':'.$c['line']."\n";

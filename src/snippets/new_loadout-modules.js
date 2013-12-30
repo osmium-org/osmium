@@ -216,7 +216,7 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 	li.data('slottype', m[3]);
 	li.data('index', index);
 	li.data('state', state);
-	li.text(m[1]);
+	li.append($(document.createElement('span')).addClass('name').text(m[1]));
 	li.prop('title', m[1]);
 
 	img = $(document.createElement('img'));

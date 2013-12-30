@@ -206,7 +206,7 @@ echo "<div id='vlattribs'>
 if(isset($fit['ship']['typeid'])) {
 	echo "<img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />\n";
 	echo "<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>\n";
-	echo "<strong>".\Osmium\Chrome\escape($fit['ship']['typename'])."</strong>\n";
+	echo "<strong><span class='name'>".\Osmium\Chrome\escape($fit['ship']['typename'])."</span></strong>\n";
 } else {
 	echo "<div class='notype'></div>\n";
 	echo "<small class='groupname'></small>\n";
@@ -378,7 +378,7 @@ foreach($stypes as $type => $tdata) {
 			.$type."' data-index='".$index."' data-state='".$s[2]."' data-chargetypeid='"
 			.($c === null ? 'null' : $c['typeid'])."'>\n";
 		echo "<img src='//image.eveonline.com/Type/".$m['typeid']."_64.png' alt='' />";
-		echo \Osmium\Chrome\escape($m['typename'])."\n";
+		echo "<span class='name'>".\Osmium\Chrome\escape($m['typename'])."</span>\n";
 
 		if($c !== null) {
 			dogma_get_number_of_module_cycles_before_reload(
@@ -482,7 +482,7 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 
 		echo "<li{$class} data-typeid='".$typeid."' data-location='".$k."' data-quantity='".$qty."'>";
 		echo "<img src='//image.eveonline.com/Type/".$typeid."_64.png' alt='' />";
-		echo "<strong class='qty'>".$qty."×</strong>".$d['typename'];
+		echo "<strong class='qty'>".$qty."×</strong><span class='name'>".$d['typename']."</span>";
 		echo $attribs;
 		echo "</li>\n";
 	}
@@ -521,7 +521,7 @@ foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) 
 
 	foreach($imps as $i) {
 		echo "<li><img src='//image.eveonline.com/Type/".$i['typeid']."_64.png' alt='' />"
-			.\Osmium\Chrome\escape($i['typename'])
+			."<span class='name'>".\Osmium\Chrome\escape($i['typename'])."</span>"
 			.'<span class="slot">, '.substr($k, 0, -1).' slot '.$i['slot'].'</span>'
 			."</li>\n";
 	}
