@@ -13,6 +13,10 @@
 * Privilege: re-tag any public loadout if you have more than 100
   reputation points.
 
+* New Mastery section in the loadout side bar, shows the missing
+  skills and an estimated training time to be able to fly the
+  lodaout. Thanks jboning.
+
 # Version 0.10
 
 ## Version 0.10.1, released 2013-11-19

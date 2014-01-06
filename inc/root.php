@@ -53,10 +53,10 @@ if(!get_ini_setting('tolerate_errors')) {
 const STATICVER = 14;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 19;
+const CSS_STATICVER = 20;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 22;
+const JS_STATICVER = 23;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 27;
