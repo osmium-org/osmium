@@ -355,7 +355,7 @@ function print_formatted_navigation(&$fit, $relative) {
 	$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
 	$agility = \Osmium\Dogma\get_ship_attribute($fit, 'agility');
 	$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass') * $agility / 1000000;
-	$warpspeed = \Osmium\Dogma\get_ship_attribute($fit, 'warpSpeedMultiplier') * 3.0;
+	$warpspeed = \Osmium\Dogma\get_ship_attribute($fit, 'warpSpeedMultiplier') * \Osmium\Dogma\get_ship_attribute($fit, 'baseWarpSpeed');
 	$warpstrength = -\Osmium\Dogma\get_ship_attribute($fit, 'warpScrambleStatus');
 	$fpoints = 'point'.(abs($warpstrength) == 1 ? '' : 's');
 
