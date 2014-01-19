@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -506,6 +506,16 @@ function check_api_key($a, $initial = false, $timeout = null) {
 		allianceid = null, alliancename = null,
 		isfittingmanager = false, apiverified = false
 		WHERE accountid = $1', array($a['accountid']));
+
+		if(!$initial && $a['apiverified'] == 't') {
+			/* Notify the user his API key broke down without user intervention */
+			\Osmium\Notification\add_notification(
+				\Osmium\Notification\NOTIFICATION_TYPE_ACCOUNT_API_KEY_DISABLED,
+				null,
+				$a['accountid'],
+				$key_id
+			);
+		}
 
 		$a['characterid'] = null;
 		$a['charactername'] = null;
