@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -199,7 +199,10 @@ if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid'] > 0) {
 	$title = $basetitle = 'Creating a new loadout';
 }
 
-\Osmium\Chrome\print_header($basetitle, RELATIVE, false);
+\Osmium\Chrome\print_header(
+	$basetitle, RELATIVE, false,
+	"<link href='//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css' rel='stylesheet' type='text/css' />\n"
+);
 
 echo "<h1>".$title."</h1>\n";
 
@@ -474,6 +477,8 @@ echo "</section>\n</div>\n";
 \Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, $tok);
 
 \Osmium\Chrome\add_js_data('shortlist', json_encode(\Osmium\AjaxCommon\get_module_shortlist()));
+
+\Osmium\Chrome\include_js("//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js");
 
 \Osmium\Chrome\print_js_snippet('new_loadout');
 \Osmium\Chrome\print_js_snippet('new_loadout-control');

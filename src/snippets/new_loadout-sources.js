@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -147,6 +147,32 @@ osmium_init_sources = function() {
 
 	osmium_init_browser();
 	osmium_init_shortlist();
+
+	$("div#nlsources > section").on('osmium-update-overflow', function() {
+		var s = $(this);
+		var mh;
+
+		s.css(
+			'max-height',
+			(mh = ($(window).height() - $("div#nlsources").offset().top - 64)) + "px"
+		);
+
+		if(s[0].scrollHeight >= mh) {
+			if(s.children('div.ps-scrollbar-y-rail').length === 0) {
+				s.perfectScrollbar({
+					wheelSpeed: 40,
+					suppressScrollX: true
+				});
+			} else {
+				s.perfectScrollbar('update');
+			}
+		} else {
+			s.perfectScrollbar('destroy');
+		}
+	});
+
+	$(window).resize(function() { $("div#nlsources > section").trigger('osmium-update-overflow'); });
+	$("div#nlsources > section").trigger('osmium-update-overflow');
 };
 
 osmium_init_browser = function() {
@@ -230,6 +256,8 @@ osmium_init_browser = function() {
 		} else {
 			t.parent().removeClass('partiallyunfolded');
 		}
+
+		t.closest('section').trigger('osmium-update-overflow');
 	});
 };
 

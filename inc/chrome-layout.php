@@ -51,7 +51,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	if(\Osmium\HTTPS) {
 		header(
 			"Content-Security-Policy: default-src 'none'"
-			." ; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'"
+			." ; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com http://cdnjs.cloudflare.com 'unsafe-inline'"
 			." ; font-src https://themes.googleusercontent.com"
 			." ; img-src 'self' https://image.eveonline.com"
 			." ; script-src 'self' https://cdnjs.cloudflare.com"
@@ -67,7 +67,7 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	} else {
 		header(
 			"Content-Security-Policy: default-src 'none'"
-			." ; style-src 'self' https://fonts.googleapis.com http://fonts.googleapis.com 'unsafe-inline'"
+			." ; style-src 'self' https://fonts.googleapis.com http://fonts.googleapis.com https://cdnjs.cloudflare.com http://cdnjs.cloudflare.com 'unsafe-inline'"
 			." ; font-src https://themes.googleusercontent.com http://themes.googleusercontent.com"
 			." ; img-src 'self' https://image.eveonline.com http://image.eveonline.com"
 			." ; script-src 'self' https://cdnjs.cloudflare.com http://cdnjs.cloudflare.com"

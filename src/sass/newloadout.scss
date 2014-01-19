@@ -199,6 +199,11 @@ div#nlsources > section li.module {
 	@include module;
 }
 
+div#nlsources > section {
+	position: relative;
+	overflow: hidden;
+}
+
 div#nlattribs > section#control {
 	text-align: center;
 	margin: 1em;

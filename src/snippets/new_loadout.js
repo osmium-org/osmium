@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -33,11 +33,11 @@ $(function() {
 		osmium_commit_clf();
 
 		/* Everything done from now on is user initiated */
-		osmium_user_initiated_push(true);
+		 osmium_user_initiated_push(true);
 
-		osmium_undo_push();
-	});
-});
+		 osmium_undo_push();
+	 });
+ });
 
 osmium_loadout_readonly = false;
 osmium_clftype = 'new';

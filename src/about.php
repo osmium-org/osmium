@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -55,6 +55,8 @@ echo "</tr>\n</thead>\n<tbody>\n";
 echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js'>jquery.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js'>https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js</a></td></tr>\n";
 
 echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js'>jquery-ui.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery-ui/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js'>https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js</a></td></tr>\n";
+
+echo "<tr><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js'>perfect-scrollbar-with-mousewheel.min.js</a></td><td><a href='http://www.yuiazu.net/perfect-scrollbar/'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js'>https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js</a></td></tr>\n";
 
 echo "<tr><td><a href='./static/jquery.jsPlumb-1.5.4-min.js'>jquery.jsPlumb-1.5.4-min.js</a></td><td><a href='https://github.com/sporritt/jsPlumb/blob/1.5.4/jsPlumb-MIT-LICENSE.txt'>MIT</a></td><td><a href='https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js'>https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js</a></td></tr>\n";
 
