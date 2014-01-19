@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -347,9 +347,11 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 			$loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']
 		);
 
+		$sn = \Osmium\Chrome\escape($loadout['typename']);
+
 		echo "<li>\n<a href='$relative/".$uri."'>"
 			."<img class='abs' src='//image.eveonline.com/Render/"
-			.$loadout['hullid']."_256.png' alt='".$loadout['typename']."' /></a>\n";
+			.$loadout['hullid']."_256.png' title='".$sn."' alt='".$sn."' /></a>\n";
 
 		$dps = $loadout['dps'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['dps'], 2);
 		$ehp = $loadout['ehp'] === null ? 'N/A' : \Osmium\Chrome\format($loadout['ehp'], 2, 'k');
