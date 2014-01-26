@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -70,6 +70,8 @@ osmium_gen_implants = function() {
 						}, { 'default': true });
 
 						osmium_ctxmenu_add_separator(menu);
+
+						osmium_add_generic_browse_mg(menu, t);
 					}
 
 					osmium_ctxmenu_add_option(menu, "Show implant info", function() {

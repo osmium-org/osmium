@@ -372,6 +372,39 @@ osmium_add_generic_showinfo = function(menu, typeid) {
 	}, { icon: osmium_showinfo_sprite_position });
 };
 
+osmium_add_generic_browse_mg = function(menu, typeid, opts) {
+	if(opts === undefined) opts = {};
+
+	var title = ("title" in opts) ? opts.title : "Browse market group";
+
+	osmium_ctxmenu_add_option(menu, title, function() {
+		var mgroot = $("div#nlsources > section#browse div.mgroot");
+		var groupid = osmium_types[typeid][9];
+		var stack = [];
+		var lasth4;
+
+		while(groupid !== undefined) {
+			stack.push(groupid);
+			groupid = osmium_groups[groupid].parent;
+		}
+
+		mgroot.find('ul.children > li').not('.folded').children('h4').click();
+
+		while((groupid = stack.pop()) !== undefined) {
+			lasth4 = mgroot.find('ul.children > li').filter(function() {
+				return $(this).data('mgid') === groupid;
+			}).children('h4').click();
+		}
+
+		$("div#nlsources ul.tabs > li > a[href='#browse']").click();
+		mgroot.parent()
+			.scrollTop(0)
+			.scrollTop(lasth4.offset().top - mgroot.parent().offset().top)
+			.trigger('osmium-update-overflow')
+		;
+	}, { icon: [ 0, 11, 64, 64 ] });
+};
+
 osmium_add_non_shortlist_contextmenu = function(li) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
@@ -392,6 +425,7 @@ osmium_add_non_shortlist_contextmenu = function(li) {
 			osmium_commit_shortlist();
 		}, {});
 		osmium_ctxmenu_add_separator(menu);
+		osmium_add_generic_browse_mg(menu, li.data('typeid'));
 		osmium_add_generic_showinfo(menu, li.data('typeid'));
 
 		return menu;
@@ -408,6 +442,7 @@ osmium_add_shortlist_contextmenu = function(li) {
 			osmium_commit_shortlist();
 		}, {});
 		osmium_ctxmenu_add_separator(menu);
+		osmium_add_generic_browse_mg(menu, li.data('typeid'));
 		osmium_add_generic_showinfo(menu, li.data('typeid'));
 
 		return menu;

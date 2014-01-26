@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +22,7 @@ if(!defined('Osmium\ROOT')) {
 	require __DIR__.'/dispatchroot.php';
 }
 
-if(!get_ini_setting('tolerate_errors')) {
+if(!get_ini_setting('tolerate_errors') && PHP_SAPI !== "cli") {
 	ob_start();
 	error_reporting(-1);
 	set_error_handler(function($errno, $errstr, $errfile, $errline) {
@@ -67,7 +67,7 @@ const CSS_STATICVER = 20;
 const JS_STATICVER = 23;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 27;
+const CLIENT_DATA_STATICVER = 28;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

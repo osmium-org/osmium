@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -270,15 +270,17 @@ osmium_init_ship = function() {
 			form.trigger('submit');
 		}, {});
 
-		osmium_ctxmenu_add_separator(menu);
+		if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
+			osmium_ctxmenu_add_separator(menu);
 
-		osmium_ctxmenu_add_option(menu, "Show ship info", function() {
-			if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
-				osmium_showinfo({ type: "ship" });
-			} else {
-				alert("No ship is selected. Please select one first (by searching for it or by using the browser).");
+			if(!osmium_loadout_readonly) {
+				osmium_add_generic_browse_mg(menu, osmium_clf.ship.typeid);
 			}
-		}, { icon: osmium_showinfo_sprite_position, 'default': true });
+
+			osmium_ctxmenu_add_option(menu, "Show ship info", function() {
+				osmium_showinfo({ type: "ship" });
+			}, { icon: osmium_showinfo_sprite_position, 'default': true });
+		}
 
 		return menu;
 	});

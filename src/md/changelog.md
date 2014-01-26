@@ -17,6 +17,8 @@
   skills and an estimated training time to be able to fly the
   lodaout. Thanks jboning.
 
+* New "browse to market group" context menu action.
+
 # Version 0.10
 
 ## Version 0.10.1, released 2013-11-19
