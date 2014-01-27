@@ -40,7 +40,7 @@ if($f === false) {
 	\Osmium\fatal(404);
 }
 
-$etag = '"'.\Osmium\STATICVER.'-'.filemtime($fname).'-'.filesize($fname).'"';
+$etag = '"'.\Osmium\STATICVER.'-'.($mtime = filemtime($fname)).'-'.filesize($fname).'"';
 
 header_remove('Pragma');
 header_remove('Expires');
@@ -53,5 +53,12 @@ if(isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] === $
 }
 
 header('Content-Type: '.$_GET['type']);
+
+if(isset($_GET['mexpire'])) {
+	$cutoff = $mtime + (int)$_GET['mexpire'];
+	header('Expires: '.date(DATE_RFC1123, $cutoff));
+}
+
 header('ETag: '.$etag);
+
 fpassthru($f);
