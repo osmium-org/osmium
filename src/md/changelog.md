@@ -1,4 +1,6 @@
-# staging
+# Version 0.11
+
+## Version 0.11.0, released 2014-01-28
 
 * Account password can now be changed in the settings page
   (finally…). Settings page now has tabbed sections for easier

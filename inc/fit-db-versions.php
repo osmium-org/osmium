@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +23,12 @@ namespace Osmium\Fit;
  * database has major updates. */
 function get_eve_db_versions() {
 	return array(
+		708191 => array(
+			'tag' => 'rubicon-11',
+			'name' => 'Rubicon 1.1',
+			'build' => 708191,
+			'reldate' => gmmktime(0, 0, 0, 1, 28, 2014),
+		),
 		653401 => array(
 			'tag' => 'rubicon-10',
 			'name' => 'Rubicon 1.0',

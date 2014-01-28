@@ -58,16 +58,16 @@ if(!get_ini_setting('tolerate_errors') && PHP_SAPI !== "cli") {
 }
 
 /** Bump this when static files (icons, etc.) are updated */
-const STATICVER = 14;
+const STATICVER = 15;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 20;
+const CSS_STATICVER = 21;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 24;
+const JS_STATICVER = 25;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 28;
+const CLIENT_DATA_STATICVER = 29;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
