@@ -9,6 +9,7 @@ require __DIR__.'/../inc/cron.php';
 \Osmium\Cron\run(
 	'cron.hourly',
 	function() {
+		passthru('./bin/clear_stale_sysvsems');
 		passthru('./bin/update_lscores');
 		passthru('./bin/prune_cache');
 		passthru('./bin/fetch_zkillboard_json');

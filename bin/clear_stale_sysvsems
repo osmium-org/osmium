@@ -1,0 +1,68 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\ClearStaleSysVSemaphores;
+
+/* Semaphores are considered stale after 10 minutes of inactivity */
+const SEM_STALENESS = 600;
+
+if(!function_exists('sem_acquire')) {
+	/* Not using SysV semaphores */
+	/* File-based semaphores are automatically cleaned as they are
+	 * considered like cache files wrt expiration. */
+	die();
+}
+
+require __DIR__.'/../inc/root.php';
+
+$sems = explode("\n", shell_exec(
+	'ipcs -s | grep $( id -un )'
+));
+
+array_pop($sems);
+
+$cutoff = time() - SEM_STALENESS;
+
+foreach($sems as $s) {
+	list($key, $id, ) = explode(" ", $s, 3);
+	$key = hexdec(substr($key, 2));
+
+	if($key >> (32 - \Osmium\State\SEM_PREFIX_LENGTH) !== \Osmium\State\SEM_PREFIX) {
+		/* Semaphore doesn't have an Osmium prefix, don't mess with
+		 * it */
+		echo "~";
+		continue;
+	}
+
+	$info = shell_exec('ipcs -s -i '.(int)$id.' | grep otime');
+	$info = substr($info, strlen("otime = "), -1);
+
+	if(strpos($info, "no-entry")) {
+		fprintf(STDERR, "N");
+		continue; /* ? */
+	}
+
+	$otime = strtotime($info);
+	if($otime < $cutoff) {
+		shell_exec('ipcrm sem '.(int)$id);
+		echo ".";
+	}
+}
+
+echo "\n";
