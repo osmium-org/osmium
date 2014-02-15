@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -41,43 +41,10 @@ function get_attributes($typeid, $getval_callback) {
 	$attributes = array();
 
 	$aq = \Osmium\Db\query_params(
-		"SELECT dgmtypeattribs.attributeid, attributename, dgmattribs.displayname, value, dgmattribs.unitid,
-		dgmunits.displayname AS udisplayname, categoryid
-		FROM eve.dgmtypeattribs
-		JOIN eve.dgmattribs ON dgmtypeattribs.attributeid = dgmattribs.attributeid
-		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
-		WHERE typeid = $1 AND published = true AND dgmattribs.displayname <> ''
-
-		UNION
-
-		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname,
-		invtypes.volume as value, dgmattribs.unitid,
-		dgmunits.displayname AS udisplayname, categoryid
-		FROM eve.invtypes
-		JOIN eve.dgmattribs ON dgmattribs.attributeid = 161
-		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
-		WHERE typeid = $1
-
-		UNION
-
-		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname,
-		invtypes.capacity as value, dgmattribs.unitid,
-		dgmunits.displayname AS udisplayname, categoryid
-		FROM eve.invtypes
-		JOIN eve.dgmattribs ON dgmattribs.attributeid = 38
-		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
-		WHERE typeid = $1
-
-		UNION
-
-		SELECT dgmattribs.attributeid, attributename, dgmattribs.displayname,
-		invtypes.mass as value, dgmattribs.unitid,
-		dgmunits.displayname AS udisplayname, categoryid
-		FROM eve.invtypes
-		JOIN eve.dgmattribs ON dgmattribs.attributeid = 4
-		LEFT JOIN eve.dgmunits ON dgmattribs.unitid = dgmunits.unitid
-		WHERE typeid = $1
-
+		"SELECT attributeid, attributename, displayname, value,
+		unitid, udisplayname, categoryid, published
+		FROM osmium.siattributes
+		WHERE typeid = $1 AND displayname <> '' AND published = true
 		ORDER BY categoryid ASC, attributeid ASC",
 		array($typeid)
 	);
@@ -174,9 +141,10 @@ else {
 
 
 
+$relative = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
 $fresult = array(
 	'header' => "<img src='//image.eveonline.com/Type/".$typeid."_64.png' alt='' /> "
-	.\Osmium\Chrome\escape($typename),
+	."<a href='{$relative}/db/type/{$typeid}'>".\Osmium\Chrome\escape($typename)."</a>",
 );
 
 if(!isset($affectors)) {
@@ -346,19 +314,10 @@ $fresult['attributes'] .= "</tbody>\n</table>\n";
 $variations = array();
 $fvariations = array();
 $variationsq = \Osmium\Db\query_params(
-	'SELECT t.typeid, metagroupid, mg.value::integer as metalevel
-	FROM (
-	SELECT typeid FROM eve.invmetatypes WHERE parenttypeid IN ($1,
-	( SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1 )
-	)
-	UNION
-	SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1
-	UNION
-	SELECT $1
-	) t
-	LEFT JOIN eve.invmetatypes ON invmetatypes.typeid = t.typeid
-	LEFT JOIN eve.dgmtypeattribs mg ON mg.attributeid = 633 AND mg.typeid = t.typeid
-	ORDER BY metalevel DESC, t.typeid ASC',
+	'SELECT vartypeid AS typeid, varmgid AS metagroupid, varml AS metalevel
+	FROM osmium.invtypevariations
+	WHERE typeid = $1
+	ORDER BY metalevel DESC, typeid ASC',
 	array($typeid)
 );
 while($r = \Osmium\Db\fetch_assoc($variationsq)) {
@@ -389,7 +348,7 @@ $desc = \Osmium\Chrome\trim($desc);
 if($desc === '') {
 	$desc = '<p class="placeholder">This type has no description.</p>';
 } else {
-	$desc = \Osmium\Chrome\sanitize_html_trust(\Osmium\Chrome\format_md(nl2br($desc)));
+	$desc = \Osmium\Chrome\format_type_description($desc);
 }
 
 $suffix = number_format(microtime(true), 6, '', '');

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -574,6 +574,34 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
+function format_type_description($desc) {
+	static $rel = null;
+
+	if($rel === null) {
+		$rel = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+	}
+
+	$desc = preg_replace_callback(
+		'%<a href=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>%',
+		function($match) use($rel) {
+			return "<a href='{$rel}/db/type/{$match['typeid']}'>";
+		},
+		$desc
+	);
+
+	/* XXX: this is ultimately flawed, as it will break on nested
+	 * <url>s (hopefully this NEVER appears in type descriptions… */
+	$desc = preg_replace_callback(
+		'%<url=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>(?<content>.*?)</url>%sU',
+		function($match) use($rel) {
+			return "<a href='{$rel}/db/type/{$match['typeid']}'>".$match['content']."</a>";
+		},
+		$desc
+	);
+
+	return sanitize_html(format_md(nl2br($desc, true)));
+}
+
 function format_isk($isk, $withunit = true) {
 	if($isk >= 10000000000) {
 		$isk = round($isk / 1000000000, 2).'b';
@@ -600,7 +628,11 @@ function truncate_string($s, $length, $fill = '…') {
 	return $s;
 }
 
-function format_number_with_unit($number, $unitid, $unitdisplayname) {
+function format_number_with_unit($number, $unitid, $unitdisplayname, $relative = null) {
+	if($relative === null) {
+		$relative = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+	}
+
 	switch((int)$unitid) {
 
 	case 1: /* Meters */
@@ -664,7 +696,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 			if($row[1] !== null) {
 				$image = "<img src='//image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
 			}
-			return $image.escape($row[0]);
+			return $image."<a href='{$relative}/db/group/{$row[1]}'>".escape($row[0])."</a>";
 		}
 		$unitdisplayname = 'Group ID';
 		break;
@@ -673,7 +705,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		$typename = \Osmium\Fit\get_typename($number);
 		if($typename !== false) {
 			return "<img src='//image.eveonline.com/Type/".$number."_64.png' alt='' /> "
-				.escape($typename);
+				."<a href='{$relative}/db/type/{$number}'>".escape($typename)."</a>";
 		}
 		$unitdisplayname = 'Type ID';
 		break;
@@ -683,6 +715,10 @@ function format_number_with_unit($number, $unitid, $unitdisplayname) {
 		if($number == 2) return 'Medium';
 		if($number == 3) return 'Large';
 		if($number == 4) return 'XLarge';
+		break;
+
+	case 119: /* Attribute ID */
+		return "<a href='{$relative}/db/attribute/{$number}'>".\Osmium\Fit\get_attributedisplayname($number)."</a>";
 		break;
 
 	case 137: /* Boolean */

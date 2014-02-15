@@ -61,6 +61,17 @@ function debug() {
 	fclose($f);
 }
 
+function ticktock() {
+	static $prev = null;
+	$new = microtime(true);
+
+	if($prev !== null) {
+		debug(func_get_args(), $new - $prev);
+	}
+
+	$prev = $new;
+}
+
 function get_ini_setting($key) {
 	static $cnf = null;
 	if($cnf === null) {

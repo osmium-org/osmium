@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -68,6 +68,16 @@ $osmium_dispatch_rules = array(
 
 	'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
 	'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
+
+
+
+	/* DB browser pages */
+	'%^/db/type/(?<typeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/type.php',
+	'%^/db/group/(?<groupid>[1-9][0-9]*)$%D' => '/src/dbbrowser/group.php',
+	'%^/db/category/(?<categoryid>[1-9][0-9]*)$%D' => '/src/dbbrowser/category.php',
+	'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
+	'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
+	'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
 
 
 
