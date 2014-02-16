@@ -78,7 +78,7 @@ $osmium_dispatch_rules = array(
 	'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
 	'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
 	'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/effect.php',
-
+	'%^/db/comparetypes/(?<typeids>([1-9][0-9]*,?)+)$%D' => '/src/dbbrowser/comparetypes.php',
 
 
 	/* API calls */

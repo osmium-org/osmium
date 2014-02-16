@@ -153,6 +153,10 @@ div#dbb {
 		}
 	}
 
+	&> section#v > p.compare {
+		text-align: center;
+	}
+
 	&> header.typelist {
 		&> ul {
 			display: table;
@@ -288,5 +292,62 @@ div#dbb {
 		font-size: 1.5em;
 		margin-left: 1em;
 		border-bottom: 1px solid $subsection-border-color;
+	}
+
+	&.compare {
+		max-width: none;
+		padding: 0 5em;
+
+		&> section.compare {
+			overflow: hidden;
+			position: relative;
+			padding-bottom: 0.75em;
+		}
+	}
+
+	&> section.compare > table {
+		table-layout: fixed;
+
+		&> thead, &> tfoot {
+			background: rgba($subsection-bg-color, .5) !important;
+		}
+
+		&> thead > tr {
+			&> td {
+				opacity: 0.5;
+				padding: 1em 0;
+
+				width: 20em;
+				text-align: center;
+				font-weight: bold;
+				color: $aside-text-color;
+
+				&> img {
+					height: 2.5em;
+				}
+
+				& + td { width: 3em; }
+			}
+
+			&> th {
+				width: 5em;
+				overflow: hidden;
+			}
+		}
+
+		&> tbody > tr > th {
+			text-align: right;
+			@include ellipsis;
+
+			&> img {
+				height: 2.5em;
+				border-radius: .5em;
+			}
+		}
+
+		&> tbody > tr > td {
+			height: 2.5em;
+			text-align: center;
+		}
 	}
 }

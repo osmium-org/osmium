@@ -22,12 +22,16 @@ table.d {
 				border: none;
 			}
 
-			&:nth-child(2n) > td {
-				background-color: $table-row-even-bg-color;
+			&:nth-child(2n) {
+				&> td, &> th {
+					background-color: $table-row-even-bg-color;
+				}
 			}
-
-			&:nth-child(2n+1) > td {
-				background-color: $table-row-odd-bg-color;
+				
+			&:nth-child(2n+1) {
+				&> td, &> th {
+					background-color: $table-row-odd-bg-color;
+				}
 			}
 		}
 	}

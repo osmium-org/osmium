@@ -47,7 +47,7 @@ $type = \Osmium\Db\fetch_assoc(
 if($type === false) \Osmium\fatal(404);
 
 \Osmium\Chrome\print_header(
-	strip_tags($type['typename']).' / Type '.$type['typeid'],
+	\Osmium\Chrome\escape(strip_tags($type['typename'])).' / Type '.$type['typeid'],
 	RELATIVE
 );
 echo "<div id='dbb'>\n";
@@ -305,7 +305,10 @@ if($nvariations > 1) {
 
 	echo "<section id='v'>\n<table class='d'>\n<tbody>\n";
 
+	$vartypeids = [];
 	foreach($fvariations as $v) {
+		$vartypeids[] = $v[0];
+
 		echo "<tr>\n";
 		echo "<td>".\Osmium\Chrome\escape($v[3])."</td>\n";
 		echo "<td><img src='//image.eveonline.com/Type/{$v[0]}_64.png' alt='' /> ";
@@ -314,7 +317,12 @@ if($nvariations > 1) {
 		echo "</tr>\n";
 	}
 
-	echo "</tbody>\n</table>\n</section>\n";
+	echo "</tbody>\n</table>\n";
+
+	echo "<p class='compare'><a href='".RELATIVE."/db/comparetypes/"
+		.implode(',', $vartypeids)."' rel='nofollow'>Compare these types</a></p>\n";
+
+	echo "</section>\n";
 }
 
 $sections = ob_get_clean();

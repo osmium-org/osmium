@@ -37,7 +37,7 @@ $g = \Osmium\Db\fetch_assoc(
 if($g === false) \Osmium\fatal(404);
 
 \Osmium\Chrome\print_header(
-	strip_tags($g['groupname']).' / Group '.$g['groupid'],
+	\Osmium\Chrome\escape(strip_tags($g['groupname'])).' / Group '.$g['groupid'],
 	RELATIVE
 );
 echo "<div id='dbb'>\n";

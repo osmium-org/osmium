@@ -16,9 +16,19 @@
  */
 
 $(function() {
-	osmium_tabify($("div#dbb > ul.tabs"), 0);
-	var btabs = $("section#b > ul.tabs");
-	if(btabs.length > 0) {
-		osmium_tabify(btabs, 0);
+	var tabs = $("ul.tabs");
+	if(tabs.length > 0) {
+		for(var i = 0; i < tabs.length; ++i) {
+			osmium_tabify($(tabs[i]), 0);
+		}
+	}
+
+	var csec = $("div#dbb.compare > section.compare");
+	if(csec.length > 0) {
+		csec.perfectScrollbar({
+			suppressScrollY: true,
+			wheelPropagation: true, /* <- Doesn't work as advertised? */
+		});
+		csec.off('mousewheel'); /* XXX: Hackish */
 	}
 });

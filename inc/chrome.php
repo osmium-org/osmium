@@ -724,7 +724,9 @@ function format_number_with_unit($number, $unitid, $unitdisplayname, $relative =
 		break;
 
 	case 119: /* Attribute ID */
-		return "<a href='{$relative}/db/attribute/{$number}'>".\Osmium\Fit\get_attributedisplayname($number)."</a>";
+		return "<a href='{$relative}/db/attribute/{$number}'>".
+			escape(\Osmium\Fit\get_attributedisplayname($number))
+			."</a>";
 		break;
 
 	case 137: /* Boolean */

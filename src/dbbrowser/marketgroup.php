@@ -44,7 +44,7 @@ $mg = \Osmium\Db\fetch_assoc(
 if($mg === false) \Osmium\fatal(404);
 
 \Osmium\Chrome\print_header(
-	strip_tags($mg['mgname0']).' / Market group '.$mg['mgid0'],
+	\Osmium\Chrome\escape(strip_tags($mg['mgname0'])).' / Market group '.$mg['mgid0'],
 	RELATIVE
 );
 echo "<div id='dbb'>\n";
