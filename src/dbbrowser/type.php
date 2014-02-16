@@ -53,10 +53,11 @@ if($type === false) \Osmium\fatal(404);
 echo "<div id='dbb'>\n";
 
 echo "<header>\n<h2>".\Osmium\Chrome\escape($type['typename']);
+echo " <small>";
 if($type['published'] !== 't') {
-	echo "<span class='unpublished'>not public</span>";
+	echo "<span class='unpublished'>not public</span> – ";
 }
-echo " <small>type ".$type['typeid']."</small></h2>\n</header>\n";
+echo "type ".$type['typeid']."</small></h2>\n</header>\n";
 
 echo "<nav>\n";
 
@@ -220,6 +221,7 @@ $sreqq = \Osmium\Db\query_params(
 	WHEN 1289 THEN 1287
 	WHEN 1290 THEN 1288
 	ELSE NULL END
+	WHERE it.published = true
 	ORDER BY level ASC, it.typeid ASC',
 	array($type['typeid'])
 );

@@ -82,6 +82,16 @@ $nav-height: 2.5em;
 	}
 }
 
+@mixin columnize($width) {
+	-webkit-column-count: auto;
+	-moz-column-count: auto;
+	column-count: auto;
+
+	-webkit-column-width: $width;
+	-moz-column-width: $width;
+	column-width: $width;
+}
+
 html, body {
 	margin: 0;
 	padding: 0;

@@ -1,5 +1,6 @@
 div#dbb {
 	@include fixed-width-page;
+	min-width: 80%;
 
 	&> header > h2 {
 		font-size: 3em;
@@ -11,12 +12,14 @@ div#dbb {
 			opacity: .5;
 		}
 
-		&> span.unpublished {
-			font-size: .5em;
+		&> small > span.unpublished {
 			color: $error-text-color;
-			opacity: .7;
-			vertical-align: middle;
-			padding-left: 1em;
+		}
+
+		&> span.raw {
+			font-size: 0.5em;
+			vertical-align: bottom;
+			font-family: $mono-font;
 		}
 	}
 
@@ -138,12 +141,9 @@ div#dbb {
 			padding: 0;
 			list-style-type: none;
 
-			-webkit-column-count: 3;
-			-moz-column-count: 3;
-			column-count: 3;
+			@include columnize(25em);
 
 			&> li {
-				display: block;
 				line-height: 2em;
 				padding: 0 0.25em;
 
@@ -151,6 +151,48 @@ div#dbb {
 
 				&> img:first-child {
 					height: 2em;
+				}
+			}
+		}
+	}
+
+	&> ul.typelist {
+		padding: 0;
+		margin: 0;
+		list-style-type: none;
+
+		@include columnize(25em);
+
+		&> li {
+			line-height: 2em;
+			padding: 0;
+
+			@include ellipsis;
+
+			&> span.tval {
+				display: inline-block;
+				font-weight: bold;
+				min-width: 3em;
+				text-align: right;
+				font-size: 1.1em;
+				vertical-align: middle;
+			}
+
+			&.letteranchor {
+				margin: 1em 0 0.5em 0;
+				background-color: $subsection-bg-color;
+				border-top: 1px solid $subsection-border-color;
+				border-bottom: 1px solid $subsection-border-color;
+
+				&:first-child { margin-top: 0; }
+
+				text-align: center;
+				font-size: 2em;
+				line-height: 1.25em;
+
+				&> a {
+					text-decoration: none;
+					font-weight: bold;
 				}
 			}
 		}
