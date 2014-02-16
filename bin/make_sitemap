@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -195,6 +195,71 @@ while($batch = \Osmium\Db\fetch_row($batchq)) {
 	$loc->appendChild($idx->createTextNode($root.'/'.$fname.'.gz'));
 	$lastmod = $s->appendChild($idx->createElement('lastmod'));
 	$lastmod->appendChild($idx->createTextNode($fdate($maxts)));
+}
+
+echo "\n";
+
+
+
+
+/* ----- DB browser pages ----- */
+
+$dbq = \Osmium\Db\query(
+	"SELECT 'type' AS t, typeid AS id FROM eve.invtypes
+	UNION
+	SELECT 'attribute' AS t, attributeid AS id FROM eve.dgmattribs
+	UNION
+	SELECT 'effect' AS t, effectid AS id FROM eve.dgmeffects
+	UNION
+	SELECT 'group' AS t, groupid AS id FROM eve.invgroups
+	UNION
+	SELECT 'category' AS t, categoryid AS id FROM eve.invcategories
+	UNION
+	SELECT 'marketgroup' AS t, marketgroupid AS id FROM eve.invmarketgroups
+	ORDER BY t ASC, id ASC"
+);
+$i = 0;
+$cnt = 0;
+$sdedate = \Osmium\Fit\get_latest_eve_db_version()['reldate'];
+$finalize = function() use(&$subidx, &$fname, &$si, &$idx, &$root, &$fdate, &$sdedate) {
+	$subidx->formatOutput = true;
+	$subidx->encoding = 'UTF-8';
+	file_put_contents(\Osmium\ROOT.'/static/cache/'.$fname, $subidx->saveXML());
+
+	$s = $si->appendChild($idx->createElement('sitemap'));
+	$loc = $s->appendChild($idx->createElement('loc'));
+	$loc->appendChild($idx->createTextNode($root.'/'.$fname.'.gz'));
+	$lastmod = $s->appendChild($idx->createElement('lastmod'));
+	$lastmod->appendChild($idx->createTextNode($fdate($sdedate)));
+};
+while($db = \Osmium\Db\fetch_assoc($dbq)) {
+	if($cnt % BATCH_SIZE === 0) {
+		if($cnt > 0) {
+			$finalize();
+		}
+
+		
+		$fname = 'sitemap-db-'.($i++).'.xml';
+		echo ".";
+
+		$subidx = new \DOMDocument();
+		$urlset = $subidx->appendChild($subidx->createElement('urlset'));
+		$xmlns = $urlset->appendChild($subidx->createAttribute('xmlns'));
+		$xmlns->appendChild($subidx->createTextNode('http://www.sitemaps.org/schemas/sitemap/0.9'));
+	}
+
+	$url = $urlset->appendChild($subidx->createElement('url'));
+	$loc = $url->appendChild($subidx->createElement('loc'));
+	$loc->appendChild($subidx->createTextNode($root.'/db/'.$db['t'].'/'.$db['id']));
+	$lastmod = $url->appendChild($subidx->createElement('lastmod'));
+	$lastmod->appendChild($subidx->createTextNode($fdate($sdedate)));
+
+	++$cnt;
+}
+
+if($cnt % BATCH_SIZE !== 0) {
+	$finalize();
+	echo ".";
 }
 
 echo "\n";
