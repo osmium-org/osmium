@@ -62,10 +62,14 @@ if($a['published'] !== 't') {
 }
 echo "attribute ".$a['attributeid']."</small></h2>\n</header>\n";
 
+$def = (!$a['defaultvalue'] && in_array($a['unitid'], [ 115, 116, 129 ]))
+	? '<small>N/A</small>' :
+	\Osmium\Chrome\format_number_with_unit(
+		$a['defaultvalue'], $a['unitid'], $a['udisplayname'], RELATIVE
+	);
+
 echo "<ul>\n";
-echo "<li>Default value: ".\Osmium\Chrome\format_number_with_unit(
-	$a['defaultvalue'], $a['unitid'], $a['udisplayname'], RELATIVE
-)."</li>\n";
+echo "<li>Default value: {$def}</li>\n";
 echo "<li>Stacking penalized: ".($a['stackable'] === 't' ? 'never' : 'yes')."</li>\n";
 echo "</ul>\n";
 

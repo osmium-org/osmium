@@ -102,6 +102,14 @@ echo "</div>\n";
 
 ob_start();
 
+$traits = \Osmium\Chrome\get_formatted_ship_traits($type['typeid'], RELATIVE);
+if($traits !== false) {
+	echo "<section id='t'>\n";
+	echo $traits;
+	echo "</section>\n";
+}
+
+
 $aq = \Osmium\Db\query_params(
 	"SELECT attributeid, attributename, displayname, value,
 	unitid, udisplayname
@@ -313,9 +321,8 @@ $sections = ob_get_clean();
 
 ob_start();
 
-if($type['categoryid'] == 6) {
-	/* XXX */
-	//echo "<li><a href='#t'>Traits</a></li>\n";
+if($traits !== false) {
+	echo "<li><a href='#t'>Traits</a></li>\n";
 }
 if($nattribs > 0) {
 	echo "<li><a href='#a'>Attributes ({$nattribs})</a></li>\n";
@@ -332,7 +339,6 @@ if($nreqby !== []) {
 if($nvariations > 1) {
 	echo "<li><a href='#v'>Variations ({$nvariations})</a></li>\n";
 }
-//echo "<li><a href='#v'>Variations</a></li>\n";
 
 $lis = ob_get_clean();
 

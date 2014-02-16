@@ -362,9 +362,15 @@ $sections = array(
 	"<section class='siattributes' id='siattributes-{$suffix}'>\n".$fresult['attributes']."</section>\n",
 );
 
+$traits = \Osmium\Chrome\get_formatted_ship_traits($typeid, $relative);
+if($traits !== false) {
+	array_unshift($lis, "<li><a href='#sitraits-{$suffix}'>Traits</a></li>\n");
+	array_unshift($sections, "<section class='sitraits' id='sitraits-{$suffix}'>\n{$traits}</section>\n");
+}
+
 if($affectors !== false) {
 	$lis[] = "<li><a href='#siafftype-{$suffix}'>Affectors by type (".count($affectors_per_type).")</a></li>\n";
-	$lis[] = "<li><a href='#siaffatt-{$suffix}'>Affectors by attribute (".count($affectors_per_att).")</a></li>\n";
+	$lis[] = "<li><a href='#siaffatt-{$suffix}'>By attribute (".count($affectors_per_att).")</a></li>\n";
 
 	$sections[] = "<section class='siaff' id='siafftype-{$suffix}'>\n".$fresult['affectors_per_type']."</section>\n";
 	$sections[] = "<section class='siaff' id='siaffatt-{$suffix}'>\n".$fresult['affectors_per_att']."</section>\n";

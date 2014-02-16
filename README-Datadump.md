@@ -11,41 +11,19 @@ The long way
 ------------
 
 The dump file is generated from the database of the EVE client
-itself. It could be generated from the Static Data Dump (with a price
-index from a third party source). Since Osmium uses a different schema
-with clear, defined constraints, it is in practice much easier to
-generate it from the client itself.
+itself.
 
-Use the [`phobos`](https://github.com/DarkFenX/Phobos) dumper to
-dump the EVE database as JSON files:
+* Import the `pgsql/eve.sql` schema;
 
-~~~~
-git clone git://github.com/DarkFenX/Phobos.git
-cd phobos
-python2.7 setup.py build
+* Install [Reverence](https://github.com/ntt/reverence) and psycopg2;
 
-PYTHONPATH=./build/lib python2.7 dumpToJson.py -j <JSON_DIRECTORY> -c <EVE_CACHE_DIRECTORY> -e <EVE_DIRECTORY> -t dgmunits\|dgmattribs\|dgmtypeattribs\|dgmeffects\|dgmtypeeffects\|invcategories\|invgroups\|invmetagroups\|invmetatypes\|invtypes\|config\(\)_GetAverageMarketPricesForClient\(\)\|marketProxy\(\)_GetMarketGroups\(\)
-~~~~
-
-Then convert the JSON files to SQL statements using the
-`json_to_postgres` script in the `bin/` directory:
-
-~~~~
-./bin/json_to_postgres <JSON_DIRECTORY>
-~~~~
-
-This will create one big SQL file with all the data (but not the
-structure). You can now import it:
+* Run the `./bin/reverence_insert` script.
 
 ~~~~
 # Import the schema
 psql osmium osmium_user < pgsql/eve.sql
 
-# Import the data
-psql osmium osmium_user
-
-SET search_path TO eve;
-\i osmium-eve-data.sql
+./bin/reverence_insert -c <path_to_cache> <path_to_eve>
 ~~~~
 
 That's it! You can now dump the eve schema for later use (for example

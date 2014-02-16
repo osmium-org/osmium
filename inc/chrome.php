@@ -574,17 +574,11 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
-function format_type_description($desc) {
-	static $rel = null;
-
-	if($rel === null) {
-		$rel = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
-	}
-
+function format_showinfo_links($desc, $relative) {
 	$desc = preg_replace_callback(
 		'%<a href=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>%',
-		function($match) use($rel) {
-			return "<a href='{$rel}/db/type/{$match['typeid']}'>";
+		function($match) use($relative) {
+			return "<a href='{$relative}/db/type/{$match['typeid']}'>";
 		},
 		$desc
 	);
@@ -593,11 +587,23 @@ function format_type_description($desc) {
 	 * <url>s (hopefully this NEVER appears in type descriptions… */
 	$desc = preg_replace_callback(
 		'%<url=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>(?<content>.*?)</url>%sU',
-		function($match) use($rel) {
-			return "<a href='{$rel}/db/type/{$match['typeid']}'>".$match['content']."</a>";
+		function($match) use($relative) {
+			return "<a href='{$relative}/db/type/{$match['typeid']}'>".$match['content']."</a>";
 		},
 		$desc
 	);
+
+	return $desc;
+}
+
+function format_type_description($desc) {
+	static $rel = null;
+
+	if($rel === null) {
+		$rel = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+	}
+
+	$desc = format_showinfo_links($desc, $rel);
 
 	return sanitize_html(format_md(nl2br($desc, true)));
 }
@@ -797,4 +803,57 @@ function format_effect_category($id) {
 	];
 
 	return isset($map[$id]) ? $map[$id] : "unknown ({$id})";
+}
+
+function get_formatted_ship_traits($shiptypeid, $relative) {
+	$traitsq = \Osmium\Db\query_params(
+		'SELECT COALESCE(sourcetypeid, sourceother) AS source,
+		bonus, t.message, u.unitid, u.displayname
+		FROM eve.fsdtypebonuses ftb
+		JOIN eve.tramessages t ON t.nameid = ftb.nameid
+		LEFT JOIN eve.dgmunits u ON u.unitid = ftb.unitid
+		WHERE ftb.typeid = $1
+		ORDER BY sourcetypeid ASC, t.nameid ASC',
+		array($shiptypeid)
+	);
+
+	$tps = [];
+	while($t = \Osmium\Db\fetch_assoc($traitsq)) {
+		$tps[$t['source']][] = $t;
+	}
+
+	if($tps === []) return false;
+	$ret = "<div class='traits'>\n";
+
+	foreach($tps as $source => $traits) {
+		if($source >= 0) {
+			$ret .= "<h3><a href='{$relative}/db/type/{$source}'>"
+				.\Osmium\Fit\get_typename($source)
+				."</a> bonuses (per skill level):</h3>\n";
+		} else if($source == -1) {
+			$ret .= "<h3>Role bonuses:</h3>\n";
+		} else if($source === -2) {
+			$ret .= "<h3>Miscellaneous bonuses:</h3>\n";
+		}
+
+		$ret .="<ul>\n";
+
+		foreach($traits as $t) {
+			$ret .= "<li>\n<span class='bvalue'>";
+
+			if($t['bonus'] !== null) {
+				$ret .= format_number_with_unit(
+					$t['bonus'], $t['unitid'], $t['displayname']
+				);
+			} else {
+				$ret .= "·";
+			}
+
+			$ret .= "</span>\n".$t['message']."\n</li>\n";
+		}
+
+		$ret .= "</ul>\n";
+	}
+
+	return format_showinfo_links($ret."</div>\n", $relative);
 }

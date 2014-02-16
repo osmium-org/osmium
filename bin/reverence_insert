@@ -1,0 +1,250 @@
+#!/usr/bin/env python2
+# Osmium
+# Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from reverence import blue
+import ConfigParser
+import os
+import sys
+import psycopg2
+import argparse
+
+parser = argparse.ArgumentParser(description="Populate the eve schema from an EVE installation.")
+parser.add_argument("eve", metavar="eve-exe-path")
+parser.add_argument("-c", "--cache", metavar="settings-path")
+parser.add_argument("-s", "--server", default="Tranquility", metavar="server-name")
+parser.add_argument("-l", "--locale", default="en-us", metavar="language")
+
+args = parser.parse_args()
+
+ini = ConfigParser.RawConfigParser()
+ini.read(os.path.dirname(os.path.realpath(__file__)) + '/../config.ini')
+
+def pgcnf(key):
+    return ini.get('postgresql', key).strip("'").strip('"')
+
+pg = psycopg2.connect("host={} port={} user={} password={} dbname={}".format(
+    pgcnf('host'), pgcnf('port'), pgcnf('user'),
+    pgcnf('password'), pgcnf('dbname'),
+))
+
+eve = blue.EVE(args.eve, cachepath=args.cache, server=args.server, languageID=args.locale)
+cfg = eve.getconfigmgr()
+
+def processRows(tablename, columnmap, rowset):
+    print "Truncating table %s..." % tablename,
+    sys.stdout.flush()
+    cur = pg.cursor()
+    cur.execute("TRUNCATE TABLE %s CASCADE" % tablename)
+    print
+
+    fields = ", ".join("%s" for x in columnmap)
+    querystring = ("INSERT INTO %s (" + fields + ")") % tuple([
+        tablename ] + columnmap.keys()) + " VALUES (" + fields + ")"
+    print querystring
+
+    i = 0
+    for row in rowset:
+        cur.execute(querystring, [ k(row) if callable(k) else row[k]
+                                   for k in columnmap.viewvalues()])
+        i += 1
+        if i % 25000 == 0:
+            print "%s..." % i,
+            sys.stdout.flush()
+
+    print str(i),
+    sys.stdout.flush()
+
+    pg.commit()
+    cur.close()
+    print "rows."
+    print
+
+def flattenRows(rowset):
+    for sub in rowset.itervalues():
+        for row in sub:
+            yield row
+
+def flattenRowsetLines(rowset):
+    for sub in rowset:
+        for row in sub.lines:
+            yield row
+
+
+
+
+processRows("eve.dgmunits", {
+    "unitid": "unitID",
+    "displayname": "displayName",
+}, cfg.dgmunits)
+
+
+
+processRows("eve.dgmattribs", {
+    "attributeid": "attributeID",
+    "attributename": "attributeName",
+    "displayname": "displayName",
+    "defaultvalue": "defaultValue",
+    "stackable": "stackable",
+    "highisgood": "highIsGood",
+    "unitid": (lambda row: row.unitID if row.unitID > 0 else None),
+    "categoryid": "categoryID",
+    "published": "published",
+}, cfg.dgmattribs)
+
+
+
+processRows("eve.dgmeffects", {
+    "effectid": "effectID",
+    "effectname": "effectName",
+    "effectcategory": "effectCategory",
+    "fittingusagechanceattributeid": "fittingUsageChanceAttributeID",
+    "durationattributeid": "durationAttributeID",
+    "npcactivationchanceattributeid": "npcActivationChanceAttributeID",
+    "npcusagechanceattributeid": "npcUsageChanceAttributeID",
+    "rangeattributeid": "rangeAttributeID",
+    "dischargeattributeid": "dischargeAttributeID",
+    "falloffattributeid": "falloffAttributeID",
+    "trackingspeedattributeid": "trackingSpeedAttributeID",
+    "isoffensive": "isOffensive",
+    "isassistance": "isAssistance",
+    "iswarpsafe": "isWarpSafe",
+    "preexpression": (lambda row: cfg.dgmexpressions.Get(row.preExpression).expressionName),
+    "postexpression": (lambda row: cfg.dgmexpressions.Get(row.postExpression).expressionName),
+}, cfg.dgmeffects);
+
+
+
+processRows("eve.invcategories", {
+    "categoryid": "categoryID",
+    "categoryname": "categoryName",
+}, cfg.invcategories);
+
+
+
+processRows("eve.invgroups", {
+    "groupid": "groupID",
+    "categoryid": "categoryID",
+    "groupname": "groupName",
+    "published": "published",
+}, cfg.invgroups);
+
+
+
+mg = eve.RemoteSvc("marketProxy").GetMarketGroups()
+processRows("eve.invmarketgroups", {
+    "marketgroupid": "marketGroupID",
+    "parentgroupid": "parentGroupID",
+    "marketgroupname": (lambda row: row.marketGroupName if row.marketGroupName != '' else cfg._localization.GetByMessageID(row.marketGroupNameID)),
+}, flattenRows(mg));
+
+
+
+processRows("eve.invmetagroups", {
+    "metagroupid": "metaGroupID",
+    "metagroupname": "metaGroupName",
+}, cfg.invmetagroups);
+
+
+
+processRows("eve.invtypes", {
+    "typeid": "typeID",
+    "groupid": "groupID",
+    "typename": "typeName",
+    "mass": "mass",
+    "volume": "volume",
+    "capacity": "capacity",
+    "published": "published",
+    "marketgroupid": (lambda row: row.marketGroupID if row.marketGroupID < 350000 else None),
+    "description": "description",
+}, cfg.invtypes);
+
+
+
+processRows("eve.dgmtypeattribs", {
+    "typeid": "typeID",
+    "attributeid": "attributeID",
+    "value": "value",
+}, flattenRows(cfg.dgmtypeattribs))
+
+
+
+processRows("eve.dgmtypeeffects", {
+    "typeid": "typeID",
+    "effectid": "effectID",
+}, flattenRows(cfg.dgmtypeeffects))
+
+
+
+processRows("eve.invmetatypes", {
+    "typeid": "typeID",
+    "metagroupid": "metaGroupID",
+    "parenttypeid": "parentTypeID",
+}, flattenRowsetLines(cfg.invmetatypes))
+
+
+
+amp = eve.RemoteSvc("config").GetAverageMarketPricesForClient()
+processRows("eve.averagemarketprices", {
+    "typeid": "typeID",
+    "averageprice": "averagePrice",
+}, amp.itervalues());
+
+
+
+trlabels = { v:k for k, v in cfg._localization.languageLabels.iteritems() }
+trrows = cfg._localization.primary
+
+def makeTranslatedMessages():
+    for k, v in trrows.iteritems():
+        yield {
+            "nameID": k,
+            "label": trlabels[k] if k in trlabels else None,
+            "message": v[0],
+        }
+
+processRows("eve.tramessages", {
+    "nameid": "nameID",
+    "label": "label",
+    "message": "message",
+}, makeTranslatedMessages())
+
+
+
+def makeTypeBonuses():
+    for id, row in cfg.fsdTypeOverrides.iteritems():
+        if not hasattr(row, "infoBubbleTypeBonuses"):
+            continue
+
+        for source, bonuses in row.infoBubbleTypeBonuses.iteritems():
+            for bonus in bonuses.itervalues():
+                yield {
+                    "typeID": id,
+                    "sourceTypeID": source if source >= 0 else None,
+                    "sourceOther": source if source < 0 else None,
+                    "bonus": bonus.bonus if hasattr(bonus, "bonus") else None,
+                    "nameID": bonus.nameID,
+                    "unitID": bonus.unitID if hasattr(bonus, "unitID") else None,
+                }
+
+processRows("eve.fsdtypebonuses", {
+    "typeid": "typeID",
+    "sourcetypeid": "sourceTypeID",
+    "sourceother": "sourceOther",
+    "bonus": "bonus",
+    "nameid": "nameID",
+    "unitid": "unitID",
+}, makeTypeBonuses())

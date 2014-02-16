@@ -105,6 +105,22 @@ CREATE TABLE dgmunits (
 
 
 --
+-- Name: fsdtypebonuses; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fsdtypebonuses (
+    typeid integer NOT NULL,
+    sourcetypeid integer,
+    sourceother integer,
+    bonus double precision,
+    nameid integer NOT NULL,
+    unitid integer,
+    CONSTRAINT fsdtypebonuses_bonus_has_unit CHECK (((bonus IS NULL) OR (unitid IS NOT NULL))),
+    CONSTRAINT fsdtypebonuses_source_check CHECK ((((sourcetypeid IS NOT NULL) AND (sourceother IS NULL)) OR ((sourcetypeid IS NULL) AND (sourceother IS NOT NULL))))
+);
+
+
+--
 -- Name: invcategories; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -172,6 +188,17 @@ CREATE TABLE invtypes (
     published boolean NOT NULL,
     marketgroupid integer,
     description text NOT NULL
+);
+
+
+--
+-- Name: tramessages; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE TABLE tramessages (
+    nameid integer NOT NULL,
+    label text,
+    message text NOT NULL
 );
 
 
@@ -272,6 +299,22 @@ ALTER TABLE ONLY invtypes
 
 
 --
+-- Name: tramessages_label_uniq; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY tramessages
+    ADD CONSTRAINT tramessages_label_uniq UNIQUE (label);
+
+
+--
+-- Name: tramessages_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY tramessages
+    ADD CONSTRAINT tramessages_pkey PRIMARY KEY (nameid);
+
+
+--
 -- Name: dgmattribs_attributename_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
@@ -325,6 +368,13 @@ CREATE INDEX dgmtypeeffects_effectid_idx ON dgmtypeeffects USING btree (effectid
 --
 
 CREATE INDEX dgmtypeeffects_typeid_idx ON dgmtypeeffects USING btree (typeid);
+
+
+--
+-- Name: fsdtypebonuses_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
+--
+
+CREATE INDEX fsdtypebonuses_typeid_idx ON fsdtypebonuses USING btree (typeid);
 
 
 --
@@ -499,6 +549,38 @@ ALTER TABLE ONLY dgmtypeeffects
 
 ALTER TABLE ONLY dgmtypeeffects
     ADD CONSTRAINT dgmtypeeffects_typeid_fkey FOREIGN KEY (typeid) REFERENCES invtypes(typeid);
+
+
+--
+-- Name: fsdtypebonuses_nameid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY fsdtypebonuses
+    ADD CONSTRAINT fsdtypebonuses_nameid_fkey FOREIGN KEY (nameid) REFERENCES tramessages(nameid);
+
+
+--
+-- Name: fsdtypebonuses_sourcetypeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY fsdtypebonuses
+    ADD CONSTRAINT fsdtypebonuses_sourcetypeid_fkey FOREIGN KEY (sourcetypeid) REFERENCES invtypes(typeid);
+
+
+--
+-- Name: fsdtypebonuses_typeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY fsdtypebonuses
+    ADD CONSTRAINT fsdtypebonuses_typeid_fkey FOREIGN KEY (typeid) REFERENCES invtypes(typeid);
+
+
+--
+-- Name: fsdtypebonuses_unitid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY fsdtypebonuses
+    ADD CONSTRAINT fsdtypebonuses_unitid_fkey FOREIGN KEY (unitid) REFERENCES dgmunits(unitid);
 
 
 --
