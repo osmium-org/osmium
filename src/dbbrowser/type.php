@@ -68,7 +68,7 @@ echo "<li><a href='../category/".$type['categoryid']."'>".\Osmium\Chrome\escape(
 echo "<li><a href='../group/".$type['groupid']."'>".\Osmium\Chrome\escape(
 	$type['groupname']
 )."</a></li>\n";
-echo "<li class='lst'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
+echo "<li class='lst memberof'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
 echo "</ul>\n";
 
 if($type['mgid0'] !== null) {
@@ -81,7 +81,7 @@ if($type['mgid0'] !== null) {
 			)."</a></li>\n";
 		}
 	}
-	echo "<li class='lst'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
+	echo "<li class='lst memberof'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
 
 	echo "</ul>\n";
 }

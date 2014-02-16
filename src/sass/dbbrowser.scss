@@ -72,7 +72,7 @@ div#dbb {
 				color: $aside-text-color;
 			}
 
-			&.lst:before {
+			&.memberof:before {
 				content: " ∋ ";
 			}
 		}
@@ -193,12 +193,19 @@ div#dbb {
 		@include columnize(25em);
 
 		&> li {
+			display: inline-block;
+			width: 25em;
+
 			line-height: 2em;
 			padding: 0;
 
+			&.h {
+				margin-top: 1em;
+			}
+
 			@include ellipsis;
 
-			&> span.tval {
+			&> span.tval, &> ul > li > span.tval {
 				display: inline-block;
 				font-weight: bold;
 				min-width: 3em;
@@ -207,8 +214,8 @@ div#dbb {
 				vertical-align: middle;
 			}
 
-			&.letteranchor {
-				margin: 1em 0 0.5em 0;
+			&> header.letteranchor {
+				margin-bottom: 0.2em;
 				background-color: rgba($subsection-bg-color, .5);
 				border-top: 1px solid $subsection-border-color;
 				border-bottom: 1px solid $subsection-border-color;
@@ -225,7 +232,61 @@ div#dbb {
 				}
 
 				&:before, &:after { content: " – "; }
+
+				@include ellipsis;
+			}
+
+			&> ul {
+				margin: 0;
+				padding: 0;
+				list-style-type: none;
 			}
 		}
+	}
+
+	&> ul.submg {
+		@include columnize(25em);
+
+		&> li {
+			margin-bottom: 2em;
+			display: inline-block;
+			width: 25em;
+
+			&> ul {
+				margin: 0;
+				padding: 0;
+				list-style-type: none;
+			}
+
+			&> ul > li {
+				line-height: 1.5em;
+				@include ellipsis;
+			}
+		}
+
+		&> li > a {
+			display: block;
+			text-align: center;
+			font-weight: bold;
+			text-decoration: none;
+
+			font-size: 1.5em;
+			line-height: 1.5em;
+			margin-bottom: 0.3em;
+
+			background-color: rgba($subsection-bg-color, .5);
+			border-top: 1px solid $subsection-border-color !important;
+			border-bottom: 1px solid $subsection-border-color !important;
+
+			&:before, &:after { content: " — "; }
+
+			@include ellipsis;
+		}
+	}
+
+	&> h3 {
+		font-size: 1.5em;
+		margin-left: 1em;
+		border-bottom: 1px solid $subsection-border-color;
 	}
 }

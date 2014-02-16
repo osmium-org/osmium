@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Page\DBBrowser\ViewAttribute;
+namespace Osmium\Page\DBBrowser\ViewEffect;
 
 require __DIR__.'/../../inc/root.php';
 require \Osmium\ROOT.'/inc/dbbrowser_common.php';

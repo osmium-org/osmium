@@ -41,12 +41,12 @@ function print_typelist(array $types) {
 	$c = count($entries);
 	$current = 0;
 	while(($current + 1) < $c) {
-		if(($curcnt = count($entries[$current][1])) >= 10) {
+		if(($curcnt = count($entries[$current][1])) >= 5) {
 			++$current;
 			continue;
 		}
 
-		if(($curcnt + count($entries[$current+1][1])) >= 20) {
+		if(($curcnt + count($entries[$current+1][1])) >= 10) {
 			$current += 2;
 			continue;
 		}
@@ -61,19 +61,24 @@ function print_typelist(array $types) {
 		--$c;
 	}
 
+	$total = 0;
+	foreach($entries as $l) $total += count($l[1]);
+
 	if($c >= 3) {
-		echo "<header class='typelist'>\n";
-		echo "<ul>\n";
-		$lis = [];
-		foreach($entries as $v) {
-			$letters = explode(' ', $v[0]);
-			foreach($letters as $letter) {
-				echo "<li><a href='#t".$letter."'>"
-					.($letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter))
-					."</a></li>\n";
+		if($total >= 100) {
+			echo "<header class='typelist'>\n";
+			echo "<ul>\n";
+			$lis = [];
+			foreach($entries as $v) {
+				$letters = explode(' ', $v[0]);
+				foreach($letters as $letter) {
+					echo "<li><a href='#t".$letter."'>"
+						.($letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter))
+						."</a></li>\n";
+				}
 			}
+			echo "</ul>\n</header>\n";
 		}
-		echo "</ul>\n</header>\n";
 
 		echo "<ul class='typelist'>\n";
 
@@ -90,10 +95,11 @@ function print_typelist(array $types) {
 					."</a>";
 			}
 
-			echo "<li class='letteranchor'>";
-			echo implode(', ', $links);
-			echo "</li>\n";
+			echo "<li class='h'>";
+			echo "<header class='letteranchor'>\n".implode(', ', $links)."</header>\n";
+			echo "<ul>\n";
 			foreach($entries as $e) echo $e[1];
+			echo "</ul>\n</li>\n";
 		}
 
 		echo "</ul>\n";
