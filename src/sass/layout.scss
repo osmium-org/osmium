@@ -126,12 +126,6 @@ div#wrapper {
 		padding-left: 1em;
 	}
 
-	padding-top: $nav-height;
-
-	@include layout-type(small) {
-		padding-top: 0;
-	}
-
 	background: rgba($main-bg-color, 0.85);
 
 	&> div#glob_feedback {
@@ -206,14 +200,10 @@ div#wrapper > nav:first-child {
 	width: 100%;
 	border-bottom: 1px solid $top-navigation-border-color;
 
-	position: fixed;
+	position: static;
 	top: 0;
 	left: 0;
 	z-index: 2000;
-
-	@include layout-type(small) {
-		position: static;
-	}
 
 	@include linear-gradient-lighten-top($top-navigation-bg-color, 15%);
 

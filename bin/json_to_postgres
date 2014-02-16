@@ -46,6 +46,19 @@ $structure = array(
 		'effectID' => 'effectid',
 		'effectName' => 'effectname',
 		'effectCategory' => 'effectcategory',
+		'fittingUsageChanceAttributeID' => 'fittingusagechanceattributeid',
+		'durationAttributeID' => 'durationattributeid',
+		'npcActivationChanceAttributeID' => 'npcactivationchanceattributeid',
+		'npcUsageChanceAttributeID' => 'npcusagechanceattributeid',
+		'rangeAttributeID' => 'rangeattributeid',
+		'dischargeAttributeID' => 'dischargeattributeid',
+		'falloffAttributeID' => 'falloffattributeid',
+		'trackingSpeedAttributeID' => 'trackingspeedattributeid',
+		'isOffensive' => 'isoffensive',
+		'isAssistance' => 'isassistance',
+		'isWarpSafe' => 'iswarpsafe',
+		'preExpression' => 'preexpression',
+		'postExpression' => 'postexpression',
 		),
 
 	'invcategories', 'invcategories.json',
@@ -139,6 +152,28 @@ for($i = 0; $i < $count; $i += 3) {
         }
 
 		foreach($cols as $jsoncol => $sqlcol) {
+			/* XXX: fetch expression text directly */
+			if($tablename === 'dgmeffects' &&
+			   ($sqlcol === 'preexpression' || $sqlcol === 'postexpression')) {
+				$expressionid = $row[$jsoncol];
+
+				if(!isset($expressions)) {
+					$expressions = [];
+
+					$rawexprs = json_decode(file_get_contents(
+						rtrim($dir, '/').'/dgmexpressions.json'
+					), true);
+
+					foreach($rawexprs as $exp) {
+						$expressions[$exp['expressionID']] = $exp['expressionName'];
+					}
+				}
+
+				if(isset($expressions[$row[$jsoncol]])){
+					$row[$jsoncol] = $expressions[$row[$jsoncol]];
+				}
+			}
+
 			/* XXX: prune null market prices */
 			if($tablename == 'averagemarketprices' && $sqlcol == 'averageprice'
                && $row[$jsoncol] === null) {

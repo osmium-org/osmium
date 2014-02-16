@@ -77,7 +77,7 @@ $osmium_dispatch_rules = array(
 	'%^/db/category/(?<categoryid>[1-9][0-9]*)$%D' => '/src/dbbrowser/category.php',
 	'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
 	'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
-	'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
+	'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/effect.php',
 
 
 

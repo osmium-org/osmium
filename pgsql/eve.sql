@@ -56,7 +56,20 @@ CREATE TABLE dgmattribs (
 CREATE TABLE dgmeffects (
     effectid smallint NOT NULL,
     effectname character varying(300) NOT NULL,
-    effectcategory smallint NOT NULL
+    effectcategory smallint NOT NULL,
+    fittingusagechanceattributeid smallint,
+    durationattributeid smallint,
+    npcactivationchanceattributeid smallint,
+    npcusagechanceattributeid smallint,
+    rangeattributeid smallint,
+    dischargeattributeid smallint,
+    falloffattributeid smallint,
+    trackingspeedattributeid smallint,
+    isoffensive boolean,
+    isassistance boolean,
+    iswarpsafe boolean,
+    preexpression text,
+    postexpression text
 );
 
 
@@ -398,6 +411,70 @@ ALTER TABLE ONLY averagemarketprices
 
 ALTER TABLE ONLY dgmattribs
     ADD CONSTRAINT dgmattribs_unitid_fkey FOREIGN KEY (unitid) REFERENCES dgmunits(unitid);
+
+
+--
+-- Name: dgmeffects_dischargeattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_dischargeattributeid_fkey FOREIGN KEY (dischargeattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_durationattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_durationattributeid_fkey FOREIGN KEY (durationattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_falloffattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_falloffattributeid_fkey FOREIGN KEY (falloffattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_fittingusagechanceattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_fittingusagechanceattributeid_fkey FOREIGN KEY (fittingusagechanceattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_npcactivationchanceattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_npcactivationchanceattributeid_fkey FOREIGN KEY (npcactivationchanceattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_npcusagechanceattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_npcusagechanceattributeid_fkey FOREIGN KEY (npcusagechanceattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_rangeattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_rangeattributeid_fkey FOREIGN KEY (rangeattributeid) REFERENCES dgmattribs(attributeid);
+
+
+--
+-- Name: dgmeffects_trackingspeedattributeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
+--
+
+ALTER TABLE ONLY dgmeffects
+    ADD CONSTRAINT dgmeffects_trackingspeedattributeid_fkey FOREIGN KEY (trackingspeedattributeid) REFERENCES dgmattribs(attributeid);
 
 
 --

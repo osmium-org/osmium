@@ -2,6 +2,8 @@ div#dbb {
 	@include fixed-width-page;
 	min-width: 80%;
 
+	.raw { font-family: $mono-font; }
+
 	&> header > h2 {
 		font-size: 3em;
 		margin-bottom: 0;
@@ -19,7 +21,6 @@ div#dbb {
 		&> span.raw {
 			font-size: 0.5em;
 			vertical-align: bottom;
-			font-family: $mono-font;
 		}
 	}
 
@@ -88,10 +89,6 @@ div#dbb {
 			}
 		}
 
-		.raw {
-			font-family: $mono-font;
-		}
-
 		td + td {
 			text-align: left;
 		}
@@ -156,6 +153,38 @@ div#dbb {
 		}
 	}
 
+	&> header.typelist {
+		&> ul {
+			display: table;
+			width: 100%;
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+
+			background-color: rgba($subsection-bg-color, .5);
+			border-top: 1px solid $subsection-border-color;
+			border-bottom: 1px solid $subsection-border-color;
+
+			font-size: 2em;
+			line-height: 1.25em;
+			margin: 1em 0 1em 0;
+
+			&> li {
+				display: table-cell;
+				margin: 0;
+				padding: 0;
+				width: 3em;
+
+				&> a {
+					display: block;
+					font-weight: bold;
+					text-decoration: none;
+					text-align: center;
+				}
+			}
+		}
+	}
+
 	&> ul.typelist {
 		padding: 0;
 		margin: 0;
@@ -180,7 +209,7 @@ div#dbb {
 
 			&.letteranchor {
 				margin: 1em 0 0.5em 0;
-				background-color: $subsection-bg-color;
+				background-color: rgba($subsection-bg-color, .5);
 				border-top: 1px solid $subsection-border-color;
 				border-bottom: 1px solid $subsection-border-color;
 
@@ -194,6 +223,8 @@ div#dbb {
 					text-decoration: none;
 					font-weight: bold;
 				}
+
+				&:before, &:after { content: " – "; }
 			}
 		}
 	}

@@ -19,6 +19,7 @@
 namespace Osmium\Page\DBBrowser\ViewAttribute;
 
 require __DIR__.'/../../inc/root.php';
+require \Osmium\ROOT.'/inc/dbbrowser_common.php';
 
 const RELATIVE = '../..';
 
@@ -87,86 +88,26 @@ echo "<h3>List of types with non-default attribute value:</h3>\n";
 
 echo "<p>Sort list by: <a href='?s=typeid' rel='nofollow'>type ID</a>, <a href='?s=typename' rel='nofollow'>name</a>, <a href='?s=value' rel='nofollow'>attribute value</a>.</p>\n";
 
-echo "<ul class='typelist'>";
-$cnt = 0;
-$entriesbyfl = [];
+$types = [];
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
 	$e = "<li>";
-	$e .= "<span class='tval'>"./*\Osmium\Chrome\format_number_with_unit(*/
-		$t['value']/*, $a['unitid'], $a['udisplayname'], RELATIVE
-		             )*/."</span> ";
-	$e .= "<a href='".RELATIVE."/db/type/".$t['typeid']."'>".\Osmium\Chrome\escape($t['typename'])."</a>";
+	$e .= "<span class='tval'>".$t['value']."</span> ";
+	$e .= "<a href='".RELATIVE."/db/type/".$t['typeid']."'>"
+		.\Osmium\Chrome\escape($t['typename'])."</a>";
 	$e .= "</li>\n";
 
-	if($sort !== 'typename') {
-		echo $e;
-	} else {
-		if(preg_match('%(?<first>[a-zA-Z0-9])%', $t['typename'], $m)) {
-			$first = strtoupper($m['first']);
-			$first = (strpos("0123456789", $first) === false) ? $first : '0';
-		} else {
-			$first = ' ';
-		}
-
-		$entriesbyfl[$first][] = $e;
-	}
+	$types[] = [ $t['typename'], $e ];
 }
 
 if($sort === 'typename') {
-	$entries = [];
-	foreach($entriesbyfl as $k => $v) $entries[] = [ $k, $v ];
-	unset($entriesbyfl);
+	\Osmium\DBBrowser\print_typelist($types);
+} else {
+	echo "<ul class='typelist'>\n";
 
-	$c = count($entries);
-	$current = 0;
-	while(($current + 1) < $c) {
-		if(($curcnt = count($entries[$current][1])) >= 10) {
-			++$current;
-			continue;
-		}
+	foreach($types as $t) echo $t[1];
 
-		if(($curcnt + count($entries[$current+1][1])) >= 20) {
-			$current += 2;
-			continue;
-		}
-
-		$entries[$current] = [
-			$entries[$current][0].' '.$entries[$current+1][0],
-			array_merge($entries[$current][1], $entries[$current+1][1])
-		];
-
-		/* Remove entry from array and re-number keys */
-		array_splice($entries, $current + 1, 1);
-		--$c;
-	}
-
-	if($c >= 3) {
-		foreach($entries as $v) {
-			list($l, $entries) = $v;
-
-			$letters = explode(' ', $l);
-			$ids = [];
-			$links = [];
-
-			foreach($letters as $letter) {
-				$links[] = "<a href='#t".$letter."' id='t".$letter."'>"
-					.($letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter))
-					."</a>";
-			}
-
-			echo "<li class='letteranchor'>";
-			echo implode(', ', $links);
-			echo "</li>\n";
-			foreach($entries as $e) echo $e;
-		}
-	} else {
-		foreach($entries as $v) {
-			foreach($v[1] as $e) echo $e;
-		}
-	}
+	echo "</ul>\n";
 }
-
-echo "</ul>\n";
 
 
 echo "</div>\n";

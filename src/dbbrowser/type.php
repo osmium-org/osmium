@@ -144,7 +144,7 @@ if($nattribs > 0) {
 
 
 $eq = \Osmium\Db\query_params(
-	'SELECT e.effectname, e.effectid
+	'SELECT e.effectname, e.effectid, e.effectcategory
 	FROM eve.dgmtypeeffects dte
 	JOIN eve.dgmeffects e ON e.effectid = dte.effectid
 	WHERE dte.typeid = $1
@@ -162,6 +162,7 @@ while($e = \Osmium\Db\fetch_row($eq)) {
 	echo "<tr>\n";
 	echo "<td><a href='../effect/".$e[1]."'>".$e[1]."</a></td>\n";
 	echo "<td class='raw'>".\Osmium\Chrome\escape($e[0])."</td>\n";
+	echo "<td class='raw'>".\Osmium\Chrome\format_effect_category($e[2])."</td>\n";
 	echo "</tr>\n";
 }
 

@@ -2,6 +2,8 @@
 
 * Import loadouts from CREST killmails.
 
+* Add simple database browser for EVE types, attributes and effects.
+
 # Version 0.11
 
 ## Version 0.11.0, released 2014-01-28

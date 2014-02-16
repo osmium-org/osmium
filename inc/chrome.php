@@ -782,3 +782,19 @@ function format_skill_level($level) {
 
 	return isset($levels[$level]) ? $levels[$level] : 'Unknown';
 }
+
+function format_effect_category($id) {
+	/* Taken from https://github.com/DarkFenX/Eos/blob/master/const/eve.py#L186 */
+	static $map = [
+		0 => 'passive',
+		1 => 'active',
+		2 => 'target',
+		3 => 'area',
+		4 => 'online',
+		5 => 'overload',
+		6 => 'dungeon',
+		7 => 'system',
+	];
+
+	return isset($map[$id]) ? $map[$id] : "unknown ({$id})";
+}
