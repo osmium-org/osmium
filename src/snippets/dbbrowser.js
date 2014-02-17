@@ -30,5 +30,106 @@ $(function() {
 			wheelPropagation: true, /* <- Doesn't work as advertised? */
 		});
 		csec.off('mousewheel'); /* XXX: Hackish */
+
+		/* Table sorting */
+		var round_sd = function(n, d) {
+			if(!n) return n;
+			var m = d - Math.floor(Math.log(Math.abs(n)) / Math.log(10)) - 1;
+			return n.toFixed(Math.max(0, m));
+		};
+
+		var asclambda = function(columnindex) {
+			return function(trA, trB) {
+				return $(trA).children().eq(columnindex).data('rawval')
+					- $(trB).children().eq(columnindex).data('rawval');
+			};
+		};
+		var desclambda = function(columnindex) {
+			return function(trA, trB) {
+				return $(trB).children().eq(columnindex).data('rawval')
+					- $(trA).children().eq(columnindex).data('rawval');
+			};
+		};
+		var unsortlambda = function(trA, trB) {
+			return $(trA).data('idx') - $(trB).data('idx');
+		};
+
+		var ctable = csec.children('table.d');
+		var tbody = ctable.children('tbody');
+		ctable
+			.children('thead')
+			.children('tr')
+			.children('th')
+			.on('click', function() {
+				var th = $(this);
+				var asc = th.hasClass('asc');
+				var desc = th.hasClass('desc');
+
+				ctable.children('colgroup').removeClass('sorted');
+				th.parent().children('th').removeClass('asc desc');
+
+				if(!asc && !desc) {
+					th.addClass('asc');
+					ctable.children('colgroup').eq(th.index()).addClass('sorted');
+					tbody.children('tr').sort(asclambda(th.index())).appendTo(tbody);
+				} else if(asc) {
+					th.addClass('desc');
+					ctable.children('colgroup').eq(th.index()).addClass('sorted');
+					tbody.children('tr').sort(desclambda(th.index())).appendTo(tbody);
+				} else if(desc) {
+					ctable.children('colgroup').eq(th.index()).removeClass('sorted');
+					tbody.children('tr').sort(unsortlambda).appendTo(tbody);
+				}
+			})
+		;
+
+		tbody
+			.children('tr')
+			.children('th:first-child')
+			.on('click', function() {
+				var tr = $(this).parent();
+				var wasbase = tr.hasClass('base');
+
+				tbody.find('small.basecmp').remove();
+				tbody.children('tr').removeClass('base')
+					.children('td').removeClass('gain loss');
+				if(wasbase) return;
+
+				tr.addClass('base');
+				tbody.children('tr').each(function() {
+					var other = $(this);
+					if(other.index() === tr.index()) return;
+
+					other.children('td').each(function() {
+						var td = $(this);
+						var baseval = tr.children().eq(td.index()).data('rawval');
+						if(!baseval) return;
+
+						var otherval = td.data('rawval');
+						var delta = 100 * (otherval - baseval) / baseval;
+						if(!delta) return;
+
+						td.append(
+							$(document.createElement('small'))
+								.addClass('basecmp')
+								.append(document.createElement('br'))
+								.append(document.createTextNode(delta >= 0 ? '+' : '-'))
+								.append(document.createTextNode(round_sd(Math.abs(delta), 2) + " %"))
+						);
+
+						var highisgood = ctable.children('thead')
+							.children('tr').children()
+							.eq(td.index()).data('hig');
+						console.log(td.index(), highisgood);
+						var gain = delta >= 0;
+						if(highisgood) {
+							td.addClass(gain ? 'gain' : 'loss');
+						} else {
+							td.addClass(gain ? 'loss' : 'gain');
+						}
+					});
+				});
+			})
+		;
 	}
 });

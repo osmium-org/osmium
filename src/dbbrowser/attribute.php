@@ -25,7 +25,7 @@ const RELATIVE = '../..';
 
 $a = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
-		'SELECT attributeid, attributename, dgmattribs.displayname, defaultvalue,
+		'SELECT attributeid, attributename, dgmattribs.displayname, defaultvalue, highisgood,
 		stackable, dgmunits.unitid, published, dgmunits.displayname AS udisplayname
 		FROM eve.dgmattribs
 		LEFT JOIN eve.dgmunits ON dgmunits.unitid = dgmattribs.unitid
@@ -69,8 +69,10 @@ $def = (!$a['defaultvalue'] && in_array($a['unitid'], [ 115, 116, 129 ]))
 	);
 
 echo "<ul>\n";
-echo "<li>Default value: {$def}</li>\n";
-echo "<li>Stacking penalized: ".($a['stackable'] === 't' ? 'never' : 'yes')."</li>\n";
+echo "<li>Default value: {$def} <small class='raw'>(unitid {$a['unitid']})</small></li>\n";
+echo "</ul>\n<ul>\n";
+echo "<li>Stacking penalized: <strong>".($a['stackable'] === 't' ? 'never' : 'yes')."</strong></li>\n";
+echo "<li>The <strong>".($a['highisgood'] ? 'higher' : 'lower')."</strong>, the better <small>(grossly inaccurate)</small></li>\n";
 echo "</ul>\n";
 
 if(isset($_GET['s']) && in_array($_GET['s'], [ 'typeid', 'typename', 'value' ], true)) {

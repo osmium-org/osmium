@@ -20,7 +20,7 @@ namespace Osmium\Page\DBBrowser\CompareTypeAttributes;
 
 require __DIR__.'/../../inc/root.php';
 
-const RELATIVE = '../..';
+const RELATIVE = '../../..';
 
 \Osmium\Chrome\print_header(
 	'Compare types', RELATIVE, false,
@@ -30,21 +30,57 @@ echo "<div id='dbb' class='compare'>\n";
 
 echo "<header><h2>Compare types</h2></header>\n";
 
-$typeids = explode(',', $_GET['typeids']);
-foreach($typeids as $k => $v) {
-	$typeids[$k] = (int)$v; /* Fuck references */
+function filter_id_list($s) {
+	return array_filter(
+		array_slice(
+			array_map('intval', explode(',', $s)),
+			0, 50
+		)
+	);
 }
-$typeids = array_slice($typeids, 0, 50);
+
+$typeids = filter_id_list($_GET['typeids']);
+$attributeids = $_GET['attributeids'] === 'auto'
+	? [] : array_flip(filter_id_list($_GET['attributeids']));
+
+$tlist = implode(',', $typeids);
+
+if($attributeids === []) {
+	$attribsq = \Osmium\Db\query(
+		'SELECT DISTINCT attributeid
+		FROM osmium.siattributes
+		WHERE typeid IN ('.$tlist.')
+		AND published = true
+		ORDER BY attributeid ASC'
+	);
+
+	while($a = \Osmium\Db\fetch_row($attribsq)) {
+		$attributeids[$a[0]] = true;
+	}
+}
+
+$alist = implode(',', array_keys($attributeids));
+
+$highisgood = [];
+$higq = \Osmium\Db\query(
+	'SELECT attributeid, highisgood
+	FROM eve.dgmattribs
+	WHERE attributeid IN ('.$alist.')'
+);
+while($hig = \Osmium\Db\fetch_row($higq)) {
+	$highisgood[$hig[0]] = ($hig[1] === 't');
+}
 
 $typeattribsq = \Osmium\Db\query(
-	'SELECT typeid, attributeid,  value, unitid, udisplayname
+	'SELECT typeid, attributeid, value, unitid, udisplayname
 	FROM osmium.siattributes
-	WHERE typeid IN ('.implode(',', $typeids).') AND published = true
+	WHERE typeid IN ('.$tlist.')
+	AND attributeid IN ('.$alist.')
+	AND published = true
 	ORDER BY attributeid ASC'
 );
 
 $data = [];
-$attributeids = [];
 
 while($ta = \Osmium\Db\fetch_assoc($typeattribsq)) {
 	$data[$ta['typeid']][$ta['attributeid']] = [
@@ -53,8 +89,6 @@ while($ta = \Osmium\Db\fetch_assoc($typeattribsq)) {
 			$ta['value'], $ta['unitid'], $ta['udisplayname'], RELATIVE
 		)
 	];
-
-	$attributeids[$ta['attributeid']] = true;
 }
 
 /* Prune attributes with no differences */
@@ -73,29 +107,35 @@ foreach($attributevals as $attributeid => $vals) {
 
 $attributeids = array_keys($attributeids);
 
+/*echo "<p class='filter'>\n";
+echo "Filter and/or reorder: <a class='types'>types</a>, <a class='attribs'>attributes</a>";
+echo "</p>\n";*/
+
 echo "<section class='compare'>\n<table class='d'>\n";
+echo "<colgroup></colgroup>\n<colgroup></colgroup>\n";
+foreach($attributeids as $attributeid) { echo "<colgroup></colgroup>\n"; }
 echo "<thead>\n<tr>\n<td><img src='".RELATIVE."/static-".\Osmium\STATICVER."/favicon.png' alt='' /><br />".\Osmium\Chrome\escape($_SERVER['HTTP_HOST'])."</td>\n<td></td>\n";
 
 foreach($attributeids as $attributeid) {
 	$dn = \Osmium\Chrome\escape(ucfirst(\Osmium\Fit\get_attributedisplayname($attributeid)));
-	echo "<th title='{$dn}'><a href='".RELATIVE."/db/attribute/{$attributeid}'>{$dn}</a></th>\n";
+	echo "<th title='{$dn}' data-aid='{$attributeid}' data-hig='"
+		.(int)$highisgood[$attributeid]."'><a>{$dn}</a></th>\n";
 }
 
 echo "</tr>\n</thead>\n<tbody>\n";
 
-foreach($typeids as $typeid) {
-	echo "<tr>\n";
+foreach($typeids as $i => $typeid) {
+	echo "<tr data-idx='{$i}' data-tid='{$typeid}'>\n";
 
+	echo "<th><a>".\Osmium\Chrome\escape(\Osmium\Fit\get_typename($typeid))."</a></th>\n";
 	echo "<th><a href='".RELATIVE."/db/type/{$typeid}'>"
-		.\Osmium\Chrome\escape(\Osmium\Fit\get_typename($typeid))
-		."</a></th>\n";
-	echo "<th><img src='//image.eveonline.com/Type/{$typeid}_64.png' alt='' /></th>\n";
+		."<img src='//image.eveonline.com/Type/{$typeid}_64.png' alt='' /></a></th>\n";
 
 	foreach($attributeids as $attributeid) {
 		$val = isset($data[$typeid][$attributeid])
 			? $data[$typeid][$attributeid] : [ null, "<small>N/A</small>" ];
 
-		echo "<td data-rawval='{$val[0]}'>{$val[1]}</td>\n";
+		echo "<td data-aid='{$attributeid}' data-rawval='{$val[0]}'>{$val[1]}</td>\n";
 	}
 
 	echo "</tr>\n";

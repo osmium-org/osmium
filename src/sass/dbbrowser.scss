@@ -308,6 +308,10 @@ div#dbb {
 	&> section.compare > table {
 		table-layout: fixed;
 
+		&> colgroup.sorted {
+			background-color: $table-highlight-bg-color;
+		}
+
 		&> thead, &> tfoot {
 			background: rgba($subsection-bg-color, .5) !important;
 		}
@@ -332,6 +336,11 @@ div#dbb {
 			&> th {
 				width: 5em;
 				overflow: hidden;
+
+				@include no-user-select;
+
+				&.asc:before { content: "▲"; }
+				&.desc:before { content: "▼"; }
 			}
 		}
 
@@ -339,7 +348,7 @@ div#dbb {
 			text-align: right;
 			@include ellipsis;
 
-			&> img {
+			img {
 				height: 2.5em;
 				border-radius: .5em;
 			}
@@ -348,6 +357,18 @@ div#dbb {
 		&> tbody > tr > td {
 			height: 2.5em;
 			text-align: center;
+
+			&> small {
+				opacity: 0.5;
+			}
+
+			&.gain { color: $attribute-gain-text-color; }
+			&.loss { color: $attribute-loss-text-color; }
+		}
+
+		&> tbody > tr.base {
+			&> th { height: 3em; }
+			background-color: $table-highlight-bg-color;
 		}
 	}
 }

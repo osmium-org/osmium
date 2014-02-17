@@ -320,7 +320,7 @@ if($nvariations > 1) {
 	echo "</tbody>\n</table>\n";
 
 	echo "<p class='compare'><a href='".RELATIVE."/db/comparetypes/"
-		.implode(',', $vartypeids)."' rel='nofollow'>Compare these types</a></p>\n";
+		.implode(',', $vartypeids)."/auto' rel='nofollow'>Compare these types</a></p>\n";
 
 	echo "</section>\n";
 }

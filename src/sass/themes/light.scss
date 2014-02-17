@@ -182,6 +182,9 @@ $loadout-list-odd-bg-color: rgba(lighten($main-bg-color, 3%), 0.5);
 
 $missing-skill-text-color: hsl(30, 100%, 40%);
 
+$attribute-gain-text-color: hsl(120, 80%, 30%);
+$attribute-loss-text-color: hsl(0, 80%, 30%);
+
 //
 // Notifications
 //
@@ -200,6 +203,8 @@ $table-header-bg-color: lighten($subsection-bg-color, 15%);
 
 $table-row-even-bg-color: hsla(0, 0%, 100%, 0.04);
 $table-row-odd-bg-color: rgba($main-bg-color, 0.04);
+
+$table-highlight-bg-color: hsla(60, 100%, 50%, 0.2);
 
 //
 // Flags
