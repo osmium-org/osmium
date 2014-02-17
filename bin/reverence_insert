@@ -93,13 +93,33 @@ processRows("eve.dgmunits", {
 
 
 
+higoverrides = {
+    6: False, # capacitorNeed
+    50: False, # cpu
+    30: False, # power
+
+    113: False, # emDamageResonance
+    111: False, # explosiveDamageResonance
+    109: False, # kineticDamageResonance
+    110: False, # thermalDamageResonance
+    133: True, # emDamageResonanceMultiplier
+    132: True, # explosiveDamageResonanceMultiplier
+    131: True, # kineticDamageResonanceMultiplier
+    130: True, # thermalDamageResonanceMultiplier
+
+    974: False, # hullEmDamageResistance
+    975: False, # hullExplosiveDamageResistance
+    976: False, # hullKineticDamageResistance
+    977: False, # hullThermalDamageResistance
+}
+
 processRows("eve.dgmattribs", {
     "attributeid": "attributeID",
     "attributename": "attributeName",
     "displayname": "displayName",
     "defaultvalue": "defaultValue",
     "stackable": "stackable",
-    "highisgood": "highIsGood",
+    "highisgood": (lambda row: higoverrides[row.attributeID] if row.attributeID in higoverrides else row.highIsGood),
     "unitid": (lambda row: row.unitID if row.unitID > 0 else None),
     "categoryid": "categoryID",
     "published": "published",
