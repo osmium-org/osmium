@@ -467,6 +467,10 @@ section.sivariations {
 		font-size: 0.8em;
 		color: $aside-text-color;
 	}
+
+	&> p.compare {
+		text-align: center;
+	}
 }
 
 .overflow {

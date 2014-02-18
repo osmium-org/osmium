@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -52,6 +52,7 @@ osmium_showinfo_internal = function(opts, onerror) {
 			osmium_tabify_nohash($('ul.showinfotabs'), 0);
 
 			var ul = $("ul.sivariations").last();
+			var vartypeids = [];
 
 			for(var i = 0; i < json.variations.length; ++i) {
 				var t = osmium_types[json.variations[i][0]];
@@ -62,6 +63,7 @@ osmium_showinfo_internal = function(opts, onerror) {
 				li.text(t[1]);
 				li.data('category', t[2]);
 				li.data('subcategory', t[3]);
+				vartypeids.push(t[0]);
 
 				li.prepend(
 					$(document.createElement('img'))
@@ -96,6 +98,13 @@ osmium_showinfo_internal = function(opts, onerror) {
 
 				ul.append(li);
 			}
+
+			ul.after($(document.createElement('p')).addClass('compare').append(
+				$(document.createElement('a'))
+					.prop('href', osmium_relative + '/db/comparetypes/'
+						  + vartypeids.join(',') + '/auto')
+					.text('Compare these types')
+			));
 		}
 	});
 }

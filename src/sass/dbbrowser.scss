@@ -298,6 +298,10 @@ div#dbb {
 		max-width: none;
 		padding: 0 5em;
 
+		&> p.meta {
+			text-align: right;
+		}
+
 		&> section.compare {
 			overflow: hidden;
 			position: relative;
@@ -347,6 +351,7 @@ div#dbb {
 		&> tbody > tr > th {
 			text-align: right;
 			@include ellipsis;
+			@include no-user-select;
 
 			img {
 				height: 2.5em;

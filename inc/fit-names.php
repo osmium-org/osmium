@@ -97,6 +97,12 @@ function get_unitid($attributeid) {
 	);
 }
 
+function get_attributedefaultvalue($attributeid) {
+	return get_cached_thing_generic(
+		'eve.dgmattribs', 'defaultvalue', 'attributeid', (int)$attributeid
+	);
+}
+
 function get_unitdisplayname($unitid) {
 	return get_cached_thing_generic(
 		'eve.dgmunits', 'displayname', 'unitid', (int)$unitid

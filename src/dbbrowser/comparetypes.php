@@ -24,15 +24,6 @@ const RELATIVE = '../../..';
 const MAX_TYPES = 50;
 const MAX_ATTRIBS = 50;
 
-function filter_id_list($s, $max) {
-	return array_filter(
-		array_slice(
-			array_map('intval', explode(',', $s)),
-			0, $max
-		)
-	);
-}
-
 if($_GET['groupid'] > 0) {
 	$gn = \Osmium\Db\fetch_row(
 		\Osmium\Db\query_params(
@@ -57,10 +48,94 @@ if($_GET['groupid'] > 0) {
 	}
 
 	$title = 'Compare group: '.$gn[0];
+
+} else if($_GET['marketgroupid'] > 0) {
+	$mgn = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT mg1.marketgroupname AS mgname1, mg0.marketgroupname AS mgname0
+			FROM eve.invmarketgroups mg0
+			LEFT JOIN eve.invmarketgroups mg1 ON mg1.marketgroupid = mg0.parentgroupid
+			WHERE mg0.marketgroupid = $1',
+			array($_GET['marketgroupid'])
+		)
+	);
+	if($mgn === false) \Osmium\fatal(404);
+	$mgn = implode(', ', array_filter($mgn));
+	$title = 'Compare market group: '.$mgn;
+
+	$typeids = [];
+	$tq = \Osmium\Db\query_params(
+		'SELECT typeid
+		FROM eve.invtypes
+		WHERE marketgroupid = $1 AND published = true
+		ORDER BY typename ASC
+		LIMIT '.MAX_TYPES,
+		array($_GET['marketgroupid'])
+	);
+	while($t = \Osmium\Db\fetch_row($tq)) {
+		$typeids[] = $t[0];
+	}
+
 } else {
-	$typeids = filter_id_list($_GET['typeids'], MAX_TYPES);	
+	$typeids = [];
+
+	foreach(explode(',', $_GET['typeids'], MAX_TYPES) as $t) {
+		if($t > 0) {
+			$typeids[] = (int)$t;
+		}
+	}
+
 	$title = 'Compare types';
 }
+
+
+$tlist = implode(',', $typeids);
+$attributes = [];
+$metaattribidx = -1;
+$hasauto = false;
+
+foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
+	if($attrib === 'auto') {
+		if($hasauto) continue;
+
+		/* Fetch attribute list from siattribs */
+		$attribsq = \Osmium\Db\query(
+			'SELECT DISTINCT attributeid
+			FROM osmium.siattributes
+			WHERE typeid IN ('.$tlist.')
+			AND published = true
+			ORDER BY attributeid ASC
+			LIMIT '.MAX_ATTRIBS
+		);
+
+		while($a = \Osmium\Db\fetch_row($attribsq)) {
+			$attributes[(int)$a[0]] = true;
+		}
+
+		$hasauto = true;
+		continue;
+	}
+
+	if(ctype_digit($attrib)) {
+		/* Simple attribute */
+		$attributes[(int)$attrib] = true;
+		continue;
+	}
+
+	if(preg_match(
+		'%^rpn:(?<name>[^:]+)(?<rpn>(:(a|((\+|-)?[0-9]*(\.[0-9]+)?(e(\+|-)?[0-9]+)?)|add|sub|mul|div))+)$%',
+		$attrib,
+		$match
+	)) {
+		/* RPN attribute */
+		$attributes[$metaattribidx--] = explode(':', $attrib);
+		continue;
+	}
+
+	\Osmium\fatal(400, "Unrecognized attribute <code>".\Osmium\Chrome\escape($attrib)."</code>");
+}
+
+
 
 \Osmium\Chrome\print_header(
 	\Osmium\Chrome\escape(strip_tags($title)), RELATIVE, false,
@@ -70,28 +145,9 @@ echo "<div id='dbb' class='compare'>\n";
 
 echo "<header><h2>".\Osmium\Chrome\escape($title)."</h2></header>\n";
 
-$attributeids = $_GET['attributeids'] === 'auto'
-	? [] : array_flip(filter_id_list($_GET['attributeids'], MAX_ATTRIBS));
 
-$tlist = implode(',', $typeids);
 
-if($attributeids === []) {
-	$attribsq = \Osmium\Db\query(
-		'SELECT DISTINCT attributeid
-		FROM osmium.siattributes
-		WHERE typeid IN ('.$tlist.')
-		AND published = true
-		ORDER BY attributeid ASC
-		LIMIT '.MAX_ATTRIBS
-	);
-
-	while($a = \Osmium\Db\fetch_row($attribsq)) {
-		$attributeids[$a[0]] = true;
-	}
-}
-
-$alist = implode(',', array_keys($attributeids));
-
+$alist = implode(',', array_keys($attributes));
 $highisgood = [];
 $higq = \Osmium\Db\query(
 	'SELECT attributeid, highisgood
@@ -131,30 +187,81 @@ foreach($data as $typeid => $sub) {
 }
 
 foreach($attributevals as $attributeid => $vals) {
+	if($attributeid < 0) continue;
+
 	if(count($vals) < 2) {
-		unset($attributeids[$attributeid]);
+		unset($attributes[$attributeid]);
 	}
 }
 
-$attributeids = array_keys($attributeids);
-
-/*echo "<p class='filter'>\n";
-echo "Filter and/or reorder: <a class='types'>types</a>, <a class='attribs'>attributes</a>";
-echo "</p>\n";*/
+echo "<p class='meta'>\n";
+echo "Filter and/or reorder: <a class='types'>types</a>, <a class='attribs'>attributes</a><br />\n";
+echo "<strong><a href='".RELATIVE."/help/db#compare'>Need help?</a></strong>";
+echo "</p>\n";
 
 echo "<section class='compare'>\n<table class='d'>\n";
 echo "<colgroup></colgroup>\n<colgroup></colgroup>\n";
-foreach($attributeids as $attributeid) { echo "<colgroup></colgroup>\n"; }
+foreach($attributes as $attributeid => $a) { echo "<colgroup></colgroup>\n"; }
 echo "<thead>\n<tr>\n<td><img src='".RELATIVE."/static-".\Osmium\STATICVER."/favicon.png' alt='' /><br />".\Osmium\Chrome\escape($_SERVER['HTTP_HOST'])."</td>\n<td></td>\n";
 
-foreach($attributeids as $attributeid) {
+foreach($attributes as $attributeid => $a) {
 	$hig = isset($highisgood[$attributeid]) ? (int)$highisgood[$attributeid] : -1;
 
-	$dn = \Osmium\Chrome\escape(ucfirst(\Osmium\Fit\get_attributedisplayname($attributeid)));
+	if($attributeid >= 0) {
+		$dn = \Osmium\Chrome\escape(ucfirst(\Osmium\Fit\get_attributedisplayname($attributeid)));
+	} else if(isset($a[0]) && $a[0] === 'rpn') {
+		$dn = \Osmium\Chrome\escape($a[1]);
+	}
+
 	echo "<th data-aid='{$attributeid}' data-hig='{$hig}'><a title='{$dn} ({$attributeid})'>{$dn}</a></th>\n";
 }
 
 echo "</tr>\n</thead>\n<tbody>\n";
+
+function eval_rpn(array $rpn, array $attribvals) {
+	$stack = [];
+
+	array_shift($rpn); /* rpn */
+	array_shift($rpn); /* name */
+
+	while(($e = array_shift($rpn)) !== null) {
+		if($e === 'a') {
+			/* Substitute attributeID on top of stack by attrib value */
+			$aid = array_pop($stack);
+
+			if($aid === null) return null;
+
+			$stack[] = isset($attribvals[$aid]) ?
+				$attribvals[$aid][0] : \Osmium\Fit\get_attributedefaultvalue($aid);
+
+		} else if(is_numeric($e)) {
+			/* Number literal: put on the stack */
+			$stack[] = floatval($e);
+		} else if($e === 'add') {
+			$a = array_pop($stack);
+			$b = array_pop($stack);
+			if($a === null || $b === null) return null;
+			$stack[] = $a + $b;
+		} else if($e === 'sub') {
+			$a = array_pop($stack);
+			$b = array_pop($stack);
+			if($a === null || $b === null) return null;
+			$stack[] = $b - $a;
+		} else if($e === 'mul') {
+			$a = array_pop($stack);
+			$b = array_pop($stack);
+			if($a === null || $b === null) return null;
+			$stack[] = $a * $b;
+		} else if($e === 'div') {
+			$a = array_pop($stack);
+			$b = array_pop($stack);
+			if($b === null || !$a) return null;
+			$stack[] = $b / $a;
+		}
+	}
+
+	return array_pop($stack);
+}
 
 foreach($typeids as $i => $typeid) {
 	echo "<tr data-idx='{$i}' data-tid='{$typeid}'>\n";
@@ -163,9 +270,19 @@ foreach($typeids as $i => $typeid) {
 	echo "<th><a href='".RELATIVE."/db/type/{$typeid}'>"
 		."<img src='//image.eveonline.com/Type/{$typeid}_64.png' alt='' /></a></th>\n";
 
-	foreach($attributeids as $attributeid) {
-		$val = isset($data[$typeid][$attributeid])
-			? $data[$typeid][$attributeid] : [ null, "<small>N/A</small>" ];
+	foreach($attributes as $attributeid => $a) {
+		if($attributeid >= 0) {
+			$val = isset($data[$typeid][$attributeid]) ?
+				$data[$typeid][$attributeid] : [ null, "<small>N/A</small>" ];
+		} else if(isset($a[0]) && $a[0] === 'rpn') {
+			$rpnv = eval_rpn($a, isset($data[$typeid]) ? $data[$typeid] : array());
+
+			if($rpnv === null) {
+				$val = [ null, "<small>ERR</small>" ];
+			} else {
+				$val = [ $rpnv, \Osmium\Chrome\round_sd($rpnv, 2) ];
+			}
+		}
 
 		echo "<td data-aid='{$attributeid}' data-rawval='{$val[0]}'>{$val[1]}</td>\n";
 	}

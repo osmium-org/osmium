@@ -585,11 +585,26 @@ ul#ctxmenu, ul.subctxmenu {
 }
 
 div#mdstatic {
+	@include fixed-width-page;
 	@include readable;
-	margin: 0 1em;
+
+	padding-bottom: 20em;
+
+	&> h1 {
+		font-size: 3em;
+		line-height: 1em;
+		border-bottom: 1px solid $title-border-color;
+		margin-top: 1em;
+	}
 
 	&> h2 {
 		margin-top: 3em;
+		font-size: 2em;
+		line-height: 1em;
+	}
+
+	&> h3 {
+		margin-left: 2em;
 	}
 }
 

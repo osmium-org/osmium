@@ -139,6 +139,9 @@ if($types !== []) {
 
 \Osmium\DBBrowser\print_typelist($types);
 
+if($types !== []) {
+	echo "<p class='compare'><a href='".RELATIVE."/db/comparemarketgroup/{$mg['mgid0']}/auto'>Compare types in this market group</a></p>\n";
+}
 
 echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('dbbrowser');
