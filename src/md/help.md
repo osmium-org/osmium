@@ -15,6 +15,10 @@ Please [contact the developers](./about#project) for any questions about Osmium.
 - [**Search help**](./help/search): detailed help and examples about
   searching loadouts and types.
 
+- [**Database browser help**](./help/db): documentation for the
+  database browser. Includes examples and a list of available
+  parameters.
+
 - [**Loadout formats**](./help/formats): general information about
   lodaout formats, how Osmium implements them, and documentation about
   non-standard variants.

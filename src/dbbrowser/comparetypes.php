@@ -21,27 +21,57 @@ namespace Osmium\Page\DBBrowser\CompareTypeAttributes;
 require __DIR__.'/../../inc/root.php';
 
 const RELATIVE = '../../..';
+const MAX_TYPES = 50;
+const MAX_ATTRIBS = 50;
 
-\Osmium\Chrome\print_header(
-	'Compare types', RELATIVE, false,
-	"<link href='//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css' rel='stylesheet' type='text/css' />\n"
-);
-echo "<div id='dbb' class='compare'>\n";
-
-echo "<header><h2>Compare types</h2></header>\n";
-
-function filter_id_list($s) {
+function filter_id_list($s, $max) {
 	return array_filter(
 		array_slice(
 			array_map('intval', explode(',', $s)),
-			0, 50
+			0, $max
 		)
 	);
 }
 
-$typeids = filter_id_list($_GET['typeids']);
+if($_GET['groupid'] > 0) {
+	$gn = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT groupname FROM eve.invgroups
+			WHERE groupid = $1',
+			array($_GET['groupid'])
+		)
+	);
+	if($gn === false) \Osmium\fatal(404);
+
+	$typeids = [];
+	$tq = \Osmium\Db\query_params(
+		'SELECT typeid
+		FROM eve.invtypes
+		WHERE groupid = $1 AND published = true
+		ORDER BY typename ASC
+		LIMIT '.MAX_TYPES,
+		[ $_GET['groupid'] ]
+	);
+	while($t = \Osmium\Db\fetch_row($tq)) {
+		$typeids[] = $t[0];
+	}
+
+	$title = 'Compare group: '.$gn[0];
+} else {
+	$typeids = filter_id_list($_GET['typeids'], MAX_TYPES);	
+	$title = 'Compare types';
+}
+
+\Osmium\Chrome\print_header(
+	\Osmium\Chrome\escape(strip_tags($title)), RELATIVE, false,
+	"<link href='//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css' rel='stylesheet' type='text/css' />\n"
+);
+echo "<div id='dbb' class='compare'>\n";
+
+echo "<header><h2>".\Osmium\Chrome\escape($title)."</h2></header>\n";
+
 $attributeids = $_GET['attributeids'] === 'auto'
-	? [] : array_flip(filter_id_list($_GET['attributeids']));
+	? [] : array_flip(filter_id_list($_GET['attributeids'], MAX_ATTRIBS));
 
 $tlist = implode(',', $typeids);
 
@@ -51,7 +81,8 @@ if($attributeids === []) {
 		FROM osmium.siattributes
 		WHERE typeid IN ('.$tlist.')
 		AND published = true
-		ORDER BY attributeid ASC'
+		ORDER BY attributeid ASC
+		LIMIT '.MAX_ATTRIBS
 	);
 
 	while($a = \Osmium\Db\fetch_row($attribsq)) {
@@ -117,9 +148,10 @@ foreach($attributeids as $attributeid) { echo "<colgroup></colgroup>\n"; }
 echo "<thead>\n<tr>\n<td><img src='".RELATIVE."/static-".\Osmium\STATICVER."/favicon.png' alt='' /><br />".\Osmium\Chrome\escape($_SERVER['HTTP_HOST'])."</td>\n<td></td>\n";
 
 foreach($attributeids as $attributeid) {
+	$hig = isset($highisgood[$attributeid]) ? (int)$highisgood[$attributeid] : -1;
+
 	$dn = \Osmium\Chrome\escape(ucfirst(\Osmium\Fit\get_attributedisplayname($attributeid)));
-	echo "<th title='{$dn}' data-aid='{$attributeid}' data-hig='"
-		.(int)$highisgood[$attributeid]."'><a>{$dn}</a></th>\n";
+	echo "<th data-aid='{$attributeid}' data-hig='{$hig}'><a title='{$dn} ({$attributeid})'>{$dn}</a></th>\n";
 }
 
 echo "</tr>\n</thead>\n<tbody>\n";

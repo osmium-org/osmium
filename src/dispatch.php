@@ -78,7 +78,7 @@ $osmium_dispatch_rules = array(
 	'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
 	'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
 	'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/effect.php',
-	'%^/db/comparetypes/(?<typeids>([1-9][0-9]*,?)+)/(?<attributeids>auto|(([1-9][0-9]*,?)+))$%D' => '/src/dbbrowser/comparetypes.php',
+	'%^/db/compare(types/(?<typeids>([1-9][0-9]*,?)+)|group/(?<groupid>[1-9][0-9]*))/(?<attributeids>auto|(([1-9][0-9]*,?)+))$%D' => '/src/dbbrowser/comparetypes.php',
 
 
 	/* API calls */
@@ -112,6 +112,9 @@ $osmium_dispatch_rules = array(
 	],
 	'%^/help/formats%D' => [ '/src/mdstatic.php',
 	                         ['relative' => '..', 'title' => 'Loadout formats', 'f' => 'formats.md']
+	],
+	'%^/help/db%D' => [ '/src/mdstatic.php',
+	                         ['relative' => '..', 'title' => 'Database browser help', 'f' => 'dbbrowser.md']
 	],
 
 	'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],

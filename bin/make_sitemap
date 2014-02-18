@@ -61,6 +61,7 @@ $static = [
 	'/help',
 	'/help/search',
 	'/help/formats',
+	'/help/db',
 	'/api',
 	'/compare/dps',
 	'/privileges',

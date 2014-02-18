@@ -80,6 +80,7 @@ while($t = \Osmium\Db\fetch_assoc($typesq)) {
 
 \Osmium\DBBrowser\print_typelist($types);
 
+echo "<p class='compare'><a href='".RELATIVE."/db/comparegroup/{$g['groupid']}/auto' rel='nofollow'>Compare all types in this group</a></p>\n";
 
 echo "</div>\n";
 \Osmium\Chrome\print_js_snippet('dbbrowser');
