@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,20 +28,10 @@ $filters = array_keys(array_filter(
 	isset($_POST['mg']) && is_array($_POST['mg']) ? $_POST['mg'] : array(),
 	function($v) { return $v === '0'; }
 ));
-$filters[] = -1;
 
-$w = \Osmium\Search\parse_search_query_attr_filters(
-	$q,
-	[ 'ml', 'mg' ],
-	[]
+$query = \Osmium\Search\query(
+	\Osmium\Search\get_type_search_query($q, $filters, MAX_TYPES + 1)
 );
-
-$query = \Osmium\Search\query('SELECT id
-FROM osmium_types
-WHERE mg NOT IN ('.implode(',', $filters).')
-AND MATCH(\''.\Osmium\Search\escape($q).'\') '.$w.'
-LIMIT '.(MAX_TYPES + 1).'
-OPTION field_weights=(typename=1000,synonyms=1000,parenttypename=100,parentsynonyms=100,groupname=100,marketgroupname=100)');
 
 if($query === false) {
 	\Osmium\Chrome\return_json(array('payload' => array(), 'warning' => 'Invalid search query.'));

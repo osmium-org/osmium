@@ -61,6 +61,13 @@ div#search_full {
 	}
 }
 
+section.sr {
+	margin: 1em;
+	&> h2 {
+		font-size: 2em;
+	}
+}
+
 ol.loadout_sr {
 	margin: 0;
 	padding: 0;
@@ -141,6 +148,24 @@ ol.loadout_sr {
 		&> ul.tags {
 			opacity: 0.8;
 		}
+	}
+}
+
+ol.type_sr {
+	list-style-type: none;
+	margin: 0 0 0 2em;
+	padding: 0;
+
+	@include columnize(20em);
+
+	&> li {
+		&> a > img {
+			height: 3em;
+			padding: 0.2em;
+			border-radius: 0.5em;
+		}
+
+		@include ellipsis;
 	}
 }
 

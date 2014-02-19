@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -127,14 +127,15 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 	echo "<nav>\n";
 	\Osmium\State\print_login_or_logout_box($relative, $notifications);
 
+	echo "<form class='s' method='get' action='".$relative."/search'>\n";
+	echo "<input type='search' placeholder='Search' name='q' accesskey='s' title='Search fittings or types' />";
+	echo "<input type='submit' value='Go!' />\n";
+	echo "</form>";
+
 	echo "<ul>\n";
 	echo get_navigation_link(
 		$relative.'/', $osmium, $osmium,
 		"Go back to the home page"
-	);
-	echo get_navigation_link(
-		$relative.'/search', "Search loadouts", "Search",
-		"Search fittings by ship, by fitted modules, by tags, etc."
 	);
 	echo get_navigation_link(
 		$relative.'/new', "Create loadout", "Create",

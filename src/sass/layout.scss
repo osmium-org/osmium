@@ -263,6 +263,28 @@ div#wrapper > nav:first-child {
 
 		input[placeholder] {
 			width: 9em;
+			background-color: rgba($input-bg-color, .2);
+		}
+
+		input {
+			padding: 0.2em;
+		}
+	}
+
+	&> form.s {
+		display: inline-block;
+		float: right;
+		margin-right: 1em;
+		line-height: $nav-height;
+
+		&> input[type='submit'] {
+			display: none;
+		}
+
+		&> input[type='search'] {
+			width: 10em;
+			padding: 0.2em;
+			background-color: rgba($input-bg-color, .2);
 		}
 	}
 }

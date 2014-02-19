@@ -249,6 +249,24 @@ function get_search_query($search_query) {
 	".$fand;
 }
 
+function get_type_search_query($q, $mgfilters = array(), $limit = 50) {
+	$mgfilters[] = -1;
+
+	$w = parse_search_query_attr_filters(
+		$q, [ 'ml', 'mg' ], []
+	);
+
+	return 'SELECT id
+	FROM osmium_types
+	WHERE mg NOT IN ('.implode(',', $mgfilters).')
+	AND MATCH(\''.\Osmium\Search\escape($q).'\') '.$w.'
+	LIMIT '.(int)$limit.'
+	OPTION field_weights=(
+	typename=1000,synonyms=1000,parenttypename=100,parentsynonyms=100,
+	groupname=100,marketgroupname=100
+	)';
+}
+
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
 	$q = query(
 		get_search_query($search_query)
@@ -296,7 +314,7 @@ function get_meta() {
 
 function print_pretty_results($relative, $query, $more = '', $paginate = false, $perpage = 20, $pagename = 'p', $message = 'No loadouts matched your query.') {
 	$total = get_total_matches($query, $more);
-	if($paginate) {
+	if($paginate && $total > 0) {
 		$offset = \Osmium\Chrome\paginate($pagename, $perpage, $total, $pageresult, $pageinfo);
 	} else $offset = 0;
 
@@ -306,25 +324,29 @@ function print_pretty_results($relative, $query, $more = '', $paginate = false, 
 		return;
 	}
 
-	if($paginate) {
+	if($paginate && $total > 0) {
 		echo $pageinfo;
 		echo $pageresult;
-		print_loadout_list($ids, $relative, $offset, $message);
+		$ret = print_loadout_list($ids, $relative, $offset, $message);
 		echo $pageresult;
 	} else {
-		print_loadout_list($ids, $relative, $offset, $message);
+		$ret = print_loadout_list($ids, $relative, $offset, $message);
 	}
+
+	return $ret;
 }
 
 function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message = 'No loadouts.') {
 	if($ids === array()) {
-		echo "<p class='placeholder'>".$nothing_message."</p>\n";
+		if($nothing_message) {
+			echo "<p class='placeholder'>".$nothing_message."</p>\n";
+		}
 		return;		
 	}
 
 	$orderby = implode(',', array_map(function($id) { return 'lsr.loadoutid='.$id.' DESC'; }, $ids));
 	$in = implode(',', $ids);
-	$first = true;
+	$loadoutids = [];
     
 	$lquery = \Osmium\Db\query(
 		'SELECT loadoutid, privatetoken, latestrevision, viewpermission, visibility,
@@ -337,8 +359,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 	);
 
 	while($loadout = \Osmium\Db\fetch_assoc($lquery)) {
-		if($first === true) {
-			$first = false;
+		if($loadoutids === []) {
 			/* Only write the <ol> tag if there is at least one loadout */
 			echo "<ol start='".($offset + 1)."' class='loadout_sr'>\n";
 		}
@@ -346,6 +367,7 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 		$uri = \Osmium\Fit\get_fit_uri(
 			$loadout['loadoutid'], $loadout['visibility'], $loadout['privatetoken']
 		);
+		$loadoutids[$loadout['loadoutid']] = $uri;
 
 		$sn = \Osmium\Chrome\escape($loadout['typename']);
 
@@ -451,11 +473,13 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 		echo "</li>\n";
 	}
 
-	if($first === false) {
+	if($loadoutids !== []) {
 		echo "</ol>\n";
 	} else {
 		echo "<p class='placeholder'>".$nothing_message."</p>\n";
 	}
+
+	return $loadoutids;
 }
 
 function get_search_cond_from_advanced() {
@@ -619,4 +643,34 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 
 	echo"</p>\n";
 	echo "</form>\n";
+}
+
+function print_type_list($relative, $query, $limit = 20) {
+	if(!$query) return [];
+
+	$q = query(get_type_search_query($query, [], $limit));
+
+	if($q === false) return [];
+	$typeids = [];
+
+	while($t = fetch_row($q)) {
+		if($typeids === []) {
+			echo "<ol class='type_sr'>\n";
+		}
+
+		$typeid = $t[0];
+		$typeids[] = $typeid;
+
+		$tn = \Osmium\Chrome\escape(\Osmium\Fit\get_typename($typeid));
+
+		echo "<li><a href='{$relative}/db/type/{$typeid}' title='{$tn}'>"
+			."<img src='//image.eveonline.com/Type/{$typeid}_64.png' alt='' />"
+			."{$tn}</a></li>\n";
+	}
+
+	if($typeids !== []) {
+		echo "</ol>\n";
+	}
+
+	return $typeids;
 }

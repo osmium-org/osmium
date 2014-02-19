@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -40,6 +40,33 @@ if($query === false) {
 	\Osmium\Chrome\print_footer();
 	die();
 } else {
+	if(!isset($_GET['p']) || $_GET['p'] === '1') {
+		ob_start();
+		$typeids = \Osmium\Search\print_type_list('.', $query);
+		$typelist = ob_get_clean();
+		$ntypes = count($typeids);
+	} else {
+		$ntypes = 0;
+	}
+
+	ob_start();
+	$loadoutids = \Osmium\Search\print_pretty_results('.', $query, $cond, true, 24);
+	$loadoutlist = ob_get_clean();
+	$nloadouts = count($loadoutids);
+
+	if($ntypes === 1 && $nloadouts === 0) {
+		/* Redirect to type page */
+		header('Location: ./db/type/'.$typeids[0]);
+		die();
+	} else if($ntypes === 0 && $nloadouts === 1) {
+		/* Redirect to loadout */
+		reset($loadoutids);
+		header('Location: '.current($loadoutids));
+		die();
+	}
+
+
+
 	$title = 'Search results';
 	if($query !== false && strlen($query) > 0) {
 		$title .= ' / '.\Osmium\Chrome\escape($query);
@@ -49,9 +76,22 @@ if($query === false) {
 		"<link rel='canonical' href='./search' />"
 	);
 	echo "<div id='search_mini'>\n";
-	\Osmium\Search\print_search_form(null, '.', $title);
+	\Osmium\Search\print_search_form(null, '.');
 	echo "</div>\n";
 
-	\Osmium\Search\print_pretty_results('.', $query, $cond, true, 24);
+	if($ntypes > 0) {
+		echo "<section class='sr'>\n";
+		echo "<h2>Types</h2>\n";
+		echo $typelist;
+		echo "</section>\n";
+	}
+
+	if($nloadouts > 0 || $ntypes === 0) {
+		echo "<section class='sr'>\n";
+	    echo "<h2>Loadouts</h2>\n";
+		echo $loadoutlist;
+		echo "</section>\n";
+	}
+
 	\Osmium\Chrome\print_footer();
 }

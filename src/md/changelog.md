@@ -2,7 +2,18 @@
 
 * Import loadouts from CREST killmails.
 
+* Ship traits are back.
+
 * Add simple database browser for EVE types, attributes and effects.
+
+* New "compare types" page to compare multiple types together.
+
+* Add search form in the navigation bar.
+
+* Search page now searches types.
+
+* Instead of showing the search results page when there is a unique
+  result, you will be redirected to the result directly.
 
 # Version 0.11
 

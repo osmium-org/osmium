@@ -702,7 +702,7 @@ function format_number_with_unit($number, $unitid, $unitdisplayname, $relative =
 			if($row[1] !== null) {
 				$image = "<img src='//image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
 			}
-			return $image."<a href='{$relative}/db/group/{$row[1]}'>".escape($row[0])."</a>";
+			return $image."<a href='{$relative}/db/group/{$number}'>".escape($row[0])."</a>";
 		}
 		$unitdisplayname = 'Group ID';
 		break;
