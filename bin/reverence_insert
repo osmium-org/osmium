@@ -1,4 +1,6 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
 # Osmium
 # Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
 #
@@ -27,11 +29,12 @@ parser.add_argument("eve", metavar="eve-exe-path")
 parser.add_argument("-c", "--cache", metavar="settings-path")
 parser.add_argument("-s", "--server", default="Tranquility", metavar="server-name")
 parser.add_argument("-l", "--locale", default="en-us", metavar="language")
+parser.add_argument("-f", "--force", help="don't ask for confirmation before importing", action="store_true")
 
 args = parser.parse_args()
 
 ini = ConfigParser.RawConfigParser()
-ini.read(os.path.dirname(os.path.realpath(__file__)) + '/../config.ini')
+ini.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.ini'))
 
 def pgcnf(key):
     return ini.get('postgresql', key).strip("'").strip('"')
@@ -51,15 +54,16 @@ def processRows(tablename, columnmap, rowset):
     cur.execute("TRUNCATE TABLE %s CASCADE" % tablename)
     print
 
-    fields = ", ".join("%s" for x in columnmap)
-    querystring = ("INSERT INTO %s (" + fields + ")") % tuple([
-        tablename ] + columnmap.keys()) + " VALUES (" + fields + ")"
+    fields = ",".join("%s" for x in columnmap)
+    querystring = "INSERT INTO %s (%s) VALUES (%s)" % (tablename,
+                                                       ",".join(columnmap.iterkeys()),
+                                                       fields)
     print querystring
 
     i = 0
     for row in rowset:
-        cur.execute(querystring, [ k(row) if callable(k) else row[k]
-                                   for k in columnmap.viewvalues()])
+        cur.execute(querystring, [ (k(row) if callable(k) else row[k])
+                                   for k in columnmap.viewvalues() ])
         i += 1
         if i % 25000 == 0:
             print "%s..." % i,
@@ -83,6 +87,13 @@ def flattenRowsetLines(rowset):
         for row in sub.lines:
             yield row
 
+
+
+if not args.force:
+    print "Populating the eve schema requires truncating the tables with TRUNCATE … CASCADE."
+    print "THIS WILL DELETE MOST OF THE osmium SCHEMA, SO MAKE SURE TO HAVE BACKUPS!"
+    print "Press <Return> to continue or ^C to quit."
+    sys.stdin.readline()
 
 
 

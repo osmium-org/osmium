@@ -195,7 +195,6 @@ foreach($attributevals as $attributeid => $vals) {
 }
 
 echo "<p class='meta'>\n";
-echo "Filter and/or reorder: <a class='types'>types</a>, <a class='attribs'>attributes</a><br />\n";
 echo "<strong><a href='".RELATIVE."/help/db#compare'>Need help?</a></strong>";
 echo "</p>\n";
 
