@@ -121,6 +121,12 @@ function get_effectname($effectid) {
 	);
 }
 
+function get_marketgroupname($mgid) {
+	return get_cached_thing_generic(
+		'eve.invmarketgroups', 'marketgroupname', 'marketgroupid', (int)$mgid
+	);
+}
+
 function get_typeid($typename) {
 	return get_cached_thing_generic(
 		'eve.invtypes', 'typeid', 'typename', $name
@@ -165,6 +171,12 @@ function get_categoryid($typeid) {
 function get_groupname($groupid) {
 	return get_cached_thing_generic(
 		'eve.invgroups', 'groupname', 'groupid', (int)$groupid
+	);
+}
+
+function get_categoryname($catid) {
+	return get_cached_thing_generic(
+		'eve.invcategories', 'categoryname', 'categoryid', (int)$catid
 	);
 }
 

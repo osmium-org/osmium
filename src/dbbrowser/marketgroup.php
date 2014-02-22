@@ -19,9 +19,21 @@
 namespace Osmium\Page\DBBrowser\ViewCategory;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/dbbrowser_common.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
+
+
+
+$mgid = (int)$_GET['mgid'];
+$cacheid = 'DBBrowser_Marketgroup_'.$mgid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage;
+}
+
+
 
 $mg = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
@@ -37,34 +49,30 @@ $mg = \Osmium\Db\fetch_assoc(
 		LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
 		LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
 		WHERE mg0.marketgroupid = $1',
-		array($_GET['mgid'])
+		array($mgid)
 	)
 );
 
 if($mg === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	\Osmium\Chrome\escape(strip_tags($mg['mgname0'])).' / Market group '.$mg['mgid0'],
-	RELATIVE
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-echo "<header>\n<h2>".\Osmium\Chrome\escape($mg['mgname0']);
-echo " <small>marketgroup ".$mg['mgid0']."</small></h2>\n</header>\n";
+$header = $dbb->appendCreate('header');
+$h2 = $header->appendCreate('h2', $mg['mgname0']);
+$small = $h2->appendCreate('small', 'marketgroup '.$mgid);
 
 if($mg['mgid1'] !== null) {
-	echo "<nav>\n<ul>\n";
+	$ul = $dbb->appendCreate('nav')->appendCreate('ul');
 
 	for($i = 4; $i >= 1; --$i) {
 		if($mg['mgid'.$i] !== null) {
-			echo "<li><a href='../marketgroup/".$mg['mgid'.$i]."'>".\Osmium\Chrome\escape(
-				$mg['mgname'.$i]
-			)."</a></li>\n";
+			$ul->appendCreate('li', [
+				[ 'a', [ 'o-rel-href' => '/db/marketgroup/'.$mg['mgid'.$i], $mg['mgname'.$i] ] ]
+			]);
 		}
 	}
-	echo "<li class='lst'>".\Osmium\Chrome\escape($mg['mgname0'])."</li>\n";
 
-	echo "</ul>\n</nav>\n";
+	$ul->appendCreate('li', [ 'class' => 'lst', $mg['mgname0'] ]);
 }
 
 
@@ -79,39 +87,47 @@ $submgq = \Osmium\Db\query_params(
 	array($mg['mgid0'])
 );
 
-$hassubmg = false;
-$hassubsubmg = false;
+
+
+$h3 = $p->element('h3', 'Market subgroups:');
+$ul = $p->element('ul', [ 'class' => 'submg' ]);
 $prevparent = null;
+$nmg = 0;
+$nsubmg = 0;
+
 while($submg = \Osmium\Db\fetch_assoc($submgq)) {
-	if($hassubmg === false) {
-		echo "<h3>Market subgroups:</h3>\n<ul class='submg'>\n";
-		$hassubmg = true;
-	}
-
 	if($prevparent !== $submg['mgid0']) {
-		if($hassubsubmg) echo "</ul>\n";
-		if($prevparent !== null) echo "</li>\n";
+		if($nsubmg > 0) {
+			$li->append($subul);
+		}
 
-		echo "<li><a href='".RELATIVE."/db/marketgroup/".$submg['mgid0']."'>"
-			.\Osmium\Chrome\escape($submg['mgname0'])."</a>\n";
+		$li = $ul->appendCreate('li', [[ 'a', [
+			'o-rel-href' => '/db/marketgroup/'.$submg['mgid0'],
+			$submg['mgname0'],
+		]]]);
 
 		$prevparent = $submg['mgid0'];
-		$hassubsubmg = false;
+		$subul = $p->element('ul');
+		$nsubmg = 0;
+		++$nmg;
 	}
 
 	if($submg['mgid1'] !== null) {
-		if($hassubsubmg === false) {
-			echo "<ul>\n";
-			$hassubsubmg = true;
-		}
+		++$nsubmg;
 
-		echo "<li><a href='".RELATIVE."/db/marketgroup/".$submg['mgid1']."'>"
-			.\Osmium\Chrome\escape($submg['mgname1'])."</a></li>\n";
+		$subul->appendCreate('li', [['a', [
+			'o-rel-href' => '/db/marketgroup/'.$submg['mgid1'],
+			$submg['mgname1'],
+		]]]);
 	}
 }
 
-if($hassubsubmg) echo "</ul>\n";
-if($hassubmg) echo "</li>\n</ul>\n";
+if($nmg > 0) {
+	if($nsubmg > 0) {
+		$li->append($subul);
+	}
+	$dbb->append([ $h3, $ul ]);
+}
 
 
 
@@ -123,26 +139,32 @@ $typesq = \Osmium\Db\query_params(
 	array($mg['mgid0'])
 );
 
-$types = [];
+$h3 = $p->element('h3', 'Types in this market group:');
+$ul = $p->element('ul', [ 'class' => 'typelist' ]);
+$ntypes = 0;
+
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
-	$e = "<li>";
-	$e .= "<a href='".RELATIVE."/db/type/".$t['typeid']."'>"
-		.\Osmium\Chrome\escape($t['typename'])."</a>";
-	$e .= "</li>\n";
-
-	$types[] = [ $t['typename'], $e ];
+	++$ntypes;
+	$ul->appendCreate('li', [
+		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ]
+	]);
 }
 
-if($types !== []) {
-	echo "<h3>Types in this market group:</h3>\n";
+if($ntypes > 0) {
+	$dbb->append([ $h3, $ul ]);
+	$dbb->appendCreate('p', [
+		'class' => 'compare',
+		[ 'a', [ 'o-rel-href' => '/db/comparemarketgroup/'.$mgid.'/auto',
+		         'Compare types in this market group' ] ],
+	]);
 }
 
-\Osmium\DBBrowser\print_typelist($types);
 
-if($types !== []) {
-	echo "<p class='compare'><a href='".RELATIVE."/db/comparemarketgroup/{$mg['mgid0']}/auto'>Compare types in this market group</a></p>\n";
-}
 
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
+
+RenderStage:
+$p->title = \Osmium\Fit\get_marketgroupname($mgid).' / Market group '.$mgid;
+$p->relative = '../..';
+$p->snippets[] = 'dbbrowser';
+$p->render();

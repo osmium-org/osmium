@@ -82,6 +82,9 @@ class Page extends Document {
 	 * this element. */
 	public $content;
 
+	/* Elements to add to body just before finalizing the page. */
+	public $endbody = [];
+
 
 
 	/* List of available themes. */
@@ -164,6 +167,11 @@ class Page extends Document {
 		/* Relative href attribute to a static file. Does not include trailing /. */
 		$this->registerCustomAttribute('o-static-href', function(Element $e, $v, Page $ctx) {
 			$e->attr('href', $ctx->relative.'/static-'.\Osmium\STATICVER.$v);
+		});
+
+		/* Same as o-static-href, but for src. */
+		$this->registerCustomAttribute('o-static-src', function(Element $e, $v, Page $ctx) {
+			$e->attr('src', $ctx->relative.'/static-'.\Osmium\STATICVER.$v);
 		});
 
 		/* Relative href attribute to a static CSS file. Does not include trailing /. */
@@ -592,5 +600,7 @@ class Page extends Document {
 				'o-static-js-src' => self::_minify($this->snippets),
 			]],
 		]);
+
+		$this->body->append($this->endbody);
 	}
 }

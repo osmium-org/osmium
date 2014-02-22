@@ -165,15 +165,7 @@ while($a = \Osmium\Db\fetch_assoc($aq)) {
 		$tr->appendCreate('td', ucfirst($a['displayname']));
 	}
 
-	$tr->appendCreate('td', $a['value']); /* TODO */
-
-    
-	/*echo "<td>".\Osmium\Chrome\format_number_with_unit(
-		$a['value'],
-		$a['unitid'],
-		$a['udisplayname'],
-		RELATIVE
-		)."</td>\n";*/
+	$tr->appendCreate('td', $a['value']); /* TODO format number with unit */
 }
 
 if($nattribs > 0) {

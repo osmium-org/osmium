@@ -19,9 +19,20 @@
 namespace Osmium\Page\DBBrowser\ViewCategory;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/dbbrowser_common.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
+
+
+$categoryid = (int)$_GET['categoryid'];
+$cacheid = 'DBBrowser_Category_'.$categoryid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage;
+}
+
+
 
 $c = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
@@ -34,14 +45,12 @@ $c = \Osmium\Db\fetch_assoc(
 
 if($c === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	strip_tags($c['categoryname']).' / Category '.$c['categoryid'],
-	RELATIVE
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-echo "<header>\n<h2>".\Osmium\Chrome\escape($c['categoryname']);
-echo " <small>category ".$c['categoryid']."</small></h2>\n</header>\n";
+$header = $dbb->appendCreate('header');
+$h2 = $header->appendCreate('h2', $c['categoryname']);
+$small = $h2->appendCreate('small', 'category '.$categoryid);
+
 
 
 $groupsq = \Osmium\Db\query_params(
@@ -52,21 +61,27 @@ $groupsq = \Osmium\Db\query_params(
 	array($c['categoryid'])
 );
 
-echo "<h3>List of groups in this category:</h3>\n";
+$h3 = $p->element('h3', 'Groups in this category:');
+$ul = $p->element('ul', [ 'class' => 'typelist' ]);
+$ngroups = 0;
 
-$groups = [];
 while($g = \Osmium\Db\fetch_assoc($groupsq)) {
-	$e = "<li>";
-	$e .= "<a href='".RELATIVE."/db/group/".$g['groupid']."'>"
-		.\Osmium\Chrome\escape($g['groupname'])."</a>";
-	$e .= "</li>\n";
-
-	$groups[] = [ $g['groupname'], $e ];
+	++$ngroups;
+	$ul->appendCreate('li', [
+		[ 'a', [ 'o-rel-href' => '/db/group/'.$g['groupid'], $g['groupname'] ] ]
+	]);
 }
 
-\Osmium\DBBrowser\print_typelist($groups);
+if($ngroups > 0) {
+	$dbb->append([ $h3, $ul ]);
+}
 
 
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
+
+RenderStage:
+$p->title = \Osmium\Fit\get_categoryname($categoryid).' / Category '.$categoryid;
+$p->relative = '../..';
+$p->snippets[] = 'dbbrowser';
+$p->render();

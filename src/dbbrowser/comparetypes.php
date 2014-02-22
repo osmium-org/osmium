@@ -20,9 +20,12 @@ namespace Osmium\Page\DBBrowser\CompareTypeAttributes;
 
 require __DIR__.'/../../inc/root.php';
 
-const RELATIVE = '../../..';
 const MAX_TYPES = 50;
 const MAX_ATTRIBS = 50;
+
+$p = new \Osmium\DOM\Page();
+
+
 
 if($_GET['groupid'] > 0) {
 	$gn = \Osmium\Db\fetch_row(
@@ -47,7 +50,7 @@ if($_GET['groupid'] > 0) {
 		$typeids[] = $t[0];
 	}
 
-	$title = 'Compare group: '.$gn[0];
+	$p->title = 'Compare group: '.$gn[0];
 
 } else if($_GET['marketgroupid'] > 0) {
 	$mgn = \Osmium\Db\fetch_row(
@@ -61,7 +64,7 @@ if($_GET['groupid'] > 0) {
 	);
 	if($mgn === false) \Osmium\fatal(404);
 	$mgn = implode(', ', array_filter($mgn));
-	$title = 'Compare market group: '.$mgn;
+	$p->title = 'Compare market group: '.$mgn;
 
 	$typeids = [];
 	$tq = \Osmium\Db\query_params(
@@ -85,9 +88,8 @@ if($_GET['groupid'] > 0) {
 		}
 	}
 
-	$title = 'Compare types';
+	$p->title = 'Compare types';
 }
-
 
 $tlist = implode(',', $typeids);
 $attributes = [];
@@ -137,13 +139,8 @@ foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
 
 
 
-\Osmium\Chrome\print_header(
-	\Osmium\Chrome\escape(strip_tags($title)), RELATIVE, false,
-	"<link href='//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css' rel='stylesheet' type='text/css' />\n"
-);
-echo "<div id='dbb' class='compare'>\n";
-
-echo "<header><h2>".\Osmium\Chrome\escape($title)."</h2></header>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb', 'class' => 'compare' ]);
+$dbb->appendCreate('header')->appendCreate('h2', $p->title);
 
 
 
@@ -172,9 +169,7 @@ $data = [];
 while($ta = \Osmium\Db\fetch_assoc($typeattribsq)) {
 	$data[$ta['typeid']][$ta['attributeid']] = [
 		$ta['value'],
-		\Osmium\Chrome\format_number_with_unit(
-			$ta['value'], $ta['unitid'], $ta['udisplayname'], RELATIVE
-		)
+		$ta['value'], /* XXX format number with unit */
 	];
 }
 
@@ -194,28 +189,40 @@ foreach($attributevals as $attributeid => $vals) {
 	}
 }
 
-echo "<p class='meta'>\n";
-echo "<strong><a href='".RELATIVE."/help/db#compare'>Need help?</a></strong>";
-echo "</p>\n";
 
-echo "<section class='compare'>\n<table class='d'>\n";
-echo "<colgroup></colgroup>\n<colgroup></colgroup>\n";
-foreach($attributes as $attributeid => $a) { echo "<colgroup></colgroup>\n"; }
-echo "<thead>\n<tr>\n<td><img src='".RELATIVE."/static-".\Osmium\STATICVER."/favicon.png' alt='' /><br />".\Osmium\Chrome\escape($_SERVER['HTTP_HOST'])."</td>\n<td></td>\n";
 
-foreach($attributes as $attributeid => $a) {
-	$hig = isset($highisgood[$attributeid]) ? (int)$highisgood[$attributeid] : -1;
+$dbb->appendCreate('p', [ 'class' => 'meta' ])->appendCreate('strong')->appendCreate(
+	'a', [ 'o-rel-href' => '/help/db#compare', 'Need help?' ]
+);
 
-	if($attributeid >= 0) {
-		$dn = \Osmium\Chrome\escape(ucfirst(\Osmium\Fit\get_attributedisplayname($attributeid)));
-	} else if(isset($a[0]) && $a[0] === 'rpn') {
-		$dn = \Osmium\Chrome\escape($a[1]);
-	}
+$table = $dbb->appendCreate('section', [ 'class' => 'compare' ])->appendCreate('table', [ 'class' => 'd' ]);
 
-	echo "<th data-aid='{$attributeid}' data-hig='{$hig}'><a title='{$dn} ({$attributeid})'>{$dn}</a></th>\n";
+$table->appendCreate('colgroup');
+$table->appendCreate('colgroup');
+foreach($attributes as $a) $table->appendCreate('colgroup');
+
+$tr = $table->appendCreate('thead')->appendCreate('tr');
+$tr->appendCreate('td', [
+	[ 'img', [ 'o-static-src' => '/favicon.png', 'alt' => '' ] ],
+	[ 'br' ],
+	$_SERVER['HTTP_HOST'],
+]);
+$tr->appendCreate('td');
+
+foreach($attributes as $aid => $a) {
+	$hig = isset($highisgood[$aid]) ? (int)$highisgood[$aid] : -1;
+	$dn = ($attributeid >= 0) ? ucfirst(\Osmium\Fit\get_attributedisplayname($aid)) : $a[1];
+
+	$tr->appendCreate('th', [
+		'data-aid' => $aid,
+		'data-hig' => $hig,
+	])->appendCreate('a', [
+		'title' => $dn.' ('.$aid.')',
+		$dn
+	]);
 }
 
-echo "</tr>\n</thead>\n<tbody>\n";
+$tbody = $table->appendCreate('tbody');
 
 function eval_rpn(array $rpn, array $attribvals) {
 	$stack = [];
@@ -262,12 +269,21 @@ function eval_rpn(array $rpn, array $attribvals) {
 	return array_pop($stack);
 }
 
-foreach($typeids as $i => $typeid) {
-	echo "<tr data-idx='{$i}' data-tid='{$typeid}'>\n";
 
-	echo "<th><a>".\Osmium\Chrome\escape(\Osmium\Fit\get_typename($typeid))."</a></th>\n";
-	echo "<th><a href='".RELATIVE."/db/type/{$typeid}'>"
-		."<img src='//image.eveonline.com/Type/{$typeid}_64.png' alt='' /></a></th>\n";
+
+foreach($typeids as $i => $typeid) {
+	$tr = $tbody->appendCreate('tr', [
+		'data-idx' => $i,
+		'data-tid' => $typeid,
+	]);
+
+	$tr->appendCreate('th')->appendCreate('a', \Osmium\Fit\get_typename($typeid));
+	$tr->appendCreate('th')->appendCreate('a', [
+		'o-rel-href' => '/db/type/'.$typeid
+	])->appendCreate('o-eve-img', [
+		'src' => '/Type/'.$typeid.'_64.png',
+		'alt' => '',
+	]);
 
 	foreach($attributes as $attributeid => $a) {
 		if($attributeid >= 0) {
@@ -283,15 +299,25 @@ foreach($typeids as $i => $typeid) {
 			}
 		}
 
-		echo "<td data-aid='{$attributeid}' data-rawval='{$val[0]}'>{$val[1]}</td>\n";
+		$tr->appendCreate('td', [
+			'data-aid' => $attributeid,
+			'data-rawval' => $val[0],
+			$val[1]
+		]);
 	}
-
-	echo "</tr>\n";
 }
 
-echo "</tbody>\n</table>\n</section>\n";
 
-echo "</div>\n";
-\Osmium\Chrome\include_js("//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js");
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+
+$p->head->appendCreate('link', [
+	'href' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css',
+	'rel' => 'stylesheet',
+	'type' => 'text/css',
+]);
+$p->endbody[] = $p->element('script', [
+	'type' => 'application/javascript',
+	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
+]);
+$p->snippets[] = 'dbbrowser';
+$p->relative = '../../..';
+$p->render();
