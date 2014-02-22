@@ -19,9 +19,21 @@
 namespace Osmium\Page\DBBrowser\ViewEffect;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/dbbrowser_common.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
+
+
+
+$effectid = (int)$_GET['effectid'];
+$cacheid = 'DBBrowser_Effect_'.$effectid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage;
+}
+
+
 
 /* Yes, SELECT * is bad, but there's so many bloody columns in there… */
 $e = \Osmium\Db\fetch_assoc(
@@ -35,19 +47,21 @@ $e = \Osmium\Db\fetch_assoc(
 
 if($e === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	$e['effectname'].' / Effect '.$e['effectid'],
-	RELATIVE
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-echo "<header>\n<h2><span class='raw'>".$e['effectname']."</span>";
-echo " <small>effect ".$e['effectid']."</small></h2>\n</header>\n";
+$hdr = $dbb->appendCreate('header');
+$hdr->appendCreate('h2', [
+	[ 'span', [ 'class' => 'raw', $e['effectname'] ] ],
+	[ 'small', 'effect '.$e['effectid'] ],
+]);
 
-echo "<ul>\n";
-echo "<li>Effect category: <span class='raw'>".\Osmium\Chrome\format_effect_category($e['effectcategory'])."</span></li>\n";
-echo "</ul>\n<ul>\n";
+$ul = $dbb->appendCreate('ul');
+$ul->appendCreate('li', [
+	'Effect category: ',
+	[ 'span', [ 'class' => 'raw', \Osmium\Chrome\format_effect_category($e['effectcategory']) ] ],
+]);
 
+$ul = $dbb->appendCreate('ul');
 $eattribs = [
 	'durationattributeid' => 'Effect duration',
 	'dischargeattributeid' => 'Effect capacitor consumption',
@@ -60,13 +74,14 @@ $eattribs = [
 ];
 foreach($eattribs as $k => $label) {
 	if($e[$k] !== null) {
-		echo "<li>{$label}: <small>see value of "
-			.\Osmium\Chrome\format_number_with_unit($e[$k], 119, "attributeID")."</small></li>\n";
+		$ul->appendCreate('li', [
+			$label,
+			[ 'small', 'see value of '.$e[$k] ], /* TODO: format number with unit 119 */
+		]);
 	}
 }
 
-echo "</ul>\n<ul>\n";
-
+$ul = $dbb->appendCreate('ul');
 $ebools = [
 	'isoffensive' => 'Effect is % considered offensive',
 	'isassistance' => 'Effect is % considered as remote assist',
@@ -74,15 +89,20 @@ $ebools = [
 ];
 if(in_array((int)$e['effectcategory'], [ 1, 2, 3, 6, 7 ], true)) {
 	foreach($ebools as $k => $label) {
-		$label = str_replace('%', $e[$k] === 't' ? '' : '<strong>not</strong>', $label);
-		echo "<li>{$label}</li>\n";
+		list($x, $y) = explode('%', $label);
+		$ul->appendCreate('li', [
+			$x,
+			$e[$k] === 't' ? '' : [ 'strong', 'not' ],
+			$y,
+		]);
 	}
 }
 
-echo "</ul>\n<ul>\n";
-echo "<li>Pre expression: <small class='raw'>".\Osmium\Chrome\escape($e['preexpression'])."</small></li>\n";
-echo "<li>Post expression: <small class='raw'>".\Osmium\Chrome\escape($e['postexpression'])."</small></li>\n";
-echo "</ul>\n";
+$ul = $dbb->appendCreate('ul');
+$ul->appendCreate('li', [ 'Pre expression: ', [ 'small', [ 'class' => 'raw', $e['preexpression'] ] ] ]);
+$ul->appendCreate('li', [ 'Post expression: ', [ 'small', [ 'class' => 'raw', $e['postexpression'] ] ] ]);
+
+
 
 $typesq = \Osmium\Db\query_params(
 	'SELECT it.typeid, it.typename
@@ -93,21 +113,28 @@ $typesq = \Osmium\Db\query_params(
 	array($e['effectid'])
 );
 
-echo "<h3>List of types which have this effect:</h3>\n";
+$h3 = $p->element('h3', 'List of types which have this effect:');
+$ul = $p->element('ul', [ 'class' => 'typelist' ]);
+$ntypes = 0;
 
-$types = [];
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
-	$e = "<li>";
-	$e .= "<a href='".RELATIVE."/db/type/".$t['typeid']."'>"
-		.\Osmium\Chrome\escape($t['typename'])."</a>";
-	$e .= "</li>\n";
-
-	$types[] = [ $t['typename'], $e ];
+	++$ntypes;
+	$ul->appendCreate('li', [ [ 'a', [
+		'o-rel-href' => '/db/type/'.$t['typeid'],
+		$t['typename']
+	]]]);
 }
 
-\Osmium\DBBrowser\print_typelist($types);
+if($ntypes > 0) {
+	$dbb->append([ $h3, $ul ]);
+}
 
 
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
+
+RenderStage:
+$p->title = ucfirst(\Osmium\Fit\get_effectname($effectid)).' / Effect '.$effectid;
+$p->relative = '../..';
+$p->snippets[] = 'dbbrowser';
+$p->render();

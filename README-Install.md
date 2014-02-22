@@ -100,12 +100,12 @@ below (for example, Debian uses `www-data`).
 Dependencies
 ============
 
-* PHP >= 5.4, with:
+* PHP >= 5.5, with:
   * [dogma extension](https://github.com/Artefact2/php-dogma), using libdogma 1.1.x (`dogma.so`)
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)
-  * SimpleXML support (enabled by default)
+  * SimpleXML and DOM support (enabled by default)
   * Zlib support
   * (Optional) Semaphores support (`sysvsem.so`)
   * (Optional) iconv extension (`iconv.so`)

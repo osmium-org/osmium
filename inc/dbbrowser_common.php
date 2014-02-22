@@ -18,7 +18,7 @@
 
 namespace Osmium\DBBrowser;
 
-function print_typelist(array $types) {
+function make_typelist(\Osmium\DOM\Document $d, array $types) {
 	$fl = [];
 
 	foreach($types as $t) {
@@ -64,52 +64,50 @@ function print_typelist(array $types) {
 	$total = 0;
 	foreach($entries as $l) $total += count($l[1]);
 
+	$ul = $d->element('ul', [ 'class' => 'typelist' ]);
+
 	if($c >= 3) {
+		foreach($entries as $v) {
+			list($l, $e) = $v;
+
+			$li = $ul->appendCreate('li', [ 'class' => 'h' ]);
+			$lihdr = $li->appendCreate('header', [ 'class' => 'letteranchor' ]);
+			$liul = $li->appendCreate('ul');
+
+			foreach(explode(' ', $l) as $letter) {
+				$lihdr->appendCreate('a', [
+					'href' => '#t'.$letter,
+					'id' => 't'.$letter,
+					$letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter)
+				]);
+			}
+
+			foreach($e as $f) {
+				$liul->append([ $f[1] ]);
+			}
+		}
+
 		if($total >= 100) {
-			echo "<header class='typelist'>\n";
-			echo "<ul>\n";
-			$lis = [];
+			$hdr = $d->element('header', [ 'class' => 'typelist' ]);
+			$hdrul = $hdr->appendCreate('ul');
+
 			foreach($entries as $v) {
 				$letters = explode(' ', $v[0]);
 				foreach($letters as $letter) {
-					echo "<li><a href='#t".$letter."'>"
-						.($letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter))
-						."</a></li>\n";
+					$hdrul->appendCreate('li', [[ 'a', [
+						'href' => '#t'.$letter,
+						$letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter)
+					]]]);
 				}
 			}
-			echo "</ul>\n</header>\n";
+
+			return [ $hdr, $ul ];
 		}
-
-		echo "<ul class='typelist'>\n";
-
-		foreach($entries as $v) {
-			list($l, $entries) = $v;
-
-			$letters = explode(' ', $l);
-			$ids = [];
-			$links = [];
-
-			foreach($letters as $letter) {
-				$links[] = "<a href='#t".$letter."' id='t".$letter."'>"
-					.($letter === '0' ? '0-9' : ($letter === '_' ? '~' : $letter))
-					."</a>";
-			}
-
-			echo "<li class='h'>";
-			echo "<header class='letteranchor'>\n".implode(', ', $links)."</header>\n";
-			echo "<ul>\n";
-			foreach($entries as $e) echo $e[1];
-			echo "</ul>\n</li>\n";
-		}
-
-		echo "</ul>\n";
 	} else {
-		echo "<ul class='typelist'>\n";
-
 		foreach($entries as $v) {
-			foreach($v[1] as $e) echo $e[1];
+			foreach($v[1] as $e) $ul->append([ $e[1] ]);
 		}
-
-		echo "</ul>\n";
 	}
+
+	return $ul;
 }

@@ -115,6 +115,12 @@ function get_typename($typeid) {
 	);
 }
 
+function get_effectname($effectid) {
+	return get_cached_thing_generic(
+		'eve.dgmeffects', 'effectname', 'effectid', (int)$effectid
+	);
+}
+
 function get_typeid($typename) {
 	return get_cached_thing_generic(
 		'eve.invtypes', 'typeid', 'typename', $name

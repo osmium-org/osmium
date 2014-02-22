@@ -22,6 +22,19 @@ require __DIR__.'/../../inc/root.php';
 
 $p = new \Osmium\DOM\Page();
 
+
+
+$typeid = (int)$_GET['typeid'];
+$cacheid = 'DBBrowser_Type_'.$typeid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage; /* Boo */
+}
+
+
+
 $type = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
 		'SELECT typeid, typename, description, it.published,
@@ -40,7 +53,7 @@ $type = \Osmium\Db\fetch_assoc(
 		LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
 		LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
 		WHERE it.typeid = $1',
-		array($_GET['typeid'])
+		array($typeid)
 	)
 );
 
@@ -121,11 +134,11 @@ if($traits !== false) {
 /* —————————— Attributes —————————— */
 
 $aq = \Osmium\Db\query_params(
-	"SELECT attributeid, attributename, displayname, value,
+	'SELECT attributeid, attributename, displayname, value,
 	unitid, udisplayname
 	FROM osmium.siattributes
 	WHERE typeid = $1
-	ORDER BY attributeid ASC",
+	ORDER BY attributeid ASC',
 	array($type['typeid'])
 );
 
@@ -187,7 +200,7 @@ while($e = \Osmium\Db\fetch_row($eq)) {
 	++$neffects;
 
 	$tbody->appendCreate('tr', [
-		[ 'td', [ [ 'a', [ 'o-rel-href' => '/effect/'.$e[1], $e[1] ] ] ] ],
+		[ 'td', [ [ 'a', [ 'o-rel-href' => '/db/effect/'.$e[1], $e[1] ] ] ] ],
 		[ 'td', [ 'class' => 'raw', $e[0] ] ],
 		[ 'td', [ 'class' => 'raw', \Osmium\Chrome\format_effect_category($e[2]) ] ],
 	]);
@@ -386,9 +399,10 @@ if($ntabs <= 1) {
 
 
 
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
 
-
-$p->title = $type['typename'].' / Type '.$type['typeid'];
+RenderStage:
+$p->title = \Osmium\Fit\get_typename($typeid).' / Type '.$typeid;
 $p->relative = '../..';
 $p->snippets[] = 'tabs';
 $p->snippets[] = 'dbbrowser';

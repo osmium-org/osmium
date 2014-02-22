@@ -86,6 +86,9 @@ if(isset($_SERVER['REMOTE_ADDR'])) {
 	session_start();
 }
 
+libxml_use_internal_errors(true);
+libxml_disable_entity_loader(true);
+
 require ROOT.'/inc/dom.php';
 require ROOT.'/inc/chrome.php';
 require ROOT.'/inc/forms.php';

@@ -211,7 +211,7 @@ class Page extends Document {
 	function render() {
 		$this->head->appendCreate('title', $this->title.' / '.\Osmium\get_ini_setting('name'));
 
-		if($this->index) {
+		if(!$this->index) {
 			$this->head->appendCreate('meta', [ 'name' => 'robots', 'content' => 'noindex' ]);
 		}
 
@@ -560,6 +560,7 @@ class Page extends Document {
 
 	/* @internal */
 	private function renderFooter() {
+		$this->content->appendCreate('div', [ 'id' => 'push' ]);
 		$footer = $this->body->appendCreate('footer');
 		$p = $footer->appendCreate('p');
 		$p->append([

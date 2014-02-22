@@ -62,32 +62,36 @@ class Document extends \DOMDocument {
 
 
 	/* @internal
-	 * 
-	 * Convert a string, a Node, or an array of strings/Nodes to an
-	 * array of Nodes.
-	 */
+	 *
+	 * Create a DOMNode from a string, a DOMNode or an array that
+	 * matches the parameters of Document::element(). */
+	static function _to_node(\DOMDocument $owner, $e) {
+		if($e instanceof \DOMNode) {
+			return $e;
+		}
+
+		if(is_string($e)) {
+			return $owner->createTextNode($e);
+		}
+
+		if(is_array($e)) {
+			return call_user_func_array([$owner, 'element'], $e);
+		}
+
+		throw new \Exception('Can\'t make a DOMNode out of '.gettype($e));
+	}
+
+
+
+	/* @internal */
 	static function _to_nodes(\DOMDocument $owner, $e) {
 		if(!is_array($e)) {
-			$e = [ $e ];
+			yield self::_to_node($owner, $e);
+			return;
 		}
 
 		foreach($e as $v) {
-			if($v instanceof \DOMNode) {
-				yield $v;
-				continue;
-			}
-
-			if(is_string($v)) {
-				yield $owner->createTextNode($v);
-				continue;
-			}
-
-			if(is_array($v)) {
-				yield call_user_func_array(array($owner, 'element'), $v);
-				continue;
-			}
-
-			throw new \Exception("Don't know what to do with ".gettype($v));
+			yield self::_to_node($owner, $v);
 		}
 	}
 
@@ -140,15 +144,21 @@ class Document extends \DOMDocument {
 		foreach($children as $k => $v) {
 			if(is_string($k)) {
 				$e->setAttribute($k, $v);
-				unset($children[$k]);
+			} else {
+				$e->appendChild(self::_to_node($this, $v));
 			}
 		}
 
-		foreach(Document::_to_nodes($this, $children) as $node) {
-			$e->appendChild($node);
-		}
-
 		return $e;
+	}
+
+
+
+	/* Create a fragment from raw XML markup. */
+	function fragment($xml) {
+		$fragment = parent::createDocumentFragment();
+		$fragment->appendXML($xml);
+		return $fragment;
 	}
 
 
@@ -179,8 +189,12 @@ class Document extends \DOMDocument {
 
 
 class Element extends \DOMElement {
+
 	use Appendable;
 	use Removable;
+	use Renderable;
+
+
 
 	/* Get or set an attribute.
 	 *
@@ -201,7 +215,7 @@ class Element extends \DOMElement {
 			$this->setAttribute($n, $v);
 			return $this;
 		} else {
-			throw new \Exception("called with incorrect parameters");
+			throw new \Exception('called with incorrect parameters');
 		}
 	}
 
@@ -255,6 +269,7 @@ class Element extends \DOMElement {
 class Node extends \DOMNode {
 	use Appendable;
 	use Removable;
+	use Renderable;
 }
 
 
@@ -304,6 +319,13 @@ trait Removable {
 	/* Remove this node from the tree. */
 	function remove() {
 		$this->parentNode->removeChild($this);
+	}
+}
+
+trait Renderable {
+	/* Get the XML markup of this node. */
+	function renderNode() {
+		return $this->ownerDocument->saveXML($this);
 	}
 }
 

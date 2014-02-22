@@ -190,6 +190,10 @@ div#dbb {
 		}
 	}
 
+	&> p.sort {
+		@include no-user-select;
+	}
+
 	&> ul.typelist {
 		padding: 0;
 		margin: 0;

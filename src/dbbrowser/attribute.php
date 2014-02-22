@@ -19,9 +19,21 @@
 namespace Osmium\Page\DBBrowser\ViewAttribute;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/dbbrowser_common.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
+
+
+
+$attributeid = (int)$_GET['attributeid'];
+$cacheid = 'DBBrowser_Attribute_'.$attributeid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage;
+}
+
+
 
 $a = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
@@ -30,92 +42,87 @@ $a = \Osmium\Db\fetch_assoc(
 		FROM eve.dgmattribs
 		LEFT JOIN eve.dgmunits ON dgmunits.unitid = dgmattribs.unitid
 		WHERE attributeid = $1',
-		array($_GET['attributeid'])
+		array($attributeid)
 	)
 );
 
 if($a === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	$a['attributename'].' / Attribute '.$a['attributeid'],
-	RELATIVE,
-	$_SERVER['QUERY_STRING'] === ''
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-$name = '';
+
 if($a['displayname']) {
 	if(preg_replace('%[^a-z0-9]%', '', strtolower($a['attributename']))
 	   === preg_replace('%[^a-z0-9]%', '', strtolower($a['displayname']))) {
 		$name = $a['displayname'];
 	} else {
-		$name = "<span class='raw'>".$a['attributename']."</span><br />".ucfirst($a['displayname']);
+		$name = [
+			[ 'span', [ 'class' => 'raw', $a['attributename'] ] ],
+			[ 'br' ],
+			ucfirst($a['displayname'])
+		];
 	}
 } else {
-	$name = "<span class='raw'>".$a['attributename']."</span>";
+	$name = [ 'span', [ 'class' => 'raw', $a['attributename'] ] ];
 }
 
-echo "<header>\n<h2>".$name;
-echo " <small>";
+$header = $dbb->appendCreate('header');
+$h2 = $header->appendCreate('h2', $name);
+$small = $h2->appendCreate('small', 'attribute '.$a['attributeid']);
+
 if($a['published'] !== 't') {
-	echo "<span class='unpublished'>not public</span> – ";
+	$small->prepend([
+		[ 'span', [ 'class' => 'unpublished', 'not public' ] ],
+		' – ',
+	]);
 }
-echo "attribute ".$a['attributeid']."</small></h2>\n</header>\n";
 
 $def = (!$a['defaultvalue'] && in_array($a['unitid'], [ 115, 116, 129 ]))
-	? '<small>N/A</small>' :
-	\Osmium\Chrome\format_number_with_unit(
-		$a['defaultvalue'], $a['unitid'], $a['udisplayname'], RELATIVE
-	);
+	? [ 'small', 'N/A' ] : $a['defaultvalue'];
+$dbb->appendCreate('ul')->appendCreate('li', [
+	'Default value: ', $def, ' ', [ 'small', [ '(unitid '.$a['unitid'].')' ] ]
+]); /* TODO: format number with unit */
 
-echo "<ul>\n";
-echo "<li>Default value: {$def} <small class='raw'>(unitid {$a['unitid']})</small></li>\n";
-echo "</ul>\n<ul>\n";
-echo "<li>Stacking penalized: <strong>".($a['stackable'] === 't' ? 'never' : 'yes')."</strong></li>\n";
-echo "<li>The <strong>".($a['highisgood'] ? 'higher' : 'lower')."</strong>, the better <small>(grossly inaccurate)</small></li>\n";
-echo "</ul>\n";
+$dbb->appendCreate('ul')->append([
+	[ 'li', [ 'Stacking penalized: ', [ 'strong', $a['stackable'] === 't' ? 'never' : 'yes' ] ] ],
+	[ 'li', [ 'The ', [ 'strong', $a['highisgood'] ? 'higher' : 'lower' ],
+	          ', the better ', [ 'small', '(grossly inaccurate)' ] ] ],
+]);
 
-if(isset($_GET['s']) && in_array($_GET['s'], [ 'typeid', 'typename', 'value' ], true)) {
-	$sort = $_GET['s'];
-} else {
-	$sort = 'typename';
-}
+
 
 $typesq = \Osmium\Db\query_params(
 	'SELECT it.typeid, it.typename, dta.value
 	FROM eve.dgmtypeattribs dta
 	JOIN eve.invtypes it ON it.typeid = dta.typeid AND it.published = true
-	WHERE dta.attributeid = $1
-	ORDER BY '.$sort.' ASC',
-	array($a['attributeid'])
+	WHERE dta.attributeid = $1 AND dta.value <> $2
+	ORDER BY it.typename ASC',
+	array($a['attributeid'], $a['defaultvalue'])
 );
 
-echo "<h3>List of types with non-default attribute value:</h3>\n";
+$h3 = $p->element('h3', 'List of types with non-default attribute value:');
+$ul = $p->element('ul', [ 'class' => 'typelist' ]);
+$ntypes = 0;
 
-echo "<p>Sort list by: <a href='?s=typeid' rel='nofollow'>type ID</a>, <a href='?s=typename' rel='nofollow'>name</a>, <a href='?s=value' rel='nofollow'>attribute value</a>.</p>\n";
-
-$types = [];
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
-	$e = "<li>";
-	$e .= "<span class='tval'>".$t['value']."</span> ";
-	$e .= "<a href='".RELATIVE."/db/type/".$t['typeid']."'>"
-		.\Osmium\Chrome\escape($t['typename'])."</a>";
-	$e .= "</li>\n";
-
-	$types[] = [ $t['typename'], $e ];
+	++$ntypes;
+	$ul->appendCreate('li', [
+		[ 'span', [ 'class' => 'tval', $t['value'] ] ],
+		' ',
+		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ],
+	]);
 }
 
-if($sort === 'typename') {
-	\Osmium\DBBrowser\print_typelist($types);
-} else {
-	echo "<ul class='typelist'>\n";
-
-	foreach($types as $t) echo $t[1];
-
-	echo "</ul>\n";
+if($ntypes > 0) {
+	$dbb->append([ $h3, $ul ]);
 }
 
 
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
+
+RenderStage:
+$p->title = ucfirst(\Osmium\Fit\get_attributename($attributeid)).' / Attribute '.$attributeid;
+$p->relative = '../..';
+$p->snippets[] = 'dbbrowser';
+$p->render();

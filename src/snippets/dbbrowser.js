@@ -132,4 +132,49 @@ $(function() {
 			})
 		;
 	}
+
+	var typelist = $("div#dbb ul.typelist");
+	if(typelist.length > 0) {
+		var asc = -1;
+		var lsb = 'name';
+
+		var p = $(document.createElement('p')).addClass('sort');
+		p.append('Sort this list by: ');
+
+		p.append($(document.createElement('a')).text('name').on('click', function() {
+			if(lsb === 'name') {
+				asc *= -1;
+			} else {
+				lsb = 'name';
+				asc = 1;
+			}
+
+			typelist.children('li').sort(function(a, b) {
+				var as = a.lastChild.textContent.toString();
+				var bs = b.lastChild.textContent.toString();
+				return asc * ((as < bs) ? -1 : ((as > bs) ? 1 : 0));
+			}).appendTo(typelist);
+		}).click());
+
+		if(typelist.find('li > span.tval:first-child').length > 0) {
+			p.append(', ');
+
+			p.append($(document.createElement('a')).text('attribute value').on('click', function() {
+				if(lsb === 'value') {
+					asc *= -1;
+				} else {
+					lsb = 'value';
+					asc = 1;
+				}
+
+				typelist.children('li').sort(function(a, b) {
+					var af = parseFloat(a.firstChild.textContent);
+					var bf = parseFloat(b.firstChild.textContent);
+					return asc * (af - bf);
+				}).appendTo(typelist);
+			}));
+		}
+
+		typelist.before(p);
+	}
 });
