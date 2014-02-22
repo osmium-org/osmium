@@ -83,11 +83,8 @@ class Document extends \DOMDocument {
 			}
 
 			if(is_array($v)) {
-				/* Flatten the array */
-				/* XXX: this doesn't look very nice */
-				foreach(Document::_to_nodes($owner, $v) as $x) {
-					yield $x;
-				}
+				yield call_user_func_array(array($owner, 'element'), $v);
+				continue;
 			}
 
 			throw new \Exception("Don't know what to do with ".gettype($v));
@@ -128,8 +125,6 @@ class Document extends \DOMDocument {
 	function __construct() {
 		parent::__construct('1.0', 'utf-8');
 
-		$this->formatOutput = true;
-
 		$this->registerNodeClass('DOMDocument', __NAMESPACE__.'\Document');
 		$this->registerNodeClass('DOMElement', __NAMESPACE__.'\Element');
 		$this->registerNodeClass('DOMNode', __NAMESPACE__.'\Node');
@@ -137,24 +132,19 @@ class Document extends \DOMDocument {
 
 
 
-	/* Create an element.
-	 *
-	 * @param $name name of the element
-	 * 
-	 * @param $attribs an array of attributes (<name> => <value>)
-	 *
-	 * @param $content a string (which will get converted to a text
-	 * node), a Node (which will be appended as is), or an array
-	 * of strings/Nodes (which will be appended)
-	 */
-	function element($name, array $attribs = array(), $content = array()) {
+	/* Create an element. */
+	function element($name, $children = []) {
 		$e = parent::createElement($name);
 
-		foreach($attribs as $k => $v) {
-			$e->setAttribute($k, $v);
+		if(!is_array($children)) $children = [ $children ];
+		foreach($children as $k => $v) {
+			if(is_string($k)) {
+				$e->setAttribute($k, $v);
+				unset($children[$k]);
+			}
 		}
 
-		foreach(Document::_to_nodes($this, $content) as $node) {
+		foreach(Document::_to_nodes($this, $children) as $node) {
 			$e->appendChild($node);
 		}
 
@@ -167,27 +157,18 @@ class Document extends \DOMDocument {
 	 * elements. */
 	function renderCustomElements($context) {
 		$x = new \DOMXPath($this);
-		$changed = 1;
 
-		/* This seems expansive, but some very complex custom elements
-		 * may render into more custom elements, etc. */
-		while($changed > 0) {
-			$changed = 0;
-
-			foreach($this->_customElements as $name => $render) {
-				foreach($x->query('//'.$name) as $element) {
-					$finalizedelement = $render($element, $context);
-					$element->parentNode->replaceChild($finalizedelement, $element);
-					++$changed;
-				}
+		foreach($this->_customElements as $name => $render) {
+			foreach($x->query('//'.$name) as $element) {
+				$finalizedelement = $render($element, $context);
+				$element->parentNode->replaceChild($finalizedelement, $element);
 			}
+		}
 
-			foreach($this->_customAttributes as $name => $render) {
-				foreach($x->query('//@'.$name) as $attr) {
-					$render($attr->parentNode, $attr->value, $context);
-					$attr->parentNode->removeAttributeNode($attr);
-					++$changed;
-				}
+		foreach($this->_customAttributes as $name => $render) {
+			foreach($x->query('//@'.$name) as $attr) {
+				$render($attr->parentNode, $attr->value, $context);
+				$attr->parentNode->removeAttributeNode($attr);
 			}
 		}
 	}
@@ -199,6 +180,7 @@ class Document extends \DOMDocument {
 
 class Element extends \DOMElement {
 	use Appendable;
+	use Removable;
 
 	/* Get or set an attribute.
 	 *
@@ -272,6 +254,7 @@ class Element extends \DOMElement {
 
 class Node extends \DOMNode {
 	use Appendable;
+	use Removable;
 }
 
 
@@ -309,11 +292,18 @@ trait Appendable {
 	 * @return the created element.
 	 */
 	function appendCreate() {
-		/* FIXME: use ... operator in 5.6 */
 		$child = call_user_func_array(array($this->ownerDocument, 'element'), func_get_args());
 
 		$this->appendChild($child);
 		return $child;
+	}
+}
+
+
+trait Removable {
+	/* Remove this node from the tree. */
+	function remove() {
+		$this->parentNode->removeChild($this);
 	}
 }
 

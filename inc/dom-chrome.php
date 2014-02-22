@@ -209,7 +209,7 @@ class Page extends Document {
 
 	/* Render this page. Assumes headers have not been sent yet. */
 	function render() {
-		$this->head->appendCreate('title', [], $this->title.' / '.\Osmium\get_ini_setting('name'));
+		$this->head->appendCreate('title', $this->title.' / '.\Osmium\get_ini_setting('name'));
 
 		if($this->index) {
 			$this->head->appendCreate('meta', [ 'name' => 'robots', 'content' => 'noindex' ]);
@@ -320,28 +320,28 @@ class Page extends Document {
 		}
 
 		if(isset($a['ismoderator']) && $a['ismoderator'] === 't') {
-			$span = $this->element('span', [ 'title' => 'Moderator', 'class' => 'mod' ], [
+			$span = $this->element('span', [
+				'title' => 'Moderator', 'class' => 'mod',
 				\Osmium\Flag\MODERATOR_SYMBOL,
 				$span
 			]);
 		}
 
-		return $this->element(
-			'a',
-			[ 'class' => 'profile', 'o-rel-href' => '/profile/'.$a['accountid'] ],
-			$span
-		);
+		return $this->element('a', [
+			'class' => 'profile',
+			'o-rel-href' => '/profile/'.$a['accountid'],
+			$span,
+		]);
 	}
 
 
 
 	/* Format an amount of reputation points. */
 	function makeReputation($points) {
-		return $this->element(
-			'span',
-			[ 'class' => 'reputation', 'title' => 'reputation points'],
-			self::formatExactInteger($points)
-		);
+		return $this->element('span', [
+			'class' => 'reputation', 'title' => 'reputation points',
+			self::formatExactInteger($points),
+		]);
 	}
 
 
@@ -434,8 +434,8 @@ class Page extends Document {
 
 		if($shortlabel === null) $shortlabel = $label;
 
-		$full = $this->element('span', [ 'class' => 'full' ], $label);
-		$mini = $this->element('span', [ 'class' => 'mini' ], $shortlabel);
+		$full = $this->element('span', [ 'class' => 'full',  $label ]);
+		$mini = $this->element('span', [ 'class' => 'mini', $shortlabel ]);
 
 		if($title !== null) {
 			$full->attr('title', $title);
@@ -444,8 +444,8 @@ class Page extends Document {
 			$mini->attr('title', $label);
 		}
 		
-		$a = $this->element('a', [ 'o-rel-href' => $dest ], [ $full, $mini ]);
-		return $this->element('li', [], $a);
+		$a = $this->element('a', [ 'o-rel-href' => $dest, $full, $mini ]);
+		return $this->element('li', $a);
 	}
 
 
@@ -463,11 +463,11 @@ class Page extends Document {
 
 			if(isset($a['apiverified']) && $a['apiverified'] ===  't'
 			   && isset($a['characterid']) && $a['characterid'] > 0) {
-				$portrait = $this->element('o-eve-img', [
+				$portrait = [ 'o-eve-img', [
 					'src' => '/Character/'.$a['characterid'].'_128.jpg',
 					'alt' => '',
 					'class' => 'portrait',
-				]);
+				]];
 			} else {
 				$portrait = '';
 			}
@@ -475,24 +475,23 @@ class Page extends Document {
 			/* TODO: notifications */
 
 			$p->append([
-				$this->element('span', [ 'class' => 'wide' ], 'Logged in as '),
+				[ 'span', [ 'class' => 'wide' , 'Logged in as ' ] ],
 				$portrait,
 				' ',
-				$this->element('strong', [], $this->makeAccountLink($a)),
+				[ 'strong', $this->makeAccountLink($a) ],
 				' (',
-				$this->element(
-					'a',
-					[ 'class' => 'rep', 'o-rel-href' => '/privileges' ],
-					$this->makeReputation(\Osmium\Reputation\get_current_reputation())
-				),
+				[ 'a', [
+					'class' => 'rep', 'o-rel-href' => '/privileges',
+					$this->makeReputation(\Osmium\Reputation\get_current_reputation()),
+				]],
 				'). ',
-				$this->element('a', [ 'o-rel-href' => '/logout?tok='.$tok ], 'Logout'),
+				[ 'a', [ 'o-rel-href' => '/logout?tok='.$tok, 'Logout' ] ],
 				' ',
-				$this->element('small', [], [
+				[ 'small', [
 					'(',
-					$this->element('a', [ 'o-rel-href' => '/logout?tok='.$tok.'&global=1' ], 'all'),
+					[ 'a', [ 'o-rel-href' => '/logout?tok='.$tok.'&global=1', 'all' ] ],
 					')',
-				])
+				]],
 			]);
 
 		} else {
@@ -532,28 +531,26 @@ class Page extends Document {
 			]);
 			$wide->append([
 				' (',
-				$this->element('input', [
+				[ 'input', [
 					'type' => 'checkbox',
 					'name' => 'remember',
 					'id' => 'state_box_remember',
 					'checked' => 'checked',
-				]),
-				$this->element('small', [],
-					$this->element('label', [ 'for' => 'state_box_remember' ], 'Remember me')
-				),
+				]],
+				[ 'small', [ [ 'label', [ 'for' => 'state_box_remember', 'Remember me' ] ] ] ],
 				')',
 			]);
 
 			$narrow = $this->element('span', [ 'class' => 'narrow' ]);
-			$narrow->appendCreate('a', [ 'o-rel-href' => '/login' ], 'Login');
+			$narrow->appendCreate('a', [ 'o-rel-href' => '/login', 'Login' ]);
 
-			$reglink = $this->element('a', [ 'o-rel-href' => '/register' ], 'Register');
-			$requri = $this->element('input', [
+			$reglink = [ 'a', [ 'o-rel-href' => '/register', 'Register' ] ];
+			$requri = [ 'input', [
 				'type' => 'hidden',
 				'name' => 'request_uri',
 				'value' => $_SERVER['REQUEST_URI'],
-			]);
-			$p = $form->appendCreate('p', [], [ $wide, $narrow, ' or ', $reglink, $requri ]);
+			]];
+			$p = $form->appendCreate('p', [ $wide, $narrow, ' or ', $reglink, $requri ]);
 		}
 
 		return $div;
@@ -566,13 +563,11 @@ class Page extends Document {
 		$footer = $this->body->appendCreate('footer');
 		$p = $footer->appendCreate('p');
 		$p->append([
-			$this->element('a', [ 'o-rel-href' => '/changelog' ])->append(
-				$this->element('code', [], \Osmium\get_osmium_version())
-			),
+			[ 'a', [ 'o-rel-href' => '/changelog', [ 'code', [ \Osmium\get_osmium_version() ] ] ] ],
 			' – ',
-			$this->element('a', [ 'o-rel-href' => '/about', 'rel' => 'jslicense' ], 'About'),
+			[ 'a', [ 'o-rel-href' => '/about', 'rel' => 'jslicense', 'About' ] ],
 			' – ',
-			$this->element('a', [ 'o-rel-href' => '/help', 'rel' => 'help' ], 'Help'),
+		    [ 'a', [ 'o-rel-href' => '/help', 'rel' => 'help', 'Help' ] ],
 		]);
 
 		$datadiv = $this->body->appendCreate('div', [ 'id' => 'osmium-data' ]);
@@ -583,18 +578,18 @@ class Page extends Document {
 		/* If these scripts are changed, also change the license
 		 * information in about.php */
 		$this->body->append([
-			$this->element('script', [
+		    [ 'script', [
 				'type' => 'application/javascript',
 				'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js'
-			]),
-			$this->element('script', [
+			]],
+		    [ 'script', [
 				'type' => 'application/javascript',
 				'src' => '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js'
-			]),
-			$this->element('script', [
+			]],
+			[ 'script', [
 				'type' => 'application/javascript',
 				'o-static-js-src' => self::_minify($this->snippets),
-			]),
+			]],
 		]);
 	}
 }
