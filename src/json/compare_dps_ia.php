@@ -31,6 +31,7 @@ if(isset($_POST['source']) && is_array($_POST['source'])) {
 
 		$errors = array();
 		$fit = \Osmium\Fit\try_get_fit_from_remote_format($remote, $errors);
+		\Osmium\Fit\use_skillset_by_name($fit, $_POST['skillset'][$k], \Osmium\State\get_state('a'));
 
 		if(!is_array($fit)) {
 			$json[$k]['errors'] = $errors;

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -336,9 +336,9 @@ function put_state($key, $value) {
 
 /* --------------------- SETTINGS --------------------- */
 /* Settings are persistent and isolated. They are stored in the
- * database. Settings do not work for anonymous users. Each call to
- * get_setting() or put_setting() issues a database query, so use with
- * moderation. */
+ * database. For anonymous user, regular state is used instead. Each
+ * call to get_setting() or put_setting() issues a database query, so
+ * use with moderation. */
 
 /**
  * Get a setting previously stored with put_setting().
@@ -346,7 +346,10 @@ function put_state($key, $value) {
  * @param $default the value to return if $key is not found.
  */
 function get_setting($key, $default = null) {
-	if(!is_logged_in()) return $default;
+	if(!is_logged_in()) {
+		return get_state('__setting_'.$key, $default);
+	}
+
 	$accountid = get_state('a')['accountid'];
 
 	$k = \Osmium\Db\query_params('SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
@@ -362,49 +365,16 @@ function get_setting($key, $default = null) {
  * persistent between sessions.
  */
 function put_setting($key, $value) {
-	if(!is_logged_in()) return;
+	if(!is_logged_in()) {
+		return put_state('__setting_'.$key, $value);
+	}
+
 	$accountid = get_state('a')['accountid'];
 
 	\Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
 	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, serialize($value)));
 
 	return $value;
-}
-
-/* --------------------- (TRY) PERSISTENT STATE --------------------- */
-/* (Try) Persistent state is just a pretty way of using settings for
- * logged-in users and regular state for anonymous users. Use with
- * moderation. */
-
-/**
- * Get a state variable previously stored by put_state_trypersist().
- *
- * This is just a wrapper that uses settings for logged-in users, and
- * state vars for anonymous users.
- */
-function get_state_trypersist($key, $default = null) {
-	if(is_logged_in()) {
-		return get_setting($key, $default);
-	} else {
-		return get_state('__setting_'.$key, $default);
-	}
-}
-
-/**
- * Store a state variable, and try to persist changes as much as
- * possible.
- *
- * This is just a wrapper that uses settings for logged-in users, and
- * state vars for anonymous users.
- */
-function put_state_trypersist($key, $value) {
-	if(is_logged_in()) {
-		/* For regular users, use database-stored persistent storage */
-		return put_setting($key, $value);
-	} else {
-		/* For anonymous users, use session-based storage (not really persistent, but better than nothing) */
-		return put_state('__setting_'.$key, $value);
-	}
 }
 
 /* --------------------- SEMAPHORES --------------------- */

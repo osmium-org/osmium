@@ -39,7 +39,7 @@ if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 
 	$shortlist = array_unique($shortlist);
 
-	\Osmium\State\put_state_trypersist('shortlist_modules', $shortlist);
+	\Osmium\State\put_setting('shortlist_modules', $shortlist);
 	die();
 }
 

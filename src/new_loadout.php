@@ -39,6 +39,7 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
     }
 
     $tok = \Osmium\State\get_unique_loadout_token();
+    \Osmium\Fit\use_default_skillset_for_account($fit);
     \Osmium\State\put_loadout($tok, $fit);
 
     header('Location: ../'.$tok);
@@ -64,6 +65,7 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
 	}
 
 	$tok = \Osmium\State\get_unique_loadout_token();
+    \Osmium\Fit\use_default_skillset_for_account($fit);
 	\Osmium\State\put_loadout($tok, $fit);
 
 	header('Location: ../new/'.$tok);
@@ -163,6 +165,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	}
 
 	$tok = \Osmium\State\get_unique_loadout_token();
+    \Osmium\Fit\use_default_skillset_for_account($fork);
 	\Osmium\State\put_loadout($tok, $fork);
 
 	header('Location: ../new/'.$tok);
@@ -173,6 +176,7 @@ if(!isset($_GET['token'])) {
 	$tok = \Osmium\State\get_unique_loadout_token();
 
 	\Osmium\Fit\create($fit);
+	\Osmium\Fit\use_default_skillset_for_account($fit);
 	\Osmium\State\put_loadout($tok, $fit);
 
 	header('Location: ./new/'.$tok);

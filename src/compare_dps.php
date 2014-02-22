@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -105,11 +105,23 @@ echo "<h2>Loadout sources</h2>\n";
 \Osmium\Forms\print_form_begin(null, 'lsources');
 \Osmium\Forms\print_submit('Update loadouts');
 
+
+$opts = '';
+$default = \Osmium\State\get_setting('default_skillset', 'All V');
+foreach(\Osmium\Fit\get_available_skillset_names_for_account() as $ss) {
+	$name = \Osmium\Chrome\escape($ss);
+	if($ss === $default) {
+		$opts .= "<option value='{$name}' selected='selected'>{$name}</option>\n";
+	} else {
+		$opts .= "<option value='{$name}'>{$name}</option>\n";
+	}
+}
+
 for($i = 0; $i < MAX_LOADOUTS; ++$i) {
 	\Osmium\Forms\print_generic_row(
 		'source'.$i,
 		"<label for='source[{$i}]'>Loadout #".($i + 1)."</label>",
-		"<input type='text' class='source' name='source[$i]' id='source{$i}' placeholder='Loadout URI, DNA string or gzclf:// data' /><input type='text' class='legend' name='legend[$i]' id='legend{$i}' placeholder='Loadout title (optional)' />"
+		"<input type='text' class='source' name='source[$i]' id='source{$i}' placeholder='Loadout URI, DNA string or gzclf:// data' /><input type='text' class='legend' name='legend[$i]' id='legend{$i}' placeholder='Loadout title (optional)' /><select name='skillset[$i]'>{$opts}</select>"
 	);
 }
 

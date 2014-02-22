@@ -668,7 +668,7 @@ function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = array(
 }
 
 function print_loadout_common_footer(&$fit, $relative, $clftoken) {
-	$cdp = \Osmium\State\get_state_trypersist('custom_damage_profiles', []);
+	$cdp = \Osmium\State\get_setting('custom_damage_profiles', []);
 	if($cdp === []) {
 		$cdp = "{}";
 	} else {

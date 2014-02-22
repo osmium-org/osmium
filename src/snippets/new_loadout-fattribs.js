@@ -73,11 +73,26 @@ osmium_init_fattribs = function() {
 	osmium_ctxmenu_bind($("div#computed_attributes > section#mastery"), function() {
 		var menu = osmium_ctxmenu_create();
 		for(var i = 0; i < osmium_skillsets.length; ++i) {
-			osmium_ctxmenu_add_option(menu, osmium_skillsets[i], (function(sname) {
+			osmium_ctxmenu_add_subctxmenu(menu, osmium_skillsets[i], (function(sname) {
 				return function() {
-					osmium_clf.metadata['X-Osmium-skillset'] = sname;
-					osmium_undo_push();
-					osmium_commit_clf();
+					var smenu = osmium_ctxmenu_create();
+
+					osmium_ctxmenu_add_option(smenu, "Use", function() {
+						osmium_clf.metadata['X-Osmium-skillset'] = sname;
+						osmium_undo_push();
+						osmium_commit_clf();
+					}, { default: true });
+
+					osmium_ctxmenu_add_option(smenu, "Set default", function() {
+						$.ajax({
+							type: 'POST',
+							url: osmium_relative + '/internal/ps/default_skillset?'
+								+ $.param({ token: osmium_token }),
+							data: { payload: JSON.stringify(sname) }
+						});
+					}, {});
+
+					return smenu;
 				};
 			})(osmium_skillsets[i]), {
 				toggled: osmium_clf.metadata['X-Osmium-skillset'] === osmium_skillsets[i]
@@ -213,7 +228,7 @@ osmium_init_fattribs = function() {
 osmium_commit_custom_damage_profiles = function() {
 	$.ajax({
 		type: 'POST',
-		url: osmium_relative + '/src/ajax/put_custom_damage_profiles.php?' + $.param({ token: osmium_token }),
+		url: osmium_relative + '/internal/ps/custom_damage_profiles?' + $.param({ token: osmium_token }),
 		data: { payload: JSON.stringify(osmium_custom_damage_profiles) }
 	});
 };

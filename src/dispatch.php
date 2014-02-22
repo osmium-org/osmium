@@ -42,6 +42,7 @@ function get_rules($prefix) {
 		return [
 			'%^/$%D' => '/src/main.php',
 			'%^/search$%D' => '/src/search.php',
+			'%^/new$%D' => '/src/new_loadout.php',
 			'%^/login$%D' => '/src/login.php',
 			'%^/import$%D' => '/src/import_loadouts.php',
 			'%^/convert%D' => '/src/convert.php',
@@ -111,6 +112,7 @@ function get_rules($prefix) {
 			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 			'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
 			'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
+			'%^/internal/ps/(?<name>[^/]+)$%D' => '/src/ajax/put_setting.php',
 		];
 
 	case "help":

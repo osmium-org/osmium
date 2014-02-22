@@ -297,22 +297,7 @@ osmium_send_clf = function(opts) {
 				}).children('span.charge').addClass('hasncycles').append(s);
 			}
 
-			$(".missingskill").removeClass('missingskill');
-			$("section#modules div.slots > ul > li, section#drones div.drones > ul > li, section#implants div.implants > ul > li").each(function() {
-				var li = $(this);
-
-				if(li.data('typeid') in payload.missingprereqs) {
-					li.children('span.name').addClass('missingskill');
-				}
-
-				if(li.hasClass('hascharge') && li.data('chargetypeid') in payload.missingprereqs) {
-					li.children('span.charge').children('span.name').addClass('missingskill');
-				}
-			});
-			if("ship" in osmium_clf && "typeid" in osmium_clf.ship
-			   && osmium_clf.ship.typeid in payload.missingprereqs) {
-				$("section#ship h1 > strong > span.name").addClass('missingskill');
-			}
+			osmium_highlight_missing_prereqs(payload.missingprereqs);
 
 			$("section#drones small.bayusage").text(
 				osmium_clf_rawattribs.dronecapacityused
@@ -395,4 +380,34 @@ osmium_load_common_data = function() {
 	osmium_clf = d.data('clf');
 	osmium_custom_damage_profiles = d.data('customdamageprofiles');
 	osmium_skillsets = d.data('skillsets');
+};
+
+osmium_highlight_missing_prereqs = function(missingprereqs) {
+	$("section#modules div.slots > ul > li, section#drones div.drones > ul > li, section#implants div.implants > ul > li").each(function() {
+		var li = $(this);
+
+		var s = li.children('span.name');
+		if(li.data('typeid') in missingprereqs) {
+			s.addClass('missingskill');
+		 } else {
+			 s.removeClass('missingskill');
+		}
+
+		if(!li.hasClass('hascharge')) return;
+		s = li.children('span.charge').children('span.name');
+		if(li.data('chargetypeid') in missingprereqs) {
+			s.addClass('missingskill');
+		} else {
+			s.removeClass('missingskill');
+		}
+	});
+
+	if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
+		var s = $("section#ship h1 > strong > span.name")
+		if(osmium_clf.ship.typeid in missingprereqs) {
+			s.addClass('missingskill');
+		} else {
+			s.removeClass('missingskill');
+		}
+	}
 };

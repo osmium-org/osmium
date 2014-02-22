@@ -96,6 +96,18 @@ if($loadoutid !== false) {
 	$can_edit = false;
 }
 
+
+
+$ss = \Osmium\Fit\use_default_skillset_for_account($fit, $a);
+if($ss !== 'All V') {
+	list(, $missing) = \Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit);
+} else {
+	$missing = [];
+}
+\Osmium\Chrome\add_js_data('missingprereqs', json_encode($missing));
+
+
+
 $ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
 $canedit = ($loadoutid !== false) && \Osmium\State\can_edit_fit($loadoutid);
 $modprefix = $ismoderator ? '<span title="Moderator action">'.\Osmium\Flag\MODERATOR_SYMBOL.'</span> ' : '';
@@ -206,6 +218,7 @@ echo "<div id='vlattribs'>
 if(isset($fit['ship']['typeid'])) {
 	echo "<img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />\n";
 	echo "<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>\n";
+	$m = isset($missing[$fit['ship']['typeid']]) ? ' missingskill' : '';
 	echo "<strong><span class='name'>".\Osmium\Chrome\escape($fit['ship']['typename'])."</span></strong>\n";
 } else {
 	echo "<div class='notype'></div>\n";
@@ -387,6 +400,7 @@ foreach($stypes as $type => $tdata) {
 
 			echo "<span class='charge".($ncycles !== -1 ? ' hasncycles' : '')."'>,<br />";
 			echo "<img src='//image.eveonline.com/Type/".$c['typeid']."_64.png' alt='' />";
+			$m = isset($missing[$c['typeid']]) ? ' missingskill' : '';
 			echo "<span class='name'>".\Osmium\Chrome\escape($c['typename'])."</span>";
 			if($ncycles !== -1) {
 				echo "<span class='ncycles' title='Number of module cycles before having to reload'>"

@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,22 +16,25 @@
  */
 
 $(function() {
+	osmium_tabify($("div#vlmain > ul.tabs"), 0);
+
+	var odata = $("div#osmium-data");
+
 	osmium_load_common_data();
-	osmium_clf_slots = $("div#osmium-data").data('clfslots');
-	osmium_capacitors = $("div#osmium-data").data('capacitors');
-	osmium_ia = $("div#osmium-data").data('ia');
+	osmium_clf_slots = odata.data('clfslots');
+	osmium_capacitors = odata.data('capacitors');
+	osmium_ia = odata.data('ia');
 
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
-		osmium_tabify($("div#vlmain > ul.tabs"), 0);
+		osmium_highlight_missing_prereqs(odata.data('missingprereqs'));
 		osmium_user_initiated_push(true);
 		osmium_undo_push();
+		osmium_init_votes();
+		osmium_init_comment_replies();
+		osmium_init_export();
 	});
-
-	osmium_init_votes();
-	osmium_init_comment_replies();
-	osmium_init_export();
 
 	$('body').on('click', 'a.confirm', function() {
 		return confirm("You are about to do a destructive action.\n\nIt cannot be undone.\n\nContinue?");

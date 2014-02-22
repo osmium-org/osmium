@@ -15,6 +15,11 @@
 * Instead of showing the search results page when there is a unique
   result, you will be redirected to the result directly.
 
+* Set a default character for your account to be used instead of "All
+  V" when viewing/creating a loadout.
+
+* Select skillsets in the compare DPS page.
+
 # Version 0.11
 
 ## Version 0.11.0, released 2014-01-28

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -1240,6 +1240,12 @@ function get_available_skillset_names_for_account() {
 	}
 
 	return $names;
+}
+
+function use_default_skillset_for_account(&$fit, $a = null) {
+	if($a === null) $a = \Osmium\State\get_state('a');
+	use_skillset_by_name($fit, $ss = \Osmium\State\get_setting('default_skillset', 'All V'), $a);
+	return $ss;
 }
 
 /**
