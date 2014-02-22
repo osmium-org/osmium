@@ -103,6 +103,7 @@ function is_fit_flaggable($fit) {
 }
 
 /**
+ * @deprecated
  * Format (if needed) the name of a moderator.
  */
 function maybe_add_moderator_symbol($a, $name) {

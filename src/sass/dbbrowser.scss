@@ -64,7 +64,7 @@ div#dbb {
 			}
 
 			&:first-child:before {
-				content: "";
+				display: none;
 			}
 
 			&.lst {

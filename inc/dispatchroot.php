@@ -21,8 +21,7 @@ namespace Osmium;
 /* This file will be included before inc/root.php and is the only file
  * included before dispatching the URI. */
 
-$__start = microtime(true);
-
+define(__NAMESPACE__.'\T0', microtime(true));
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 

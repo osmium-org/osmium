@@ -31,6 +31,8 @@ $__osmium_js_snippets = array();
 $__osmium_js_data = array();
 
 /**
+ * @deprecated
+ * 
  * Print the page header. Nothing should be printed before this call
  * (except header() calls).
  *
@@ -174,11 +176,13 @@ function print_header($title = '', $relative = '.', $index = true, $add_head = '
 }
 
 /**
+ * @deprecated
+ * 
  * Print the page footer. As this closes the <html> tag, nothing
  * should be printed after calling this.
  */
 function print_footer() {
-	global $__osmium_chrome_relative, $__osmium_js_scripts, $__osmium_js_snippets, $__osmium_js_data, $__start;
+	global $__osmium_chrome_relative, $__osmium_js_scripts, $__osmium_js_snippets, $__osmium_js_data;
 
 	echo "<div id='push'></div>\n</div>\n<footer>\n<p>\n";
 	echo "<a href='".$__osmium_chrome_relative."/changelog'><code>".\Osmium\get_osmium_version()."</code></a> –\n";
@@ -238,7 +242,7 @@ function print_footer() {
 	}
 
 	echo "</body>\n</html>\n";
-	echo "<!-- ".(microtime(true) - $__start)." -->\n";
+	echo "<!-- ".(microtime(true) - \Osmium\T0)." -->\n";
 
 	\Osmium\State\put_activity();
 }

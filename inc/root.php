@@ -86,6 +86,7 @@ if(isset($_SERVER['REMOTE_ADDR'])) {
 	session_start();
 }
 
+require ROOT.'/inc/dom.php';
 require ROOT.'/inc/chrome.php';
 require ROOT.'/inc/forms.php';
 require ROOT.'/inc/db.php';

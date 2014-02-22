@@ -18,6 +18,7 @@
 
 namespace Osmium\Chrome;
 
+/* @deprecated */
 define(
 	__NAMESPACE__.'\XHTML',
 	isset($_SERVER['HTTP_ACCEPT']) && (
@@ -36,6 +37,8 @@ require __DIR__.'/chrome-fit.php';
 
 /**
  * Escape a string.
+ *
+ * @deprecated
  */
 function escape($s) {
 	if(\Osmium\Chrome\XHTML) {
@@ -303,6 +306,7 @@ function format_reputation($rep) {
 }
 
 /**
+ * @deprecated
  * Get nickname or character name of current user.
  */
 function get_name($a, &$rawname) {
@@ -321,6 +325,7 @@ function get_name($a, &$rawname) {
 }
 
 /**
+ * @deprecated
  * Format a character name (with a link to the profile).
  */
 function format_character_name($a, $relative = '.', &$rawname = null) {
@@ -574,11 +579,11 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
-function format_showinfo_links($desc, $relative) {
+function format_showinfo_links($desc) {
 	$desc = preg_replace_callback(
 		'%<a href=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>%',
-		function($match) use($relative) {
-			return "<a href='{$relative}/db/type/{$match['typeid']}'>";
+		function($match) {
+			return "<a o-rel-href='/db/type/{$match['typeid']}'>";
 		},
 		$desc
 	);
@@ -587,8 +592,8 @@ function format_showinfo_links($desc, $relative) {
 	 * <url>s (hopefully this NEVER appears in type descriptions… */
 	$desc = preg_replace_callback(
 		'%<url=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>(?<content>.*?)</url>%sU',
-		function($match) use($relative) {
-			return "<a href='{$relative}/db/type/{$match['typeid']}'>".$match['content']."</a>";
+		function($match) {
+			return "<a o-rel-href='/db/type/{$match['typeid']}'>".$match['content']."</a>";
 		},
 		$desc
 	);
@@ -597,14 +602,7 @@ function format_showinfo_links($desc, $relative) {
 }
 
 function format_type_description($desc) {
-	static $rel = null;
-
-	if($rel === null) {
-		$rel = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
-	}
-
-	$desc = format_showinfo_links($desc, $rel);
-
+	$desc = format_showinfo_links($desc);
 	return sanitize_html(format_md(nl2br($desc, true)));
 }
 
@@ -807,7 +805,7 @@ function format_effect_category($id) {
 	return isset($map[$id]) ? $map[$id] : "unknown ({$id})";
 }
 
-function get_formatted_ship_traits($shiptypeid, $relative) {
+function get_formatted_ship_traits($shiptypeid) {
 	$traitsq = \Osmium\Db\query_params(
 		'SELECT COALESCE(sourcetypeid, sourceother) AS source,
 		bonus, t.message, u.unitid, u.displayname
@@ -829,7 +827,7 @@ function get_formatted_ship_traits($shiptypeid, $relative) {
 
 	foreach($tps as $source => $traits) {
 		if($source >= 0) {
-			$ret .= "<h3><a href='{$relative}/db/type/{$source}'>"
+			$ret .= "<h3><a o-rel-href='/db/type/{$source}'>"
 				.\Osmium\Fit\get_typename($source)
 				."</a> bonuses (per skill level):</h3>\n";
 		} else if($source == -1) {
@@ -857,5 +855,5 @@ function get_formatted_ship_traits($shiptypeid, $relative) {
 		$ret .= "</ul>\n";
 	}
 
-	return format_showinfo_links($ret."</div>\n", $relative);
+	return format_showinfo_links($ret."</div>\n");
 }

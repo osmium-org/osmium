@@ -20,7 +20,7 @@ namespace Osmium\Page\DBBrowser\ViewType;
 
 require __DIR__.'/../../inc/root.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
 
 $type = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
@@ -46,68 +46,72 @@ $type = \Osmium\Db\fetch_assoc(
 
 if($type === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	\Osmium\Chrome\escape(strip_tags($type['typename'])).' / Type '.$type['typeid'],
-	RELATIVE
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-echo "<header>\n<h2>".\Osmium\Chrome\escape($type['typename']);
-echo " <small>";
+
+
+$header = $dbb->appendCreate('header');
+$h2 = $header->appendCreate('h2', [], $type['typename']);
+$small = $h2->appendCreate('small', [], 'type '.$type['typeid']);
 if($type['published'] !== 't') {
-	echo "<span class='unpublished'>not public</span> – ";
+	$small->prepend([
+		$p->element('span', [ 'class' => 'unpublished' ], 'not public'),
+		' – ',
+	]);
 }
-echo "type ".$type['typeid']."</small></h2>\n</header>\n";
 
-echo "<nav>\n";
 
-echo "<ul>\n";
-echo "<li><a href='../category/".$type['categoryid']."'>".\Osmium\Chrome\escape(
-	$type['categoryname']
-)."</a></li>\n";
-echo "<li><a href='../group/".$type['groupid']."'>".\Osmium\Chrome\escape(
-	$type['groupname']
-)."</a></li>\n";
-echo "<li class='lst memberof'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
-echo "</ul>\n";
+
+$nav = $dbb->appendCreate('nav');
+$ul = $nav->appendCreate('ul');
+$ul->append([
+	$p->element('li', [], $p->element('a',
+	                                  [ 'o-rel-href' => '/db/category/'.$type['categoryid'] ],
+	                                  $type['categoryname'])),
+	$p->element('li', [], $p->element('a',
+	                                  [ 'o-rel-href' => '/db/group/'.$type['groupid'] ],
+	                                  $type['groupname'])),
+	$p->element('li', [ 'class' => 'lst memberof' ], $type['typename']),
+]);
 
 if($type['mgid0'] !== null) {
-	echo "<ul>\n";
+	$ul = $nav->appendCreate('ul');
+
 
 	for($i = 4; $i >= 0; --$i) {
 		if($type['mgid'.$i] !== null) {
-			echo "<li><a href='../marketgroup/".$type['mgid'.$i]."'>".\Osmium\Chrome\escape(
-				$type['mgname'.$i]
-			)."</a></li>\n";
+			$a = $p->element('a',
+			                 [ 'o-rel-href' => '/db/marketgroup/'.$type['mgid'.$i] ],
+			                 $type['mgname'.$i]);
+			$ul->appendCreate('li', [], $a);
 		}
 	}
-	echo "<li class='lst memberof'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
 
-	echo "</ul>\n";
+	$ul->appendCreate('li', [ 'class' => 'lst memberof' ], $type['typename']);
 }
 
-echo "</nav>\n";
+$desc = $dbb->appendCreate('div', [ 'id' => 'desc' ]);
+$desc->appendCreate('o-eve-img', [ 'src' => '/Type/'.$type['typeid'].'_64.png', 'alt' => '' ]);
+$desctext = \Osmium\Chrome\trim($type['description']);
 
-echo "<div id='desc'>\n";
-echo "<img src='//image.eveonline.com/Type/".$type['typeid']."_64.png' alt='' />\n";
-
-$desc = \Osmium\Chrome\trim($type['description']);
-if($desc === '') {
-	echo "<p class='placeholder'>This type has no description.</p>\n";
+if($desctext !== '') {
+	$fragment = $p->createDocumentFragment();
+	$fragment->appendXML(\Osmium\Chrome\format_type_description($desctext));
+	$desc->appendChild($fragment);
 } else {
-	echo \Osmium\Chrome\format_type_description($desc);
+	$desc->appendCreate('p', [ 'class' => 'placeholder' ], 'This type has no description.');
 }
 
-echo "</div>\n";
 
-ob_start();
 
-$traits = \Osmium\Chrome\get_formatted_ship_traits($type['typeid'], RELATIVE);
+$traits = \Osmium\Chrome\get_formatted_ship_traits($type['typeid']);
 if($traits !== false) {
-	echo "<section id='t'>\n";
-	echo $traits;
-	echo "</section>\n";
+	$section = $dbb->appendCreate('section', [ 'id' => 't' ]);
+	$fragment = $p->createDocumentFragment();
+	$fragment->appendXML($traits);
+	$section->appendChild($fragment);
 }
+
 
 
 $aq = \Osmium\Db\query_params(
@@ -120,34 +124,54 @@ $aq = \Osmium\Db\query_params(
 );
 
 $nattribs = 0;
+$section = $p->element('section', [ 'id' => 'a' ]);
+$tbody = $section->appendCreate('table', [ 'class' => 'd' ])
+	->appendCreate('tbody');
 while($a = \Osmium\Db\fetch_assoc($aq)) {
-	if($nattribs === 0) {
-		echo "<section id='a'>\n<table class='d'>\n<tbody>\n";
-	}
 	++$nattribs;
 
 	$hasdname = ($a['displayname'] !== '');
 
-	echo "<tr>\n";
-	echo "<td><a href='../attribute/".$a['attributeid']."'>"
-		.$a['attributeid']."</a></td>\n";
-	echo "<td class='raw' colspan='".($hasdname ? 1 : 2)."'><small>"
-		.\Osmium\Chrome\escape($a['attributename'])."</small></td>\n";
+	$tr = $tbody->appendCreate('tr');
+
+	$anchor = $p->element('a', [ 'o-rel-href' => '/db/attribute/'.$a['attributeid'] ], $a['attributeid']);
+	$tr->appendCreate('td', [], $anchor);
+
+	$small = $p->element('small', [], $a['attributename']);
+	$tr->appendCreate('td', [ 'class' => 'small', 'colspan' => ($hasdname ? 1 : 2) ], $small);
+
 	if($hasdname) {
-		echo "<td>".\Osmium\Chrome\escape(ucfirst($a['displayname']))."</td>\n";
+		$tr->appendCreate('td', [], ucfirst($a['displayname']));
 	}
-	echo "<td>".\Osmium\Chrome\format_number_with_unit(
+
+	$tr->appendCreate('td', [], $a['value']); /* TODO */
+
+    
+	/*echo "<td>".\Osmium\Chrome\format_number_with_unit(
 		$a['value'],
 		$a['unitid'],
 		$a['udisplayname'],
 		RELATIVE
-	)."</td>\n";
-	echo "</tr>\n";
+		)."</td>\n";*/
 }
 
 if($nattribs > 0) {
-	echo "</tbody>\n</table>\n</section>\n";
+	$dbb->append($section);
 }
+
+
+
+$p->title = $type['typename'].' / Type '.$type['typeid'];
+$p->relative = '../..';
+$p->snippets[] = 'tabs';
+$p->snippets[] = 'dbbrowser';
+$p->render();
+
+/* TODO: the rest of this bloody page */
+die();
+
+ob_start();
+
 
 
 
@@ -357,9 +381,3 @@ if($lis !== '') {
 
 
 
-
-
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('tabs');
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
