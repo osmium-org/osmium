@@ -20,7 +20,8 @@ namespace Osmium\Dispatch;
 
 require __DIR__.'/../inc/dispatchroot.php';
 
-/* Dispatch rules, of the form <RegEx> => <Path>;
+/* Returns some dispatch rules, of the form <RegEx> => <Path>, that
+ * start with the given prefix.
  *
  * <Path> will be included if <RegEx> matches the current request URI
  * (normalized according to the relative root). If <RegEx> has named
@@ -34,126 +35,155 @@ require __DIR__.'/../inc/dispatchroot.php';
  * pages first, and try to keep the general number of rules low (worst
  * case being 404 errors, where all the rules have to be checked).
  */
-$osmium_dispatch_rules = array(
-	/* Very common pages */
-	'%^/$%D' => '/src/main.php',
-	\Osmium\PUBLIC_LOADOUT_RULE => '/src/view_loadout.php',
-	\Osmium\NEW_LOADOUT_RULE => '/src/new_loadout.php',
-	'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
-	'%^/search$%D' => '/src/search.php',
-	'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
-	\Osmium\PRIVATE_LOADOUT_RULE => '/src/view_loadout.php',
+function get_rules($prefix) {
+	switch($prefix) {
 
-	'%^/internal/nc$%D' => '/src/ajax/get_notification_count.php',
-	'%^/internal/syncclf/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/process_clf.php',
-	'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
-	'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
+	case false:
+		return [
+			'%^/$%D' => '/src/main.php',
+			'%^/search$%D' => '/src/search.php',
+			'%^/login$%D' => '/src/login.php',
+			'%^/import$%D' => '/src/import_loadouts.php',
+			'%^/convert%D' => '/src/convert.php',
+			'%^/register$%D' => '/src/register.php',
+			'%^/logout$%D' => '/src/logout.php',
+			'%^/settings$%D' => '/src/settings.php',
+			'%^/resetpassword$%D' => '/src/reset_password.php',
+			'%^/notifications$%D' => '/src/view_notifications.php',
+			'%^/privileges$%D' => '/src/view_privileges.php',
+			'%^/help$%D' => [ '/src/mdstatic.php',
+			                  ['relative' => '..', 'title' => 'Osmium help', 'f' => 'help.md']
+			],
+			'%^/about$%D' => '/src/about.php',
+			'%^/changelog$%D' => [ '/src/mdstatic.php',
+			                       ['relative' => '.', 'title' => 'Changelog', 'f' => 'changelog.md']
+			],
+			'%^/moderation$%D' => '/src/moderation/main.php',
+			'%^/robots\.txt$%D' => [
+				'/src/staticpassthrough.php',
+				[ 'f' => 'static/robots.txt', 'type' => 'text/plain' ]
+			],
+			'%^/sitemap\.xml\.gz$%D' => [
+				'/src/staticpassthrough.php', [
+					'f' => 'static/cache/sitemap-root.xml.gz',
+					'type' => 'application/x-gzip',
+					'dontcompress' => true,
+					'mexpire' => 93600,
+				]
+			],
+			'%^/sitemap-(?<sitemap>[a-z0-9-]+)\.xml\.gz$%D' => [
+				'/src/staticpassthrough.php', [
+					'type' => 'application/x-gzip',
+					'dontcompress' => true,
+					'mexpire' => 93600,
+				]
+			],
+		];
 
-	'%^/login$%D' => '/src/login.php',
+	case "loadout":
+		return [
+			\Osmium\PUBLIC_LOADOUT_RULE => '/src/view_loadout.php',
+			\Osmium\PRIVATE_LOADOUT_RULE => '/src/view_loadout.php',
+			'%^/loadout/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/view_loadout.php',
+		];
+
+	case "new":
+		return [
+			\Osmium\NEW_LOADOUT_RULE => '/src/new_loadout.php',
+			'%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
+		];
+
+	case "db":
+		return [
+			'%^/db/type/(?<typeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/type.php',
+			'%^/db/group/(?<groupid>[1-9][0-9]*)$%D' => '/src/dbbrowser/group.php',
+			'%^/db/category/(?<categoryid>[1-9][0-9]*)$%D' => '/src/dbbrowser/category.php',
+			'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
+			'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
+			'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/effect.php',
+			'%^/db/compare(types/(?<typeids>([1-9][0-9]*,?)+)|group/(?<groupid>[1-9][0-9]*)|marketgroup/(?<marketgroupid>[1-9][0-9]*))/(?<attributes>[^/]+)$%D' => '/src/dbbrowser/comparetypes.php',
+		];
+
+	case "internal":
+		return [
+			'%^/internal/nc$%D' => '/src/ajax/get_notification_count.php',
+			'%^/internal/syncclf/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/process_clf.php',
+			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
+			'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
+			'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
+		];
+
+	case "help":
+		return [
+			'%^/help/search$%D' => [ '/src/mdstatic.php',
+			                         ['relative' => '..', 'title' => 'Search help', 'f' => 'search.md']
+			],
+			'%^/help/formats%D' => [ '/src/mdstatic.php',
+			                         ['relative' => '..', 'title' => 'Loadout formats', 'f' => 'formats.md']
+			],
+			'%^/help/db%D' => [ '/src/mdstatic.php',
+			                    ['relative' => '..', 'title' => 'Database browser help', 'f' => 'dbbrowser.md']
+			],
+		];
+
+	case "atom":
+		return [
+			'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
+			'%^/atom/recentlyupdated\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'recentlyupdated']],
+		];
+
+	case "moderation":
+		return [
+			'%^/moderation/flags$%D' => '/src/moderation/view_flags.php',
+		];
+
+	default:
+		return [
+			'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
+			'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
 
 
-	/* Atom feeds */
-	'%^/atom/newfits\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'newfits']],
-	'%^/atom/recentlyupdated\.xml$%D' => ['/src/atom/recentfits.php', ['type' => 'recentlyupdated']],
+			'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
+			'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
+			'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
+			'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
 
+			'%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
+			'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],
+			'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
 
-	/* Loadout-related operations */
-	'%^/import$%D' => '/src/import_loadouts.php',
-	'%^/convert%D' => '/src/convert.php',
+			'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
 
-	'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
-	'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
-	'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
+			'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
+			'%^/editcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'commentreply']],
+			'%^/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
+			'%^/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
 
-	'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
-	'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
+			'%^/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
 
+			'%^/loadouthistory/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_loadout_history.php',
+			'%^/flagginghistory/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_flagging_history.php',
 
+			'%^/flag/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'loadout']],
+			'%^/flagcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'comment']],
+			'%^/flagcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'commentreply']],
+		];
 
-	/* DB browser pages */
-	'%^/db/type/(?<typeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/type.php',
-	'%^/db/group/(?<groupid>[1-9][0-9]*)$%D' => '/src/dbbrowser/group.php',
-	'%^/db/category/(?<categoryid>[1-9][0-9]*)$%D' => '/src/dbbrowser/category.php',
-	'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
-	'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
-	'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/effect.php',
-	'%^/db/compare(types/(?<typeids>([1-9][0-9]*,?)+)|group/(?<groupid>[1-9][0-9]*)|marketgroup/(?<marketgroupid>[1-9][0-9]*))/(?<attributes>[^/]+)$%D' => '/src/dbbrowser/comparetypes.php',
-
-
-	/* API calls */
-    '%^/loadout/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/view_loadout.php',
-    '%^/new/(?<import>dna)/(?<dna>[0-9:;]+)$%D' => '/src/new_loadout.php',
-
-    '%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
-	'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],
-	'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
-
-
-
-	/* Less common pages */
-	'%^/register$%D' => '/src/register.php',
-	'%^/logout$%D' => '/src/logout.php',
-	'%^/settings$%D' => '/src/settings.php',
-	'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
-	'%^/resetpassword$%D' => '/src/reset_password.php',
-	'%^/notifications$%D' => '/src/view_notifications.php',
-	'%^/privileges$%D' => '/src/view_privileges.php',
-
-	'%^/help$%D' => [ '/src/mdstatic.php',
-	                  ['relative' => '..', 'title' => 'Osmium help', 'f' => 'help.md']
-	],
-	'%^/about$%D' => '/src/about.php',
-	'%^/changelog$%D' => [ '/src/mdstatic.php',
-	                       ['relative' => '.', 'title' => 'Changelog', 'f' => 'changelog.md']
-	],
-	'%^/help/search$%D' => [ '/src/mdstatic.php',
-	                         ['relative' => '..', 'title' => 'Search help', 'f' => 'search.md']
-	],
-	'%^/help/formats%D' => [ '/src/mdstatic.php',
-	                         ['relative' => '..', 'title' => 'Loadout formats', 'f' => 'formats.md']
-	],
-	'%^/help/db%D' => [ '/src/mdstatic.php',
-	                         ['relative' => '..', 'title' => 'Database browser help', 'f' => 'dbbrowser.md']
-	],
-
-	'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
-	'%^/editcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'commentreply']],
-	'%^/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
-	'%^/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
-
-	'%^/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
-
-	'%^/loadouthistory/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_loadout_history.php',
-	'%^/flagginghistory/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_flagging_history.php',
-
-	'%^/flag/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'loadout']],
-	'%^/flagcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'comment']],
-	'%^/flagcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'commentreply']],
-
-	'%^/moderation/$%D' => '/src/moderation/main.php',
-	'%^/moderation/flags$%D' => '/src/moderation/view_flags.php',
-
-	/* Stuff for robots */
-	'%^/robots\.txt$%D' => [ '/src/staticpassthrough.php', [ 'f' => 'static/robots.txt',
-	                                                         'type' => 'text/plain', ]
-	],
-	'%^/sitemap\.xml\.gz$%D' => [ '/src/staticpassthrough.php', [ 'f' => 'static/cache/sitemap-root.xml.gz',
-	                                                              'type' => 'application/x-gzip',
-	                                                              'dontcompress' => true,
-	                                                              'mexpire' => 93600, ]
-	],
-	'%^/sitemap-(?<sitemap>[a-z0-9-]+)\.xml\.gz$%D' => [ '/src/staticpassthrough.php',
-	                                                     [ 'type' => 'application/x-gzip',
-	                                                       'dontcompress' => true,
-	                                                       'mexpire' => 93600, ]
-	],
-);
+	}
+}
 
 $relativeroot = \Osmium\get_ini_setting('relative_path');
 $request = '/'.substr(explode('?', $_SERVER['REQUEST_URI'], 2)[0], strlen($relativeroot));
 
-foreach($osmium_dispatch_rules as $rule => $target) {
+$p = strpos($request, '/', 1);
+if($p === false) {
+	$prefix = false;
+} else {
+	$prefix = substr($request, 1, $p -1);
+}
+
+foreach(get_rules($prefix) as $rule => $target) {
 	if(!preg_match($rule, $request, $matches)) continue;
 
 	foreach($matches as $k => $v) {
