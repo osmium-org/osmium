@@ -37,7 +37,7 @@ function query_select_searchdata($cond, array $params = array()) {
 		'SELECT loadoutid, restrictedtoaccountid, restrictedtocorporationid,
 		restrictedtoallianceid, viewpermission,
 		tags, modules, author, name, description,
-		shipid, upvotes, downvotes, score, ship, groups, creationdate,
+		revision, shipid, upvotes, downvotes, score, ship, groups, creationdate,
 		updatedate, evebuildnumber, comments, dps, ehp, estimatedprice
 		FROM osmium.loadoutssearchdata '.$cond,
 		$params
@@ -127,7 +127,7 @@ function index($loadout) {
 		'INSERT INTO osmium_loadouts (
 		id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
 		goodstandingids, excellentstandingids,
-		shipid, upvotes, downvotes, score, creationdate, updatedate, build,
+		revision, shipid, upvotes, downvotes, score, creationdate, updatedate, build,
 		comments, dps, ehp, estimatedprice,
 		attship, attshipgroup, attname, atttags, attauthor,
 		ship, shipgroup, name, author, tags, description, types
@@ -140,6 +140,7 @@ function index($loadout) {
 		.'('.implode(', ', $goodstandings).')'.','
 		.'('.implode(', ', $excellentstandings).'),'
 
+		.$loadout['revision'].','
 		.$loadout['shipid'].','
 		.$loadout['upvotes'].','
 		.$loadout['downvotes'].','
@@ -225,7 +226,7 @@ function get_search_query($search_query) {
 		[
 			'loadoutid', 'restrictedtoaccountid',
 			'restrictedtocorporationid', 'restrictedtoallianceid',
-			'shipid', 'upvotes', 'downvotes',
+			'revision', 'shipid', 'upvotes', 'downvotes',
 			'creationdate', 'updatedate',
 			'build', 'comments',
 		],

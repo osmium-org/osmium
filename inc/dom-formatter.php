@@ -39,6 +39,23 @@ trait Formatter {
 		return self::formatNDigits($normalized, $digits - 1) * $m;
 	}
 
+	/* Format a number with an optional 'k', 'm' or 'b' prefix. */
+	static function formatKMB($n, $sd = 3, $min = '') {
+		static $suffixes = [
+			'b' => 1e9,
+			'm' => 1e6,
+			'k' => 1e3,
+			'' => 1,
+		];
+
+		if($n < 0) return '-'.self::formatKMB(-$n, $sd, $min);
+		foreach($suffixes as $s => $limit) {
+			if($n >= $limit || $s === $min) {
+				return self::formatSDigits($n / $limit, $sd).$s;
+			}
+		}
+	}
+
 
 
 	/* Format an amount of reputation points. */

@@ -267,7 +267,7 @@ function get_navigation_link($dest, $label, $shortlabel = null, $title = null) {
 	return "<li><a href='$dest'>{$core}</a></li>\n";
 }
 
-/** @internal */
+/** @internal @deprecated */
 function is_current($relativeuri) {
 	static $absoluteparts = null;
 	static $currenturi;

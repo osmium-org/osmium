@@ -1087,9 +1087,10 @@ CREATE VIEW loadoutssearchdata AS
     ( SELECT fd.descriptions
            FROM fittingdescriptions fd
           WHERE (fd.fittinghash = fittings.fittinghash)) AS description,
+    loadoutslatestrevision.latestrevision AS revision,
     fittings.hullid AS shipid,
     invtypes.typename AS ship,
-    fittings.creationdate,
+    f0.creationdate,
     loadouthistory.updatedate,
     ls.upvotes,
     ls.downvotes,
@@ -1101,11 +1102,13 @@ CREATE VIEW loadoutssearchdata AS
     COALESCE(lda.ehp, (0)::double precision) AS ehp,
     COALESCE(lda.estimatedprice, (0)::double precision) AS estimatedprice,
     l.viewpermission
-   FROM (((((((((loadouts l
+   FROM (((((((((((loadouts l
    JOIN loadoutslatestrevision ON ((l.loadoutid = loadoutslatestrevision.loadoutid)))
    JOIN accounts ON ((l.accountid = accounts.accountid)))
    JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision))))
    JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash)))
+   JOIN loadouthistory l0 ON (((l0.loadoutid = loadoutslatestrevision.loadoutid) AND (l0.revision = 1))))
+   JOIN fittings f0 ON ((f0.fittinghash = l0.fittinghash)))
    JOIN loadoutscores ls ON ((ls.loadoutid = l.loadoutid)))
    JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)))
    LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = l.loadoutid)))

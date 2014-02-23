@@ -367,7 +367,10 @@ class Page extends RawPage {
 
 	/* @internal */
 	private function makeNavigationLink($dest, $label, $shortlabel = null, $title = null) {
-		/* TODO if link is current, make it strong */
+		static $current = null;
+		if($current === null) {
+			$current = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
+		}
 
 		if($shortlabel === null) $shortlabel = $label;
 
@@ -382,7 +385,11 @@ class Page extends RawPage {
 		}
 		
 		$a = $this->element('a', [ 'o-rel-href' => $dest, $full, $mini ]);
-		return $this->element('li', $a);
+		if(substr($current, -strlen($dest)) === $dest) {
+			$a = [ 'strong', $a ];
+		}
+
+		return $this->element('li', [ $a ]);
 	}
 
 
