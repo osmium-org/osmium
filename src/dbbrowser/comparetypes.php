@@ -288,12 +288,12 @@ foreach($typeids as $i => $typeid) {
 	foreach($attributes as $attributeid => $a) {
 		if($attributeid >= 0) {
 			$val = isset($data[$typeid][$attributeid]) ?
-				$data[$typeid][$attributeid] : [ null, '<small>N/A</small>' ];
+				$data[$typeid][$attributeid] : [ null, [ 'small', 'N/A' ] ];
 		} else if(isset($a[0]) && $a[0] === 'rpn') {
 			$rpnv = eval_rpn($a, isset($data[$typeid]) ? $data[$typeid] : array());
 
 			if($rpnv === null) {
-				$val = [ null, '<small>ERR</small>' ];
+				$val = [ null, [ 'small', 'ERR' ] ];
 			} else {
 				$val = [ $rpnv, (string)$p->formatSDigits($rpnv, 2) ];
 			}
