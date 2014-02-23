@@ -42,7 +42,7 @@ trait Formatter {
 
 
 	/* Format an amount of reputation points. */
-	static function formatReputation($points) {
+	function formatReputation($points) {
 		return $this->element('span', [
 			'class' => 'reputation', 'title' => 'reputation points',
 			self::formatExactInteger($points),

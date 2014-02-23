@@ -160,11 +160,11 @@ $section = $p->element('section', [ 'class' => 'siattributes', 'id' => 'siattrib
 $tbody = $section->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
 
 $aq = \Osmium\Db\query_params(
-	"SELECT attributeid, attributename, displayname, value,
+	'SELECT attributeid, attributename, displayname, value,
 	unitid, udisplayname, categoryid, published
 	FROM osmium.siattributes
-	WHERE typeid = $1 AND displayname <> '' AND published = true
-	ORDER BY categoryid ASC, attributeid ASC",
+	WHERE typeid = $1 AND displayname <> \'\' AND published = true
+	ORDER BY categoryid ASC, attributeid ASC',
 	array($typeid)
 );
 

@@ -134,7 +134,7 @@ foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
 		continue;
 	}
 
-	\Osmium\fatal(400, "Unrecognized attribute <code>".\Osmium\Chrome\escape($attrib)."</code>");
+	\Osmium\fatal(400, 'Unrecognized attribute <code>'.\Osmium\Chrome\escape($attrib).'</code>');
 }
 
 
@@ -288,12 +288,12 @@ foreach($typeids as $i => $typeid) {
 	foreach($attributes as $attributeid => $a) {
 		if($attributeid >= 0) {
 			$val = isset($data[$typeid][$attributeid]) ?
-				$data[$typeid][$attributeid] : [ null, "<small>N/A</small>" ];
+				$data[$typeid][$attributeid] : [ null, '<small>N/A</small>' ];
 		} else if(isset($a[0]) && $a[0] === 'rpn') {
 			$rpnv = eval_rpn($a, isset($data[$typeid]) ? $data[$typeid] : array());
 
 			if($rpnv === null) {
-				$val = [ null, "<small>ERR</small>" ];
+				$val = [ null, '<small>ERR</small>' ];
 			} else {
 				$val = [ $rpnv, (string)$p->formatSDigits($rpnv, 2) ];
 			}

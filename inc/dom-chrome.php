@@ -409,7 +409,10 @@ class Page extends RawPage {
 				$portrait = '';
 			}
 
-			/* TODO: notifications */
+			$ncount = \Osmium\Notification\get_new_notification_count();
+			if($ncount > 0) {
+				$this->head->getElementsByTagName('title')->item(0)->prepend('('.$ncount.') ');
+			}
 
 			$p->append([
 				[ 'span', [ 'class' => 'wide' , 'Logged in as ' ] ],
@@ -422,6 +425,14 @@ class Page extends RawPage {
 					$this->formatReputation(\Osmium\Reputation\get_current_reputation()),
 				]],
 				'). ',
+				[ 'a', [
+					'id' => 'ncount',
+					'data-count' => (string)$ncount,
+					'o-rel-href' => '/notifications',
+					'title' => $ncount.' new notification(s)',
+					(string)$ncount
+				]],
+				' ',
 				[ 'a', [ 'o-rel-href' => '/logout?tok='.$tok, 'Logout' ] ],
 				' ',
 				[ 'small', [
