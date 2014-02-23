@@ -382,6 +382,7 @@ header.hsi > h2 {
 	&> img {
 		width: 1.75em;
 		height: 1.75em;
+		padding-right: .25em;
 	}
 }
 
@@ -442,9 +443,13 @@ section.siaff {
 	}
 }
 
-section.sidesc {
+section.sidesc, section.sitraits {
 	@include readable;
 	padding: 0.5em 1em;
+
+	&> div.traits > h3:first-child {
+		margin-top: 0;
+	}
 
 	font {
 		font-size: 1.2em;
@@ -614,9 +619,10 @@ div.traits {
 				display: inline-block;
 				width: 5em;
 				text-align: right;
-				font-size: 1.2em;
+				font-size: 1.1em;
 				font-weight: bold;
 				vertical-align: middle;
+				padding-right: 0.25em;
 			}
 		}
 	}

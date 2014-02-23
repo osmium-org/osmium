@@ -85,7 +85,7 @@ class Document extends \DOMDocument {
 
 	/* @internal */
 	static function _to_nodes(\DOMDocument $owner, $e) {
-		if(!is_array($e)) {
+		if(!is_array($e) && !($e instanceof \DOMNodeList)) {
 			yield self::_to_node($owner, $e);
 			return;
 		}
@@ -308,7 +308,6 @@ trait Appendable {
 	 */
 	function appendCreate() {
 		$child = call_user_func_array(array($this->ownerDocument, 'element'), func_get_args());
-
 		$this->appendChild($child);
 		return $child;
 	}
@@ -331,4 +330,6 @@ trait Renderable {
 
 
 
+require __DIR__.'/dom-formatter.php';
+require __DIR__.'/dom-raw.php';
 require __DIR__.'/dom-chrome.php';

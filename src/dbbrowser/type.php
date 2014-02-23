@@ -121,12 +121,9 @@ $ultabs = $dbb->appendCreate('ul', [ 'class' => 'tabs' ]);
 
 /* —————————— Traits —————————— */
 
-$traits = \Osmium\Chrome\get_formatted_ship_traits($type['typeid']);
+$traits = $p->formatTypeTraits($type['typeid']);
 if($traits !== false) {
-	$section = $dbb->appendCreate('section', [ 'id' => 't' ]);
-	$fragment = $p->createDocumentFragment();
-	$fragment->appendXML($traits);
-	$section->appendChild($fragment);
+	$dbb->appendCreate('section', [ 'id' => 't' ])->append($traits);
 }
 
 
@@ -165,7 +162,7 @@ while($a = \Osmium\Db\fetch_assoc($aq)) {
 		$tr->appendCreate('td', ucfirst($a['displayname']));
 	}
 
-	$tr->appendCreate('td', $a['value']); /* TODO format number with unit */
+	$tr->appendCreate('td', $p->formatNumberWithUnit($a['value'], $a['unitid'], $a['udisplayname']));
 }
 
 if($nattribs > 0) {
@@ -395,7 +392,8 @@ if($ntabs <= 1) {
 
 RenderStage:
 $p->title = \Osmium\Fit\get_typename($typeid).' / Type '.$typeid;
-$p->relative = '../..';
 $p->snippets[] = 'tabs';
 $p->snippets[] = 'dbbrowser';
-$p->render();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);

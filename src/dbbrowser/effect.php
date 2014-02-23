@@ -75,8 +75,8 @@ $eattribs = [
 foreach($eattribs as $k => $label) {
 	if($e[$k] !== null) {
 		$ul->appendCreate('li', [
-			$label,
-			[ 'small', 'see value of '.$e[$k] ], /* TODO: format number with unit 119 */
+			$label, ': governed by ',
+			[ 'strong', $p->formatNumberWithUnit($e[$k], 119, '') ],
 		]);
 	}
 }
@@ -135,6 +135,7 @@ if($ntypes > 0) {
 
 RenderStage:
 $p->title = ucfirst(\Osmium\Fit\get_effectname($effectid)).' / Effect '.$effectid;
-$p->relative = '../..';
 $p->snippets[] = 'dbbrowser';
-$p->render();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);

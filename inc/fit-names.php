@@ -60,7 +60,7 @@ function get_cached_thing_generic($table, $field, $wherename, $whereval) {
 	}
 
 	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		"SELECT $field FROM $table WHERE $wherename = $1",
+		"SELECT $field FROM $table WHERE $wherename = $1 LIMIT 1",
 		array($whereval)
 	));
 
@@ -177,6 +177,15 @@ function get_groupname($groupid) {
 function get_categoryname($catid) {
 	return get_cached_thing_generic(
 		'eve.invcategories', 'categoryname', 'categoryid', (int)$catid
+	);
+}
+
+function get_group_any_typeid($groupid) {
+	return get_cached_thing_generic(
+		'eve.invtypes',
+		'typeid',
+		'groupid',
+		(int)$groupid
 	);
 }
 

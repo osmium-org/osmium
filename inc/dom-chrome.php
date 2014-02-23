@@ -18,13 +18,15 @@
 
 namespace Osmium\DOM;
 
-class Page extends Document {
+
+
+/* A full-blown page, with the base UI. */
+class Page extends RawPage {
+
+	use Formatter;
 
 	/* The title of this page. */
 	public $title = 'Osmium page';
-
-	/* Relative URI, without trailing /, to the root page. */
-	public $relative = '.';
 
 	/* Content-Security-Policy (CSP) rules. https?:// variants will be
 	 * automatically added if using TLS. */
@@ -57,11 +59,6 @@ class Page extends Document {
 	/* Decides whether robots can index this page or not. */
 	public $index = true;
 
-	/* If true, output XHTML (with application/xhtml+xml). If false,
-	 * output HTML (with text/html). If 'auto', output XHTML if the
-	 * client has support for it. */
-	public $xhtml = 'auto';
-
 	/* The theme to use. Must be a key of the array $_themes (see
 	 * below), or the value 'auto' to guess from cookie or use the
 	 * default. */
@@ -92,14 +89,6 @@ class Page extends Document {
 		'Dark' => 'dark.css',
 		'Light' => 'light.css',
 	];
-
-
-
-	/* Format a (large) integer with thousands separator(s), without
-	 * loss of precision. */
-	static function formatExactInteger($n) {
-		return number_format($n);
-	}
 
 
 
@@ -152,59 +141,6 @@ class Page extends Document {
 	function __construct() {
 		parent::__construct();
 
-
-
-		/* Relative href attribute. Does not include trailing /. */
-		$this->registerCustomAttribute('o-rel-href', function(Element $e, $v, Page $ctx) {
-			$e->attr('href', $ctx->relative.$v);
-		});
-
-		/* Same as o-rel-href, but for action. */
-		$this->registerCustomAttribute('o-rel-action', function(Element $e, $v, Page $ctx) {
-			$e->attr('action', $ctx->relative.$v);
-		});
-
-		/* Relative href attribute to a static file. Does not include trailing /. */
-		$this->registerCustomAttribute('o-static-href', function(Element $e, $v, Page $ctx) {
-			$e->attr('href', $ctx->relative.'/static-'.\Osmium\STATICVER.$v);
-		});
-
-		/* Same as o-static-href, but for src. */
-		$this->registerCustomAttribute('o-static-src', function(Element $e, $v, Page $ctx) {
-			$e->attr('src', $ctx->relative.'/static-'.\Osmium\STATICVER.$v);
-		});
-
-		/* Relative href attribute to a static CSS file. Does not include trailing /. */
-		$this->registerCustomAttribute('o-static-css-href', function(Element $e, $v, Page $ctx) {
-			$e->attr('href', $ctx->relative.'/static-'.\Osmium\CSS_STATICVER.$v);
-		});
-
-		/* Relative src attribute to a static JS file. Does not include trailing /. */
-		$this->registerCustomAttribute('o-static-js-src', function(Element $e, $v, Page $ctx) {
-			$e->attr('src', $ctx->relative.'/static-'.\Osmium\JS_STATICVER.$v);
-		});
-
-
-
-		/* An image from the CCP image server. */
-		$this->registerCustomElement('o-eve-img', function(Element $e, Page $ctx) {
-			$i = $ctx->element('img');
-
-			/* Move attributes over, and alter src */
-			while($e->attributes->length > 0) {
-				$attr = $e->attributes->item(0);
-				if($attr->name === 'src') {
-					$attr->value = '//image.eveonline.com'.$attr->value;
-				}
-
-				$i->setAttributeNode($attr);
-			}
-
-			return $i;
-		});
-
-
-
 		$this->html = $this->element('html');
 		$this->head = $this->html->appendCreate('head');
 		$this->body = $this->html->appendCreate('body');
@@ -215,8 +151,10 @@ class Page extends Document {
 
 
 
-	/* Render this page. Assumes headers have not been sent yet. */
-	function render() {
+	/* @see RawPage::finalize() */
+	function finalize(RenderContext $ctx) {
+		if($this->finalized) return;
+
 		$this->head->appendCreate('title', $this->title.' / '.\Osmium\get_ini_setting('name'));
 
 		if(!$this->index) {
@@ -246,12 +184,18 @@ class Page extends Document {
 		$this->snippets[] = 'notifications';
 		$this->snippets[] = 'feedback';
 
-		$this->data['relative'] = $this->relative;
+		$this->data['relative'] = $ctx->relative;
 
 		$this->renderThemes();
 		$this->renderHeader();
 		$this->renderFooter();
-		$this->renderCustomElements($this);
+
+		parent::finalize($ctx);
+	}
+
+	/* Render this page. Assumes headers have not been sent yet. */
+	function render(RenderContext $ctx) {
+		$this->finalize($ctx);
 
 		$csp = $this->csp;
 		foreach($csp as $k => $rules) {
@@ -280,18 +224,11 @@ class Page extends Document {
 			}
 		}
 
-		if($this->xhtml === 'auto') {
-			$xhtml = isset($_SERVER['HTTP_ACCEPT'])
-				&& strpos($_SERVER['HTTP_ACCEPT'], 'application/xhtml+xml') !== false;
-		} else {
-			$xhtml = (boolean)$this->xhtml;
-		}
-
 		$this->appendChild($this->createComment(' '.(microtime(true) - \Osmium\T0).' '));
 
-		if($xhtml) {
+		if($ctx->xhtml) {
 			header('Content-Type: application/xhtml+xml');
-			$this->html->attr('xmlns', 'http://www.w3.org/1999/xhtml');
+			$this->html->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
 			$this->save('php://output');
 		} else {
@@ -301,6 +238,8 @@ class Page extends Document {
 			echo "<!DOCTYPE html>\n";
 			$this->saveHTMLFile('php://output');
 		}
+
+		\Osmium\State\put_activity();
 	}
 
 
@@ -339,16 +278,6 @@ class Page extends Document {
 			'class' => 'profile',
 			'o-rel-href' => '/profile/'.$a['accountid'],
 			$span,
-		]);
-	}
-
-
-
-	/* Format an amount of reputation points. */
-	function makeReputation($points) {
-		return $this->element('span', [
-			'class' => 'reputation', 'title' => 'reputation points',
-			self::formatExactInteger($points),
 		]);
 	}
 
@@ -490,7 +419,7 @@ class Page extends Document {
 				' (',
 				[ 'a', [
 					'class' => 'rep', 'o-rel-href' => '/privileges',
-					$this->makeReputation(\Osmium\Reputation\get_current_reputation()),
+					$this->formatReputation(\Osmium\Reputation\get_current_reputation()),
 				]],
 				'). ',
 				[ 'a', [ 'o-rel-href' => '/logout?tok='.$tok, 'Logout' ] ],

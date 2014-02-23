@@ -78,10 +78,10 @@ if($a['published'] !== 't') {
 }
 
 $def = (!$a['defaultvalue'] && in_array($a['unitid'], [ 115, 116, 129 ]))
-	? [ 'small', 'N/A' ] : $a['defaultvalue'];
+	? [ 'small', 'N/A' ] : $p->formatNumberWithUnit($a['defaultvalue'], $a['unitid'], $a['udisplayname']);
 $dbb->appendCreate('ul')->appendCreate('li', [
 	'Default value: ', $def, ' ', [ 'small', [ '(unitid '.$a['unitid'].')' ] ]
-]); /* TODO: format number with unit */
+]);
 
 $dbb->appendCreate('ul')->append([
 	[ 'li', [ 'Stacking penalized: ', [ 'strong', $a['stackable'] === 't' ? 'never' : 'yes' ] ] ],
@@ -123,6 +123,7 @@ if($ntypes > 0) {
 
 RenderStage:
 $p->title = ucfirst(\Osmium\Fit\get_attributename($attributeid)).' / Attribute '.$attributeid;
-$p->relative = '../..';
 $p->snippets[] = 'dbbrowser';
-$p->render();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);

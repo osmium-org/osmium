@@ -82,6 +82,7 @@ if($ngroups > 0) {
 
 RenderStage:
 $p->title = \Osmium\Fit\get_categoryname($categoryid).' / Category '.$categoryid;
-$p->relative = '../..';
 $p->snippets[] = 'dbbrowser';
-$p->render();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);

@@ -99,6 +99,7 @@ if($ntypes > 0) {
 
 RenderStage:
 $p->title = \Osmium\Fit\get_groupname($groupid).' / Group '.$groupid;
-$p->relative = '../..';
 $p->snippets[] = 'dbbrowser';
-$p->render();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);

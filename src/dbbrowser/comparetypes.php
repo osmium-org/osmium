@@ -169,7 +169,7 @@ $data = [];
 while($ta = \Osmium\Db\fetch_assoc($typeattribsq)) {
 	$data[$ta['typeid']][$ta['attributeid']] = [
 		$ta['value'],
-		$ta['value'], /* XXX format number with unit */
+		$p->formatNumberWithUnit($ta['value'], $ta['unitid'], $ta['udisplayname']),
 	];
 }
 
@@ -211,7 +211,7 @@ $tr->appendCreate('td');
 
 foreach($attributes as $aid => $a) {
 	$hig = isset($highisgood[$aid]) ? (int)$highisgood[$aid] : -1;
-	$dn = ($attributeid >= 0) ? ucfirst(\Osmium\Fit\get_attributedisplayname($aid)) : $a[1];
+	$dn = ($aid >= 0) ? ucfirst(\Osmium\Fit\get_attributedisplayname($aid)) : $a[1];
 
 	$tr->appendCreate('th', [
 		'data-aid' => $aid,
@@ -295,7 +295,7 @@ foreach($typeids as $i => $typeid) {
 			if($rpnv === null) {
 				$val = [ null, "<small>ERR</small>" ];
 			} else {
-				$val = [ $rpnv, \Osmium\Chrome\round_sd($rpnv, 2) ];
+				$val = [ $rpnv, (string)$p->formatSDigits($rpnv, 2) ];
 			}
 		}
 
@@ -319,5 +319,6 @@ $p->endbody[] = $p->element('script', [
 	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
 ]);
 $p->snippets[] = 'dbbrowser';
-$p->relative = '../../..';
-$p->render();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../../..';
+$p->render($ctx);
