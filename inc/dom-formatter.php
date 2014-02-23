@@ -277,14 +277,9 @@ trait Formatter {
 
 			$li = $ul->appendCreate('li');
 
-			if($t['bonus'] !== null) {
-				$li->appendCreate('span', [
-					'class' => 'bvalue',
-					$this->formatNumberWithUnit($t['bonus'], $t['unitid'], $t['displayname'])
-				]);
-			} else {
-				$li->append('·');
-			}
+			$li->appendCreate('span', [ 'class' => 'bvalue', $t['bonus'] !== null ?
+			                            $this->formatNumberWithUnit($t['bonus'], $t['unitid'], $t['displayname'])
+			                            : '·' ]);
 
 			$li->append($this->formatShowinfoLinks($t['message']));
 		}
