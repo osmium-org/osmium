@@ -54,37 +54,45 @@ $maincont->append($p->fragment(ob_get_clean())); /* XXX: get rid of fragment */
 
 
 $maincont = $p->content->appendCreate('div', [ 'class' => 'mainpcont' ]);
-$metrics = $maincont->appendCreate('section', [
-	'class' => 'metrics',
-	[ 'h2', 'Quick stats' ],
-]);
 
-$ul = $metrics->appendCreate('ul');
-$ul->appendCreate('li', get_estimate_count($p, 'loadouts', 'loadout', 'total loadouts'));
-$ul->appendCreate('li', get_estimate_count($p, 'fittings', 'fitting', 'distinct fittings'));
-$ul->appendCreate('li', get_estimate_count($p, 'fittingmodules', 'fitted module', 'total fitted modules'));
-$ul->append(get_cached_li($p, function() {
-	return \Osmium\State\count_cache_entries([ 'mmin' => 10 ], 'Loadout_New_')
+
+
+$maincont->append($p->fragment(get_cache_memory_or_gen('metrics', 30, function() use($p) {
+	$section = $p->element('section', [
+		'class' => 'metrics',
+		[ 'h2', 'Quick stats' ],
+	]);
+
+	$nctx = \Osmium\State\count_cache_entries([ 'mmin' => 10 ], 'Loadout_New_')
 		+ \Osmium\State\count_memory_cache_entries(array(), 'Loadout_View_');
-}, 'dogma_contexts', 30, 'dogma context', 'dogma contexts'));
 
-$ul = $metrics->appendCreate('ul');
-$ul->appendCreate('li', get_estimate_count($p, 'accounts', 'account', 'accounts'));
-$ul->append([
-	get_cached_li($p, function() {
-		return (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
-			'SELECT count(accountid) FROM accounts WHERE apiverified = true'
-		))[0];
-	}, 'verified_accounts', 3601, 'verified account', 'verified accounts'),
-	get_cached_li($p, function() {
-		return (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
-			'SELECT sum(reputation) FROM accounts'
-		))[0];
-	}, 'reputation_total', 3602, 'total reputation points', 'total reputation points'),
-	get_cached_li($p, function() {
-		return max(1, \Osmium\State\count_memory_cache_entries(array(), 'Activity_'));
-	}, 'active_users', 10, 'active user', 'active users'),
-]);
+	$nusers = max(1, \Osmium\State\count_memory_cache_entries(array(), 'Activity_'));
+
+	$ul = $section->appendCreate('ul');
+	$ul->appendCreate('li', get_estimate_count($p, 'loadouts', 'loadout', 'total loadouts'));
+	$ul->appendCreate('li', get_estimate_count($p, 'fittings', 'fitting', 'distinct fittings'));
+	$ul->appendCreate('li', get_estimate_count($p, 'fittingmodules', 'fitted module', 'total fitted modules'));
+	$ul->append(get_li($p, $nctx, 'dogma context', 'dogma contexts'));
+
+	$ul = $section->appendCreate('ul');
+	$ul->appendCreate('li', get_estimate_count($p, 'accounts', 'account', 'accounts'));
+	$ul->append([
+		get_cached_li($p, function() {
+			return (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
+				'SELECT count(accountid) FROM accounts WHERE apiverified = true'
+			))[0];
+		}, 'verified_accounts', 3601, 'verified account', 'verified accounts'),
+		get_cached_li($p, function() {
+			return (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
+				'SELECT sum(reputation) FROM accounts'
+			))[0];
+		}, 'reputation_total', 3602, 'total reputation points', 'total reputation points'),
+		get_li($p, $nusers, 'active user', 'active users'),
+	]);
+
+	return $section->renderNode();
+}, 'Main_')));
+
 
 
 
@@ -169,6 +177,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen(
 
 		return $section->renderNode();
 }, 'Main_')));
+
 
 
 $maincont->append($p->fragment(get_cache_memory_or_gen('fotw', 603, function() use($p) {
@@ -308,6 +317,10 @@ function get_estimate_count(\Osmium\DOM\Page $p, $table, $single, $plural) {
 		array($table)
 	))[0];
 	return [ [ 'strong', $p->formatExactInteger($n) ], ' ', $n === 1 ? $single : $plural ];
+}
+
+function get_li(\Osmium\DOM\Page $p, $num, $single, $plural) {
+	return $p->element('li', [ [ 'strong', $p->formatExactInteger($num) ], ' ', $num === 1 ? $single : $plural ]);
 }
 
 function get_cached_li(\Osmium\DOM\Page $p, callable $getcount, $key, $ttl, $single, $plural) {

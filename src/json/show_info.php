@@ -169,9 +169,12 @@ $aq = \Osmium\Db\query_params(
 );
 
 $previouscatid = null;
-$attributes = [];
+$attributenames = [];
 
 while($a = \Osmium\Db\fetch_assoc($aq)) {
+	$a['displayname'] = ucfirst($a['displayname']);
+	$attributenames[$a['attributeid']] = $a['displayname'];
+
 	$tr = $tbody->appendCreate('tr');
 
 	if($previouscatid !== $a['categoryid']) {
@@ -187,12 +190,8 @@ while($a = \Osmium\Db\fetch_assoc($aq)) {
 		$val = $a['value'];
 	}
 
-	$a['displayname'] = ucfirst($a['displayname']);
-
 	$tr->appendCreate('td', [[ 'strong', $a['displayname'] ]]);
 	$tr->appendCreate('td', $p->formatNumberWithUnit($val, $a['unitid'], $a['udisplayname']));
-
-	$attributes[$a['attributeid']] = $a;
 }
 
 if($previouscatid !== null) {
@@ -214,27 +213,18 @@ if($affectors !== false) {
 	$naffectors = 0;
 
 	foreach($affectors as $affector) {
-		if(!isset($attributes[$affector['destid']])) {
+		if(!isset($attributenames[$affector['destid']])) {
 			if(\Osmium\Fit\get_categoryid($affector['id']) == \Osmium\Fit\CATEGORY_Skill) {
 				/* XXX: some are relevant (thermodynamics for example)
 				 * but hand-filtering them is a pain */
 				continue;
 			}
 
-			$val = $getatt($affector['destid']);
-
-			$attributes[$affector['destid']] = [
-				\Osmium\Fit\get_attributedisplayname($affector['destid']),
-				$p->formatNumberWithUnit(
-					$val,
-					\Osmium\Fit\get_unitid($affector['destid']),
-					\Osmium\Fit\get_unitdisplayname($affector['destid'])
-				),
-				0
-			];
+		    $dest = \Osmium\Fit\get_attributedisplayname($affector['destid']);
+		} else {
+			$dest = $attributenames[$affector['destid']];
 		}
 
-		$dest = $attributes[$affector['destid']]['displayname'];
 		$source = \Osmium\Fit\get_typename($affector['id']);
 		$fval = $affector['value'];
 
