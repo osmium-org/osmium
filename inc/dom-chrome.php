@@ -79,9 +79,6 @@ class Page extends RawPage {
 	 * this element. */
 	public $content;
 
-	/* Elements to add to body just before finalizing the page. */
-	public $endbody = [];
-
 
 
 	/* List of available themes. */
@@ -547,7 +544,5 @@ class Page extends RawPage {
 				'o-static-js-src' => self::_minify($this->snippets),
 			]],
 		]);
-
-		$this->body->append($this->endbody);
 	}
 }
