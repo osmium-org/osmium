@@ -46,10 +46,11 @@ $h1 = $p->content->appendCreate('h1', [ 'id' => 'mainp', $name.' — '.$desc ]);
 
 
 
-$maincont = $p->content->appendCreate('div', [ 'class' => 'mainpcont quick', 'id' => 'search_mini' ]);
-ob_start();
-\Osmium\Search\print_search_form('./search');
-$maincont->append($p->fragment(ob_get_clean())); /* XXX: get rid of fragment */
+$p->content->appendCreate('div', [
+	'class' => 'mainpcont quick',
+	'id' => 'search_mini',
+	$p->makeSearchBox(),
+]);
 
 
 

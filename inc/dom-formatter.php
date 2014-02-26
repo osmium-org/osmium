@@ -286,4 +286,18 @@ trait Formatter {
 
 		return $prevsrc === null ? false : $div;
 	}
+
+
+
+	/* Format a query string from given arrays. If there are duplicate
+	 * parameters, the last ones have precedence. */
+	static function formatQueryString() {
+		$g = call_user_func_array('array_merge', func_get_args()); /* 5.6: use ... */
+		if($g === []) return '';
+
+		array_walk($g, function(&$val, $key) {
+				$val = $key.'='.$val; /* XXX: may need percent-encoding */
+			});
+		return '?'.implode('&', $g);
+	}
 }

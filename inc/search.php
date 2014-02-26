@@ -20,6 +20,38 @@ namespace Osmium\Search;
 
 const SPHINXQL_PORT = 24492;
 
+function get_orderby_list() {
+	return [
+		"" => "relevance",
+		"creationdate" => "creation date",
+		"attname" => "name",
+		"attship" => "ship",
+		"attshipgroup" => "ship group",
+		"attauthor" => "author",
+		"atttags" => "tags",
+		"score" => "score (votes)",
+		"comments" => "number of comments",
+		"dps" => "damage per second",
+		"ehp" => "effective hitpoints",
+		"estimatedprice" => "estimated price",
+	];
+}
+
+function get_operator_list() {
+	return [
+		'gt' => [ '>=', 'or newer' ],
+		'eq' => [ '=', 'exactly' ],
+		'lt' => [ '<=', 'or older' ],
+	];
+}
+
+function get_order_list() {
+	return [
+		'desc' => 'in descending order',
+		'asc' => 'in ascending order',
+	];
+}
+
 function get_link() {
 	static $link = null;
 	if($link === null) {
@@ -270,11 +302,12 @@ function get_type_search_query($q, $mgfilters = array(), $limit = 50) {
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
 	$q = query(
-		get_search_query($search_query)
+		$rawq = get_search_query($search_query)
 		.' '.$more_cond
 		.' LIMIT '.$offset.','.$limit
 		.' OPTION field_weights=(ship=100,shipgroup=80,author=100,name=70,description=10,tags=150,types=30)'
 	);
+	\Osmium\debug($rawq);
 	if($q === false) return false; /* Invalid query */
 
 	$ids = array();
@@ -494,33 +527,15 @@ function get_search_cond_from_advanced() {
 		$_GET['build'] = $vercutoff;
 	}
 
-	static $operators = array(
-		'eq' => '=',
-		'lt' => '<=',
-		'gt' => '>=',
-	);
-
-	static $orderby = array(
-		//"relevance" => "relevance", /* Does not match to an ORDER BY statement as this is the default */
-		"creationdate" => "creation date",
-		"attname" => "name",
-		"attship" => "ship",
-		"attshipgroup" => "ship group",
-		"attauthor" => "author",
-		"atttags" => "tags",
-		"score" => "score (votes)",
-		"comments" => "number of comments",
-		"dps" => "damage per second",
-		"ehp" => "effective hitpoints",
-		"estimatedprice" => "estimated price",
-	);
+	$operators = get_operator_list();
+	$orderby = get_orderby_list();
 
 	$cond = '';
 	if(isset($_GET['op']) && isset($_GET['build']) && isset($operators[$_GET['op']])) {
-		$cond .= " AND build ".$operators[$_GET['op']]." ".((int)$_GET['build']);
+		$cond .= " AND build ".$operators[$_GET['op']][0]." ".((int)$_GET['build']);
 	}
 
-	if(isset($_GET['sort']) && isset($orderby[$_GET['sort']])) {
+	if(isset($_GET['sort']) && isset($orderby[$_GET['sort']]) && $_GET['sort'] !== '') {
 		$order = isset($_GET['order']) && in_array($_GET['order'], [ 'asc', 'desc' ]) ? $_GET['order'] : 'DESC';
 		$cond .= ' ORDER BY '.$_GET['sort'].' '.$order;
 	}
@@ -531,33 +546,12 @@ function get_search_cond_from_advanced() {
 /**
  * Print a basic seach form. Pre-fills the search form from $_GET data
  * if present.
+ * @deprecated
  */
 function print_search_form($uri = null, $relative = '.', $label = 'Search loadouts', $icon = null, $advanced = 'Advanced search') {
-	static $operands = array(
-		"gt" => "or newer",
-		"eq" => "exactly",
-		"lt" => "or older",
-	);
-
-	static $orderby = array(
-		"relevance" => "relevance",
-		"creationdate" => "creation date",
-		"attname" => "name",
-		"attship" => "ship",
-		"attshipgroup" => "ship group",
-		"attauthor" => "author",
-		"atttags" => "tags",
-		"score" => "score (votes)",
-		"comments" => "number of comments",
-		"dps" => "damage per second",
-		"ehp" => "effective hitpoints",
-		"estimatedprice" => "estimated price",
-	);
-
-	static $orders = array(
-		'desc' => 'in descending order',
-		'asc' => 'in ascending order',
-	);
+	$operands = get_operator_list();
+	$orderby = get_orderby_list();
+	$orders = get_order_list();
 
 	static $examples = array(
 		"@ship Drake | Tengu @tags missile-boat",
@@ -612,7 +606,7 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 				echo " selected='selected'";
 			}
 
-			echo ">$label</option>\n";
+			echo ">{$label[1]}</option>\n";
 		}
 		echo "</select><br />\nsort by \n<select name='sort' id='sort'>\n";
 		foreach($orderby as $sort => $label) {

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -26,6 +26,17 @@ const FIELD_DISABLED = 8;
 $__osmium_form_errors = array();
 
 function post_redirect_get() {
+	if(isset($_POST) && $_POST !== [] && !defined('Osmium\NO_CSRF_CHECK')) {
+		if(!isset($_POST['o___csrf']) || $_POST['o___csrf'] !== \Osmium\State\get_token()) {
+			/* No/incorrect CSRF token */
+			/* XXX: uncomment this later, when all code has moved to using <o-form> */
+			/*
+			  unset($_POST);
+			  fatal(400, "Incorrect CSRF token. If you made a legitimate request, please report.");
+			*/
+		}
+	}
+
 	if(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 	   && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
 		/* Don't PRG XHRs */
@@ -36,7 +47,7 @@ function post_redirect_get() {
 
 	$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
-	if(isset($_POST) && count($_POST) > 0) {
+	if(isset($_POST) && $_POST !== []) {
 		if(!isset($_FILES)) $_FILES = array();
 		else {
 			foreach($_FILES as &$file) {

@@ -260,6 +260,19 @@ class Element extends \DOMElement {
 
 		return $this;
 	}
+
+
+
+	/* Find the closest parent with a certain node name. */
+	function closestParent($parentname) {
+		$p = $this;
+		while($p->nodeType === XML_ELEMENT_NODE && $p->nodeName !== $parentname) {
+			$p = $p->parentNode;
+		}
+
+		if($p->nodeName === $parentname) return $p;
+		throw new \Exception('element '.$this->nodeName.' not a descendant of '.$parentname);
+	}
 }
 
 

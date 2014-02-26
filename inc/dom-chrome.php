@@ -280,6 +280,106 @@ class Page extends RawPage {
 
 
 
+	/* For use in makeSearchBox(). */
+	const MSB_SEARCH = 1;
+	const MSB_FILTER = 2;
+
+	/* Make a search box. */
+	function makeSearchBox($mode = self::MSB_SEARCH) {
+		static $idx = 0;
+
+		static $examples = [
+			"@ship Drake | Tengu @tags missile-boat",
+			"@shipgroup Cruiser -Strategic -Heavy @dps >= 500",
+			"@tags -armor-tank",
+			"@dps >= 400 @ehp >= 40k @tags pvp",
+			"battlecruiser @types \"stasis webifier\"",
+			"@tags cheap low-sp @estimatedprice <= 10m",
+			"battleship @tags pve|l4|missions",
+		];
+
+		$f = $this->element('o-form', [
+			'method' => 'get',
+			'o-rel-action' => '/search',
+		]);
+
+		$sprite = $this->element('o-sprite', [
+			'x' => $mode === self::MSB_SEARCH ? 2 : 3,
+			'y' => 12,
+			'gridwidth' => 64,
+			'gridheight' => 64,
+			'alt' => '',
+		]);
+
+		$label = $f->appendCreate('h1')->appendCreate('label', [
+			'for' => 'search'.$idx,
+			$sprite,
+		]);
+
+		$p = $f->appendCreate('p');
+		$p->append([
+			[ 'o-input', [
+				'id' => 'search'.$idx,
+				'type' => 'search',
+				'name' => 'q',
+				'placeholder' => $examples[mt_rand(0, count($examples) - 1)]
+			]],
+			[ 'input', [
+				'type' => 'submit',
+				'value' => 'Go!',
+			]],
+			[ 'br' ],
+		]);
+
+		if(isset($_GET['ad']) && $_GET['ad'] === '1') {
+			/* Advanced search mode */
+			$label->append('Advanced search');
+
+			$sbuild = $this->element('o-select', [ 'name' => 'build' ]);
+			foreach(\Osmium\Fit\get_eve_db_versions() as $v) {
+				$sbuild->appendCreate('option', [ 'value' => $v['build'], $v['name'] ]);
+			}
+
+			$soperand = $this->element('o-select', [ 'name' => 'op' ]);
+			foreach(\Osmium\Search\get_operator_list() as $op => $label) {
+				$soperand->appendCreate('option', [ 'value' => $op, $label[1] ]);
+			}
+
+			$ssort = $this->element('o-select', [ 'name' => 'sort' ]);
+			foreach(\Osmium\Search\get_orderby_list() as $sort => $label) {
+				$ssort->appendCreate('option', [ 'value' => $sort, $label ]);
+			}
+
+			$sorder = $this->element('o-select', [ 'name' => 'order' ]);
+			foreach(\Osmium\Search\get_order_list() as $sort => $label) {
+				$sorder->appendCreate('option', [ 'value' => $sort, $label ]);
+			}
+
+			$p->append([
+				'for ', $sbuild, ' ', $soperand, [ 'br' ],
+				'sort by ', $ssort, ' ', $sorder,
+				[ 'input', [ 'type' => 'hidden', 'name' => 'ad', 'value' => 1 ] ], [ 'br' ],
+				[ 'a', [ 'o-rel-href' => '/help/search', [ 'small', 'Help' ] ] ],
+			]);
+
+		} else {
+			/* Simple search mode, show a link to advanced mode and nothing else */
+			$label->append(($mode === self::MSB_SEARCH ? 'Search' : 'Filter').' loadouts');
+
+			$p->appendCreate('small', [
+				[ 'a', [ 'o-rel-href' => '/search'.self::formatQueryString($_GET, [ 'ad' => 1 ]),
+						 'Advanced '.($mode === self::MSB_SEARCH ? 'search' : 'filters') ] ],
+				' — ',
+				[ 'a', [ 'o-rel-href' => '/help/search', 'Help' ] ],
+			]);
+		}
+
+		++$idx;
+		return $f;
+	}
+
+
+
 	/* @internal */
 	private function renderThemes() {
 		if($this->theme === 'auto') {
@@ -448,7 +548,7 @@ class Page extends RawPage {
 
 		} else {
 			$div->addClass('login');
-			$form = $div->appendCreate('form', [ 'method' => 'post' ]);
+			$form = $div->appendCreate('o-form', [ 'method' => 'post' ]);
 
 			if(!\Osmium\HTTPS
 			   && \Osmium\get_ini_setting('https_available')

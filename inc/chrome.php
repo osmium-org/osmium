@@ -632,6 +632,7 @@ function truncate_string($s, $length, $fill = '…') {
 	return $s;
 }
 
+/* @deprecated */
 function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = null, $width = null, $height = null) {
 	if($grid_height === null) $grid_height = $grid_width;
 	if($width === null) $width = $grid_width;
