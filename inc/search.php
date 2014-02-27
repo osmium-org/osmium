@@ -307,7 +307,6 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 		.' LIMIT '.$offset.','.$limit
 		.' OPTION field_weights=(ship=100,shipgroup=80,author=100,name=70,description=10,tags=150,types=30)'
 	);
-	\Osmium\debug($rawq);
 	if($q === false) return false; /* Invalid query */
 
 	$ids = array();

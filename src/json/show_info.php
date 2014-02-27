@@ -281,7 +281,6 @@ if($affectors !== false) {
 		usort($a, function($x, $y) { return strcmp($x[1], $y[1]); });
 		foreach($a as $val) {
 			list($aff, $dest, $source, $fval, $flags) = $val;
-			\Osmium\debug($dest, $fval);
 			$subul->appendCreate('li', [
 				[ 'label', $dest ],
 				' ',

@@ -361,7 +361,7 @@ $pvotes->appendCreate('h2', [
 	[ 'small', $p->formatExactInteger($total).' votes cast' ]
 ]);
 
-$pvotes->append($p->fragment($result)); /* XXX */
+if($result !== '') $pvotes->append($p->fragment($result)); /* XXX */
 
 $votesq = \Osmium\Db\query_params(
 	'SELECT v.creationdate, type, targettype, targetid1, targetid2, targetid3, sl.loadoutid, f.name

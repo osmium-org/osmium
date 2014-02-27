@@ -52,6 +52,12 @@ class RawPage extends Document {
 
 
 
+	/* A list of form errors. Will be rendered before the referenced
+	 * element(s). */
+	public $formerrors = [];
+
+
+
 	/* Has finalized() been called yet? */
 	protected $finalized = false;
 
@@ -116,9 +122,12 @@ class RawPage extends Document {
 		 * appropriate (ie not when type=password). You can override
 		 * it by setting attribute "remember" to "auto", "on" or
 		 * "off". Remembered values will never override the "value"
-		 * attribute if it already set. */
+		 * attribute if it already set. For checkboxes and radios, you
+		 * can specify a default checked state with the "default"
+		 * attribute. */
 		$this->registerCustomElement('o-input', function(Element $e, RenderContext $ctx) {
 			$i = $e->ownerDocument->createElement('input');
+			$this->_render_form_errors($e);
 
 			$remember = 'auto';
 			$j = 0;
@@ -132,12 +141,41 @@ class RawPage extends Document {
 				$i->setAttributeNode($attr);
 			}
 
-			if($remember !== 'off' && ($remember === 'on' || $i->getAttribute('type') !== 'password')) {
-				$_vals = $e->closestParent('form')->getAttribute('method') === 'get' ? $_GET : $_POST;
+			$type = $i->getAttribute('type');
+			$parentform = $e->closestParent('form');
+
+			if($remember === 'auto' && in_array($type, [ 'password', 'file' ], true)) {
+				$remember = 'off';
+			}
+
+			if($remember !== 'off') {
+				$_vals = $parentform->getAttribute('method') === 'get' ? $_GET : $_POST;
 				$n = $i->getAttribute('name');
-				if(isset($_vals[$n]) && !($i->hasAttribute('value'))) {
-					$i->setAttribute('value', $_vals[$n]);
+
+				if($type === 'radio' || $type === 'checkbox') {
+					if(!($i->hasAttribute('checked'))) {
+						if($_vals === []) {
+							/* No POST/GET data, use default value */
+							if($i->hasAttribute('default')) {
+								if($i->getAttribute('default') === 'checked') {
+									$i->setAttribute('checked', 'checked');
+								}
+								$i->removeAttribute('default');
+							}
+						} else if(isset($_vals[$n]) && $_vals[$n]) {
+							/* Has POST/GET data _and_ checkbox was checked */
+							$i->setAttribute('checked', 'checked');
+						}
+					}
+				} else {
+					if(isset($_vals[$n]) && !($i->hasAttribute('value'))) {
+						$i->setAttribute('value', $_vals[$n]);
+					}
 				}
+			}
+
+			if($type === 'file') {
+				$parentform->setAttribute('enctype', 'multipart/form-data');
 			}
 
 			return $i;
@@ -150,6 +188,7 @@ class RawPage extends Document {
 		 * correct <option>. */
 		$this->registerCustomElement('o-select', function(Element $e, RenderContext $ctx) {
 			$s = $e->ownerDocument->createElement('select');
+			$this->_render_form_errors($e);
 
 			$i = 0;
 			while($i < $e->attributes->length) {
@@ -178,6 +217,34 @@ class RawPage extends Document {
 			}
 
 			return $s;
+		});
+
+		/* A textarea. See o-input for more details. */
+		$this->registerCustomElement('o-textarea', function(Element $e, RenderContext $ctx) {
+			$ta = $e->ownerDocument->createElement('textarea');
+			$this->_render_form_errors($e);
+
+			$remember = 'auto';
+			$j = 0;
+			while($j < $e->attributes->length) {
+				$attr = $e->attributes->item($j);
+				if($attr->name === 'remember') {
+					$remember = $attr->value;
+					++$j;
+					continue;
+				}
+				$ta->setAttributeNode($attr);
+			}
+
+			if($remember !== 'off') {
+				$_vals = $e->closestParent('form')->getAttribute('method') === 'get' ? $_GET : $_POST;
+				$n = $ta->getAttribute('name');
+				if(isset($_vals[$n]) && $e->childNodes->length === 0) {
+					$ta->appendChild($this->createCDATASection($_vals[$n]));
+				}
+			}
+
+			return $ta;
 		});
 
 
@@ -246,6 +313,25 @@ class RawPage extends Document {
 
 			return $span;
 		});
+	}
+
+
+
+	/* @internal */
+	private function _render_form_errors(Element $e) {
+		$n = $e->getAttribute('name');
+		if($n === '') return;
+		if(!isset($this->formerrors[$n])) return;
+
+		$parent = $e->parentNode;
+		foreach($this->formerrors[$n] as $error) {
+			$p = $this->createElement('p');
+			$p->setAttribute('class', 'error_box');
+			$p->append($error);
+			$parent->insertBefore($p, $e);
+		}
+
+		$e->addClass('error');
 	}
 
 

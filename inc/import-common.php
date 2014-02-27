@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,15 +20,34 @@ namespace Osmium\Import;
 
 const MAX_FILESIZE = 1048576;
 
-function print_tri_choice($textarea_name, $uri_name, $file_name) {
-	\Osmium\Forms\print_generic_row('', '<label>Method</label>', '<div id="methodselect">Use at most one of the three methods below:</div>');
+function make_tri_choice(\Osmium\DOM\Document $p, $textarea_name, $uri_name, $file_name) {
+	$tr = $p->element('tr', [
+		[ 'th', [[ 'label', 'Method' ]] ],
+		[ 'td', [[ 'div', [ 'id' => 'methodselect', 'Use at most one of the three methods below:' ] ]] ],
+	]);
 
-	\Osmium\Forms\print_textarea('Direct input', $textarea_name, null, 0);
-	\Osmium\Forms\print_generic_field('Fetch a URI', $uri_name, $uri_name);
-	\Osmium\Forms\print_file('Upload file', $file_name, MAX_FILESIZE);
+	$di = $p->element('tr', [
+		[ 'th', [[ 'label', [ 'for' => $textarea_name, 'Direct input' ] ]] ],
+		[ 'td', [[ 'o-textarea', [ 'id' => $textarea_name, 'name' => $textarea_name ] ]] ],
+	]);
+
+	$url = $p->element('tr', [
+		[ 'th', [[ 'label', [ 'for' => $uri_name, 'Fetch a URL' ] ]] ],
+		[ 'td', [[ 'o-input', [ 'type' => 'url', 'id' => $uri_name, 'name' => $uri_name ] ]] ],
+	]);
+
+	$up = $p->element('tr', [
+		[ 'th', [[ 'label', [ 'for' => $file_name, 'Upload file' ] ]] ],
+		[ 'td', [
+			[ 'o-input', [ 'type' => 'hidden', 'name' => 'MAX_FILE_SIZE', 'value' => (string)MAX_FILESIZE ] ],
+			[ 'o-input', [ 'type' => 'file', 'id' => $file_name, 'name' => $file_name ] ],
+		]],
+	]);
+
+	return [ $tr, $di, $url, $up ];
 }
 
-function get_source($textarea_name, $uri_name, $file_name) {
+function get_source(\Osmium\DOM\RawPage $p, $textarea_name, $uri_name, $file_name) {
 	if(!empty($_POST[$textarea_name])) {
 		return truncate($_POST['source']);
 	}
@@ -37,22 +56,19 @@ function get_source($textarea_name, $uri_name, $file_name) {
 		$url = $_POST[$uri_name];
 
 		if(filter_var($url, FILTER_VALIDATE_URL) === false) {
-			\Osmium\Forms\add_field_error($uri_name, 'Enter a correct URI or leave this field empty.');
+			$p->formerrors[$uri_name][] = 'Enter a correct URI or leave this field empty.';
 			return false;
 		}
 
 		$d = parse_url($url);
 		if($d['scheme'] != 'http' && $d['scheme'] != 'https') {
-			\Osmium\Forms\add_field_error(
-				$uri_name,
-				'Invalid scheme. Use either <code>http://</code> or <code>https://</code> URLs.'
-			);
+			$p->formerrors[$uri_name][] = 'Invalid scheme. Must be either http or https.';
 			return false;
 		}
 
 		if(filter_var($d['host'], FILTER_VALIDATE_IP) !== false
 		          && !filter_var($d['host'], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE)) {
-			\Osmium\Forms\add_field_error($uri_name, 'Please enter a public IP address or a domain name.');
+			$p->formerrors[$uri_name][] = 'Please enter a public IP address or a domain name.';
 			return false;
 		}
 
@@ -63,12 +79,12 @@ function get_source($textarea_name, $uri_name, $file_name) {
 		$error = $_FILES[$file_name]['error'];
 		if($error == UPLOAD_ERR_INI_SIZE || $error == UPLOAD_ERR_FORM_SIZE 
 		   || $_FILES[$file_name]['size'] > MAX_FILESIZE) {
-			\Osmium\Forms\add_field_error($file_name, 'The file you tried to upload is too big.');
+			$p->formerrors[$file_name][] = 'The file you tried to upload is too big.';
 			return false;
 		}
 
 		if($error != UPLOAD_ERR_OK) {
-			\Osmium\Forms\add_field_error($file_name, "Internal error ($error), please report.");
+			$p->formerrors[$file_name][] = 'Internal error ('.$error.'), please report.';
 			return false;
 		}
 
@@ -79,7 +95,7 @@ function get_source($textarea_name, $uri_name, $file_name) {
 }
 
 function fetch($uri) {
-	$f = fopen($uri, 'rb');
+	$f = @fopen($uri, 'rb');
 	if($f === false) return false;
 	$contents = stream_get_contents($f, MAX_FILESIZE);
 	fclose($f);
