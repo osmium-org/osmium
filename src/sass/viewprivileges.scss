@@ -1,12 +1,8 @@
 div#vprivileges {
-	text-align: center;
 
 	&> section {
 		@include fixed-width-page;
-		display: inline-block;
-		vertical-align: top;
-		text-align: left;
-		margin: 0 2em;
+		min-width: 80%;
 	}
 
 	strong.reptotal {

@@ -428,7 +428,7 @@ class Page extends RawPage {
 		]);
 		$form->appendCreate('input', [
 			'type' => 'search',
-			'placeholder' => 'Search',
+			'placeholder' => 'Search [s]',
 			'name' => 'q',
 			'accesskey' => 's',
 			'title' => 'Search fittings or types',
@@ -537,11 +537,14 @@ class Page extends RawPage {
 					(string)$ncount
 				]],
 				' ',
-				[ 'a', [ 'o-rel-href' => '/logout?tok='.$tok, 'Logout' ] ],
+				[ 'a', [ 'o-rel-href' => '/logout'.self::formatQueryString([ 'tok' => $tok ]), 'Logout' ] ],
 				' ',
 				[ 'small', [
 					'(',
-					[ 'a', [ 'o-rel-href' => '/logout?tok='.$tok.'&global=1', 'all' ] ],
+					[ 'a', [
+						'o-rel-href' => '/logout'.self::formatQueryString([ 'tok' => $tok, 'global' => '1' ]),
+						'all',
+					]],
 					')',
 				]],
 			]);
@@ -557,7 +560,7 @@ class Page extends RawPage {
 				$form->attr(
 					'action',
 					rtrim('https://'.$_SERVER['HTTP_HOST']
-					      .\Osmium\get_ini_setting('relative_puth'), '/').'/login'
+					      .\Osmium\get_ini_setting('relative_path'), '/').'/login'
 				);
 			} else {
 				$form->attr('o-rel-action', '/login');
@@ -567,7 +570,8 @@ class Page extends RawPage {
 			$wide->appendCreate('input', [
 				'type' => 'text',
 				'name' => 'account_name',
-				'placeholder' => 'Account name',
+				'placeholder' => 'Account name [n]',
+				'accesskey' => 'n',
 			]);
 			$wide->append(' ');
 			$wide->appendCreate('input', [

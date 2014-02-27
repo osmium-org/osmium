@@ -296,8 +296,69 @@ trait Formatter {
 		if($g === []) return '';
 
 		array_walk($g, function(&$val, $key) {
-				$val = $key.'='.$val; /* XXX: may need percent-encoding */
+				$val = rawurlencode($key).'='.rawurlencode($val);
 			});
 		return '?'.implode('&', $g);
+	}
+
+
+
+	/* Format a duration. */
+	static function formatDuration($nseconds, $abbrev = false, $precision = \PHP_INT_MAX) {
+		list($Y, $M, $D, $H, $I, $S) = explode('-', gmdate('Y-m-d-H-i-s', abs($nseconds)));
+		$out = array(
+			'year' => (int)$Y - 1970,
+			'month' => (int)$M - 1,
+			'day' => (int)$D - 1,
+			'hour' => (int)$H,
+			'minute' => (int)$I,
+			'second' => (int)$S,
+		);
+
+		foreach($out as $k => &$v) {
+			if($v === 0) unset($out[$k]);
+			$v = $v.($abbrev ? $k[0] : ' '.$k.($v > 1 ? 's' : ''));
+		}
+		unset($v);
+
+		if($out === []) return $abbre ? '1s' : 'less than 1 second';
+		$out = array_slice($out, 0, $precision);
+
+		$s = array_pop($out);
+		$m = array_pop($out);
+		if($m === null) return $s;
+
+		$out[] = $m.' and '.$s;
+		return implode($abbrev ? ' ' : ', ', $out);
+	}
+
+	/* Format a timestamp. If the given timestamp is near enough in
+	 * the past or the future, formatDuration() will be used, if not,
+	 * a generic date (Y-m-d) will be returned.
+	 *
+	 * @param $cutoff after this difference (in seconds) between $now
+	 * and $timestamp, use absolute dates. Set to -1 to always use
+	 * relative dates, set to 0 to always use absolute dates.
+	 *
+	 * @param $now relative timestamp to compare $timestamp to,
+	 * defaults to time()
+	 */
+	function formatRelativeDate($timestamp, $cutoff = 432000, $now = null) {
+		$fd = date('c', $timestamp);
+		$dt = $this->element('time', [ 'datetime' => $fd, 'title' => $fd ]);
+		if($now === null) $now = time();
+
+		if($cutoff === -1 || abs($now - $timestamp) < $cutoff) {
+			$dt->append([
+				$now < $timestamp ? 'in ' : '',
+				'about ',
+				self::formatDuration($timestamp - $now, false, 2),
+				$now >= $timestamp ? ' ago' : '',
+			]);
+		} else {
+			$dt->append(date('Y-m-d', $timestamp));
+		}
+
+		return $dt;
 	}
 }

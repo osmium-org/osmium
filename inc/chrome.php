@@ -160,6 +160,7 @@ function format_number($num, $precisionoffset = 0) {
 	}
 }
 
+/** @deprecated use Formatter::formatDuration(_, true) */
 function format_duration($seconds) {
 	$s = fmod($seconds, 60);
 	$m = round($seconds - $s) / 60;
@@ -175,6 +176,7 @@ function format_duration($seconds) {
 	}
 }
 
+/** @deprecated use Formatter::formatDuration() */
 function format_long_duration($seconds, $precision = 6) {
 	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', 0));
 	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', $seconds));
@@ -214,6 +216,7 @@ function format_long_duration($seconds, $precision = 6) {
 	return implode(', ', $out);
 }
 
+/** @deprecated see Formatter::formatRelativeDate */
 function format_relative_date($date, $now = null) {
 	if($now === null) $now = time();
 	$before = "<time datetime='".date('c', $date)."'>";
@@ -334,6 +337,7 @@ function format_character_name($a, $relative = '.', &$rawname = null) {
 	return maybe_add_profile_link($a, $relative, $name);
 }
 
+/** @deprecated */
 function maybe_add_profile_link($a, $relative, $name) {
 	if(isset($a['accountid'])) {
 		return "<a class='profile' href='$relative/profile/".$a['accountid']."'>$name</a>";

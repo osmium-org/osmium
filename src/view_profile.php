@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,7 +24,13 @@ if(!isset($_GET['accountid'])) {
 	\Osmium\fatal(404);
 }
 
-$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, creationdate, lastlogindate, apiverified, nickname, characterid, charactername, corporationid, corporationname, allianceid, alliancename, ismoderator, flagweight, reputation FROM osmium.accounts WHERE accountid = $1', array($_GET['accountid'])));
+$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+	'SELECT accountid, creationdate, lastlogindate, apiverified,
+	nickname, characterid, charactername, corporationid, corporationname,
+	allianceid, alliancename, ismoderator, flagweight, reputation
+	FROM osmium.accounts WHERE accountid = $1',
+	array($_GET['accountid'])
+));
 
 if($row === false) {
 	\Osmium\fatal(404);
@@ -34,87 +40,133 @@ $a = \Osmium\State\get_state('a', array());
 $myprofile = \Osmium\State\is_logged_in() && $a['accountid'] == $_GET['accountid'];
 $ismoderator = isset($a['ismoderator']) && $a['ismoderator'] === 't';
 
-$name = \Osmium\Chrome\get_name($row, $rname);
-\Osmium\Chrome\print_header(\Osmium\Chrome\escape($rname)."'s profile", '..');
+$p = new \Osmium\DOM\Page();
+$nameelement = $p->makeAccountLink($row, $name);
+$p->title = $name.'\'s profile';
 
-echo "<div id='vprofile'>\n";
-echo "<header>\n";
-$sep = "<tr class='sep'><td colspan='3'> </td></tr>\n";
+$content = $p->content->appendCreate('div', [ 'id' => 'vprofile' ]);
+$header = $content->appendCreate('header');
 
-$moderator = ($row['ismoderator'] === 't') ? 'Moderator '.\Osmium\Flag\MODERATOR_SYMBOL : '';
-$isthisme = $myprofile ? '(this is you!)' : '';
-echo "<h2>".$name." <small>$isthisme $moderator</small></h2>\n";
+$header->appendCreate('h2', [
+	$nameelement,
+	[ 'small', [
+		$myprofile ? ' (this is you!) ' : '',
+		$row['ismoderator'] === 't' ? ' '.\Osmium\Flag\MODERATOR_SYMBOL.'Moderator ' : '',
+	]]
+]);
+
 
 if($row['apiverified'] === 't') {
 	$allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
 	$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
 
-	echo "<p>\n"
-		."<a href='../search?q=".urlencode("@restrictedtoaccountid > 0")."'>"
-		."<img src='//image.eveonline.com/Character/".$row['characterid']."_512.jpg' alt='portrait' />"
-		."</a><br />\n"
-		."<a href='../search?q=".urlencode("@restrictedtocorporationid > 0")."'>"
-		."<img src='//image.eveonline.com/Corporation/".$row['corporationid']."_256.png'"
-		." alt='corporation logo' title='".\Osmium\Chrome\escape($row['corporationname'])."' /></a>"
-		."<a href='../search?q=".urlencode("@restrictedtoallianceid > 0")."'>"
-		."<img src='//image.eveonline.com/Alliance/".$allianceid."_128.png'"
-		." alt='alliance logo' title='".\Osmium\Chrome\escape($alliancename)."' /></a></p>\n";
+	$pp = $header->appendCreate('p');
+
+	$pp->append([
+		[ 'a', [
+			'o-rel-href' => '/search?q=@restrictedtoaccountid > 0',
+			[ 'o-eve-img', [ 'src' => '/Character/'.$row['characterid'].'_512.jpg', 'alt' => 'portrait' ] ],
+		]],
+		[ 'br' ],
+		[ 'a', [
+			'o-rel-href' => '/search?q=@restrictedtocorporationid > 0',
+			[ 'o-eve-img', [ 'src' => '/Corporation/'.$row['corporationid'].'_256.png',
+			                 'alt' => 'corporation logo', 'title' => $row['corporationname'] ] ],
+		]],
+		[ 'a', [
+			'o-rel-href' => '/search?q=@restrictedtoallianceid > 0',
+			[ 'o-eve-img', [ 'src' => '/Alliance/'.$allianceid.'_128.png',
+			                 'alt' => 'alliance logo', 'title' => $alliancename ] ],
+		]],
+	]);
 }
 
-echo "<table>\n<tbody>\n";
+$tbody = $header->appendCreate('table')->appendCreate('tbody');
+$sep = $p->element('tr', [
+	'class' => 'sep',
+	[ 'td', [ 'colspan' => '3', ' ' ] ],
+]);
 
 if($row['apiverified'] === 't') {
-	echo "<tr>\n<th rowspan='2'>character</th>\n<td>corporation</td>\n<td>".\Osmium\Chrome\escape($row['corporationname'])."</td>\n</tr>\n<tr>\n<td>alliance</td>\n<td>".\Osmium\Chrome\escape($alliancename)."</td>\n</tr>\n";
-	echo $sep;
+	$tbody->appendCreate('tr', [
+		[ 'th', [ 'rowspan' => '2', 'character' ] ],
+		[ 'td', 'corporation' ],
+		[ 'td', $row['corporationname'] ],
+	]);
+	$tbody->appendCreate('tr', [
+		[ 'td', 'alliance' ],
+		[ 'td', $alliancename ],
+	]);
+	$tbody->append($sep->cloneNode(true));
 }
 
-echo "<tr>\n<th rowspan='2'>visits</th>\n<td>member for</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['creationdate'], 2)."</td>\n</tr>\n<tr>\n<td>last seen</td>\n<td>".\Osmium\Chrome\format_long_duration(time() - $row['lastlogindate'], 2)." ago</td>\n</tr>\n";
+$tbody->appendCreate('tr', [
+	[ 'th', [ 'rowspan' => '2', 'visits' ] ],
+	[ 'td', 'member for' ],
+	[ 'td', $p->formatRelativeDate($row['creationdate'], -1) ],
+]);
+$tbody->appendCreate('tr', [
+	[ 'td', 'last seen' ],
+	[ 'td', $p->formatRelativeDate($row['lastlogindate'], -1) ],
+]);
+$tbody->append($sep->cloneNode(true));
 
-echo $sep;
-
-echo "<tr>\n<th rowspan='2'>meta</th>\n<td>api key verified</td>\n<td>".(($row['apiverified'] === 't') ? 'yes' : 'no')."</td>\n</tr>\n";
-echo "<tr>\n<td>reputation score</td>\n<td>".number_format($row['reputation']);
-if($myprofile) {
-	echo " <a href='../privileges'>(check my privileges)</a>";
-}
-echo "</td>\n</tr>\n";
+$tbody->appendCreate('tr', [
+	[ 'th', [ 'rowspan' => '2', 'meta' ] ],
+	[ 'td', 'api key verified' ],
+	[ 'td', $row['apiverified'] === 't' ? 'yes' : 'no' ],
+]);
+$tbody->appendCreate('tr', [
+	[ 'td', 'reputation points' ],
+	[ 'td', [
+		$p->formatReputation($row['reputation']),
+		' ',
+		$myprofile ? [ 'a', [ 'o-rel-href' => '/privileges#privlist', '(check my privileges)' ] ] : '',
+	]],
+]);
 
 if($myprofile || $ismoderator) {
-	echo $sep;
-	echo "<tr>\n<th>private</th>\n<td>flag weight</td>\n<td>".$row['flagweight']." <a href='../flagginghistory/".$row['accountid']."'>(see flagging history)</a></td>\n</tr>\n";
+	$tbody->append($sep->cloneNode(true));
+	$tbody->appendCreate('tr', [
+		[ 'th', [ 'private' ] ],
+		[ 'td', 'flag weight' ],
+		[ 'td', [
+			$p->formatExactInteger($row['flagweight']),
+			' ',
+			[ 'a', [ 'o-rel-href' => '/flagginghistory/'.$row['accountid'], '(see flagging history)' ] ],
+		]],
+	]);
 }
 
-echo "</tbody>\n</table>\n</header>\n";
 
-echo "<ul class='tabs'>\n";
-if($myprofile) {
-	echo "<li><a href='#pfavorites'>Favorites</a></li>\n";
-	echo "<li><a href='#phidden'>Hidden</a></li>\n";
-}
-echo "<li><a href='#ploadouts'>Recent</a></li>\n";
-echo "<li><a href='#reputation'>Reputation</a></li>\n";
-echo "<li><a href='#votes'>Votes</a></li>\n";
-//echo "<li><a href='#comment'>Comments</a></li>\n";
-echo "</ul>\n";
+
+$content->appendCreate('ul', [
+	'class' => 'tabs',
+	$myprofile ? [ 'li', [[ 'a', [ 'href' => '#pfavorites', 'Favorites' ] ]] ] : '',
+	$myprofile ? [ 'li', [[ 'a', [ 'href' => '#phidden', 'Hidden' ] ]] ] : '',
+	[ 'li', [[ 'a', [ 'href' => '#ploadouts', 'Recent' ] ]] ],
+	[ 'li', [[ 'a', [ 'href' => '#reputation', 'Reputation' ] ]] ],
+	[ 'li', [[ 'a', [ 'href' => '#votes', 'Votes' ] ]] ],
+]);
 
 
 
-
-
-echo "<section id='ploadouts' class='psection'>\n";
-echo "<h2>Loadouts recently submitted <small><a href=\"../search?q=".urlencode('@author "'.\Osmium\Chrome\escape($rname).'"')."\">(browse all)</a></small></h2>\n";
-\Osmium\Search\print_pretty_results("..", '@author "'.$rname.'"', 'ORDER BY creationdate DESC', false, 20, 'p', \Osmium\Chrome\escape($rname).' does not have submitted any loadouts.');
-echo "</section>\n";
-
-
+$ploadouts = $content->appendCreate('section', [ 'id' => 'ploadouts', 'class' => 'psection' ]);
+$ploadouts->appendCreate('h2', 'Loadouts recently submitted')->appendCreate('small')->appendCreate('a', [
+	'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@author "'.$name.'"' ]),
+	'(browse all)'
+]);
+ob_start();
+\Osmium\Search\print_pretty_results("..", '@author "'.$name.'"', 'ORDER BY creationdate DESC', false, 20, 'p', \Osmium\Chrome\escape($name).' does not have submitted any loadouts.');
+$ploadouts->append($p->fragment(ob_get_clean())); /* XXX */
 
 
 
 if($myprofile) {
-	$a = \Osmium\State\get_state('a');
-	/* TODO: paginate this */
+	$pfavs = $content->appendCreate('section', [ 'id' => 'pfavorites', 'class' => 'psection' ]);
+	$pfavs->appendCreate('h2', 'My favorite loadouts');
 
-	echo "<section id='pfavorites' class='psection'>\n<h2>My favorite loadouts</h2>\n";
+	/* TODO pagination */
 	$favorites = array();
 	$stale = array();
 	$favq = \Osmium\Db\query_params(
@@ -132,37 +184,59 @@ if($myprofile) {
 		}
 	}
 
-	if(count($stale) > 0) {
-		echo "<p>These following loadouts you added as favorites are no longer accessible to you:</p>\n<ol>\n";
+	if($stale !== []) {
+		$pfavs->appendCreate(
+			'p',
+			'These following loadouts you added as favorites are no longer accessible to you:'
+		);
+
+		$ol = $pfavs->appendCreate('ol');
+		$qs = $p->formatQueryString([ 'tok' => \Osmium\State\get_token(), 'redirect' => 'profile' ]);
 
 		foreach($stale as $id) {
-			echo "<li>Loadout <a href='../loadout/{$id}'>#{$id}</a>"
-				." — <a href='../favorite/{$id}?tok=".\Osmium\State\get_token()
-				."&amp;redirect=profile'>unfavorite</a></li>\n";
+			$ol->appendCreate('li', [
+				'Loadout ',
+				[ 'a', [ 'o-rel-href' => '/loadout/'.$id, '#'.$id ] ],
+				' — ',
+				[ 'a', [ 'o-rel-href' => '/favorite/'.$id.$qs, 'unfavorite' ] ]
+			]);
 		}
-
-		echo "</ol>\n";
 	}
 
+	ob_start();
 	\Osmium\Search\print_loadout_list($favorites, '..', 0, 'You have no favorited loadouts.');
-	echo "</section>\n";
+	$pfavs->append($p->fragment(ob_get_clean())); /* XXX */
 
-	echo "<section id='phidden' class='psection'>\n<h2>My hidden loadouts</h2>\n";
+
+	/* TODO pagination */
+	$phidden = $content->appendCreate('section', [ 'id' => 'phidden', 'class' => 'psection' ]);
+	$phidden->appendCreate('h2', 'My hidden loadouts');
+
 	$hidden = array();
-	$hiddenq = \Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadouts WHERE accountid = $1 AND visibility = $2 ORDER BY loadoutid DESC', array($a['accountid'], \Osmium\Fit\VISIBILITY_PRIVATE));
+	$hiddenq = \Osmium\Db\query_params(
+		'SELECT loadoutid
+		FROM osmium.loadouts
+		WHERE accountid = $1 AND visibility = $2
+		ORDER BY loadoutid DESC',
+		array(
+			$a['accountid'],
+			\Osmium\Fit\VISIBILITY_PRIVATE
+		)
+	);
 	while($r = \Osmium\Db\fetch_row($hiddenq)) {
 		$hidden[] = $r[0];
 	}
-	\Osmium\Search\print_loadout_list($hidden, '..', 0, 'You have no hidden loadouts.');	
-	echo "</section>\n";
+	ob_start();
+	\Osmium\Search\print_loadout_list($hidden, '..', 0, 'You have no hidden loadouts.');
+	$phidden->append($p->fragment(ob_get_clean())); /* XXX */
 }
 
 
-
-
-
-echo "<section id='reputation' class='psection'>\n";
-echo "<h2>Reputation changes this month <small>".\Osmium\Chrome\format_reputation($row['reputation'])." reputation</small></h2>\n";
+$preputation = $content->appendCreate('section', [ 'id' => 'reputation', 'class' => 'psection' ]);
+$preputation->appendCreate('h2', [
+	'Reputation changes this month',
+	[ 'small', [ $p->formatReputation($row['reputation']), ' reputation points' ] ],
+]);
 
 $votetypes = \Osmium\Reputation\get_vote_types();
 $repchangesq = \Osmium\Db\query_params(
@@ -183,57 +257,68 @@ $repchangesq = \Osmium\Db\query_params(
 	      \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
 		)
 	);
-echo "<ul>\n";
 $lastday = null;
 $first = true;
 $data = array();
+$ul = $preputation->appendCreate('ul');
 
-function print_target($d) {
+function make_target(\Osmium\DOM\Document $p, $d) {
 	if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT) {
 		if($d['name'] !== null) {
-			echo "<a href='../loadout/".$d['loadoutid']."'>".\Osmium\Chrome\escape($d['name'])."</a>";
+			return $p->element('a', [
+				'o-rel-href' => '/loadout/'.$d['loadoutid'],
+				$d['name'],
+			]);
 		} else {
-			echo "<small>Private/hidden loadout</small>";
+			return $p->element('small', 'Private/hidden loadout');
 		}
 	} else if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT) {
 		if($d['name'] !== null) {
-			echo "Comment <a href='../loadout/".$d['loadoutid']."?jtc=".$d['targetid1']."#c".$d['targetid1']."'>#".$d['targetid1']."</a> on <a href='../loadout/".$d['loadoutid']."'>".\Osmium\Chrome\escape($d['name'])."</a>";
+			return [
+				'Comment ',
+				$p->element('a', [
+					'o-rel-href' => '/loadout/'.$d['loadoutid']
+					.$p->formatQueryString([ 'jtc' => $d['targetid1'] ]).'#c'.$d['targetid1'],
+
+					'#'.$d['targetid1'],
+				]),
+				' on ',
+				$p->element('a', [
+					'o-rel-href' => '/loadout/'.$d['loadoutid'],
+					$d['name']
+				]),
+			];
 		} else {
-			echo "<small>Comment on a private/hidden loadout</small>";
+			return $p->element('small', 'Comment on a private/hidden loadout');
 		}
 	}
 }
 
-function print_reputation_day($day, $data) {
+function make_reputation_day(\Osmium\DOM\Document $p, $day, $data) {
 	global $votetypes;
 
 	$net = 0;
 	foreach($data as $d) $net += $d['reputationgiventodest'];
-	$class = ($net >= 0) ? 'positive' : 'negative';
 
-	echo "<li>\n<h4>$day <span class='$class'>$net</span></h4>\n";
-	echo "<table class='d'>\n<tbody>\n";
+	$li = $p->createElement('li');
+	$li->appendCreate('h4', [
+		$day,
+		[ 'span', [ 'class' => $net >= 0 ? 'positive' : 'negative', (string)$net ] ],
+	]);
+
+	$tbody = $li->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
 
 	foreach($data as $d) {
-		echo "<tr>\n";
 		$rep = $d['reputationgiventodest'];
-		$class = ($rep >= 0) ? 'positive' : 'negative';
-		if($rep > 0) $rep = '+'.$rep;
-		echo "<td class='rep $class'>$rep</td>\n";
-
-		$time = date('H:i', $d['creationdate']);
-		echo "<td class='time'>$time</td>\n";
-
-		$type = $votetypes[$d['type']];
-		echo "<td class='type'>$type</td>\n";
-
-		echo "<td class='l'>";
-		print_target($d);
-		echo "</td>\n";
-		echo "</tr>\n";
+		$tbody->appendCreate('tr', [
+			[ 'td', $rep >= 0 ? [ 'class' => 'rep positive', '+'.$rep ]
+			  : [ 'class' => 'rep negative', (string)$rep ] ],
+			[ 'td', [ 'class' => 'time', date('H:i', $d['creationdate']) ] ],
+			[ 'td', [ 'class' => 'type', $votetypes[$d['type']] ] ],
+		])->appendCreate('td', [ 'class' => 'l' ])->append(make_target($p, $d));
 	}
 
-	echo "</tbody>\n</table>\n</li>\n";
+	return $li;
 }
 
 while($r = \Osmium\Db\fetch_assoc($repchangesq)) {
@@ -241,7 +326,7 @@ while($r = \Osmium\Db\fetch_assoc($repchangesq)) {
 	if($lastday !== $day) {
 		if($first) $first = false;
 		else {
-			print_reputation_day($lastday, $data);
+			$ul->appendChild(make_reputation_day($p, $lastday, $data));
 		}
 
 		$lastday = $day;
@@ -250,16 +335,19 @@ while($r = \Osmium\Db\fetch_assoc($repchangesq)) {
 
 	$data[] = $r;
 }
-if(!$first) print_reputation_day($day, $data);
-echo "</ul>\n";
-if($first) echo "<p class='placeholder'>No reputation changes this month.</p>\n";
-echo "</section>\n";
+
+if($first) {
+	$preputation->appendCreate('p', [
+		'class' => 'placeholder',
+		'No reputation changes this month.',
+	]);
+} else {
+	$ul->appendChild(make_reputation_day($p, $day, $data));
+}
 
 
 
-$__time = microtime(true);
-
-echo "<section id='votes' class='psection'>\n";
+$pvotes = $content->appendCreate('section', [ 'id' => 'votes', 'class' => 'psection' ]);
 
 list($total) = \Osmium\Db\fetch_row(
 	\Osmium\Db\query_params(
@@ -268,8 +356,12 @@ list($total) = \Osmium\Db\fetch_row(
 		));
 $offset = \Osmium\Chrome\paginate('vp', 25, $total, $result, $metaresult, null, '', '#votes');
 
-echo "<h2>Votes cast <small>".number_format($total)." votes cast</small></h2>\n";
-echo $result;
+$pvotes->appendCreate('h2', [
+	'Votes cast',
+	[ 'small', $p->formatExactInteger($total).' votes cast' ]
+]);
+
+$pvotes->append($p->fragment($result)); /* XXX */
 
 $votesq = \Osmium\Db\query_params(
 	'SELECT v.creationdate, type, targettype, targetid1, targetid2, targetid3, sl.loadoutid, f.name
@@ -291,32 +383,30 @@ $votesq = \Osmium\Db\query_params(
 		isset($a['accountid']) ? $a['accountid'] : 0,
 	)
 );
-echo "<table class='d'>\n<tbody>\n";
+
+$tbody = $pvotes->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
+
 $first = true;
 while($v = \Osmium\Db\fetch_assoc($votesq)) {
 	$first = false;
-
-	echo "<tr>\n";
-
-	echo "<td class='date'>".\Osmium\Chrome\format_relative_date($v['creationdate'])."</td>\n";
-	echo "<td class='type'>".$votetypes[$v['type']]."</td>\n";
-
-	echo "<td class='l'>";
-	print_target($v);
-	echo "</td>\n";
-
-	echo "</tr>\n";
+	$tbody->appendCreate('tr', [
+		[ 'td', [ 'class' => 'date', $p->formatRelativeDate($v['creationdate']) ] ],
+		[ 'td', [ 'class' => 'type', $votetypes[$v['type']] ] ],
+	])->appendCreate('td', [ 'class' => 'l' ])->append(make_target($p, $v));
 }
-echo "</tbody>\n</table>\n";
-if($first) echo "<p class='placeholder'>No votes cast.</p>\n";
-echo "</section>\n";
+
+if($first) {
+	$pvotes->appendCreate('p', [
+		'class' => 'placeholder',
+		'No votes cast.',
+	]);
+}
 
 
 
-
-
-echo "</div>\n";
-\Osmium\Chrome\add_js_data('defaulttab', ($myprofile ? 2 : 0));
-\Osmium\Chrome\print_js_snippet('tabs');
-\Osmium\Chrome\print_js_snippet('view_profile');
-\Osmium\Chrome\print_footer();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '..';
+$p->snippets[] = 'tabs';
+$p->snippets[] = 'view_profile';
+$p->data['defaulttab'] = $myprofile ? 2 : 0;
+$p->render($ctx);

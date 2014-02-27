@@ -111,7 +111,8 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('popular_tags', 3603, fun
 
 	while($row = \Osmium\Db\fetch_row($query)) {
 		$ul->appendCreate('li', [
-			[ 'a', [ 'o-rel-href' => '/browse/best?q=@tags "'.$row[0].'"', $row[0] ] ],
+			[ 'a', [ 'o-rel-href' => '/browse/best'.$p->formatQueryString([ 'q' => '@tags "'.$row[0].'"' ]),
+					 $row[0] ] ],
 			' (',
 			$row[1],
 			')',
