@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,16 +18,24 @@
 
 namespace Osmium\Login;
 
-if(!\Osmium\get_ini_setting('https_available')
-   || \Osmium\HTTPS
-   || !\Osmium\get_ini_setting('prefer_secure_login')) {
-	return;
+function make_https_warning(\Osmium\DOM\RawPage $d) {
+	if(!\Osmium\get_ini_setting('https_available')
+	   || \Osmium\HTTPS
+	   || !\Osmium\get_ini_setting('prefer_secure_login')) {
+		return '';
+	}
+
+	$p = $d->element('p', [ 'class' => 'nohttps warning_box' ]);
+	$p->append([
+		[ 'strong', 'You are not using HTTPS.' ],
+		[ 'br' ],
+		'Your login credentials (and your session token) will be sent in plaintext over the network.',
+		[ 'br' ],
+		[ 'a', [
+			'href' => 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
+			'Use the HTTPS version of this page (recommended).'
+		]],
+	]);
+
+	return $p;
 }
-
-$uri = \Osmium\Chrome\escape('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
-
-echo "<p class='nohttps warning_box'>\n";
-echo "<strong>You are not using HTTPS.</strong><br />
-Your login credentials (and your session token) will be sent in plaintext.<br />
-<a href='{$uri}'>Use the HTTPS version of this page (recommended).</a>\n";
-echo "</p>\n";

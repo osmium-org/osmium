@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,6 +19,7 @@
 namespace Osmium\Page\Login;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/login-common.php';
 
 $redirect = isset($_POST['request_uri']) ? $_POST['request_uri'] : (isset($_GET['r']) ? $_GET['r'] : './');
 
@@ -27,46 +28,84 @@ if(\Osmium\State\is_logged_in()) {
 	die();
 }
 
+$p = new \Osmium\DOM\Page();
+$p->title = 'Login';
+
 if(isset($_POST['__osmium_login'])) {
 	if(($errormsg = \Osmium\State\try_login()) === true) {
 		header('Location: '.$redirect, true, 303);
 		die();
 	}
 
-	\Osmium\Forms\add_field_error('account_name', $errormsg);
-	\Osmium\Forms\add_field_error('password', '');
+	$p->formerrors['account_name'][] = $errormsg;
+	$p->formerrors['password'][] = '';
 }
 
-\Osmium\Chrome\print_header('Login', '.');
+$p->content->appendCreate('h1', 'Login');
+$p->content->append(\Osmium\Login\make_https_warning($p));
 
-echo "<h1>Login</h1>\n";
+$tbody = $p->content->appendCreate('o-form', [
+	'o-rel-action' => '/login',
+	'method' => 'post',
+])->appendCreate('table')->appendCreate('tbody');
 
-require \Osmium\ROOT.'/inc/login-httpscheck.php';
-
-\Osmium\Forms\print_form_begin();
-
-if(isset($_GET['r'])) {
-	echo "<tr class='error_message'><td colspan='2'><p>You need to log in to access <strong>".\Osmium\Chrome\escape($_GET['r'])."</strong>.</p></td></tr>\n";
+if($redirect !== './') {
+	$tbody->appendCreate('tr')
+		->appendCreate('td', [ 'colspan' => '2' ])
+		->appendCreate('p', [
+			'class' => 'error_box',
+			'You need to log in to access ',
+			[ 'strong', [[ 'code', $redirect ]] ],
+			'.',
+		]);
 }
 
-\Osmium\Forms\print_generic_field(
-	'Account name', 'text', 'account_name', null, 
-	\Osmium\Forms\FIELD_REMEMBER_VALUE
-);
-\Osmium\Forms\print_generic_field('Password', 'password', 'password');
-\Osmium\Forms\print_separator();
-\Osmium\Forms\print_checkbox(
-	'Remember me <small>(uses a cookie)</small>', 'remember',
-	null, !isset($_POST['account_name']), \Osmium\Forms\FIELD_REMEMBER_VALUE
-);
-\Osmium\Forms\print_submit('Login', '__osmium_login');
-\Osmium\Forms\print_form_end();
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'account_name', 'Account name' ] ]] ],
+	[ 'td', [[ 'o-input', [
+		'type' => 'text',
+		'name' => 'account_name',
+		'id' => 'account_name',
+	]]]],
+]);
 
-echo "<h1>Other actions</h1>\n";
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'password', 'Password' ] ]] ],
+	[ 'td', [[ 'o-input', [
+		'type' => 'password',
+		'name' => 'password',
+		'id' => 'password',
+	]]]],
+]);
 
-echo "<ul>
-<li>Don't have an account yet? <a href='./register'>Create one.</a> It takes less than a minute.</li>
-<li>Forgot your password? <a href='./resetpassword'>Reset your password.</a></li>
-</ul>\n";
+$tbody->appendCreate('tr')->append([
+	[ 'th' ], [ 'td', [
+		[ 'o-input', [ 'type' => 'checkbox', 'default' => 'checked', 'id' => 'remember', 'name' => 'remember' ] ],
+		[ 'label', [ 'for' => 'checkbox', 'Remember me ', [ 'small', '(uses a cookie)' ] ] ],
+	]],
+]);
 
-\Osmium\Chrome\print_footer();
+$tbody->appendCreate('tr')->append([
+	[ 'th' ], [ 'td', [
+		[ 'o-input', [ 'type' => 'submit', 'name' => '__osmium_login', 'value' => 'Login' ] ],
+	]],
+]);
+
+$p->content->appendCreate('h1', 'Other actions');
+$ul = $p->content->appendCreate('ul');
+
+$ul->appendCreate('li', [
+	'Don\'t have an account yet? ',
+	[ 'a', [ 'o-rel-href' => '/register', 'Create one.' ] ],
+	' It takes less than a minute.',
+]);
+
+$ul->appendCreate('li', [
+	'Forgot your password? ',
+	[ 'a', [ 'o-rel-href' => '/resetpassword', 'Reset your password.' ] ],
+]);
+
+
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '.';
+$p->render($ctx);

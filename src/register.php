@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,46 +19,71 @@
 namespace Osmium\Page\Register;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/login-common.php';
 
-\Osmium\State\assume_logged_out();
+\Osmium\State\assume_logged_out('.');
+$p = new \Osmium\DOM\Page();
 
 if(isset($_POST['account_name'])) {
-	$q = \Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountname = $1', array($_POST['account_name']));
+	$q = \Osmium\Db\query_params(
+		'SELECT COUNT(accountid) FROM osmium.accounts
+		WHERE accountname = $1',
+		array($_POST['account_name'])
+	);
 	list($an) = \Osmium\Db\fetch_row($q);
 
-	$q = \Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE nickname = $1', array($_POST['nickname']));
+	$q = \Osmium\Db\query_params(
+		'SELECT COUNT(accountid) FROM osmium.accounts
+		WHERE nickname = $1',
+		array($_POST['nickname'])
+	);
 	list($nn) = \Osmium\Db\fetch_row($q);
 
 	$pw = $_POST['password_0'];
 	$pw1 = $_POST['password_1'];
 
 	if($an !== '0') {
-		\Osmium\Forms\add_field_error('account_name', 'Sorry, this account name is already taken.');
+		$p->formerrors['account_name'][] = 'Sorry, this account name is already taken.';
 	} else if($nn !== '0') {
-		\Osmium\Forms\add_field_error('nickname', 'Sorry, this nickname is already taken.');
+		$p->formerrors['nickname'][] = 'Sorry, this nickname is already taken.';
 	} else if(mb_strlen($_POST['account_name']) < 3) {
-		\Osmium\Forms\add_field_error('account_name', 'Must be at least 3 characters.');
+		$p->formerrors['account_name'][] = 'Must be at least 3 characters.';
 	} else if(mb_strlen($_POST['nickname']) < 3) {
-		\Osmium\Forms\add_field_error('nickname', 'Must be at least 3 characters.');
+		$p->formerrors['nickname'][] = 'Must be at least 3 characters.';
 	} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-		\Osmium\Forms\add_field_error('password_0', $s);
+		$p->formerrors['password_0'][] = $s;
 	} else if($pw !== $pw1) {
-		\Osmium\Forms\add_field_error('password_1', 'The two passwords are not equal.');
+		$p->formerrors['password_1'][] = 'The two passwords did not match.';
 	} else {
 		$hash = \Osmium\State\hash_password($pw);
 
-		\Osmium\Db\query_params('INSERT INTO osmium.accounts (accountname, passwordhash, nickname,
-		creationdate, lastlogindate, keyid, verificationcode, apiverified,
-		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
-		isfittingmanager, ismoderator, flagweight, reputation) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)', 
-		                        array(
-			                        $_POST['account_name'], $hash, $_POST['nickname'],
-			                        time(), 0, null, null, 'f',
-			                        null, null, null, null, null, null,
-			                        'f', 'f', \Osmium\Flag\DEFAULT_FLAG_WEIGHT,
-			                        \Osmium\Reputation\DEFAULT_REPUTATION,
-			                        ));
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.accounts (accountname, passwordhash, nickname,
+			creationdate, lastlogindate, keyid, verificationcode, apiverified,
+			characterid, charactername, corporationid, corporationname, allianceid, alliancename,
+			isfittingmanager, ismoderator, flagweight, reputation) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+			)', 
+			array(
+				$_POST['account_name'],
+				$hash,
+				$_POST['nickname'],
+				time(),
+				0,
+				null,
+				null,
+				'f',
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				'f',
+				'f',
+				\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
+				\Osmium\Reputation\DEFAULT_REPUTATION,
+			));
 		
 		\Osmium\State\do_post_login($_POST['account_name'], false);
 		$_POST = array();
@@ -67,39 +92,60 @@ if(isset($_POST['account_name'])) {
 	}
 }
 
-\Osmium\Chrome\print_header('Account creation', '.');
+$p->title = 'Account creation';
 
-echo "<h1>Account creation</h1>\n";
+$p->content->appendCreate('h1', 'Account creation');
+$p->content->append(\Osmium\Login\make_https_warning($p));
 
-require \Osmium\ROOT.'/inc/login-httpscheck.php';
+$p->content->appendCreate('p', 'Creating an account allows you to:');
+$p->content->appendCreate('ul', [
+	[ 'li', 'Save and create public (and private) loadouts;' ],
+	[ 'li', 'Comment on loadouts;' ],
+	[ 'li', 'Cast votes and flags to help moderation;' ],
+	[ 'li', [ 'Access and create corporation or alliance-only loadouts ',
+	          [ 'small', '(requires API verification)' ],
+	          '.' ] ],
+]);
 
-echo "<p>Creating an account allows you to:</p>
-<ul>
-<li>Save and create public loadouts;</li>
-<li>Comment on loadouts;</li>
-<li>Cast votes and flags to help moderation;</li>
-<li>Access and create corporation or alliance-only loadouts <small>(requires API verification)</small>.</li>
-</ul>\n";
 
-\Osmium\Forms\print_form_begin();
 
-\Osmium\Forms\print_text('The account name is only used for logging in (and never displayed), while the nickname will be used as a display name.');
+$tbody = $p->content->appendCreate('o-form', [
+	'o-rel-action' => '/register',
+	'method' => 'post',
+])->appendCreate('table')->appendCreate('tbody');
 
-\Osmium\Forms\print_generic_field('Account name', 'text', 'account_name', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->appendCreate('tr')->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('p', 'The account name is only used for logging in (and never displayed), while the nickname will be used as a display name.');
 
-\Osmium\Forms\print_generic_field('Nickname', 'text', 'nickname', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'account_name', 'Account name' ] ]] ],
+	[ 'td', [[ 'o-input', [ 'type' => 'text', 'name' => 'account_name', 'id' => 'account_name' ] ]] ],
+]);
 
-\Osmium\Forms\print_separator();
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'nickname', 'Nickname' ] ]] ],
+	[ 'td', [[ 'o-input', [ 'type' => 'text', 'name' => 'nickname', 'id' => 'nickname' ] ]] ],
+]);
 
-\Osmium\Forms\print_generic_field('Password', 'password', 'password_0', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
-\Osmium\Forms\print_generic_field('Password (confirm)', 'password', 'password_1', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->appendCreate('tr', [ 'class' => 'separator'])->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
 
-\Osmium\Forms\print_separator();
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'password_0', 'Password' ] ]] ],
+	[ 'td', [[ 'o-input', [ 'type' => 'password', 'name' => 'password_0', 'id' => 'password_0' ] ]] ],
+]);
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'password_1', 'Password (confirm)' ] ]] ],
+	[ 'td', [[ 'o-input', [ 'type' => 'password', 'name' => 'password_1', 'id' => 'password_1' ] ]] ],
+]);
 
-\Osmium\Forms\print_submit();
-\Osmium\Forms\print_form_end();
-\Osmium\Chrome\print_footer();
+$tbody->appendCreate('tr', [ 'class' => 'separator'])->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
+
+$tbody->appendCreate('tr')->append([
+	[ 'th' ], [ 'td', [
+		[ 'o-input', [ 'type' => 'submit', 'value' => 'Create account' ] ]
+	]],
+]);
+
+
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '.';
+$p->render($ctx);

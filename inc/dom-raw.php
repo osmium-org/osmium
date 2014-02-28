@@ -326,6 +326,8 @@ class RawPage extends Document {
 
 		$parent = $e->parentNode;
 		foreach($this->formerrors[$n] as $error) {
+			if(!$error) continue;
+
 			$p = $this->createElement('p');
 			$p->setAttribute('class', 'error_box');
 			$p->append($error);

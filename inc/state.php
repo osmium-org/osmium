@@ -769,7 +769,7 @@ function get_nonce() {
 }
 
 function put_activity() {
-	/* Used for getting a rough estimate of the current member of
+	/* Used for getting a rough estimate of the current number of
 	 * users browsing the site. */
 	if(defined('Osmium\ACTIVITY_IGNORE')) return;
 	$a = get_state('a', null);
