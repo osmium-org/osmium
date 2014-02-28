@@ -29,7 +29,6 @@ $ctx->relative = '.';
 
 
 $source = \Osmium\Import\get_source($p, 'source', 'url', 'file');
-\Osmium\debug($p->formerrors);
 if($source !== false) {
 	$format = $_POST['inputformat'];
 	$outfmt = $_POST['outputformat'];

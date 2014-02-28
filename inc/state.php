@@ -680,10 +680,10 @@ function update_character_contactlist($a, $timeout = null) {
  * tokens.)
  */
 function get_token() {
-	$tok = get_state('logouttoken', null);
+	$tok = get_state('_csrftoken', null);
 
 	if($tok === null) {
-		put_state('logouttoken', $tok = uniqid('OsmiumTok_', true));
+		put_state('_csrftoken', $tok = get_nonce());
 	}
 
 	return $tok;

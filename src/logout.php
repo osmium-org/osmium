@@ -39,5 +39,5 @@ $global = isset($_GET['global']) && $_GET['global'];
 
 redirect:
 header('HTTP/1.1 303 See Other', true, 303);
-header('Location: ./', true, 303);
+header('Location: ../', true, 303);
 die(); /* Our work here is done. */

@@ -93,7 +93,7 @@ $osmium_dispatch_rules = array(
 
 	/* Less common pages */
 	'%^/register$%D' => '/src/register.php',
-	'%^/logout$%D' => '/src/logout.php',
+	'%^/logout/(?<tok>[0-9]+)$%D' => '/src/logout.php',
 	'%^/settings$%D' => '/src/settings.php',
 	'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
 	'%^/resetpassword$%D' => '/src/reset_password.php',

@@ -30,6 +30,7 @@ $cond = \Osmium\Search\get_search_cond_from_advanced();
 $p = new \Osmium\DOM\Page();
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '.';
+$p->index = false;
 
 if($query === false) {
 	$p->title = (isset($_GET['ad']) && $_GET['ad'] == 1) ? 'Advanced search' : 'Search lodaouts';

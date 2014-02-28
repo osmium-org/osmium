@@ -540,12 +540,12 @@ class Page extends RawPage {
 					(string)$ncount
 				]],
 				' ',
-				[ 'a', [ 'o-rel-href' => '/logout'.self::formatQueryString([ 'tok' => $tok ]), 'Logout' ] ],
+				[ 'a', [ 'o-rel-href' => '/logout/'.$tok, 'Logout' ] ],
 				' ',
 				[ 'small', [
 					'(',
 					[ 'a', [
-						'o-rel-href' => '/logout'.self::formatQueryString([ 'tok' => $tok, 'global' => '1' ]),
+						'o-rel-href' => '/logout/'.$tok.self::formatQueryString([ 'global' => '1' ]),
 						'all',
 					]],
 					')',

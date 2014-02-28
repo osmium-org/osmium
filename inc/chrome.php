@@ -439,6 +439,9 @@ function round_sd($number, $digits = 0) {
  * @param $anchor optional anchor to append to the generated link URIs
  *
  * @return offset of the current page
+ *
+ * TODO port this to DOM
+ * TODO add <link rel="next" /> and <link rel="prev" /> when appropriate
  */
 function paginate($name, $perpage, $total, &$result, &$metaresult,
                   $pageoverride = null, $format = 'Showing rows %1-%2 of %3.',
