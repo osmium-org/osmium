@@ -224,6 +224,14 @@ function get_import_formats() {
 				return $fits === array() ? false : $fits;
 			}
 		),
+		'fittingmanagementcopy' => array(
+			'Fitting Management', 'copy/paste of the fitting',
+			function($data, &$errors) {
+				\Osmium\debug($data);
+				$fit = try_parse_fit_from_fitting_window_cp($data);
+				return $fit === false ? false : [ $fit ];
+			}
+		),
 	);
 }
 
@@ -621,6 +629,32 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 	return $fit;
 }
 
+
+
+
+
+/** Parse a loadout from a paste of the "fitting management" in-game
+ * window. */
+function try_parse_fit_from_fitting_window_cp($s, array &$errors = array()) {
+	require_once __DIR__.CLF_PATH;
+
+	$dna = [];
+	foreach(explode("\n", $s) as $l) {
+		if(!preg_match(
+			'%^(?<qty>[1-9][0-9]*)x (?<typename>.+)$%',
+			$l,
+			$match
+		)) continue;
+
+		if(($typeid = \CommonLoadoutFormat\get_typeid(trim($match['typename']))) !== false) {
+			$dna[] = $typeid.';'.$match['qty'];
+		} else {
+			$errors[] = 'Could not parse typename: '.$match['typename'];
+		}
+	}
+
+	return try_parse_fit_from_shipdna(implode(':', $dna).'::', 'Imported loadout', $errors);
+}
 
 
 

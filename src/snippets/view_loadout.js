@@ -260,7 +260,7 @@ osmium_init_export = function() {
 		});
 	});
 
-	$("section#export").on('click', 'a:data(ccpdna)', function() {
+	$("section#export, h1#vltitle").on('click', 'a[data-ccpdna]', function() {
 		var t = $(this);
 		t.blur();
 

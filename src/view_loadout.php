@@ -35,6 +35,7 @@ require __DIR__.'/../inc/view_loadout-access.php';
 
 $loggedin = \Osmium\State\is_logged_in();
 $a = \Osmium\State\get_state('a', array());
+$dna = \Osmium\Fit\export_to_dna($fit);
 
 if($loadoutid !== false) {
 	$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
@@ -166,8 +167,8 @@ if($revision_overridden) {
 	"<link rel='canonical' href='".\Osmium\Chrome\escape($canonicaluri)."' />"
 );
 
-echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'>"
-.\Osmium\Chrome\escape($fit['metadata']['name'])."</strong>";
+echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'><a data-ccpdna='{$dna}'>"
+.\Osmium\Chrome\escape($fit['metadata']['name'])."</a></strong>";
 
 $canretag = ($revision_overridden === false)
 	&& isset($a['accountid']) && isset($author['accountid'])
@@ -667,7 +668,6 @@ require __DIR__.'/../inc/view_loadout-meta.php';
 
 
 
-$dna = \Osmium\Fit\export_to_dna($fit);
 echo "</section>
 <section id='export'>\n";
 
