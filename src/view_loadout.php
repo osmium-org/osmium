@@ -687,15 +687,10 @@ echo "<h2>Lossless formats (recommended)</h2>
 <ul>
 <li><a href='".$exporturi('evexml', 'xml', true, ['embedclf' => 0])."' type='application/xml' rel='nofollow'>Export to XML</a>: same as XML+gzCLF, minus the description.</li>
 <li><a href='".$exporturi('eft', 'txt', true)."' type='text/plain' rel='nofollow'>Export to EFT</a>: the <em>de-facto</em> format used by the fitting tool EFT.</li>
-<li><a href='".$exporturi('dna', 'txt', true)."' type='text/plain' rel='nofollow'>Export to DNA</a>: short format that can be understood by the game client.<br /><small><code>".$dna."</code></small></li>\n";
-
-/* XXX: bleh. Browser sniffing is terrible, also this violates the CSP
- * policy. This will break if the IGB ever supports it one day. */
-if(isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'EVE-IGB') !== false) {
-	echo "<li><a onclick='CCPEVE.showFitting(\"{$dna}\");'>Export to in-game DNA</a>: use this link to open the loadout window from the in-game browser.</li>\n";
-}
-
-echo "</ul>\n</section>\n";
+<li><a href='".$exporturi('dna', 'txt', true)."' type='text/plain' rel='nofollow'>Export to DNA</a>: short format that can be understood by the game client.<br /><small><code>".$dna."</code></small></li>
+<li><a data-ccpdna='{$dna}'>Export to in-game DNA</a>: use this link to open the loadout window from the in-game browser.</li>
+</ul>
+</section>\n";
 
 echo "</div>\n";
 
