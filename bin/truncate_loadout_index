@@ -1,0 +1,31 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+/* Truncate the index (FIXME: replace this by TRUNCATE RTINDEX when
+ * available) */
+do {
+	$q = \Osmium\Search\query('SELECT id FROM osmium_loadouts');
+	$deleted = 0;
+	while($row = \Osmium\Search\fetch_row($q)) {
+		\Osmium\Search\query('DELETE FROM osmium_loadouts WHERE id = '.$row[0]);
+		++$deleted;
+	}
+} while($deleted > 0);

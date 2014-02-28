@@ -3,6 +3,13 @@ staging
 
 The eve schema has been updated.
 
+The sphinx loadout index has been updated.You must:
+
+* stop sphinx-searchd;
+* delete all index.* files;
+* start sphinx-searchd;
+* run `make reindex-loadouts`.
+
 v0.11.0, released 2014-01-28
 ============================
 
