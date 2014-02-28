@@ -156,9 +156,12 @@ $ploadouts->appendCreate('h2', 'Loadouts recently submitted')->appendCreate('sma
 	'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@author "'.$name.'"' ]),
 	'(browse all)'
 ]);
-ob_start();
-\Osmium\Search\print_pretty_results("..", '@author "'.$name.'"', 'ORDER BY creationdate DESC', false, 20, 'p', \Osmium\Chrome\escape($name).' does not have submitted any loadouts.');
-$ploadouts->append($p->fragment(ob_get_clean())); /* XXX */
+$ploadouts->append(\Osmium\Search\make_pretty_results(
+	$p, '@author "'.$name.'"',
+	'ORDER BY creationdate DESC',
+	false, 10, 'p',
+	$name.' does not yet have any public loadouts.'
+)[1]);
 
 
 
@@ -203,9 +206,15 @@ if($myprofile) {
 		}
 	}
 
-	ob_start();
-	\Osmium\Search\print_loadout_list($favorites, '..', 0, 'You have no favorited loadouts.');
-	$pfavs->append($p->fragment(ob_get_clean())); /* XXX */
+	if($favorites !== []) {
+		$pfavs->append($p->makeLoadoutGridLayout($favorites));
+	} else {
+		$pfavs->appendCreate('p', [
+			'class' => 'placeholder',
+			'You have no favorite loadouts.',
+		]);
+	}
+
 
 
 	/* TODO pagination */
@@ -226,9 +235,15 @@ if($myprofile) {
 	while($r = \Osmium\Db\fetch_row($hiddenq)) {
 		$hidden[] = $r[0];
 	}
-	ob_start();
-	\Osmium\Search\print_loadout_list($hidden, '..', 0, 'You have no hidden loadouts.');
-	$phidden->append($p->fragment(ob_get_clean())); /* XXX */
+
+	if($hidden !== []) {
+		$phidden->append($p->makeLoadoutGridLayout($hidden));
+	} else {
+		$phidden->appendCreate('p', [
+			'class' => 'placeholder',
+			'You have no hidden loadouts.',
+		]);
+	}
 }
 
 

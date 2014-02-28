@@ -66,9 +66,15 @@ if($source !== false) {
 	}
 
 	$p->content->appendCreate('h1', 'Import results');
-	ob_start();
-	\Osmium\Search\print_loadout_list($ids, '.', 0, 'No loadouts were imported.');
-	$p->content->append($p->fragment(ob_get_clean())); /* XXX */
+
+	if($ids !== []) {
+		$p->content->append($p->makeLoadoutGridLayout($ids));
+	} else {
+		$p->content->appendCreate('p', [
+			'class' => 'placeholder',
+			'No loadouts were imported.',
+		]);
+	}
 }
 
 

@@ -46,20 +46,20 @@ if($query === false) {
 		$ntypes = 0;
 	}
 
-	ob_start();
-	$loadoutids = \Osmium\Search\print_pretty_results('.', $query, $cond, true, 24);
-	$loadoutlist = ob_get_clean();
+	list($loadoutids, $loadoutsr) = \Osmium\Search\make_pretty_results($p, $query, $cond, true, 24);
 	$nloadouts = count($loadoutids);
 
-	if($ntypes === 1 && $nloadouts === 0) {
-		/* Redirect to type page */
-		header('Location: ./db/type/'.$typeids[0]);
-		die();
-	} else if($ntypes === 0 && $nloadouts === 1) {
-		/* Redirect to loadout */
-		reset($loadoutids);
-		header('Location: '.current($loadoutids));
-		die();
+	if(!isset($_GET['p'])) {
+		if($ntypes === 1 && $nloadouts === 0) {
+			/* Redirect to type page */
+			header('Location: ./db/type/'.$typeids[0]);
+			die();
+		} else if($ntypes === 0 && $nloadouts === 1) {
+			/* Redirect to loadout */
+			reset($loadoutids);
+			header('Location: ./loadout/'.current($loadoutids));
+			die();
+		}
 	}
 
 
@@ -81,10 +81,9 @@ if($query === false) {
 	}
 
 	if($nloadouts > 0 || $ntypes === 0) {
-		$p->content->appendCreate('section', [ 'class' => 'sr' ])->append([
-			[ 'h2', 'Loadouts' ],
-			$p->fragment($loadoutlist), /* XXX */
-		]);
+		$p->content->appendCreate('section', [ 'class' => 'sr' ])
+			->append([[ 'h2', 'Loadouts' ]])
+			->append($loadoutsr);
 	}
 }
 

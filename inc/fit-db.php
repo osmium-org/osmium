@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -737,6 +737,7 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	if($sem !== false) {
 		\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision, 'Loadout_Cache_');
 		\Osmium\State\invalidate_cache('loadout-'.$loadoutid, 'Loadout_Cache_');
+		\Osmium\State\invalidate_cache_memory('Loadout_Grid_'.$loadoutid);
 		\Osmium\State\semaphore_release($sem);
 	}
 

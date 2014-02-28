@@ -142,11 +142,15 @@ $maincont->append($p->fragment(get_cache_memory_or_gen(
 			'', 'ORDER BY creationdate DESC', 0, 20
 		);
 
-		ob_start();
-		\Osmium\Search\print_loadout_list(
-			$ids, '.', 0, 'No loadouts yet! What are you waiting for?'
-		);
-		$section->append($p->fragment(ob_get_clean())); /* XXX */
+		if($ids !== []) {
+			$section->append($p->makeLoadoutGridLayout($ids));
+		} else {
+			$section->appendCreate('p', [
+				'class' => 'placeholder',
+				'No loadouts yet! What are you waiting for?',
+			]);
+		}
+
 		$section->appendCreate('p', [
 			'class' => 'b_more',
 			[ 'a', [ 'o-rel-href' => '/browse/new', 'Browse more new loadouts…' ] ],
@@ -167,11 +171,15 @@ $maincont->append($p->fragment(get_cache_memory_or_gen(
 			'', 'AND build >= '.$vercutoff.' ORDER BY score DESC', 0, 20
 		);
 
-		ob_start();
-		\Osmium\Search\print_loadout_list(
-			$ids, '.', 0, 'No loadouts yet! What are you waiting for?'
-		);
-		$section->append($p->fragment(ob_get_clean())); /* XXX */
+		if($ids !== []) {
+			$section->append($p->makeLoadoutGridLayout($ids));
+		} else {
+			$section->appendCreate('p', [
+				'class' => 'placeholder',
+				'No loadouts yet! What are you waiting for?',
+			]);
+		}
+
 		$section->appendCreate('p', [
 			'class' => 'b_more',
 			[ 'a', [ 'o-rel-href' => '/browse/best', 'Browse more popular loadouts…' ] ],

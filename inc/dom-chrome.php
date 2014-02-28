@@ -298,10 +298,13 @@ class Page extends RawPage {
 			"battleship @tags pve|l4|missions",
 		];
 
-		$f = $this->element('o-form', [
-			'method' => 'get',
-			'o-rel-action' => '/search',
-		]);
+		$f = $this->element('o-form', [ 'method' => 'get' ]);
+
+		if($mode === self::MSB_SEARCH) {
+			$f->setAttribute('o-rel-action', '/search');
+		} else {
+			$f->setAttribute('action', '');
+		}
 
 		$sprite = $this->element('o-sprite', [
 			'x' => $mode === self::MSB_SEARCH ? 2 : 3,
@@ -367,7 +370,7 @@ class Page extends RawPage {
 			$label->append(($mode === self::MSB_SEARCH ? 'Search' : 'Filter').' loadouts');
 
 			$p->appendCreate('small', [
-				[ 'a', [ 'o-rel-href' => '/search'.self::formatQueryString($_GET, [ 'ad' => 1 ]),
+				[ 'a', [ 'href' => self::formatQueryString($_GET, [ 'ad' => 1 ]),
 						 'Advanced '.($mode === self::MSB_SEARCH ? 'search' : 'filters') ] ],
 				' — ',
 				[ 'a', [ 'o-rel-href' => '/help/search', 'Help' ] ],

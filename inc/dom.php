@@ -344,5 +344,6 @@ trait Renderable {
 
 
 require __DIR__.'/dom-formatter.php';
+require __DIR__.'/dom-formatter-loadout.php';
 require __DIR__.'/dom-raw.php';
 require __DIR__.'/dom-chrome.php';

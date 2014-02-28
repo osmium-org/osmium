@@ -49,6 +49,7 @@ class RenderContext {
 class RawPage extends Document {
 
 	use Formatter;
+	use LoadoutFormatter;
 
 
 

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -33,16 +33,30 @@ if($type == 'best') {
 
 unset($_GET['type']);
 if(!isset($_GET['q'])) $_GET['q'] = '';
+
 $advq = \Osmium\Search\get_search_cond_from_advanced();
 
-\Osmium\Chrome\print_header($t, '..', false);
-echo "<div id='search_mini'>\n";
-\Osmium\Search\print_search_form(null, '..', 'Filter loadouts', [ 3, 12, 64, 64 ], 'Advanced filters');
-echo "</div>\n";
 if(!isset($_GET['sort'])) {
 	$advq .= ' '.$more;
 }
 
-\Osmium\Search\print_pretty_results('..', $_GET['q'], $advq, true, 24,
-                                    'p', 'No loadouts matched your filter(s).');
-\Osmium\Chrome\print_footer();
+
+
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$p->title = $t;
+$p->index = false;
+$ctx->relative = '..';
+
+$p->content->appendCreate('div', [ 'id' => 'search_mini' ])->append(
+	$p->makeSearchBox(\Osmium\DOM\Page::MSB_FILTER)
+);
+
+$p->content->append(
+	\Osmium\Search\make_pretty_results(
+		$p, $_GET['q'], $advq,
+		true, 24, 'p', 'No loadouts matched your filter(s).'
+	)[1]
+);
+
+$p->render($ctx);
