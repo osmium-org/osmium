@@ -593,7 +593,7 @@ osmium_create_projected = function(key, clf, index) {
 
 					osmium_ctxmenu_add_option(menu, "Clear target", function() {
 						jsPlumb.select({ source: source }).detach();
-					}, { default: true });
+					}, { 'default': true });
 
 					osmium_ctxmenu_add_separator(menu);
 
@@ -825,7 +825,7 @@ osmium_create_projected = function(key, clf, index) {
 
 					osmium_modal([ hdr, form ]);
 				};
-			})(key), { default: true });
+			})(key), { 'default': true });
 
 			osmium_ctxmenu_add_option(menu, "Remove fitting", function() {
 				jsPlumb.doWhileSuspended(function() {
@@ -873,7 +873,7 @@ osmium_create_projected = function(key, clf, index) {
 					remote: key,
 					type: "ship"
 				});
-			}, { icon: osmium_showinfo_sprite_position, default: osmium_loadout_readonly });
+			}, { icon: osmium_showinfo_sprite_position, 'default': osmium_loadout_readonly });
 		}
 
 		return menu;

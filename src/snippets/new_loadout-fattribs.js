@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@ osmium_init_fattribs = function() {
 						osmium_clf.metadata['X-Osmium-skillset'] = sname;
 						osmium_undo_push();
 						osmium_commit_clf();
-					}, { default: true });
+					}, { 'default': true });
 
 					osmium_ctxmenu_add_option(smenu, "Set default", function() {
 						$.ajax({
@@ -158,7 +158,7 @@ osmium_init_fattribs = function() {
 								osmium_clf['X-damage-profile'] = [ k, profile ];
 								osmium_undo_push();
 								osmium_commit_clf();
-							}, { default: true });
+							}, { 'default': true });
 
 							osmium_ctxmenu_add_option(sssmenu, "Remove", function() {
 								if(k === osmium_clf['X-damage-profile'][0]) {

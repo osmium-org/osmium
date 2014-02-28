@@ -695,6 +695,7 @@ function print_loadout_common_footer(&$fit, $relative, $clftoken) {
 	include_js($relative."/static-1/jquery.jsPlumb-1.5.4-min.js");
 	include_js($relative."/static-1/rawdeflate.min.js");
 
+	print_js_snippet('localstorage_fallback');
 	print_js_snippet('tabs');
 	print_js_snippet('modal');
 	print_js_snippet('context_menu');
