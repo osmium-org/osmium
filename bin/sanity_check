@@ -72,6 +72,7 @@ foreach(array(
 	'curl' => 'curl_init',
 	'simplexml' => 'simplexml_load_string',
 	'zlib' => 'gzinflate',
+	'json' => 'json_decode',
 ) as $ext => $func) {
 	check_ext($ext, CHECK_REQUIRED);
 	check_func($func, CHECK_REQUIRED);
