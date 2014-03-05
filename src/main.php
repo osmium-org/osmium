@@ -206,8 +206,8 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('fotw', 603, function() u
 	foreach($topkills['fotw'] as $f) {
 		list($shipid, ) = explode(':', $f['dna'], 2);
 
-		$fname = \Osmium\Fit\get_typename($shipid).' fitting'
-			.($f['tags'] ? ': '.implode(', ', $f['tags']) : '');
+		$shiptypename = \Osmium\Fit\get_typename($shipid);
+		$fname = $shiptypename.' fitting'.($f['tags'] ? ': '.implode(', ', $f['tags']) : '');
 
 		$a = $ol->appendCreate('li')
 			->appendCreate('a', [ 'rel' => 'nofollow', 'o-rel-href' => '/loadout/dna/'.$f['dna'] ]);
@@ -223,12 +223,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('fotw', 603, function() u
 			[ 'small', ' ISK' ],
 		]);
 
-		$a->appendCreate('o-eve-img', [
-			'class' => 'abs',
-			'src' => '/Render/'.$shipid.'_256.png',
-			'alt' => $fname,
-			'title' => $fname,
-		]);
+		$a->append($p->makeLoadoutShipIcon($shipid, $shiptypename)->attr('title', $fname));
 
 		$a->appendCreate('div', [
 			'class' => 'absnum losscount',
@@ -260,8 +255,8 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('doctrines', 604, functio
 	foreach($topkills['doctrine'] as $f) {
 		list($shipid, ) = explode(':', $f['dna'], 2);
 
-		$fname = \Osmium\Fit\get_typename($shipid).' fitting'
-			.($f['tags'] ? ': '.implode(', ', $f['tags']) : '');
+		$shiptypename = \Osmium\Fit\get_typename($shipid);
+		$fname = $shiptypename.' fitting'.($f['tags'] ? ': '.implode(', ', $f['tags']) : '');
 
 		$anames = [];
 		$alogos = [];
@@ -289,12 +284,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('doctrines', 604, functio
 			[ 'small', ' ISK' ],
 		]);
 
-		$a->appendCreate('o-eve-img', [
-			'class' => 'abs',
-			'src' => '/Render/'.$shipid.'_256.png',
-			'alt' => $fname,
-			'title' => $fname,
-		]);
+		$a->append($p->makeLoadoutShipIcon($shipid, $shiptypename)->attr('title', $fname));
 
 		$a->appendCreate('div', [ 'title' => $aname, 'class' => 'abs alogos n'.count($f['alliances']) ])
 			->append($alogos);

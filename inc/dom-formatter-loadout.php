@@ -20,6 +20,19 @@ namespace Osmium\DOM;
 
 trait LoadoutFormatter {
 
+	/* Make an icon with the ship render and its name as an
+	 * overlay. */
+	function makeLoadoutShipIcon($typeid, $typename = null) {
+		if($typename === null) {
+			$typename = \Osmium\Fit\get_typename($typeid);
+		}
+
+		return $this->element('div', [ 'class' => 'ship-icon' ])->append([
+			[ 'o-eve-img', [ 'src' => '/Render/'.$typeid.'_256.png', 'title' => $typename, 'alt' => $typename ] ],
+			[ 'span', [ 'class' => 'name', $typename ] ],
+		]);
+	}
+
 	/* Make a <li> with main information about the loadout. */
 	function formatLoadoutGridLayout($loadoutid) {
 		$cached = \Osmium\State\get_cache_memory('Loadout_Grid_'.$loadoutid, null);
@@ -53,12 +66,8 @@ trait LoadoutFormatter {
 		$uri = '/'.\Osmium\Fit\get_fit_uri($lrow['loadoutid'], $lrow['visibility'], $lrow['privatetoken']);
 
 		$li = $this->createElement('li');
-		$li->appendCreate('a', [ 'o-rel-href' => $uri ])->appendCreate('o-eve-img', [
-			'class' => 'abs',
-			'src' => '/Render/'.$lrow['hullid'].'_256.png',
-			'title' => $lrow['typename'],
-			'alt' => $lrow['typename'],
-		]);
+		$li->appendCreate('a', [ 'o-rel-href' => $uri ])
+			->append($this->makeLoadoutShipIcon($lrow['hullid'], $lrow['typename']));
 
 		$li->appendCreate('div', [
 			'title' => 'Damage per second of this loadout',
