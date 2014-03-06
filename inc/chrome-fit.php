@@ -79,53 +79,19 @@ function print_nested_skill_requirements($typeid, $level, array &$skills, array 
 function print_formatted_mastery(&$fit, $relative, array $prereqs_per_type) {
 	ob_start();
 
+	$missing_per_type = array();
+	\Osmium\Skills\get_missing_prerequisites($prereqs_per_type, $fit['skillset'], $missing_per_type);
+	$prereqs_unique = \Osmium\Skills\merge_skill_prerequisites($prereqs_per_type);
+	$missing_unique = \Osmium\Skills\merge_skill_prerequisites($missing_per_type);
+	list($missingsp, $totalsp) = \Osmium\Skills\sp_totals($prereqs_unique, $fit['skillset']);
+
 	$types_per_prereqs = [];
-	$prereqs_unique = [];
-	$missing_unique = [];
-	$missingsp = 0;
-	$totalsp = 0;
-
-	foreach($prereqs_per_type as $tid => $arr) {
-		foreach($arr as $stid => $level) {
-			if(isset($prereqs_unique[$stid])) {
-				if($prereqs_unique[$stid] < $level) {
-					$prereqs_unique[$stid] = $level;
-				} else {
-					unset($prereqs_per_type[$tid][$stid]);
-				}
-			} else {
-				$prereqs_unique[$stid] = $level;
-			}
-		}
-	}
-
-	foreach($prereqs_per_type as $typeid => $arr) {
+	foreach($missing_per_type as $typeid => $arr) {
 		foreach($arr as $stid => $level) {
 			$types_per_prereqs[$stid][$typeid] = true;
 		}
 	}
 
-	$sp = function($level, $rank) {
-		if($level == 0) return 0;
-		return ceil(pow(2, 2.5 * ($level - 1.0)) * 250.0 * $rank);
-	};
-
-	foreach($prereqs_unique as $stid => $level) {
-		$current = isset($fit['skillset']['override'][$stid])
-			? $fit['skillset']['override'][$stid] : $fit['skillset']['default'];
-
-		$rank = \Osmium\Fit\get_skill_rank($stid);
-		$needed = ceil(250.0 * $rank * pow(2, 2.5 * ($level - 1.0)));
-
-		$totalsp += $needed;
-
-		if($current >= $level) {
-			continue;
-		}
-
-		$missing_unique[$stid] = $level;
-		$missingsp += $needed - ceil(250.0 * $rank * ($current ? pow(2, 2.5 * ($current - 1.0)) : 0));
-	}
 
 	foreach($types_per_prereqs as &$arr) {
 		$arr = array_reverse(array_keys($arr));

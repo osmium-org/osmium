@@ -1242,30 +1242,7 @@ function get_available_skillset_names_for_account() {
 	return $names;
 }
 
-/**
- * Takes in an array of item/module type IDs; fills the $result array with entries like:
- *     input_type_id => array(
- *         skill_type_id => required_level,
- *         ...
- *     )
- */
-function get_skill_prerequisites_for_types(array $types, array &$result) {
-	foreach ($types as $typeid) {
-		if(!isset($result[$typeid])) {
-			$result[$typeid] = [];
-		}
-
-		foreach(get_required_skills($typeid) as $stid => $slevel) {
-			if(!isset($result[$stid])) {
-				get_skill_prerequisites_for_types([ $stid ], $result);
-			}
-
-			$result[$typeid][$stid] = $slevel;
-		}
-	}
-}
-
-function get_skill_prerequisites_and_missing_prerequisites($fit) {
+function get_skill_prerequisites_for_loadout($fit) {
 	$types = array();
 
 	if (!empty($fit['ship'])) {
@@ -1293,23 +1270,14 @@ function get_skill_prerequisites_and_missing_prerequisites($fit) {
 	}
 
 	$types = array_keys($types);
-	$prereqs = $missing = array();
+	$prereqs = array();
+	\Osmium\Skills\get_skill_prerequisites_for_types($types, $prereqs);
+	return $prereqs;
+}
 
-	get_skill_prerequisites_for_types($types, $prereqs);
-
-	foreach($types as $tid) {
-		if(!isset($prereqs[$tid])) continue;
-
-		foreach($prereqs[$tid] as $stid => $level) {
-			$current = isset($fit['skillset']['override'][$stid])
-				? $fit['skillset']['override'][$stid] : $fit['skillset']['default'];
-
-			if($current < $level) {
-				$missing[$tid] = 1;
-				break;
-			}
-		}
-	}
-
+function get_skill_prerequisites_and_missing_prerequisites($fit) {
+	$prereqs = get_skill_prerequisites_for_loadout($fit);
+	$missing = array();
+	\Osmium\Skills\get_missing_prerequisites($prereqs, $fit['skillset'], $missing);
 	return [ $prereqs, $missing ];
 }
