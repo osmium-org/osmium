@@ -144,7 +144,9 @@ function index($loadout) {
 	}
 
 	/* XXX */
-	$minskills = \Osmium\Fit\merge_skill_prerequisites_for_loadout(\Osmium\Fit\get_fit($loadout['loadoutid']));
+	$fit = \Osmium\Fit\get_fit($loadout['loadoutid']);
+	$prereqs_per_type = \Osmium\Fit\get_skill_prerequisites_for_loadout($fit);
+	$minskills = \Osmium\Skills\merge_skill_prerequisites($prereqs_per_type);
 	$skills = implode(', ', array_map(
 		function($n) use($minskills) { return isset($minskills[$n]) ? $minskills[$n] : 0; },
 		$skillids
