@@ -61,7 +61,6 @@ function get_missing_prerequisites(array $prereqs, array $skillset, array &$resu
 }
 
 function merge_skill_prerequisites($requisites) {
-	\Osmium\debug($requisites);
 	$s = [];
 	foreach($requisites as $tid => $sub) {
 		foreach($sub as $stid => $sl) {
