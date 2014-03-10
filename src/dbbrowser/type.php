@@ -345,7 +345,7 @@ if($nvariations > 1) {
 	}
 
 	$section->appendCreate('p', [ 'class' => 'compare', [ 'a', [
-		'o-rel-href' => '/db/comparetypes/'.implode(',', $vartypeids).'/auto',
+		'o-rel-href' => '/db/comparevariations/'.$typeid.'/auto',
 		'rel' => 'nofollow',
 		'Compare these types',
 	]]]);

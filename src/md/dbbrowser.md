@@ -62,6 +62,7 @@ Browse the contents of a market group.
 ### URIs
 
 * `/db/comparetypes/<types>/<attributes>`
+* `/db/comparevariations/<typeid>/<attributes>`
 * `/db/comparegroup/<groupid>/<attributes>`
 * `/db/comparemarketgroup/<marketgroupid>/<attributes>`
 
@@ -87,6 +88,9 @@ report inaccuracies so they can be fixed.
 * `marketgroupid`: a valid market group ID. This is the same as
   calling `/db/comparetypes/` with the list of types that belong in
   the group.
+
+* `typeid`: a type ID. This is the same as calling `/db/comparetypes/`
+  with the list of variations of the given type.
 
 * `types`: a comma-separated list of type IDs to compare. 50 types
   maximum.

@@ -79,6 +79,20 @@ if($_GET['groupid'] > 0) {
 		$typeids[] = $t[0];
 	}
 
+} else if($_GET['typeid'] > 0) {
+	$typeids = [];
+	$vq = \Osmium\Db\query_params(
+		'SELECT vartypeid
+		FROM osmium.invtypevariations
+		WHERE typeid = $1
+		ORDER BY varml ASC',
+		array($_GET['typeid'])
+	);
+	while($row = \Osmium\Db\fetch_row($vq)) $typeids[] = $row[0];
+
+	$p->title = 'Compare variations of '.\Osmium\Fit\get_typename($_GET['typeid']);
+
+
 } else {
 	$typeids = [];
 
