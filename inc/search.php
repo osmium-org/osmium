@@ -61,7 +61,7 @@ function get_skillids() {
 		$skillids = \Osmium\State\get_cache_memory('skillids', null);
 		if($skillids !== null) return $skillids;
 
-		$sq = \Osmium\Db\query('SELECT typeid FROM osmium.invskills ORDER BY typeid ASC');
+		$sq = \Osmium\Db\query('SELECT skilltypeid FROM osmium.requirableskills ORDER BY skilltypeid ASC');
 		while($row = \Osmium\Db\fetch_row($sq)) $skillids[] = (int)$row[0];
 		\Osmium\State\put_cache_memory('skillids', $skillids);
 	}

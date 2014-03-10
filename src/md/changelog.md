@@ -20,6 +20,8 @@
 
 * Select skillsets in the compare DPS page.
 
+* **Filter loadouts by flyability (for one of your characters).**
+
 # Version 0.11
 
 ## Version 0.11.0, released 2014-01-28

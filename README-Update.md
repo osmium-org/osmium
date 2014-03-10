@@ -72,18 +72,8 @@ Updating the `eve` schema
    pg_restore -j 8 -d osmium -U osmium_user pgsql/osmium-full-XXXXX.pgsql
    ~~~~
 
-5. Regenerate the module search index:
-
-   ~~~~
-   (stop searchd)
-   cd sphinx
-   sphinx-indexer osmium_types
-   (start searchd)
-   ~~~~
-
-6. ~~~
-   make post-eve-schema-update
-   ~~~
+5. Wipe all Sphinx indexes and redo the initial Sphinx setup (see
+   `README-Install.md`).
 
 Updating the `osmium` schema
 ============================
@@ -100,11 +90,5 @@ Updating the `osmium` schema
    cat pgsql/patches/<previous_version>/*.sql | psql osmium osmium_user
    ~~~~
 
-3. Regenerate the module search index:
-
-   ~~~~
-   (stop searchd)
-   cd sphinx
-   sphinx-indexer osmium_types
-   (start searchd)
-   ~~~~
+3. Wipe all Sphinx indexes and redo the initial Sphinx setup (see
+   `README-Install.md`).

@@ -19,11 +19,28 @@
 
 require __DIR__.'/../inc/root.php';
 
-$q = \Osmium\Db\query(
-	'SELECT typeid FROM osmium.invskills ORDER BY typeid ASC'
-);
-
-while($row = \Osmium\Db\fetch_row($q)) {
-	echo "\trt_attr_uint = rl".$row[0]."\n";
+function replace($search, $replace, &$subject) {
+	$subject = str_replace('@@'.$search.'@@', $replace, $subject);
 }
 
+$q = \Osmium\Db\query(
+	'SELECT skilltypeid FROM osmium.requirableskills ORDER BY skilltypeid ASC'
+);
+
+$cnf = file_get_contents(\Osmium\ROOT.'/sphinx/sphinx.conf-skel');
+
+
+$skillattribs = '';
+while($row = \Osmium\Db\fetch_row($q)) {
+	$skillattribs .= "\trt_attr_uint = rl".$row[0]."\n";
+}
+
+replace('skill_attributes', $skillattribs, $cnf);
+
+replace('sphinx_data', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+replace('sphinx_log', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+replace('sphinx_run', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+
+replace('osmium_root', \Osmium\ROOT, $cnf);
+
+echo $cnf;
