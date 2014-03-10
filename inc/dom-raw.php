@@ -241,7 +241,11 @@ class RawPage extends Document {
 				$_vals = $e->closestParent('form')->getAttribute('method') === 'get' ? $_GET : $_POST;
 				$n = $ta->getAttribute('name');
 				if(isset($_vals[$n]) && $e->childNodes->length === 0) {
-					$ta->appendChild($this->createCDATASection($_vals[$n]));
+					$ta->appendChild(
+						$ctx->xhtml === true ?
+						$this->createCDATASection($_vals[$n])
+						: $this->createTextNode($_vals[$n])
+					);
 				}
 			}
 
