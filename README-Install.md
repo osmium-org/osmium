@@ -33,14 +33,10 @@ below (for example, Debian uses `www-data`).
 
 4. Install the depedencies listed below.
 
-5. Make sure Sphinx uses the configuration file
-   `sphinx/sphinx.conf`. In some systems (like Debian), you will need
-   to copy this file to the system-wide `sphinx.conf` and edit all the
-   paths to absolute paths. The search daemon (`searchd`) should now
-   be running.
-
-6. Install the PostgreSQL schema: see the "Initial database setup"
+5. Install the PostgreSQL schema: see the "Initial database setup"
    section below.
+
+6. Install Sphinx: see the "Initial Sphinx setup" section below.
 
 7. Run `./bin/sanity_check`. At this point, you should not have any
    fatal issues (marked in red).
@@ -152,11 +148,16 @@ the `osmium_user` user, follow these steps:
     psql osmium osmium_user < pgsql/osmium.sql
     ~~~~
 
-4. Generate the type search index:
+Initial Sphinx setup
+====================
+
+1. Make a sphinx.conf file by running `./bin/make_sphinx_conf`.
+
+2. Generate the type search index:
 
    ~~~~
    (stop searchd)
-   cd sphinx
+   cd /path/to/sphinx.conf
    indexer osmium_types
    (start searchd)
    ~~~~
@@ -165,6 +166,6 @@ the `osmium_user` user, follow these steps:
    `sphinx-indexer`. See your system packaging of Sphinx for more
    details.*
 
-5. ~~~~
+3. ~~~~
    make post-eve-schema-update
    ~~~~

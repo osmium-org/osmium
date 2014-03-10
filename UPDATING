@@ -1,7 +1,20 @@
 staging
 =======
 
-The eve schema has been updated.
+The eve schema has been updated. The osmium schema has been updated.
+
+The sphinx.conf file is no longer a part of the git repository. It is
+now dynamically generated using ./bin/make_sphinx_conf from
+sphinx/sphinx.conf-skel. You must add the [sphinx] section in
+config.ini (see defauts in config-example.ini), then generate your
+sphinx.conf with the aforementioned script.
+
+The sphinx loadout index has been updated. You must:
+
+* stop sphinx-searchd;
+* delete all index.* and loadouts.* files;
+* start sphinx-searchd;
+* run `make reindex-loadouts`.
 
 v0.11.0, released 2014-01-28
 ============================

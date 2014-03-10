@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,38 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\CLI\UpdateLoadoutDogmaAttribs;
-
 require __DIR__.'/../inc/root.php';
 
-if($argc === 3) {
-	list(, $modtotal, $modcurrent) = $argv;
-} else {
-	$modcurrent = 0;
-	$modtotal = 1;
+function replace($search, $replace, &$subject) {
+	$subject = str_replace('@@'.$search.'@@', $replace, $subject);
 }
 
-if($modcurrent >= $modtotal) die();
-
-$q = \Osmium\Db\query_params(
-	'SELECT loadoutid FROM osmium.loadouts WHERE mod(loadoutid, $1) = $2',
-	array($modtotal, $modcurrent)
+$q = \Osmium\Db\query(
+	'SELECT skilltypeid FROM osmium.requirableskills ORDER BY skilltypeid ASC'
 );
-$bs = 100;
-$i = 0;
 
-\Osmium\Db\query('BEGIN');
+$cnf = file_get_contents(\Osmium\ROOT.'/sphinx/sphinx.conf-skel');
+
+
+$skillattribs = '';
 while($row = \Osmium\Db\fetch_row($q)) {
-	if(++$i % 100 === 0) {
-		\Osmium\Db\query('COMMIT');
-		echo "\n";
-		\Osmium\Db\query('BEGIN');
-	}
-
-	$fit = \Osmium\Fit\get_fit($row[0]);
-	\Osmium\Fit\commit_loadout_dogma_attribs($fit);
-
-	echo ".";
+	$skillattribs .= "\trt_attr_uint = rl".$row[0]."\n";
 }
-\Osmium\Db\query('COMMIT');
-echo "\n";
+
+replace('skill_attributes', $skillattribs, $cnf);
+
+replace('sphinx_data', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+replace('sphinx_log', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+replace('sphinx_run', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+
+replace('osmium_root', \Osmium\ROOT, $cnf);
+
+echo $cnf;

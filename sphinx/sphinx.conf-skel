@@ -1,7 +1,7 @@
 source osmium_types_src
 {
 	type = xmlpipe2
-	xmlpipe_command = ../bin/get_types_xml
+	xmlpipe_command = @@osmium_root@@/bin/get_types_xml
 }
 
 index osmium_types
@@ -16,7 +16,7 @@ index osmium_types
 #	expand_keywords = 1
 
 	min_prefix_len = 1
-	path = ./types
+	path = @@sphinx_data@@/types
 	charset_type = utf-8
 }
 
@@ -30,7 +30,7 @@ index osmium_loadouts
 #	expand_keywords = 1
 #	min_prefix_len = 3
 
-	path = ./index
+	path = @@sphinx_data@@/loadouts
 	charset_type = utf-8
 	rt_attr_bigint = restrictedtoaccountid
 	rt_attr_bigint = restrictedtocorporationid
@@ -61,6 +61,8 @@ index osmium_loadouts
 	rt_field = description
 	rt_field = types
 
+@@skill_attributes@@
+
 	# Tweak this if needed
 	rt_mem_limit = 128M
 }
@@ -68,12 +70,13 @@ index osmium_loadouts
 searchd
 {
 	listen = 127.0.0.1:24492:mysql41
-	log = ./searchd.log
-	query_log = ./query.log
-	pid_file = ./searchd.pid
+	log = @@sphinx_log@@/searchd.log
+	# Uncomment if you have plenty of disk space (or configure log rotation)
+	#query_log = @@sphinx_log@@/query.log
+	pid_file = @@sphinx_run@@/searchd.pid
 	max_matches = 1000
 	workers = threads
-	binlog_path = ./
+	binlog_path = @@sphinx_data@@/
 	query_log_format = sphinxql
 	collation_server = utf8_general_ci
 }

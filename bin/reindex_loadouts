@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,16 +19,14 @@
 
 require __DIR__.'/../inc/root.php';
 
-/* Truncate the index (FIXME: replace this by TRUNCATE RTINDEX when
- * available) */
-do {
-	$q = \Osmium\Search\query('SELECT id FROM osmium_loadouts');
-	$deleted = 0;
-	while($row = \Osmium\Search\fetch_row($q)) {
-		\Osmium\Search\query('DELETE FROM osmium_loadouts WHERE id = '.$row[0]);
-		++$deleted;
-	}
-} while($deleted > 0);
+if($argc === 3) {
+	list(, $modtotal, $modcurrent) = $argv;
+} else {
+	$modcurrent = 0;
+	$modtotal = 1;
+}
+
+if($modcurrent >= $modtotal) die();
 
 const BATCH_SIZE = 1000;
 
@@ -36,14 +34,17 @@ $offset = 0;
 do {
 	$q = \Osmium\Db\query_params(
 		'SELECT loadoutid
-		FROM osmium.loadouts WHERE visibility = $1
+		FROM osmium.loadouts
+		WHERE visibility = $1 AND mod(loadoutid, $4) = $5
 		LIMIT $2 OFFSET $3',
 		array(
 			\Osmium\Fit\VISIBILITY_PUBLIC,
 			BATCH_SIZE,
-			$offset
-			)
-		);
+			$offset,
+			$modtotal,
+			$modcurrent
+		)
+	);
 	$offset += BATCH_SIZE;
 
 	$ids = array();

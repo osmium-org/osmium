@@ -46,10 +46,13 @@ clear-api-cache:
 clear-sessions:
 	find ./cache -name "sess_*" -delete
 
-post-eve-schema-update:
-	./bin/parallelize 8 ./bin/update_loadout_dogma_attribs
+post-eve-schema-update: reindex-loadouts
 
 update-charinfo:
 	./bin/parallelize 16 ./bin/update_charinfo
 
-.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache post-eve-schema-update
+reindex-loadouts:
+	./bin/truncate_loadout_index
+	./bin/parallelize 8 ./bin/reindex_loadouts
+
+.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache post-eve-schema-update reindex-loadouts

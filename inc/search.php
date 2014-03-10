@@ -55,6 +55,20 @@ function escape($string) {
 	return str_replace ($from, $to, $string);
 }
 
+function get_skillids() {
+	static $skillids = null;
+	if($skillids === null) {
+		$skillids = \Osmium\State\get_cache_memory('skillids', null);
+		if($skillids !== null) return $skillids;
+
+		$sq = \Osmium\Db\query('SELECT skilltypeid FROM osmium.requirableskills ORDER BY skilltypeid ASC');
+		while($row = \Osmium\Db\fetch_row($sq)) $skillids[] = (int)$row[0];
+		\Osmium\State\put_cache_memory('skillids', $skillids);
+	}
+
+	return $skillids;
+}
+
 function unindex($loadoutid) {
 	query('DELETE FROM osmium_loadouts WHERE id = '.$loadoutid);
 }
@@ -123,6 +137,21 @@ function index($loadout) {
 	sort($tags);
 	$tags = implode(' ', $tags);
 
+	$skillids = get_skillids();
+	static $skillcolumnnames = null;
+	if($skillcolumnnames === null) {
+		$skillcolumnnames = implode(', ', array_map(function($n) { return 'rl'.$n; }, $skillids));
+	}
+
+	/* XXX */
+	$fit = \Osmium\Fit\get_fit($loadout['loadoutid']);
+	$prereqs_per_type = \Osmium\Fit\get_skill_prerequisites_for_loadout($fit);
+	$minskills = \Osmium\Skills\merge_skill_prerequisites($prereqs_per_type);
+	$skills = implode(', ', array_map(
+		function($n) use($minskills) { return isset($minskills[$n]) ? $minskills[$n] : 0; },
+		$skillids
+	));
+
 	return query(
 		'INSERT INTO osmium_loadouts (
 		id, restrictedtoaccountid, restrictedtocorporationid, restrictedtoallianceid,
@@ -130,7 +159,8 @@ function index($loadout) {
 		shipid, upvotes, downvotes, score, creationdate, updatedate, build,
 		comments, dps, ehp, estimatedprice,
 		attship, attshipgroup, attname, atttags, attauthor,
-		ship, shipgroup, name, author, tags, description, types
+		ship, shipgroup, name, author, tags, description, types,
+		'.$skillcolumnnames.'
 		) VALUES ('
 
 		.$loadout['loadoutid'].','
@@ -164,7 +194,10 @@ function index($loadout) {
 		.'\''.escape($loadout['author']).'\','
 		.'\''.escape($tags).'\','
 		.'\''.escape($loadout['description']).'\','
-		.'\''.escape($loadout['modules']).'\''
+		.'\''.escape($loadout['modules']).'\','
+
+		.$skills
+
 		.')'
 	);
 }
@@ -519,6 +552,26 @@ function get_search_cond_from_advanced() {
 		$cond .= " AND build ".$operators[$_GET['op']]." ".((int)$_GET['build']);
 	}
 
+	if(isset($_GET['sr']) && $_GET['sr'] && isset($_GET['ss']) && \Osmium\State\is_logged_in()) {
+		/* XXX: cache this somewhat */
+		$ss = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT importedskillset, overriddenskillset
+			FROM osmium.accountcharacters
+			WHERE accountid = $1 AND name = $2',
+			array(\Osmium\State\get_state('a')['accountid'], $_GET['ss'])
+		));
+
+		if($ss !== false) {
+			$skills = (array)json_decode($ss['importedskillset'], true);
+			foreach((array)json_decode($ss['overriddenskillset'], true) as $t => $l) {
+				$skills[$t] = $l;
+			}
+			foreach(get_skillids() as $t) {
+				$cond .= ' AND rl'.$t.' <= '.(isset($skills[$t]) ? $skills[$t] : 0);
+			}
+		}
+	}
+
 	if(isset($_GET['sort']) && isset($orderby[$_GET['sort']])) {
 		$order = isset($_GET['order']) && in_array($_GET['order'], [ 'asc', 'desc' ]) ? $_GET['order'] : 'DESC';
 		$cond .= ' ORDER BY '.$_GET['sort'].' '.$order;
@@ -631,6 +684,26 @@ function print_search_form($uri = null, $relative = '.', $label = 'Search loadou
 			echo ">{$label}</option>\n";
 		}
 		echo "</select>\n";
+		$avsss = \Osmium\Fit\get_available_skillset_names_for_account();
+		if(count($avsss) > 2) {
+			echo "<br />\n";
+			if(isset($_GET['sr']) && $_GET['sr']) {
+				$checked = " checked='checked'";
+			} else {
+				$checked = '';
+			}
+			echo "<input type='checkbox' name='sr' id='sr'{$checked} />";
+			echo " <label for='sr'>Only show loadouts</label>\n";
+			echo "<select name='ss' id='ss'>\n";
+			foreach($avsss as $ss) {
+				if($ss === 'All 0' || $ss === 'All V') continue;
+				$selected = isset($_GET['ss']) && $_GET['ss'] === $ss ? " selected='selected'" : '';
+				$ss = \Osmium\Chrome\escape($ss);
+				echo "<option value='{$ss}'{$selected}>{$ss}</option>\n";
+			}
+			echo "</select>\n<label for='sr'>can fly</label>";
+			\Osmium\Chrome\print_js_snippet('searchform');
+		}
 		echo "<input type='hidden' name='ad' value='1' />\n";
 		echo "<br />\n<a href='{$relative}/help/search'><small>Help</small></a>\n";
 	} else {

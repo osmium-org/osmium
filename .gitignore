@@ -4,7 +4,7 @@ static/cache/*
 !static/cache/.empty_file
 config.ini
 sphinx/*
-!sphinx/sphinx.conf
+!sphinx/sphinx.conf-skel
 static/*.css
 static/robots.txt
 .sass-cache

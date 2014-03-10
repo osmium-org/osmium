@@ -1248,22 +1248,23 @@ function use_default_skillset_for_account(&$fit, $a = null) {
 	return $ss;
 }
 
-/**
- * Takes in an array of item/module type IDs; fills the $result array with entries like:
+/* Takes in an array of item/module type IDs; fills the $result array with entries like:
  *     input_type_id => array(
  *         skill_type_id => required_level,
  *         ...
  *     )
+ *
+ * @param $recursive if true, also fetch prerequisites of prerequisites, etc.
  */
-function get_skill_prerequisites_for_types(array $types, array &$result) {
+function get_skill_prerequisites_for_types(array $types, array &$result, $recursive = true) {
 	foreach ($types as $typeid) {
 		if(!isset($result[$typeid])) {
 			$result[$typeid] = [];
 		}
 
 		foreach(get_required_skills($typeid) as $stid => $slevel) {
-			if(!isset($result[$stid])) {
-				get_skill_prerequisites_for_types([ $stid ], $result);
+			if($recursive && !isset($result[$stid])) {
+				get_skill_prerequisites_for_types([ $stid ], $result, true);
 			}
 
 			$result[$typeid][$stid] = $slevel;
@@ -1271,7 +1272,7 @@ function get_skill_prerequisites_for_types(array $types, array &$result) {
 	}
 }
 
-function get_skill_prerequisites_and_missing_prerequisites($fit) {
+function get_skill_prerequisites_for_loadout($fit, $recursive = true) {
 	$types = array();
 
 	if (!empty($fit['ship'])) {
@@ -1299,14 +1300,17 @@ function get_skill_prerequisites_and_missing_prerequisites($fit) {
 	}
 
 	$types = array_keys($types);
-	$prereqs = $missing = array();
+	$prereqs = array();
+	get_skill_prerequisites_for_types($types, $prereqs, $recursive);
+	return $prereqs;
+}
 
-	get_skill_prerequisites_for_types($types, $prereqs);
+function get_skill_prerequisites_and_missing_prerequisites($fit) {
+	$prereqs = get_skill_prerequisites_for_loadout($fit);
+	$missing = array();
 
-	foreach($types as $tid) {
-		if(!isset($prereqs[$tid])) continue;
-
-		foreach($prereqs[$tid] as $stid => $level) {
+	foreach($prereqs as $tid => $sub) {
+		foreach($sub as $stid => $level) {
 			$current = isset($fit['skillset']['override'][$stid])
 				? $fit['skillset']['override'][$stid] : $fit['skillset']['default'];
 
@@ -1318,4 +1322,16 @@ function get_skill_prerequisites_and_missing_prerequisites($fit) {
 	}
 
 	return [ $prereqs, $missing ];
+}
+
+function merge_skill_prerequisites_for_loadout($fit) {
+	$requisites = get_skill_prerequisites_for_loadout($fit, false);
+	$s = [];
+	foreach($requisites as $sub) {
+		foreach($sub as $stid => $sl) {
+			if(!isset($s[$stid])) $s[$stid] = $sl;
+			else $s[$stid] = max($sl, $s[$stid]);
+		}
+	}
+	return $s;
 }
