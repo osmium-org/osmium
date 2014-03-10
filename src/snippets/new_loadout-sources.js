@@ -18,7 +18,7 @@
 osmium_init_sources = function() {
 	$('div#nlsources > section#search > form > ul.filters, div#nlsources > section#browse > ul.filters, div#nlsources > section#shortlist > ul.filters').each(function() {
 		var t = $(this);
-		var li, input, a;
+		var li, input, a, b;
 
 		for(var id in osmium_metagroups) {
 			li = $(document.createElement('li'));
@@ -33,9 +33,18 @@ osmium_init_sources = function() {
 			a = $(document.createElement('a'));
 			a.addClass('metagroup');
 			a.addClass('mg' + id);
-			a.text(osmium_metagroups[id]);
-			a.prop('title', 'Filter ' + osmium_metagroups[id] + ' types');
+			a.addClass('on');
+			a.prop('title', osmium_metagroups[id] + ' types');
+			a.append(
+				$(document.createElement('img'))
+					.prop('alt', osmium_metagroups[id])
+					.prop('src', osmium_relative + '/static/icons/metagroups.svg') /* XXX: staticver? */
+			);
 			li.append(a);
+
+			li.append(b = a.clone().removeClass('on').addClass('off'));
+			a.prop('title', a.prop('title') + ' [shown]');
+			b.prop('title', b.prop('title') + ' [hidden]');
 
 			t.append(li);
 		}

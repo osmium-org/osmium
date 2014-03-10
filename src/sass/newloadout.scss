@@ -17,14 +17,6 @@ div#nlattribs {
 	width: $metadata-width;
 }
 
-$mg-width: 32px;
-$mg-height: $mg-width;
-$mg-file: "./icons/metagroups.svg";
-
-@mixin metagroup-sprite($x, $y) {
-	@include sprite($mg-file, $x * $mg-width, $y * $mg-height, $mg-width, $mg-height);
-}
-
 div#nlsources, div#nlmain, div#nlattribs {
 	@include column;
 
@@ -43,29 +35,45 @@ div#nlsources {
 		@include no-user-select;
 
 		&> li {
-			margin: 0;
-			padding: 0.25em;
+			margin: 0.25em;
+			padding: 0;
 			display: inline-block;
+			position: relative;
+			width: 32px;
+			height: 32px;
 
-			&> input[value="0"] + a {
-				opacity: 0.5;
-
-				&.mg1 { @include metagroup-sprite(0, 1); }
-				&.mg2 { @include metagroup-sprite(1, 1); }
-				&.mg14 { @include metagroup-sprite(2, 1); }
-				&.mg3 { @include metagroup-sprite(3, 1); }
-				&.mg4 { @include metagroup-sprite(4, 1); }
-				&.mg5 { @include metagroup-sprite(5, 1); }
-				&.mg6 { @include metagroup-sprite(6, 1); }
+			&> input[value="0"] {
+				& + a.on { display: none; }
+				& + a.on + a.off { opacity: 0.5; }
 			}
 
-			&> a.mg1 { @include metagroup-sprite(0, 0); }
-			&> a.mg2 { @include metagroup-sprite(1, 0); }
-			&> a.mg14 { @include metagroup-sprite(2, 0); }
-			&> a.mg3 { @include metagroup-sprite(3, 0); }
-			&> a.mg4 { @include metagroup-sprite(4, 0); }
-			&> a.mg5 { @include metagroup-sprite(5, 0); }
-			&> a.mg6 { @include metagroup-sprite(6, 0); }
+			&> input[value="1"] {
+				& + a.on + a.off { display: none; }
+			}
+
+			&> a {
+				overflow: hidden;
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+
+				&> img {
+					position: absolute;
+					top: 0;
+					left: 0;
+				}
+
+				&.mg2 > img { left: -32px; }
+				&.mg14 > img { left: -64px; }
+				&.mg3 > img { left: -96px; }
+				&.mg4 > img { left: -128px; }
+				&.mg5 > img { left: -160px; }
+				&.mg6 > img { left: -192px; }
+
+				&.off > img { top: -32px; }
+			}
 		}
 	}
 }

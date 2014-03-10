@@ -306,7 +306,9 @@ class RawPage extends Document {
 			$imgheight = $height / $gridheight * 1024;
 
 			$span->setAttribute('style', 'width: '.$width.'px; height: '.$height.'px;');
-			$img->setAttribute('o-static-src', '/icons/sprite.png');
+			if(!$img->hasAttribute('o-static-src')) {
+				$img->setAttribute('o-static-src', '/icons/sprite.png');
+			}
 			$img->setAttribute(
 				'style',
 				'width: '.$imgwidth.'px; height: '.$imgheight.'px; top: -'.$posx.'px; left: -'.$posy.'px;'
