@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,9 +32,12 @@ if(!\Osmium\State\is_logged_in()) {
 
 $a = \Osmium\State\get_state('a');
 
-\Osmium\Chrome\print_header('Import loadouts', '.');
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$p->title = 'Import loadouts';
+$ctx->relative = '.';
 
-$source = \Osmium\Import\get_source('source', 'url', 'file');
+$source = \Osmium\Import\get_source($p, 'source', 'url', 'file');
 if($source !== false) {
 	$format = $_POST['format'];
 	$errors = array();
@@ -54,42 +57,82 @@ if($source !== false) {
 		}
 	}
 
-	if(count($errors) > 0) {
-		echo "<h1>Import errors</h1>\n";
-		echo "<div id='import_errors'>\n<ol>\n";
+	if($errors !== []) {
+		$p->content->appendCreate('h1', 'Import errors');
+		$ol = $p->content->appendCreate('div', [ 'id' => 'import_errors' ])->appendCreate('ol');
 		foreach($errors as $e) {
-			echo "<li><code>".\Osmium\Chrome\escape($e)."</code></li>\n";
+			$ol->appendCreate('li')->appendCreate('code', $e);
 		}
-		echo "</ol>\n</div>\n";
 	}
 
-	echo "<h1>Import results</h1>\n";
-	\Osmium\Search\print_loadout_list($ids, '.', 0, 'No loadouts were imported.');
+	$p->content->appendCreate('h1', 'Import results');
+
+	if($ids !== []) {
+		$p->content->append($p->makeLoadoutGridLayout($ids));
+	} else {
+		$p->content->appendCreate('p', [
+			'class' => 'placeholder',
+			'No loadouts were imported.',
+		]);
+	}
 }
 
-echo "<h1>Import loadouts</h1>\n";
 
-\Osmium\Forms\print_form_begin(null, '', 'multipart/form-data');
 
-$formats = array();
+$p->content->appendCreate('h1', 'Import loadouts');
+$form = $p->content->appendCreate('o-form', [
+	'method' => 'post',
+	'o-rel-action' => '/import',
+]);
+
+$tbody = $form->appendCreate('table')->appendCreate('tbody');
+
+$select = $p->element('select', [ 'name' => 'format', 'id' => 'format' ]);
 foreach(\Osmium\Fit\get_import_formats() as $k => $f) {
-	$formats[$k] = $f[0].' ('.\Osmium\Chrome\escape($f[1]).')';
+	$select->appendCreate('option', [
+		'value' => $k,
+		$f[0].' ('.$f[1].')'
+	]);
 }
-\Osmium\Forms\print_select('Input format', 'format', $formats, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
-\Osmium\Import\print_tri_choice('source', 'url', 'file');
+$tbody->appendCreate('tr', [
+	[ 'th', [[ 'label', [ 'for' => 'format', 'Input format' ] ]] ],
+	[ 'td', $select ],
+]);
 
-\Osmium\Forms\print_checkbox('Immediately edit the first loadout (instead of saving them all)',
-                             'editimport',
-                             null,
-                             \Osmium\State\is_logged_in() ? null : true,
-                             \Osmium\State\is_logged_in() ? 0 : \Osmium\Forms\FIELD_DISABLED);
+$tbody->append(\Osmium\Import\make_tri_choice($p, 'source', 'url', 'file'));
 
-\Osmium\Forms\print_submit('Import');
-\Osmium\Forms\print_form_end();
+$checkbox = $p->element('o-input', [
+	'type' => 'checkbox',
+	'id' => 'editimport',
+	'name' => 'editimport',
+]);
 
-\Osmium\Chrome\print_js_snippet('import');
-\Osmium\Chrome\print_footer();
+if(!\Osmium\State\is_logged_in()) {
+	$checkbox->setAttribute('remember', 'off');
+	$checkbox->setAttribute('disabled', 'disabled');
+	$checkbox->setAttribute('checked', 'checked');
+}
+
+$tbody->appendCreate('tr', [
+	[ 'th' ], [ 'td', [
+		$checkbox,
+		[ 'label', [ 'for' => 'editimport', 'Immediately edit the first loadout (instead of saving them all)' ] ]
+	]],
+]);
+
+$tbody->appendCreate('tr', [
+	[ 'th' ], [ 'td', [
+		[ 'input', [ 'type' => 'submit', 'value' => 'Import' ] ]
+	]],
+]);
+
+
+
+$p->snippets[] = 'import';
+$p->render($ctx);
+
+
 
 function post_import(&$fit, &$ids, $a, &$errors) {
 	if($fit == false) return;

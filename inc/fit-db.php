@@ -737,6 +737,7 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	if($sem !== false) {
 		\Osmium\State\invalidate_cache('loadout-'.$loadoutid.'-'.$revision, 'Loadout_Cache_');
 		\Osmium\State\invalidate_cache('loadout-'.$loadoutid, 'Loadout_Cache_');
+		\Osmium\State\invalidate_cache_memory('Loadout_Grid_'.$loadoutid);
 		\Osmium\State\semaphore_release($sem);
 	}
 

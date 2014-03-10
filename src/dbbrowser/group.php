@@ -19,9 +19,20 @@
 namespace Osmium\Page\DBBrowser\ViewGroup;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/dbbrowser_common.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
+
+
+$groupid = (int)$_GET['groupid'];
+$cacheid = 'DBBrowser_Group_'.$groupid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage;
+}
+
+
 
 $g = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
@@ -30,32 +41,28 @@ $g = \Osmium\Db\fetch_assoc(
 		FROM eve.invgroups ig
 		LEFT JOIN eve.invcategories ic ON ic.categoryid = ig.categoryid
 		WHERE groupid = $1',
-		array($_GET['groupid'])
+		array($groupid)
 	)
 );
 
 if($g === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	\Osmium\Chrome\escape(strip_tags($g['groupname'])).' / Group '.$g['groupid'],
-	RELATIVE
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-echo "<header>\n<h2>".\Osmium\Chrome\escape($g['groupname']);
-echo " <small>";
+$header = $dbb->appendCreate('header');
+$h2 = $header->appendCreate('h2', $g['groupname']);
+$small = $h2->appendCreate('small', 'group '.$groupid);
 if($g['published'] !== 't') {
-	echo "<span class='unpublished'>not public</span> – ";
+	$small->prepend([[ 'span', [ 'class' => 'unpublished', 'not public' ] ]]);
 }
-echo "group ".$g['groupid']."</small></h2>\n</header>\n";
 
+$nav = $dbb->appendCreate('nav');
+$ul = $nav->appendCreate('ul');
+$ul->append([
+	[ 'li', [ [ 'a', [ 'o-rel-href' => '/db/category/'.$g['categoryid'], $g['categoryname'] ] ] ] ],
+	[ 'li', [ 'class' => 'lst', $g['groupname'] ] ],
+]);
 
-echo "<nav>\n<ul>\n";
-echo "<li><a href='../category/".$g['categoryid']."'>".\Osmium\Chrome\escape(
-	$g['categoryname']
-)."</a></li>\n";
-echo "<li class='lst'>".\Osmium\Chrome\escape($g['groupname'])."</li>\n";
-echo "</ul>\n</nav>\n";
 
 
 $typesq = \Osmium\Db\query_params(
@@ -66,22 +73,33 @@ $typesq = \Osmium\Db\query_params(
 	array($g['groupid'])
 );
 
-echo "<h3>List of types in this group:</h3>\n";
+$h3 = $p->element('h3', 'Types in this group:');
+$ul = $p->element('ul', [ 'class' => 'typelist' ]);
+$ntypes = 0;
 
-$types = [];
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
-	$e = "<li>";
-	$e .= "<a href='".RELATIVE."/db/type/".$t['typeid']."'>"
-		.\Osmium\Chrome\escape($t['typename'])."</a>";
-	$e .= "</li>\n";
-
-	$types[] = [ $t['typename'], $e ];
+	++$ntypes;
+	$ul->appendCreate('li', [
+		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ]
+	]);
 }
 
-\Osmium\DBBrowser\print_typelist($types);
+if($ntypes > 0) {
+	$dbb->append([ $h3, $ul ]);
+	$dbb->appendCreate('p', [
+		'class' => 'compare',
+		[ 'a', [ 'o-rel-href' => '/db/comparegroup/'.$groupid.'/auto',
+		         'Compare all types in this group' ] ],
+	]);
+}
 
-echo "<p class='compare'><a href='".RELATIVE."/db/comparegroup/{$g['groupid']}/auto' rel='nofollow'>Compare all types in this group</a></p>\n";
 
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
+
+RenderStage:
+$p->title = \Osmium\Fit\get_groupname($groupid).' / Group '.$groupid;
+$p->snippets[] = 'dbbrowser';
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -43,8 +43,6 @@ if(!function_exists('curl_strerror')) {
  * invalid, or null on network/other error.
  */
 function fetch($name, array $params, $timeout = null) {
-	libxml_use_internal_errors(true);
-
 	/* We sort the $params array to always have the same hash even when
 	   the paramaters are not given in the same order. It makes
 	   sense. */

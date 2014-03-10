@@ -131,9 +131,7 @@ function get_import_formats() {
 				$fits = array();
 
 				try {
-					$old = libxml_use_internal_errors(true);
 					$xml = new \SimpleXMLElement($data);
-					libxml_use_internal_errors($old);
 
 					if(isset($xml->shipType)) {
 						$fits[] = try_parse_fit_from_eve_xml($xml, $errors);
@@ -268,9 +266,7 @@ function autodetect_format($source) {
 	}
 
 	try {
-		$old = libxml_use_internal_errors(true);
 		$xml = new \SimpleXMLElement($source);
-		libxml_use_internal_errors($old);
 
 		if(isset($xml->shipType) || isset($xml->fitting->shipType) || isset($xml->fitting[0]->shipType)) {
 			return 'evexml';
@@ -301,9 +297,7 @@ function autodetect_format($source) {
  */
 function try_parse_fit_from_eve_xml_string($xmlstring, &$errors) {
 	try {
-		$old = libxml_use_internal_errors(true);
 		$xml = new \SimpleXMLElement($xmlstring);
-		libxml_use_internal_errors($old);
 
 		if(isset($xml->shipType)) {
 			/* Root element is <fitting> */

@@ -18,6 +18,7 @@
 
 namespace Osmium\Chrome;
 
+/* @deprecated */
 define(
 	__NAMESPACE__.'\XHTML',
 	isset($_SERVER['HTTP_ACCEPT']) && (
@@ -36,6 +37,8 @@ require __DIR__.'/chrome-fit.php';
 
 /**
  * Escape a string.
+ *
+ * @deprecated
  */
 function escape($s) {
 	if(\Osmium\Chrome\XHTML) {
@@ -157,6 +160,7 @@ function format_number($num, $precisionoffset = 0) {
 	}
 }
 
+/** @deprecated use Formatter::formatDuration(_, true) */
 function format_duration($seconds) {
 	$s = fmod($seconds, 60);
 	$m = round($seconds - $s) / 60;
@@ -172,6 +176,7 @@ function format_duration($seconds) {
 	}
 }
 
+/** @deprecated use Formatter::formatDuration() */
 function format_long_duration($seconds, $precision = 6) {
 	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', 0));
 	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', $seconds));
@@ -211,6 +216,7 @@ function format_long_duration($seconds, $precision = 6) {
 	return implode(', ', $out);
 }
 
+/** @deprecated see Formatter::formatRelativeDate */
 function format_relative_date($date, $now = null) {
 	if($now === null) $now = time();
 	$before = "<time datetime='".date('c', $date)."'>";
@@ -303,6 +309,7 @@ function format_reputation($rep) {
 }
 
 /**
+ * @deprecated
  * Get nickname or character name of current user.
  */
 function get_name($a, &$rawname) {
@@ -321,6 +328,7 @@ function get_name($a, &$rawname) {
 }
 
 /**
+ * @deprecated
  * Format a character name (with a link to the profile).
  */
 function format_character_name($a, $relative = '.', &$rawname = null) {
@@ -329,6 +337,7 @@ function format_character_name($a, $relative = '.', &$rawname = null) {
 	return maybe_add_profile_link($a, $relative, $name);
 }
 
+/** @deprecated */
 function maybe_add_profile_link($a, $relative, $name) {
 	if(isset($a['accountid'])) {
 		return "<a class='profile' href='$relative/profile/".$a['accountid']."'>$name</a>";
@@ -430,6 +439,9 @@ function round_sd($number, $digits = 0) {
  * @param $anchor optional anchor to append to the generated link URIs
  *
  * @return offset of the current page
+ *
+ * TODO port this to DOM
+ * TODO add <link rel="next" /> and <link rel="prev" /> when appropriate
  */
 function paginate($name, $perpage, $total, &$result, &$metaresult,
                   $pageoverride = null, $format = 'Showing rows %1-%2 of %3.',
@@ -574,11 +586,11 @@ function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
 }
 
-function format_showinfo_links($desc, $relative) {
+function format_showinfo_links($desc) {
 	$desc = preg_replace_callback(
 		'%<a href=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>%',
-		function($match) use($relative) {
-			return "<a href='{$relative}/db/type/{$match['typeid']}'>";
+		function($match) {
+			return "<a o-rel-href='/db/type/{$match['typeid']}'>";
 		},
 		$desc
 	);
@@ -587,8 +599,8 @@ function format_showinfo_links($desc, $relative) {
 	 * <url>s (hopefully this NEVER appears in type descriptions… */
 	$desc = preg_replace_callback(
 		'%<url=showinfo:(?<typeid>[1-9][0-9]*)(// ?(?<itemid>[1-9][0-9]*))?>(?<content>.*?)</url>%sU',
-		function($match) use($relative) {
-			return "<a href='{$relative}/db/type/{$match['typeid']}'>".$match['content']."</a>";
+		function($match) {
+			return "<a o-rel-href='/db/type/{$match['typeid']}'>".$match['content']."</a>";
 		},
 		$desc
 	);
@@ -597,14 +609,7 @@ function format_showinfo_links($desc, $relative) {
 }
 
 function format_type_description($desc) {
-	static $rel = null;
-
-	if($rel === null) {
-		$rel = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
-	}
-
-	$desc = format_showinfo_links($desc, $rel);
-
+	$desc = format_showinfo_links($desc);
 	return sanitize_html(format_md(nl2br($desc, true)));
 }
 
@@ -634,133 +639,7 @@ function truncate_string($s, $length, $fill = '…') {
 	return $s;
 }
 
-function format_number_with_unit($number, $unitid, $unitdisplayname, $relative = null) {
-	if($relative === null) {
-		$relative = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
-	}
-
-	switch((int)$unitid) {
-
-	case 1: /* Meters */
-		if($number >= 10000) {
-			$number /= 1000;
-			$unitdisplayname = 'km';
-		} else {
-			$unitdisplayname = 'm';
-		}
-		break;
-
-	case 101: /* Milliseconds */
-		$number /= 1000;
-		$unitdisplayname = 's';
-		break;
-
-	case 104: /* Multiplier */
-		$unitdisplayname = 'x';
-		break;
-
-	case 108: /* Inverse absolute percent */
-		$number = (1 - $number) * 100;
-
-	case 105: /* Percentage */
-	case 121: /* Real percentage */
-		$unitdisplayname = '%';
-		break;
-
-	case 111: /* Inversed modifier percent */
-		$number = 2 - $number;
-
-	case 109: /* Modifier percent */
-		$number -= 1;
-		$number *= 100;
-
-	case 124: /* Modifier relative percent */
-		$unitdisplayname = '%';
-		$rounded = ($number >= 0 ? '+' : '').$number;
-		break;
-
-	case 127: /* Absolute percent */
-		$unitdisplayname = '%';
-		$number *= 100;
-		break;
-
-	case 112: /* Rotation speed */
-		$rounded = round_sd($number, 4);
-		break;
-
-	case 115: /* Group ID */
-		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'SELECT groupname, typeid FROM eve.invgroups
-			LEFT JOIN eve.invtypes
-			ON invtypes.groupid = invgroups.groupid AND invtypes.published = true
-			WHERE invgroups.groupid = $1 ORDER BY typeid ASC
-			LIMIT 1',
-			array($number)
-		));
-		if($row !== false) {
-			$image = '';
-			if($row[1] !== null) {
-				$image = "<img src='//image.eveonline.com/Type/".$row[1]."_64.png' alt='' /> ";
-			}
-			return $image."<a href='{$relative}/db/group/{$number}'>".escape($row[0])."</a>";
-		}
-		$unitdisplayname = 'Group ID';
-		break;
-
-	case 116: /* Type ID */
-		$typename = \Osmium\Fit\get_typename($number);
-		if($typename !== false) {
-			return "<img src='//image.eveonline.com/Type/".$number."_64.png' alt='' /> "
-				."<a href='{$relative}/db/type/{$number}'>".escape($typename)."</a>";
-		}
-		$unitdisplayname = 'Type ID';
-		break;
-
-	case 117: /* Size class */
-		if($number == 1) return 'Small';
-		if($number == 2) return 'Medium';
-		if($number == 3) return 'Large';
-		if($number == 4) return 'XLarge';
-		break;
-
-	case 119: /* Attribute ID */
-		return "<a href='{$relative}/db/attribute/{$number}'>".
-			escape(\Osmium\Fit\get_attributedisplayname($number))
-			."</a>";
-		break;
-
-	case 137: /* Boolean */
-		if($number == 0) return 'False';
-		if($number == 1) return 'True';
-		break;
-
-	case 139: /* Bonus */
-		$rounded = (($number >= 0) ? '+' : '').$number;
-		break;
-
-	case 140: /* Level */
-		return 'Level '.$number;
-
-	case 142: /* Sex */
-		if($number == 1) return 'Male';
-		if($number == 2) return 'Unisex';
-		if($number == 3) return 'Female';
-		break;
-
-	}
-
-	if(!isset($rounded)) {
-		$n = number_format($number, 3);
-		list($rounded, $dec) = explode('.', $n);
-		$dec = rtrim($dec, '0');
-		if($dec) $rounded .= '.'.$dec;
-	}
-
-	return '<span title="'.sprintf("%.14f", $number).'">'
-		.$rounded.' '.escape($unitdisplayname)
-		.'</span>';
-}
-
+/* @deprecated */
 function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = null, $width = null, $height = null) {
 	if($grid_height === null) $grid_height = $grid_width;
 	if($width === null) $width = $grid_width;
@@ -805,57 +684,4 @@ function format_effect_category($id) {
 	];
 
 	return isset($map[$id]) ? $map[$id] : "unknown ({$id})";
-}
-
-function get_formatted_ship_traits($shiptypeid, $relative) {
-	$traitsq = \Osmium\Db\query_params(
-		'SELECT COALESCE(sourcetypeid, sourceother) AS source,
-		bonus, t.message, u.unitid, u.displayname
-		FROM eve.fsdtypebonuses ftb
-		JOIN eve.tramessages t ON t.nameid = ftb.nameid
-		LEFT JOIN eve.dgmunits u ON u.unitid = ftb.unitid
-		WHERE ftb.typeid = $1
-		ORDER BY sourcetypeid ASC, t.nameid ASC',
-		array($shiptypeid)
-	);
-
-	$tps = [];
-	while($t = \Osmium\Db\fetch_assoc($traitsq)) {
-		$tps[$t['source']][] = $t;
-	}
-
-	if($tps === []) return false;
-	$ret = "<div class='traits'>\n";
-
-	foreach($tps as $source => $traits) {
-		if($source >= 0) {
-			$ret .= "<h3><a href='{$relative}/db/type/{$source}'>"
-				.\Osmium\Fit\get_typename($source)
-				."</a> bonuses (per skill level):</h3>\n";
-		} else if($source == -1) {
-			$ret .= "<h3>Role bonuses:</h3>\n";
-		} else if($source === -2) {
-			$ret .= "<h3>Miscellaneous bonuses:</h3>\n";
-		}
-
-		$ret .="<ul>\n";
-
-		foreach($traits as $t) {
-			$ret .= "<li>\n<span class='bvalue'>";
-
-			if($t['bonus'] !== null) {
-				$ret .= format_number_with_unit(
-					$t['bonus'], $t['unitid'], $t['displayname']
-				);
-			} else {
-				$ret .= "·";
-			}
-
-			$ret .= "</span>\n".$t['message']."\n</li>\n";
-		}
-
-		$ret .= "</ul>\n";
-	}
-
-	return format_showinfo_links($ret."</div>\n", $relative);
 }

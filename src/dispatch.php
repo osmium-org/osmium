@@ -47,7 +47,6 @@ function get_rules($prefix) {
 			'%^/import$%D' => '/src/import_loadouts.php',
 			'%^/convert%D' => '/src/convert.php',
 			'%^/register$%D' => '/src/register.php',
-			'%^/logout$%D' => '/src/logout.php',
 			'%^/settings$%D' => '/src/settings.php',
 			'%^/resetpassword$%D' => '/src/reset_password.php',
 			'%^/notifications$%D' => '/src/view_notifications.php',
@@ -144,6 +143,7 @@ function get_rules($prefix) {
 			'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 			'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
 
+			'%^/logout/(?<tok>[0-9]+)$%D' => '/src/logout.php',
 
 			'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
 			'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',

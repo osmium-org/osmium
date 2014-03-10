@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,9 +21,14 @@ namespace Osmium\Page\Convert;
 require __DIR__.'/../inc/root.php';
 require __DIR__.'/../inc/import-common.php';
 
-\Osmium\Chrome\print_header('Convert loadouts', '.');
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$p->title = 'Convert lodaouts';
+$ctx->relative = '.';
 
-$source = \Osmium\Import\get_source('source', 'url', 'file');
+
+
+$source = \Osmium\Import\get_source($p, 'source', 'url', 'file');
 if($source !== false) {
 	$format = $_POST['inputformat'];
 	$outfmt = $_POST['outputformat'];
@@ -43,50 +48,86 @@ if($source !== false) {
 	}
 
 	if(count($errors) > 0) {
-		echo "<h1>Conversion errors</h1>\n";
-		echo "<div id='import_errors'>\n<ol>\n";
+		$p->content->appendCreate('h1', 'Conversion errors');
+		$ol = $p->content->appendCreate('div', [ 'id' => 'import_errors' ])->appendCreate('ol');
 		foreach($errors as $e) {
-			echo "<li><code>".\Osmium\Chrome\escape($e)."</code></li>\n";
+			$ol->appendCreate('li')->appendCreate('code', $e);
 		}
-		echo "</ol>\n</div>\n";
 	}
 }
 
-echo "<h1>Convert loadouts</h1>\n";
 
-\Osmium\Forms\print_form_begin('./convert#result', '', 'multipart/form-data');
 
-$formats = array();
+$p->content->appendCreate('h1', 'Convert loadouts');
+$form = $p->content->appendCreate('o-form', [
+	'method' => 'post',
+	'o-rel-action' => '/convert#result',
+]);
+
+$tbody = $form->appendCreate('table')->appendCreate('tbody');
+
+$select = $p->element('o-select', [ 'name' => 'inputformat', 'id' => 'inputformat' ]);
 foreach(\Osmium\Fit\get_import_formats() as $k => $f) {
-	$formats[$k] = $f[0].' ('.\Osmium\Chrome\escape($f[1]).')';
+	$select->appendCreate('option', [
+		'value' => $k,
+		$f[0].' ('.$f[1].')',
+	]);
 }
-\Osmium\Forms\print_select('Input format', 'inputformat', $formats, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->appendCreate('tr', [
+	[ 'th', [[ 'label', [ 'for' => 'inputformat', 'Input format' ] ]] ],
+	[ 'td', $select ],
+]);
 
-\Osmium\Import\print_tri_choice('source', 'url', 'file');
+$tbody->append(\Osmium\Import\make_tri_choice($p, 'source', 'url', 'file'));
 
-$formats = array();
+$select = $p->element('o-select', [ 'name' => 'outputformat', 'id' => 'outputformat' ]);
 foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
-	$formats[$k] = $f[0];
+	$select->appendCreate('option', [
+		'value' => $k,
+		$f[0],
+	]);
 }
-\Osmium\Forms\print_select('Output format', 'outputformat', $formats, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->appendCreate('tr', [
+	[ 'th', [[ 'label', [ 'for' => 'outputformat', 'Output format' ] ]] ],
+	[ 'td', $select ],
+]);
 
-\Osmium\Forms\print_checkbox('Minify generated JSON', 'minify', null, null,
-                             \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->appendCreate('tr', [
+	[ 'th' ], [ 'td', [
+		[ 'o-input', [
+			'type' => 'checkbox',
+			'name' => 'minify',
+			'id' => 'minify',
+			'default' => 'checked',
+		] ],
+		[ 'label', [ 'for' => 'minify', 'Minify generated JSON' ] ],
+	]],
+]);
 
-\Osmium\Forms\print_submit('Engage conversion');
-\Osmium\Forms\print_form_end();
+$tbody->appendCreate('tr', [
+	[ 'th' ], [ 'td', [
+		[ 'input', [ 'type' => 'submit', 'value' => 'Engage conversion' ] ]
+	]],
+]);
+
+
 
 if($source !== false && $fits !== false && $exportfunc !== false) {
-	echo "<h1 id='result'>Conversion results</h1>\n";
+	$p->content->appendCreate('h1', [ 'id' => 'result', 'Conversion results' ]);
 
-	echo "<form action='./convert' method='POST' id='exportresults'>\n";
+	$form = $p->content->appendCreate('form', [
+		'o-relaction' => '/convert',
+		'method' => 'post',
+		'id' => 'exportresults',
+	]);
+
 	foreach($fits as &$fit) {
-		echo "<p>\n";
-		echo '<textarea readonly="readonly">'.\Osmium\Chrome\escape($exportfunc($fit, $_POST))."</textarea>\n";
-		echo "</p>\n";
+		$form->appendCreate('p')->appendCreate('textarea', [ 'readonly' => 'readonly' ])->append(
+			$p->createCDATASection($exportfunc($fit, $_POST))
+		);
 	}
-	echo "</form>";
 }
 
-\Osmium\Chrome\print_js_snippet('import');
-\Osmium\Chrome\print_footer();
+
+$p->snippets[] = 'import';
+$p->render($ctx);

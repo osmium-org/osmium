@@ -37,6 +37,7 @@ index osmium_loadouts
 	rt_attr_bigint = restrictedtoallianceid
 	rt_attr_multi = goodstandingids
 	rt_attr_multi = excellentstandingids
+	rt_attr_uint = revision
 	rt_attr_uint = shipid
 	rt_attr_uint = upvotes
 	rt_attr_uint = downvotes

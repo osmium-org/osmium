@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -26,6 +26,17 @@ const FIELD_DISABLED = 8;
 $__osmium_form_errors = array();
 
 function post_redirect_get() {
+	if(isset($_POST) && $_POST !== [] && !defined('Osmium\NO_CSRF_CHECK')) {
+		if(!isset($_POST['o___csrf']) || $_POST['o___csrf'] !== \Osmium\State\get_token()) {
+			/* No/incorrect CSRF token */
+			/* XXX: uncomment this later, when all code has moved to using <o-form> */
+			/*
+			  unset($_POST);
+			  fatal(400, "Incorrect CSRF token. If you made a legitimate request, please report.");
+			*/
+		}
+	}
+
 	if(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 	   && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
 		/* Don't PRG XHRs */
@@ -36,7 +47,7 @@ function post_redirect_get() {
 
 	$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
-	if(isset($_POST) && count($_POST) > 0) {
+	if(isset($_POST) && $_POST !== []) {
 		if(!isset($_FILES)) $_FILES = array();
 		else {
 			foreach($_FILES as &$file) {
@@ -73,6 +84,7 @@ function post_redirect_get() {
 	}
 }
 
+/* @deprecated Make forms yourself with o-form and DOM. */
 function print_form_begin($action = null, $id = '', $enctype = 'application/x-www-form-urlencoded') {
 	if($action === null) $action = \Osmium\Chrome\escape($_SERVER['REQUEST_URI']);
 	if($id !== '') $id = " id='$id'";
@@ -80,15 +92,18 @@ function print_form_begin($action = null, $id = '', $enctype = 'application/x-ww
 	echo "<form method='post' accept-charset='utf-8' enctype='$enctype' action='$action'$id>\n<table>\n<tbody>\n";
 }
 
+/* @deprecated */
 function print_form_end() {
 	echo "</tbody>\n</table>\n</form>\n";
 }
 
+/* @deprecated use RawPage::formerrors */
 function add_field_error($name, $error) {
 	global $__osmium_form_errors;
 	$__osmium_form_errors[$name][] = $error;
 }
 
+/* @deprecated */
 function print_generic_row($name, $td1, $td2, $id = '') {
 	$class = '';
 
@@ -115,6 +130,7 @@ function print_generic_row($name, $td1, $td2, $id = '') {
 	echo "</tr>\n";
 }
 
+/* @deprecated use <o-input> */
 function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
 	if($id === null) $id = $name;
 	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
@@ -131,6 +147,7 @@ function print_generic_field($label, $type, $name, $id = null, $flags = 0) {
 	);
 }
 
+/* @deprecated use <o-textarea> */
 function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = '') {
 	if($id === null) $id = $name;
 	if($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name])) {
@@ -148,6 +165,7 @@ function print_textarea($label, $name, $id = null, $flags = 0, $placeholder = ''
 	);
 }
 
+/* @deprecated use <o-input> */
 function print_file($label, $name, $maxsize, $id = null) {
 	static $hasMAX_FILE_SIZE = false;
 	if(!$hasMAX_FILE_SIZE) {
@@ -159,6 +177,7 @@ function print_file($label, $name, $maxsize, $id = null) {
 	print_generic_row($name, "<label for='$id'>$label</label>", $hidden."<input type='file' name='$name' id='$id' />");
 }
 
+/* @deprecated */
 function print_submit($value = '', $name = '') {
 	if($value !== '') {
 		$value = "value='".\Osmium\Chrome\escape($value)."' ";
@@ -171,14 +190,17 @@ function print_submit($value = '', $name = '') {
 	echo "<td><input type='submit' $name$value/></td>\n</tr>\n";
 }
 
+/* @deprecated do it yourself */
 function print_separator() {
 	echo "<tr class='separator'>\n<td colspan='2'><hr /></td>\n</tr>\n";
 }
 
+/* @deprecated do it yourself */
 function print_text($text) {
 	echo "<tr>\n<td colspan='2'>".$text."</td>\n</tr>\n";
 }
 
+/* @deprecated use <o-select> */
 function print_select($label, $name, $options, $size = null, $id = null, $flags = 0) {
 	if($id === null) $id = $name;
 
@@ -207,6 +229,7 @@ function print_select($label, $name, $options, $size = null, $id = null, $flags 
 	print_generic_row($name, "<label for='$id'>".$label."</label>", "\n<select id='$id' name='$name'{$size}{$multiselect}{$disabled}>\n$fOptions</select>\n");
 }
 
+/* @deprecated XXX */
 function format_optgroup($name, $options, $flags) {
 	$f = '';
 	foreach($options as $value => $label) {
@@ -225,6 +248,7 @@ function format_optgroup($name, $options, $flags) {
 	return $f;
 }
 
+/* @deprecated use <o-input> */
 function print_checkbox_or_radio($type, $label, $name, $id = null, $checked = null, $value = null, $flags = 0) {
 	if($id === null) $id = $name;
 	if($checked === true || ($flags & FIELD_REMEMBER_VALUE && isset($_POST[$name]) && $_POST[$name] == $value)) {
@@ -241,10 +265,12 @@ function print_checkbox_or_radio($type, $label, $name, $id = null, $checked = nu
 	print_generic_row($name, "", "<input type='$type' name='$name' id='$id' {$value}{$checked}{$disabled}/> <label for='$id'>$label</label>");
 }
 
+/* @deprecated use <o-input> */
 function print_checkbox($label, $name, $id = null, $checked = null, $flags = 0) {
 	print_checkbox_or_radio('checkbox', $label, $name, $id, $checked, 'on', $flags);
 }
 
+/* @deprecated use <o-input> */
 function print_radio($label, $name, $value, $id = null, $checked = null, $flags = 0) {
 	static $idcnt = 0;
 

@@ -192,7 +192,7 @@ function print_login_box($relative) {
 	}
 
 	echo "<form method='post' action='{$relative}/login'>\n"
-		."<p>\n<span class='wide'>\n<input type='text' name='account_name' placeholder='Account name' />\n"
+		."<p>\n<span class='wide'>\n<input type='text' name='account_name' placeholder='Account name [n]' accesskey='n' />\n"
 		."<input type='password' name='password' placeholder='Password' />\n"
 		."<input type='submit' name='__osmium_login' value='Login' />"
 		." (<small><input type='checkbox' name='remember' id='remember' checked='checked' />"
@@ -223,8 +223,8 @@ function print_logoff_box($relative, $notifications) {
 		.\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())
 		."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications'"
 		." title='$notifications new notification(s)'>$notifications</a>"
-		." <a href='$relative/logout?tok=$tok' title='Logs you out on this browser only.'>Logout</a>"
-		." <small>(<a href='$relative/logout?tok=$tok&amp;global=1' title='Logs you out on all the machines where you are currently logged in, and also invalidates all cookies issued in the past.'>all</a>)</small>\n"
+		." <a href='$relative/logout/$tok' title='Logs you out on this browser only.'>Logout</a>"
+		." <small>(<a href='$relative/logout/$tok?global=1' title='Logs you out on all the machines where you are currently logged in, and also invalidates all cookies issued in the past.'>all</a>)</small>\n"
 		."</p>\n</div>\n";
 }
 
@@ -680,10 +680,10 @@ function update_character_contactlist($a, $timeout = null) {
  * tokens.)
  */
 function get_token() {
-	$tok = get_state('logouttoken', null);
+	$tok = get_state('_csrftoken', null);
 
 	if($tok === null) {
-		put_state('logouttoken', $tok = uniqid('OsmiumTok_', true));
+		put_state('_csrftoken', $tok = get_nonce());
 	}
 
 	return $tok;
@@ -769,7 +769,7 @@ function get_nonce() {
 }
 
 function put_activity() {
-	/* Used for getting a rough estimate of the current member of
+	/* Used for getting a rough estimate of the current number of
 	 * users browsing the site. */
 	if(defined('Osmium\ACTIVITY_IGNORE')) return;
 	$a = get_state('a', null);

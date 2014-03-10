@@ -60,7 +60,7 @@ function get_cached_thing_generic($table, $field, $wherename, $whereval) {
 	}
 
 	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		"SELECT $field FROM $table WHERE $wherename = $1",
+		"SELECT $field FROM $table WHERE $wherename = $1 LIMIT 1",
 		array($whereval)
 	));
 
@@ -115,6 +115,18 @@ function get_typename($typeid) {
 	);
 }
 
+function get_effectname($effectid) {
+	return get_cached_thing_generic(
+		'eve.dgmeffects', 'effectname', 'effectid', (int)$effectid
+	);
+}
+
+function get_marketgroupname($mgid) {
+	return get_cached_thing_generic(
+		'eve.invmarketgroups', 'marketgroupname', 'marketgroupid', (int)$mgid
+	);
+}
+
 function get_typeid($typename) {
 	return get_cached_thing_generic(
 		'eve.invtypes', 'typeid', 'typename', $name
@@ -159,6 +171,21 @@ function get_categoryid($typeid) {
 function get_groupname($groupid) {
 	return get_cached_thing_generic(
 		'eve.invgroups', 'groupname', 'groupid', (int)$groupid
+	);
+}
+
+function get_categoryname($catid) {
+	return get_cached_thing_generic(
+		'eve.invcategories', 'categoryname', 'categoryid', (int)$catid
+	);
+}
+
+function get_group_any_typeid($groupid) {
+	return get_cached_thing_generic(
+		'eve.invtypes',
+		'typeid',
+		'groupid',
+		(int)$groupid
 	);
 }
 

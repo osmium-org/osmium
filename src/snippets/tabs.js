@@ -163,6 +163,7 @@ osmium_tabify_nohash = function(ul, selected) {
 		li.addClass('active');
 		tgt.fadeIn(250).trigger('made_visible');
 
+		t.blur();
 		return false;
 	}).each(function() {
 		var t = $(this);

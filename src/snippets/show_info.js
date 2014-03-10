@@ -38,6 +38,8 @@ osmium_showinfo = function(opts) {
 osmium_showinfo_internal = function(opts, onerror) {
 	osmium_clfspinner_push();
 
+	opts.relative = osmium_relative;
+
 	$.ajax({
 		type: 'POST',
 		url: osmium_relative + '/internal/showinfo/' + osmium_clftoken,

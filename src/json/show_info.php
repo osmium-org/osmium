@@ -37,36 +37,6 @@ if(isset($_POST['remote'])) {
 	\Osmium\Fit\set_local($fit, $_POST['remote']);
 }
 
-function get_attributes($typeid, $getval_callback) {
-	$attributes = array();
-
-	$aq = \Osmium\Db\query_params(
-		"SELECT attributeid, attributename, displayname, value,
-		unitid, udisplayname, categoryid, published
-		FROM osmium.siattributes
-		WHERE typeid = $1 AND displayname <> '' AND published = true
-		ORDER BY categoryid ASC, attributeid ASC",
-		array($typeid)
-	);
-	while($a = \Osmium\Db\fetch_assoc($aq)) {
-		$rawval = $getval_callback !== null ? $getval_callback($a['attributeid']) : (float)$a['value'];
-
-		if((int)$a['attributeid'] === 38 && $rawval === 0.0) continue;
-
-		$attributes[$a['attributeid']] = array(
-			ucfirst($a['displayname']),
-			\Osmium\Chrome\format_number_with_unit(
-				$rawval,
-				$a['unitid'],
-				$a['udisplayname']
-				),
-			$a['categoryid'],
-			);
-	}
-
-	return $attributes;
-}
-
 \Osmium\Dogma\auto_init($fit);
 
 if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['index'])
@@ -78,9 +48,9 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typeid = $module['typeid'];
 	$typename = $module['typename'];
 	$loc = [ DOGMA_LOC_Module, 'module_index' => $module['dogma_index'] ];
-	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $st, $idx) {
-			return \Osmium\Dogma\get_module_attribute($fit, $st, $idx, $aname);
-		});
+	$getatt = function($aname) use(&$fit, $st, $idx) {
+		return \Osmium\Dogma\get_module_attribute($fit, $st, $idx, $aname);
+	};
 } else if($_POST['type'] == 'charge' && isset($_POST['slottype']) && isset($_POST['index'])
    && isset($fit['charges'][$_POST['slottype']][$_POST['index']])) {
 	$st = $_POST['slottype'];
@@ -90,16 +60,16 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typeid = $charge['typeid'];
 	$typename = $charge['typename'];
 	$loc = [ DOGMA_LOC_Charge, 'module_index' => $fit['modules'][$st][$idx]['dogma_index'] ];
-	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $st, $idx) {
-			return \Osmium\Dogma\get_charge_attribute($fit, $st, $idx, $aname);
-		});
+	$getatt = function($aname) use(&$fit, $st, $idx) {
+		return \Osmium\Dogma\get_charge_attribute($fit, $st, $idx, $aname);
+	};
 } else if($_POST['type'] == 'ship') {
 	$typeid = $fit['ship']['typeid'];
 	$typename = $fit['ship']['typename'];
 	$loc = DOGMA_LOC_Ship;
-	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit) {
-			return \Osmium\Dogma\get_ship_attribute($fit, $aname);
-		});
+	$getatt = function($aname) use(&$fit) {
+		return \Osmium\Dogma\get_ship_attribute($fit, $aname);
+	};
 } else if($_POST['type'] == 'drone' && isset($_POST['typeid']) && isset($fit['drones'][$_POST['typeid']])) {
 	$typeid = $_POST['typeid'];
 	$typename = $fit['drones'][$typeid]['typename'];
@@ -110,9 +80,9 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 		\Osmium\Fit\transfer_drone($fit, $typeid, 'bay', 1);
 	}
 
-	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $typeid) {
-			return \Osmium\Dogma\get_drone_attribute($fit, $typeid, $aname);
-		});
+	$getatt = function($aname) use(&$fit, $typeid) {
+		return \Osmium\Dogma\get_drone_attribute($fit, $typeid, $aname);
+	};
 
 	if($temptransfer) {
 		dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
@@ -124,13 +94,13 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typeid = $_POST['typeid'];
 	$typename = $fit['implants'][$typeid]['typename'];
 	$loc = [ DOGMA_LOC_Implant, 'implant_index' => $fit['implants'][$typeid]['dogma_index'] ];
-	$attributes = get_attributes($typeid, $getatt = function($aname) use(&$fit, $typeid) {
+	$getatt = function($aname) use(&$fit, $typeid) {
 		return \Osmium\Dogma\get_implant_attribute($fit, $typeid, $aname);
-	});
+	};
 } else if($_POST['type'] === 'generic') {
 	$typeid = (int)$_POST['typeid'];
 	$typename = \Osmium\Fit\get_typename($typeid);
-	$attributes = get_attributes($typeid, null);
+	$getatt = null;
 	$affectors = false;
 }
 
@@ -141,51 +111,120 @@ else {
 
 
 
-$relative = rtrim(\Osmium\get_ini_setting('relative_path'), '/');
-$fresult = array(
-	'header' => "<img src='//image.eveonline.com/Type/".$typeid."_64.png' alt='' /> "
-	."<a href='{$relative}/db/type/{$typeid}'>".\Osmium\Chrome\escape($typename)."</a>",
+$p = new \Osmium\DOM\RawPage();
+$suffix = number_format(microtime(true), 6, '', '');
+
+$hdr = $p->element('header', [ 'class' => 'hsi' ]);
+$h2 = $hdr->appendCreate('h2');
+$h2->appendCreate('o-eve-img', [ 'src' => '/Type/'.$typeid.'_64.png', 'alt' => '' ]);
+$h2->appendCreate('a', [ 'o-rel-href' => '/db/type/'.$typeid, $typename ]);
+
+$ultabs = $p->element('ul', [ 'class' => 'showinfotabs' ]);
+
+$p->appendChild($hdr);
+$p->appendChild($ultabs);
+
+
+
+/* —————————— Traits —————————— */
+
+$traits = $p->formatTypeTraits($typeid);
+if($traits !== false) {
+	$ultabs->appendCreate('li')->appendCreate('a', [ 'href' => '#sitraits-'.$suffix, 'Traits' ]);
+	$p->appendChild($p->element('section', [ 'class' => 'sitraits', 'id' => 'sitraits-'.$suffix, $traits ]));
+}
+
+
+
+/* —————————— Description —————————— */
+
+list($desc) = \Osmium\Db\fetch_row(
+	\Osmium\Db\query_params(
+		'SELECT description FROM eve.invtypes WHERE typeid = $1', 
+		array($typeid)
+	)
 );
+
+$desc = \Osmium\Chrome\trim($desc);
+if($desc !== '') {
+	$desc = $p->fragment(\Osmium\Chrome\format_type_description($desc));
+	$ultabs->appendCreate('li')->appendCreate('a', [ 'href' => '#sidesc-'.$suffix, 'Description' ]);
+	$p->appendChild($p->element('section', [ 'class' => 'sidesc', 'id' => 'sidesc-'.$suffix, $desc ]));
+}
+
+
+
+/* —————————— Attributes —————————— */
+
+$section = $p->element('section', [ 'class' => 'siattributes', 'id' => 'siattributes-'.$suffix ]);
+$tbody = $section->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
+
+$aq = \Osmium\Db\query_params(
+	'SELECT attributeid, attributename, displayname, value,
+	unitid, udisplayname, categoryid, published
+	FROM osmium.siattributes
+	WHERE typeid = $1 AND displayname <> \'\' AND published = true
+	ORDER BY categoryid ASC, attributeid ASC',
+	array($typeid)
+);
+
+$previouscatid = null;
+$attributenames = [];
+
+while($a = \Osmium\Db\fetch_assoc($aq)) {
+	$a['displayname'] = ucfirst($a['displayname']);
+	$attributenames[$a['attributeid']] = $a['displayname'];
+
+	$tr = $tbody->appendCreate('tr');
+
+	if($previouscatid !== $a['categoryid']) {
+		if($previouscatid !== null) {
+			$tr->addClass('sep');
+		}
+		$previouscatid = $a['categoryid'];
+	}
+
+	if($getatt !== null) {
+		$val = $getatt($a['attributeid']);
+	} else {
+		$val = $a['value'];
+	}
+
+	$tr->appendCreate('td', [[ 'strong', $a['displayname'] ]]);
+	$tr->appendCreate('td', $p->formatNumberWithUnit($val, $a['unitid'], $a['udisplayname']));
+}
+
+if($previouscatid !== null) {
+	$ultabs->appendCreate('li')->appendCreate('a', [ 'href' => '#siattributes-'.$suffix, 'Attributes' ]);
+	$p->appendChild($section);
+}
+
+
+
+/* —————————— Affectors —————————— */
 
 if(!isset($affectors)) {
 	dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
 }
 
 if($affectors !== false) {
-	$affectors_per_type = array();
-	$affectors_per_att = array();
-	$numaffectors = 0;
-
-
+	$pertype = array();
+	$peratt = array();
+	$naffectors = 0;
 
 	foreach($affectors as $affector) {
-		if(!isset($attributes[$affector['destid']])) {
+		if(!isset($attributenames[$affector['destid']])) {
 			if(\Osmium\Fit\get_categoryid($affector['id']) == \Osmium\Fit\CATEGORY_Skill) {
 				/* XXX: some are relevant (thermodynamics for example)
 				 * but hand-filtering them is a pain */
 				continue;
 			}
 
-			$val = $getatt($affector['destid']);
-
-			if($affector['operator'] === '*' && abs($val) < 1e-300) {
-				/* Likely irrelevant since it won't change the final
-				 * value */
-				continue;
-			}
-
-			$attributes[$affector['destid']] = [
-				\Osmium\Fit\get_attributedisplayname($affector['destid']),
-				\Osmium\Chrome\format_number_with_unit(
-					$val,
-					$uid = \Osmium\Fit\get_unitid($affector['destid']),
-					\Osmium\Fit\get_unitdisplayname($uid)
-				),
-				0
-			];
+		    $dest = \Osmium\Fit\get_attributedisplayname($affector['destid']);
+		} else {
+			$dest = $attributenames[$affector['destid']];
 		}
 
-		$dest = $attributes[$affector['destid']][0];
 		$source = \Osmium\Fit\get_typename($affector['id']);
 		$fval = $affector['value'];
 
@@ -194,7 +233,6 @@ if($affectors !== false) {
 		case '*':
 			if(abs($affector['value'] - 1.0) < 1e-300) continue 2;
 			$affector['operator'] = '×';
-			$fval = "<span title='".sprintf("%.14f", $fval)."'>".\Osmium\Chrome\format($fval, 3).'</span>';
 			break;
 
 		case '-':
@@ -203,11 +241,9 @@ if($affectors !== false) {
 		case '+':
 			if(abs($affector['value']) < 1e-300) continue 2;
 
-		case '=':
-			$fval = \Osmium\Chrome\format($fval, -1);
-			break;
-
 		}
+
+		$fval = [ 'span', [ 'title' => sprintf('%.14f', $fval), (string)$p->formatSDigits($fval, 3) ] ];
 
 		if($affector['flags'] > 0) {
 			$flags = array();
@@ -218,98 +254,94 @@ if($affectors !== false) {
 				$flags[] = 'singleton';
 			}
 
-			$fval .= ' <small>('.implode(', ', $flags).')</small>';
+			$flags = implode(', ', $flags);
+			if($flags !== '') $flags = [ 'small', ' ('.$flags.')' ];
+		} else {
+			$flags = '';
 		}
 
-		$a = [ $affector, $dest, $source, $fval ];
-		$affectors_per_type[$affector['id']][] = $a;
-		$affectors_per_att[$affector['destid']][] = $a;
-		++$numaffectors;
+		$a = [ $affector, $dest, $source, $fval, $flags ];
+		$pertype[$affector['id']][] = $a;
+		$peratt[$affector['destid']][] = $a;
+		++$naffectors;
 	}
 
+	uasort($pertype, function($a, $b) { return strcmp($a[0][2], $b[0][2]); });
+	uasort($peratt, function($a, $b) { return strcmp($a[0][1], $b[0][1]); });
 
+	$ulpertype = $p->element('ul');
+	foreach($pertype as $a_typeid => &$a) {
+		$li = $ulpertype->appendCreate('li', [
+			[ 'o-eve-img', [ 'src' => '/Type/'.$a_typeid.'_64.png', 'alt' => '' ] ],
+			' ',
+			$a[0][2],
+		]);
 
-	uasort($affectors_per_type, function($a, $b) { return strcmp($a[0][2], $b[0][2]); });
-	uasort($affectors_per_att, function($a, $b) { return strcmp($a[0][1], $b[0][1]); });
-
-
-
-	$fresult['affectors_per_type'] = "<ul>\n";
-	foreach($affectors_per_type as $a_typeid => &$a) {
-		$typename = \Osmium\Chrome\escape($a[0][2]);
-		$fresult['affectors_per_type'] .= "<li><img src='//image.eveonline.com/Type/"
-			.$a_typeid."_64.png' alt='' /> ".$typename.":\n";
-		$fresult['affectors_per_type'] .= "<ul>\n";
-
+		$subul = $li->appendCreate('ul');
 		usort($a, function($x, $y) { return strcmp($x[1], $y[1]); });
-
 		foreach($a as $val) {
-			list($aff, $dest, $source, $fval) = $val;
-			$op = $aff['operator'];
-
-			$fresult['affectors_per_type'] .= "<li><label>".htmlspecialchars($dest)."</label> {$op}{$fval}</li>\n";
+			list($aff, $dest, $source, $fval, $flags) = $val;
+			$subul->appendCreate('li', [
+				[ 'label', $dest ],
+				' ',
+				$aff['operator'],
+				$fval,
+				$flags,
+			]);
 		}
-		$fresult['affectors_per_type'] .= "</ul>\n</li>\n";
-	}
-	$fresult['affectors_per_type'] .= "</ul>\n";
-
-
-
-	if($numaffectors > 0) {
-		$fresult['affectors_per_att'] = "<p><em>The operations are ordered by precedence (lower operations get applied last).</em></p>\n";
-	} else {
-		$fresult['affectors_per_att'] = '';
 	}
 
-	$fresult['affectors_per_att'] .= "<ul>\n";
-	foreach($affectors_per_att as $attid => &$a) {
-		$attname = \Osmium\Chrome\escape($a[0][1]);
-		$fresult['affectors_per_att'] .= "<li>".$attname.":\n";
-		$fresult['affectors_per_att'] .= "<ul>\n";
 
+
+	$precedencetext = $p->element('p')
+		->append([[ 'em', 'The operations are ordered by precedence (lower operations get applied last).' ]]);
+
+	$ulperatt = $p->element('ul');
+	foreach($peratt as $attid => &$a) {
+		$li = $ulperatt->appendCreate('li', [
+			$a[0][1], ':'
+		]);
+
+		$subul = $li->appendCreate('ul');
 		usort($a, function($x, $y) { return $x[0]['order'] - $y[0]['order']; });
-
 		foreach($a as $val) {
-			list($aff, $dest, $source, $fval) = $val;
-			$op = $aff['operator'];
-
-			$fresult['affectors_per_att'] .= "<li><label><img src='//image.eveonline.com/Type/".$aff['id']
-				."_64.png' alt='' /> ".\Osmium\Chrome\escape($source)."</label> {$op}{$fval}</li>\n";
+			list($aff, $dest, $source, $fval, $flags) = $val;
+			$subul->appendCreate('li', [
+				[ 'label', [
+					[ 'o-eve-img', [ 'src' => '/Type/'.$aff['id'].'_64.png', 'alt' => '' ] ],
+					' ',
+					$source,
+				]],
+				' ',
+				$aff['operator'],
+				$fval,
+				$flags,
+			]);
 		}
-		$fresult['affectors_per_att'] .= "</ul>\n</li>\n";
 	}
-	$fresult['affectors_per_att'] .= "</ul>\n";
 
 
 
-	if($affectors_per_type === array()) {
-		$fresult['affectors_per_type'] .= "<p class='placeholder'>No affectors</p>\n";
-		$fresult['affectors_per_att'] .= "<p class='placeholder'>No affectors</p>\n";
+	if($naffectors > 0) {
+		$ultabs->appendCreate('li')->appendCreate(
+			'a', [ 'href' => '#siafftype-'.$suffix, 'Affectors by type ('.count($pertype).')' ]
+		);
+		$p->appendChild(
+			$p->element('section', [ 'class' => 'siaff', 'id' => 'siafftype-'.$suffix, $ulpertype ])
+		);
+
+		$ultabs->appendCreate('li')->appendCreate(
+			'a', [ 'href' => '#siaffatt-'.$suffix, 'By attribute ('.count($peratt).')' ]
+		);
+		$p->appendChild(
+			$p->element('section', [ 'class' => 'siaff', 'id' => 'siaffatt-'.$suffix, $precedencetext, $ulperatt ])
+		);
 	}
 }
 
 
 
-$fresult['attributes'] = "<table class='d'>\n<tbody>\n";
-$previouscatid = null;
-foreach($attributes as $a) {
-	list($dname, $value, $catid) = $a;
-	if($previouscatid !== $catid) {
-		if($previouscatid !== null) {
-			$class = " class='sep'";
-		} else $class = '';
-		$previouscatid = $catid;
-	} else $class = '';
-
-	$fresult['attributes'] .= "<tr$class><td><strong>"
-		.\Osmium\Chrome\escape($dname)
-		."</strong></td><td>".$value."</td></tr>\n";
-}
-$fresult['attributes'] .= "</tbody>\n</table>\n";
-
-
-
-
+/* —————————— Variations —————————— */
 
 $variations = array();
 $fvariations = array();
@@ -333,58 +365,31 @@ foreach($variations as $a) {
 	$fvariations = array_merge($fvariations, $a);
 }
 
-
-
-
-
-list($desc) = \Osmium\Db\fetch_row(
-	\Osmium\Db\query_params(
-		'SELECT description FROM eve.invtypes WHERE typeid = $1', 
-		array($typeid)
-	)
-);
-
-$desc = \Osmium\Chrome\trim($desc);
-if($desc === '') {
-	$desc = '<p class="placeholder">This type has no description.</p>';
-} else {
-	$desc = \Osmium\Chrome\format_type_description($desc);
-}
-
-$suffix = number_format(microtime(true), 6, '', '');
-
-$lis = array(
-	"<li><a href='#sidesc-{$suffix}'>Description</a></li>",
-	"<li><a href='#siattributes-{$suffix}'>Attributes</a></li>\n",
-);
-$sections = array(
-	"<section class='sidesc' id='sidesc-{$suffix}'>".$desc."</section>\n",
-	"<section class='siattributes' id='siattributes-{$suffix}'>\n".$fresult['attributes']."</section>\n",
-);
-
-$traits = \Osmium\Chrome\get_formatted_ship_traits($typeid, $relative);
-if($traits !== false) {
-	array_unshift($lis, "<li><a href='#sitraits-{$suffix}'>Traits</a></li>\n");
-	array_unshift($sections, "<section class='sitraits' id='sitraits-{$suffix}'>\n{$traits}</section>\n");
-}
-
-if($affectors !== false) {
-	$lis[] = "<li><a href='#siafftype-{$suffix}'>Affectors by type (".count($affectors_per_type).")</a></li>\n";
-	$lis[] = "<li><a href='#siaffatt-{$suffix}'>By attribute (".count($affectors_per_att).")</a></li>\n";
-
-	$sections[] = "<section class='siaff' id='siafftype-{$suffix}'>\n".$fresult['affectors_per_type']."</section>\n";
-	$sections[] = "<section class='siaff' id='siaffatt-{$suffix}'>\n".$fresult['affectors_per_att']."</section>\n";
-}
-
 if(count($fvariations) > 1) {
-	$lis[] = "<li><a href='#sivariations-{$suffix}'>Variations (".count($fvariations).")</a></li>\n";
-	$sections[] = "<section class='sivariations' id='sivariations-{$suffix}'>\n<ul class='sivariations'></ul>\n</section>\n";
+	$ultabs->appendCreate('li')->appendCreate('a', [
+		'href' => '#sivariations-'.$suffix, 'Variations ('.count($fvariations).')'
+	]);
+	$p->appendChild($p->element('section', [
+		'class' => 'sivariations',
+		'id' => 'sivariations-'.$suffix,
+		[ 'ul', [ 'class' => 'sivariations' ] ],
+	]));
 } else {
 	$fvariations = array();
 }
 
-\Osmium\Chrome\return_json(array(
-	'modal' => "<header class='hsi'><h2>".$fresult['header']."</h2></header>\n"
-	."<ul class='showinfotabs'>\n".implode("\n", $lis)."</ul>\n".implode("\n", $sections),
+
+
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = $_POST['relative'];
+$p->finalize($ctx);
+
+$xml = '';
+foreach($p->childNodes as $e) {
+	$xml .= $e->renderNode();
+}
+
+\Osmium\Chrome\return_json([
+	'modal' => $xml,
 	'variations' => $fvariations,
-));
+]);

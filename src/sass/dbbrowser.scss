@@ -60,11 +60,12 @@ div#dbb {
 			display: inline-block;
 
 			&:before {
-				content: " ⊃ ";
+				content: "⊃";
+				padding: 0 0.25em;
 			}
 
 			&:first-child:before {
-				content: "";
+				display: none;
 			}
 
 			&.lst {
@@ -73,7 +74,7 @@ div#dbb {
 			}
 
 			&.memberof:before {
-				content: " ∋ ";
+				content: "∋";
 			}
 		}
 	}
@@ -187,6 +188,10 @@ div#dbb {
 				}
 			}
 		}
+	}
+
+	&> p.sort {
+		@include no-user-select;
 	}
 
 	&> ul.typelist {

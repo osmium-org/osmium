@@ -59,6 +59,7 @@ queries:
 <tr><td>estimatedprice</td><td>float</td><td>Estimated price of the loadout (only the default presets)</td></tr>
 <tr><td>score</td><td>float</td><td>Score of the loadout (computed using votes)</td></tr>
 <tr><td>id</td><td>integer</td><td>The loadout ID</td></tr>
+<tr><td>revision</td><td>integer</td><td>The latest revision of the loadout</td></tr>
 <tr><td>shipid</td><td>integer</td><td>The type ID of the ship</td></tr>
 <tr><td>creationdate</td><td>integer</td><td>The creation date of the lodaout (UNIX timestamp)</td></tr>
 <tr><td>updatedate</td><td>integer</td><td>Last modification date of the loadout (UNIX timestamp)</td></tr>

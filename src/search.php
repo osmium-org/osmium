@@ -27,18 +27,16 @@ if(isset($_GET['q'])) {
 }
 
 $cond = \Osmium\Search\get_search_cond_from_advanced();
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '.';
+$p->index = false;
 
 if($query === false) {
-	$title = (isset($_GET['ad']) && $_GET['ad'] == 1) ? 'Advanced search' : 'Search lodaouts';
-	\Osmium\Chrome\print_header(
-		$title, '.', true,
-		"<link rel='canonical' href='./search' />"
+	$p->title = (isset($_GET['ad']) && $_GET['ad'] == 1) ? 'Advanced search' : 'Search lodaouts';
+	$p->content->appendCreate('div', [ 'id' => 'search_full' ])->append(
+		$p->makeSearchBox()
 	);
-	echo "<div id='search_full'>\n";
-	\Osmium\Search\print_search_form(null, '.', $title);
-	echo "</div>\n";
-	\Osmium\Chrome\print_footer();
-	die();
 } else {
 	if(!isset($_GET['p']) || $_GET['p'] === '1') {
 		ob_start();
@@ -49,49 +47,50 @@ if($query === false) {
 		$ntypes = 0;
 	}
 
-	ob_start();
-	$loadoutids = \Osmium\Search\print_pretty_results('.', $query, $cond, true, 24);
-	$loadoutlist = ob_get_clean();
+	list($loadoutids, $loadoutsr) = \Osmium\Search\make_pretty_results($p, $query, $cond, true, 24);
 	$nloadouts = count($loadoutids);
 
-	if($ntypes === 1 && $nloadouts === 0) {
-		/* Redirect to type page */
-		header('Location: ./db/type/'.$typeids[0]);
-		die();
-	} else if($ntypes === 0 && $nloadouts === 1) {
-		/* Redirect to loadout */
-		reset($loadoutids);
-		header('Location: '.current($loadoutids));
-		die();
+	if(!isset($_GET['p'])) {
+		if($ntypes === 1 && $nloadouts === 0) {
+			/* Redirect to type page */
+			header('Location: ./db/type/'.$typeids[0]);
+			die();
+		} else if($ntypes === 0 && $nloadouts === 1) {
+			/* Redirect to loadout */
+			reset($loadoutids);
+			header('Location: ./loadout/'.current($loadoutids));
+			die();
+		}
 	}
 
 
 
-	$title = 'Search results';
-	if($query !== false && strlen($query) > 0) {
-		$title .= ' / '.\Osmium\Chrome\escape($query);
+	$p->title = 'Search results';
+	if($query !== '') {
+		$p->title .= ' / '.$query;
 	}
-	\Osmium\Chrome\print_header(
-		$title, '.', false,
-		"<link rel='canonical' href='./search' />"
+
+	$p->content->appendCreate('div', [ 'id' => 'search_mini' ])->append(
+		$p->makeSearchBox()
 	);
-	echo "<div id='search_mini'>\n";
-	\Osmium\Search\print_search_form(null, '.');
-	echo "</div>\n";
 
 	if($ntypes > 0) {
-		echo "<section class='sr'>\n";
-		echo "<h2>Types</h2>\n";
-		echo $typelist;
-		echo "</section>\n";
+		$p->content->appendCreate('section', [ 'class' => 'sr' ])->append([
+			[ 'h2', 'Types' ],
+			$p->fragment($typelist), /* XXX */
+		]);
 	}
 
 	if($nloadouts > 0 || $ntypes === 0) {
-		echo "<section class='sr'>\n";
-	    echo "<h2>Loadouts</h2>\n";
-		echo $loadoutlist;
-		echo "</section>\n";
+		$p->content->appendCreate('section', [ 'class' => 'sr' ])
+			->append([[ 'h2', 'Loadouts' ]])
+			->append($loadoutsr);
 	}
-
-	\Osmium\Chrome\print_footer();
 }
+
+$p->finalize($ctx);
+$p->head->appendCreate('link', [
+	'rel' => 'canonical',
+	'o-rel-href' => '/search',
+]);
+$p->render($ctx);

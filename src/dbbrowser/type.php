@@ -20,7 +20,20 @@ namespace Osmium\Page\DBBrowser\ViewType;
 
 require __DIR__.'/../../inc/root.php';
 
-const RELATIVE = '../..';
+$p = new \Osmium\DOM\Page();
+
+
+
+$typeid = (int)$_GET['typeid'];
+$cacheid = 'DBBrowser_Type_'.$typeid;
+$xml = \Osmium\State\get_cache($cacheid);
+if($xml !== null) {
+	$dbb = $p->fragment($xml);
+	$p->content->append($dbb);
+	goto RenderStage; /* Boo */
+}
+
+
 
 $type = \Osmium\Db\fetch_assoc(
 	\Osmium\Db\query_params(
@@ -40,116 +53,125 @@ $type = \Osmium\Db\fetch_assoc(
 		LEFT JOIN eve.invmarketgroups mg3 ON mg3.marketgroupid = mg2.parentgroupid
 		LEFT JOIN eve.invmarketgroups mg4 ON mg4.marketgroupid = mg3.parentgroupid
 		WHERE it.typeid = $1',
-		array($_GET['typeid'])
+		array($typeid)
 	)
 );
 
 if($type === false) \Osmium\fatal(404);
 
-\Osmium\Chrome\print_header(
-	\Osmium\Chrome\escape(strip_tags($type['typename'])).' / Type '.$type['typeid'],
-	RELATIVE
-);
-echo "<div id='dbb'>\n";
+$dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
-echo "<header>\n<h2>".\Osmium\Chrome\escape($type['typename']);
-echo " <small>";
+
+
+/* —————————— Header —————————— */
+
+$header = $dbb->appendCreate('header');
+$h2 = $header->appendCreate('h2', $type['typename']);
+$small = $h2->appendCreate('small', 'type '.$type['typeid']);
 if($type['published'] !== 't') {
-	echo "<span class='unpublished'>not public</span> – ";
+	$small->prepend([
+		[ 'span', [ 'class' => 'unpublished' ], 'not public' ],
+		' – ',
+	]);
 }
-echo "type ".$type['typeid']."</small></h2>\n</header>\n";
 
-echo "<nav>\n";
-
-echo "<ul>\n";
-echo "<li><a href='../category/".$type['categoryid']."'>".\Osmium\Chrome\escape(
-	$type['categoryname']
-)."</a></li>\n";
-echo "<li><a href='../group/".$type['groupid']."'>".\Osmium\Chrome\escape(
-	$type['groupname']
-)."</a></li>\n";
-echo "<li class='lst memberof'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
-echo "</ul>\n";
+$nav = $dbb->appendCreate('nav');
+$ul = $nav->appendCreate('ul');
+$ul->append([
+	[ 'li', [ [ 'a', [ 'o-rel-href' => '/db/category/'.$type['categoryid'], $type['categoryname'] ] ] ] ],
+	[ 'li', [ [ 'a', [ 'o-rel-href' => '/db/group/'.$type['groupid'], $type['groupname'] ] ] ] ],
+	[ 'li', [ 'class' => 'lst memberof', $type['typename'] ] ],
+]);
 
 if($type['mgid0'] !== null) {
-	echo "<ul>\n";
+	$ul = $nav->appendCreate('ul');
 
 	for($i = 4; $i >= 0; --$i) {
 		if($type['mgid'.$i] !== null) {
-			echo "<li><a href='../marketgroup/".$type['mgid'.$i]."'>".\Osmium\Chrome\escape(
-				$type['mgname'.$i]
-			)."</a></li>\n";
+			$ul->appendCreate('li', [
+				[ 'a', [ 'o-rel-href' => '/db/marketgroup/'.$type['mgid'.$i], $type['mgname'.$i] ] ]
+			]);
 		}
 	}
-	echo "<li class='lst memberof'>".\Osmium\Chrome\escape($type['typename'])."</li>\n";
 
-	echo "</ul>\n";
+	$ul->appendCreate('li', [ 'class' => 'lst memberof', $type['typename'] ]);
 }
 
-echo "</nav>\n";
 
-echo "<div id='desc'>\n";
-echo "<img src='//image.eveonline.com/Type/".$type['typeid']."_64.png' alt='' />\n";
 
-$desc = \Osmium\Chrome\trim($type['description']);
-if($desc === '') {
-	echo "<p class='placeholder'>This type has no description.</p>\n";
+/* —————————— Description —————————— */
+
+$desc = $dbb->appendCreate('div', [ 'id' => 'desc' ]);
+$desc->appendCreate('o-eve-img', [ 'src' => '/Type/'.$type['typeid'].'_64.png', 'alt' => '' ]);
+$desctext = \Osmium\Chrome\trim($type['description']);
+
+if($desctext !== '') {
+	$fragment = $p->createDocumentFragment();
+	$fragment->appendXML(\Osmium\Chrome\format_type_description($desctext));
+	$desc->appendChild($fragment);
 } else {
-	echo \Osmium\Chrome\format_type_description($desc);
+	$desc->appendCreate('p', [ 'class' => 'placeholder', 'This type has no description.' ]);
 }
 
-echo "</div>\n";
 
-ob_start();
 
-$traits = \Osmium\Chrome\get_formatted_ship_traits($type['typeid'], RELATIVE);
+$ultabs = $dbb->appendCreate('ul', [ 'class' => 'tabs' ]);
+
+
+
+/* —————————— Traits —————————— */
+
+$traits = $p->formatTypeTraits($type['typeid']);
 if($traits !== false) {
-	echo "<section id='t'>\n";
-	echo $traits;
-	echo "</section>\n";
+	$dbb->appendCreate('section', [ 'id' => 't' ])->append($traits);
 }
 
+
+
+/* —————————— Attributes —————————— */
 
 $aq = \Osmium\Db\query_params(
-	"SELECT attributeid, attributename, displayname, value,
+	'SELECT attributeid, attributename, displayname, value,
 	unitid, udisplayname
 	FROM osmium.siattributes
 	WHERE typeid = $1
-	ORDER BY attributeid ASC",
+	ORDER BY attributeid ASC',
 	array($type['typeid'])
 );
 
 $nattribs = 0;
+$section = $p->element('section', [ 'id' => 'a' ]);
+$tbody = $section->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
 while($a = \Osmium\Db\fetch_assoc($aq)) {
-	if($nattribs === 0) {
-		echo "<section id='a'>\n<table class='d'>\n<tbody>\n";
-	}
 	++$nattribs;
 
 	$hasdname = ($a['displayname'] !== '');
 
-	echo "<tr>\n";
-	echo "<td><a href='../attribute/".$a['attributeid']."'>"
-		.$a['attributeid']."</a></td>\n";
-	echo "<td class='raw' colspan='".($hasdname ? 1 : 2)."'><small>"
-		.\Osmium\Chrome\escape($a['attributename'])."</small></td>\n";
+	$tr = $tbody->appendCreate('tr');
+
+	$tr->appendCreate('td', [
+		[ 'a', [ 'o-rel-href' => '/db/attribute/'.$a['attributeid'], $a['attributeid'] ] ]
+	]);
+
+	$tr->appendCreate('td', [
+		'class' => 'small', 'colspan' => ($hasdname ? 1 : 2),
+		[ 'small', $a['attributename'] ]
+	]);
+
 	if($hasdname) {
-		echo "<td>".\Osmium\Chrome\escape(ucfirst($a['displayname']))."</td>\n";
+		$tr->appendCreate('td', ucfirst($a['displayname']));
 	}
-	echo "<td>".\Osmium\Chrome\format_number_with_unit(
-		$a['value'],
-		$a['unitid'],
-		$a['udisplayname'],
-		RELATIVE
-	)."</td>\n";
-	echo "</tr>\n";
+
+	$tr->appendCreate('td', $p->formatNumberWithUnit($a['value'], $a['unitid'], $a['udisplayname']));
 }
 
 if($nattribs > 0) {
-	echo "</tbody>\n</table>\n</section>\n";
+	$dbb->append($section);
 }
 
 
+
+/* —————————— Effects —————————— */
 
 $eq = \Osmium\Db\query_params(
 	'SELECT e.effectname, e.effectid, e.effectcategory
@@ -161,59 +183,59 @@ $eq = \Osmium\Db\query_params(
 );
 
 $neffects = 0;
+$section = $p->element('section', [ 'id' => 'e' ]);
+$tbody = $section->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
 while($e = \Osmium\Db\fetch_row($eq)) {
-	if($neffects === 0) {
-		echo "<section id='e'>\n<table class='d'>\n<tbody>\n";
-	}
 	++$neffects;
 
-	echo "<tr>\n";
-	echo "<td><a href='../effect/".$e[1]."'>".$e[1]."</a></td>\n";
-	echo "<td class='raw'>".\Osmium\Chrome\escape($e[0])."</td>\n";
-	echo "<td class='raw'>".\Osmium\Chrome\format_effect_category($e[2])."</td>\n";
-	echo "</tr>\n";
+	$tbody->appendCreate('tr', [
+		[ 'td', [ [ 'a', [ 'o-rel-href' => '/db/effect/'.$e[1], $e[1] ] ] ] ],
+		[ 'td', [ 'class' => 'raw', $e[0] ] ],
+		[ 'td', [ 'class' => 'raw', \Osmium\Chrome\format_effect_category($e[2]) ] ],
+	]);
 }
 
 if($neffects > 0) {
-	echo "</tbody>\n</table>\n</section>\n";
+	$dbb->append($section);
 }
 
 
+
+/* —————————— Prerequisites —————————— */
 
 $prereqs = \Osmium\Fit\get_required_skills($type['typeid']);
 $nprereqs = count($prereqs);
 if($nprereqs > 0) {
-	echo "<section id='r'>\n";
+	function make_reqs(\Osmium\DOM\Document $e, array $prereqs, array $blacklist) {
+		if($prereqs === []) return '';
 
-	function format_reqs(array $prereqs, array $blacklist) {
-		if($prereqs === []) return;
-
-		echo "<ul>\n";
+		$ul = $e->element('ul');
 
 		foreach($prereqs as $skill => $level) {
-			echo "<li>\n";
-			echo "<header><img src='//image.eveonline.com/Type/{$skill}_64.png' alt='' /> "
-				."<a href='".RELATIVE."/db/type/{$skill}'>"
-				.\Osmium\Chrome\escape(\Osmium\Fit\get_typename($skill))
-				."</a> ".\Osmium\Chrome\format_skill_level($level)
-				."</header>\n";
+			$li = $ul->appendCreate('li');
+
+			$li->appendCreate('header', [
+				[ 'o-eve-img', [ 'src' => '/Type/'.$skill.'_64.png', 'alt' => '' ] ],
+				[ 'a', [ 'o-rel-href' => '/db/type/'.$skill, \Osmium\Fit\get_typename($skill) ] ],
+				' ',
+				\Osmium\Chrome\format_skill_level($level),
+			]);
 
 			$newbl = $blacklist; /* Copy the array */
 			$newbl[$skill] = true;
-			format_reqs(\Osmium\Fit\get_required_skills($skill), $newbl);
 
-			echo "</li>\n";
+			$li->append(make_reqs($e, \Osmium\Fit\get_required_skills($skill), $newbl));
 		}
 
-		echo "</ul>\n";
+		return $ul;
 	}
 
-	format_reqs($prereqs, []);
-
-	echo "</section>\n";
+	$dbb->appendCreate('section', [ 'id' => 'r' ])->append(make_reqs($p, $prereqs, []));
 }
 
 
+
+/* —————————— Required by —————————— */
 
 $sreqq = \Osmium\Db\query_params(
 	'SELECT it.typeid, it.typename, l.value::integer as level
@@ -235,42 +257,43 @@ $sreqq = \Osmium\Db\query_params(
 	array($type['typeid'])
 );
 
-ob_start();
-
 $nreqby = [];
+$section = $p->element('section', [ 'id' => 'b' ]);
+
 while($t = \Osmium\Db\fetch_assoc($sreqq)) {
 	if(!isset($nreqby[$t['level']])) {
-		if($nreqby !== []) {
-			echo "</ul>\n</section>\n";
-		}
-		echo "<section id='l".$t['level']."'>\n<ul class='t'>\n";
 		$nreqby[$t['level']] = 0;
+
+		$ul = $section->appendCreate('section', [ 'id' => 'l'.$t['level'] ])
+			->appendCreate('ul', [ 'class' => 't' ]);
 	}
+
 	++$nreqby[$t['level']];
 
-	echo "<li>";
-	echo "<img src='//image.eveonline.com/Type/".$t['typeid']."_64.png' alt='' /> ";
-	echo "<a href='".RELATIVE."/db/type/".$t['typeid']."'>"
-		.\Osmium\Chrome\escape($t['typename'])."</a>";
-	echo "</li>\n";
-}
-if($nreqby !== []) {
-	echo "</ul>\n</section>\n";
+	$ul->appendCreate('li', [
+		[ 'o-eve-img', [ 'src' => '/Type/'.$t['typeid'].'_64.png', 'alt' => '' ] ],
+		' ',
+		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ],
+	]);
 }
 
-$lists = ob_get_clean();
 if($nreqby !== []) {
-	echo "<section id='b'>\n";
-	echo "<ul class='tabs'>\n";
+	$dbb->append($section);
+
+	$ul = $p->element('ul', [ 'class' => 'tabs' ]);
 	foreach($nreqby as $l => $c) {
-		echo "<li><a href='#l{$l}'>".\Osmium\Chrome\format_skill_level($l)."</a></li>\n";
+		$ul->appendCreate('li', [[ 'a', [
+			'href' => '#l'.$l,
+			\Osmium\Chrome\format_skill_level($l)
+		] ]]);
 	}
-	echo "</ul>\n";
-	echo $lists;
-	echo "</section>\n";
+
+	$section->prepend($ul);
 }
 
 
+
+/* —————————— Variations —————————— */
 
 $vq = \Osmium\Db\query_params(
 	'SELECT vartypeid, vartypename, varmgid, varml, img.metagroupname
@@ -303,63 +326,74 @@ if($nvariations > 1) {
 		$fvariations = array_merge($fvariations, $a);
 	}
 
-	echo "<section id='v'>\n<table class='d'>\n<tbody>\n";
+	$section = $section = $dbb->appendCreate('section', [ 'id' => 'v' ]);
+	$tbody = $section->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
 
 	$vartypeids = [];
 	foreach($fvariations as $v) {
 		$vartypeids[] = $v[0];
 
-		echo "<tr>\n";
-		echo "<td>".\Osmium\Chrome\escape($v[3])."</td>\n";
-		echo "<td><img src='//image.eveonline.com/Type/{$v[0]}_64.png' alt='' /> ";
-		echo "<a href='".RELATIVE."/db/type/{$v[0]}'>".\Osmium\Chrome\escape($v[1])."</a></td>\n";
-		echo "<td><small>meta level {$v[2]}</small></td>\n";
-		echo "</tr>\n";
+		$tbody->appendCreate('tr', [
+			[ 'td', $v[3] ],
+			[ 'td', [
+				[ 'o-eve-img', [ 'src' => '/Type/'.$v[0].'_64.png', 'alt' => '' ] ],
+				' ',
+				[ 'a', [ 'o-rel-href' => '/db/type/'.$v[0], $v[1] ] ],
+			]],
+			[ 'td', [ [ 'small', 'meta level '.$v[2] ] ] ],
+		]);
 	}
 
-	echo "</tbody>\n</table>\n";
-
-	echo "<p class='compare'><a href='".RELATIVE."/db/comparetypes/"
-		.implode(',', $vartypeids)."/auto' rel='nofollow'>Compare these types</a></p>\n";
-
-	echo "</section>\n";
+	$section->appendCreate('p', [ 'class' => 'compare', [ 'a', [
+		'o-rel-href' => '/db/comparetypes/'.implode(',', $vartypeids).'/auto',
+		'rel' => 'nofollow',
+		'Compare these types',
+	]]]);
 }
 
-$sections = ob_get_clean();
 
-ob_start();
+
+/* —————————— Tabs —————————— */
+
+$ntabs = 0;
 
 if($traits !== false) {
-	echo "<li><a href='#t'>Traits</a></li>\n";
+	$ultabs->appendCreate('li', [[ 'a', [ 'href' => '#t', 'Traits' ] ]]);
+	++$ntabs;
 }
 if($nattribs > 0) {
-	echo "<li><a href='#a'>Attributes ({$nattribs})</a></li>\n";
+	$ultabs->appendCreate('li', [[ 'a', [ 'href' => '#a', 'Attributes ('.$nattribs.')' ] ]]);
+	++$ntabs;
 }
 if($neffects > 0) {
-	echo "<li><a href='#e'>Effects ({$neffects})</a></li>\n";
+	$ultabs->appendCreate('li', [[ 'a', [ 'href' => '#e', 'Effects ('.$neffects.')' ] ]]);
+	++$ntabs;
 }
 if($nprereqs > 0) {
-	echo "<li><a href='#r'>Requirements ({$nprereqs})</a></li>\n";
+	$ultabs->appendCreate('li', [[ 'a', [ 'href' => '#r', 'Requirements ('.$nprereqs.')' ] ]]);
+	++$ntabs;
 }
 if($nreqby !== []) {
-	echo "<li><a href='#b'>Required by (".array_sum($nreqby).")</a></li>\n";
+	$ultabs->appendCreate('li', [[ 'a', [ 'href' => '#b', 'Required by ('.array_sum($nreqby).')' ] ]]);
+	++$ntabs;
 }
 if($nvariations > 1) {
-	echo "<li><a href='#v'>Variations ({$nvariations})</a></li>\n";
+	$ultabs->appendCreate('li', [[ 'a', [ 'href' => '#v', 'Variations ('.$nvariations.')' ] ]]);
+	++$ntabs;
 }
 
-$lis = ob_get_clean();
-
-if($lis !== '') {
-	echo "<ul class='tabs'>\n{$lis}</ul>\n";
-	echo $sections;
+if($ntabs <= 1) {
+	$ultabs->remove();
 }
 
 
 
+\Osmium\State\put_cache($cacheid, $dbb->renderNode());
 
-
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('tabs');
-\Osmium\Chrome\print_js_snippet('dbbrowser');
-\Osmium\Chrome\print_footer();
+RenderStage:
+$p->title = \Osmium\Fit\get_typename($typeid).' / Type '.$typeid;
+$p->snippets[] = 'tabs';
+$p->snippets[] = 'dbbrowser';
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '../..';
+$p->render($ctx);
