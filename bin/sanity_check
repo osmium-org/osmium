@@ -18,7 +18,7 @@
  */
 
 define('CHECK_REQUIRED', 1);
-define('MIN_PHP_VER', '5.5.0');
+define('MIN_PHP_VER', '5.4.0');
 
 function check($label, $checkfunc, $opts = 0) {
 	echo str_pad("checking ".$label.' ', 70, '.').' ';

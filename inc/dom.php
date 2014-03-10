@@ -83,16 +83,20 @@ class Document extends \DOMDocument {
 
 
 
-	/* @internal */
+	/* @internal
+	 * 
+	 * TODO: use yield in 5.5
+	 */
 	static function _to_nodes(\DOMDocument $owner, $e) {
 		if(!is_array($e) && !($e instanceof \DOMNodeList)) {
-			yield self::_to_node($owner, $e);
-			return;
+			return [ self::_to_node($owner, $e) ];
 		}
 
+		$nodes = [];
 		foreach($e as $v) {
-			yield self::_to_node($owner, $v);
+			$nodes[] = self::_to_node($owner, $v);
 		}
+		return $nodes;
 	}
 
 

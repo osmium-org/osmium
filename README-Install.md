@@ -96,7 +96,7 @@ below (for example, Debian uses `www-data`).
 Dependencies
 ============
 
-* PHP >= 5.5, with:
+* PHP >= 5.4, with:
   * [dogma extension](https://github.com/Artefact2/php-dogma), using libdogma 1.1.x (`dogma.so`)
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
