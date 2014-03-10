@@ -23,71 +23,89 @@ namespace Osmium\Fit;
  * database has major updates. */
 function get_eve_db_versions() {
 	return array(
+		722372 => array(
+			'tag' => 'rubicon-12',
+			'name' => 'Rubicon 1.2',
+			'build' => 722372,
+			'reldate' => gmmktime(0, 0, 0, 2, 18, 2014),
+			'dogmaver' => 11,
+		),
 		708191 => array(
 			'tag' => 'rubicon-11',
 			'name' => 'Rubicon 1.1',
 			'build' => 708191,
 			'reldate' => gmmktime(0, 0, 0, 1, 28, 2014),
+			'dogmaver' => 11,
 		),
 		653401 => array(
 			'tag' => 'rubicon-10',
 			'name' => 'Rubicon 1.0',
 			'build' => 653401,
 			'reldate' => gmmktime(0, 0, 0, 11, 19, 2013),
+			'dogmaver' => 10,
 		),
 		592399 => array(
 			'tag' => 'odyssey-11',
 			'name' => 'Odyssey 1.1',
 			'build' => 592399,
 			'reldate' => gmmktime(0, 0, 0, 9, 3, 2013),
+			'dogmaver' => 9,
 		),
 		548234 => array(
 			'tag' => 'odyssey-10',
 			'name' => 'Odyssey 1.0',
 			'build' => 548234,
 			'reldate' => gmmktime(0, 0, 0, 6, 4, 2013),
+			'dogmaver' => 8,
 		),
 		538542 => array(
 			'tag' => 'retribution-12',
 			'name' => 'Retribution 1.2',
 			'build' => 538542,
 			'reldate' => gmmktime(0, 0, 0, 5, 6, 2013),
+			'dogmaver' => 7,
 		),
 		529690 => array(
 			'tag' => 'retribution-11',
 			'name' => 'Retribution 1.1',
 			'build' => 529690,
 			'reldate' => gmmktime(0, 0, 0, 2, 19, 2013),
+			'dogmaver' => 6,
 		),
 		476047 => array(
 			'tag' => 'retribution-10',
 			'name' => 'Retribution 1.0',
 			'build' => 476047,
 			'reldate' => gmmktime(0, 0, 0, 12, 4, 2012),
+			'dogmaver' => 5,
 		),
 		433763 => array(
 			'tag' => 'inferno-13',
 			'name' => 'Inferno 1.3',
 			'build' => 433763,
 			'reldate' => gmmktime(0, 0, 0, 10, 16, 2012),
+			'dogmaver' => 4,
 		),
 		404131 => array(
 			'tag' => 'inferno-12',
 			'name' => 'Inferno 1.2',
 			'build' => 404131,
 			'reldate' => gmmktime(0, 0, 0, 8, 8, 2012),
+			'dogmaver' => 3,
 		),
 		390556 => array(
 			'tag' => 'inferno-11',
 			'name' => 'Inferno 1.1',
 			'build' => 390556,
 			'reldate' => gmmktime(0, 0, 0, 6, 25, 2012),
+			'dogmaver' => 2,
 		),
 		377452 => array(
 			'tag' => 'inferno-10',
 			'name' => 'Inferno 1.0',
 			'build' => 377452,
 			'reldate' => gmmktime(0, 0, 0, 5, 22, 2012),
+			'dogmaver' => 1,
 		),
 		/* Osmium was not released before this time, so there's little
 		 * point in including the version prior to this. */
@@ -145,4 +163,19 @@ function get_closest_version_by_build($b) {
 /** Get the closest EVE db version of a given timestamp. */
 function get_closest_version_by_time($t) {
 	return get_closest_version_by_key('reldate', $t);
+}
+
+/** Return a "sane" latest build for searching. */
+function get_build_cutoff() {
+	$vers = array_values(get_eve_db_versions());
+	$nvers = count($vers);
+	$build = $vers[0]['build'];
+	$dogmavercutoff = $vers[0]['dogmaver'] - 2;
+
+	for($i = 1; $i < $nvers; ++$i) {
+		if($vers[$i]['dogmaver'] < $dogmavercutoff) return $build;
+		$build = $vers[$i]['build'];
+	}
+
+	return $build;
 }

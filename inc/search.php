@@ -517,13 +517,8 @@ function print_loadout_list(array $ids, $relative, $offset = 0, $nothing_message
 
 function get_search_cond_from_advanced() {
 	if(!isset($_GET['build']) && !isset($_GET['op'])) {
-		/* Use sane defaults, ie hide absurdly outdated loadouts by
-		 * default */
-
-		$vercutoff = array_values(\Osmium\Fit\get_eve_db_versions())[2]['build'];
-
 		$_GET['op'] = 'gt';
-		$_GET['build'] = $vercutoff;
+		$_GET['build'] = \Osmium\Fit\get_build_cutoff();
 	}
 
 	static $operators = array(

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,7 @@ namespace Osmium\Page\Register;
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\State\assume_logged_out();
+\Osmium\State\assume_logged_out('.');
 
 if(isset($_POST['account_name'])) {
 	$q = \Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountname = $1', array($_POST['account_name']));

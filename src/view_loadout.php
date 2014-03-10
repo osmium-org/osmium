@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -227,7 +227,8 @@ if(isset($fit['ship']['typeid'])) {
 	echo "<strong>N/A</strong>\n";
 }
 
-echo "<small class='dbver'>".\Osmium\Chrome\escape(\Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber'])['name'])."</small>
+$intendeddbver = \Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber']);
+echo "<small class='dbver'>".\Osmium\Chrome\escape($intendeddbver['name'])."</small>
 </h1>\n";
 
 if($loadoutid === false) {
@@ -308,6 +309,17 @@ echo "<div id='vlmain'>\n";
 
 if($revision_overridden && isset($lastrev['updatedate'])) {
 	echo "<p class='notice_box'>You are viewing revision {$revision} of this loadout, as it was published the ".date('Y-m-d \a\t H:i', $lastrev['updatedate']).". <a href='".RELATIVE."/".\Osmium\Fit\get_fit_uri($loadoutid, $fit['metadata']['visibility'], $fit['metadata']['privatetoken'])."'>Link to the latest revision.</a></p>";
+}
+
+$latestdbver = \Osmium\Fit\get_latest_eve_db_version();
+if($latestdbver['dogmaver'] - $intendeddbver['dogmaver'] > 1) {
+	echo "<p class='warning_box'>";
+	if($can_edit) {
+		echo "<strong>Please update this loadout for ".$latestdbver['name'].".</strong>";
+	} else {
+		echo "This loadout was made for an older EVE version (".$intendeddbver['name'].") and may no longer be relevant for the current EVE version (".$latestdbver['name'].").";
+	}
+	echo "</p>\n";
 }
 
 echo "<ul class='tabs'>
