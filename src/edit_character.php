@@ -114,13 +114,14 @@ $q = \Osmium\Db\query(
 );
 
 /* There's a big number of rows (about 400), so it's more efficient to
- * make a deep copy of a template row then edit it in the loop */
+ * make a deep copy of a template row then edit it in the loop. We are
+ * also not using o-select to save some time. */
 
 $rowtemplate = $p->element('tr');
 $rowtemplate->appendCreate('td')->appendCreate('a');
 $rowtemplate->appendCreate('td');
 $selecttd = $p->element('td');
-$select = $selecttd->appendCreate('o-select');
+$select = $selecttd->appendCreate('select');
 $select->appendCreate('option', [ 'value' => '-2', 'No override' ]);
 foreach([ 0, 1, 2, 3, 4, 5 ] as $k) {
 	$select->appendCreate('option', [ 'value' => $k, $p->formatSkillLevel($k) ]);
@@ -171,7 +172,7 @@ while($s = \Osmium\Db\fetch_assoc($q)) {
 	);
 	$select = $tr->childNodes->item(2)->firstChild;
 	$select->setAttribute('name', 'soverride['.$s['typeid'].']');
-	if($olevel !== null) $select->setAttribute('selected', $olevel);
+	if($olevel !== null) $select->childNodes->item(1 + $olevel)->setAttribute('selected', 'selected');
 
 	$tbody->append($tr);
 }
