@@ -361,4 +361,21 @@ trait Formatter {
 
 		return $dt;
 	}
+
+
+
+	/* Format a skill level, in roman numerals. */
+	static function formatSkillLevel($level) {
+		static $levels = array(
+			null => 'Untrained',
+			0 => '0',
+			1 => 'I',
+			2 => 'II',
+			3 => 'III',
+			4 => 'IV',
+			5 => 'V',
+		);
+
+		return isset($levels[$level]) ? $levels[$level] : 'Unknown ('.$level.')';
+	}
 }

@@ -19,6 +19,17 @@
 
 namespace Osmium\Skills;
 
+/* Default value for intelligence, memory, etc. */
+const DEFAULT_ATTRIBUTE_VALUE = 20;
+
+/* Minimum attribute value */
+const MIN_ATTRIBUTE_VALUE = 17;
+
+/* Maximum attribute value (27+7) */
+const MAX_ATTRIBUTE_VALUE = 34;
+
+
+
 /* Takes in an array of item/module type IDs; fills the $result array with entries like:
  *     input_type_id => array(
  *         skill_type_id => required_level,

@@ -155,7 +155,7 @@ function get_rules($prefix) {
 			'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],
 			'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
 
-			'%^/editskillset/(?<name>.+)$%D' => '/src/edit_skillset.php',
+			'%^/editcharacter/(?<name>.+)$%D' => '/src/edit_character.php',
 
 			'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
 			'%^/editcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'commentreply']],

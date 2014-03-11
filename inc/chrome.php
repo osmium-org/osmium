@@ -655,19 +655,11 @@ function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = n
 	return "<span class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></span>";
 }
 
-/** Format a skill level in roman numerals. */
+/** Format a skill level in roman numerals.
+ *
+ * @deprecated see Formatter::formatSkillLevel() */
 function format_skill_level($level) {
-	static $levels = array(
-		null => 'Untrained',
-		0 => '0',
-		1 => 'I',
-		2 => 'II',
-		3 => 'III',
-		4 => 'IV',
-		5 => 'V',
-	);
-
-	return isset($levels[$level]) ? $levels[$level] : 'Unknown';
+	return \Osmium\DOM\Page::formatSkillLevel($level);
 }
 
 function format_effect_category($id) {

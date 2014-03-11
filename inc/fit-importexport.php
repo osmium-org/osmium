@@ -225,7 +225,6 @@ function get_import_formats() {
 		'fittingmanagementcopy' => array(
 			'Fitting Management', 'copy/paste of the fitting',
 			function($data, &$errors) {
-				\Osmium\debug($data);
 				$fit = try_parse_fit_from_fitting_window_cp($data);
 				return $fit === false ? false : [ $fit ];
 			}

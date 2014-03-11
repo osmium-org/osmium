@@ -163,14 +163,15 @@ class RawPage extends Document {
 								}
 								$i->removeAttribute('default');
 							}
-						} else if(isset($_vals[$n]) && $_vals[$n]) {
+						} else if(self::_get_post_value($_vals, $n)) {
 							/* Has POST/GET data _and_ checkbox was checked */
 							$i->setAttribute('checked', 'checked');
 						}
 					}
 				} else {
-					if(isset($_vals[$n]) && !($i->hasAttribute('value'))) {
-						$i->setAttribute('value', $_vals[$n]);
+					$value = self::_get_post_value($_vals, $n, false);
+					if($value !== false && !($i->hasAttribute('valueh'))) {
+						$i->setAttribute('value', $value);
 					}
 				}
 			}
@@ -205,7 +206,8 @@ class RawPage extends Document {
 			$n = $s->getAttribute('name');
 			if(!isset($selected) && (!isset($remember) || $remember !== 'off')) {
 				$_vals = $e->closestParent('form')->getAttribute('method') === 'get' ? $_GET : $_POST;
-				if(isset($_vals[$n])) $selected = $_vals[$n];
+				$selected = self::_get_post_value($_vals, $n, false);
+				if($selected === false) unset($selected);
 			}
 
 			while($e->childNodes->length > 0) {
@@ -240,11 +242,12 @@ class RawPage extends Document {
 			if($remember !== 'off') {
 				$_vals = $e->closestParent('form')->getAttribute('method') === 'get' ? $_GET : $_POST;
 				$n = $ta->getAttribute('name');
-				if(isset($_vals[$n]) && $e->childNodes->length === 0) {
+				$contents = self::_get_post_value($_vals, $n, false);
+				if($contents !== false && $e->childNodes->length === 0) {
 					$ta->appendChild(
 						$ctx->xhtml === true ?
-						$this->createCDATASection($_vals[$n])
-						: $this->createTextNode($_vals[$n])
+						$this->createCDATASection($contents)
+						: $this->createTextNode($contents)
 					);
 				}
 			}
@@ -341,6 +344,28 @@ class RawPage extends Document {
 		}
 
 		$e->addClass('error');
+	}
+
+	/* @internal */
+	private static function _get_post_value(array $data, $name, $default = null) {
+		$p = strpos($name, '[');
+		if($p === false) return isset($data[$name]) ? $data[$name] : $default;
+
+		$parts = explode('[', $name);
+		$i = 0;
+		foreach($parts as $part) {
+			if($i !== 0) {
+				if(substr($part, -1) !== ']') throw new \Exception('malformed post name: '.$name);
+				$part = substr($part, 0, -1);
+			}
+			++$i;
+
+			if(isset($data[$part])) {
+				$data = $data[$part];
+			} else return $default;
+		}
+
+		return $data;
 	}
 
 

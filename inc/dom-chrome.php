@@ -236,6 +236,8 @@ class Page extends RawPage {
 			$this->saveHTMLFile('php://output');
 		}
 
+		flush(); /* Not sure about its effectiveness, but it doesn't hurt */
+
 		\Osmium\State\put_activity();
 	}
 

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -242,6 +242,7 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 				} else if(isset($sheet->error)) {
 					echo "<p class='error_box'>(".((int)$sheet->error['code']).") ".\Osmium\Chrome\escape((string)$sheet->error)."</p>\n";
 				} else {
+					/* Update skills */
 					$skills = array();
 					foreach($sheet->result->rowset as $rowset) {
 						if(!isset($rowset['name']) || (string)$rowset['name'] !== 'skills') continue;
@@ -254,21 +255,47 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 					}
 
 					ksort($skills);
-					\Osmium\Db\query_params('UPDATE osmium.accountcharacters SET importedskillset = $1, lastimportdate = $2 WHERE accountid = $3 AND name = $4', array(
-						                        json_encode($skills),
-						                        time(),
-						                        $a['accountid'],
-						                        $cname,
-						                        ));
+					\Osmium\Db\query_params(
+						'UPDATE osmium.accountcharacters SET importedskillset = $1, lastimportdate = $2
+						WHERE accountid = $3 AND name = $4',
+						array(
+							json_encode($skills),
+							time(),
+							$a['accountid'],
+							$cname,
+						));
+
+					/* Update attributes */
+					$attribs = [
+						'perception' => null,
+						'willpower' => null,
+						'intelligence' => null,
+						'memory' => null,
+						'charisma' => null,
+					];
+					foreach($attribs as $attr => &$v) {
+						$val = (int)$sheet->result->attributes->$attr;
+						if(isset($sheet->result->attributeEnhancers->{$attr.'Bonus'}->augmentatorValue)) {
+							$val += (int)$sheet->result->attributeEnhancers->{$attr.'Bonus'}->augmentatorValue;
+						}
+
+						$v = $attr.' = '.$val;
+					}
+					\Osmium\Db\query_params(
+						'UPDATE osmium.accountcharacters SET
+						'.implode(', ', $attribs).'
+						WHERE accountid = $1 AND name = $2',
+						array($a['accountid'], $cname)
+					);
 				}
 			}
 		}
 	}
-} else if(isset($_POST['editoverrides']) && is_array($_POST['editoverrides'])) {
-	reset($_POST['editoverrides']);
-	$cname = key($_POST['editoverrides']);
+} else if(isset($_POST['edit']) && is_array($_POST['edit'])) {
+	reset($_POST['edit']);
+	$cname = key($_POST['edit']);
 
-	header('Location: ./editskillset/'.urlencode($cname));
+	header('Location: ./editcharacter/'.urlencode($cname));
 	die();
 }
 
@@ -295,8 +322,8 @@ while($c = \Osmium\Db\fetch_assoc($cq)) {
 	echo "<td><input type='text' name='iname[$cname]' value='".\Osmium\Chrome\escape($c['importname'])."' /></td>\n";
 	echo "<td>".($c['lastimportdate'] === null ? '<em>never</em>' : \Osmium\Chrome\format_relative_date($c['lastimportdate']))."</td>\n";
 	echo "<td>\n";
-	echo "<input type='submit' name='fetch[$cname]' value='Fetch skillset from API' /> ";
-	echo "<input type='submit' name='editoverrides[$cname]' value='Manually edit skill levels' /> ";
+	echo "<input type='submit' name='fetch[$cname]' value='Update from API' /> ";
+	echo "<input type='submit' name='edit[$cname]' value='Edit skills and attributes' /> ";
 	echo "<input type='submit' name='delete[$cname]' value='Delete character' /> ";
 	echo "</td>\n";
 	echo "</tr>\n";

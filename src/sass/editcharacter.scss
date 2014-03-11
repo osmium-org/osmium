@@ -23,3 +23,13 @@ table#e_skillset {
 		}
 	}
 }
+
+table#e_attributes {
+	max-width: 50em;
+	margin-left: 1em;
+
+	&> tbody > tr > td > input[type='text'] {
+		min-width: 0;
+		width: 10em;
+	}
+}
