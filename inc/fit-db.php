@@ -1205,9 +1205,19 @@ function use_skillset_by_name(&$fit, $ssname, $a = null) {
 	if(isset($a['accountid'])) {
 		$row = \Osmium\Db\fetch_assoc(
 			\Osmium\Db\query_params(
-				'SELECT importedskillset, overriddenskillset FROM osmium.accountcharacters
+				'SELECT importedskillset, overriddenskillset,
+				COALESCE(perceptionoverride, perception, $3) AS perception,
+				COALESCE(willpoweroverride, willpower, $3) AS willpower,
+				COALESCE(intelligenceoverride, intelligence, $3) AS intelligence,
+				COALESCE(memoryoverride, memory, $3) AS memory,
+				COALESCE(charismaoverride, charisma, $3) AS charisma
+				FROM osmium.accountcharacters
 				WHERE accountid = $1 AND name = $2',
-				array($a['accountid'], $ssname)
+				array(
+					$a['accountid'],
+					$ssname,
+					\Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE
+				)
 			));
 		if($row === false) return false; /* Incorrect skillset name */
 
@@ -1218,7 +1228,16 @@ function use_skillset_by_name(&$fit, $ssname, $a = null) {
 		foreach($overridden as $typeid => $l) {
 			$skillset[$typeid] = $l;
 		}
-		use_skillset($fit, $skillset, 0, $ssname);
+
+		$attribs = [
+			'perception' => $row['perception'],
+			'willpower' => $row['willpower'],
+			'intelligence' => $row['intelligence'],
+			'memory' => $row['memory'],
+			'charisma' => $row['charisma'],
+		];
+
+		use_skillset($fit, $skillset, 0, $ssname, $attribs);
 		return $ssname;
 	}
 

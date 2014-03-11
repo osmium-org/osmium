@@ -92,11 +92,15 @@ function sp_to_level_at_rank($level, $rank) {
 }
 
 /**
- * @return [ $missingsp, $totalsp ]
+ * @return [ $missingsp, $totalsp, $missingsecs ]
  */
 function sp_totals($prereqs_unique, $skillset) {
 	$totalsp = 0;
 	$missingsp = 0;
+	$missingsecs = 0;
+
+	static $attributemap = null;
+
 	foreach($prereqs_unique as $stid => $level) {
 		$current = isset($skillset['override'][$stid])
 			? $skillset['override'][$stid] : $skillset['default'];
@@ -110,7 +114,27 @@ function sp_totals($prereqs_unique, $skillset) {
 			continue;
 		}
 
-		$missingsp += $needed - sp_to_level_at_rank($current, $rank);
+		if($attributemap === null) {
+			$attributemap = [
+				\Osmium\Fit\ATT_Perception => 'perception',
+				\Osmium\Fit\ATT_Willpower => 'willpower',
+				\Osmium\Fit\ATT_Intelligence => 'intelligence',
+				\Osmium\Fit\ATT_Memory => 'memory',
+				\Osmium\Fit\ATT_Charisma => 'charisma',
+			];
+		}
+
+		list($primary, $secondary) = \Osmium\Fit\get_skill_attributes($stid);
+		$spps = (
+			2.0 * $skillset['attributes'][$attributemap[$primary]]
+			+ $skillset['attributes'][$attributemap[$secondary]]
+		) / 60.0;
+
+		\Osmium\debug($stid, $primary, $secondary, $attributemap);
+
+		$sp = $needed - sp_to_level_at_rank($current, $rank);
+		$missingsp += $sp;
+		$missingsecs += $sp / $spps;
 	}
-	return [ $missingsp, $totalsp ];
+	return [ $missingsp, $totalsp, $missingsecs ];
 }

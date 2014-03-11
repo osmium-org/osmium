@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -83,7 +83,7 @@ function print_formatted_mastery(&$fit, $relative, array $prereqs_per_type) {
 	\Osmium\Skills\get_missing_prerequisites($prereqs_per_type, $fit['skillset'], $missing_per_type);
 	$prereqs_unique = \Osmium\Skills\merge_skill_prerequisites($prereqs_per_type);
 	$missing_unique = \Osmium\Skills\merge_skill_prerequisites($missing_per_type);
-	list($missingsp, $totalsp) = \Osmium\Skills\sp_totals($prereqs_unique, $fit['skillset']);
+	list($missingsp, $totalsp, $secs) = \Osmium\Skills\sp_totals($prereqs_unique, $fit['skillset']);
 
 	$types_per_prereqs = [];
 	foreach($missing_per_type as $typeid => $arr) {
@@ -107,8 +107,12 @@ function print_formatted_mastery(&$fit, $relative, array $prereqs_per_type) {
 		echo "<ul>\n";
 
 		echo "<li>".format_integer($missingsp)." SP missing out of ".format_integer($totalsp)." SP required</li>\n";
-		$secs = $missingsp / (45.0 / 60.0);
-		echo "<li>approximately ".format_long_duration($secs, 2)." of training time</li>\n";
+
+		echo "<li>";
+		if($fit['skillset']['name'] === 'All V' || $fit['skillset']['name'] === 'All 0') {
+			echo "approximately ";
+		}
+		echo format_long_duration($secs, 2)." of training time</li>\n";
 
 		echo "</ul>\n";
 	}

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -177,7 +177,7 @@ function get_state_names() {
  *
  * remote => array(<key> => $fit)
  *
- * skillset => array(name, default, override)
+ * skillset => array(name, default, override, attributes)
  *
  * damageprofile => array(name, damages => array(em, explosive, kinetic, thermal))
  *
@@ -200,6 +200,13 @@ function create(&$fit) {
 			'name' => 'All V',
 			'default' => 5,
 			'override' => [],
+			'attributes' => [
+				'perception' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+				'willpower' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+				'intelligence' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+				'memory' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+				'charisma' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+			],
 		),
 		'damageprofile' => array(
 			'name' => 'Uniform',
@@ -1296,13 +1303,29 @@ function delta($old, $new) {
  * V).
  *
  * @param $skillset array(skilltypeid => skilllevel)
+ * 
  * @param $defaultlevel level to use for skills not in $skillset
+ * 
+ * @param $attributes if specified, must be an array with five
+ * elements having keys: perception, willpower, intelligence, memory,
+ * charisma.
  */
-function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5, $name = null) {
+function use_skillset(&$fit, array $skillset = array(), $defaultlevel = 5, $name = null, $attributes = null) {
+	if($attributes === null) {
+		$attributes = [
+			'perception' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+			'willpower' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+			'intelligence' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+			'memory' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+			'charisma' => \Osmium\Skills\DEFAULT_ATTRIBUTE_VALUE,
+		];
+	}
+
 	$fit['skillset'] = [ 
-		'name' =>$name,
+		'name' => $name,
 		'default' => $defaultlevel,
-		'override' => $skillset
+		'override' => $skillset,
+		'attributes' => $attributes,
 	];
 
 	if(\Osmium\Dogma\has_context($fit)) {

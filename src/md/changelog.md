@@ -24,6 +24,9 @@
 
 * **Filter loadouts by flyability (for one of your characters).**
 
+* Training time will use character attributes and is no longer an
+  estimate (unless using All V or All 0).
+
 # Version 0.11
 
 ## Version 0.11.0, released 2014-01-28

@@ -27,14 +27,22 @@ const EFFECT_TargetArmorRepair = 592;
 const EFFECT_TargetAttack = 10;
 const EFFECT_UseMissiles = 101;
 
+const ATT_Charisma = 164;
+const ATT_Intelligence = 165;
+const ATT_Memory = 166;
+const ATT_Perception = 167;
+const ATT_Willpower = 168;
+
 const ATT_Boosterness = 1087;
 const ATT_HiSlots = 14;
 const ATT_Implantness = 331;
 const ATT_LauncherSlotsLeft = 101;
 const ATT_LowSlots = 12;
 const ATT_MedSlots = 13;
+const ATT_PrimaryAttribute = 180;
 const ATT_ReloadTime = 1795;
 const ATT_ScanResolution = 564;
+const ATT_SecondaryAttribute = 181;
 const ATT_SignatureRadius = 552;
 const ATT_SkillTimeConstant = 275;
 const ATT_TurretSlotsLeft = 102;
@@ -272,4 +280,24 @@ function get_skill_rank($typeid) {
 
 	\Osmium\State\put_cache_memory($key, $rank, 86400);
 	return $rank;
+}
+
+function get_skill_attributes($typeid) {
+	$typeid = (int)$typeid;
+	$key = 'NameCache_skill_attribs_'.$typeid;
+	$cache = \Osmium\State\get_cache_memory($key);
+
+	if($cache !== null) {
+		return $cache;
+	}
+
+	static $ctx = null;
+	if($ctx === null) dogma_init_context($ctx);
+
+	$attribs = [ null, null ];
+	dogma_get_skill_attribute($ctx, $typeid, ATT_PrimaryAttribute, $attribs[0]);
+	dogma_get_skill_attribute($ctx, $typeid, ATT_SecondaryAttribute, $attribs[1]);
+
+	\Osmium\State\put_cache_memory($key, $attribs, 86400);
+	return $attribs;
 }
