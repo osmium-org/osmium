@@ -23,6 +23,13 @@ namespace Osmium\Fit;
  * database has major updates. */
 function get_eve_db_versions() {
 	return array(
+		739267 => array(
+			'tag' => 'rubicon-13',
+			'name' => 'Rubicon 1.3',
+			'build' => 739267,
+			'reldate' => gmmktime(0, 0, 0, 3, 12, 2014),
+			'dogmaver' => 12,
+		),
 		722372 => array(
 			'tag' => 'rubicon-12',
 			'name' => 'Rubicon 1.2',

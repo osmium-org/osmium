@@ -1,4 +1,6 @@
-# staging
+# Version 0.12
+
+## Version 0.12.0, released 2014-03-12
 
 * Import loadouts from CREST killmails.
 
