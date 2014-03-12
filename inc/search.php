@@ -397,10 +397,13 @@ function make_pretty_results(\Osmium\DOM\RawPage $p, $query, $more = '', $pagina
 
 	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $perpage);
 	if($ids === false) {
-		return $p->element('p', [
-			'class' => 'placeholder',
-			'The supplied query is invalid.',
-		]);
+		return [
+			[],
+			$p->element('p', [
+				'class' => 'placeholder',
+				'The supplied query is invalid.',
+			]),
+		];
 	}
 
 	$ol = $p->makeLoadoutGridLayout($ids);
