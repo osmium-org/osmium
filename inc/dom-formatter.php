@@ -321,7 +321,7 @@ trait Formatter {
 		}
 		unset($v);
 
-		if($out === []) return $abbre ? '1s' : 'less than 1 second';
+		if($out === []) return $abbrev ? '1s' : 'less than 1 second';
 		$out = array_slice($out, 0, $precision);
 
 		$s = array_pop($out);
