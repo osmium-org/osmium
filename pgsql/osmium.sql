@@ -34,7 +34,17 @@ CREATE TABLE accountcharacters (
     importname name,
     importedskillset text,
     overriddenskillset text,
-    lastimportdate integer
+    lastimportdate integer,
+    perception smallint,
+    willpower smallint,
+    intelligence smallint,
+    memory smallint,
+    charisma smallint,
+    perceptionoverride smallint,
+    willpoweroverride smallint,
+    intelligenceoverride smallint,
+    memoryoverride smallint,
+    charismaoverride smallint
 );
 
 
