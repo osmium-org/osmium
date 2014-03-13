@@ -302,12 +302,12 @@ foreach($typeids as $i => $typeid) {
 	foreach($attributes as $attributeid => $a) {
 		if($attributeid >= 0) {
 			$val = isset($data[$typeid][$attributeid]) ?
-				$data[$typeid][$attributeid] : [ null, [ 'small', 'N/A' ] ];
+				$data[$typeid][$attributeid] : [ null, $p->element('small', 'N/A') ];
 		} else if(isset($a[0]) && $a[0] === 'rpn') {
 			$rpnv = eval_rpn($a, isset($data[$typeid]) ? $data[$typeid] : array());
 
 			if($rpnv === null) {
-				$val = [ null, [ 'small', 'ERR' ] ];
+				$val = [ null, $p->element('small', 'ERR') ];
 			} else {
 				$val = [ $rpnv, (string)$p->formatSDigits($rpnv, 2) ];
 			}
@@ -315,9 +315,8 @@ foreach($typeids as $i => $typeid) {
 
 		$tr->appendCreate('td', [
 			'data-aid' => $attributeid,
-			'data-rawval' => $val[0],
-			$val[1]
-		]);
+			'data-rawval' => $val[0]
+		])->append($val[1]);
 	}
 }
 
