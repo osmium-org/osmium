@@ -179,9 +179,10 @@ function get_import_formats() {
 				$fits = array();
 				$lines = array_map('trim', explode("\n", $data));
 
+				$eft = '';
 				foreach($lines as $l) {
 					if(preg_match('%^\[(.+)(,(.+)?)\]$%U', $l)) {
-						if(isset($eft)) {
+						if($eft !== '') {
 							$fits[] = try_parse_fit_from_eft_format($eft, $errors);
 						}
 						$eft = '';
