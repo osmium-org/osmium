@@ -35,7 +35,6 @@ require __DIR__.'/../inc/view_loadout-access.php';
 
 $loggedin = \Osmium\State\is_logged_in();
 $a = \Osmium\State\get_state('a', array());
-$dna = \Osmium\Fit\export_to_dna($fit);
 
 if($loadoutid !== false) {
 	$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
@@ -158,6 +157,8 @@ if(isset($fit['ship']['typename'])) {
 if($revision_overridden) {
 	$title .= ' (R'.$revision.')';
 }
+
+$dna = \Osmium\Fit\export_to_dna($fit);
 
 \Osmium\Chrome\print_header(
 	$title, RELATIVE,
