@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,10 +30,15 @@ if(strpos($f, $allowed) !== 0) {
 	\Osmium\fatal(404);
 }
 
-\Osmium\Chrome\print_header($data['title'], $data['relative']);
+$mdxml = \Osmium\State\get_cache('mdstatic_'.$f, null);
+if($mdxml === null) {
+	$mdxml = \Osmium\Chrome\format_md(file_get_contents($f));
+	\Osmium\State\put_cache('mdstatic_'.$f, $mdxml);
+}
 
-echo "<div id='mdstatic'>\n";
-echo \Osmium\Chrome\format_md(file_get_contents($f));
-echo "</div>\n";
-
-\Osmium\Chrome\print_footer();
+$p = new \Osmium\DOM\Page();
+$p->content->appendCreate('div', [ 'id' => 'mdstatic' ])->append($p->fragment($mdxml));
+$p->title = $data['title'];
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = $data['relative'];
+$p->render($ctx);

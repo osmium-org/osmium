@@ -133,6 +133,9 @@ class Document extends \DOMDocument {
 	function __construct() {
 		parent::__construct('1.0', 'utf-8');
 
+		$this->formatOutput = false;
+		$this->preserveWhiteSpace = false;
+
 		$this->registerNodeClass('DOMDocument', __NAMESPACE__.'\Document');
 		$this->registerNodeClass('DOMElement', __NAMESPACE__.'\Element');
 		$this->registerNodeClass('DOMNode', __NAMESPACE__.'\Node');
