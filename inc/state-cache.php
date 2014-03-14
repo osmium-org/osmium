@@ -18,15 +18,6 @@
 
 namespace Osmium\State;
 
-/* System unique prefix for semaphore keys. Change this if you have
- * some other process using semaphores whose first SEM_PREFIX_LENGTH
- * bits are SEM_PREFIX. */
-const SEM_PREFIX = 0xA6;
-
-/* Number of bits to use of SEM_PREFIX. Increase this if you need to
- * use a longer prefix. */
-const SEM_PREFIX_LENGTH = 8;
-
 /** @internal */
 $__osmium_cache_stack = array();
 
@@ -395,7 +386,8 @@ if(function_exists('sem_acquire')) {
      * semaphore_release().
      */
 	function semaphore_acquire($name) {
-		$key = (SEM_PREFIX << (32 - SEM_PREFIX_LENGTH)) | (crc32(__FILE__.'/'.$name) >> SEM_PREFIX_LENGTH);
+		$key = (int)\Osmium\get_ini_setting('sem_start')
+			+ (crc32($name) & 0x8FFFFFFF) % (int)\Osmium\get_ini_setting('num_sems');
 		$id = sem_get($key);
 		if($id === false) return false;
 		if(sem_acquire($id) === false) return false;
@@ -408,7 +400,6 @@ if(function_exists('sem_acquire')) {
 	 */
 	function semaphore_release($semaphore) {
 		sem_release($semaphore);
-		sem_remove($semaphore);
 	}
 } else {
 	/* Use flock() as a fallback */
