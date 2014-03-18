@@ -588,9 +588,9 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 		\Osmium\Forms\print_separator();
 	}
 
-	$presets = array(); /* FIXME: use array_column later */
+	$presets = [];
 	foreach($fit[$parraykey] as $id => $p) {
-		$presets[$id] = $p['name'];
+		$presets[$id] = \Osmium\Chrome\escape($p['name']);
 	}
 	$_POST[$name] = $fit[$pkey.'id'];
 	\Osmium\Forms\print_select($fname, $name, $presets, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
