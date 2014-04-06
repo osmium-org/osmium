@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,25 +20,34 @@ namespace Osmium\Page\Moderation\Main;
 
 require __DIR__.'/../../inc/root.php';
 
-\Osmium\State\assume_logged_in('..');
+\Osmium\State\assume_logged_in('.');
 $a = \Osmium\State\get_state('a');
 if($a['ismoderator'] !== 't') {
 	\Osmium\fatal(404);
 }
 
-\Osmium\Chrome\print_header('Moderation index', '..');
+$p = new \Osmium\DOM\Page();
+$p->title = 'Moderation index';
 
-echo "<h1>Moderation index</h1>\n";
-echo "<ul>\n";
+$p->content->appendCreate('h1', 'Moderation index');
+$ul = $p->content->appendCreate('ul');
 
-$a = "<a href='./flags'>View flags</a>";
-list($newflags) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(flagid) FROM osmium.flags WHERE status = $1', array(\Osmium\Flag\FLAG_STATUS_NEW)));
+$li = $ul->appendCreate('li');
+$a = $p->element('a', [ 'o-rel-href' => '/moderation/flags', 'View flags' ]);
+$newflags = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT COUNT(flagid) FROM osmium.flags WHERE status = $1',
+	array(\Osmium\Flag\FLAG_STATUS_NEW)
+))[0];
 if($newflags > 0) {
-	echo "<li><strong>$a ($newflags new)</strong></li>\n";
+	$li->appendCreate('strong')->append([
+		$a,
+		' ('.$p->formatExactInteger($newflags).' new)',
+	]);
 } else {
-	echo "<li>$a</li>\n";
+	$li->append($a);
 }
 
-echo "</ul>\n";
 
-\Osmium\Chrome\print_footer();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '.';
+$p->render($ctx);

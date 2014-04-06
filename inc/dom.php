@@ -163,6 +163,8 @@ class Document extends \DOMDocument {
 
 	/* Create a fragment from raw XML markup. */
 	function fragment($xml) {
+		$xml = (string)$xml;
+		if($xml === '') return '';
 		$fragment = parent::createDocumentFragment();
 		$fragment->appendXML($xml);
 		return $fragment;

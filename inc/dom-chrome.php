@@ -484,7 +484,7 @@ class Page extends RawPage {
 			$a = \Osmium\State\get_state('a');
 			if(isset($a['ismoderator']) && $a['ismoderator'] === 't') {
 				$ul->append($this->makeNavigationLink(
-					'/moderation/',
+					'/moderation',
 					\Osmium\Flag\MODERATOR_SYMBOL.'Moderation',
 					\Osmium\Flag\MODERATOR_SYMBOL
 				));
