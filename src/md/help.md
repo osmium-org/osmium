@@ -23,7 +23,7 @@ Please [contact the developers](./about#project) for any questions about Osmium.
   lodaout formats, how Osmium implements them, and documentation about
   non-standard variants.
 
-- [**API information**](./api): for developers and enthusiasts who want
+- [**API information**](./help/api): for developers and enthusiasts who want
   to integrate some Osmium features in their application.
 
 ## Frequently Asked Questions (FAQ) {#faq}
