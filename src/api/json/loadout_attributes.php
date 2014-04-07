@@ -24,6 +24,7 @@ require \Osmium\ROOT.'/inc/api_common.php';
 $fit = \Osmium\API\get_fit_from_input_post_get();
 \Osmium\Dogma\auto_init($fit);
 $out = [];
+$nout = 0;
 
 foreach(explode('/', $_GET['attributes']) as $loc) {
 	$keys = [];
@@ -158,6 +159,10 @@ foreach(explode('/', $_GET['attributes']) as $loc) {
 		);
 
 		$out[$keys['name']][$att] = $ret === DOGMA_OK ? $dogma_out : null;
+
+		if(++$nout >= 50) {
+			break 2;
+		}
 	}
 }
 
