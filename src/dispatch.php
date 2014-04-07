@@ -125,6 +125,9 @@ function get_rules($prefix) {
 			'%^/help/db%D' => [ '/src/mdstatic.php',
 			                    ['relative' => '..', 'title' => 'Database browser help', 'f' => 'dbbrowser.md']
 			],
+			'%^/help/api$%D' => [ '/src/mdstatic.php',
+			                      ['relative' => '..', 'title' => 'Osmium API', 'f' => 'api.md']
+			],
 		];
 
 	case "atom":
@@ -152,7 +155,6 @@ function get_rules($prefix) {
 			'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
 
 			'%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
-			'%^/api$%D' => ['/src/mdstatic.php', ['relative' => '.', 'title' => 'Osmium API', 'f' => 'api.md']],
 			'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
 
 			'%^/editcharacter/(?<name>.+)$%D' => '/src/edit_character.php',
