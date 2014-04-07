@@ -267,6 +267,30 @@ different values than what you would expect:
   * `turretSlotsLeft`, `launcherSlotsLeft` will return the number of
     **free** hardpoints on the ship.
 
+  * `capacitor` will run a capacitor simulation and return some
+    capacitor info of the main ship, a JSON object with the following
+    keys: `capacity` (GJ), `stable` (boolean), `delta` (used GJ/ms)
+    and `stable_fraction` (between 0 (0%) and 1 (100%)) or
+    `depletion_time` (milliseconds).
+
+  * `capacitors` will run a capacitor simulation and return capacitor
+    info for all ships (including remotes). Same returned syntax as
+    `capacitor`.
+
+  * `ehpAndResonances` will return EHPs and resonances for hull, armor
+    and shield. See examples for the return syntax.
+
+  * `priceEstimateTotal` will return a breakdown of the loadout
+    estimated price per category. See examples for the return syntax.
+
+  * `miningYieldTotal` will return the total mining yield, in m³/ms.
+
+  * `droneBandwidthUsed` will return the used drone bandwidth by
+    drones in space.
+
+  * `droneCapacityUsed` will returned the used drone capacity by
+    drones in space and in bay.
+
 
 ### Parameters
 
@@ -301,6 +325,9 @@ different values than what you would expect:
 
 <tr><td>GET</td><td>callback</td><td>string</td><td>no</td><td>any</td><td><em>none</em></td>
 <td>If present, use the specified callback function (JSONP).</td></tr>
+
+<tr><td>GET</td><td>capreload</td><td>bool</td><td>no</td><td>0, 1</td><td>1</td>
+<td>Include reload time in capacitor stability calculations.</td></tr>
 
 </tbody>
 </table>

@@ -154,11 +154,42 @@ foreach(explode('/', $_GET['attributes']) as $loc) {
 	}
 
 	foreach($keys['a'] as $att) {
-		$ret = dogma_get_location_attribute(
-			$fit['__dogma_context'], $dogmalocation, \Osmium\Dogma\get_att($att), $dogma_out
-		);
+		unset($val);
 
-		$out[$keys['name']][$att] = $ret === DOGMA_OK ? $dogma_out : null;
+		if($keys['loc'] === 'ship') {
+			if($att === 'capacitor') {
+				$val = \Osmium\Fit\get_capacitor_stability(
+					$fit,
+					isset($_GET['capreload']) ? $_GET['capreload'] : true
+				);
+			} else if($att === 'capacitors') {
+				$val = \Osmium\Fit\get_all_capacitors(
+					$fit,
+					isset($_GET['capreload']) ? $_GET['capreload'] : true
+				);
+			} else if($att === 'ehpAndResonances') {
+				$val = ($ehp = \Osmium\Fit\get_ehp_and_resists($fit));
+			} else if($att === 'priceEstimateTotal') {
+				$missing = [];
+				$val = \Osmium\Fit\get_estimated_price($fit, $missing);
+				if($missing !== []) $val['__missing'] = $missing;
+			} else if($att === 'miningYieldTotal') {
+				$val = \Osmium\Fit\get_mining_yield($fit);
+			} else if($att === 'droneBandwidthUsed') {
+				$val = \Osmium\Fit\get_used_drone_bandwidth($fit);
+			} else if($att === 'droneCapacityUsed') {
+				$val = \Osmium\Fit\get_used_drone_capacity($fit);
+			}
+		}
+
+		if(!isset($val)) {
+			$ret = dogma_get_location_attribute(
+				$fit['__dogma_context'], $dogmalocation, \Osmium\Dogma\get_att($att), $val
+			);
+			$val = $ret === DOGMA_OK ? $val : null;
+		}
+
+		$out[$keys['name']][$att] = $val;
 
 		if(++$nout >= 50) {
 			break 2;
