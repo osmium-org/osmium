@@ -194,3 +194,141 @@ An array of JSON objects having the following fields:
 * `downvotes`: total number of downvotes;
 * `comments`: total number of comments (does not include replies);
 * `buildnumber`: intended EVE build number for this loadout.
+
+
+
+
+
+## `/api/json/loadout/<source_fmt>/attributes/<attributes…>` {#api-loadout-attributes}
+
+
+
+### Synopsis
+
+Get some computed attributes from a loadout.
+
+For the `source_fmt` usage, see the [convert call](#api-convert).
+
+The `attributes…` parameter is a forward slash (`/`) separated list of
+location specifiers.
+
+You cannot specify more than 50 location specifiers or request more
+than 50 attributes in one single request.
+
+### Location specifiers
+
+Here is the syntax of a location specifier:
+
+~~~
+    name1:value1,name2:value2,…,nameN:valueN
+~~~
+
+Here is a list of recognised names:
+
+* `loc` is required and can take the value of: `char`, `implant`,
+  `skill`, `ship`, `module`, `charge`, `drone`.
+
+* `typeid` is required if `loc` is one of `implant`, `skill`,
+  `drone`. May be used if `loc` is `module` or `charge`. If `loc` is
+  `charge`, you must specify the type ID of the module using the
+  charge, not the type ID of the charge itself.
+
+* `slot` may be used to specify a specific module. Can take the value
+  of `high`, `medium`, `low`, `rig`, `subsystem`.
+
+* `index` may be used to specify a specific module (not all input
+  formats may support indices). If omitted, use the first fitted
+  module with the given type ID.
+
+* `name` may be used to identify this location in the generated
+  response. If omitted, an automatically generated name will be used.
+
+* `a` may be used (multiple times in the same location specifier) to
+  request the value of a certain attribute. Permitted values are
+  attribute names or numeric attribute IDs.
+
+
+
+### Osmium extensions
+
+Osmium exposes some additional attributes, and some attributes have
+different values than what you would expect:
+
+* On `ship`:
+
+  * `upgradeLoad` will return used calibration.
+
+  * `hiSlots`, `medSlots`, `lowSlots` will take any subsystem bonii
+    into account.
+
+  * `turretSlots`, `launcherSlots` will return the **total** number of
+    hardpoints on the ship.
+
+  * `turretSlotsLeft`, `launcherSlotsLeft` will return the number of
+    **free** hardpoints on the ship.
+
+
+### Parameters
+
+<table class='d'>
+<thead>
+<tr><th>Type</th><th>Name</th><th>Type</th><th>Mandatory?</th><th>Possible values</th><th>Default</th>
+<th>Description</th></tr>
+</thead>
+<tfoot></tfoot>
+<tbody>
+
+<tr><td>GET or POST</td><td>input</td><td>string</td><td>yes/no</td><td>N/A</td><td>N/A</td>
+<td>Mandatory unless a loadout ID is used as input.<br />The source loadout to convert.<br />POST is preffered (and has precedence), unless the input loadout is a very short string.</td></tr>
+
+<tr><td>GET</td><td>revision</td><td>integer</td><td>no</td><td>any</td><td><em>latest</em></td>
+<td>If using a loadout ID as input, use this specific revision.</td></tr>
+
+<tr><td>GET</td><td>fleet</td><td>string</td><td>no</td><td>fleet, wing, squad</td><td><em>N/A</em></td>
+<td>If using a loadout ID as input, use its fleet/wing/squad booster instead.</td></tr>
+
+<tr><td>GET</td><td>minify</td><td>bool</td><td>no</td><td>0, 1</td><td>0</td>
+<td>Minify generated JSON.</td></tr>
+
+<tr><td>GET</td><td>preset</td><td>integer</td><td>no</td><td>any</td><td><em>first</em></td>
+<td>Use this preset.</td></tr>
+
+<tr><td>GET</td><td>chargepreset</td><td>integer</td><td>no</td><td>any</td><td><em>first</em></td>
+<td>Use this charge preset.</td></tr>
+
+<tr><td>GET</td><td>dronepreset</td><td>integer</td><td>no</td><td>any</td><td><em>first</em></td>
+<td>Use this drone preset.</td></tr>
+
+<tr><td>GET</td><td>callback</td><td>string</td><td>no</td><td>any</td><td><em>none</em></td>
+<td>If present, use the specified callback function (JSONP).</td></tr>
+
+</tbody>
+</table>
+
+
+
+### Result
+
+On success, a JSON object containing the requested attributes. The
+syntax should be self-explanatory from the examples. On libdogma
+errors, an attribute value of `null` will be set.
+
+
+
+### Examples
+
+Get the slot counts of a Rifter ([try it](../api/json/loadout/dna/attributes/loc:ship,a:hiSlots,a:medSlots,a:lowSlots,a:upgradeSlotsLeft?input=587::)):
+
+~~~
+/api/json/loadout/dna/attributes/loc:ship,a:hiSlots,a:medSlots,a:lowSlots,a:upgradeSlotsLeft?input=587::
+
+# Result
+{
+    "ship": {
+        "hiSlots": 4,
+        "medSlots": 3,
+        "lowSlots": 3,
+        "upgradeSlotsLeft": 3
+    }
+}
+~~~
