@@ -158,17 +158,23 @@ foreach(explode('/', $_GET['attributes']) as $loc) {
 
 		if($keys['loc'] === 'ship') {
 			if($att === 'capacitor') {
-				$val = \Osmium\Fit\get_capacitor_stability(
-					$fit,
-					isset($_GET['capreload']) ? $_GET['capreload'] : true
-				);
+				if (!isset($cap)) {
+					$cap = \Osmium\Fit\get_capacitor_stability(
+						$fit,
+						isset($_GET['capreload']) ? $_GET['capreload'] : true
+					);
+				}
+				$val = $cap;
 			} else if($att === 'capacitors') {
 				$val = \Osmium\Fit\get_all_capacitors(
 					$fit,
 					isset($_GET['capreload']) ? $_GET['capreload'] : true
 				);
 			} else if($att === 'ehpAndResonances') {
-				$val = ($ehp = \Osmium\Fit\get_ehp_and_resists($fit));
+				if (!isset($ehp)) {
+					$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+				}
+				$val = $ehp;
 			} else if($att === 'priceEstimateTotal') {
 				$missing = [];
 				$val = \Osmium\Fit\get_estimated_price($fit, $missing);
@@ -179,6 +185,63 @@ foreach(explode('/', $_GET['attributes']) as $loc) {
 				$val = \Osmium\Fit\get_used_drone_bandwidth($fit);
 			} else if($att === 'droneCapacityUsed') {
 				$val = \Osmium\Fit\get_used_drone_capacity($fit);
+			} else if($att === 'damage') {
+				if (!isset($ia)) {
+					$ia = \Osmium\Fit\get_interesting_attributes($fit);
+				}
+				$reload = isset($_GET['dpsreload']) ? $_GET['dpsreload'] : false;
+				$m = \Osmium\Fit\get_damage_from_missiles($fit, $ia, $reload);
+				$t = \Osmium\Fit\get_damage_from_turrets($fit, $ia, $reload);
+				$s = \Osmium\Fit\get_damage_from_smartbombs($fit, $ia);
+				$d = \Osmium\Fit\get_damage_from_drones($fit, $ia);
+				function names(array $dmg) {
+					return [
+						"dps" => $dmg[0],
+						"volley" => $dmg[1],
+					];
+				}
+				$val = [
+					"missiles" => names($m),
+					"turrets" => names($t),
+					"smartbombs" => names($s),
+					"drones" => names($d),
+					"total" => [
+						"dps" => $m[0] + $t[0] + $s[0] + $d[0],
+						"volley" => $m[1] + $t[1] + $s[1] + $d[1],
+					],
+				];
+			} else if($att == 'tank') {
+				if (!isset($ehp)) {
+					$ehp = \Osmium\Fit\get_ehp_and_resists($fit);
+				}
+				if (!isset($cap)) {
+					$cap = \Osmium\Fit\get_capacitor_stability(
+						$fit,
+						isset($_GET['capreload']) ? $_GET['capreload'] : true
+					);
+				}
+				$tanks = \Osmium\Fit\get_tank($fit, $ehp, $cap['delta'],
+					isset($_GET['tankreload']) ? $_GET['tankreload'] : false
+				);
+				$total_rf = 0;
+				$total_sus = 0;
+				foreach ($tanks as $tank => $values) {
+					list($rf, $sus) = $values;
+					$rf *= 1000;
+					$sus *= 1000;
+					$total_rf += $rf;
+					$total_sus += $sus;
+					$val[$tank] = [
+						"reinforced" => $rf,
+						"sustained" => $sus,
+					];
+				}
+				$val["total"] = [
+					"reinforced" => $total_rf,
+					"sustained" => $total_sus,
+				];
+			} else if($att == 'outgoing') {
+				$val = \Osmium\Fit\get_outgoing($fit);
 			}
 		}
 
