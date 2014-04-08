@@ -336,6 +336,12 @@ different values than what you would expect:
 <tr><td>GET</td><td>capreload</td><td>bool</td><td>no</td><td>0, 1</td><td>1</td>
 <td>Include reload time in capacitor stability calculations.</td></tr>
 
+<tr><td>GET</td><td>dpsreload</td><td>bool</td><td>no</td><td>0, 1</td><td>0</td>
+<td>Include reload time in damage-per-second calculations.</td></tr>
+
+<tr><td>GET</td><td>tankreload</td><td>bool</td><td>no</td><td>0, 1</td><td>0</td>
+<td>Include reload time in tank calculations.</td></tr>
+
 </tbody>
 </table>
 
