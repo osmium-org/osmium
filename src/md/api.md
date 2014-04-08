@@ -291,6 +291,13 @@ different values than what you would expect:
   * `droneCapacityUsed` will returned the used drone capacity by
     drones in space and in bay.
 
+  * `damage` will return dps and alpha by source (missiles, turrets,
+    smartbombs, drones) and in total.
+
+  * `tank` will return reinforced and sustained tank by type and in total.
+
+  * `outgoing` will return outgoing effects.
+
 
 ### Parameters
 
