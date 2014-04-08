@@ -242,6 +242,9 @@ foreach(explode('/', $_GET['attributes']) as $loc) {
 				];
 			} else if($att == 'outgoing') {
 				$val = \Osmium\Fit\get_outgoing($fit);
+				foreach ($val as $k => $v) {
+					$val[$k][0] *= 1000;
+				}
 			}
 		}
 
