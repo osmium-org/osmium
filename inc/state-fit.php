@@ -46,11 +46,18 @@ function can_view_fit($loadoutid) {
 }
 
 /**
- * Checks whether a loadout can be viewed by the current user, and
- * that the user has been granted access if the fit is password
- * protected.
+ * Checks whether a loadout can be viewed by the current user, that
+ * the privatetoken is correct, and that the user has been granted
+ * access if the fit is password protected.
  */
 function can_access_fit($fit) {
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		/* Require private token */
+		if(!isset($_GET['privatetoken']) || (string)$_GET['privatetoken'] !== (string)$fit['metadata']['privatetoken']) {
+			return false;
+		}
+	}
+
 	if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
 		$pw = get_state('pw_fits', array());
 		$a = get_state('a', array());

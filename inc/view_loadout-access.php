@@ -218,6 +218,10 @@ if(!isset($exporturi)) {
 		$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
 		$uri .= '.'.$ext.'?revision='.$fit['metadata']['revision'];
 
+		if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+			$params['privatetoken'] = $fit['metadata']['privatetoken'];
+		}
+
 		if($incpresets) {
 			$params['preset'] = $fit['modulepresetid'];
 			$params['chargepreset'] = $fit['chargepresetid'];

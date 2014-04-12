@@ -106,6 +106,10 @@ pretty filename for convenience when saving the file from the browser.
 <tr><td>GET</td><td>dronepreset</td><td>integer</td><td>no</td><td>any</td><td><em>first</em></td>
 <td>If the output format does not support drone presets, use this drone preset.</td></tr>
 
+<tr><td>GET</td><td>privatetoken</td><td>integer</td><td>no</td><td>any</td><td></td>
+<td>If exporting a private loadout, supply its private token here (the
+number after <code>/private/</code> in its URI).</td></tr>
+
 <tr><td>GET</td><td>callback</td><td>string</td><td>no</td><td>any</td><td><em>none</em></td>
 <td>If present, wrap the data in a JSON object and use the specified callback function (JSONP).</td></tr>
 
