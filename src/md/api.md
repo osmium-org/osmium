@@ -342,6 +342,9 @@ different values than what you would expect:
 <tr><td>GET</td><td>tankreload</td><td>bool</td><td>no</td><td>0, 1</td><td>0</td>
 <td>Include reload time in tank calculations.</td></tr>
 
+<tr><td>GET</td><td>damageprofile</td><td>array of 4 double</td><td>no</td><td>[ ≥0, ≥0, ≥0, ≥0 ]</td><td>[ .25, .25, .25, .25 ]</td>
+<td>Override the default damage profile. If present, must be an array of 4 nonnegative numeric values (corresponding to EM/Explosive/Kinetic/Thermal proportions), with at least one nonzero value.</td></tr>
+
 </tbody>
 </table>
 

@@ -26,6 +26,21 @@ $fit = \Osmium\API\get_fit_from_input_post_get();
 $out = [];
 $nout = 0;
 
+if(isset($_GET['damageprofile'])) {
+	$dp = json_decode($_GET['damageprofile'], true);
+	if(json_last_error() === JSON_ERROR_NONE && is_array($dp) && count($dp) === 4) {
+		list($em, $ex, $ki, $th) = $dp;
+
+		if($em >= 0 && $ex >= 0 && $ki >= 0 && $th >= 0 && ($em + $ex + $ki + $th) > 0) {
+			\Osmium\Fit\set_damage_profile($fit, 'User-supplied', $em, $ex, $ki, $th);
+		} else {
+			\Osmium\fatal(400, 'Nonsensical damageprofile given.');
+		}
+	} else {
+		\Osmium\fatal(400, 'Invalid syntax for damageprofile.');
+	}
+}
+
 foreach(explode('/', $_GET['attributes']) as $loc) {
 	$keys = [];
 	foreach(explode(',', $loc) as $loc) {
