@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,16 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Api\Json\QueryLoadouts;
+namespace Osmium\API\Json\QueryLoadouts;
 
 require __DIR__.'/../../../inc/root.php';
-
-const CACHE_TIMER = 3600;
+require \Osmium\ROOT.'/inc/api_common.php';
 
 $query = isset($_GET['query']) ? $_GET['query'] : '';
 $limit = isset($_GET['limit']) ? $_GET['limit'] : 25;
 $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
-$sortby = isset($_GET['sortby']) ? $_GET['sortby'] : 'relevance';
+$sortby = isset($_GET['sortby']) ? $_GET['sortby'] : 'creationdate';
 
 /* XXX: complete the list using inc/search.php */
 $sorts = array(
@@ -36,30 +35,25 @@ $sorts = array(
 );
 
 if(!preg_match('%[0-9]+%', (string)$limit)) {
-	header('HTTP/1.1 400 Bad Request');
-	die('limit is not a positive integer');
+	\Osmium\fatal(400, 'limit is not a positive integer');
 }
 
 $limit = (int)$limit;
 if($limit < 0 || $limit > 50) {
-	header('HTTP/1.1 400 Bad Request');
-	die('limit is out of bounds');
+	\Osmium\fatal(400, 'limit is out of bounds');
 }
 
 if(!preg_match('%[0-9]+%', (string)$offset)) {
-	header('HTTP/1.1 400 Bad Request');
-	die('offset is not a positive integer');
+	\Osmium\fatal(400, 'offset is not a positive integer');
 }
 
 $offset = (int)$offset;
 if($offset < 0 || $offset > 1000) {
-	header('HTTP/1.1 400 Bad Request');
-	die('offset is out of bounds');
+	\Osmium\fatal(400, 'offset is out of bounds');
 }
 
 if(!in_array($sortby, array_keys($sorts))) {
-	header('HTTP/1.1 400 Bad Request');
-	die('invalid sortby value');	
+	\Osmium\fatal(400, 'invalid sortby value');
 }
 
 $cond = $sorts[$sortby];
@@ -128,9 +122,5 @@ foreach($ids as $id) {
 	$result[] = $r;
 }
 
-header('Content-Type: application/json; charset=utf-8');
-header('Expires: '.gmdate('r', time() + CACHE_TIMER));
-header('Cache-Control: public');
-header_remove('Pragma');
-header_remove('Set-Cookie');
-\Osmium\Chrome\return_json($result, JSON_PRETTY_PRINT);
+/* If the user is logged in, private loadouts may be returned and should not be stored in a public cache. */
+\Osmium\API\outputp(json_encode($result), 'application/json', null, \Osmium\State\is_logged_in());

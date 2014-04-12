@@ -43,7 +43,7 @@ function get_fit_from_input_post_get() {
 		}
 
 		if(!\Osmium\State\can_access_fit($fit)) {
-			\Osmium\fatal(403);
+			\Osmium\fatal(403, 'Loadout is hidden and/or password-protected, please supply privatetoken and/or password.');
 		}
 
 		if(isset($_GET['remote'])) {
@@ -118,7 +118,18 @@ function get_fit_from_input_post_get() {
 	return $fit;
 }
 
-function outputp($data, $ctype) {
+function outputp($data, $ctype, $cache = null, $sessionbound = false) {
+	if($cache === null) $cache = 3600;
+	if($cache > 0) {
+		header('Cache-Control: '.($sessionbound ? 'private' : 'public'));
+		header('Expires: '.gmdate('r', time() + $cache));
+		header_remove('Pragma');
+
+		if(!$sessionbound) {
+			header_remove('Set-Cookie');
+		}
+	}
+
 	if(isset($_GET['callback']) && !empty($_GET['callback'])) {
 		if($ctype !== 'application/json') {
 			$data = json_encode($data);

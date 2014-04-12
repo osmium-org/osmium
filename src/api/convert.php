@@ -36,5 +36,7 @@ $fit = \Osmium\API\get_fit_from_input_post_get();
 
 list(, $ctype, $func) = $available_export_formats[$tgt];
 
-header('X-Robots-Tag: noindex');
-\Osmium\API\outputp($func($fit, $_GET), $ctype);
+\Osmium\API\outputp(
+	$func($fit, $_GET), $ctype,
+	null, $fit['metadata']['view_permission'] != \Osmium\Fit\VIEW_EVERYONE
+);

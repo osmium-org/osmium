@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -217,6 +217,10 @@ if(!isset($exporturi)) {
 		$uri = RELATIVE.'/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
 		$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
 		$uri .= '.'.$ext.'?revision='.$fit['metadata']['revision'];
+
+		if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+			$params['privatetoken'] = $fit['metadata']['privatetoken'];
+		}
 
 		if($incpresets) {
 			$params['preset'] = $fit['modulepresetid'];

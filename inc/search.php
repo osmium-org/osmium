@@ -370,12 +370,14 @@ function index($loadout) {
 
 
 function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 1000) {
-	$q = query(
-		$rawq = get_search_query($search_query)
+	$rawq =
+		get_search_query($search_query)
 		.' '.$more_cond
 		.' LIMIT '.$offset.','.$limit
 		.' OPTION field_weights=(ship=100,shipgroup=80,author=100,name=70,description=10,tags=150,types=30)'
-	);
+		;
+
+	$q = query($rawq);
 	if($q === false) return false; /* Invalid query */
 
 	$ids = array();

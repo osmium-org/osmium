@@ -139,7 +139,9 @@ The loadout will be returned in the target format (with the correct
 ### Synopsis
 
 Get a list of loadouts matching a given query. JSON equivalent of the
-browse/search pages. Only public loadouts will be returned.
+browse/search pages. May return account, corporation or alliance-only
+loadouts if the request is made from a logged-in session. Will never
+return hidden lodaouts.
 
 
 

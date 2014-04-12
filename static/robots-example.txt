@@ -1,4 +1,7 @@
 # Should match the values in config.ini
 Sitemap: http://my-domain.tld/sitemap.xml.gz
 
+User-agent: *
+Disallow: /api/
+
 # Add your own rules here…
