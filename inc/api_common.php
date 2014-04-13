@@ -130,9 +130,16 @@ function outputp($data, $ctype, $cache = null, $sessionbound = false) {
 		}
 	}
 
+	$jsonopts = isset($_GET['minify']) && !$_GET['minify'] ? JSON_PRETTY_PRINT : 0;
+
+	if($ctype === 'application/json+encode') {
+		$data = json_encode($data, $jsonopts);
+		$ctype = 'application/json';
+	}
+
 	if(isset($_GET['callback']) && !empty($_GET['callback'])) {
 		if($ctype !== 'application/json') {
-			$data = json_encode($data);
+			$data = json_encode($data, $jsonopts);
 		}
 
 		$data = $_GET['callback']."(".$data.");\n";

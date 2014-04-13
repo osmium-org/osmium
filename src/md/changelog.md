@@ -1,3 +1,13 @@
+# staging
+
+* **The syntax for the query loadouts API call has changed. Please update your
+    applications. [New syntax is here.](./help/api/loadout-query)**
+
+* New API call: loadout attributes.
+
+* The API documentation has been completely overhauled and should be
+  easier to navigate.
+
 # Version 0.12
 
 ## Version 0.12.0, released 2014-03-12

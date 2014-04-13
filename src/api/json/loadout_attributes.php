@@ -279,8 +279,8 @@ foreach(explode('/', $_GET['attributes']) as $loc) {
 }
 
 \Osmium\API\outputp(
-	json_encode($out, isset($_GET['minify']) && $_GET['minify'] ? 0 : JSON_PRETTY_PRINT),
-	'application/json',
+	$out,
+	'application/json+encode',
 	null,
 	$fit['metadata']['view_permission'] != \Osmium\Fit\VIEW_EVERYONE
 );

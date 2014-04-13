@@ -24,7 +24,7 @@ require \Osmium\ROOT.'/inc/api_common.php';
 $query = isset($_GET['query']) ? $_GET['query'] : '';
 $limit = isset($_GET['limit']) ? $_GET['limit'] : 25;
 $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
-$sortby = isset($_GET['sortby']) ? $_GET['sortby'] : 'creationdate';
+$sortby = isset($_GET['sortby']) ? $_GET['sortby'] : 'relevance';
 
 /* XXX: complete the list using inc/search.php */
 $sorts = array(
@@ -95,6 +95,8 @@ $uripath = explode('/', $_SERVER['REQUEST_URI']);
 array_pop($uripath);
 array_pop($uripath);
 array_pop($uripath);
+array_pop($uripath);
+array_pop($uripath);
 $uriprefix .= implode('/', $uripath);
 
 $result = array();
@@ -123,4 +125,4 @@ foreach($ids as $id) {
 }
 
 /* If the user is logged in, private loadouts may be returned and should not be stored in a public cache. */
-\Osmium\API\outputp(json_encode($result), 'application/json', null, \Osmium\State\is_logged_in());
+\Osmium\API\outputp($result, 'application/json+encode', null, \Osmium\State\is_logged_in());

@@ -128,6 +128,21 @@ function get_rules($prefix) {
 			'%^/help/api$%D' => [ '/src/mdstatic.php',
 			                      ['relative' => '..', 'title' => 'Osmium API', 'f' => 'api.md']
 			],
+			'%^/help/api/common%D' => [ '/src/mdstatic.php',
+			                      ['relative' => '../..', 'title' => 'Common API parameters', 'f' => 'api/common.md']
+			],
+			'%^/help/api/loadout-dna$%D' => [ '/src/mdstatic.php',
+			                      ['relative' => '../..', 'title' => 'DNA helpers', 'f' => 'api/loadout-dna.md']
+			],
+			'%^/help/api/loadout-convert%D' => [ '/src/mdstatic.php',
+			                      ['relative' => '../..', 'title' => 'Convert/export loadouts', 'f' => 'api/loadout-convert.md']
+			],
+			'%^/help/api/loadout-query%D' => [ '/src/mdstatic.php',
+			                      ['relative' => '../..', 'title' => 'Query loadouts', 'f' => 'api/loadout-query.md']
+			],
+			'%^/help/api/loadout-attributes%D' => [ '/src/mdstatic.php',
+			                      ['relative' => '../..', 'title' => 'Loadout attributes', 'f' => 'api/loadout-attributes.md']
+			],
 		];
 
 	case "atom":
@@ -156,7 +171,7 @@ function get_rules($prefix) {
 
 			'%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
 			'%^/api/json/loadout/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/attributes/(?<attributes>.+)$%D' => '/src/api/json/loadout_attributes.php',
-			'%^/api/json/query_loadouts\.json$%D' => '/src/api/json/query_loadouts.php',
+			'%^/api/json/loadout/query/(?<query>.*)$%D' => '/src/api/json/query_loadouts.php',
 
 			'%^/editcharacter/(?<name>.+)$%D' => '/src/edit_character.php',
 

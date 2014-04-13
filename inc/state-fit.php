@@ -72,6 +72,11 @@ function can_access_fit($fit) {
 			return true;
 		}
 
+		if(isset($_GET['password']) &&
+		   \Osmium\State\check_password($_GET['password'], $fit['metadata']['password'])) {
+			return true;
+		}
+
 		return false;
 	}
 

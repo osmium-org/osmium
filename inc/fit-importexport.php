@@ -36,7 +36,7 @@ function get_export_formats() {
 			'CLF', 'application/json',
 			function($fit, $opts = array()) {
 				$clfopts = CLF_EXPORT_DEFAULT_OPTS
-					| ((isset($opts['minify']) && $opts['minify']) ? CLF_EXPORT_MINIFY : 0);
+					| ((isset($opts['minify']) && !$opts['minify']) ? 0 : CLF_EXPORT_MINIFY);
 				return export_to_common_loadout_format($fit, $clfopts);
 			}),
 		'md' => array(
