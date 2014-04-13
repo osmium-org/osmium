@@ -62,7 +62,11 @@ $static = [
 	'/help/search',
 	'/help/formats',
 	'/help/db',
-	'/api',
+	'/help/api/common',
+	'/help/api/loadout-dna',
+	'/help/api/loadout-convert',
+	'/help/api/loadout-query',
+	'/help/api/loadout-attributes',
 	'/compare/dps',
 	'/privileges',
 ];
