@@ -64,7 +64,7 @@ const STATICVER = 16;
 const CSS_STATICVER = 22;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 26;
+const JS_STATICVER = 27;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 30;
