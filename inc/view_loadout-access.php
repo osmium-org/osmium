@@ -157,6 +157,14 @@ $canonicaluri = RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
 );
 $forkuri = RELATIVE.'/fork/'.$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision'];
 $historyuri = RELATIVE.'/loadouthistory/'.$loadoutid;
+
+if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+	$tok = 'privatetoken='.$fit['metadata']['privatetoken'];
+
+	$forkuri .= '&amp;'.$tok;
+	$historyuri .= '?'.$tok;
+}
+
 $exportparams = array();
 
 if(isset($_GET['remote']) && $_GET['remote']) {
