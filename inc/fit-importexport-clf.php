@@ -1376,9 +1376,28 @@ function try_get_fit_from_remote_format($remote, array &$errors = array()) {
 				return false;
 			}
 
+			if(isset($match['privatetoken'])) {
+				/* XXX: this sucks, ideally find a way that doesn't use global state */
+				if(isset($_GET['privatetoken'])) $oldpt = $_GET['privatetoken'];
+				$_GET['privatetoken'] = $match['privatetoken'];
+			}
+
 			if(!\Osmium\State\can_access_fit($fit)) {
 				$errors[] = "Loadout exists but cannot be accessed.";
+				if(isset($oldpt)) {
+					$_GET['privatetoken'] = $oldpt;
+					unset($oldpt);
+				} else {
+					unset($_GET['privatetoken']);
+				}
 				return false;
+			}
+
+			if(isset($oldpt)) {
+				$_GET['privatetoken'] = $oldpt;
+				unset($oldpt);
+			} else {
+				unset($_GET['privatetoken']);
 			}
 
 			if($fit['metadata']['visibility'] == VISIBILITY_PRIVATE && (
