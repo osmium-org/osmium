@@ -516,7 +516,7 @@ function try_parse_fit_from_gzclf($source, &$errors) {
 		return false;
 	}
 
-	return try_parse_fit_from_gzclf_raw($source[0]);
+	return try_parse_fit_from_gzclf_raw($source[0], $errors);
 }
 
 /** @internal */
