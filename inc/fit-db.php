@@ -63,15 +63,19 @@ function get_unique(&$fit) {
 			$z = 0;
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				$newindexes[$type][$index] = ($z++);
-				$newmodule = array((int)$module['typeid'], (int)$module['state']);
+				$newindexes[$type][$index] = $z;
+				$newmodule = array($z, (int)$module['typeid'], (int)$module['state']);
+				++$z;
 
 				/* Target info is stored separately on the "local" fit
 				 * only */
 
 				$uniquep['modules'][$type][unique_key($newmodule)] = $newmodule;
+				if($type === 'rig') \Osmium\debug($index, $module, $newmodule);
 			}
 		}
+
+		\Osmium\debug($uniquep['modules']['rig']);
 
 		foreach($preset['chargepresets'] as $chargepreset) {
 			$uniquecp = array(
