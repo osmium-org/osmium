@@ -20,11 +20,6 @@
 namespace Osmium\Fit;
 
 /** @internal */
-function unique_key($stuff) {
-	return sha1(json_encode($stuff));
-}
-
-/** @internal */
 function damage_profile_is_default($dp) {
 	return $dp['name'] === 'Uniform'
 		&& (double)$dp['damages']['em'] === (double)$dp['damages']['explosive']
@@ -36,7 +31,7 @@ function damage_profile_is_default($dp) {
  * Get an array that contains all the significant data of a fit. Used
  * to compare fits.
  */
-function get_unique(&$fit) {
+function get_unique($fit) {
 	sanitize($fit);
 
 	$unique = array();
@@ -46,87 +41,91 @@ function get_unique(&$fit) {
 	}
 
 	$unique['metadata'] = array(
-		'name' => $fit['metadata']['name'],
-		'description' => $fit['metadata']['description'],
+		'name' => (string)$fit['metadata']['name'],
+		'description' => (string)$fit['metadata']['description'],
 		'evebuildnumber' => (int)$fit['metadata']['evebuildnumber'],
-		'tags' => $fit['metadata']['tags'],
+		'tags' => (array)$fit['metadata']['tags'],
 	);
 
+	$newmindexes = [];
+	$newpindexes = [];
+
+	$pz = 0;
 	foreach($fit['presets'] as $presetid => $preset) {
+		$newpindexes[$presetid] = $pz;
+		++$pz;
+
 		$uniquep = array(
-			'name' => $preset['name'],
-			'description' => $preset['description']
+			'name' => (string)$preset['name'],
+			'description' => (string)$preset['description']
 		);
 
-		$newindexes = array();
 		foreach($preset['modules'] as $type => $d) {
 			$z = 0;
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				$newindexes[$type][$index] = $z;
-				$newmodule = array($z, (int)$module['typeid'], (int)$module['state']);
+				$newmindexes[$presetid][$type][$index] = $z;
 				++$z;
 
-				/* Target info is stored separately on the "local" fit
-				 * only */
+				$newmodule = [
+					'typeid' => (int)$module['typeid'],
+					'state' => (int)$module['state'],
+				];
 
-				$uniquep['modules'][$type][unique_key($newmodule)] = $newmodule;
-				if($type === 'rig') \Osmium\debug($index, $module, $newmodule);
+				$uniquep['modules'][$type][] = $newmodule;
 			}
 		}
 
-		\Osmium\debug($uniquep['modules']['rig']);
-
 		foreach($preset['chargepresets'] as $chargepreset) {
 			$uniquecp = array(
-				'name' => $chargepreset['name'],
-				'description' => $chargepreset['description']
+				'name' => (string)$chargepreset['name'],
+				'description' => (string)$chargepreset['description']
 			);
 
 			foreach($chargepreset['charges'] as $type => $a) {
 				foreach($a as $index => $charge) {
-					$newindex = $newindexes[$type][$index];
+					$newindex = $newpindexes[$presetid][$type][$index];
 					$uniquecp['charges'][$type][$newindex] = (int)$charge['typeid'];
 				}
 			}
 
-			$uniquep['chargepresets'][unique_key($uniquecp)] = $uniquecp;
+			$uniquep['chargepresets'][] = $uniquecp;
 		}
 
 		foreach($preset['implants'] as $i) {
-			$uniquep['implants'][(int)$i['typeid']] = 1;
+			$uniquep['implants'][(int)$i['typeid']] = true;
 		}
 
-		$unique['presets'][unique_key($uniquep)] = $uniquep;
+		$unique['presets'][] = $uniquep;
 	}
 
 	foreach($fit['dronepresets'] as $dronepreset) {
 		$uniquedp = array(
-			'name' => $dronepreset['name'],
-			'description' => $dronepreset['description']
+			'name' => (string)$dronepreset['name'],
+			'description' => (string)$dronepreset['description']
 			);
 
 		foreach($dronepreset['drones'] as $drone) {
 			$newdrone = array((int)$drone['typeid'],
 			                  (int)$drone['quantityinbay'],
 			                  (int)$drone['quantityinspace']);
-			$uniquedp['drones'][unique_key($newdrone)] = $newdrone;
+			$uniquedp['drones'][(int)$drone['typeid']] = $newdrone;
 		}
 
-		$unique['dronepresets'][unique_key($uniquedp)] = $uniquedp;
+		$unique['dronepresets'][] = $uniquedp;
 	}
 
 	if(isset($fit['fleet'])) {
 		foreach($fit['fleet'] as $k => $f) {
 			if($k !== 'fleet' && $k !== 'wing' && $k !== 'squad') continue;
-			$unique['fleet'][$k] = get_hash($f);
+			$unique['fleet'][$k] = get_unique($f);
 		}
 	}
 
 	if(isset($fit['remote'])) {
 		foreach($fit['remote'] as $k => $rf) {
 			if($k === 'local' || $k === null) continue;
-			$unique['remote'][$k] = get_hash($rf);
+			$unique['remote'][$k] = get_unique($rf);
 		}
 
 		$remotes = $fit['remote'];
@@ -137,7 +136,11 @@ function get_unique(&$fit) {
 				foreach($preset['modules'] as $type => $sub) {
 					foreach($sub as $index => $m) {
 						if(!isset($m['target']) || $m['target'] === null) continue;
-						$unique['targets']['modules'][$pid][$type][$index] = (string)$m['target'];
+						$unique['moduletargets']
+							[$newpindexes[$pid]]
+							[$type]
+							[$newmindexes[$pid][$type][$index]]
+							= (string)$m['target'];
 					}
 				}
 			}
@@ -172,11 +175,10 @@ function ksort_rec(array &$array) {
 
 /**
  * Get the hash ("fittinghash" in the database) of a fit. If two fits
- * have the same hash, they are essentially the same, not counting for
- * example order of tags, order of module indexes etc.
+ * have the same hash, they are essentially the same.
  */
 function get_hash($fit) {
-	return unique_key(get_unique($fit));
+	return \Osmium\hashcode(get_unique($fit));
 }
 
 /** @internal */

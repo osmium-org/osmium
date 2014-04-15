@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,15 +19,23 @@
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\Db\query('BEGIN');
-\Osmium\Db\query('TRUNCATE TABLE osmium.fittingdeltas');
+if($argc === 3) {
+	list(, $modtotal, $modcurrent) = $argv;
+} else {
+	$modcurrent = 0;
+	$modtotal = 1;
+}
 
-$q = \Osmium\Db\query(
+if($modcurrent >= $modtotal) die();
+
+$q = \Osmium\Db\query_params(
 	'SELECT DISTINCT pr.fittinghash, lh.fittinghash
 	FROM osmium.loadouthistory lh
 	JOIN osmium.loadouthistory pr
 	ON lh.loadoutid = pr.loadoutid AND pr.revision = (lh.revision - 1)
-	ORDER BY pr.fittinghash, lh.fittinghash -- DISTINCT needs this, this is not the "canonical" order'
+	WHERE mod(lh.loadoutid, $1) = $2
+	ORDER BY pr.fittinghash, lh.fittinghash -- DISTINCT needs this, this is not the "canonical" order',
+	[ $modtotal, $modcurrent ]
 );
 
 while($row = \Osmium\Db\fetch_row($q)) {
@@ -45,6 +53,11 @@ while($row = \Osmium\Db\fetch_row($q)) {
 		continue;
 	}
 
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.fittingdeltas WHERE fittinghash1 = $1 AND fittinghash2 = $2',
+		[ $row[0], $row[1] ]
+	);
+
 	$ret = \Osmium\Db\query_params(
 		'INSERT INTO osmium.fittingdeltas (fittinghash1, fittinghash2, delta) VALUES ($1, $2, $3)',
 		array(
@@ -61,7 +74,5 @@ while($row = \Osmium\Db\fetch_row($q)) {
 
 	echo ".";
 }
-
-\Osmium\Db\query('COMMIT');
 
 echo "\n";

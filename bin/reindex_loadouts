@@ -36,6 +36,7 @@ do {
 		'SELECT loadoutid
 		FROM osmium.loadouts
 		WHERE visibility = $1 AND mod(loadoutid, $4) = $5
+		ORDER BY loadoutid DESC
 		LIMIT $2 OFFSET $3',
 		array(
 			\Osmium\Fit\VISIBILITY_PUBLIC,

@@ -55,4 +55,8 @@ reindex-loadouts:
 	./bin/truncate_loadout_index
 	./bin/parallelize 8 ./bin/reindex_loadouts
 
-.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache post-eve-schema-update reindex-loadouts
+reformat-deltas:
+	./bin/truncate osmium.fittingdeltas
+	./bin/parallelize 8 ./bin/reformat_deltas
+
+.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache post-eve-schema-update reindex-loadouts reformat-deltas

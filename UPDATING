@@ -5,6 +5,10 @@ The [sysv] section has been added to config.ini.
 
 Some changes have been made to the example robots.txt.
 
+The fittinghash generation algorithm has changed. If you don't want to
+create empty revisions and store most fittings twice with different
+hashes, you should run `./bin/rehash_fittings`.
+
 v0.12.0, released 2014-03-12
 ============================
 

@@ -46,7 +46,7 @@ function printr($stuff) {
 }
 
 function debug() {
-	$f = fopen('/tmp/osmium', 'ab');
+	$f = fopen('/tmp/osmium.'.getmypid(), 'ab');
 	ob_start();
 
 	echo "\n\n===== ".date('c')."  =====\n";
@@ -188,5 +188,45 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 
 	if($die) {
 		die((int)$code);
+	}
+}
+
+/** @internal
+ *
+ * Return a mostly unique representation of a primitive data type.
+ *
+ * @note This is used to generate fittinghashes, so think carefully
+ * before doing any changes to this function.
+ */
+function hashcode($stuff) {
+	switch($type = gettype($stuff)) {
+
+	case 'boolean':
+		return $stuff ? 't' : 'f';
+
+	case 'integer':
+		return (string)$stuff;
+
+	case 'double':
+		return sprintf("%F", $stuff);
+
+	case 'string':
+		return sha1($stuff);
+
+	case 'NULL':
+		return 'n';
+
+	case 'array':
+		$ctx = hash_init('sha1');
+		hash_update($ctx, "array\n");
+		foreach($stuff as $k => $v) {
+			hash_update($ctx, hashcode($k).' => '.hashcode($v)."\n");
+		}
+		return hash_final($ctx);
+
+	default:
+		trigger_error('Can\'t make hashcode from '.$type, E_USER_ERROR);
+		return false;
+
 	}
 }

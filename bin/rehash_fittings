@@ -1,0 +1,122 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+require __DIR__.'/../inc/root.php';
+
+function fatal($str) {
+	echo "\n";
+	fwrite(STDERR, $str."\n");
+	\Osmium\Db\query('ROLLBACK');
+	die(1);
+}
+
+\Osmium\State\set_cache_enabled(false);
+
+\Osmium\Db\query('TRUNCATE TABLE fittingdeltas');
+
+$q = \Osmium\Db\query('SELECT fittinghash FROM osmium.fittings ORDER BY fittinghash ASC');
+$i = 0;
+$j = 0;
+while($fh = \Osmium\Db\fetch_row($q)) {
+	$oldhash = $fh[0];
+	$newhash = rehash($oldhash);
+	echo "\r".$fh[0];
+
+	if($newhash !== $oldhash) {
+		echo "\r$oldhash => $newhash\n";
+		++$i;
+	}
+}
+
+echo "\nAll done ($i changes).\nRun `make reformat-deltas` to complete the operation.\n";
+
+
+
+function rehash($oldhash) {
+	$fitting = \Osmium\Fit\get_fitting($oldhash);
+	if($fitting === false) fatal("get_fitting($oldhash) failed");
+
+	$newhash = \Osmium\Fit\get_hash($fitting);
+	if($newhash === $oldhash) return $newhash;
+
+
+
+	\Osmium\Db\query('BEGIN');
+	\Osmium\Db\query('SET CONSTRAINTS fittingmoduletargets_source_fkey DEFERRED');
+	$newhash = \Osmium\Fit\commit_fitting($fitting);
+	if($newhash === false) fatal("commit_fitting($oldhash) failed");
+
+
+
+	if(\Osmium\Db\query_params(
+		'DELETE FROM osmium.fittingmoduletargets WHERE fittinghash = $1 OR sourcefittinghash = $1',
+		[ $oldhash ]
+	) === false) {
+		fatal('could not run DELETE on fittingmoduletargets, hash '.$oldhash);
+	}
+
+	foreach([
+		'fittingtags',
+		'fittingfleetboosters',
+		'fittingremotes',
+		'fittingcharges',
+		'fittingchargepresets',
+		'fittingdrones',
+		'fittingdronepresets',
+		'fittingmodules',
+		'fittingimplants',
+		'fittingpresets',
+	] as $table) {
+		if(\Osmium\Db\query_params(
+			'DELETE FROM osmium.'.$table.' WHERE fittinghash = $1', [ $oldhash ]
+		) === false) {
+			fatal('could not run DELETE on table '.$table.', hash '.$oldhash);
+		}
+	}
+
+
+
+	$p = [ $oldhash, $newhash ];
+	foreach([
+		[ 'loadouthistory', 'fittinghash' ],
+		[ 'fittingremotes', 'remotefittinghash' ],
+		[ 'fittingmoduletargets', 'sourcefittinghash' ],
+		[ 'fittingfleetboosters', 'fleetboosterfittinghash' ],
+		[ 'fittingfleetboosters', 'wingboosterfittinghash' ],
+		[ 'fittingfleetboosters', 'squadboosterfittinghash' ],
+	] as $d) {
+		list($table, $field) = $d;
+		if(\Osmium\Db\query_params(
+			'UPDATE osmium.'.$table.' SET '.$field.' = $2 WHERE '.$field.' = $1',
+			$p
+		) === false) {
+			fatal('could not run UPDATE on table '.$table.', hash '.$oldhash);
+		}
+	}
+
+
+	if(\Osmium\Db\query_params(
+		'DELETE FROM osmium.fittings WHERE fittinghash = $1', [ $oldhash ]
+	) === false) {
+		fatal('could not run DELETE on fitting, hash '.$oldhash);
+	}
+
+	if(\Osmium\Db\query('COMMIT') === false) fatal('could not COMMIT transaction, hash '.$oldhash);
+	return $newhash;
+}
