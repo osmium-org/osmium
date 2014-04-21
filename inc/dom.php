@@ -143,9 +143,36 @@ class Document extends \DOMDocument {
 
 
 
-	/* Create an element. */
+	/* Create an element.
+	 *
+	 * @param $name the element name. Also supports "p#someid" and
+	 * "div.class1.class2" syntax for adding an ID or classes.
+	 */
 	function element($name, $children = []) {
-		$e = parent::createElement($name);
+		$elementname = strtok($name, '#.');
+		$offset = strlen($elementname);
+		$classes = '';
+		$id = false;
+
+		while(($tok = strtok('#.')) !== false) {
+			switch($name[$offset]) {
+
+			case '.':
+				$classes .= ' '.$tok;
+				break;
+
+			case '#':
+				$id = $tok;
+				break;
+
+			}
+
+			$offset += strlen($tok) + 1;
+		}
+
+		$e = parent::createElement($elementname);
+		if($id !== false) $e->setAttribute('id', $id);
+		if($classes !== '') $e->setAttribute('class', substr($classes, 1));
 
 		if(!is_array($children)) $children = [ $children ];
 		foreach($children as $k => $v) {
