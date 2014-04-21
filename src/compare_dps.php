@@ -31,22 +31,30 @@ while(array_pop($uriparts) !== 'dps') {
 	$relative .= '/..';
 }
 
-\Osmium\Chrome\print_header('Compare loadout DPS', $relative, $relative === '..');
-echo "<div id='comparedps'>\n";
+$p = new \Osmium\DOM\Page();
+$p->title = 'Compare loadout DPS';
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = $relative;
+$p->index = $relative === '..';
 
-echo "<h1>Compare loadout DPS</h1>\n";
+$div = $p->content->appendCreate('div#comparedps');
 
-echo "<h2>Graph output</h2>\n";
-echo "<div id='graphcontext'></div>\n";
-echo "<p id='graphpermalink'><small>Share this graph: <a></a></small></p>\n";
-
-
+$div->appendCreate('h1', $p->title);
+$div->appendCreate('div#graphcontext');
+$div->appendCreate('p#graphpermalink')->appendCreate('small', 'Share this graph: ')->appendCreate('a');
 
 
 
-echo "<h2>Graph parameters</h2>\n";
-\Osmium\Forms\print_form_begin(null, 'gparams');
-\Osmium\Forms\print_submit('Redraw graph');
+$div->appendCreate('h2', 'Graph parameters');
+$tbody = $div->appendCreate('o-form#gparams', [
+	'action' => $_SERVER['REQUEST_URI'],
+	'method' => 'post',
+])->appendCreate('table')->appendCreate('tbody');
+
+$tbody->appendCreate('tr', [
+	[ 'th' ],
+	[ 'td', [[ 'input', [ 'type' => 'submit', 'value' => 'Redraw graph' ] ]] ],
+]);
 
 $xgraphable = array(
 	'td' => [ 'Target distance', 'km' ],
@@ -61,78 +69,129 @@ $ygraphable = array(
 );
 
 foreach([ 'x' => $xgraphable, 'y' => $ygraphable ] as $dir => $graphable) {
-	$lis = array();
+	$tr = $tbody->appendCreate('tr#'.$dir.'axistype');
+	$tr->appendCreate('th', strtoupper($dir).' axis');
+	$ul = $tr->appendCreate('td')->appendCreate('ul.'.$dir);
+
 	foreach($graphable as $n => $d) {
-		$f = "<input type='radio' name='{$dir}axis' id='{$dir}axistype_{$n}' value='{$n}' />";
-		$f .= " <label for='{$dir}axistype_{$n}'>{$d[0]}</label><br />";
-		$f .= "<div>\n";
-		$f .= "from <input type='text' class='{$dir}min' placeholder='0' /> {$d[1]}<br />\n";
-		$f .= "to <input type='text' class='{$dir}max' placeholder='auto' /> {$d[1]}\n";
-		$f .= "</div>\n";
+		$li = $ul->appendCreate('li.'.$n);
 
-		$lis[] = "<li class='{$n}'>\n{$f}</li>\n";
+		$li->appendCreate('input', [
+			'type' => 'radio',
+			'name' => $dir.'axis',
+			'id' => $dir.'axistype_'.$n,
+			'value' => $n,
+		]);
+
+		$li->append(' ');
+		$li->appendCreate('label', [
+			'for' => $dir.'axistype_'.$n,
+			$d[0],
+		]);
+		$li->appendCreate('br');
+
+		$lidiv = $li->appendCreate('div');
+		$lidiv->append('from ');
+		$lidiv->appendCreate('input', [
+			'type' => 'text',
+			'class' => $dir.'min',
+			'placeholder' => '0',
+		]);
+		$lidiv->append([ ' ', $d[1], [ 'br' ], 'to ' ]);
+		$lidiv->appendCreate('input', [
+			'type' => 'text',
+			'class' => $dir.'max',
+			'placeholder' => 'auto',
+		]);
+		$lidiv->append([ ' ', $d[1] ]);
 	}
-
-	\Osmium\Forms\print_generic_row(
-		$dir.'axistype', strtoupper($dir).' axis',
-		"<ul class='{$dir}'>\n".implode("", $lis)."</ul>\n",
-		$dir.'axistype'
-	);
 }
 
-$lis = array();
+$tr = $tbody->appendCreate('tr#initvalues');
+$tr->appendCreate('th', 'Other values');
+$ul = $tr->appendCreate('td')->appendCreate('ul.initvalues');
+
 foreach($xgraphable as $n => $d) {
+	$li = $ul->appendCreate('li.'.$n);
+
+	$li->appendCreate('label', [
+		'for' => $n.'_init',
+		$d[0],
+	]);
+
+	$li->appendCreate('br');
+	$li->appendCreate('input', [
+		'type' => 'text',
+		'class' => 'init '.$n,
+		'placeholder' => 'auto'
+	]);
+
+	$li->append([ ' ', $d[1] ]);
+
 	$f = "<label for='{$n}_init'>{$d[0]}</label><br />";
 	$f .= "<input type='text' class='init {$n}' placeholder='auto' /> {$d[1]}\n";
 
 	$lis[] = "<li class='{$n}'>\n{$f}</li>\n";
 }
 
-\Osmium\Forms\print_generic_row(
-	'initvalues', 'Other values',
-	"<ul class='initvalues'>\n".implode("", $lis)."</ul>\n",
-    'initvalues'
-);
-
-\Osmium\Forms\print_submit('Redraw graph');
-\Osmium\Forms\print_form_end();
+$tbody->appendCreate('tr', [
+	[ 'th' ],
+	[ 'td', [[ 'input', [ 'type' => 'submit', 'value' => 'Redraw graph' ] ]] ],
+]);
 
 
 
+$div->appendCreate('h2', 'Loadout sources');
+$tbody = $div->appendCreate('o-form#lsources', [
+	'action' => $_SERVER['REQUEST_URI'],
+	'method' => 'post',
+])->appendCreate('table')->appendCreate('tbody');
 
+$tbody->appendCreate('tr', [
+	[ 'th' ],
+	[ 'td', [[ 'input', [ 'type' => 'submit', 'value' => 'Update loadouts' ] ]] ],
+]);
 
-echo "<h2>Loadout sources</h2>\n";
-\Osmium\Forms\print_form_begin(null, 'lsources');
-\Osmium\Forms\print_submit('Update loadouts');
-
-
-$opts = '';
-$default = \Osmium\State\get_setting('default_skillset', 'All V');
+$select = $p->createElement('o-select');
+$select->setAttribute('selected', \Osmium\State\get_setting('default_skillset', 'All V'));
 foreach(\Osmium\Fit\get_available_skillset_names_for_account() as $ss) {
-	$name = \Osmium\Chrome\escape($ss);
-	if($ss === $default) {
-		$opts .= "<option value='{$name}' selected='selected'>{$name}</option>\n";
-	} else {
-		$opts .= "<option value='{$name}'>{$name}</option>\n";
-	}
+	$select->appendCreate('option', [ 'value' => $ss, $ss ]);
 }
 
 for($i = 0; $i < MAX_LOADOUTS; ++$i) {
-	\Osmium\Forms\print_generic_row(
-		'source'.$i,
-		"<label for='source[{$i}]'>Loadout #".($i + 1)."</label>",
-		"<input type='text' class='source' name='source[$i]' id='source{$i}' placeholder='Loadout URI, DNA string or gzclf:// data' /><input type='text' class='legend' name='legend[$i]' id='legend{$i}' placeholder='Loadout title (optional)' /><select name='skillset[$i]'>{$opts}</select>"
-	);
+	$tr = $tbody->appendCreate('tr');
+	$tr->appendCreate('th')->appendCreate('label', [
+		'for' => 'source'.$i,
+		'Loadout #'.($i + 1)
+	]);
+
+	$td = $tr->appendCreate('td');
+	$td->appendCreate('input', [
+		'type' => 'text',
+		'class' => 'source',
+		'name' => 'source['.$i.']',
+		'id' => 'source'.$i,
+		'placeholder' => 'Loadout URI, DNA string or gzclf:// data',
+	]);
+	$td->appendCreate('input', [
+		'type' => 'text',
+		'class' => 'legend',
+		'name' => 'legend['.$i.']',
+		'id' => 'legend'.$i,
+		'placeholder' => 'Loadout title (optional)',
+	]);
+	$tdselect = $select->cloneNode(true);
+	$tdselect->setAttribute('name', 'skillset['.$i.']');
+	$td->append($tdselect);
 }
 
-\Osmium\Forms\print_submit('Update loadouts');
-\Osmium\Forms\print_form_end();
+$tbody->appendCreate('tr', [
+	[ 'th' ],
+	[ 'td', [[ 'input', [ 'type' => 'submit', 'value' => 'Update loadouts' ] ]] ],
+]);
 
 
 
-
-
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('graph_common');
-\Osmium\Chrome\print_js_snippet('compare_dps');
-\Osmium\Chrome\print_footer();
+$p->snippets[] = 'graph_common';
+$p->snippets[] = 'compare_dps';
+$p->render($ctx);
