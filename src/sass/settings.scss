@@ -25,8 +25,14 @@ div#account_settings {
 	}
 
 	&> section#s_characters {
-		&> form > table > tbody > tr > td > input[type='text'] {
-			min-width: 0;
+		&> form > table > tbody > tr > td {
+			&> input[type='text'] {
+				min-width: 0;
+			}
+
+			&> input[type='submit'] {
+				margin: .05em .2em;
+			}
 		}
 	}
 }

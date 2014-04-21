@@ -190,7 +190,7 @@ function print_submit($value = '', $name = '') {
 	echo "<td><input type='submit' $name$value/></td>\n</tr>\n";
 }
 
-/* @deprecated do it yourself */
+/* @deprecated see Page::makeInputFormSeparatorRow */
 function print_separator() {
 	echo "<tr class='separator'>\n<td colspan='2'><hr /></td>\n</tr>\n";
 }

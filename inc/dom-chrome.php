@@ -411,6 +411,43 @@ class Page extends RawPage {
 	}
 
 
+	/* Make a simple row from some nodes. */
+	public function makeFormRawRow($thinside = [], $tdinside = []) {
+		$tr = $this->createElement('tr');
+		$tr->appendCreate('th')->append($thinside);
+		$tr->appendCreate('td')->append($tdinside);
+		return $tr;
+	}
+
+	/* Make a simple row with a label and an input field. */
+	public function makeFormInputRow($type, $name, $label) {
+		$tr = $this->createElement('tr');
+		$tr->appendCreate('th')->appendCreate('label', [ 'for' => $name, $label ]);
+		$tr->appendCreate('td')->appendCreate('o-input', [
+			'type' => $type,
+			'name' => $name,
+			'id' => $name,
+		]);
+
+		return $tr;
+	}
+
+	/* Make a simple separator row for tabular forms. */
+	public function makeFormSeparatorRow() {
+		$tr = $this->createElement('tr');
+		$tr->setAttribute('class', 'separator');
+		$tr->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
+		return $tr;
+	}
+
+	/* Make a simple row with a submit button for tabular forms. */
+	public function makeFormSubmitRow($label) {
+		return $this->makeFormRawRow([], [
+			[ 'input', [ 'type' => 'submit', 'value' => $label ] ],
+		]);
+	}
+
+
 
 	/* @internal */
 	private function renderThemes() {

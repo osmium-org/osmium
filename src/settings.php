@@ -22,7 +22,12 @@ require __DIR__.'/../inc/root.php';
 
 const MASK = '********';
 
-\Osmium\State\assume_logged_in('.');
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$p->title = 'Account settings';
+$ctx->relative = '.';
+
+\Osmium\State\assume_logged_in($ctx->relative);
 $a = \Osmium\State\get_state('a');
 
 if(isset($_POST['key_id'])) {
@@ -37,9 +42,13 @@ if(isset($_POST['key_id'])) {
 	$s = \Osmium\State\check_api_key_sanity($a['accountid'], $key_id, $v_code);
 
 	if($s !== true) {
-		\Osmium\Forms\add_field_error('key_id', $s);
+		$p->formerrors['key_id'][] = $s;
 	} else {
-		\Osmium\Db\query_params('UPDATE osmium.accounts SET keyid = $1, verificationcode = $2, apiverified = true WHERE accountid = $3', array($key_id, $v_code, $a['accountid']));
+		\Osmium\Db\query_params(
+			'UPDATE osmium.accounts SET keyid = $1, verificationcode = $2, apiverified = true
+			WHERE accountid = $3',
+			array($key_id, $v_code, $a['accountid'])
+		);
 
 		$a['apiverified'] = 't';
 		$a['keyid'] = $key_id;
@@ -56,26 +65,26 @@ if(isset($_POST['key_id'])) {
 	}
 }
 
-\Osmium\Chrome\print_header('Account settings', '.');
-echo "<div id='account_settings'>\n";
+$div = $p->content->appendCreate('div#account_settings');
 
-echo "<ul class='tindex'>\n";
-echo "<li><a href='#s_changepw'>Change password</a></li>\n";
-echo "<li><a href='#s_apiauth'>Account status</a></li>\n";
-echo "<li><a href='#s_characters'>Characters and skills</a></li>\n";
-echo "</ul>\n";
+$ul = $div->appendCreate('ul.tindex');
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changepw', 'Change password' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_characters', 'Characters and skills' ]);
 
-echo "<section id='s_changepw'>\n<h1>Change password</h1>\n";
-\Osmium\Forms\print_form_begin("#s_changepw");
+
+
+$section = $div->appendCreate('section#s_changepw');
+$section->appendCreate('h1', 'Change password');
 
 if(isset($_POST['curpw'])) {
 	$cur = $_POST['curpw'];
 	$new = $_POST['newpw'];
 
 	if($new !== $_POST['newpw2']) {
-		\Osmium\Forms\add_field_error('newpw2', 'The two passwords were not equal.');
+		$p->formerrors['newpw2'][] = 'The two passwords are not equal.';
 	} else if(($s = \Osmium\State\is_password_sane($new)) !== true) {
-		\Osmium\Forms\add_field_error('newpw', $s);
+		$p->formerrors['newpw'][] = $s;
 	} else {
 		$accountid = \Osmium\State\get_state('a')['accountid'];
 		$apw = \Osmium\Db\fetch_row(
@@ -87,7 +96,11 @@ if(isset($_POST['curpw'])) {
 		)[0];
 
 		if(!\Osmium\State\check_password($cur, $apw)) {
-			\Osmium\Forms\add_field_error('curpw', 'Incorrect password. If you forgot your password, log out and use the reset password page.');
+			$p->formerrors['curpw'][] = [
+				'Incorrect password. If you forgot your password, log out and use the ',
+				[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset password' ] ],
+				' page.',
+			];
 		} else {
 			$newhash = \Osmium\State\hash_password($new);
 			\Osmium\Db\query_params(
@@ -95,87 +108,124 @@ if(isset($_POST['curpw'])) {
 				WHERE accountid = $2',
 				array($newhash, $accountid)
 			);
-			echo "<p class='notice_box'>Password was successfully changed.</p>\n";
+
+			$section->appendCreate('p.notice_box', 'Password was successfully changed.');
 		}
 	}
 }
 
-\Osmium\Forms\print_generic_field('Current password', 'password', 'curpw');
-\Osmium\Forms\print_generic_field('New password', 'password', 'newpw');
-\Osmium\Forms\print_generic_field('New password (confirm)', 'password', 'newpw2');
-\Osmium\Forms\print_submit();
-\Osmium\Forms\print_form_end();
-echo "</section>\n";
+$tbody = $section
+	->appendCreate('o-form', [ 'action' => '#s_changepw', 'method' => 'post' ])
+	->appendCreate('table')
+	->appendCreate('tbody')
+	;
 
-echo "<section id='s_apiauth'>\n<h1>Account status</h1>\n";
-echo "<p>".($a['apiverified'] === 't' ? 'Your account is API-verified.'
-            : 'Your account is <strong>not</strong> API-verified.')."</p>\n";
+$tbody->append($p->makeFormInputRow('password', 'curpw', 'Current password'));
+$tbody->append($p->makeFormInputRow('password', 'newpw', 'New password'));
+$tbody->append($p->makeFormInputRow('password', 'newpw2', 'New password (confirm)'));
+$tbody->append($p->makeFormSubmitRow('Update password'));
 
-if($a['apiverified'] !== 't') {
-	echo "<p>\nVerifying your account with an API key will allow you to:</p>\n";
-	echo "<ul>\n";
-	echo "<li>Share loadouts with your corporation/alliance, and access corporation/alliance-restricted loadouts;</li>\n";
-	echo "<li>Have your character name used instead of your nickname;</li>\n";
-	echo "<li>Reset your password if you ever forget it.</li>\n";
-	echo "</ul>\n";
+
+
+$section = $div->appendCreate('section#s_apiauth');
+$section->appendCreate('h1', 'Account status');
+
+if($a['apiverified'] === 't') {
+	$section->appendCreate('p.notice_box', 'Your account is API-verified.');
+} else {
+	$section->appendCreate('p.warning_box', [
+		'Your account is ',
+		[ 'strong', 'not' ],
+		' API-verified.',
+	]);
+
+	$section->appendCreate('p', 'Verifying your account with an API key will allow you to:');
+	$ul = $section->appendCreate('ul');
+	$ul->appendCreate('li', 'Share loadouts with your corporation or alliance, and access corporation or alliance-restricted loadouts;');
+	$ul->appendCreate('li', 'Have your character name used instead of your nickname;');
+	$ul->appendCreate('li', 'Reset your password if you ever forget it.');
 }
 
+$section->appendCreate('h2', 'API credentials');
+$section->append(\Osmium\State\make_api_link());
 
-echo "<h2>API credentials</h2>\n";
+$tbody = $section
+	->appendCreate('o-form', [ 'action' => '#s_apiauth', 'method' => 'post' ])
+	->appendCreate('table')
+	->appendCreate('tbody')
+	;
 
-\Osmium\State\print_api_link();
-\Osmium\Forms\print_form_begin("#s_apiauth");
+$tbody->append($p->makeFormInputRow('text', 'key_id', 'API Key ID'));
+$tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
+$tbody->append($p->makeFormSubmitRow('Set API credentials'));
 
-\Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
-\Osmium\Forms\print_generic_field('Verification Code', 'text', 'v_code', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
 
-\Osmium\Forms\print_submit();
-\Osmium\Forms\print_form_end();
 
-echo "</section>\n";
+$section = $div->appendCreate('section#s_characters');
+$section->appendCreate('h1', 'Characters');
+$section->appendCreate('p', 'Here you can add characters with custom skills and attributes to use in loadouts.');
 
-echo "<section id='s_characters'>\n<h1>Characters</h1>\n";
-echo "<p>You can create characters with custom skillsets to use in loadouts.</p>\n";
-
-echo "<h3>Create a new character</h3>\n";
-
-\Osmium\Forms\print_form_begin("#s_characters");
+$section->appendCreate('h3', 'Create a new character');
 
 if(isset($_POST['newcharname']) && $_POST['newcharname'] !== '') {
 	$name = $_POST['newcharname'];
-	list($exists) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2', array($a['accountid'], $name)));
+	list($exists) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(accountid) FROM osmium.accountcharacters
+		WHERE accountid = $1 AND name = $2',
+		array($a['accountid'], $name)
+	));
 
 	if($name == 'All 0' || $name == 'All V') {
-		\Osmium\Forms\add_field_error('newcharname', 'You cannot pick this name, it has a special meaning and is reserved.');
+		$p->formerrors['newcharname'][] = 'This name has a special meaning and cannot be used.';
 	} else if($exists) {
-		\Osmium\Forms\add_field_error('newcharname', 'You already have a character with the same name.');
+		$p->formerrors['newcharname'][] = 'There is already a character with the same name.';
 	} else {
-		\Osmium\Db\query_params('INSERT INTO osmium.accountcharacters (accountid, name) VALUES ($1, $2)', array($a['accountid'], $name));
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.accountcharacters (accountid, name)
+			VALUES ($1, $2)',
+			array($a['accountid'], $name)
+		);
 		unset($_POST['newcharname']);
 	}
 }
 
-\Osmium\Forms\print_generic_field('Character name', 'text', 'newcharname', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody = $section
+	->appendCreate('o-form', [ 'action' => '#s_characters', 'method' => 'post' ])
+	->appendCreate('table')
+	->appendCreate('tbody')
+	;
 
-\Osmium\Forms\print_submit('Create character');
-\Osmium\Forms\print_form_end();
+$tbody->append($p->makeFormInputRow('text', 'newcharname', 'Character name'));
+$tbody->append($p->makeFormSubmitRow('Create character'));
 
-echo "<h3>Manage characters</h3>\n";
-echo "<p>You can use any API key you want for importing skills, just make sure you tick the CharacterSheet box and that you enter the name of the character you want to import the skills from in the \"Import character name\" row.<br />\nCreate an API key here: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/8'>https://support.eveonline.com/api/Key/CreatePredefined/8</a></strong></p>\n";
+
+$section->appendCreate('h3', 'Manage characters');
+$csapi = 'https://support.eveonline.com/api/Key/CreatePredefined/8';
+$section->appendCreate('p', [
+	'You can use any API key for importing skills and attributes as long as it has CharacterSheet access.',
+	[ 'br' ],
+	'Create an API key here: ',
+	[ 'strong', [[ 'a', 'href' => $csapi, $csapi ]] ],
+]);
 
 if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 	reset($_POST['delete']);
 	$cname = key($_POST['delete']);
 
-	\Osmium\Db\query_params('DELETE FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2', array($a['accountid'], $cname));
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.accountcharacters
+		WHERE accountid = $1 AND name = $2',
+		array($a['accountid'], $cname)
+	);
 } else if(isset($_POST['fetch']) && is_array($_POST['fetch'])) {
 	reset($_POST['fetch']);
 	$cname = key($_POST['fetch']);
 
-	list($keyid, $vcode) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT keyid, verificationcode FROM osmium.accountcharacters WHERE accountid = $1 AND name = $2', array($a['accountid'], $cname)));
+	list($keyid, $vcode) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT keyid, verificationcode FROM osmium.accountcharacters
+		WHERE accountid = $1 AND name = $2',
+		array($a['accountid'], $cname)
+	));
 
 	$pkeyid = $_POST['keyid'][$cname];
 	$pvcode = $_POST['vcode'][$cname];
@@ -188,19 +238,26 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 	}
 
 	if((string)$pkeyid === '') {
-		echo "<p class='error_box'>You must specify a key ID.</p>\n";
+		$p->formerrors['keyid['.$cname.']'][] = 'Must supply a key ID.';
 	} else if((string)$pvcode === '') {
-		echo "<p class='error_box'>You must specify a verification code.</p>\n";
+		$p->formerrors['vcode['.$cname.']'][] = 'Must supply a verification code.';
 	} else {
-		$keyinfo = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', 
-		                                array('keyID' => $pkeyid, 
-		                                      'vCode' => $pvcode));
+		$keyinfo = \Osmium\EveApi\fetch(
+			'/account/APIKeyInfo.xml.aspx', 
+			array('keyID' => $pkeyid, 
+			      'vCode' => $pvcode)
+		);
+
 		if(!($keyinfo instanceof \SimpleXMLElement)) {
-			echo "<p class='error_box'>Error occured while fetching API key info.</p>\n";
+			$section->appendCreate('p.error_box', 'An error occured while fetching API key info. Please report if the issue persists.');
 		} else if(isset($keyinfo->error)) {
-			echo "<p class='error_box'>(".((int)$keyinfo->error['code']).") ".\Osmium\Chrome\escape((string)$keyinfo->error)."</p>\n";
+			$section->appendCreate(
+				'p.error_box',
+				'('.(int)$keyinfo->error['code'].') '
+				.(string)$keyinfo->error
+			);
 		} else if(!((int)$keyinfo->result->key['accessMask'] & \Osmium\State\CHARACTER_SHEET_ACCESS_MASK)) {
-			echo "<p class='error_box'>API key does not allow accessing the character sheet. Please tick the CharacterSheet box!</p>\n";
+			$p->formerrors['keyid['.$cname.']'][] = 'No CharacterSheet access.';
 		} else {
 			$apicharid = null;
 
@@ -219,28 +276,38 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 			}
 
 			if($apicharid === null) {
-				echo "<p class='error_box'>Could not find character <strong>".\Osmium\Chrome\escape($piname)."</strong> in this API key. Leave the import character blank to use the first character available.</p>\n";
+				$p->formerrors['keyid['.$cname.']'][] = [ 'Character ', [ 'strong', $piname ], ' not found.' ];
 			} else {
-				\Osmium\Db\query_params('UPDATE osmium.accountcharacters SET keyid = $1, verificationcode = $2, importname = $3 WHERE accountid = $4 AND name = $5',
-				                        array(
-					                        $pkeyid,
-					                        $pvcode,
-					                        $piname,
-					                        $a['accountid'],
-					                        $cname,
-					                        ));
+				\Osmium\Db\query_params(
+					'UPDATE osmium.accountcharacters
+					SET keyid = $1, verificationcode = $2, importname = $3
+					WHERE accountid = $4 AND name = $5',
+					array(
+						$pkeyid,
+						$pvcode,
+						$piname,
+						$a['accountid'],
+						$cname,
+					)
+				);
 
-				$sheet = \Osmium\EveApi\fetch('/char/CharacterSheet.xml.aspx',
-				                              array(
-					                              'keyID' => $pkeyid,
-					                              'vCode' => $pvcode,
-					                              'characterID' => $apicharid,
-					                              ));
+				$sheet = \Osmium\EveApi\fetch(
+					'/char/CharacterSheet.xml.aspx',
+					array(
+						'keyID' => $pkeyid,
+						'vCode' => $pvcode,
+						'characterID' => $apicharid,
+					)
+				);
 
 				if(!($sheet instanceof \SimpleXMLElement)) {
-					echo "<p class='error_box'>Error occured while fetching the character sheet.</p>\n";
+					$section->appendCreate('p.error_box', 'An error occured while fetching character sheet. Please report if the issue persists.');
 				} else if(isset($sheet->error)) {
-					echo "<p class='error_box'>(".((int)$sheet->error['code']).") ".\Osmium\Chrome\escape((string)$sheet->error)."</p>\n";
+					$section->appendCreate(
+						'p.error_box',
+						'('.(int)$sheet->error['code'].') '
+						.(string)$sheet->error
+					);
 				} else {
 					/* Update skills */
 					$skills = array();
@@ -299,44 +366,87 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 	die();
 }
 
-echo "<form method='post' action='#s_characters'>\n";
-echo "<table class='d scharacters'>\n<thead>\n";
-echo "<tr>\n<th>Name</th>\n<th>Key ID</th>\n<th>Verification code</th>\n<th>Import character name</th>\n<th>Last import date</th>\n<th>Actions</th>\n</tr>\n";
-echo "</thead>\n<tfoot></tfoot>\n<tbody>\n";
+$table = $section
+	->appendCreate('o-form', [ 'action' => '#s_characters', 'method' => 'post' ])
+	->appendCreate('table.d.scharacters')
+	;
 
-$cq = \Osmium\Db\query_params('SELECT name, keyid, verificationcode, importname, lastimportdate FROM osmium.accountcharacters WHERE accountid = $1', array($a['accountid']));
+$headtr = $p->element('tr', [
+	[ 'th', 'Name' ],
+	[ 'th', 'Key ID' ],
+	[ 'th', 'Verification code' ],
+	[ 'th', 'Import character name' ],
+	[ 'th', 'Last import date' ],
+	[ 'th', 'Actions' ],
+]);
+$table->appendCreate('thead', $headtr);
+
+$table->appendCreate('tfoot');
+$tbody = $table->appendCreate('tbody');
+
+$cq = \Osmium\Db\query_params(
+	'SELECT name, keyid, verificationcode, importname, lastimportdate
+	FROM osmium.accountcharacters WHERE accountid = $1',
+	array($a['accountid'])
+);
 $haschars = false;
 while($c = \Osmium\Db\fetch_assoc($cq)) {
 	$haschars = true;
-
-	$cname = \Osmium\Chrome\escape($c['name']);
-
 	$vcode = $c['verificationcode'];
 	if($vcode === null) $vcode = '';
 	else $vcode = MASK.substr($vcode, -4);
 
-	echo "<tr>\n";
-	echo "<td><strong>".$cname."</strong></td>\n";
-	echo "<td><input type='text' name='keyid[$cname]' value='".$c['keyid']."' /></td>\n";
-	echo "<td><input type='text' name='vcode[$cname]' value='".\Osmium\Chrome\escape($vcode)."' /></td>\n";
-	echo "<td><input type='text' name='iname[$cname]' value='".\Osmium\Chrome\escape($c['importname'])."' /></td>\n";
-	echo "<td>".($c['lastimportdate'] === null ? '<em>never</em>' : \Osmium\Chrome\format_relative_date($c['lastimportdate']))."</td>\n";
-	echo "<td>\n";
-	echo "<input type='submit' name='fetch[$cname]' value='Update from API' /> ";
-	echo "<input type='submit' name='edit[$cname]' value='Edit skills and attributes' /> ";
-	echo "<input type='submit' name='delete[$cname]' value='Delete character' /> ";
-	echo "</td>\n";
-	echo "</tr>\n";
+	$cname = $c['name'];
+
+	$tr = $tbody->appendCreate('tr');
+	$tr->appendCreate('td')->appendCreate('strong', $cname);
+	$tr->appendCreate('td')->appendCreate('o-input', [
+		'type' => 'text',
+		'name' => 'keyid['.$cname.']',
+		'value' => $c['keyid'],
+	]);
+	$tr->appendCreate('td')->appendCreate('o-input', [
+		'type' => 'text',
+		'name' => 'vcode['.$cname.']',
+		'value' => $vcode,
+	]);
+	$tr->appendCreate('td')->appendCreate('o-input', [
+		'type' => 'text',
+		'name' => 'iname['.$cname.']',
+		'value' => $c['importname'],
+	]);
+
+	$tr->appendCreate('td')->append(
+		$c['lastimportdate'] === null ? [ 'em', 'never' ] : $p->formatRelativeDate($c['lastimportdate'])
+	);
+
+	$td = $tr->appendCreate('td');
+
+	$td->appendCreate('input', [
+		'type' => 'submit',
+		'name' => 'fetch['.$cname.']',
+		'value' => 'Update from API',
+	]);
+	$td->appendCreate('input', [
+		'type' => 'submit',
+		'name' => 'edit['.$cname.']',
+		'value' => 'Edit skills and attributes',
+	]);
+	$td->appendCreate('input', [
+		'type' => 'submit',
+		'name' => 'delete['.$cname.']',
+		'value' => 'Delete character',
+	]);
 }
 if(!$haschars) {
-	echo "<tr>\n<td colspan='6'>\n<p class='placeholder'>No characters.</p></td>\n</tr>\n";
+	$tbody
+		->appendCreate('tr')
+		->appendCreate('td', [ 'colspan' => (string)$headtr->childNodes->length ])
+		->appendCreate('p.placeholder', 'No characters.')
+		;
 }
 
-echo "</tbody>\n</table>\n</form>\n";
 
-echo "</section>\n";
-
-echo "</div>\n";
-\Osmium\Chrome\print_js_snippet('tabs');
-\Osmium\Chrome\print_js_snippet('settings');
-\Osmium\Chrome\print_footer();
+$p->snippets[] = 'tabs';
+$p->snippets[] = 'settings';
+$p->render($ctx);

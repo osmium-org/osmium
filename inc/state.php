@@ -229,17 +229,23 @@ function print_logoff_box($relative, $notifications) {
 }
 
 /** @internal */
-function print_api_link() {
-	echo "<p>\nYou can create an API key here:</p>\n<ul>\n"
-		."<li>With ContactList access: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITH_CONTACTS."'>https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITH_CONTACTS."</a></strong></li>\n"
-		."<li>Without ContactList access: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS."'>https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS."</a></strong></li>\n"
-		."</ul>\n<p>\nBe aware that you need the ContactList access check on your API if you want to use the standings based visibility.<br />\n";
-	echo "<strong>Make sure that you only select one character, do not change any of the checkboxes on the right.</strong>\n</p>\n";
-	echo "<p>\nIf you are still having errors despite having updated your API key, you will have to wait for the cache to expire, or just create a whole new API key altogether (no waiting involved!).\n</p>\n";
+function make_api_link() {
+	$curi = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITH_CONTACTS;
+	$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS;
+
+	return [
+		[ 'p', 'You can create an API key here:' ],
+		[ 'ul', [
+			[ 'li', [ 'With contact list access: ', [ 'strong', [[ 'a', 'href' => $curi, $curi ]] ] ] ],
+			[ 'li', [ 'Without contact list access: ', [ 'strong', [[ 'a', 'href' => $uri, $uri ]] ] ] ],
+		] ],
+		[ 'p', [
+			'You need the contact list access if you want to use the standings-based visibility settings.',
+			[ 'br' ],
+			[ 'strong', 'Only select one character. Do not change the checkboxes on the right.' ],
+		] ],
+		[ 'p', 'If you are still having errors despite having updated your API key, either wait for the cache to expire or create a new API key to get around the caching.' ],
+	];
 }
 
 /**
@@ -413,24 +419,24 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	);
 
 	if($api === false) {
-		return "API server returned a 403. Invalid credentials?";
+		return 'API server returned a 403. Invalid credentials?';
 	}
 
 	if(!($api instanceof \SimpleXMLElement)) {
 		/* Aouch */
-		return "API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!";
+		return 'API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!';
 	}
 
 	if(isset($api->error) && !empty($api->error)) {
 		return '('.((int)$api->error['code']).') '.\Osmium\Chrome\escape((string)$api->error);
 	}
 
-	if((string)$api->result->key["type"] !== 'Character') {
+	if((string)$api->result->key['type'] !== 'Character') {
 	    return 'Invalid key type. Make sure you only select one character.';
 	}
 
-	if((int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
-	   && (int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS ) {
+	if((int)$api->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
+	   && (int)$api->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS ) {
 		return 'Incorrect access mask. Please set it to '.REQUIRED_ACCESS_MASK_WITH_CONTACTS
 			.' (with ContactList) or '.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
 			.' (without ContactList), or use the link above.';
@@ -439,9 +445,14 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	$characterid = (int)$api->result->key->rowset->row['characterID'];
 	$charactername = (string)$api->result->key->rowset->row['characterName'];
 	if($accountid !== null) {
-		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)', array($accountid, $characterid, $charactername)));
+		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(accountid) FROM osmium.accounts
+			WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)',
+			array($accountid, $characterid, $charactername)
+		));
+
 		if($c > 0) {
-			return "Character <strong>".\Osmium\Chrome\escape($charactername)."</strong> is already used by another account.";
+			return [ 'Character', [ 'strong', $charactername ], ' is already used by another account.' ];
 		}
 	}
 
