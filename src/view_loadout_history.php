@@ -147,7 +147,7 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 	$par->appendCreate('code', 'fittinghash '.$rev['fittinghash']);
 
 	if($rev['revision'] > 1 && $rev['delta']) {
-		$li->appendCreate('pre', $p->fragment($rev['delta']));
+		$li->appendCreate('pre', $p->fragment(abbreviate_delta($rev['delta'])));
 	} else {
 		$li->appendCreate('pre', 'No changes / delta not available.');
 	}
@@ -156,3 +156,94 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 }
 
 $p->render($ctx);
+
+
+
+function abbreviate_delta($delta, $context = 5, $snipafter = 10) {
+	$lines = explode("\n", $delta);
+	$distances = [];
+
+	$prevdistance = 100;
+	$inslevel = 0;
+	$dellevel = 0;
+	foreach($lines as $i => $l) {
+		if($i > 0) $prevdistance = $distances[$i - 1];
+
+		$pos = 0;
+		while(($pos = strpos($l, '<ins>', $pos)) !== false) {
+			$pos += 5;
+			++$inslevel;
+			$distances[$i] = 0;
+		}
+
+		$pos = 0;
+		while(($pos = strpos($l, '<del>', $pos)) !== false) {
+			$pos += 5;
+			++$dellevel;
+			$distances[$i] = 0;
+		}
+
+		$pos = 0;
+		while(($pos = strpos($l, '</ins>', $pos)) !== false) {
+			$pos += 6;
+			--$inslevel;
+			$distances[$i] = 0;
+		}
+
+		$pos = 0;
+		while(($pos = strpos($l, '</del>', $pos)) !== false) {
+			$pos += 6;
+			--$dellevel;
+			$distances[$i] = 0;
+		}
+
+		if(isset($distances[$i])) {
+			continue;
+		}
+
+		if($inslevel > 0 || $dellevel > 0) {
+			$distances[$i] = 0;
+		} else {
+			$distances[$i] = $prevdistance + 1;
+		}
+	}
+
+	for($i = count($lines) - 2; $i >= 0; --$i) {
+		$prevdistance = $distances[$i + 1];
+		$distances[$i] = min($prevdistance + 1, $distances[$i]);
+	}
+
+	$ret = '';
+	$snip = '';
+	$sniplines = 0;
+	$imax = count($lines) - 1;
+
+	foreach($lines as $i => $l) {
+		if($i < $imax) $l .= "\n";
+
+		if($distances[$i] <= $context) {
+			if($sniplines >= $snipafter) {
+				$ret .= '<span class="snip"><span><span>@@ lines '.($i - $sniplines + 1).'-'.$i.' snipped @@</span> </span>'
+					.'<span>'.$snip.'</span></span>';
+			} else {
+				$ret .= $snip;
+			}
+
+			$snip = '';
+			$sniplines = 0;
+			$ret .= $l;
+		} else {
+			$snip .= $l;
+			++$sniplines;
+		}
+	}
+
+	if($sniplines >= $snipafter) {
+		$ret .= '<span class="snip"><span><span>@@ lines '.($i - $sniplines + 1).'-'.$i.' snipped @@</span> </span>'
+			.'<span>'.$snip.'</span></span>';
+	} else {
+		$ret .= $snip;
+	}
+
+	return $ret;
+}

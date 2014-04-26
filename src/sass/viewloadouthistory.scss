@@ -34,6 +34,22 @@ ol#lhistory {
 				text-decoration: none;
 				opacity: 1.0;
 			}
+
+			&> span.snip {
+				&> span {
+					display: none;
+				}
+
+				&> span:first-child {
+					display: inline;
+
+					&> span {
+						background-color: $diff-snip-bg-color;
+						color: $diff-snip-text-color;
+						@include no-user-select;
+					}
+				}
+			}
 		}
 	}
 }
