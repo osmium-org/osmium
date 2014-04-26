@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,9 +20,11 @@ namespace Osmium\Page\CastFlag;
 
 require __DIR__.'/../inc/root.php';
 
-if(!\Osmium\State\is_logged_in()) {
-	\Osmium\fatal(403);
-}
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '..';
+
+\Osmium\State\assume_logged_in($ctx->relative);
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $type = isset($_GET['type']) ? $_GET['type'] : '';
@@ -30,27 +32,35 @@ $a = \Osmium\State\get_state('a');
 
 $options = array();
 $flagtype = null;
-$title = 'Flag';
-$ftitle = 'Flag';
 $otherid1 = null;
 $otherid2 = null;
 
 if($type == 'loadout') {
 	$flagtype = \Osmium\Flag\FLAG_TYPE_LOADOUT;
 	$loadoutid = $id;
-	$uri = "../".\Osmium\Fit\fetch_fit_uri($id);
-	$title = 'Flag loadout #'.$id;
-	$ftitle = "Flag loadout <a href='$uri'>#$id</a>";
 
-	$options[\Osmium\Flag\FLAG_SUBTYPE_NOT_A_REAL_LOADOUT] = array('Not a real loadout', 'This loadout cannot be fitted on either Tranquility or Singularity, or fills no purpose.');
+	$p->title = 'Flag loadout #'.$id;
+	$p->content
+		->appendCreate('h1', 'Flag loadout ')
+		->appendCreate('a', [ 'o-rel-href' => ($uri = '/'.\Osmium\Fit\fetch_fit_uri($id)), '#'.$id ])
+		;
+
+	$options[\Osmium\Flag\FLAG_SUBTYPE_NOT_A_REAL_LOADOUT] = array(
+		'Not a real loadout',
+		'This loadout cannot be fitted on either Tranquility or Singularity, or fills no purpose.'
+	);
 } else if($type == 'comment' || $type == 'commentreply') {
 	if($type == 'comment') {
 		$flagtype = \Osmium\Flag\FLAG_TYPE_COMMENT;
 		$entity = 'comment';
 		$commentid = $id;
-		$anchor = 'c'.$id;
+		$jump = '?jtc='.$id;
 
-		$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT loadoutid FROM osmium.loadoutcomments WHERE commentid = $1', array($id)));
+		$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT loadoutid FROM osmium.loadoutcomments WHERE commentid = $1',
+			array($id)
+		));
+
 		if($row === false) {
 			\Osmium\fatal(404);
 		}
@@ -59,9 +69,15 @@ if($type == 'loadout') {
 	} else if($type == 'commentreply') {
 		$flagtype = \Osmium\Flag\FLAG_TYPE_COMMENTREPLY;
 		$entity = 'comment reply';
-		$anchor = 'r'.$id;
+		$jump = '?jtr='.$id;
 
-		$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT lcr.commentid, loadoutid FROM osmium.loadoutcommentreplies AS lcr JOIN osmium.loadoutcomments AS lc ON lc.commentid = lcr.commentid WHERE commentreplyid = $1', array($id)));
+		$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT lcr.commentid, loadoutid FROM osmium.loadoutcommentreplies AS lcr
+			JOIN osmium.loadoutcomments AS lc ON lc.commentid = lcr.commentid
+			WHERE commentreplyid = $1',
+			array($id)
+		));
+
 		if($row === false) {
 			\Osmium\fatal(404);
 		}
@@ -70,11 +86,16 @@ if($type == 'loadout') {
 		$loadoutid = $otherid2 = $row['loadoutid'];
 	}
 
-	$uri = "../".\Osmium\Fit\fetch_fit_uri($loadoutid)."?jtc={$commentid}#{$anchor}";
-	$title = 'Flag '.$entity.' #'.$id;
-	$ftitle = 'Flag '.$entity." <a href='$uri'>#$id</a>";
+	$p->title = 'Flag '.$entity.' #'.$id;
+	$p->content
+		->appendCreate('h1', 'Flag '.$entity.' ')
+		->appendCreate('a', [ 'o-rel-href' => ($uri = '/'.\Osmium\Fit\fetch_fit_uri($loadoutid).$jump), '#'.$id ])
+		;
 
-	$options[\Osmium\Flag\FLAG_SUBTYPE_NOT_CONSTRUCTIVE] = array('Not constructive', 'This comment is useless, or brings nothing new or interesting to the loadout.');
+	$options[\Osmium\Flag\FLAG_SUBTYPE_NOT_CONSTRUCTIVE] = array(
+		'Not constructive',
+		'This comment is useless, or brings nothing new or interesting to the loadout.',
+	);
 } else {
 	\Osmium\fatal(400);
 }
@@ -90,62 +111,90 @@ if(!\Osmium\Flag\is_fit_flaggable($fit)) {
 
 $options[\Osmium\Flag\FLAG_SUBTYPE_OFFENSIVE] = array('Offensive');
 $options[\Osmium\Flag\FLAG_SUBTYPE_SPAM] = array('Spam');
-$options[\Osmium\Flag\FLAG_SUBTYPE_OTHER] = array('Requires moderator attention', "<textarea placeholder='You want to report something that does not fall in any other category above? Use this field to provide more details.' name='other'></textarea>");
+$options[\Osmium\Flag\FLAG_SUBTYPE_OTHER] = array(
+	'Requires moderator attention',
+	$p->element('o-textarea', [
+		'placeholder' => 'Provide more details here.',
+		'name' => 'other',
+	]),
+);
 
 if(isset($_POST['flagtype']) && isset($options[$_POST['flagtype']])) {
 	$flagsubtype = (int)$_POST['flagtype'];
-	$other = trim($_POST['other']);
+	$other = \Osmium\Chrome\trim($_POST['other']);
 
 	if($flagsubtype == \Osmium\Flag\FLAG_SUBTYPE_OTHER && !$other) {
-		\Osmium\Forms\add_field_error('flagtype'.\Osmium\Flag\FLAG_SUBTYPE_OTHER, 'Please provide a reason.');
+		$p->formerrors['other'][] = 'Please provide a reason.';
 	} else {
-		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT flagid FROM osmium.flags WHERE flaggedbyaccountid = $1 AND createdat >= $2 AND type = $3 AND subtype = $4 AND target1 = $5 AND status = $6', 
-		                                                    array($a['accountid'],
-		                                                          time() - 7200,
-		                                                          $flagtype,
-		                                                          $flagsubtype,
-		                                                          $id,
-		                                                          \Osmium\Flag\FLAG_STATUS_NEW)));
-		if($row !== false) {
-			\Osmium\Forms\add_field_error('flagtype'.$flagsubtype, 'You already flagged this fit recently.');
-		} else {
-			\Osmium\Db\query_params('INSERT INTO osmium.flags (flaggedbyaccountid, createdat, type, subtype, status, other, target1, target2, target3) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', array(
-				                        $a['accountid'],
-				                        time(),
-				                        $flagtype,
-				                        $flagsubtype,
-				                        \Osmium\Flag\FLAG_STATUS_NEW,
-				                        $flagsubtype == \Osmium\Flag\FLAG_SUBTYPE_OTHER ? $other : null,
-				                        $id,
-				                        $otherid1,
-				                        $otherid2));
+		$row = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT flagid FROM osmium.flags
+			WHERE flaggedbyaccountid = $1 AND createdat >= $2
+			AND type = $3 AND subtype = $4 AND target1 = $5 AND status = $6',
+			array(
+				$a['accountid'],
+				time() - 7200,
+				$flagtype,
+				$flagsubtype,
+				$id,
+				\Osmium\Flag\FLAG_STATUS_NEW,
+			)
+		));
 
-			header('Location: '.$uri);
+		if($row !== false) {
+			$p->content->appendCreate('p.error_box', 'You already flagged this fit recently.');
+		} else {
+			\Osmium\Db\query_params(
+				'INSERT INTO osmium.flags (
+				flaggedbyaccountid, createdat, type, subtype, status, other, target1, target2, target3
+				) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+				array(
+					$a['accountid'],
+					time(),
+					$flagtype,
+					$flagsubtype,
+					\Osmium\Flag\FLAG_STATUS_NEW,
+					$flagsubtype == \Osmium\Flag\FLAG_SUBTYPE_OTHER ? $other : null,
+					$id,
+					$otherid1,
+					$otherid2,
+				)
+			);
+
+			header('Location: '.$ctx->relative.$uri);
 			die();
 		}
 	}
 }
 
-\Osmium\Chrome\print_header($title, '..');
-echo "<h1>$ftitle</h1>\n";
+$div = $p->content->appendCreate('div#castflag');
 
-echo "<div id='castflag'>\n";
-\Osmium\Forms\print_form_begin();
+$tbody = $div
+	->appendCreate('o-form', [ 'method' => 'post', 'action' => $_SERVER['REQUEST_URI'] ])
+	->appendCreate('table')
+	->appendCreate('tbody')
+	;
 
 foreach($options as $type => $a) {
-	$v = "<h2><label for='flagtype$type'>".$a[0]."</label></h2>";
+	$tr = $tbody->appendCreate('tr');
+	$th = $tr->appendCreate('th');
+	$td = $tr->appendCreate('td');
+
+	$td->appendCreate('h2')->appendCreate('label', [ 'for' => 'flagtype'.$type, $a[0] ]);
 	if(isset($a[1])) {
-		$v .= "\n<p>".$a[1]."</p>";
+		$td->appendCreate('p')->append($a[1]);
 	}
 
-	$checked = isset($_POST['flagtype']) && $_POST['flagtype'] == $type ? 'checked="checked" ' : '';
-	\Osmium\Forms\print_generic_row('flagtype'.$type, "<input type='radio' name='flagtype' id='flagtype$type' value='$type' {$checked}/>", $v);
-	\Osmium\Forms\print_separator();
+	$th->appendCreate('o-input', [
+		'type' => 'radio',
+		'name' => 'flagtype',
+		'id' => 'flagtype'.$type,
+		'value' => $type,
+	]);
+
+	$tbody->append($p->makeFormSeparatorRow());
 }
 
-\Osmium\Forms\print_submit('Cast flag');
-\Osmium\Forms\print_form_end();
-echo "</div>\n";
+$tbody->append($p->makeFormSubmitRow('Cast flag'));
 
-\Osmium\Chrome\print_js_snippet('castflag');
-\Osmium\Chrome\print_footer();
+$p->snippets[] = 'castflag';
+$p->render($ctx);

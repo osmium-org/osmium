@@ -163,14 +163,14 @@ class RawPage extends Document {
 								}
 								$i->removeAttribute('default');
 							}
-						} else if(self::_get_post_value($_vals, $n)) {
+						} else if(self::_get_post_value($_vals, $n) !== null) {
 							/* Has POST/GET data _and_ checkbox was checked */
 							$i->setAttribute('checked', 'checked');
 						}
 					}
 				} else {
 					$value = self::_get_post_value($_vals, $n, false);
-					if($value !== false && !($i->hasAttribute('valueh'))) {
+					if($value !== false && !($i->hasAttribute('value'))) {
 						$i->setAttribute('value', $value);
 					}
 				}
