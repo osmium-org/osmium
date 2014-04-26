@@ -315,7 +315,7 @@ if($revision_overridden && isset($lastrev['updatedate'])) {
 $latestdbver = \Osmium\Fit\get_latest_eve_db_version();
 if($latestdbver['dogmaver'] - $intendeddbver['dogmaver'] > 1) {
 	echo "<p class='warning_box'>";
-	if($can_edit) {
+	if($can_edit && !$revision_overridden) {
 		echo "<strong>Please update this loadout for ".$latestdbver['name'].".</strong>";
 	} else {
 		echo "This loadout was made for an older EVE version (".$intendeddbver['name'].") and may no longer be relevant for the current EVE version (".$latestdbver['name'].").";
