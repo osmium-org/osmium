@@ -53,7 +53,7 @@ osmium_init_presets = function() {
 		osmium_post_preset_change();
 		osmium_undo_push();
 	});
-	$('section#presets tr#rchargepresets select#scpreset').change(function() {
+	$('section#presets tr#rcpresets select#scpreset').change(function() {
 		osmium_clf['X-Osmium-current-chargepresetid'] = $(this).val();
 
 		var cps = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
@@ -68,7 +68,7 @@ osmium_init_presets = function() {
 		osmium_post_preset_change();
 		osmium_undo_push();
 	});
-	$('section#presets tr#rdronepresets select#sdpreset').change(function() {
+	$('section#presets tr#rdpresets select#sdpreset').change(function() {
 		osmium_clf['X-Osmium-current-dronepresetid'] = $(this).val();
 		$('section#presets textarea#tdpresetdesc').val(
 			osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetdescription
@@ -154,7 +154,7 @@ osmium_init_presets = function() {
 		}
 		return false;
 	};
-	$('section#presets tr#rchargepresets input.createpreset').click(function() {
+	$('section#presets tr#rcpresets input.createpreset').click(function() {
 		var name = osmium_get_unique_preset_name('New charge preset', charge_preset_name_exists);
 		name = prompt('Enter the new preset name:', name);
 		if(name !== null) {
@@ -178,7 +178,7 @@ osmium_init_presets = function() {
 			osmium_undo_push();
 		}
 	});
-	$('section#presets tr#rchargepresets input.renamepreset').click(function() {
+	$('section#presets tr#rcpresets input.renamepreset').click(function() {
 		var cps = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
 		var name;
 		for(var i = 0; i < cps.length; ++i) {
@@ -196,7 +196,7 @@ osmium_init_presets = function() {
 			osmium_undo_push();
 		}
 	});
-	$('section#presets tr#rchargepresets input.clonepreset').click(function() {
+	$('section#presets tr#rcpresets input.clonepreset').click(function() {
 		var cps = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
 		var cp;
 		var id = 0;
@@ -237,7 +237,7 @@ osmium_init_presets = function() {
 		osmium_post_preset_change();
 		osmium_undo_push();
 	});
-	$('section#presets tr#rchargepresets input.deletepreset').click(function() {
+	$('section#presets tr#rcpresets input.deletepreset').click(function() {
 		var cps = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
 		var index;
 		for(var i = 0; i < cps.length; ++i) {
@@ -261,7 +261,7 @@ osmium_init_presets = function() {
 		}
 		return false;
 	};
-	$('section#presets tr#rdronepresets input.createpreset').click(function() {
+	$('section#presets tr#rdpresets input.createpreset').click(function() {
 		var name = osmium_get_unique_preset_name('New drone preset', drone_preset_name_exists);
 		name = prompt('Enter the new preset name:', name);
 		if(name !== null) {
@@ -278,7 +278,7 @@ osmium_init_presets = function() {
 			osmium_undo_push();
 		}
 	});
-	$('section#presets tr#rdronepresets input.renamepreset').click(function() {
+	$('section#presets tr#rdpresets input.renamepreset').click(function() {
 		var name = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetname;
 		name = prompt('Enter the new preset name:', name);
 		if(name !== null) {
@@ -289,7 +289,7 @@ osmium_init_presets = function() {
 			osmium_undo_push();
 		}
 	});
-	$('section#presets tr#rdronepresets input.clonepreset').click(function() {
+	$('section#presets tr#rdpresets input.clonepreset').click(function() {
 		var name = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetname;
 		var id = osmium_clf.drones.push($.extend(
 			true, {}, 
@@ -301,7 +301,7 @@ osmium_init_presets = function() {
 		osmium_commit_clf();
 		osmium_undo_push();
 	});
-	$('section#presets tr#rdronepresets input.deletepreset').click(function() {
+	$('section#presets tr#rdpresets input.deletepreset').click(function() {
 		osmium_clf.drones.splice(osmium_clf['X-Osmium-current-dronepresetid'], 1);
 		if(osmium_clf['X-Osmium-current-dronepresetid'] >= osmium_clf.drones.length) {
 			osmium_clf['X-Osmium-current-dronepresetid'] = osmium_clf.drones.length - 1;
@@ -374,7 +374,7 @@ osmium_gen_charge_presets_only = function() {
 		}
 	}
 	$('section#presets textarea#tcpresetdesc').val("description" in cp ? cp.description : '');
-	$('section#presets tr#rchargepresets input.deletepreset').prop('disabled', p.chargepresets.length < 2);
+	$('section#presets tr#rcpresets input.deletepreset').prop('disabled', p.chargepresets.length < 2);
 };
 
 osmium_gen_drone_presets_only = function() {
@@ -392,7 +392,7 @@ osmium_gen_drone_presets_only = function() {
 	select.val(osmium_clf['X-Osmium-current-dronepresetid']);
 	p = osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']];
 	$('section#presets textarea#tdpresetdesc').val("presetdescription" in p ? p.presetdescription : '');
-	$('section#presets tr#rdronepresets input.deletepreset').prop('disabled', osmium_clf.drones.length < 2);	
+	$('section#presets tr#rdpresets input.deletepreset').prop('disabled', osmium_clf.drones.length < 2);	
 };
 
 osmium_pre_preset_change = function() {

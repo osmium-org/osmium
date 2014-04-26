@@ -130,8 +130,6 @@ function sp_totals($prereqs_unique, $skillset) {
 			+ $skillset['attributes'][$attributemap[$secondary]]
 		) / 60.0;
 
-		\Osmium\debug($stid, $primary, $secondary, $attributemap);
-
 		$sp = $needed - sp_to_level_at_rank($current, $rank);
 		$missingsp += $sp;
 		$missingsecs += $sp / $spps;

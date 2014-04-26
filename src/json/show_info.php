@@ -19,7 +19,6 @@
 namespace Osmium\Json\ShowInfo;
 
 require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/ajax_common.php';
 
 if(isset($_GET['clftoken'])) {
 	$fit = \Osmium\State\get_loadout($_GET['clftoken']);

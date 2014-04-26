@@ -227,6 +227,7 @@ class Document extends \DOMDocument {
 class Element extends \DOMElement {
 
 	use Appendable;
+	use Insertable;
 	use Removable;
 	use Renderable;
 
@@ -317,6 +318,7 @@ class Element extends \DOMElement {
 
 class Node extends \DOMNode {
 	use Appendable;
+	use Insertable;
 	use Removable;
 	use Renderable;
 }
@@ -359,6 +361,18 @@ trait Appendable {
 		$child = call_user_func_array(array($this->ownerDocument, 'element'), func_get_args());
 		$this->appendChild($child);
 		return $child;
+	}
+}
+
+trait Insertable {
+	/* Insert another node before this node. */
+	function before($node) {
+		$this->parentNode->insertBefore($node, $this);
+	}
+
+	/* Insert another node after this node. */
+	function after($node) {
+		$this->parentNode->insertAfter($node, $this);
 	}
 }
 

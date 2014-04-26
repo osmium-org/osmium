@@ -19,7 +19,8 @@
 namespace Osmium\ViewLoadout;
 
 require __DIR__.'/../inc/root.php';
-require __DIR__.'/../inc/ajax_common.php';
+require __DIR__.'/../inc/ajax-common.php';
+require __DIR__.'/../inc/loadout-nv-common.php';
 
 /* XXX: there is probably a way to slap a Last-Modified: header on
  * this to save some server resources */

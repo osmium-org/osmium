@@ -422,7 +422,7 @@ class Page extends RawPage {
 	/* Make a simple row with a label and an input field. */
 	public function makeFormInputRow($type, $name, $label) {
 		$tr = $this->createElement('tr');
-		$tr->appendCreate('th')->appendCreate('label', [ 'for' => $name, $label ]);
+		$tr->appendCreate('th')->appendCreate('label', [ 'for' => $name ])->append($label);
 		$tr->appendCreate('td')->appendCreate('o-input', [
 			'type' => $type,
 			'name' => $name,
@@ -714,6 +714,7 @@ class Page extends RawPage {
 			]],
 			[ 'script', [
 				'type' => 'application/javascript',
+				'id' => 'snippets',
 				'o-static-js-src' => self::_minify($this->snippets),
 			]],
 		]);

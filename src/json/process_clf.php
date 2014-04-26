@@ -20,7 +20,7 @@
 namespace Osmium\Json\ProcessCLF;
 
 require __DIR__.'/../../inc/root.php';
-require \Osmium\ROOT.'/inc/ajax_common.php';
+require \Osmium\ROOT.'/inc/ajax-common.php';
 
 if(!isset($_POST['token']) || $_POST['token'] != \Osmium\State\get_token()
    || !isset($_POST['type']) || !in_array($_POST['type'], array('new', 'view'))
