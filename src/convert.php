@@ -122,9 +122,10 @@ if($source !== false && $fits !== false && $exportfunc !== false) {
 	]);
 
 	foreach($fits as &$fit) {
-		$form->appendCreate('p')->appendCreate('textarea', [ 'readonly' => 'readonly' ])->append(
-			$p->createCDATASection($exportfunc($fit, $_POST))
-		);
+		$form
+			->appendCreate('p')
+			->appendCreate('textarea', [ 'readonly' => 'readonly', (string)$exportfunc($fit, $_POST) ])
+			;
 	}
 }
 
