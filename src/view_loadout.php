@@ -341,7 +341,7 @@ if($maxrev !== false && $historyuri !== false) {
 echo "<li class='external'><a rel='nofollow' href='".$forkuri."' title='Make a private copy of this loadout and edit it immediately'>Fork</a></li>\n";
 
 if($can_edit) {
-	echo "<li class='external'><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'>Edit</a></li>\n";
+	echo "<li class='external'><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision'].($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE ? '&amp;privatetoken='.$fit['metadata']['privatetoken'] : '')."' rel='nofollow'>Edit</a></li>\n";
 }
 
 echo "</ul>\n";
@@ -589,9 +589,9 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 		\Osmium\Forms\print_separator();
 	}
 
-	$presets = array(); /* FIXME: use array_column later */
+	$presets = [];
 	foreach($fit[$parraykey] as $id => $p) {
-		$presets[$id] = $p['name'];
+		$presets[$id] = \Osmium\Chrome\escape($p['name']);
 	}
 	$_POST[$name] = $fit[$pkey.'id'];
 	\Osmium\Forms\print_select($fname, $name, $presets, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);

@@ -157,6 +157,14 @@ $canonicaluri = RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
 );
 $forkuri = RELATIVE.'/fork/'.$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision'];
 $historyuri = RELATIVE.'/loadouthistory/'.$loadoutid;
+
+if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+	$tok = 'privatetoken='.$fit['metadata']['privatetoken'];
+
+	$forkuri .= '&amp;'.$tok;
+	$historyuri .= '?'.$tok;
+}
+
 $exportparams = array();
 
 if(isset($_GET['remote']) && $_GET['remote']) {
@@ -217,6 +225,10 @@ if(!isset($exporturi)) {
 		$uri = RELATIVE.'/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
 		$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
 		$uri .= '.'.$ext.'?revision='.$fit['metadata']['revision'];
+
+		if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+			$params['privatetoken'] = $fit['metadata']['privatetoken'];
+		}
 
 		if($incpresets) {
 			$params['preset'] = $fit['modulepresetid'];

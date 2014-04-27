@@ -323,6 +323,7 @@ foreach($typeids as $i => $typeid) {
 
 
 $p->snippets[] = 'dbbrowser';
+$p->index = false;
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '../../..';
 $p->finalize($ctx);
@@ -336,4 +337,5 @@ $p->body->appendCreate('script', [
 	'type' => 'application/javascript',
 	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
 ]);
+
 $p->render($ctx);

@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -54,6 +54,7 @@ osmium_init_presets = function() {
 		osmium_undo_push();
 	});
 	$('section#presets tr#rcpresets select#scpreset').change(function() {
+		osmium_pre_preset_change();
 		osmium_clf['X-Osmium-current-chargepresetid'] = $(this).val();
 
 		var cps = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].chargepresets;
@@ -69,11 +70,15 @@ osmium_init_presets = function() {
 		osmium_undo_push();
 	});
 	$('section#presets tr#rdpresets select#sdpreset').change(function() {
+		osmium_pre_preset_change();
+
 		osmium_clf['X-Osmium-current-dronepresetid'] = $(this).val();
 		$('section#presets textarea#tdpresetdesc').val(
 			osmium_clf.drones[osmium_clf['X-Osmium-current-dronepresetid']].presetdescription
 		);
+
 		osmium_commit_clf();
+		osmium_post_preset_change();
 		osmium_undo_push();
 	});
 
@@ -403,5 +408,6 @@ osmium_post_preset_change = function() {
 	osmium_user_initiated_push(false);
 	osmium_gen_modules();
 	osmium_gen_projected();
+	osmium_gen_drones();
 	osmium_user_initiated_pop();
 };
