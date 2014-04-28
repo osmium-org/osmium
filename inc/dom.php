@@ -133,6 +133,9 @@ class Document extends \DOMDocument {
 	function __construct() {
 		parent::__construct('1.0', 'utf-8');
 
+		$this->formatOutput = false;
+		$this->preserveWhiteSpace = false;
+
 		$this->registerNodeClass('DOMDocument', __NAMESPACE__.'\Document');
 		$this->registerNodeClass('DOMElement', __NAMESPACE__.'\Element');
 		$this->registerNodeClass('DOMNode', __NAMESPACE__.'\Node');
@@ -140,9 +143,36 @@ class Document extends \DOMDocument {
 
 
 
-	/* Create an element. */
+	/* Create an element.
+	 *
+	 * @param $name the element name. Also supports "p#someid" and
+	 * "div.class1.class2" syntax for adding an ID or classes.
+	 */
 	function element($name, $children = []) {
-		$e = parent::createElement($name);
+		$elementname = strtok($name, '#.');
+		$offset = strlen($elementname);
+		$classes = '';
+		$id = false;
+
+		while(($tok = strtok('#.')) !== false) {
+			switch($name[$offset]) {
+
+			case '.':
+				$classes .= ' '.$tok;
+				break;
+
+			case '#':
+				$id = $tok;
+				break;
+
+			}
+
+			$offset += strlen($tok) + 1;
+		}
+
+		$e = parent::createElement($elementname);
+		if($id !== false) $e->setAttribute('id', $id);
+		if($classes !== '') $e->setAttribute('class', substr($classes, 1));
 
 		if(!is_array($children)) $children = [ $children ];
 		foreach($children as $k => $v) {
@@ -160,6 +190,8 @@ class Document extends \DOMDocument {
 
 	/* Create a fragment from raw XML markup. */
 	function fragment($xml) {
+		$xml = (string)$xml;
+		if($xml === '') return '';
 		$fragment = parent::createDocumentFragment();
 		$fragment->appendXML($xml);
 		return $fragment;
@@ -195,6 +227,7 @@ class Document extends \DOMDocument {
 class Element extends \DOMElement {
 
 	use Appendable;
+	use Insertable;
 	use Removable;
 	use Renderable;
 
@@ -285,6 +318,7 @@ class Element extends \DOMElement {
 
 class Node extends \DOMNode {
 	use Appendable;
+	use Insertable;
 	use Removable;
 	use Renderable;
 }
@@ -327,6 +361,18 @@ trait Appendable {
 		$child = call_user_func_array(array($this->ownerDocument, 'element'), func_get_args());
 		$this->appendChild($child);
 		return $child;
+	}
+}
+
+trait Insertable {
+	/* Insert another node before this node. */
+	function before($node) {
+		$this->parentNode->insertBefore($node, $this);
+	}
+
+	/* Insert another node after this node. */
+	function after($node) {
+		$this->parentNode->insertAfter($node, $this);
 	}
 }
 

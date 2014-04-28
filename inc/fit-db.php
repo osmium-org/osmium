@@ -1092,7 +1092,7 @@ function get_fit($loadoutid, $revision = null) {
 
 	if(($cache = \Osmium\State\get_cache('loadout-'.$loadoutid.'-'.$revision, null, 'Loadout_Cache_')) !== null) {
 		if(isset($latest_revision) && $latest_revision === true) {
-			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache, 0, 'Loadout_Cache_');
+			\Osmium\State\put_cache('loadout-'.$loadoutid, $cache, null, 'Loadout_Cache_');
 		}
 
 		return $cache;
@@ -1142,10 +1142,10 @@ function get_fit($loadoutid, $revision = null) {
 	$fit['metadata']['accountid'] = $loadout['accountid'];
 
 	if(isset($latest_revision) && $latest_revision === true) {
-		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, 0, 'Loadout_Cache_');
+		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, null, 'Loadout_Cache_');
 	}
 
-	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit, 0, 'Loadout_Cache_');
+	\Osmium\State\put_cache('loadout-'.$loadoutid.'-'.$revision, $fit, null, 'Loadout_Cache_');
 	\Osmium\State\semaphore_release($sem);
 	return $fit;
 }

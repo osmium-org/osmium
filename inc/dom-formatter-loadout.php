@@ -204,7 +204,7 @@ trait LoadoutFormatter {
 			}
 		}
 
-		\Osmium\State\put_cache_memory('Loadout_Grid_'.$loadoutid, $li->renderNode(), 86400);
+		\Osmium\State\put_cache_memory('Loadout_Grid_'.$loadoutid, $li->renderNode(), 600);
 		\Osmium\State\semaphore_release($sem);
 		return $li;
 	}

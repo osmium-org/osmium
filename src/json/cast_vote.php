@@ -19,7 +19,6 @@
 namespace Osmium\Json\CastVote;
 
 require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/ajax_common.php';
 
 $result = array();
 

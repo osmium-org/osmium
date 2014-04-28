@@ -9,6 +9,11 @@ The fittinghash generation algorithm has changed. If you don't want to
 create empty revisions and store most fittings twice with different
 hashes, you should run `./bin/rehash_fittings`.
 
+v0.12.1, released 2014-04-28
+============================
+
+Bugfix release only. You may want to update the datadump.
+
 v0.12.0, released 2014-03-12
 ============================
 

@@ -99,7 +99,7 @@ function get_flag_weight_deltas() {
  * Checks whether a fit can be flagged by the current user.
  */
 function is_fit_flaggable($fit) {
-	return \Osmium\State\is_logged_in() && \Osmium\Reputation\is_fit_public($fit);
+	return \Osmium\Reputation\is_fit_public($fit) && isset($fit['metadata']['loadoutid']);
 }
 
 /**

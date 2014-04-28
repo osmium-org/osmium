@@ -31,7 +31,6 @@ const F_USED_SHOW_DIFFERENCE = 2;
 const F_USED_SHOW_PERCENTAGE = 4;
 const F_USED_SHOW_PROGRESS_BAR = 8;
 
-require __DIR__.'/chrome-layout.php';
 require __DIR__.'/chrome-fit.php';
 
 
@@ -216,40 +215,6 @@ function format_long_duration($seconds, $precision = 6) {
 	return implode(', ', $out);
 }
 
-/** @deprecated see Formatter::formatRelativeDate */
-function format_relative_date($date, $now = null) {
-	if($now === null) $now = time();
-	$before = "<time datetime='".date('c', $date)."'>";
-	$after = '</time>';
-
-	if($date > $now || $date < ($now - 2 * 86400)) {
-		return $before.date('Y-m-d', $date).$after;
-	}
-
-	$duration = $now - $date;
-
-	if($duration < 2) return $before."less than a second ago".$after;
-
-	$s = $duration % 60;
-	$m = (($duration - $s) / 60) % 60;
-	$h = (($duration - $s - 60 * $m) / 3600) % 24;
-	$d = ($duration - $s - 60 * $m - 3600 * $h) / 86400;
-
-	$a = array_filter(array(
-		                  'd' => $d,
-		                  'h' => $h,
-		                  'm' => $m,
-		                  's' => $s
-		                  ));
-
-	$ret = array();
-	foreach($a as $k => $v) {
-		$ret[] = $v.$k;
-	}
-
-	return $before.implode(' ', array_slice($ret, 0, 2)).' ago'.$after;
-}
-
 /**
  * Format the capacitor stability percentage or the time it lasts.
  *
@@ -300,12 +265,6 @@ function format_integer($i, $exact = true) {
 	}
 
 	return number_format($i);
-}
-
-function format_reputation($rep) {
-	if($rep <= 0) $rep = 0;
-	$rep = format_integer($rep, false);
-	return "<span class='reputation' title='reputation'>{$rep}</span>";
 }
 
 /**
@@ -676,4 +635,16 @@ function format_effect_category($id) {
 	];
 
 	return isset($map[$id]) ? $map[$id] : "unknown ({$id})";
+}
+
+/**
+ * Ends the script and outputs JSON-encoded data.
+ *
+ * @param $data the PHP object/array/value to encode.
+ *
+ * @param $flags flags to pass to json_encode().
+ */
+function return_json($data, $flags = 0) {
+	header('Content-Type: application/json');
+	die(json_encode($data, $flags));
 }

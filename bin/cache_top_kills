@@ -20,7 +20,7 @@
 namespace Osmium\CLI\CacheTopKills;
 
 require __DIR__.'/../inc/root.php';
-require \Osmium\ROOT.'/inc/ajax_common.php';
+require \Osmium\ROOT.'/inc/ajax-common.php';
 
 echo "Caching groupdna…\n";
 

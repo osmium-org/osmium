@@ -28,6 +28,20 @@ Please [contact the developers](./about#project) for any questions about Osmium.
 
 ## Frequently Asked Questions (FAQ) {#faq}
 
+### How do I import a fitting from within the game?
+
+* if you want to import from a kill report, copy the CREST URL and
+  [import](../import) it;
+
+* if you want to import a fitting someone posted in chat, you can
+  copy/paste the message containing the link, and import that *(NB: it
+  only works for messages actually posted in the chat, not in the
+  redaction area)*;
+
+* the longest way, but that should always work, is to save the fitting
+  then export is as an XML file in the client; you can then import the
+  file.
+
 ### Why is this section mostly empty?
 
 Because no questions have been frequently asked yet.

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,23 +20,31 @@ namespace Osmium\Page\ViewNotifications;
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\Chrome\print_header('Notifications', '.');
+$p = new \Osmium\DOM\Page();
+$p->title = 'Notifications';
 
-echo "<div id='vnotifications'>\n";
-echo "<h2>Notifications</h2>\n";
+$div = $p->content->appendCreate('div', [ 'id' => 'vnotifications' ]);
+$div->appendCreate('h2', $p->title);
 
-echo "<table class='d'>\n<tbody>\n";
+$tbody = $div->appendCreate('table', [ 'class' => 'd' ])->appendCreate('tbody');
 
-\Osmium\Notification\get_notifications(function($row, $isnew) {
-		echo "<tr".($isnew ? ' class="new"' : '').">\n";
-		echo "<td>".\Osmium\Chrome\format_relative_date($row['creationdate'])."</td>\n";
-		echo "<td>".\Osmium\Notification\get_notification_body($row)."</td>\n";
-		echo "</tr>\n";
-	});
+$trtpl = $p->element('tr');
+$trtpl->appendCreate('td');
+$trtpl->appendCreate('td');
 
-echo "</tbody>\n</table>\n";
+\Osmium\Notification\get_notifications(function($row, $isnew) use($p, $trtpl, $tbody) {
+	$tr = $trtpl->cloneNode(true);
 
-echo "</div>\n";
-\Osmium\Chrome\print_footer();
+	if($isnew) $tr->setAttribute('class', 'new');
+	$tr->firstChild->append($p->formatRelativeDate($row['creationdate']));
+	$tr->lastChild->append($p->fragment(\Osmium\Notification\get_notification_body($row)) /* XXX */);
+
+	$tbody->appendChild($tr);
+});
+
+
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '.';
+$p->render($ctx);
 
 \Osmium\Notification\reset_notification_count();

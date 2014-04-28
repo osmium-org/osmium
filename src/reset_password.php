@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,11 +19,17 @@
 namespace Osmium\Page\ResetPassword;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/login-common.php';
 
-\Osmium\State\assume_logged_out('.');
-\Osmium\Chrome\print_header('Reset password', '.');
+$p = new \Osmium\DOM\Page();
+$p->title = 'Reset password';
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '.';
 
-echo "<h1>Password reset</h1>\n";
+\Osmium\State\assume_logged_out($ctx->relative);
+
+$p->content->appendCreate('h1', $p->title);
+$p->content->append(\Osmium\Login\make_https_warning($p));
 
 if(isset($_POST['key_id'])) {
 	$keyid = $_POST['key_id'];
@@ -34,47 +40,63 @@ if(isset($_POST['key_id'])) {
 	$s = \Osmium\State\check_api_key_sanity(null, $keyid, $vcode, $characterid, $charactername);
 
 	if($s !== true) {
-		\Osmium\Forms\add_field_error('key_id', $s);
+		$p->formerrors['key_id'][] = $s;
 	} else {
-		$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params('SELECT accountid, accountname FROM osmium.accounts WHERE apiverified = true AND characterid = $1', array($characterid)));
+		$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT accountid, accountname
+			FROM osmium.accounts
+			WHERE apiverified = true AND characterid = $1',
+			array($characterid)
+		));
 
 		if($a === false) {
-			\Osmium\Forms\add_field_error(
-				'key_id',
-				"Character <strong>".\Osmium\Chrome\escape($charactername)
-				."</strong> is not used by any API-validated account."
-			);
+			$p->formerrors['key_id'][] = [
+				'Character ',
+				[ 'strong', $charactername ],
+				' is not used by any API-verified account.',
+			];
 		} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-			\Osmium\Forms\add_field_error('password_0', $s);
+			$p->formerrors['password_0'][] = $s;
 		} else if($pw !== $pw1) {
-			\Osmium\Forms\add_field_error('password_1', 'The two passwords are not equal.');
+			$p->formerrors['password_1'][] = 'The two passwords are not equal.';
 		} else {
 			$hash = \Osmium\State\hash_password($pw);
 
-			\Osmium\Db\query_params('UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
-			                        array($hash, $a['accountid']));
+			\Osmium\Db\query_params(
+				'UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
+				array($hash, $a['accountid'])
+			);
 
-			echo "<p class='notice_box'>\nPassword reset was successful. You can now login on the account <strong>".\Osmium\Chrome\escape($a['accountname'])."</strong> using your new password.\n</p>\n";
+			$p->contents->appendCreate('p.notice_box', [
+				'Password reset was successful. You can now login on the account ',
+				[ 'strong', $a['accountname'] ],
+				' using your new password.',
+			]);
 		}
 	}
 }
 
-echo "<p>\nIf you forgot the password of your API-verified account, you can reset it by re-entering the API key associated with your account below.<br />\nYou can see a list of your API keys here: <strong><a href='https://support.eveonline.com/api'>https://support.eveonline.com/api</a></strong>\n</p>\n";
+$p->content->appendCreate('p')->append([
+	'If you forgot the password of your API-verified account, you can reset it by re-entering the API key associated with your account below.',
+	[ 'br' ],
+	'You can see a list of your API keys here: ',
+	[ 'strong', [[ 'a', [ 'href' => 'https://support.eveonline.com/api', 'https://support.eveonline.com/api' ] ]] ]
+]);
 
-\Osmium\Forms\print_form_begin();
+$tbody = $p->content
+	->appendCreate('o-form', [ 'action' => $_SERVER['REQUEST_URI'], 'method' => 'post' ])
+	->appendCreate('table')
+	->appendCreate('tbody')
+	;
 
-\Osmium\Forms\print_generic_field('API Key ID', 'text', 'key_id', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
-\Osmium\Forms\print_generic_field('Verification Code', 'text', 'v_code', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
-\Osmium\Forms\print_separator();
+$tbody->append($p->makeFormInputRow('text', 'key_id', 'API Key ID'));
+$tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
 
-\Osmium\Forms\print_generic_field('New password', 'password', 'password_0', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
-\Osmium\Forms\print_generic_field('New password (confirm)', 'password', 'password_1', null, 
-                                  \Osmium\Forms\FIELD_REMEMBER_VALUE);
+$tbody->append($p->makeFormSeparatorRow());
 
-\Osmium\Forms\print_submit('Check API key');
-\Osmium\Forms\print_form_end();
+$tbody->append($p->makeFormInputRow('password', 'password_0', 'New password'));
+$tbody->append($p->makeFormInputRow('password', 'password_1', 'New password (confirm)'));
 
-\Osmium\Chrome\print_footer();
+$tbody->append($p->makeFormSubmitRow('Check API key'));
+
+$p->render($ctx);

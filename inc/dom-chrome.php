@@ -411,6 +411,43 @@ class Page extends RawPage {
 	}
 
 
+	/* Make a simple row from some nodes. */
+	public function makeFormRawRow($thinside = [], $tdinside = []) {
+		$tr = $this->createElement('tr');
+		$tr->appendCreate('th')->append($thinside);
+		$tr->appendCreate('td')->append($tdinside);
+		return $tr;
+	}
+
+	/* Make a simple row with a label and an input field. */
+	public function makeFormInputRow($type, $name, $label) {
+		$tr = $this->createElement('tr');
+		$tr->appendCreate('th')->appendCreate('label', [ 'for' => $name ])->append($label);
+		$tr->appendCreate('td')->appendCreate('o-input', [
+			'type' => $type,
+			'name' => $name,
+			'id' => $name,
+		]);
+
+		return $tr;
+	}
+
+	/* Make a simple separator row for tabular forms. */
+	public function makeFormSeparatorRow() {
+		$tr = $this->createElement('tr');
+		$tr->setAttribute('class', 'separator');
+		$tr->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
+		return $tr;
+	}
+
+	/* Make a simple row with a submit button for tabular forms. */
+	public function makeFormSubmitRow($label) {
+		return $this->makeFormRawRow([], [
+			[ 'input', [ 'type' => 'submit', 'value' => $label ] ],
+		]);
+	}
+
+
 
 	/* @internal */
 	private function renderThemes() {
@@ -484,7 +521,7 @@ class Page extends RawPage {
 			$a = \Osmium\State\get_state('a');
 			if(isset($a['ismoderator']) && $a['ismoderator'] === 't') {
 				$ul->append($this->makeNavigationLink(
-					'/moderation/',
+					'/moderation',
 					\Osmium\Flag\MODERATOR_SYMBOL.'Moderation',
 					\Osmium\Flag\MODERATOR_SYMBOL
 				));
@@ -677,6 +714,7 @@ class Page extends RawPage {
 			]],
 			[ 'script', [
 				'type' => 'application/javascript',
+				'id' => 'snippets',
 				'o-static-js-src' => self::_minify($this->snippets),
 			]],
 		]);

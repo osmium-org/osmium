@@ -19,9 +19,10 @@
 namespace Osmium\Page\NewLoadout;
 
 require __DIR__.'/../inc/root.php';
-require __DIR__.'/../inc/ajax_common.php';
+require __DIR__.'/../inc/ajax-common.php';
+require __DIR__.'/../inc/loadout-nv-common.php';
 
-const RELATIVE = '..';
+
 
 if(isset($_GET['import']) && $_GET['import'] === 'dna') {
     $dna = $_GET['dna'];
@@ -45,6 +46,8 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
     header('Location: ../'.$tok);
     die();
 }
+
+
 
 if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
    && \Osmium\State\is_logged_in() && $_GET['tok'] == \Osmium\State\get_token()) {
@@ -72,6 +75,8 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
 	die();
 }
 
+
+
 if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	$loadoutid = (int)$_GET['loadoutid'];
 	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
@@ -98,8 +103,8 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	if(preg_match(
 		'%^(?<title>.+?) \(fork( (?<forknumber>[1-9][0-9]*))?\)$%D',
 		$fork['metadata']['name'],
-		$matches)
-	) {
+		$matches
+	)) {
 		$fork['metadata']['name'] = $matches['title'];
 		$forknum = isset($matches['forknumber']) ? (int)$matches['forknumber'] : 1;
 		$fork['metadata']['name'] .= ' (fork '.($forknum + 1).')';
@@ -130,7 +135,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 		\Osmium\Fit\set_local($fork, $key);
 		/* XXX refactor this */
 		$fork['metadata']['description'] = trim(
-			"*This loadout is a fork of remote loadout #".\Osmium\Chrome\escape($key)
+			"*This loadout is a fork of remote loadout #".$key
 			." of loadout [#".(int)$fit['metadata']['loadoutid']
 			."](".\Osmium\get_ini_setting('relative_path').\Osmium\Fit\get_fit_uri(
 				$fit['metadata']['loadoutid'],
@@ -143,7 +148,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	}
 
 	if(isset($_GET['fleet'])) {
-		$t = \Osmium\Chrome\escape($_GET['fleet']);
+		$t = $_GET['fleet'];
 
 		if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
 		|| !$fit['fleet'][$t]['ship']['typeid']) {
@@ -172,6 +177,8 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	die();
 }
 
+
+
 if(!isset($_GET['token'])) {
 	$tok = \Osmium\State\get_unique_loadout_token();
 
@@ -192,60 +199,87 @@ if(!isset($_GET['token'])) {
 	}
 }
 
+
+
+$p = new \Osmium\LoadoutCommon\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '..';
+$p->index = false;
+
+$p->head->appendCreate('link', [
+	'href' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css',
+	'rel' => 'stylesheet',
+	'type' => 'text/css',
+]);
+
 if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid'] > 0) {
-	$basetitle = 'Editing loadout #'.$fit['metadata']['loadoutid'];
-	$title = "Editing loadout <a href='../".\Osmium\Fit\get_fit_uri(
-		$fit['metadata']['loadoutid'],
-		$fit['metadata']['visibility'],
-		$fit['metadata']['privatetoken']
-	)."'>#".$fit['metadata']['loadoutid']."</a>";
+	$p->title = 'Editing loadout #'.$fit['metadata']['loadoutid'];
+	$p->content
+		->appendCreate('h1', 'Editing loadout ')
+		->appendCreate('a', [
+			'o-rel-href' => '/'.\Osmium\Fit\get_fit_uri(
+				$fit['metadata']['loadoutid'],
+				$fit['metadata']['visibility'],
+				$fit['metadata']['privatetoken']
+			),
+			'#'.$fit['metadata']['loadoutid'],
+		]);
 } else {
-	$title = $basetitle = 'Creating a new loadout';
+	$p->title = 'Creating a new loadout';
+	$p->content->appendCreate('h1', $p->title);
 }
 
-\Osmium\Chrome\print_header(
-	$basetitle, RELATIVE, false,
-	"<link href='//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css' rel='stylesheet' type='text/css' />\n"
-);
+$nla = $p->content->appendCreate('div#nlattribs');
+$nla->appendCreate('section#ship');
 
-echo "<h1>".$title."</h1>\n";
+$section = $nla->appendCreate('section#control');
+$form = $section->appendCreate('form', [ 'method' => 'get', 'action' => './'.$tok ]);
 
-echo "<div id='nlattribs'>
-<section id='ship'></section>
-<section id='control'>
-<form method='GET' action='./".$tok."'>
-<input type='button' name='reset_loadout' id='reset_loadout' value='Reset loadout' />\n";
+$form->appendCreate('input', [
+	'type' => 'button',
+	'name' => 'reset_loadout',
+	'id' => 'reset_loadout',
+	'value' => 'Reset loadout',
+]);
 
-
-echo "<input type='button' name='export_loadout' id='export_loadout' value='Export loadout' />\n";
+$form->appendCreate('input', [
+	'type' => 'button',
+	'name' => 'export_loadout',
+	'id' => 'export_loadout',
+	'value' => 'Export loadout',
+]);
 
 if(\Osmium\State\is_logged_in()) {
-	echo "<input type='button' name='submit_loadout' id='submit_loadout' value='Save loadout' />\n";
+	$form->appendCreate('input', [
+		'type' => 'button',
+		'name' => 'submit_loadout',
+		'id' => 'submit_loadout',
+		'value' => 'Save loadout',
+	]);
 }
 
-echo "<br />\nExport format: <select name='export_type' id='export_type'>\n";
+$form->appendCreate('br');
+$form->append('Export format: ');
+
+$select = $form->appendCreate('select', [ 'name' => 'export_type', 'id' => 'export_type' ]);
 foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
-	echo "<option value='".\Osmium\Chrome\escape($k)."'>".\Osmium\Chrome\escape($f[0])."</option>\n";
+	$select->appendCreate('option', [ 'value' => $k, $f[0] ]);
 }
-echo "</select>\n";
 
-echo "</form>
-</section>
-<section id='attributes'>
-<div class='compact' id='computed_attributes'>
-<p class='placeholder loading'>
-Loading attributes…<span class='spinner'></span>
-</p>
-</div>
-</section>
-</div>\n";
+$nla
+->appendCreate('section#attributes')
+->appendCreate('div.compact#computed_attributes')
+->appendCreate('p.placeholder.loading', 'Loading attributes…')
+->appendCreate('span.spinner')
+;
 
-echo "<div id='nlsources'>
-<ul class='tabs'>
-<li><a href='#search'>Search</a></li>
-<li><a href='#browse'>Browse</a></li>
-<li><a href='#shortlist'>Shortlist</a></li>
-</ul>\n";
+
+
+$nls = $p->content->appendCreate('div#nlsources');
+$ul = $nls->appendCreate('ul.tabs');
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#search', 'Search' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#browse', 'Browse' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#shortlist', 'Shortlist' ]);
 
 $searchexamples = array(
 	/* Module synonyms */
@@ -263,67 +297,140 @@ $searchexamples = array(
 	/* Implants synonyms */
 	'lg snake', 'crystal implant',
 );
-echo "<section id='search'>
-<form method='get' action='?'>
-<ul class='filters'></ul>
-<div class='query'>
-<div><input type='search' name='q' placeholder='Example query: ".
-\Osmium\Chrome\escape($searchexamples[mt_rand(0, count($searchexamples) - 1)])
-."' title='Search items by name, by group, by abbreviation' /></div>
-<input type='submit' value='Search' />
-</div>
-</form>
-<ul class='results'></ul>
-</section>\n";
 
-echo "<section id='browse'>
-<ul class='filters'></ul>
-<p class='placeholder loading'>
-Fetching the list of types…<span class='spinner'></span>
-</p>
-</section>\n";
+$section = $nls->appendCreate('section#search');
+$form = $section->appendCreate('form', [ 'method' => 'get', 'action' => '?' ]);
+$form->appendCreate('ul.filters');
+$div = $form->appendCreate('div.query');
+$div->appendCreate('div')->appendCreate('input', [
+	'type' => 'search',
+	'name' => 'q',
+	'placeholder' => 'Example query: '.$searchexamples[mt_rand(0, count($searchexamples) - 1)],
+	'title' => 'Search items by name, by group, by abbreviation',
+]);
+$div->appendCreate('input', [ 'type' => 'submit', 'value' => 'Search' ]);
+$section->appendCreate('ul.results');
 
-echo "<section id='shortlist'>
-<ul class='filters'></ul>
-<p class='placeholder loading'>
-Fetching shortlist…<span class='spinner'></span>
-</p>
-</section>\n";
+$section = $nls->appendCreate('section#browse');
+$section->appendCreate('ul.filters');
+$section->appendCreate('p.placeholder.loading', 'Fetching type list…')->appendCreate('span.spinner');
 
-echo "</div>\n";
+$section = $nls->appendCreate('section#shortlist');
+$section->appendCreate('ul.filters');
+$section->appendCreate('p.placeholder.loading', 'Fetching shortlist…')->appendCreate('span.spinner');
 
-echo "<div id='nlmain'>
-<ul class='tabs'>
-<li><a href='#modules'>Modules &amp; Charges</a></li>
-<li><a href='#drones'>Drones</a></li>
-<li><a href='#implants'>Implants &amp; Boosters</a></li>
-<li><a href='#remote'>Remote</a></li>
-<li><a href='#presets'>Presets</a></li>
-<li><a href='#metadata'>Metadata</a></li>
-</ul>\n";
 
-echo "<section id='presets'>\n";
-$presetactions = "<input type='button' class='createpreset' value='Create preset' />\n<input type='button' class='renamepreset' value='Rename preset' />\n<input type='button' class='clonepreset' value='Clone preset' />\n<input type='button' class='deletepreset' value='Delete preset' />";
-\Osmium\Forms\print_form_begin();
-\Osmium\Forms\print_generic_row('spreset', "<label for='spreset'>Preset</label>", "<select id='spreset' name='spreset'></select><br />\n".$presetactions."\n", 'rpresets');
-\Osmium\Forms\print_textarea('Preset description', 'tpresetdesc');
-\Osmium\Forms\print_separator();
-\Osmium\Forms\print_generic_row('scpreset', "<label for='scpreset'>Charge preset</label>", "<select id='scpreset' name='scpreset'></select><br />\n".$presetactions."\n", 'rchargepresets');
-\Osmium\Forms\print_textarea('Charge preset description', 'tcpresetdesc');
-\Osmium\Forms\print_separator();
-\Osmium\Forms\print_generic_row('sdpreset', "<label for='sdpreset'>Drone preset</label>", "<select id='sdpreset' name='sdpreset'></select><br />\n".$presetactions."\n", 'rdronepresets');
-\Osmium\Forms\print_textarea('Drone preset description', 'tdpresetdesc');
-\Osmium\Forms\print_form_end();
-echo "</section>\n";
 
-echo "<section id='metadata'>\n";
-\Osmium\Forms\print_form_begin();
-\Osmium\Forms\print_generic_field('Loadout title', 'text', 'name', 'name');
-\Osmium\Forms\print_textarea('Description<br /><small>(optional,<br />Markdown and some HTML allowed)</small>', 'description', 'description');
-\Osmium\Forms\print_generic_field('Tags<br /><small>(space-separated, '
-                                  .(int)\Osmium\get_ini_setting('min_tags').'-'
-                                  .(int)\Osmium\get_ini_setting('max_tags').')</small>',
-                                  'text', 'tags', 'tags');
+$nlm = $p->content->appendCreate('div#nlmain');
+$ul = $nlm->appendCreate('ul.tabs');
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#modules', 'Modules & Charges' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#drones', 'Drones' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#implants', 'Implants & Boosters' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#remote', 'Fleet & Projected' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#presets', 'Presets' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#metadata', 'Metadata' ]);
+
+$section = $nlm->appendCreate('section#modules');
+foreach(\Osmium\Fit\get_slottypes() as $type => $tdata) {
+	$div = $section->appendCreate('div.slots.'.$type);
+	$h3 = $div->appendCreate('h3', $tdata[0]);
+	$div->appendCreate('ul');
+
+	$span = $h3->appendCreate('span');
+	if($type === 'high' || $type === 'medium') {
+		$div->addClass('grouped');
+		$span->appendcreate('small.groupcharges', [
+			'title' => 'Charges are grouped',
+		]);
+	} else {
+		$div->addClass('ungrouped');
+	}
+	$span->appendCreate('small.counts');
+}
+
+$section = $nlm->appendCreate('section#drones');
+foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
+	$div = $section->appendCreate('div.drones.'.$type);
+	$span = $div->appendCreate('h3', $fname)->appendCreate('span');
+
+	if($type === 'space') {
+		$span->appendCreate('small.maxdrones', [ 'title' => 'Maximum number of drones in space' ]);
+		$span->appendCreate('small', ' — ');
+		$span->appendCreate('small.bandwidth', [ 'title' => 'Drone bandwidth usage' ]);
+	} else if($type === 'bay') {
+		$span->appendCreate('small.bayusage', [ 'title' => 'Drone bay usage' ]);
+	}
+
+	$div->appendCreate('ul');
+}
+
+$section = $nlm->appendCreate('section#implants');
+$section->appendCreate('div.implants')->append([ [ 'h3', 'Implants' ], [ 'ul' ] ]);
+$section->appendCreate('div.boosters')->append([ [ 'h3', 'Boosters' ], [ 'ul' ] ]);
+
+$nlm->append($p->makeRemoteSection($fit));
+
+$section = $nlm->appendCreate('section#presets');
+$tbody = $section
+	->appendCreate('form', [ 'method' => 'get', 'action' => '?' ])
+	->appendCreate('table')
+	->appendCreate('tbody');
+$tpltd = $p->element('td', [
+	[ 'select' ],
+	[ 'br' ],
+	[ 'input.createpreset', [ 'type' => 'button', 'value' => 'Create preset' ] ],
+	' ',
+	[ 'input.renamepreset', [ 'type' => 'button', 'value' => 'Rename preset' ] ],
+	' ',
+	[ 'input.clonepreset', [ 'type' => 'button', 'value' => 'Clone preset' ] ],
+	' ',
+	[ 'input.deletepreset', [ 'type' => 'button', 'value' => 'Delete preset' ] ],
+]);
+
+foreach([ '' => 'Preset', 'c' => 'Charge preset', 'd' => 'Drone preset' ] as $k => $n) {
+	if($k !== '') $tbody->append($p->makeFormSeparatorRow());
+
+	$td = $tpltd->cloneNode(true);
+	$select = $td->firstChild;
+	$select->setAttribute('id', $id = 's'.$k.'preset');
+	$select->setAttribute('name', $id);
+
+	$tbody->appendCreate('tr#r'.$k.'presets')->append([
+		[ 'th', [[ 'label', [ 'for' => $id, $n ] ]] ],
+		$td,
+	]);
+
+	$id = 't'.$k.'presetdesc';
+	$tbody->appendCreate('tr')->append([
+		[ 'th', [[ 'label', [ 'for' => $id, $n.' description' ] ]] ],
+		[ 'td', [[ 'textarea', [ 'name' => $id, 'id' => $id ] ]] ],
+	]);
+}
+
+$section = $nlm->appendCreate('section#metadata');
+$tbody = $section->appendCreate('form', [ 'method' => 'get', 'action' => '?' ])
+	->appendCreate('table')->appendCreate('tbody');
+
+$tbody->append($p->makeFormInputRow('text', 'name', 'Loadout title'));
+$tbody->append($p->makeFormRawRow(
+	[[ 'label', [
+		'for' => 'textarea',
+		'Description',
+		[ 'br' ],
+		[ 'small', '(Markdown; optional)' ],
+	] ]],
+	[[ 'textarea', [
+		'name' => 'description',
+		'id' => 'description',
+	] ]]
+));
+$tbody->append($p->makeFormInputRow('text', 'tags', [
+	'Tags',
+	[ 'br' ],
+	[ 'small', '(space-separated, '.\Osmium\get_ini_setting('min_tags')
+	  .'-'.\Osmium\get_ini_setting('max_tags').')' ],
+]));
+
 $commontags = array(
 	/* General usage */
 	'pve', 'pvp',
@@ -344,154 +451,122 @@ $commontags = array(
 	'cheap', 'expensive',
 	'low-sp', 'high-sp',
 );
-\Osmium\Forms\print_generic_row(
-	'common_tags', '',
-	'Common tags:<ul class="tags">'
-	.implode(
-		' ',
-		array_map(
-			function($tag) { return '<li><a title="Add this tag">'.$tag.'</a></li>'; },
-			$commontags
-		)
-	).'</ul>',
-	'common_tags'
-);
-
-$versions = \Osmium\Fit\get_eve_db_versions();
-foreach($versions as &$v) {
-	$v = $v['name']." (".$v['tag'].", build ".$v['build'].")";
+$ul = $p->element('ul.tags');
+foreach($commontags as $tag) {
+	$ul->appendCreate('li')->appendCreate('a', [ 'title' => 'add tag '.$tag, $tag ]);
 }
-\Osmium\Forms\print_select('Expansion<br /><small>(for experts only)</small>', 'evebuildnumber', $versions);
+$tbody->appendCreate('tr#common_tags')->append([
+	[ 'th' ],
+	[ 'td', [ 'Common tags:', $ul ] ],
+]);
+
+$select = $p->element('select#evebuildnumber', [ 'name' => 'evebuildnumber' ]);
+foreach(\Osmium\Fit\get_eve_db_versions() as $k => $v) {
+	$select->appendCreate('option', [
+		'value' => $k,
+		$v['name'].' ('.$v['tag'].'; build '.$p->formatExactInteger($v['build']).')'
+	]);
+}
+$tbody->appendCreate('tr')->append([
+	[ 'th', [[ 'label', [ 'for' => 'evebuildnumber', 'Expansion', [ 'br' ], [ 'small', '(for experts)' ] ] ]] ],
+	[ 'td', $select ],
+]);
 
 if(\Osmium\State\is_logged_in()) {
-	\Osmium\Forms\print_separator();
+	$tbody->append($p->makeFormSeparatorRow());
 
-	\Osmium\Forms\print_select(
-		'Can be seen by', 'view_perms', 
-		array(
-			\Osmium\Fit\VIEW_EVERYONE => 'everyone',
-			\Osmium\Fit\VIEW_PASSWORD_PROTECTED => 'everyone but require a password',
-			\Osmium\Fit\VIEW_ALLIANCE_ONLY => 'my alliance only',
-			\Osmium\Fit\VIEW_CORPORATION_ONLY => 'my corporation only',
-			\Osmium\Fit\VIEW_OWNER_ONLY => 'only me',
-			\Osmium\Fit\VIEW_GOOD_STANDING => 'my contacts with good standing (≥0.01, includes corporation and alliance)',
-			\Osmium\Fit\VIEW_EXCELLENT_STANDING => 'my contacts with excellent standing (≥5.01, includes corporation and alliance)',
-			), null, 'view_perms');
+	$select = $p->element('select#view_perms', [ 'name' => 'view_perms' ]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_EVERYONE,
+		'everyone',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_PASSWORD_PROTECTED,
+		'anyone with the password',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_GOOD_STANDING,
+		'my alliance mates and my contacts with good standing (≥0.01)',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_EXCELLENT_STANDING,
+		'my alliance mates and my contacts with excellent standing (≥5.01)',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_ALLIANCE_ONLY,
+		'my alliance mates',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_CORPORATION_ONLY,
+		'my corporation mates',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VIEW_OWNER_ONLY,
+		'only me',
+	]);
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', [ 'for' => 'view_perms', 'Can be seen by' ] ]],
+		$select
+	));
 
-	\Osmium\Forms\print_select(
-		'Can be edited by', 'edit_perms', 
-		array(
-			\Osmium\Fit\EDIT_OWNER_ONLY => 'only me',
-			\Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY => 'me and anyone in my corporation with the Fitting Manager role',
-			\Osmium\Fit\EDIT_CORPORATION_ONLY => 'anyone in my corporation',
-			\Osmium\Fit\EDIT_ALLIANCE_ONLY => 'anyone in my alliance',
-			), null, 'edit_perms');
+	$select = $p->element('select#edit_perms', [ 'name' => 'edit_perms' ]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\EDIT_OWNER_ONLY,
+		'only me',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY,
+		'me and fitting managers in my corporation',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\EDIT_CORPORATION_ONLY,
+		'me and my corporation mates',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\EDIT_ALLIANCE_ONLY,
+		'me and my alliance mates',
+	]);
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', [ 'for' => 'edit_perms', 'Can be edited by' ] ]],
+		$select
+	));
 
-	\Osmium\Forms\print_select(
-		'Visibility', 'visibility', 
-		array(
-			\Osmium\Fit\VISIBILITY_PUBLIC => 'public (will appear on the homepage and in search results)',
-			\Osmium\Fit\VISIBILITY_PRIVATE => 'private (will not appear in search results)',
-			), null, 'visibility');
+	$select = $p->element('select#visibility', [ 'name' => 'visibility' ]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VISIBILITY_PUBLIC,
+		'public (will appear on the homepage and in search results)',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\VISIBILITY_PRIVATE,
+		'private (will not appear in search results)',
+	]);
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', [ 'for' => 'visibility', 'Visibility' ] ]],
+		$select
+	));
 
-	\Osmium\Forms\print_generic_field('Password', 'password', 'pw', 'pw');
-}
-\Osmium\Forms\print_form_end();
-echo "</section>\n";
-
-echo "<section id='modules'>\n";
-$stypes = \Osmium\Fit\get_slottypes();
-foreach($stypes as $type => $tdata) {
-    if($type === "high" || $type === "medium") {
-        $groupstatus = "grouped";
-        $groupedcharges = "<small class='groupcharges'>Charges are grouped</small>";
-    } else {
-        $groupstatus = "ungrouped";
-        $groupedcharges = "";
-    }
-
-	echo "<div class='slots $type $groupstatus'>\n<h3>".\Osmium\Chrome\escape($tdata[0])
-		." <span>$groupedcharges<small class='counts'></small></span></h3>\n";
-	echo "<ul></ul>\n";
-	echo "</div>\n";
-}
-echo "</section>\n";
-
-echo "<section id='drones'>\n";
-foreach(array('space' => 'In space', 'bay' => 'In bay') as $type => $fname) {
-	echo "<div class='drones $type'>\n<h3>".\Osmium\Chrome\escape($fname)." <span>";
-	if($type === 'space') {
-		echo "<small title='Maximum number of drones in space' class='maxdrones'></small>";
-		echo "<small> — </small>";
-		echo "<small title='Drone bandwidth usage' class='bandwidth'></small>";
-	} else if($type === 'bay') {
-		echo "<small title='Drone bay usage' class='bayusage'></small>";
-	}
-	echo "</span></h3>\n<ul></ul>\n</div>\n";
-}
-echo "</section>\n";
-
-echo "<section id='implants'>\n";
-echo "<div class='implants'>\n<h3>Implants</h3>\n<ul></ul>\n</div>\n";
-echo "<div class='boosters'>\n<h3>Boosters</h3>\n<ul></ul>\n</div>\n";
-echo "</section>\n";
-
-echo "<section id='remote'>\n";
-echo "<section id='fleet'>\n<h2>Fleet boosters</h2>\n";
-echo "<p>The fittings you use as fleet, wing or squad boosters will be visible by anyone who also has access to this loadout.<br />\nThe skills will be reset to \"All V\" when saving the loadout.</p>\n";
-echo "<form>\n<table>\n<tbody>\n";
-
-foreach(array('fleet', 'wing', 'squad') as $ft) {
-	echo "<tr data-type='{$ft}'>\n";
-	echo "<td rowspan='3'><input type='checkbox' id='{$ft}_enabled' name='{$ft}_enabled' class='{$ft} enabled' />";
-	echo " <label for='{$ft}_enabled'><strong>".ucfirst($ft)." booster</strong></label></td>\n";
-	echo "<td><label for='{$ft}_skillset'>Use skills: </label></td>\n";
-	echo "<td><select name='{$ft}_skillset' id='{$ft}_skillset' class='skillset {$ft}'></select></td>\n";
-	echo "</tr>\n";
-
-	echo "<tr data-type='{$ft}'>\n";
-	echo "<td rowspan='2'><label for='{$ft}_fit'>Use fitting: </label></td>\n";
-	echo "<td><input type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' placeholder='Loadout URI, DNA string or gzclf:// data' /></td>\n";
-	echo "</tr>\n";
-
-	echo "<tr data-type='{$ft}'>\n<td>";
-	echo "<input type='button' class='set {$ft}' value='Set fit' /> <input type='button' class='clear {$ft}' value='Clear fit' />";	
-	echo "</td></tr>\n";
+	$tbody->append($p->makeFormInputRow('password', 'pw', 'Password'));
 }
 
-echo "</tbody>\n</table>\n</form>\n</section>\n";
 
-echo "<section id='projected'>
-<h2>Projected effects
-<form>
-<input type='button' value='Add projected fit' id='createprojected' />
-<input type='button' value='Toggle fullscreen' id='projectedfstoggle' />
-</form>
-</h2>
-<p id='rearrange'>
-Rearrange loadouts: <a id='rearrange-grid'>grid</a>,
-<a id='rearrange-circle'>circle</a>
-</p>
-<form id='projected-list'>
-</form>
-</section>\n";
+$p->snippets = array_merge($p->snippets, [
+	'new_loadout',
+	'new_loadout-control',
+	'new_loadout-sources',
+	'new_loadout-ship',
+	'new_loadout-presets',
+	'new_loadout-metadata',
+	'new_loadout-modules',
+	'new_loadout-drones',
+	'new_loadout-implants',
+	'new_loadout-remote',
+]);
+$p->data['shortlist'] = \Osmium\AjaxCommon\get_module_shortlist();
 
-echo "</section>\n</div>\n";
+$p->finalizeWithFit($ctx, $fit, $tok);
+$p->body->appendCreate('script', [
+	'type' => 'application/javascript',
+	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
+]);
 
-\Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, $tok);
-
-\Osmium\Chrome\add_js_data('shortlist', json_encode(\Osmium\AjaxCommon\get_module_shortlist()));
-
-\Osmium\Chrome\include_js("//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js");
-
-\Osmium\Chrome\print_js_snippet('new_loadout');
-\Osmium\Chrome\print_js_snippet('new_loadout-control');
-\Osmium\Chrome\print_js_snippet('new_loadout-sources');
-\Osmium\Chrome\print_js_snippet('new_loadout-ship');
-\Osmium\Chrome\print_js_snippet('new_loadout-presets');
-\Osmium\Chrome\print_js_snippet('new_loadout-metadata');
-\Osmium\Chrome\print_js_snippet('new_loadout-modules');
-\Osmium\Chrome\print_js_snippet('new_loadout-drones');
-\Osmium\Chrome\print_js_snippet('new_loadout-implants');
-\Osmium\Chrome\print_js_snippet('new_loadout-remote');
-\Osmium\Chrome\print_footer();
+$p->render($ctx);

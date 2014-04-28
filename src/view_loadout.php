@@ -19,17 +19,24 @@
 namespace Osmium\ViewLoadout;
 
 require __DIR__.'/../inc/root.php';
-require __DIR__.'/../inc/ajax_common.php';
+require __DIR__.'/../inc/ajax-common.php';
+require __DIR__.'/../inc/loadout-nv-common.php';
 
 /* XXX: there is probably a way to slap a Last-Modified: header on
  * this to save some server resources */
+
+$p = new \Osmium\LoadoutCommon\Page();
+$ctx = new \Osmium\DOM\RenderContext();
 
 
 
 /* Check permissions, password, private tokens. Populates the $fit,
  * $revision, $lodaoutid, $forkuri, $historyuri, $exporturi and
- * $revision_overridden variables. Defines the RELATIVE constant. */
+ * $revision_overridden variables. Fills $ctx->relative. */
 require __DIR__.'/../inc/view_loadout-access.php';
+
+$capacitors = \Osmium\Fit\get_all_capacitors($fit);
+$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
 
 
 
@@ -104,13 +111,12 @@ if($ss !== 'All V') {
 } else {
 	$missing = [];
 }
-\Osmium\Chrome\add_js_data('missingprereqs', json_encode($missing));
+$p->data['missingprereqs'] = $missing;
 
 
 
 $ismoderator = $loggedin && isset($a['ismoderator']) && ($a['ismoderator'] === 't');
-$canedit = ($loadoutid !== false) && \Osmium\State\can_edit_fit($loadoutid);
-$modprefix = $ismoderator ? '<span title="Moderator action">'.\Osmium\Flag\MODERATOR_SYMBOL.'</span> ' : '';
+$modprefix = $ismoderator ? [ 'span', [ 'title' => 'Moderator action', \Osmium\Flag\MODERATOR_SYMBOL ] ] : '';
 
 
 
@@ -143,33 +149,35 @@ foreach(array('', 'charge', 'drone') as $ptype) {
 	}
 }
 
-if(count($fit['metadata']['tags']) > 0) {
-	$tags = ' ('.implode(', ', $fit['metadata']['tags']).')';
-} else {
-	$tags = '';
-}
 
-$title = \Osmium\Chrome\escape($fit['metadata']['name'].$tags);
+
+$p->title = $fit['metadata']['name'];
+
+if(count($fit['metadata']['tags']) > 0) {
+	$p->title .= ' ('.implode(', ', $fit['metadata']['tags']).')';
+}
 
 if(isset($fit['ship']['typename'])) {
-	$title .= \Osmium\Chrome\escape(' / '.$fit['ship']['typename'].' fitting');
+	$p->title .= ' / '.$fit['ship']['typename'].' fitting';
 }
 if($revision_overridden) {
-	$title .= ' (R'.$revision.')';
+	$p->title .= ' (revision '.$revision.')';
 }
+
+$p->index = $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
+	&& !$revision_overridden && !$preset_overridden;
+
+$p->head->appendCreate('link', [
+	'rel' => 'canonical',
+	'o-rel-href' => $canonicaluri,
+]);
 
 $dna = \Osmium\Fit\export_to_dna($fit);
 
-\Osmium\Chrome\print_header(
-	$title, RELATIVE,
-	($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
-	 && !$revision_overridden
-	 && !$preset_overridden),
-	"<link rel='canonical' href='".\Osmium\Chrome\escape($canonicaluri)."' />"
+$h1 = $p->content->appendCreate('h1#vltitle', 'Viewing loadout: ');
+$h1->appendCreate('strong.fitname')->appendCreate(
+	'a', [ 'data-ccpdna' => $dna, $fit['metadata']['name'] ]
 );
-
-echo "<h1 id='vltitle'>Viewing loadout: <strong class='fitname'><a data-ccpdna='{$dna}'>"
-.\Osmium\Chrome\escape($fit['metadata']['name'])."</a></strong>";
 
 $canretag = ($revision_overridden === false)
 	&& isset($a['accountid']) && isset($author['accountid'])
@@ -180,24 +188,24 @@ $canretag = ($revision_overridden === false)
 	));
 
 if(count($fit['metadata']['tags']) > 0 || $canretag) {
-	echo "\n<ul class='tags'>\n";
+	$ul = $h1->appendCreate('ul.tags');
+
 	foreach($fit['metadata']['tags'] as $tag) {
-		echo "<li><a href='".RELATIVE."/search?q=".urlencode('@tags '.$tag)."'>$tag</a></li>\n";
+		$ul->appendCreate('li')->appendCreate('a', [
+			'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@tags "'.$tag.'"' ]),
+			$tag
+		]);
 	}
+
 	if($canretag) {
-		echo "<li class='retag'><a><small>✎ Edit tags</small></a></li>";
+		$ul->appendCreate('li.retag')->appendCreate('a')->appendCreate('small', '✎ Edit tags');
 	}
-	echo "</ul>\n";
 }
-echo "</h1>\n";
+
+
 
 if(isset($fit['ship']['typeid'])) {
-	list($groupname) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT groupname FROM eve.invtypes
-		JOIN eve.invgroups ON invtypes.groupid = invgroups.groupid
-		WHERE typeid = $1',
-		array($fit['ship']['typeid'])
-	));
+	$groupname = \Osmium\Fit\get_groupname(\Osmium\Fit\get_groupid($fit['ship']['typeid']));
 } else {
 	$groupname = '';
 }
@@ -213,24 +221,31 @@ list($commentcount) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
 ));
 $commentcount = (int)$commentcount;
 
-echo "<div id='vlattribs'>
-<section id='ship' data-loadoutid='".(int)$loadoutid."'>
-<h1>\n";
+$div = $p->content->appendCreate('div#vlattribs');
+$section = $div->appendCreate('section#ship', [ 'data-loadoutid' => (int)$loadoutid ]);
+$h1 = $section->appendCreate('h1');
 
 if(isset($fit['ship']['typeid'])) {
-	echo "<img src='//image.eveonline.com/Render/".$fit['ship']['typeid']."_256.png' alt='' />\n";
-	echo "<small class='groupname'>".\Osmium\Chrome\escape($groupname)."</small>\n";
-	$m = isset($missing[$fit['ship']['typeid']]) ? ' missingskill' : '';
-	echo "<strong><span class='name'>".\Osmium\Chrome\escape($fit['ship']['typename'])."</span></strong>\n";
+	$h1->appendCreate('o-eve-img', [
+		'src' => '/Render/'.$fit['ship']['typeid'].'_256.png',
+		'alt' => '',
+	]);
+
+	$h1->appendCreate('small.groupname', $groupname);
+
+	$span = $h1->appendCreate('strong')->appendCreate('span.name', $fit['ship']['typename']);
+
+	if(isset($missing[$fit['ship']['typeid']])) {
+		$span->addClass('missingskill');
+	}
 } else {
-	echo "<div class='notype'></div>\n";
-	echo "<small class='groupname'></small>\n";
-	echo "<strong>N/A</strong>\n";
+	$h1->appendCreate('div.notype');
+	$h1->appendCreate('small.groupname');
+	$h1->appendCreate('strong', 'N/A');
 }
 
 $intendeddbver = \Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber']);
-echo "<small class='dbver'>".\Osmium\Chrome\escape($intendeddbver['name'])."</small>
-</h1>\n";
+$h1->appendCreate('small.dbver', $intendeddbver['name']);
 
 if($loadoutid === false) {
 	$votesclass = ' dummy';
@@ -242,117 +257,190 @@ if($loadoutid === false) {
 	$votesclass = '';
 }
 
-echo "<div class='votes{$votesclass}' data-targettype='loadout'>\n";
-echo "<a title='This loadout is creative, useful, and fills the role it was designed for' class='upvote"
-.($votetype == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')
-."'><img src='".RELATIVE."/static-".\Osmium\STATICVER
-."/icons/vote.svg' alt='upvote' /></a>\n";
-echo "<strong title='".$totalupvotes." upvote(s), "
-.$totaldownvotes." downvote(s)'>".$totalvotes."</strong>\n";
-echo "<a title='This loadout suffers from severe flaws, is badly formatted, or shows no research effort'"
-." class='downvote".($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')
-."'><img src='".RELATIVE."/static-".\Osmium\STATICVER
-."/icons/vote.svg' alt='downvote' /></a>\n";
-echo "</div>\n";
+$votesdiv = $section->appendCreate('div.votes'.$votesclass, [ 'data-targettype' => 'loadout' ]);
 
-echo "</section>\n";
+$anch = $votesdiv->appendCreate('a.upvote', [
+	'title' => 'This loadout is creative, useful, and fills the role it was designed for',
+]);
+$anch->appendCreate('img', [
+	'o-static-src' => '/icons/vote.svg',
+	'alt' => 'upvote',
+]);
+if($votetype == \Osmium\Reputation\VOTE_TYPE_UP) $anch->addClass('voted');
+
+$votesdiv->appendCreate('strong', [
+	'title' => $p->formatExactInteger($totalupvotes).' upvote(s), '.$p->formatExactInteger($totaldownvotes).' downvote(s)',
+	$p->formatExactInteger($totalvotes),
+]);
+
+$anch = $votesdiv->appendCreate('a.downvote', [
+	'title' => 'This loadout suffers from sever flaws, is badly formatted, or shows no research effort',
+]);
+$anch->appendCreate('img', [
+	'o-static-src' => '/icons/vote.svg',
+	'alt' => 'downvote',
+]);
+if($votetype == \Osmium\Reputation\VOTE_TYPE_DOWN) $anch->addClass('voted');
+
+
 
 if($loadoutid !== false) {
-	$class = $fit['metadata']['revision'] > 1 ? 'edited' : 'notedited';
-	echo "<section id='credits' class='$class'>\n";
+	$section = $div->appendCreate('section#credits.'.($fit['metadata']['revision'] > 1 ? 'edited' : 'notedited'));
 
-	echo "<div class='author'>\n";
+	$authordiv = $section->appendCreate('div.author');
 	if($author['apiverified'] === 't') {
 		if($author['allianceid'] > 0) {
-			echo "<img class='alliance' src='//image.eveonline.com/Alliance/".$author['allianceid']."_128.png' alt='' title='member of ".\Osmium\Chrome\escape($author['alliancename'])."' />";
+			$authordiv->appendCreate('o-eve-img.alliance', [
+				'src' => '/Alliance/'.$author['allianceid'].'_128.png',
+				'alt' => '',
+				'title' => 'member of '.$author['alliancename'],
+			]);
 		} else {
-			echo "<img class='corporation' src='//image.eveonline.com/Corporation/".$author['corporationid']."_256.png' alt='' title='member of ".\Osmium\Chrome\escape($author['corporationname'])."' />";
+			$authordiv->appendCreate('o-eve-img.corporation', [
+				'src' => '/Corporation/'.$author['corporationid'].'_256.png',
+				'alt' => '',
+				'title' => 'member of '.$author['corporationname'],
+			]);
 		}
+
 		if($author['characterid'] > 0) {
-			echo "<img class='portrait' src='//image.eveonline.com/Character/".$author['characterid']."_256.jpg' alt='' />";
+			$authordiv->appendCreate('o-eve-img.portrait', [
+				'src' => '/Character/'.$author['characterid'].'_256.jpg',
+				'alt' => '',
+			]);
 		}
 	}
-	echo "<small>submitted by</small><br />\n";
-	echo \Osmium\Chrome\format_character_name($author, RELATIVE, $rauthorname)."<br />\n";
-	echo \Osmium\Chrome\format_reputation($author['reputation']).' – '
-		.\Osmium\Chrome\format_relative_date($truecreationdate)."\n";
-	echo "</div>\n";
+
+	$authordiv->appendCreate('small', 'submitted by');
+	$authordiv->appendCreate('br');
+	$authordiv->append($p->makeAccountLink($author, $rauthorname))
+		->appendCreate('br');
+	$authordiv->append($p->formatReputation($author['reputation']))
+		->append(' – ')
+		->append($p->formatRelativeDate($truecreationdate));
 
 	if($fit['metadata']['revision'] > 1) {
-		echo "<div class='author edit'>\n";
-		echo "<small>revision #".$fit['metadata']['revision']." edited by</small><br />\n";
-		echo \Osmium\Chrome\format_character_name($lastrev, RELATIVE)."<br />\n";
-		echo \Osmium\Chrome\format_reputation($lastrev['reputation']).' – '
-			.\Osmium\Chrome\format_relative_date($lastrev['updatedate'])."\n";
-		echo "</div>\n";
+		$editdiv = $section->appendCreate('div.author.edit');
+		$editdiv->appendCreate('small', 'revision #'.$fit['metadata']['revision'].' edited by');
+		$editdiv->appendCreate('br');
+		$editdiv->append($p->makeAccountLink($lastrev))
+			->appendCreate('br');
+		$editdiv->append($p->formatReputation($lastrev['reputation']))
+			->append(' – ')
+			->append($p->formatRelativeDate($lastrev['updatedate']));
 	}
-
-	echo "</section>";
 }
 
-$capacitors = \Osmium\Fit\get_all_capacitors($fit);
-$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
-echo "<section id='attributes'>
-<div class='compact' id='computed_attributes'>\n";
-\Osmium\Chrome\print_formatted_loadout_attributes(
-	$fit, RELATIVE, [
+
+
+$section = $div->appendCreate('section#attributes');
+$attribsdiv = $section->appendCreate('div.compact#computed_attributes');
+$attribsdiv->append($p->fragment(\Osmium\Chrome\get_formatted_loadout_attributes(
+	$fit, $ctx->relative, [
 		'cap' => $capacitors['local'],
 		'ia' => $ia_,
 	]
-);
-echo "</div>
-</section>
-</div>\n";
+))); /* XXX */
 
 
 
-echo "<div id='vlmain'>\n";
+
+
+$div = $p->content->appendCreate('div#vlmain');
 
 if($revision_overridden && isset($lastrev['updatedate'])) {
-	echo "<p class='notice_box'>You are viewing revision {$revision} of this loadout, as it was published the ".date('Y-m-d \a\t H:i', $lastrev['updatedate']).". <a href='".RELATIVE."/".\Osmium\Fit\get_fit_uri($loadoutid, $fit['metadata']['visibility'], $fit['metadata']['privatetoken'])."'>Link to the latest revision.</a></p>";
+	$div->appendCreate(
+		'p.notice_box',
+		'You are viewing revision '.$revision.' of this loadout, as it was published the '
+		.date('Y-m-d \a\t H:i', $lastrev['updatedate']).'. '
+	)->appendCreate('a', [
+		'o-rel-href' => '/'.\Osmium\Fit\get_fit_uri(
+			$loadoutid,
+			$fit['metadata']['visibility'],
+			$fit['metadata']['privatetoken']
+		),
+		'Link to the latest revision.'
+	]);
 }
 
 $latestdbver = \Osmium\Fit\get_latest_eve_db_version();
 if($latestdbver['dogmaver'] - $intendeddbver['dogmaver'] > 1) {
-	echo "<p class='warning_box'>";
-	if($can_edit) {
-		echo "<strong>Please update this loadout for ".$latestdbver['name'].".</strong>";
+	$dogmawarn = $div->appendCreate('p.notice_box');
+
+	if($can_edit && !$revision_overridden) {
+		$dogmawarn->appendCreate(
+			'strong',
+			'Please update this loadout for '.$latestdbver['name'].'.'
+		);
 	} else {
-		echo "This loadout was made for an older EVE version (".$intendeddbver['name'].") and may no longer be relevant for the current EVE version (".$latestdbver['name'].").";
+		$dogmawarn->append(
+			'This loadout was made for an older EVE version ('
+			.$intendeddbver['name'].') and may no longer be applicable to the current EVE version ('
+			.$latestdbver['name'].').'
+		);
 	}
-	echo "</p>\n";
 }
 
-echo "<ul class='tabs'>
-<li><a href='#loadout'>Loadout</a></li>
-<li><a href='#presets'>Presets (".(max(count($fit['presets']), count($fit['chargepresets']), count($fit['dronepresets']))).")</a></li>
-<li><a href='#remote'>Remote (".
-((isset($fit['fleet']) ? count($fit['fleet']) : 0) + (isset($fit['remote']) ? count($fit['remote']) : 0))
-.")</a></li>
-<li><a href='#comments'>Comments (".$commentcount.")</a></li>
-<li><a href='#meta'>Meta</a></li>
-<li><a href='#export'>Export</a></li>\n";
+$ul = $div->appendCreate('ul.tabs');
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#loadout', 'Loadout' ]);
+$ul->appendCreate('li')->appendCreate('a', [
+	'href' => '#presets',
+	'Presets ('.max(
+		count($fit['presets']),
+		count($fit['chargepresets']),
+		count($fit['dronepresets'])
+	).')',
+]);
+$ul->appendCreate('li')->appendCreate('a', [
+	'href' => '#remote',
+	'Fleet ('.(isset($fit['fleet']) ? count($fit['fleet']) : 0)
+	.') & Projected ('.(isset($fit['remote']) ? count($fit['remote']) : 0).')',
+]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('.$commentcount.')' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#meta', 'Meta' ]);
 
 if($maxrev !== false && $historyuri !== false) {
-	echo "<li class='external'><a href='".$historyuri."' title='View the different revisions of the loadout and compare the changes that were made'>History (".($maxrev - 1).")</a></li>\n";
+	$ul->appendCreate('li.external')->appendCreate('a', [
+		'o-rel-href' => $historyuri,
+		'title' => 'View different revisions of this loadout, and compare changes',
+		'History ('.($maxrev - 1).')',
+	]);
 }
 
-echo "<li class='external'><a rel='nofollow' href='".$forkuri."' title='Make a private copy of this loadout and edit it immediately'>Fork</a></li>\n";
+$ul->appendCreate('li.external')->appendCreate('a', [
+	'rel' => 'nofollow',
+	'o-rel-href' => $forkuri,
+	'title' => 'Make a copy of this loadout and start editing it',
+	'Fork',
+]);
 
 if($can_edit) {
-	echo "<li class='external'><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'>Edit</a></li>\n";
+	$editparams = [
+		'tok' => \Osmium\State\get_token(),
+		'revision' => $fit['metadata']['revision'],
+	];
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$editparams['privatetoken'] = $fit['metadata']['privatetoken'];
+	}
+
+	$ul->appendCreate('li.external')->appendCreate('a', [
+		'rel' => 'nofollow',
+		'o-rel-href' => '/edit/'.$loadoutid.$p->formatQueryString($editparams),
+		'Edit',
+	]);
 }
 
-echo "</ul>\n";
 
 
+$section = $div->appendCreate('section#loadout');
 
-echo "<section id='loadout'>
-<section id='modules'>\n";
+$msection = $section->appendCreate('section#modules');
 $stypes = \Osmium\Fit\get_slottypes();
 $slotusage = \Osmium\AjaxCommon\get_slot_usage($fit);
 $states = \Osmium\Fit\get_state_names();
 $ia = array();
+
 foreach($ia_ as $k) {
 	if($k['location'][0] === 'module') {
 		$ia['module'][$k['location'][1]][$k['location'][2]] = $k;
@@ -360,6 +448,7 @@ foreach($ia_ as $k) {
 		$ia['drone'][$k['location'][1]] = $k;
 	}
 }
+
 $fittedtotal = 0;
 foreach($stypes as $type => $tdata) {
 	if($slotusage[$type] == 0 && (
@@ -368,20 +457,23 @@ foreach($stypes as $type => $tdata) {
 
 	$sub = isset($fit['modules'][$type]) ? $fit['modules'][$type] : array();
 
+	$sdiv = $msection->appendCreate('div.slots.'.$type);
+	$span = $sdiv->appendCreate('h3', $tdata[0])->appendCreate('span');
+
 	if($type === "high" || $type === "medium") {
-		$groupstatus = "grouped";
-		$groupedcharges = "<small class='groupcharges'>Charges are grouped</small>";
+		$sdiv->addClass('grouped');
+		$span->appendCreate('small.groupcharges', [
+			'title' => 'Charges are grouped',
+		]);
 	} else {
-		$groupstatus = "ungrouped";
-		$groupedcharges = "";
+		$sdiv->addClass('ungrouped');
 	}
 
-	echo "<div class='slots $type $groupstatus'>\n<h3>";
-	echo \Osmium\Chrome\escape($tdata[0])." <span>$groupedcharges";
 	$u = count($sub);
-	$overflow = $u > $slotusage[$type] ? ' overflow' : '';
-	echo "<small class='counts$overflow'>".$u." / ".$slotusage[$type]."</small></span>";
-	echo "</h3>\n<ul>\n";
+	$small = $span->appendCreate('small.counts', $u.' / '.$slotusage[$type]);
+	if($u > $slotusage[$type]) $small->addClass('overflow');
+
+	$ul = $sdiv->appendCreate('ul');
 
 	$fittedtype = 0;
 	foreach($sub as $index => $m) {
@@ -390,74 +482,100 @@ foreach($stypes as $type => $tdata) {
 			$c = $fit['charges'][$type][$index];
 		} else $c = null;
 
-		$class = [];
+		$li = $ul->appendCreate('li', [
+			'data-typeid' => $m['typeid'],
+			'data-slottype' => $type,
+			'data-index' => $index,
+			'data-state' => $s[2],
+			'data-chargetypeid' => $c === null ? 'null' : $c['typeid'],
+		]);
+
 		if(isset($ia['module'][$type][$index])) {
-			$class[] = 'hasattribs';
+			$li->addClass('hasattribs');
 		}
 		if($fittedtype >= $slotusage[$type]) {
-			$class[] = 'overflow';
+			$li->addClass('overflow');
 		}
 
-		if($class) $class = " class='".implode(' ', $class)."'";
-		else $class = '';
+		$li->appendCreate('o-eve-img', [
+			'src' => '/Type/'.$m['typeid'].'_64.png',
+			'alt' => '',
+		]);
 
-		echo "<li{$class} data-typeid='".$m['typeid']."' data-slottype='"
-			.$type."' data-index='".$index."' data-state='".$s[2]."' data-chargetypeid='"
-			.($c === null ? 'null' : $c['typeid'])."'>\n";
-		echo "<img src='//image.eveonline.com/Type/".$m['typeid']."_64.png' alt='' />";
-		echo "<span class='name'>".\Osmium\Chrome\escape($m['typename'])."</span>\n";
+		$span = $li->appendCreate('span.name', $m['typename']);
+		if(isset($missing[$m['typeid']])) $span->addClass('missingskill');
 
 		if($c !== null) {
+			$span = $li->appendCreate('span.charge');
+
 			dogma_get_number_of_module_cycles_before_reload(
 				$fit['__dogma_context'], $m['dogma_index'], $ncycles
 			);
+			if($ncycles !== -1) $span->addClass('hasncycles');
 
-			echo "<span class='charge".($ncycles !== -1 ? ' hasncycles' : '')."'>,<br />";
-			echo "<img src='//image.eveonline.com/Type/".$c['typeid']."_64.png' alt='' />";
-			$m = isset($missing[$c['typeid']]) ? ' missingskill' : '';
-			echo "<span class='name'>".\Osmium\Chrome\escape($c['typename'])."</span>";
+			$span->append([ ',', [ 'br' ] ]);
+			$span->appendCreate('o-eve-img', [
+				'src' => '/Type/'.$c['typeid'].'_64.png',
+				'alt' => '',
+			]);
+
+			$nspan = $span->appendCreate('span.name', $c['typename']);
+			if(isset($missing[$c['typeid']])) $nspan->addClass('missingskill');
+
 			if($ncycles !== -1) {
-				echo "<span class='ncycles' title='Number of module cycles before having to reload'>"
-					.$ncycles."</span>";
+				$span->appendCreate('span.ncycles', [
+					'title' => 'Number of module cycles per reload',
+					$p->formatExactInteger($ncycles),
+				]);
 			}
-			echo "</span>\n";
 		}
 
 		if($tdata[2]) {
-			echo "<a class='toggle_state' title='".$s[0]."'>"
-				.\Osmium\Chrome\sprite(RELATIVE, $s[2], $s[1][0], $s[1][1], $s[1][2], $s[1][3], 16)
-				."</a>\n";
+			$li->appendCreate('a.toggle_state', [
+				'title' => $s[0],
+			])->appendCreate('o-sprite', [
+				'alt' => $s[2],
+				'x' => $s[1][0], 'y' => $s[1][1],
+				'gridwidth' => $s[1][2],
+				'gridheight' => $s[1][3],
+				'width' => 16,
+				'height' => 16,
+			]);
 		}
 
 		if(isset($ia['module'][$type][$index]) && isset($ia['module'][$type][$index]['fshort'])) {
-			echo "<small class='attribs' title='".\Osmium\Chrome\escape(
-				isset($ia['module'][$type][$index]['flong'])
-				? $ia['module'][$type][$index]['flong'] : ''
-			)."'>".\Osmium\Chrome\escape(
-				$ia['module'][$type][$index]['fshort']
-			)."</small>\n";
+			$small = $li->appendCreate('small.attribs', $ia['module'][$type][$index]['fshort']);
+
+			if(isset($ia['module'][$type][$index]['flong'])) {
+				$small->setAttribute('title', $ia['module'][$type][$index]['flong']);
+			}
 		}
 
-		echo "</li>\n";
 		++$fittedtotal;
 		++$fittedtype;
 	}
 
 	for($i = count($sub); $i < $slotusage[$type]; ++$i) {
-		echo "<li class='placeholder'>"
-			.\Osmium\Chrome\sprite(RELATIVE, '', $tdata[1][0], $tdata[1][1], $tdata[1][2], $tdata[1][3], 32)
-			."Unused ".$type." slot</li>\n";
+		$li = $ul->appendCreate('li.placeholder');
+		$li->appendCreate('o-sprite', [
+			'x' => $tdata[1][0], 'y' => $tdata[1][1],
+			'gridwidth' => $tdata[1][2],
+			'gridheight' => $tdata[1][3],
+			'width' => '32', 'height' => '32',
+			'alt' => '',
+		]);
+		$li->append('Unused '.$type.' slot');
+
 		++$fittedtotal;
 	}
-
-	echo "</ul>\n</div>\n";
 }
 if($fittedtotal === 0) {
-	echo "<p class='placeholder'>No available slots.</p>";
+	$msection->appendCreate('p.placeholder', 'No available slots.');
 }
 
-echo "</section>
-<section id='drones'>\n";
+
+
+$dsection = $section->appendCreate('section#drones');
 
 $dronesin['space'] = 0;
 $dronesin['bay'] = 0;
@@ -466,11 +584,12 @@ foreach($fit['drones'] as $typeid => $d) {
 	if(isset($d['quantityinbay'])) { $dronesin['bay'] += $d['quantityinbay']; }
 }
 $dbw = \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth');
+
 foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $v) {
 	if($dbw == 0 && $dronesin['space'] === 0 && $dronesin['bay'] === 0) continue;
 
-	echo "<div class='drones ".$k."'>\n";
-	echo "<h3>".\Osmium\Chrome\escape($v)." <span>";
+	$ddiv = $dsection->appendCreate('div.drones.'.$k);
+	$span = $ddiv->appendCreate('h3', $v)->appendCreate('span');
 
 	if($k === 'space') {
 		$dbw = \Osmium\Dogma\get_ship_attribute($fit, 'droneBandwidth');
@@ -478,55 +597,80 @@ foreach(array('space' => 'Drones in space', 'bay' => 'Drones in bay') as $k => $
 		$mad = \Osmium\Dogma\get_char_attribute($fit, 'maxActiveDrones');
 		$ad = $dronesin[$k];
 
-		$overflow = ($ad > $mad) ? ' overflow' : '';
-		echo "<small title='Maximum number of drones in space' class='maxdrones$overflow'>$ad / $mad</small>";
-		echo "<small> — </small>";
-		$overflow = ($dbwu > $dbw) ? ' overflow' : '';
-		echo "<small title='Drone bandwidth usage' class='bandwidth$overflow'>$dbwu / $dbw Mbps</small>";
+		$small = $span->appendCreate('small.maxdrones', [
+			'title' => 'Maximum number of drones in space',
+			$ad.' / '.$mad,
+		]);
+
+		if($ad > $mad) $small->addClass('overflow');
+
+		$span->appendCreate('small', ' — ');
+
+		$small = $span->appendCreate('small.bandwidth', [
+			'title' => 'Drone bandwidth usage',
+			$dbwu.' / '.$dbw.' Mbps',
+		]);
 	} else if($k === 'bay') {
 		$dcap = \Osmium\Dogma\get_ship_attribute($fit, 'droneCapacity');
 		$dcapu = \Osmium\Fit\get_used_drone_capacity($fit);
 
-		$overflow = ($dcapu > $dcap) ? ' overflow' : '';
-		echo "<small title='Drone bay usage' class='bayusage$overflow'>$dcapu / $dcap m³</small>";
+		$small = $span->appendCreate('small.bayusage', [
+			'title' => 'Drone bay usage',
+			$dcapu.' / '.$dcap.' m³'
+		]);
+
+		if($dcapu > $dcap) $small->addClass('overflow');
 	}
 
-	echo "</span></h3>\n<ul>\n";
+	$ul = $ddiv->appendCreate('ul');
 
 	foreach($fit['drones'] as $typeid => $d) {
 		if(!isset($d['quantityin'.$k])) continue;
 		$qty = (int)$d['quantityin'.$k];
 		if($qty === 0) continue;
 
-		if($k === 'space' && isset($ia['drone'][$typeid]['fshort'])) {
-			$class = " class='hasattribs'";
-			$attribs = "<small class='attribs' title='".\Osmium\Chrome\escape(
-				isset($ia['drone'][$typeid]['flong'])
-				? $ia['drone'][$typeid]['flong'] : ''
-			)."'>".\Osmium\Chrome\escape(
-				$ia['drone'][$typeid]['fshort']
-			)."</small>\n";
-		} else $class = $attribs = '';
+		$li = $ul->appendCreate('li', [
+			'data-typeid' => $typeid,
+			'data-location' => $k,
+			'data-quantity' => $qty,
+		]);
 
-		echo "<li{$class} data-typeid='".$typeid."' data-location='".$k."' data-quantity='".$qty."'>";
-		echo "<img src='//image.eveonline.com/Type/".$typeid."_64.png' alt='' />";
-		echo "<strong class='qty'>".$qty."×</strong><span class='name'>".$d['typename']."</span>";
-		echo $attribs;
-		echo "</li>\n";
+		$li->appendCreate('o-eve-img', [
+			'src' => '/Type/'.$typeid.'_64.png',
+			'alt' => '',
+		]);
+
+		$li->appendCreate('strong.qty', $qty.'×');
+		$span = $li->appendCreate('span.name', $d['typename']);
+
+		if(isset($missing[$typeid])) $span->addClass('missingskill');
+
+		if($k === 'space' && isset($ia['drone'][$typeid]['fshort'])) {
+			$li->addClass('hasattribs');
+			$small = $li->appendCreate('small.attribs', $ia['drone'][$typeid]['fshort']);
+
+			if(isset($ia['drone'][$typeid]['flong'])) {
+				$small->setAttribute('title', $ia['drone'][$typeid]['flong']);
+			}
+		}
 	}
 
 	if($dronesin[$k] === 0) {
-		echo "<li class='placeholder'>"
-			.\Osmium\Chrome\sprite(RELATIVE, '', 0, 13, 64, 64, 32)
-			."No drones in ".$k."</li>\n";
+		$li = $ul->appendCreate('li.placeholder');
+		$li->appendCreate('o-sprite', [
+			'alt' => '',
+			'x' => 0, 'y' => 13,
+			'gridwidth' => 64,
+			'gridheight' => 64,
+			'width' => 32, 'height' => 32,
+		]);
+		$li->append('No drones in '.$k);
 	}
-
-	echo "</ul>\n</div>\n";
 }
 
-echo "</section>
-<section id='implants'>\n";
 
+
+$isection = $section->appendCreate('section#implants');
 $implants = array();
 $boosters = array();
 
@@ -545,38 +689,47 @@ usort($boosters, $slotcmp);
 foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) {
 	if($imps === array()) continue;
 
-	echo "<div class='".$k."'>\n<h3>".ucfirst($k)."</h3>\n<ul>\n";
+	$idiv = $isection->appendCreate('div.'.$k);
+	$idiv->appendCreate('h3', ucfirst($k));
+
+	$ul = $idiv->appendCreate('ul');
 
 	foreach($imps as $i) {
-		echo "<li><img src='//image.eveonline.com/Type/".$i['typeid']."_64.png' alt='' />"
-			."<span class='name'>".\Osmium\Chrome\escape($i['typename'])."</span>"
-			.'<span class="slot">, '.substr($k, 0, -1).' slot '.$i['slot'].'</span>'
-			."</li>\n";
-	}
+		$li = $ul->appendCreate('li');
 
-	echo "</ul>\n</div>\n";
+		$li->appendCreate('o-eve-img', [
+			'src' => '/Type/'.$i['typeid'].'_64.png',
+			'alt' => '',
+		]);
+
+		$span = $li->appendCreate('span.name', $i['typename']);
+		if(isset($missing[$i['typeid']])) $span->addClass('missingskill');
+
+		$li->appendCreate('span.slot', substr($k, 0, -1).' slot '.$i['slot']);
+	}
 }
 
-echo "</section>
-<section id='description'>
-<h3>Fitting description</h3>\n";
+$dsection = $section->appendCreate('section#description');
+$dsection->appendCreate('h3', 'Fitting description');
 
 $desc = \Osmium\Chrome\trim($fit['metadata']['description']);
 if(empty($desc)) {
-	echo "<p class='placeholder'>No description given.</p>\n";
+	$dsection->appendCreate('p.placeholder', 'No description given.');
 } else {
 	/* XXX: potential resource hog */
-	echo "<div>\n".\Osmium\Chrome\format_sanitize_md($desc)."\n</div>\n";
+	/* XXX */
+	$dsection->appendCreate('div')->append($p->fragment(
+		\Osmium\Chrome\format_sanitize_md($desc)
+	));
 }
-echo "</section>\n";
 
 
 
-echo "</section>
-<section id='presets'>\n";
-
-\Osmium\Forms\print_form_begin();
+$section = $div->appendCreate('section#presets');
+$tbody = $section->appendCreate('o-form', [ 'method' => 'post', 'action' => $_SERVER['REQUEST_URI'] ])
+	->appendCreate('table')->appendCreate('tbody');
 $first = true;
+
 foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
           ['chargepresets', 'chargepreset', 'Charge preset', 'scpreset'],
           ['dronepresets', 'dronepreset', 'Drone preset', 'sdpreset'] ] as $ptype) {
@@ -585,147 +738,73 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 	if($first) {
 		$first = false;
 	} else {
-		\Osmium\Forms\print_separator();
+		$tbody->append($p->makeFormSeparatorRow());
 	}
 
-	$presets = [];
-	foreach($fit[$parraykey] as $id => $p) {
-		$presets[$id] = \Osmium\Chrome\escape($p['name']);
+	$select = $p->element('select', [
+		'name' => $name,
+		'id' => $name,
+		'selected' => $fit[$pkey.'id'],
+	]);
+	foreach($fit[$parraykey] as $id => $preset) {
+		$select->appendCreate('option', [ 'value' => $id, $preset['name'] ]);
 	}
-	$_POST[$name] = $fit[$pkey.'id'];
-	\Osmium\Forms\print_select($fname, $name, $presets, null, null, \Osmium\Forms\FIELD_REMEMBER_VALUE);
+
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', [ 'for' => $name, $fname ] ]],
+		$select
+	));
 
 	$desc = \Osmium\Chrome\trim($fit[$pkey.'desc']);
 	if(empty($desc)) {
-		$desc = '<p class="placeholder">No description available.</p>';
+		$desc = $p->element('p.placeholder', 'Empty description.');
 	} else {
-		$desc = \Osmium\Chrome\format_sanitize_md($desc);
+		$desc = $p->fragment(\Osmium\Chrome\format_sanitize_md($desc)); /* XXX */
 	}
-	\Osmium\Forms\print_generic_row($name.'desc', '<label>Description</label>',
-	                                "<div class='pdesc'>\n".$desc."\n</div>");
+
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', 'Description' ]],
+		[[ 'div.pdesc', $desc ]]
+	));
 }
 
-\Osmium\Forms\print_form_end();
+
+$div->append($p->makeRemoteSection($fit, true));
 
 
-
-echo "</section>
-<section id='remote'>\n";
-
-echo "<section id='fleet'>\n<h2>Fleet</h2>\n";
-echo "<form>\n<table>\n<tbody>\n";
-
-foreach(array('fleet', 'wing', 'squad') as $ft) {
-	if(isset($fit['fleet'][$ft])) {
-		$fl = \Osmium\Chrome\escape($fit['fleet'][$ft]['__id']);
-		$showlink = ($fl !== "(empty fitting)");
-		$checked = " checked='checked'";
-	} else {
-		$fl = '';
-		$showlink = false;
-		$checked = '';
-	}
-
-	echo "<tr data-type='{$ft}' id='{$ft}booster' class='booster'>\n";
-	echo "<td rowspan='".($showlink ? 3 : 2)."'><input type='checkbox' id='{$ft}_enabled' name='{$ft}_enabled' class='{$ft} enabled'{$checked} />";
-	echo " <label for='{$ft}_enabled'><strong>".ucfirst($ft)." booster</strong></label></td>\n";
-	echo "<td><label for='{$ft}_skillset'>Use skills: </label></td>\n";
-	echo "<td><select disabled='disabled' name='{$ft}_skillset' id='{$ft}_skillset' class='skillset {$ft}'><option value='All V'>All V</option></select></td>\n";
-	echo "</tr>\n";
-
-	echo "<tr>\n";
-	echo "<td".($showlink ? " rowspan='2'" : '')."><label for='{$ft}_fit'>Use fitting: </label></td>\n";
-	echo "<td><input readonly='readonly' type='text' name='{$ft}_fit' id='{$ft}_fit' class='fit {$ft}' value='{$fl}' placeholder='(empty fitting)' /></td>\n";
-	echo "</tr>\n";
-
-	if($showlink) {
-		$cur = explode('?', $_SERVER['REQUEST_URI'], 2)[0].'/booster/'.$ft;
-		echo "<tr>\n<td>";
-		echo "<a href='".\Osmium\Chrome\escape($cur)."'>View fitting</a>";
-		echo "</td></tr>\n";
-	}
-}
-
-echo "</tbody>\n</table>\n</form>\n</section>\n";
-
-echo "<section id='projected'>
-<h2>Projected effects
-<form>
-<input type='button' value='Toggle fullscreen' id='projectedfstoggle' />
-</form>
-</h2>
-<p id='rearrange'>
-Rearrange loadouts: <a id='rearrange-grid'>grid</a>,
-<a id='rearrange-circle'>circle</a>
-</p>
-<form id='projected-list'>
-<p class='placeholder'>Loading remote fittings…<br />
-<span class='spinner'></span></p>
-</form>
-</section>\n";
-
-
-echo "</section>
-<section id='comments'>\n";
 
 /* Prints paginated comments and the "add comment" form. */
 require __DIR__.'/../inc/view_loadout-commentview.php';
 
-
-
-echo "</section>
-<section id='meta'>\n";
-
-/* Pretty prints permissions, show actions and moderator actions. */
+/* Pretty prints permissions, show actions, moderator actions, export
+ * and share links. */
 require __DIR__.'/../inc/view_loadout-meta.php';
 
 
 
-echo "</section>
-<section id='export'>\n";
 
-if(!isset($fit['ship']['typeid'])) {
-	echo "<p class='warning_box'>You are exporting an incomplete loadout. Be careful, other programs may not accept to import such loadouts.</p>\n";
-}
-
-echo "<h2>Lossless formats (recommended)</h2>
-<ul>
-<li><a href='".$exporturi('clf', 'json')."' type='application/json' rel='nofollow'><strong>Export to CLF (Common Loadout Format)</strong></a>: recommended for archival and for usage with other programs supporting it.</li>
-<li><a href='".$exporturi('clf', 'json', false, ['minify' => 1])."' type='application/json' rel='nofollow'>Export to minified CLF</a>: same as above, minus all the redundant information. Not readable by humans.</li>
-<li><a href='".$exporturi('md', 'txt')."' type='text/plain' rel='nofollow'>Export to Markdown+gzCLF</a>: a Markdown-formatted description of the loadout, with embedded CLF for programs.</li>
-<li><a href='".$exporturi('evexml', 'xml', true)."' type='application/xml' rel='nofollow'><strong>Export to XML+gzCLF</strong></a>: recommended if you want to import loadouts from the game client.</li>
-</ul>
-<h2>Lossy formats</h2>
-<p>Only use those formats if none of the lossless option is usable for your situation.</p>
-<ul>
-<li><a href='".$exporturi('evexml', 'xml', true, ['embedclf' => 0])."' type='application/xml' rel='nofollow'>Export to XML</a>: same as XML+gzCLF, minus the description.</li>
-<li><a href='".$exporturi('eft', 'txt', true)."' type='text/plain' rel='nofollow'>Export to EFT</a>: the <em>de-facto</em> format used by the fitting tool EFT.</li>
-<li><a href='".$exporturi('dna', 'txt', true)."' type='text/plain' rel='nofollow'>Export to DNA</a>: short format that can be understood by the game client.<br /><small><code>".$dna."</code></small></li>
-<li><a data-ccpdna='{$dna}'>Export to in-game DNA</a>: use this link to open the loadout window from the in-game browser.</li>
-</ul>
-</section>\n";
-
-echo "</div>\n";
-
-/* The phony CLF token is obviously not a valid token, and process_clf
- * will pick it up and create a new token on demand. So if the user
- * never interacts with the loadout, it never gets cached. */
-\Osmium\Chrome\print_loadout_common_footer($fit, RELATIVE, '___demand___');
-
-\Osmium\Chrome\add_js_data('clfslots', json_encode(\Osmium\AjaxCommon\get_slot_usage($fit)));
 
 foreach($capacitors as &$c) {
 	if(!isset($c['depletion_time'])) continue;
 	$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
 }
-\Osmium\Chrome\add_js_data('capacitors', json_encode($capacitors));
-\Osmium\Chrome\add_js_data('ia', json_encode($ia_));
 
-\Osmium\Chrome\print_js_snippet('view_loadout');
-\Osmium\Chrome\print_js_snippet('view_loadout-presets');
-\Osmium\Chrome\print_js_snippet('new_loadout-ship');
-\Osmium\Chrome\print_js_snippet('new_loadout-modules');
-\Osmium\Chrome\print_js_snippet('new_loadout-drones');
-\Osmium\Chrome\print_js_snippet('new_loadout-implants');
-\Osmium\Chrome\print_js_snippet('new_loadout-remote');
-\Osmium\Chrome\print_footer();
+$p->data['capacitors'] = $capacitors;
+$p->data['ia'] = $ia_;
+$p->data['clfslots'] = \Osmium\AjaxCommon\get_slot_usage($fit);
+
+$p->snippets = array_merge($p->snippets, [
+	'view_loadout',
+	'view_loadout-presets',
+	'new_loadout-ship',
+	'new_loadout-modules',
+	'new_loadout-drones',
+	'new_loadout-implants',
+	'new_loadout-remote',
+]);
+
+/* The phony CLF token is obviously not a valid token, and process_clf
+ * will pick it up and create a new token on demand. So if the user
+ * never interacts with the loadout, it never gets cached. */
+$p->finalizeWithFit($ctx, $fit, '___demand___');
+$p->render($ctx);

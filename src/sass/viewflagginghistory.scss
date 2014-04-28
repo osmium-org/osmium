@@ -31,6 +31,15 @@ div#vflaghistory, div#modflags > form {
 		&.status2 {
 			background-color: $flag-abusive-bg-color;
 		}
+
+		&> td > span[title] {
+			border-bottom: 1px dotted $main-text-color;
+		}
+
+		&> td.actions > input[type='submit'] {
+			margin-left: 0.1em;
+			margin-right: 0.1em;
+		}
 	}
 }
 

@@ -21,7 +21,7 @@ namespace Osmium\Json\ShortlistModules;
 const SHORTLIST_MAXIMUM_LENGTH = 200;
 
 require __DIR__.'/../../inc/root.php';
-require __DIR__.'/../../inc/ajax_common.php';
+require __DIR__.'/../../inc/ajax-common.php';
 
 if(isset($_GET['token']) && $_GET['token'] == \Osmium\State\get_token()) {
 	$shortlist = array();

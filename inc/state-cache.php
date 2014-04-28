@@ -18,6 +18,10 @@
 
 namespace Osmium\State;
 
+/* When $expires parameter is not specified in put_cache (and its
+ * variants), set it to this value. (In seconds.) */
+const CACHE_DEFAULT_TTL = 86400;
+
 /** @internal */
 $__osmium_cache_stack = array();
 
@@ -99,9 +103,11 @@ function get_cache($key, $default = null, $prefix = 'OsmiumCache_') {
  * unless explicitely invalidated. If not, *try* to keep the value in
  * cache for $expires seconds.
  */
-function put_cache($key, $value, $expires = 0, $prefix = 'OsmiumCache_') {
+function put_cache($key, $value, $expires = null, $prefix = 'OsmiumCache_') {
 	global $__osmium_cache_enabled;
 	if(!$__osmium_cache_enabled) return;
+
+	if($expires === null) $expires = CACHE_DEFAULT_TTL;
 
 	if($expires > 0) $expires = time() + $expires;
 	if($expires < 0) {
@@ -191,10 +197,11 @@ if(function_exists('apc_store')) {
 	}
 
 	/** @see put_cache() */
-	function put_cache_memory($key, $value, $expires = 0, $prefix = '') {
+	function put_cache_memory($key, $value, $expires = null, $prefix = '') {
 		global $__osmium_cache_enabled;
 		if(!$__osmium_cache_enabled) return;
 
+		if($expires === null) $expires = CACHE_DEFAULT_TTL;
 		return apc_store('Osmium_'.$prefix.$key, $value, $expires);
 	}
 
@@ -245,7 +252,7 @@ if(function_exists('apc_store')) {
 	}
 
 	/** @see put_cache() */
-	function put_cache_memory($key, $value, $expires = 0, $prefix = '') {
+	function put_cache_memory($key, $value, $expires = null, $prefix = '') {
 		return put_cache($key, $value, $expires, 'MemoryCache_'.$prefix);
 	}
 
@@ -285,7 +292,7 @@ function get_cache_memory_fb($key, $default = null, $prefix = '') {
 }
 
 /** @see put_cache() */
-function put_cache_memory_fb($key, $value, $expires = 0, $prefix = '') {
+function put_cache_memory_fb($key, $value, $expires = null, $prefix = '') {
 	put_cache('MemoryFB_'.$key, $value, $expires, $prefix);
 	put_cache_memory($key, $value, $expires, $prefix);
 }

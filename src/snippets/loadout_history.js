@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -45,4 +45,15 @@ $(function() {
 		toggle_revision_delta($(this).parent().parent());
 		$(this).blur();
 	});
+
+	$('ol#lhistory > li > pre span.snip > span:first-child > span')
+		.css('cursor', 'pointer')
+		.prop('title', 'click to show lines')
+		.click(function() {
+		var t = $(this).parent();
+		t.parent().children('span:last-child').fadeIn();
+		t.remove();
+	});
+
+	$('li:target a.toggle').click();
 });

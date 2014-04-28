@@ -169,77 +169,24 @@ function check_client_attributes($attributes) {
 	return $attributes === get_client_attributes();
 }
 
-/**
- * Prints the login box if the current user is not logged in, or print
- * the logout box if the user is logged in.
- */
-function print_login_or_logout_box($relative, $notifications) {
-	if(is_logged_in()) {
-		print_logoff_box($relative, $notifications);
-	} else {
-		print_login_box($relative);
-	}
-}
-
 /** @internal */
-function print_login_box($relative) {
-	echo "<div id='state_box' class='login'>\n";
+function make_api_link() {
+	$curi = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITH_CONTACTS;
+	$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS;
 
-	if(\Osmium\get_ini_setting('https_available')
-	   && !\Osmium\HTTPS
-	   && \Osmium\get_ini_setting('prefer_secure_login')) {
-		$relative = rtrim('https://'.$_SERVER['HTTP_HOST'].\Osmium\get_ini_setting('relative_path'), '/');
-	}
-
-	echo "<form method='post' action='{$relative}/login'>\n"
-		."<p>\n<span class='wide'>\n<input type='text' name='account_name' placeholder='Account name [n]' accesskey='n' />\n"
-		."<input type='password' name='password' placeholder='Password' />\n"
-		."<input type='submit' name='__osmium_login' value='Login' />"
-		." (<small><input type='checkbox' name='remember' id='remember' checked='checked' />"
-		." <label for='remember'>Remember me</label></small>)</span>\n"
-		."<span class='narrow'><a href='{$relative}/login'>Login</a></span>"
-		." or <a href='$relative/register'>Register</a>\n"
-		."<input type='hidden' name='request_uri' value='"
-		.\Osmium\Chrome\escape($_SERVER['REQUEST_URI'])."' />\n"
-		."</p>\n</form>\n</div>\n";
-}
-
-/** @internal */
-function print_logoff_box($relative, $notifications) {
-	$a = get_state('a');
-	$tok = urlencode(get_token());
-
-	$portrait = '';
-	if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
-	   isset($a['characterid']) && $a['characterid'] > 0) {
-		$id = $a['characterid'];
-		$portrait = "<img src='//image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
-	}
-
-	echo "<div id='state_box' class='logout'>\n<p>\n"
-		."<span class='wide'>Logged in as </span>$portrait<strong>"
-		.\Osmium\Chrome\format_character_name($a, $relative)
-		."</strong> (<a class='rep' href='$relative/privileges'>"
-		.\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())
-		."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications'"
-		." title='$notifications new notification(s)'>$notifications</a>"
-		." <a href='$relative/logout/$tok' title='Logs you out on this browser only.'>Logout</a>"
-		." <small>(<a href='$relative/logout/$tok?global=1' title='Logs you out on all the machines where you are currently logged in, and also invalidates all cookies issued in the past.'>all</a>)</small>\n"
-		."</p>\n</div>\n";
-}
-
-/** @internal */
-function print_api_link() {
-	echo "<p>\nYou can create an API key here:</p>\n<ul>\n"
-		."<li>With ContactList access: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITH_CONTACTS."'>https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITH_CONTACTS."</a></strong></li>\n"
-		."<li>Without ContactList access: <strong><a href='https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS."'>https://support.eveonline.com/api/Key/CreatePredefined/"
-		.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS."</a></strong></li>\n"
-		."</ul>\n<p>\nBe aware that you need the ContactList access check on your API if you want to use the standings based visibility.<br />\n";
-	echo "<strong>Make sure that you only select one character, do not change any of the checkboxes on the right.</strong>\n</p>\n";
-	echo "<p>\nIf you are still having errors despite having updated your API key, you will have to wait for the cache to expire, or just create a whole new API key altogether (no waiting involved!).\n</p>\n";
+	return [
+		[ 'p', 'You can create an API key here:' ],
+		[ 'ul', [
+			[ 'li', [ 'With contact list access: ', [ 'strong', [[ 'a', 'href' => $curi, $curi ]] ] ] ],
+			[ 'li', [ 'Without contact list access: ', [ 'strong', [[ 'a', 'href' => $uri, $uri ]] ] ] ],
+		] ],
+		[ 'p', [
+			'You need the contact list access if you want to use the standings-based visibility settings.',
+			[ 'br' ],
+			[ 'strong', 'Only select one character. Do not change the checkboxes on the right.' ],
+		] ],
+		[ 'p', 'If you are still having errors despite having updated your API key, either wait for the cache to expire or create a new API key to get around the caching.' ],
+	];
 }
 
 /**
@@ -413,24 +360,24 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	);
 
 	if($api === false) {
-		return "API server returned a 403. Invalid credentials?";
+		return 'API server returned a 403. Invalid credentials?';
 	}
 
 	if(!($api instanceof \SimpleXMLElement)) {
 		/* Aouch */
-		return "API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!";
+		return 'API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!';
 	}
 
 	if(isset($api->error) && !empty($api->error)) {
-		return '('.((int)$api->error['code']).') '.\Osmium\Chrome\escape((string)$api->error);
+		return '('.((int)$api->error['code']).') '.(string)$api->error;
 	}
 
-	if((string)$api->result->key["type"] !== 'Character') {
+	if((string)$api->result->key['type'] !== 'Character') {
 	    return 'Invalid key type. Make sure you only select one character.';
 	}
 
-	if((int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
-	   && (int)$api->result->key["accessMask"] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS ) {
+	if((int)$api->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
+	   && (int)$api->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS ) {
 		return 'Incorrect access mask. Please set it to '.REQUIRED_ACCESS_MASK_WITH_CONTACTS
 			.' (with ContactList) or '.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
 			.' (without ContactList), or use the link above.';
@@ -439,9 +386,14 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	$characterid = (int)$api->result->key->rowset->row['characterID'];
 	$charactername = (string)$api->result->key->rowset->row['characterName'];
 	if($accountid !== null) {
-		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(accountid) FROM osmium.accounts WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)', array($accountid, $characterid, $charactername)));
+		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(accountid) FROM osmium.accounts
+			WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)',
+			array($accountid, $characterid, $charactername)
+		));
+
 		if($c > 0) {
-			return "Character <strong>".\Osmium\Chrome\escape($charactername)."</strong> is already used by another account.";
+			return [ 'Character', [ 'strong', $charactername ], ' is already used by another account.' ];
 		}
 	}
 

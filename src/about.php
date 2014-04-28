@@ -20,55 +20,138 @@ namespace Osmium\Page\About;
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\Chrome\print_header('About Osmium');
+$aboutxml = \Osmium\State\get_cache('about', null);
+$p = new \Osmium\DOM\Page();
 
-echo "<div id='mdstatic'>\n";
+if($aboutxml !== null) goto RenderStage;
 
-echo "<h1>About Osmium</h1>\n";
+$div = $p->element('div', [ 'id' => 'mdstatic' ]);
 
-echo \Osmium\Chrome\format_md(
+$div->appendCreate('h1', 'About Osmium');
+$div->append($p->fragment(\Osmium\Chrome\format_md(
 	file_get_contents(__DIR__.'/md/about.md')
-);
+)));
 
-echo "<h2 id='contact'>Contact</h2>\n";
-
-echo \Osmium\Chrome\format_md(
+$div->appendCreate('h2', [ 'id' => 'contact', 'Contact' ]);
+$div->append($p->fragment(\Osmium\Chrome\format_md(
 	\Osmium\get_ini_setting('contact')
-);
+)));
 
-echo "<h2>Get the source code</h2>\n";
+$div->appendCreate('h2', 'Get the source code');
+$div->append($p->fragment(\Osmium\Chrome\format_md(
+	"The full source code of this instance of Osmium "
+	."should be available at <".\Osmium\get_ini_setting('source').">. "
+	."If you believe this is not the case, please contact "
+	."the administrators about a possible AGPL violation."
+)));
 
-echo \Osmium\Chrome\format_md(
-	"The full source code of this instance of Osmium should be available at <".\Osmium\get_ini_setting('source').">. If you believe this is not the case, please contact the administrators about a possible AGPL violation."
-);
-
-echo \Osmium\Chrome\format_md(
+$div->append($p->fragment(\Osmium\Chrome\format_md(
 	file_get_contents(__DIR__.'/md/about-disclaimers.md')
-);
+)));
 
-echo "<h2>Javascript license information</h2>\n";
-echo "<table class='d' id='jslicense-labels1'>\n";
-echo "<thead>\n<tr>\n";
-echo "<th>Script name</th>\n<th>License</th>\n<th>Non-obfuscated source</th>\n";
-echo "</tr>\n</thead>\n<tbody>\n";
 
-echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js'>jquery.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js'>https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js</a></td></tr>\n";
 
-echo "<tr><td><a href='//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js'>jquery-ui.min.js</a></td><td><a href='https://raw.github.com/jquery/jquery-ui/master/MIT-LICENSE.txt'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js'>https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js</a></td></tr>\n";
+$div->appendCreate('h2', 'Javascript license information');
+$table = $div->appendCreate('table', [ 'class' => 'd', 'id' => 'jslicense-labels1' ]);
+$table->appendCreate('thead')->appendCreate('tr')->append([
+	[ 'th', 'Script name' ],
+	[ 'th', 'License' ],
+	[ 'th', 'Non-minified source' ],
+]);
+$tbody = $table->appendCreate('tbody');
 
-echo "<tr><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js'>perfect-scrollbar-with-mousewheel.min.js</a></td><td><a href='http://www.yuiazu.net/perfect-scrollbar/'>MIT</a></td><td><a href='https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js'>https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js</a></td></tr>\n";
-
-echo "<tr><td><a href='./static/jquery.jsPlumb-1.5.4-min.js'>jquery.jsPlumb-1.5.4-min.js</a></td><td><a href='https://github.com/sporritt/jsPlumb/blob/1.5.4/jsPlumb-MIT-LICENSE.txt'>MIT</a></td><td><a href='https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js'>https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js</a></td></tr>\n";
-
-echo "<tr><td><a href='./static-1/rawdeflate.min.js'>rawdeflate.min.js</a></td><td><a href='http://opensource.org/licenses/GPL-2.0'>GNU-GPL-2.0-only</a><br /><a href='http://opensource.org/licenses/mit-license'>MIT</a></td><td><a href='https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/rawdeflate.js'>https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/rawdeflate.js</a><br /><a href='https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js'>https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js</a></td></tr>\n";
+$js = [
+	[
+		'jquery.min.js',
+		'https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js',
+		'MIT',
+		'https://raw.github.com/jquery/jquery/master/MIT-LICENSE.txt',
+		'https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.js',
+	],
+	[
+		'jquery-ui.min.js',
+		'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js',
+		'MIT',
+		'https://raw.github.com/jquery/jquery-ui/master/MIT-LICENSE.txt',
+		'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js',
+	],
+	[
+		'perfect-scrollbar-with-mousewheel.min.js',
+		'https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
+		'MIT',
+		'http://www.yuiazu.net/perfect-scrollbar/',
+		'https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js',
+	],
+	[
+		'jquery.jsPlumb-1.5.4.min.js',
+		'./static/jquery.jsPlumb-1.5.4.min.js',
+		'MIT',
+		'https://github.com/sporritt/jsPlumb/blob/1.5.4/jsPlumb-MIT-LICENSE.txt',
+		'https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js',
+	],
+	[
+		'rawdeflate.min.js (rawdeflate)',
+		'./static-1/rawdeflate.min.js',
+		'GNU-GPL-2.0-only',
+		'http://opensource.org/licenses/GPL-2.0',
+		'https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/rawdeflate.js',
+	],
+	[
+		'rawdeflate.min.js (base64)',
+		'./static-1/rawdeflate.min.js',
+		'MIT',
+		'http://opensource.org/licenses/mit-license',
+		'https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js',
+	],
+];
 
 chdir(__DIR__.'/../static/cache');
 foreach(glob('JS_*.min.js') as $min) {
 	$full = substr($min, 0, -strlen('.min.js')).".js";
-	echo "<tr><td><a href='./static-".\Osmium\JS_STATICVER."/cache/{$min}'>{$min}</a></td><td><a href='./static/copying.txt'>GNU-AGPL-3.0-or-later</a></td><td><a href='./static-".\Osmium\JS_STATICVER."/cache/{$full}'>{$full}</a></td></tr>\n";
+
+	$js[] = [
+		$min,
+		'./static-'.\Osmium\JS_STATICVER.'/cache/'.$min,
+		'GNU-AGPL-3.0-or-later',
+		'./static/copying.txt',
+		'./static-'.\Osmium\JS_STATICVER.'/cache/'.$full,
+	];
 }
 
-echo "</tbody>\n</table>\n";
 
-echo "</div>\n";
-\Osmium\Chrome\print_footer();
+
+$rowtpl = $p->element('tr');
+$rowtpl->appendCreate('td')->appendCreate('a')->appendCreate('code');
+$rowtpl->appendCreate('td')->appendCreate('a');
+$rowtpl->appendCreate('td')->appendCreate('a')->appendCreate('code');
+
+foreach($js as $d) {
+	list($min, $minuri, $license, $licenseuri, $fulluri) = $d;
+	$row = $rowtpl->cloneNode(true);
+
+	$a = $row->firstChild->firstChild;
+	$a->setAttribute('href', $minuri);
+	$a->firstChild->append($min);
+
+	$a = $row->childNodes->item(1)->firstChild;
+	$a->setAttribute('href', $licenseuri);
+	$a->append($license);
+
+	$a = $row->lastChild->firstChild;
+	$a->setAttribute('href', $fulluri);
+	$a->firstChild->append($fulluri);
+
+	$tbody->append($row);
+}
+
+$aboutxml = $div->renderNode();
+\Osmium\State\put_cache('about', $aboutxml, 600);
+
+
+
+RenderStage:
+$ctx = new \Osmium\DOM\RenderContext();
+$p->title = 'About Osmium';
+$ctx->relative = '.';
+$p->content->append($p->fragment($aboutxml));
+$p->render($ctx);

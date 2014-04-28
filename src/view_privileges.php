@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,31 +20,22 @@ namespace Osmium\Page\ViewPrivileges;
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\Chrome\print_header('Privileges', '.');
+$p = new \Osmium\DOM\Page();
+$p->title = 'Privileges';
 
 $anonymous = !\Osmium\State\is_logged_in();
 $myrep = \Osmium\Reputation\get_current_reputation();
 $bs = \Osmium\get_ini_setting('bootstrap_mode');
 
-echo "<div id='vprivileges'>\n";
+$div = $p->content->appendCreate('div', [ 'id' => 'vprivileges' ]);
 
-echo "<section id='repguide'>\n<h2>What is reputation?</h2>\n";
 
-echo "<p>
-Reputation points are a way to roughly measure how much the community trusts you.
-The more points you have, the more privileges you unlock.
-</p>
-<p>
-Most privileges do not apply to private or hidden loadouts.
-</p>\n";
-
-echo "<h3>How do I get reputation?</h3>\n";
 
 $changes = \Osmium\Reputation\get_updown_vote_reputation();
 $up = $changes[\Osmium\Reputation\VOTE_TYPE_UP];
 $down = $changes[\Osmium\Reputation\VOTE_TYPE_DOWN];
 
-function formatquantities(array $deltas, $type) {
+function formatquantities(\Osmium\DOM\Page $p, array $deltas, $type) {
 	$return = [];
 
 	list($destdelta, $srcdelta) = $deltas[$type];
@@ -60,49 +51,72 @@ function formatquantities(array $deltas, $type) {
 		$return[] = $srcdelta.$unit.' for the voter';
 	}
 
-	return $return === [] ? '' : ' <small>('.implode('; ', $return).')</small>';
+	return $return === [] ? '' : $p->element('small', ' ('.implode('; ', $return).')');
 }
 
-echo "<p>
-You get reputation points when…
-</p>
-<ul>
-<li>Someone upvotes one of your public lodaouts".formatquantities($up, \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT).";</li>
-<li>Someone upvotes one of your comments on a public loadout".formatquantities($up, \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT).".</li>
-</ul>
-<p>
-If you submit quality content, reputation points will come naturally. Similarly, upvote content when you believe it deserves it.
-</p>
-<h3>Can I lose points?</h3>
-<p>
-It is possible to lose reputation, when…
-</p>
-<ul>
-<li>Someone downvotes one of your public lodaouts".formatquantities($down, \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT).";</li>
-<li>Someone downvotes one of your comments on a public loadout".formatquantities($down, \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT).".</li>
-</ul>
-<h3>So votes are only useful for reputation?</h3>
-<p>
-Not only. The amount of votes is used to determine a <a href='http://www.evanmiller.org/how-not-to-sort-by-average-rating.html'>score</a> which is used to sort results. Entries with a very bad score may not appear in search results at all.
-</p>\n";
+$div->appendCreate('section', [ 'id' => 'repguide' ])->append([
+	[ 'h2', 'What is reputation?' ],
+	[ 'p', 'Reputation points are a rough measure of the community\'s trust. The more points you have, the more privileges you have.' ],
+	[ 'p', 'Most privileges do not apply to private or hidden loadouts.' ],
+	[ 'h3', 'How do I get reputation?' ],
+	[ 'p', 'You get reputation points when…' ],
+	[ 'ul', [
+		[ 'li', [
+			'Someone upvotes one of your public loadouts',
+			formatquantities($p, $up, \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT),
+			';',
+		]],
+		[ 'li', [
+			'Someone upvotes one of your comments on a public loadout',
+			formatquantities($p, $up, \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT),
+			';',
+		]],
+	]],
+	[ 'p', 'If you submit quality content, your reputation points will raise naturally. Similarly, upvote content when you believe it deserves it.' ],
+	[ 'h3', 'Can I lose points?' ],
+	[ 'p', 'It is possible to lose reputation, when…' ],
+	[ 'ul', [
+		[ 'li', [
+			'Someone downvotes one of your public loadouts',
+			formatquantities($p, $down, \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT),
+			';',
+		]],
+		[ 'li', [
+			'Someone downvotes one of your comments on a public loadout',
+			formatquantities($p, $down, \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT),
+			';',
+		]],
+	]],
+	[ 'h3', 'So votes are only useful for reputation?' ],
+	[ 'p', [
+		'Not only. The amount of votes is used to determine a ',
+		[ 'a', [ 'href' => 'http://www.evanmiller.org/how-not-to-sort-by-average-rating.html', 'score' ] ],
+		' which is used to sort results. Entries with a very low score may not appear in search results at all.',
+	]],
 
-if($anonymous) {
-	echo "<p>\nYou need to be logged in to gain reputation points and earn privileges.</p>\n";
-} else {
-	echo "<p>\nYou currently have <strong class='reptotal'>".\Osmium\Chrome\format_integer($myrep)."</strong> reputation points.</p>\n";
-}
+	$anonymous ?
+	[ 'p', 'You need to be logged in to gain reputation points and earn privileges.' ]
+	: [ 'p', [ 'You currently have ',
+	           [ 'strong', [ 'class' => 'reptotal', $p->formatReputation($myrep) ] ],
+	           ' reputation point(s).' ]
+	],
+]);
 
-echo "</section>\n";
-
-echo "<section id='privlist'>\n<h2>Available privileges</h2>\n";
+$section = $div->appendCreate('section', [ 'id' => 'privlist' ]);
+$section->appendCreate('h2', 'Available privileges');
 
 if($bs) {
-	echo "<p class='notice_box'><strong>The site is currently in bootstrap mode.</strong><br />Some privilege requirements may be lowered in bootstrap mode. <br />When this happens, the real requirements will be shown in parentheses.</p>\n";
+	$section->appendCreate('p', [ 'class' => 'notice_box' ])->append([
+		[ 'strong', 'The site is currently in bootstrap mode.' ],
+		[ 'br' ],
+		'Some privilege requirements may be lowered in bootstrap mode.',
+		[ 'br' ],
+		'When this happens, the real requirements will be shown in parentheses.',
+	]);
 }
 
-echo "<ol>";
-
-foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
+$ol = $section->appendCreate('ol');
+foreach(\Osmium\Reputation\get_privileges() as $priv => $d) {
 	$name = $d['name'];
 	$rep_needed = $d['req'][0];
 	$rep_needed_bs = $d['req'][1];
@@ -111,32 +125,57 @@ foreach(\Osmium\Reputation\get_privileges() as $p => $d) {
 	$needed = $bs ? $rep_needed_bs : $rep_needed;
 	$progress = round(min(1, $myrep / $needed) * 100, 2);
 
-	echo "<li id='p{$p}' class='".($myrep >= $needed ? 'haveit' : ($anonymous ? '' : 'donthaveit'))."'>\n";
-	echo "<h2>".\Osmium\Chrome\escape($name)." <span>";
-
+	$li = $ol->appendCreate('li', [ 'id' => 'p'.$priv ]);
 	if($myrep >= $needed) {
-		echo "got it!";
-		if($myrep < $rep_needed) {	
-			echo " <small>(".\Osmium\Chrome\format_integer($myrep)
-				." / ".\Osmium\Chrome\format_integer($rep_needed).")</small>";
+		$li->addClass('haveit');
+	} else if(!$anonymous) {
+		$li->addClass('donthaveit');
+	}
+
+	$sp = $li->appendCreate('h2', $name)->appendCreate('span');
+	if($myrep >= $needed) {
+		$sp->append('got it!');
+
+		if($myrep < $rep_needed) {
+			$sp->append(' ');
+			$sp->appendCreate('small', [
+				'(',
+				$p->formatExactInteger($myrep),
+				' / ',
+				$p->formatExactInteger($rep_needed),
+				')',
+			]);
 		}
 	} else {
-		echo \Osmium\Chrome\format_integer($myrep)
-			." / ".\Osmium\Chrome\format_integer($bs ? $rep_needed_bs : $rep_needed);
+		$sp->append([
+			$p->formatExactInteger($myrep),
+			' / ',
+			$p->formatExactInteger($bs ? $rep_needed_bs : $rep_needed),
+		]);
 
 		if($bs && $rep_needed > $rep_needed_bs) {
-			echo " <small>(".\Osmium\Chrome\format_integer($myrep)
-				." / ".\Osmium\Chrome\format_integer($rep_needed).")</small>";
+			$sp->append(' ');
+			$sp->appendCreate('small', [
+				'(',
+				$p->formatExactInteger($myrep),
+				' / ',
+				$p->formatExactInteger($rep_needed),
+				')',
+			]);
 		}
 	}
-	echo "</span></h2>\n";
-	echo "<div class='progress'><div class='pinner' style='width: {$progress}%;'> </div></div>\n";
-	echo "<div class='desc'>\n{$desc}</div>\n";
-	echo "</li>\n";
+
+	$li->appendCreate('div', [ 'class' => 'progress' ])->appendCreate('div', [
+		'class' => 'pinner',
+		'style' => 'width: '.$progress.'%;',
+		' ',
+	]);
+
+	$li->appendCreate('div', [ 'class' => 'desc', $p->fragment($desc) ]);
 }
 
-echo "</ol>\n";
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = '';
+$p->snippets[] = 'view_privileges';
+$p->render($ctx);
 
-echo "</section>\n</div>\n";
-\Osmium\Chrome\print_js_snippet('view_privileges');
-\Osmium\Chrome\print_footer();
