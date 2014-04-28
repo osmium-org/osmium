@@ -741,7 +741,7 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 		$tbody->append($p->makeFormSeparatorRow());
 	}
 
-	$select = $p->element('select', [
+	$select = $p->element('o-select', [
 		'name' => $name,
 		'id' => $name,
 		'selected' => $fit[$pkey.'id'],
