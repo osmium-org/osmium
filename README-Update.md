@@ -51,8 +51,8 @@ Updating Osmium
 9. Start your webserver and test the changes. You may want to only
    allow your IP address to access the server during that period.
 
-Updating the `eve` schema
-=========================
+Updating the `eve` schema/data
+==============================
 
 1. Backup the `osmium` schema (`bin/backup_osmium`).
 

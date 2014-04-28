@@ -1,5 +1,11 @@
 # Version 0.12
 
+## Version 0.12.1, released 2014-04-28
+
+* Rubicon 1.4 readiness.
+
+* Many minor bugfixes. See `git log` for all the gory details.
+
 ## Version 0.12.0, released 2014-03-12
 
 * Import loadouts from CREST killmails.
