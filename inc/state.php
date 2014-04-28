@@ -169,65 +169,6 @@ function check_client_attributes($attributes) {
 	return $attributes === get_client_attributes();
 }
 
-/**
- * Prints the login box if the current user is not logged in, or print
- * the logout box if the user is logged in.
- */
-function print_login_or_logout_box($relative, $notifications) {
-	if(is_logged_in()) {
-		print_logoff_box($relative, $notifications);
-	} else {
-		print_login_box($relative);
-	}
-}
-
-/** @internal */
-function print_login_box($relative) {
-	echo "<div id='state_box' class='login'>\n";
-
-	if(\Osmium\get_ini_setting('https_available')
-	   && !\Osmium\HTTPS
-	   && \Osmium\get_ini_setting('prefer_secure_login')) {
-		$relative = rtrim('https://'.$_SERVER['HTTP_HOST'].\Osmium\get_ini_setting('relative_path'), '/');
-	}
-
-	echo "<form method='post' action='{$relative}/login'>\n"
-		."<p>\n<span class='wide'>\n<input type='text' name='account_name' placeholder='Account name [n]' accesskey='n' />\n"
-		."<input type='password' name='password' placeholder='Password' />\n"
-		."<input type='submit' name='__osmium_login' value='Login' />"
-		." (<small><input type='checkbox' name='remember' id='remember' checked='checked' />"
-		." <label for='remember'>Remember me</label></small>)</span>\n"
-		."<span class='narrow'><a href='{$relative}/login'>Login</a></span>"
-		." or <a href='$relative/register'>Register</a>\n"
-		."<input type='hidden' name='request_uri' value='"
-		.\Osmium\Chrome\escape($_SERVER['REQUEST_URI'])."' />\n"
-		."</p>\n</form>\n</div>\n";
-}
-
-/** @internal */
-function print_logoff_box($relative, $notifications) {
-	$a = get_state('a');
-	$tok = urlencode(get_token());
-
-	$portrait = '';
-	if(isset($a['apiverified']) && $a['apiverified'] === 't' &&
-	   isset($a['characterid']) && $a['characterid'] > 0) {
-		$id = $a['characterid'];
-		$portrait = "<img src='//image.eveonline.com/Character/${id}_128.jpg' alt='' class='portrait' /> ";
-	}
-
-	echo "<div id='state_box' class='logout'>\n<p>\n"
-		."<span class='wide'>Logged in as </span>$portrait<strong>"
-		.\Osmium\Chrome\format_character_name($a, $relative)
-		."</strong> (<a class='rep' href='$relative/privileges'>"
-		.\Osmium\Chrome\format_reputation(\Osmium\Reputation\get_current_reputation())
-		."</a>). <a id='ncount' data-count='$notifications' href='$relative/notifications'"
-		." title='$notifications new notification(s)'>$notifications</a>"
-		." <a href='$relative/logout/$tok' title='Logs you out on this browser only.'>Logout</a>"
-		." <small>(<a href='$relative/logout/$tok?global=1' title='Logs you out on all the machines where you are currently logged in, and also invalidates all cookies issued in the past.'>all</a>)</small>\n"
-		."</p>\n</div>\n";
-}
-
 /** @internal */
 function make_api_link() {
 	$curi = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITH_CONTACTS;
@@ -428,7 +369,7 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 	}
 
 	if(isset($api->error) && !empty($api->error)) {
-		return '('.((int)$api->error['code']).') '.\Osmium\Chrome\escape((string)$api->error);
+		return '('.((int)$api->error['code']).') '.(string)$api->error;
 	}
 
 	if((string)$api->result->key['type'] !== 'Character') {

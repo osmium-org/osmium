@@ -128,7 +128,7 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 
 	require_once __DIR__.'/root.php';
 
-	$escape = function_exists('Osmium\Chrome\escape') ? 'Osmium\Chrome\escape' : 'htmlspecialchars';
+	$escape = function($x) { return htmlspecialchars($x, \ENT_HTML5); };
 
 	static $internaltitles = [
 		"He's dead, Jim!",
@@ -173,7 +173,7 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 	if($showbt) {
 		echo "<p>This issue has been logged.<br />Please report it to the developers and describe the steps to reproduce this issue. Thanks!</p>\n";
 		$bt = '';
-		foreach(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10) as $c) {
+		foreach(debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 10) as $c) {
 			$bt .= '\\'.$c['function'].'() called from '.$c['file'].':'.$c['line']."\n";
 		}
 		echo "<pre class='bt'>".$escape($bt)."</pre>\n";

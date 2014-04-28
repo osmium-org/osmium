@@ -135,7 +135,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 		\Osmium\Fit\set_local($fork, $key);
 		/* XXX refactor this */
 		$fork['metadata']['description'] = trim(
-			"*This loadout is a fork of remote loadout #".\Osmium\Chrome\escape($key)
+			"*This loadout is a fork of remote loadout #".$key
 			." of loadout [#".(int)$fit['metadata']['loadoutid']
 			."](".\Osmium\get_ini_setting('relative_path').\Osmium\Fit\get_fit_uri(
 				$fit['metadata']['loadoutid'],
@@ -148,7 +148,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
 	}
 
 	if(isset($_GET['fleet'])) {
-		$t = \Osmium\Chrome\escape($_GET['fleet']);
+		$t = $_GET['fleet'];
 
 		if(!isset($fit['fleet'][$t]) || !isset($fit['fleet'][$t]['ship']['typeid'])
 		|| !$fit['fleet'][$t]['ship']['typeid']) {
