@@ -339,7 +339,9 @@ foreach(\Osmium\Fit\get_slottypes() as $type => $tdata) {
 	$span = $h3->appendCreate('span');
 	if($type === 'high' || $type === 'medium') {
 		$div->addClass('grouped');
-		$span->appendcreate('small.groupcharges', 'Charges are grouped');
+		$span->appendcreate('small.groupcharges', [
+			'title' => 'Charges are grouped',
+		]);
 	} else {
 		$div->addClass('ungrouped');
 	}
@@ -366,82 +368,7 @@ $section = $nlm->appendCreate('section#implants');
 $section->appendCreate('div.implants')->append([ [ 'h3', 'Implants' ], [ 'ul' ] ]);
 $section->appendCreate('div.boosters')->append([ [ 'h3', 'Boosters' ], [ 'ul' ] ]);
 
-$section = $nlm->appendCreate('section#remote');
-
-$fleet = $section->appendCreate('section#fleet');
-$fleet->appendCreate('h2', 'Fleet boosters');
-$fleet->appendCreate('p', [
-	'The fittings you use as boosters will be visible by anyone who can view this loadout.',
-	[ 'br' ],
-	'The skills will be reset to "All V" when saving the loadout.',
-]);
-$tbody = $fleet->appendCreate('form')->appendCreate('table')->appendCreate('tbody');
-
-foreach([ 'fleet', 'wing', 'squad' ] as $ft) {
-	$tr = $tbody->appendCreate('tr', [ 'data-type' => $ft ]);
-	$td = $tr->appendCreate('td', [ 'rowspan' => '3' ]);
-	$td->appendCreate('input', [
-		'type' => 'checkbox',
-		'id' => $ft.'_enabled',
-		'name' => $ft.'_enabled',
-		'class' => 'enabled '.$ft,
-	]);
-	$td
-		->appendCreate('label', [ 'for' => $ft.'_enabled' ])
-		->appendCreate('strong', ' '.ucfirst($ft).' booster');
-	$tr->appendCreate('td')->appendCreate('label', [ 'for' => $ft.'_skillset', 'Use skills: ' ]);
-	$tr->appendCreate('td')->appendCreate('select', [
-		'name' => $ft.'_skillset',
-		'id' => $ft.'_skillset',
-		'class' => 'skillset '.$ft,
-	]);
-
-	$tr = $tbody->appendCreate('tr', [ 'data-type' => $ft ]);
-	$tr->appendCreate('td', [ 'rowspan' => '2' ])->appendCreate('label', [
-		'for' => $ft.'_fit',
-		'Use fitting: '
-	]);
-	$tr->appendCreate('td')->appendCreate('input', [
-		'type' => 'text',
-		'name' => $ft.'_fit',
-		'id' => $ft.'_fit',
-		'class' => 'fit '.$ft,
-		'placeholder' => 'Loadout URI, DNA string, gzclf:// data',
-	]);
-
-	$td = $tbody->appendCreate('tr', [ 'data-type' => $ft ])->appendCreate('td');
-	$td->appendCreate('input', [
-		'type' => 'button',
-		'class' => 'set '.$ft,
-		'value' => 'Set fit',
-	]);
-	$td->appendCreate('input', [
-		'type' => 'button',
-		'class' => 'clear '.$ft,
-		'value' => 'Clear fit',
-	]);
-}
-
-$projected = $section->appendCreate('section#projected');
-$h2 = $projected->appendCreate('h2', 'Projected effects');
-$form = $h2->appendCreate('form', [ 'method' => 'get', 'action' => '?' ]);
-$form->appendCreate('input', [
-	'type' => 'button',
-	'value' => 'Add projected fit',
-	'id' => 'createprojected',
-]);
-$form->appendCreate('input', [
-	'type' => 'button',
-	'value' => 'Toggle fullscreen',
-	'id' => 'projectedfstoggle',
-]);
-$projected->appendCreate('p#rearrange', [
-	'Rearrange loadouts: ',
-	[ 'a#rearrange-grid', 'grid' ],
-	', ',
-	[ 'a#rearrange-circle', 'circle' ],
-]);
-$projected->appendCreate('form#projected-list', [ 'method' => 'get', 'action' => '?' ]);
+$nlm->append($p->makeRemoteSection($fit));
 
 $section = $nlm->appendCreate('section#presets');
 $tbody = $section

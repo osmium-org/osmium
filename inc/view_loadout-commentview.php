@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,8 @@
 
 namespace Osmium\ViewLoadout;
 
-echo "<h2>Comments</h2>\n";
+$section = $div->appendCreate('section#comments');
+$section->appendCreate('h2', 'Comments');
 
 $cancomment = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_privilege(
 	\Osmium\Reputation\PRIVILEGE_COMMENT_LOADOUT
@@ -28,8 +29,8 @@ $canreply = !\Osmium\Reputation\is_fit_public($fit) || \Osmium\Reputation\has_pr
 );
 
 if($commentcount === 0) {
-	echo "<p class='placeholder'>This loadout has no comments.</p>\n";
-	goto addcomment; /* Yeah, this isn't very cool, but it avoid
+	$section->appendCreate('p.placeholder', 'This loadout has zero comments.');
+	goto AddComment; /* Yeah, this isn't very cool, but it avoid
 	                  * putting the following code in a else block and
 	                  * wasting one indentation level */
 }
@@ -109,81 +110,144 @@ $cq = \Osmium\Db\query_params(
 	)
 );
 
-function format_comment($row) {
-	global $isflaggable, $ismoderator, $modprefix, $loggedin, $a, $fit;
+function format_comment($row, &$replybefore = null) {
+	global $isflaggable, $ismoderator, $modprefix, $loggedin, $commentsallowed, $canreply, $a, $fit, $p;
 
-	echo "<div class='comment' id='c".$row['commentid']."' data-commentid='".$row['commentid']."'>\n";
+	$cmt = $p->element('div.comment#c'.$row['commentid'], [
+		'data-commentid' => $row['commentid'],
+	]);
 
-	echo "<div class='votes' data-targettype='comment'>\n";
-	echo "<a title='This comment is useful' class='upvote"
-		.($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP ? ' voted' : '')
-		."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='upvote' /></a>\n";
-	echo "<strong title='".$row['upvotes']." upvote(s), "
-		.$row['downvotes']." downvote(s)'>".$row['votes']."</strong>\n";
-	echo "<a title='This comment is off-topic, not constructive or not useful' class='downvote"
-		.($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN ? ' voted' : '')
-		."'><img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/vote.svg' alt='downvote' /></a>\n";
-	echo "</div>\n";
+	$votes = $cmt->appendCreate('div.votes', [ 'data-targettype' => 'comment' ]);
 
-	echo "<div class='body'>\n".$row['commentformattedbody']."</div>\n";
+	$anch = $votes->appendCreate('a.upvote', [
+		'title' => 'This comment is useful'
+	]);
+	$anch->appendCreate('img', [
+		'o-static-src' => '/icons/vote.svg',
+		'alt' => 'upvote',
+	]);
+	if($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_UP) $anch->addClass('voted');
 
-	echo "<header>\n<div class='author'>\n";
+	$votes->appendCreate('strong', [
+		'title' => $p->formatExactInteger($row['upvotes']).' upvote(s), '.$p->formatExactInteger($row['downvotes']).' downvote(s)',
+		$p->formatExactInteger($row['votes']),
+	]);
+
+	$anch = $votes->appendCreate('a.downvote', [
+		'title' => 'This comment is off-topic, not constructive or not useful'
+	]);
+	$anch->appendCreate('img', [
+		'o-static-src' => '/icons/vote.svg',
+		'alt' => 'downvote',
+	]);
+	if($row['votetype'] == \Osmium\Reputation\VOTE_TYPE_DOWN) $anch->addClass('voted');
+
+	$cmt->appendCreate('div.body')->append($p->fragment($row['commentformattedbody'])); /* XXX */
+
+	$hdr = $cmt->appendCreate('header');
+	$author = $hdr->appendCreate('div.author');
+
 	if($row['apiverified'] === 't' && $row['characterid'] > 0) {
-		echo "<img class='portrait' src='//image.eveonline.com/Character/"
-			.$row['characterid']."_256.jpg' alt='' />";
+		$author->appendCreate('o-eve-img.portrait', [
+			'src' => '/Character/'.$row['characterid'].'_256.jpg',
+			'alt' => '',
+		]);
 	}
-	echo "<small>commented by</small><br />\n";
-	echo \Osmium\Chrome\format_character_name($row, RELATIVE)."<br />\n";
-	echo \Osmium\Chrome\format_reputation($row['reputation']).' – '
-		.\Osmium\Chrome\format_relative_date($row['creationdate'])."\n";
-	echo "</div>\n<div class='meta'>\n";
-	echo "<a href='?jtc=".$row['commentid']."' title='permanent link'>#</a>";
+	$author->appendCreate('small', 'commented by');
+	$author->appendCreate('br');
+	$author->append($p->makeAccountLink($row))
+		->appendCreate('br');
+	$author->append($p->formatReputation($row['reputation']))
+		->append(' – ')
+		->append($p->formatRelativeDate($row['creationdate']));
+
+	$meta = $hdr->appendCreate('div.meta');
+	$meta->appendCreate('a', [
+		'href' => $p->formatQueryString([ 'jtc' => $row['commentid'] ]),
+		'title' => 'permanent link to this comment',
+		'#permalink',
+	]);
+
 	if($isflaggable) {
-		echo " — <a class='dangerous' href='".RELATIVE."/flagcomment/"
-			.$row['commentid']."' title='This comment requires moderator attention'>⚑</a>";
+		$meta->append(' — ');
+		$meta->appendCreate('a.dangerous', [
+			'o-rel-href' => '/flagcomment/'.$row['commentid'],
+			'title' => 'Flag comment; this comment requires moderator attention',
+			'⚑report',
+		]);
 	}
+
 	if($ismoderator || ($loggedin && $row['accountid'] == $a['accountid'])) {
 		$tmp = ($loggedin && $row['accountid'] == $a['accountid']) ? '' : $modprefix;
 
-		echo " — <a href='".RELATIVE."/editcomment/".$row['commentid']."'>{$tmp}edit</a>";
-		echo " — <a href='".RELATIVE."/deletecomment/".$row['commentid']."?tok=".\Osmium\State\get_token()."' class='dangerous confirm'>{$tmp}delete</a>";
+		$meta->append(' — ');
+		$meta->appendCreate('a', [
+			'o-rel-href' => '/editcomment/'.$row['commentid'],
+			$tmp, 'edit',
+		]);
+
+		$meta->append(' — ');
+		$meta->appendCreate('a.dangerous.confirm', [
+			'o-rel-href' => '/deletecomment/'.$row['commentid']
+			.$p->formatQueryString([ 'tok' => \Osmium\State\get_token() ]),
+			$tmp, 'delete',
+		]);
 	}
+
+	if($loggedin && $commentsallowed && ($canreply || $commentauthorid == $a['accountid'])) {
+		$meta->append(' — ');
+		$meta->appendCreate('a.add_comment', '↪reply');
+	}
+
 	if($row['loadoutrevision'] < $fit['metadata']['revision']) {
-		echo "<br />\n<span class='outdated'>(this comment applies to a previous revision of this loadout:";
-		echo " <a href='".RELATIVE.'/'.\Osmium\Fit\get_fit_uri(
-			$fit['metadata']['loadoutid'],
-			$fit['metadata']['visibility'],
-			$fit['metadata']['privatetoken'],
-			$row['loadoutrevision']
-		)."'>revision #".$row['loadoutrevision']."</a>)</span>\n";
-	}
-	echo "</div>\n</header>\n<ul id='creplies".$row['commentid']."' class='replies'>\n";
-}
+		$meta->append(' — ');
 
-function format_comment_end($row) {
-	global $loggedin, $commentsallowed, $canreply, $a;
+		$span = $meta->appendCreate(
+			'span.outdated',
+			'targeted at '
+		);
 
-	$commentid = $row['commentid'];
-	$commentauthorid = $row['accountid'];
-
-	if($loggedin && $commentsallowed && ($canreply || $commentauthorid == $a['accountid'])) {
-		echo "<li class='new'>\n";
-		echo "<form method='post' action='#creplies".$commentid."' accept-charset='utf-8'>\n";
-		echo "<textarea name='replybody' placeholder='Type your reply… (Markdown and some HTML allowed, basic formatting only)'></textarea>\n";
-		echo "<input type='hidden' name='commentid' value='".$commentid."' />\n";
-		echo "<input type='submit' value='Submit reply' />\n";
-		echo "<a class='cancel'>cancel</a>\n</form>\n</li>\n";
+		$span->appendCreate('a', [
+			'o-rel-href' => '/'.\Osmium\Fit\get_fit_uri(
+				$fit['metadata']['loadoutid'],
+				$fit['metadata']['visibility'],
+				$fit['metadata']['privatetoken'],
+				$row['loadoutrevision']
+			),
+			'revision #'.$row['loadoutrevision'],
+		]);
 	}
 
-	echo "</ul>\n";
-	if($loggedin && $commentsallowed && ($canreply || $commentauthorid == $a['accountid'])) {
-		echo "<a class='add_comment'>reply to this comment</a>\n";
-	}
-	echo "</div>\n";
+
+	$replybefore = $cmt->appendCreate('ul.replies#creplies'.$row['commentid'])->appendCreate('li.new');
+	$form = $replybefore->appendCreate('o-form', [
+		'method' => 'post', 'action' => '#creplies'.$row['commentid'],
+	]);
+
+	$form->appendCreate('o-textarea', [
+		'name' => 'replybody',
+		'placeholder' => 'Type your reply… (Markdown; inline formatting only)',
+	]);
+
+	$form->appendCreate('input', [
+		'type' => 'hidden',
+		'name' => 'commentid',
+		'value' => $row['commentid'],
+	]);
+
+	$form->appendCreate('input', [
+		'type' => 'submit',
+		'value' => 'Submit reply',
+	]);
+
+	$form->append(' ');
+	$form->appendCreate('a.cancel', 'cancel');
+
+	return $cmt;
 }
 
 function format_comment_reply($row) {
-	global $ismoderator, $loggedin, $isflaggable, $a, $modprefix;
+	global $ismoderator, $loggedin, $isflaggable, $a, $modprefix, $p;
 
 	$c = array(
 		'accountid' => $row['raccountid'],
@@ -194,66 +258,85 @@ function format_comment_reply($row) {
 		'ismoderator' => $row['rismoderator']
 	);
 
-	echo "<li id='r".$row['commentreplyid']."'>\n<div class='body'>\n"
-		.$row['replyformattedbody']."</div>\n— "
-		.\Osmium\Chrome\format_character_name($c, RELATIVE)."\n";
+	$li = $p->element('li#r'.$row['commentreplyid']);
+	$li->appendCreate('div.body')->append($p->fragment($row['replyformattedbody'])); /* XXX */
+	$li->append(' — ');
+	$li->append($p->makeAccountLink($c));
 
+	$li->append(' — ');
 	if($row['repupdatedate'] !== null) {
-		echo "<span class='updated' title='This reply was edited (".
-			strip_tags(\Osmium\Chrome\format_relative_date($row['repupdatedate']))
-			.").'>✎</span>\n";
+		$li->appendCreate('span', [
+			'title' => 'reply was edited ('.$p->formatRelativeDate($row['repupdatedate'])->textContent.')',
+			'✎',
+		]);
+	}
+	$li->append($p->formatRelativeDate($row['repcreationdate']));
+
+	$meta = $li->appendCreate('span.meta');
+	$meta->append(' — ');
+	$meta->appendCreate('a', [
+		'href' => $p->formatQueryString([ 'jtr' => $row['commentreplyid'] ]),
+		'title' => 'permanent link to this reply',
+		'#',
+	]);
+
+	if($isflaggable) {
+		$meta->append(' — ');
+		$meta->appendCreate('a.dangerous', [
+			'o-rel-href' => '/flagcommentreply/'.$row['commentreplyid'],
+			'title' => 'Flag reply; this reply requires moderator attention',
+			'⚑',
+		]);
 	}
 
-	echo " — ".\Osmium\Chrome\format_relative_date($row['repcreationdate'])."\n";
-	echo "<span class='meta'>\n— <a href='?jtr=".$row['commentreplyid']."' title='permament link'>#</a>";
-	if($isflaggable) {
-		echo " — <a class='dangerous' href='".RELATIVE."/flagcommentreply/"
-			.$row['commentreplyid']."' title='This comment reply requires moderator attention'>⚑</a>\n";
-	}
 	if($ismoderator || ($loggedin && $row['raccountid'] == $a['accountid'])) {
 		$tmp = ($loggedin && $row['raccountid'] == $a['accountid']) ? '' : $modprefix;
 
-		echo " — <a href='".RELATIVE."/editcommentreply/".$row['commentreplyid']."'>{$tmp}edit</a>\n";
-		echo " — <a href='".RELATIVE."/deletecommentreply/".$row['commentreplyid']."?tok=".\Osmium\State\get_token()."' class='dangerous confirm'>{$tmp}delete</a>\n";
+		$meta->append(' — ');
+		$meta->appendCreate('a', [
+			'o-rel-href' => '/editcommentreply/'.$row['commentreplyid'],
+			$tmp, 'edit',
+		]);
+
+		$meta->append(' — ');
+		$meta->appendCreate('a.dangerous.confirm', [
+			'o-rel-href' => '/deletecommentreply/'.$row['commentreplyid']
+			.$p->formatQueryString([ 'tok' => \Osmium\State\get_token() ]),
+			$tmp, 'delete',
+		]);
 	}
-	echo "</span>\n</li>\n";
+
+	return $li;
 }
 
 $prevcid = null;
-$prevrow = null;
+$replybefore = null;
 while($row = \Osmium\Db\fetch_assoc($cq)) {
 	if($row['commentid'] !== $prevcid) {
-		if($prevcid !== null) {
-			format_comment_end($prevrow);
-		}
-		format_comment($row);
 		$prevcid = $row['commentid'];
-		$prevrow = $row;
+
+		$section->append(format_comment($row, $replybefore));
 	}
 
-	if($row['commentreplyid'] !== null) {
-		format_comment_reply($row);
-	}
-}
-if($prevcid !== null) {
-	format_comment_end($prevrow);
+	if($row['commentreplyid'] === null) continue;
+	$replybefore->before(format_comment_reply($row));
 }
 
-addcomment:
-echo "<h2>Add a comment</h2>\n";
+AddComment:
+$section->appendCreate('h2', 'Add a comment');
 
 if($commentsallowed && $loggedin && $cancomment) {
-	\Osmium\Forms\print_form_begin(\Osmium\Chrome\escape($_SERVER['REQUEST_URI']).'#comments');
-	\Osmium\Forms\print_textarea(
-		'Comment body<br /><small>(Markdown and some HTML allowed)</small>',
-		'commentbody',
-		'commentbody');
-	\Osmium\Forms\print_submit('Submit comment');
-	\Osmium\Forms\print_form_end();
+	$tbody = $section->appendCreate('o-form', [ 'method' => 'post', 'action' => '#comments' ])
+		->appendCreate('table')->appendCreate('tbody');
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', [ 'for' => 'commentbody', 'Comment body', [ 'br' ], [ 'small', '(Markdown)' ] ] ]],
+		[[ 'o-textarea', [ 'id' => 'commentbody', 'name' => 'commentbody' ] ]]
+	));
+	$tbody->append($p->makeFormSubmitRow('Submit comment'));
 } else if($loggedin && $commentsallowed) {
-	echo "<p class='placeholder'>You don't have the necessary privilege to comment this loadout.</p>\n";
+	$section->appendCreate('p.placeholder', 'You do not have the necessary privilege to comment this loadout.');
 } else if(!$loggedin && $commentsallowed) {
-	echo "<p class='placeholder'>You have to log in to comment on this loadout.</p>\n";
+	$section->appendCreate('p.placeholder', 'You have to login to comment on this loadout.');
 } else if(!$commentsallowed) {
-	echo "<p class='placeholder'>This loadout cannot be commented on.</p>\n";
+	$section->appendCreate('p.placeholder', 'This loadout cannot be commented on.');
 }

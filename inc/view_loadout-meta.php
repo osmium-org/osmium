@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,41 +18,218 @@
 
 namespace Osmium\ViewLoadout;
 
-function print_list($heading, array $elements) {
+$section = $div->appendCreate('section#meta');
+
+function make_list($heading, array $elements) {
+	global $section;
+	$subsection = $section->appendCreate('section');
+
 	if(count($elements) === 0) return;
-	echo "<h2>".$heading."</h2>\n<ul>\n";
+
+	$subsection->appendCreate('h2', $heading);
+	$ul = $subsection->appendCreate('ul');
 
 	foreach($elements as $v) {
-		if(is_array($v)) {
-			if(is_array($v[0])) {
-				$img = \Osmium\Chrome\sprite(RELATIVE, '', $v[0][0], $v[0][1], $v[0][2], $v[0][3], 16);
-			} else {
-				$img = "<img src='".RELATIVE."/static-".\Osmium\STATICVER."/icons/".$v[0]."' alt='' />";
-			}
-			$v = $img." ".$v[1];
-			$c = ' class="hasleadicon"';
-		} else {
-			$c = '';
+		$li = $ul->appendCreate('li');
+		$lead = array_shift($v);
+
+		if(is_array($lead)) {
+			$li->appendCreate('o-sprite', [
+				'alt' => '',
+				'x' => $lead[0],
+				'y' => $lead[1],
+				'gridwidth' => $lead[2],
+				'gridheight' => $lead[3],
+				'width' => 16,
+				'height' => 16,
+			]);
+		} else if($lead !== null) {
+			$li->appendCreate('img', [
+				'o-static-src' => '/icons/'.$lead,
+				'alt' => '',
+			]);
 		}
 
-		echo "<li$c>".$v."</li>\n";
+		if($lead !== null) {
+			$li->append(' ');
+			$li->addClass('hasleadicon');
+		}
+
+		$li->append($v);
 	}
 
-	echo "</ul>\n";
+	return $subsection;
 }
+
+$share = [];
+$uriprefix = (\Osmium\HTTPS ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST']
+	.rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+
+if(isset($canonicaluriwithrevision)) {
+	$share[] = [
+		null,
+		'# Permanent link ',
+		[ 'small', '(latest revision):' ],
+		[ 'br' ],
+		[ 'code', $uriprefix.$canonicaluri ],
+	];
+
+	$share[] = [
+		null,
+		'# Permanent link ',
+		[ 'small', '(revision #'.$fit['metadata']['revision'].'):' ],
+		[ 'br' ],
+		[ 'code', $uriprefix.$canonicaluriwithrevision ],
+	];
+} else {
+	$share[] = [
+		null,
+		'# Permanent link:',
+		[ 'br' ],
+		[ 'code', $uriprefix.$canonicaluri ],
+	];
+}
+
+$title = 'View '.$fit['metadata']['name'].' on Osmium';
+
+$share[] = [
+	null,
+	'Markdown code:',
+	[ 'br' ],
+	[ 'pre', '['.$title.']('.$uriprefix.$canonicaluri.')' ],
+];
+
+$share[] = [
+	null,
+	'BBCode:',
+	[ 'br' ],
+	[ 'pre', '[url='.$uriprefix.$canonicaluri.']'.$title.'[/url]' ],
+];
+
+$anchor = $p->element('a', [
+	'href' => $uriprefix.$canonicaluri,
+	$title,
+]);
+
+$share[] = [
+	null,
+	'HTML:',
+	[ 'br' ],
+	[ 'pre', $anchor->renderNode() ],
+];
+
+make_list('Share', $share);
+
+
+
+$export = [];
+
+$export[] = [
+	null,
+	[ 'a', [
+		'o-rel-href' => $exporturi('clf', 'json'),
+		'type' => 'application/json',
+		'rel' => 'nofollow',
+		[ 'strong', 'Export to CLF (Common Loadout Format)' ]
+	] ],
+	': recommended for archival and for usage with other programs.'
+];
+$export[] = [
+	null,
+	[ 'a', [
+		'o-rel-href' => $exporturi('clf', 'json', false, [ 'minify' => 1 ]),
+		'type' => 'application/json',
+		'rel' => 'nofollow',
+		[ 'strong', 'Export to minified CLF' ]
+	] ],
+	': stripped down version of the above. Not human-readable.'
+];
+$export[] = [
+	null,
+	[ 'a', [
+		'o-rel-href' => $exporturi('md', 'txt'),
+		'type' => 'text/plain',
+		'rel' => 'nofollow',
+		[ 'strong', 'Export to Markdown+gzCLF' ]
+	] ],
+	': a Markdown-formatted description of the loadout, with embedded CLF for programs.'
+];
+$export[] = [
+	null,
+	[ 'a', [
+		'o-rel-href' => $exporturi('evexml', 'xml', true),
+		'type' => 'application/xml',
+		'rel' => 'nofollow',
+		[ 'strong', 'Export to XML+gzCLF' ]
+	] ],
+	': recommended when importing in the game client.'
+];
+$export[] = [
+	null,
+	'Lossy formats: ',
+	[ 'a', [
+		'o-rel-href' => $exporturi('evexml', 'xml', true, [ 'embedclf' => 0 ]),
+		'type' => 'application/xml',
+		'rel' => 'nofollow',
+		'XML'
+	] ],
+	', ',
+	[ 'a', [
+		'o-rel-href' => $exporturi('eft', 'txt', true),
+		'type' => 'text/plain',
+		'rel' => 'nofollow',
+		'EFT'
+	] ],
+	', ',
+	[ 'a', [
+		'o-rel-href' => $exporturi('dna', 'txt', true),
+		'type' => 'text/plain',
+		'rel' => 'nofollow',
+		'DNA'
+	] ],
+	', ',
+	[ 'a', [
+		'data-ccpdna' => $dna,
+		'in-game DNA'
+	] ],
+	[ 'br' ],
+	[ 'pre', $dna ],
+];
+
+$subsection = make_list('Export', $export);
+$subsection->setAttribute('id', 'export');
+if(!isset($fit['ship']['typeid'])) {
+	$subsection->prepend($p->element(
+		'p.warning_box',
+		'You are exporting an incomplete loadout. Some programs may not react nicely to them.'
+	));
+}
+
+
 
 $perms = array();
 
 switch($fit['metadata']['view_permission']) {
 
 case \Osmium\Fit\VIEW_EVERYONE:
-	$perms[] =  "This loadout can be viewed by <strong>anyone</strong>.";
+	$perms[] =  [
+		null,
+		'This loadout can be viewed by ',
+		[ 'strong', 'anyone' ],
+		'.',
+	];
 	break;
 
 case \Osmium\Fit\VIEW_PASSWORD_PROTECTED:
 	$perms[] = [
 		[ 0, 25, 32, 32 ],
-		"This loadout can be viewed by <strong>anyone</strong>, provided they have the <strong>password</strong>."
+		[
+			'This loadout can be viewed by ',
+			[ 'strong', 'anyone' ],
+			', provided they have the ',
+			[ 'strong', 'password' ],
+			'.',
+		],
 	];
 	break;
 
@@ -60,13 +237,16 @@ case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
 	if($author['apiverified'] === 't' && $author['allianceid'] > 0) {
 		$perms[] = [
 			[ 2, 13, 64, 64 ],
-			"This loadout can only be viewed by members of <strong>"
-			.\Osmium\Chrome\escape($author['alliancename'])."</strong> only"
+			'This loadout can only be viewed by members of ',
+			[ 'strong', $author['alliancename'] ],
+			'.',
 		];
 	} else {
 		$perms[] = [
 			[ 1, 25, 32, 32 ],
-			"This loadout is marked as alliance only, but the author is not in any alliance (or has not verified his account). This loadout can effectively be viewed by its <strong>owner only</strong>."
+			'This loadout is marked as ',
+			[ 'strong', 'alliance only' ],
+			', but the owner is not in any alliance or the owner\'s account is not API-verified.',
 		];
 	}
 	break;
@@ -75,13 +255,16 @@ case \Osmium\Fit\VIEW_CORPORATION_ONLY:
 	if($author['apiverified'] === 't') {
 		$perms[] = [
 			[ 3, 13, 64, 64 ],
-			"This loadout can only be viewed by members of <strong>"
-			.\Osmium\Chrome\escape($author['corporationname'])."</strong> only."
+			'This loadout can only be viewed by members of ',
+			[ 'strong', $author['corporationname'] ],
+			'.',
 		];
 	} else {
 		$perms[] = [
 			[ 1, 25, 32, 32 ],
-			"This loadout is marked as corporation only, but the author is not in any corporation (or has not verified his account). This loadout can effectively be viewed by its <strong>owner only</strong>."
+			'This loadout is marked as ',
+			[ 'strong', 'corporation only' ],
+			', but the owner\'s account is not API-verified.',
 		];
 	}
 	break;
@@ -89,22 +272,46 @@ case \Osmium\Fit\VIEW_CORPORATION_ONLY:
 case \Osmium\Fit\VIEW_OWNER_ONLY:
 	$perms[] = [
 		[ 1, 25, 32, 32 ],
-		"This loadout can be viewed by its <strong>owner only</strong>."
+		'This loadout can be viewed by its ',
+		[ 'strong', 'owner only' ],
+		'.',
 	];
 	break;
 
 case \Osmium\Fit\VIEW_GOOD_STANDING:
-	$perms[] = [
-		[ 5, 28, 32, 32 ],
-		"This loadout can be view by its owner and his contacts with <strong>good standings</strong> only (includes corporation and alliance)."
-	];
-	break;
-
 case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
-	$perms[] = [
-		[ 4, 28, 32, 32 ],
-		"This loadout can be view by its owner and his contacts with <strong>excellent standings</strong> only (includes corporation and alliance)."
-	];
+
+	$level = $fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_GOOD_STANDING
+		? 'good' : 'excellent';
+
+	if($author['apiverified'] !== 't') {
+		$text = [
+			'This loadout is marked as ',
+			[ 'strong', $level.' standings only' ],
+			', but the owner\'s account is not API-verified.',
+		];
+	} else if($author['allianceid'] > 0) {
+		$text = [
+			'This loadout can be viewed by members of ',
+			[ 'strong', $author['alliancename'] ],
+			' and contacts of ',
+			[ 'strong', $author['charactername'] ],
+			' with a ',
+			[ 'strong', $level.' standing' ],
+			'.',
+		];
+	} else {
+		$text = [
+			'This loadout can be viewed by members of ',
+			[ 'strong', $author['corporationname'] ],
+			' and contacts of ',
+			[ 'strong', $author['charactername'] ],
+			' with a ',
+			[ 'strong', $level.' standing' ],
+			'.',
+		];
+	}
+	$perms[] = [ [ 5, 28, 32, 32 ], $text ];
 	break;
 
 }
@@ -115,7 +322,9 @@ if($loadoutid !== false) {
 	case \Osmium\Fit\EDIT_OWNER_ONLY:
 		$perms[] = [
 			[ 1, 25, 32, 32 ],
-			"This loadout can be edited by its <strong>owner only</strong>."
+			'This loadout can be edited by its ',
+			[ 'strong', 'owner only' ],
+			'.',
 		];
 		break;
 
@@ -123,14 +332,22 @@ if($loadoutid !== false) {
 		if($author['apiverified'] === 't') {
 			$perms[] = [
 				[ 3, 13, 64, 64 ],
-				"This loadout can be edited by its <strong>owner</strong> or by people in <strong>"
-				.\Osmium\Chrome\escape($author['corporationname'])
-				."</strong> with the <strong>fitting manager</strong> role."
+				'This loadout can be edited by its ',
+				[ 'strong', 'owner' ],
+				' and by members of ',
+				[ 'strong', $author['corporationname'] ],
+				' having the ',
+				[ 'strong', 'fitting manager' ],
+				' role.',
 			];
 		} else {
 			$perms[] = [
 				[ 1, 25, 32, 32 ],
-				"This loadout is marked as editable its owner and by people in the same corporation with the fitting manager role, but the owner is not in a corporation (or has not verified his account). This loadout can effectively be edited by its <strong>owner only</strong>."
+				'This loadout can be edited by its ',
+				[ 'strong', 'owner' ],
+				' and by ',
+				[ 'strong', 'fitting managers' ],
+				' in the owner\'s corporation, but the owner\'s account is not API-verified.',
 			];
 		}
 		break;
@@ -139,13 +356,16 @@ if($loadoutid !== false) {
 		if($author['apiverified'] === 't') {
 			$perms[] = [
 				[ 3, 13, 64, 64 ],
-				"This loadout can be edited by any person in <strong>"
-				.\Osmium\Chrome\escape($author['corporationname'])."</strong>."
+				'This loadout can be edited by members of ',
+				[ 'strong', $author['corporationname'] ],
+				'.',
 			];
 		} else {
 			$perms[] = [
 				[ 1, 25, 32, 32 ],
-				"This loadout is marked as editable by the corporation of the owner, but the owner is not in a corporation (or has not verified his account). This loadout can effectively be edited by its <strong>owner only</strong>."
+				'This loadout can be edited by members of the owner\'s ',
+				[ 'strong', 'corporation' ],
+				' but the owner\'s account is not API-verified.',
 			];
 		}
 		break;
@@ -154,20 +374,28 @@ if($loadoutid !== false) {
 		if($author['apiverified'] === 't' && $author['allianceid'] > 0) {
 			$perms[] = [
 				[ 2, 13, 64, 64 ],
-				"This loadout can be edited by any person in <strong>"
-				.\Osmium\Chrome\escape($author['alliancename'])."</strong>."
+				'This loadout can be edited by members of ',
+				[ 'strong', $author['alliancename'] ],
+				'.',
 			];
 		} else {
 			$perms[] = [
 				[ 1, 25, 32, 32 ],
-				"This loadout is marked as editable by the alliance of the owner, but the owner is not in an alliance (or has not verified his account). This loadout can effectively be edited by its <strong>owner only</strong>."
+				'This loadout can be edited by members of the owner\'s ',
+				[ 'strong', 'alliance' ],
+				' but the owner is not in any alliance or owner\'s account is not API-verified.',
 			];
 		}
 		break;
 
 	}
 } else {
-	$perms[] = "This loadout <strong>cannot</strong> be edited, but it can still be forked by anyone.";
+	$perms[] = [
+		null,
+		'This loadout is ',
+		[ 'strong', 'read only' ],
+		', but it can still be forked freely.',
+	];
 }
 
 if($loadoutid === false) {
@@ -177,13 +405,20 @@ if($loadoutid === false) {
 switch($fit['metadata']['visibility']) {
 
 case \Osmium\Fit\VISIBILITY_PUBLIC:
-	$perms[] = "This loadout is <strong>public</strong>. It will be indexed and appear on the search results of anyone who can access the loadout.";
+	$perms[] = [
+		null,
+		'This loadout is ',
+		[ 'strong', 'public' ],
+		'. It will appear in search results of people that can view the loadout.',
+	];
 	break;
 
 case \Osmium\Fit\VISIBILITY_PRIVATE:
 	$perms[] = [
 		[ 4, 13, 64, 64 ],
-		"This loadout is <strong>private</strong>. It will not be indexed and will not appear on any search results. Only people with the correct URI will be able to access the loadout."
+		'This loadout is ',
+		[ 'strong', 'private' ],
+		'. It will never appear in search results and it has an obfuscated URI.',
 	];
 	break;
 
@@ -191,20 +426,60 @@ case \Osmium\Fit\VISIBILITY_PRIVATE:
 
 $moderated = $loadoutid !== false && \Osmium\Reputation\is_fit_public($fit);
 if(!$moderated) {
-	$perms[] = "Due to the nature of this loadout, it is not subject to public moderation, and votes cast on it or its comments yield no reputation.";
+	$perms[] = [
+		null,
+		'This loadout is not subject to public moderation and votes cast on it yield no reputation points.',
+	];
 }
 
-print_list("Permissions and visibility", $perms);
+make_list('Permissions and visibility', $perms);
+
+
 
 $actions = array();
 
 if($loadoutid !== false && \Osmium\Flag\is_fit_flaggable($fit)) {
-	$actions[] = "<strong><a href='".RELATIVE."/flag/".$loadoutid."' class='dangerous'>⚑ Flag this loadout</a></strong>: report that this loadout requires moderator attention.";
+	$actions[] = [
+		null,
+		[ 'strong', [[ 'a.dangerous', [ 'o-rel-href' => '/flag/'.$loadoutid, '⚑ Report this loadout' ] ]] ],
+		': this loadout requires moderator attention.',
+	];
 }
 
 if($can_edit) {
-	$actions[] = "<strong><a href='".RELATIVE."/edit/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;revision=".$fit['metadata']['revision']."' rel='nofollow'>{$modprefix}Edit this loadout</a></strong>: change the lodaout (older versions will still be visible and can be restored through the history).";
-	$actions[] = "<strong><a class='dangerous confirm' href='".RELATIVE."/delete/".$loadoutid."?tok=".\Osmium\State\get_token()."' rel='nofollow'>{$modprefix}Delete this loadout</a></strong>: permanently remove the loadout and all its history.";
+	$opts = [
+		'tok' => \Osmium\State\get_token(),
+		'revision' => $fit['metadata']['revision'],
+	];
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$opts['privatetoken'] = $fit['metadata']['privatetoken'];
+	}
+
+	$actions[] = [
+		null,
+		[ 'strong', [[ 'a', [
+			'o-rel-href' => '/edit/'.$loadoutid.$p->formatQueryString($opts),
+			'rel' => 'nofollow',
+			'Edit this loadout',
+		] ]] ],
+		': change the loadout (older versions are saved and can be viewed and rolled back through the history)',
+	];
+
+	unset($opts['revision']);
+
+	$actions[] = [
+		null,
+		[ 'strong', [[ 'a', [
+			'o-rel-href' => '/delete/'.$loadoutid.$p->formatQueryString($opts),
+			'rel' => 'nofollow',
+			'class' => 'dangerous confirm',
+			'Delete this loadout',
+		] ]] ],
+		': ',
+		[ 'strong', 'permanently' ],
+		' remove the loadout and all its history.',
+	];
 }
 
 if($loggedin && $loadoutid !== false) {
@@ -225,30 +500,59 @@ if($loggedin && $loadoutid !== false) {
 		$favimg = [ 2, 25, 32, 32 ];
 	}
 
+	$opts = [
+		'tok' => \Osmium\State\get_token(),
+		'redirect' => 'loadout',
+	];
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$opts['privatetoken'] = $fit['metadata']['privatetoken'];
+	}
+
 	$actions[] = [
 		$favimg,
-		"<a href='".RELATIVE."/favorite/".$loadoutid."?tok=".\Osmium\State\get_token()."&amp;redirect=loadout'>"
-		.$title."</a>: favorite loadouts are listed on your <a href='".RELATIVE."/profile/".$a['accountid']."#pfavorites'>profile</a> page."
+		[ 'a', [ 'o-rel-href' => '/favorite/'.$loadoutid.$p->formatQueryString($opts), $title ] ],
+		': favorite loadouts are listed on your ',
+		[ 'a', [ 'o-rel-href' => '/profile/'.$a['accountid'].'#pfavorites', 'profile page' ] ],
+		'.',
 	];
 }
 
 if(isset($fit['ship']['typename'])) {
-	$shipname = \Osmium\Chrome\escape($fit['ship']['typename']);
-	$actions[] = "<a href='".RELATIVE."/search?q=".urlencode('@ship "'.$fit['ship']['typename'].'"')
-		."'>Browse all ".$shipname." loadouts</a>";
-}
-
-if(isset($rauthorname)) {
-	$actions[] = "<a href='".RELATIVE."/search?q="
-		.urlencode('@author "'.\Osmium\Chrome\escape($rauthorname).'"')
-		."'>Browse loadouts from the same author</a>";
-}
-
-if(isset($fit['ship']['typeid'])) {
 	$actions[] = [
-		"external.svg",
-		"<a href='//zkillboard.com/ship/".$fit['ship']['typeid']."/'>".$shipname." activity on zKillboard</a>"
+		null,
+		[ 'a', [
+			'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@ship "'.$fit['ship']['typename'].'"' ]),
+			'Browse all '.$fit['ship']['typename'].' loadouts',
+		] ],
 	];
 }
 
-print_list("Actions", $actions);
+if(isset($rauthorname)) {
+	$actions[] = [
+		null,
+		[ 'a', [
+			'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@author "'.$rauthorname.'"' ]),
+			'Browse loadouts from '.$rauthorname,
+		] ],
+	];
+}
+
+if(isset($fit['ship']['typeid'])) {
+	$anchor = $p->element('a', [
+		'href' => '//zkillboard.com/ship/'.$fit['ship']['typeid'],
+		$fit['ship']['typename'].' activity on zKillboard',
+	]);
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		/* Don't leak private URIs */
+		$anchor->setAttribute('rel', 'noreferrer');
+	}
+
+	$actions[] = [
+		'external.svg',
+		$anchor,
+	];
+}
+
+make_list('Actions', $actions);

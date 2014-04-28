@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,9 +28,13 @@ if($_GET['tok'] != \Osmium\State\get_token()) {
 
 $loadoutid = isset($_GET['loadoutid']) ? $_GET['loadoutid'] : 0;
 
-$can_edit = \Osmium\State\can_edit_fit($loadoutid);
-if(!$can_edit) {
+if(!\Osmium\State\can_edit_fit($loadoutid)) {
 	\Osmium\fatal(403);
+}
+
+$fit = \Osmium\Fit\get_fit($loadoutid);
+if(!\Osmium\State\can_access_fit($fit)) {
+	\Osmium\Fatal(403);
 }
 
 \Osmium\Db\query('BEGIN;');

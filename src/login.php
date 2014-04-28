@@ -23,6 +23,7 @@ require \Osmium\ROOT.'/inc/login-common.php';
 
 $redirect = isset($_POST['request_uri']) ? $_POST['request_uri'] : (isset($_GET['r']) ? $_GET['r'] : './');
 
+
 if(\Osmium\State\is_logged_in()) {
 	header('Location: '.$redirect, true, 303);
 	die();
@@ -45,7 +46,7 @@ $p->content->appendCreate('h1', 'Login');
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
 $tbody = $p->content->appendCreate('o-form', [
-	'o-rel-action' => '/login',
+	'o-rel-action' => $_SERVER['REQUEST_URI'],
 	'method' => 'post',
 ])->appendCreate('table')->appendCreate('tbody');
 

@@ -130,7 +130,7 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 		->append([ ' (', $p->formatRelativeDate($rev['updatedate']), ')', ])
 		->append(' — ')
 		->appendCreate('small.anchor')
-		->appendCreate('a', [ 'href' => '#revision'.$rev['revision'], '#' ])
+		->appendCreate('a', [ 'href' => '#revision'.$rev['revision'], '#permalink' ])
 		;
 
 	if(!$first && $can_edit) {

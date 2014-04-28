@@ -230,8 +230,8 @@ osmium_init_votes = function() {
 };
 
 osmium_init_comment_replies = function() {
-	$("section#comments > div.comment > a.add_comment").click(function() {
-		$(this).parent().find('ul.replies > li.new').fadeIn(250).find('textarea').focus();
+	$("section#comments > div.comment > header > div.meta a.add_comment").click(function() {
+		$(this).closest('div.comment').find('ul.replies > li.new').fadeIn(250).find('textarea').focus();
 	});
 	$("section#comments > div.comment > ul.replies > li.new > form > a.cancel").click(function() {
 		$(this).parent().parent().hide().find('textarea').val('');

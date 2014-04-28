@@ -61,7 +61,6 @@ div#vlattribs {
 div#pwfit {
 	display: inline-block;
 	width: 30em;
-	height: 10em;
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -76,10 +75,6 @@ div#pwfit {
 	& > form > table > tbody > tr > td > input#pw {
 		min-width: 20em;
 	}
-}
-
-section#export {
-	@include readable;
 }
 
 section#description {
@@ -134,6 +129,15 @@ section#meta {
 	li.hasleadicon > img:first-child {
 		height: 1.2em;
 	}
+
+	li > pre {
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	li > code, li > pre {	
+		color: $aside-text-color;
+	}
 }
 
 section#comments {
@@ -175,13 +179,16 @@ section#comments {
 				color: $loadout-comment-meta-text-color;
 				font-size: 0.9em;
 
-				&> span.outdated, &> span.outdated.a {
+				&> span.outdated > a {
 					color: $loadout-comment-meta-text-color;
 				}
 
 				&> span.outdated {
-					display: block;
-					padding-top: 0.5em;
+					opacity: .75;
+				}
+
+				&> a.add_comment {
+					font-weight: bold;
 				}
 			}
 		}
@@ -193,11 +200,6 @@ section#comments {
 			&:hover {
 				text-decoration: underline;
 			}
-		}
-
-		&> a.add_comment {
-			padding-left: 0.25em;
-			font-size: 0.9em;
 		}
 
 		&> div.body {
