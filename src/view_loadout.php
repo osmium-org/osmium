@@ -137,13 +137,13 @@ if(isset($_GET['dpid']) && !isset($_GET['dronepreset'])) {
 $preset_overridden = false;
 foreach(array('', 'charge', 'drone') as $ptype) {
 	if(isset($_GET[$ptype.'preset']) && $_GET[$ptype.'preset'] !== '') {
-		$p = intval($_GET[$ptype.'preset']);
-		if(!isset($fit[$ptype.'presets'][$p])) {
+		$pid = intval($_GET[$ptype.'preset']);
+		if(!isset($fit[$ptype.'presets'][$pid])) {
 			\Osmium\Fatal(404, "Invalid ".$ptype." preset");
 		}
 		call_user_func_array(
 			'Osmium\Fit\use_'.$ptype.($ptype ? '_' : '').'preset',
-			array(&$fit, $p)
+			array(&$fit, $pid)
 		);
 		$preset_overridden = true;
 	}
