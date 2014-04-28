@@ -57,6 +57,10 @@ $header->appendCreate('h2', [
 
 
 if($row['apiverified'] === 't') {
+	/* Shouldn't typically happen, but better safe than sorry */
+	$corpid = (($row['corporationid'] == null) ? 1 : $row['corporationid']);
+	$corpname = ($corpid === 1) ? '(no corporation)' : $row['corporationname'];
+
 	$allianceid = (($row['allianceid'] == null) ? 1 : $row['allianceid']);
 	$alliancename = ($allianceid === 1) ? '(no alliance)' : $row['alliancename'];
 
@@ -70,8 +74,8 @@ if($row['apiverified'] === 't') {
 		[ 'br' ],
 		[ 'a', [
 			'o-rel-href' => '/search?q=@restrictedtocorporationid > 0',
-			[ 'o-eve-img', [ 'src' => '/Corporation/'.$row['corporationid'].'_256.png',
-			                 'alt' => 'corporation logo', 'title' => $row['corporationname'] ] ],
+			[ 'o-eve-img', [ 'src' => '/Corporation/'.$corpid.'_256.png',
+			                 'alt' => 'corporation logo', 'title' => $corpname ] ],
 		]],
 		[ 'a', [
 			'o-rel-href' => '/search?q=@restrictedtoallianceid > 0',
@@ -91,7 +95,7 @@ if($row['apiverified'] === 't') {
 	$tbody->appendCreate('tr', [
 		[ 'th', [ 'rowspan' => '2', 'character' ] ],
 		[ 'td', 'corporation' ],
-		[ 'td', $row['corporationname'] ],
+		[ 'td', $corpname ],
 	]);
 	$tbody->appendCreate('tr', [
 		[ 'td', 'alliance' ],
