@@ -136,10 +136,6 @@ Code conventions
   `testSomethingWorksAsExpected`). Variable names can use either
   `$a_variable_name` or `$avariablename`.
 
-* If your function prints something to the standard output, please
-  prefix its name by `print_`, for example:
-  `print_login_or_logout_box()`.
-
 * If you absolutely need to use global variables (you should try not
   to), prefix them by `$__osmium_`, for example:
   `$__osmium_cache_stack`.
@@ -148,10 +144,117 @@ Code conventions
   $value;` instead of `define('CONSTANT', $value)` if it is possible
   to do so.
 
+DOM
+---
+
+Use DOM for creating XHTML or XML markup. DOM is safer and makes for
+more robust code. Osmium extends the PHP DOM classes with many
+convenience methods to make developement quicker.
+
+DOM takes care of escaping entities when needed:
+
+~~~
+$document = new \Osmium\DOM\Page();
+$p = $document->content->appendCreate('p');
+
+$p->append('foo & bar');                        /* Safe */
+$p->append('<![CDATA[ baz ]]>');                /* Safe */
+$p->append('<script>alert("foo");</script>');   /* Safe */
+
+$p->append($document->fragment(
+	'<div>baz</div>'                        /* Unsafe */
+));
+~~~
+
+DOM takes care of closing elements and always generates syntaxically valid XML.
+
+~~~
+/* Don't do this! */
+
+echo "<ul id='somelist' class='foo bar'>";
+
+foreach($foo as $baz) {
+    echo "<li>".escape($baz)."</li>";
+}
+
+echo "</ul>";
+
+
+
+/* Do this instead. */
+
+$ul = $document->element('ul#somelist.foo.bar');
+
+foreach($foo as $baz) {
+    $ul->appendCreate('li', $baz);
+}
+~~~
+
+In many cases, DOM makes for less cumbersome coding:
+
+~~~
+/* Don't do this! */
+
+$m = isset($missing[$fit['ship']['typeid']]) ? ' missingskill' : '';
+echo "<strong><span class='name{$m}'>".\Osmium\Chrome\escape($fit['ship']['typename'])."</span></strong>\n";
+
+
+
+/* Do this instead. */
+
+$span = $h1->appendCreate('strong')->appendCreate('span.name', $fit['ship']['typename']);
+
+if(isset($missing[$fit['ship']['typeid']])) {
+	$span->addClass('missingskill');
+}
+~~~
+
+Osmium introduces "dynamic elements" which are only rendered at the
+last minute, allowing for more dynamic elements:
+
+~~~
+/* o-form will automatically add a CSRF token and specify the accept-encoding value */
+$form = $document->element('o-form', [ 'method' => 'post', 'action' => '/somepage' ]);
+
+/* o-input will remember its value (unless remember attribute is off or value is overridden) */
+$form->appendCreate('o-input', [ 'type' => 'text', 'name' => 'somefield' ]);
+
+/* o-select will remember its value, also accepts selected attribute */
+$select = $form->appendCreate('o-select', [ 'name' => 'someselect', 'selected' => 'three' ]);
+$select->appendCreate('option', [ 'value' => 'one', 'Option one' ]);
+$select->appendCreate('option', [ 'value' => 'two', 'Option two' ]);
+$select->appendCreate('option', [ 'value' => 'three', 'Option three' ]);
+~~~
+
+**Dynamic elements must begin with `o-`.**
+
+Since DOM is slower than directly echoing XHTML, it's good practice to
+use templates when iterating over big datasets:
+
+~~~
+$rowtemplate = $document->element('tr');
+$rowtemplate->appendCreate('th')->appendCreate('a');
+$rowtemplate->appendCreate('td');
+
+$tbody = $document->element('table')->appendCreate('tbody');
+foreach($types as $typeid => $typename) {
+    $row = $rowtemplate->cloneNode(true); /* Clone, don't recreate */
+
+    $a = $row->firstChild->firstChild;
+    $td = $row->lastChild;
+
+    $a->setAttribute('href', '/db/type/'.$typeid);
+    $a->append($typeid);
+    $td->append($typename);
+    $tbody->append($row);
+}
+~~~
+
+
 Polyglot markup
 ---------------
 
-Any HTML code you print should validate as both XTHML5 and HTML5.
+Any HTML code you generate should validate as both XTHML5 and HTML5.
 
 You can use http://validator.nu to check if your code is correct (your
 code should validate with both the HTML5 parser and the XML parser).
@@ -161,43 +264,22 @@ Here are the most important gotchas to keep in mind:
 * Never use the shorthand notation for attributes:
 
   ~~~~
-  <input type='text' required />                // No
-  <input type='text' required='required' />     // Yes
-  ~~~~
-
-* Always close attributes (even when they can be omitted in strict HTML5):
-
-  ~~~~
-  <p>Foo <p>Bar                                 // No
-  <p>Foo</p><p>Bar</p>                          // Yes
-
-  <br>                                          // No
-  <br></br>                                     // No
-  <br />                                        // Yes
+  $input->setAttribute('required', '');                // No
+  $input->setAttribute('required', 'required');        // Yes
   ~~~~
 
 * When using tables, always explicitely insert the `<tbody>` tag (and
   optionally `<thead>` and `<tfoot>`), for example:
 
   ~~~~
-  <table><tr><td>Foo</td></tr></table>                  // No
-  <table><tbody><tr><td>Foo</td></tr></tbody></table>   // Yes
-  ~~~~
+  $table->appendCreate('tr')->appendCreate('td', 'foo');              // No
 
-* If using name entities, only use `amp`, `lt`, `gt`, `apos` and
-  `quot`.
-
-  ~~~~
-  &nbsp;                                        // No
-  &#xa0;                                        // Yes
+  $tbody = $table->appendCreate('tbody');
+  $tbody->appendCreate('tr')->appendCreate('td', 'foo');              // Yes
   ~~~~
 
 * If using Javascript, do not use `document.write()` (it is bad
   practice anyway, and XHTML5 forbids it).
-
-* If using inline `<script>` tags, escape their contents correctly
-  with `CDATA` sections (or use `Osmium\Chrome\print_js_code()` that
-  already does it for you).
 
 See the full list at: http://dev.w3.org/html5/html-xhtml-author-guide/
 
