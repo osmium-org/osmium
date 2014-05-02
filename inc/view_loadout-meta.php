@@ -223,13 +223,11 @@ case \Osmium\Fit\VIEW_EVERYONE:
 case \Osmium\Fit\VIEW_PASSWORD_PROTECTED:
 	$perms[] = [
 		[ 0, 25, 32, 32 ],
-		[
-			'This loadout can be viewed by ',
-			[ 'strong', 'anyone' ],
-			', provided they have the ',
-			[ 'strong', 'password' ],
-			'.',
-		],
+		'This loadout can be viewed by ',
+		[ 'strong', 'anyone' ],
+		', provided they have the ',
+		[ 'strong', 'password' ],
+		'.',
 	];
 	break;
 
@@ -311,7 +309,8 @@ case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
 			'.',
 		];
 	}
-	$perms[] = [ [ 5, 28, 32, 32 ], $text ];
+	array_unshift($text, [ 5, 28, 32, 32 ]);
+	$perms[] = $text;
 	break;
 
 }

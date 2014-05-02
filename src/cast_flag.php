@@ -23,6 +23,7 @@ require __DIR__.'/../inc/root.php';
 $p = new \Osmium\DOM\Page();
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';
+$p->index = false;
 
 \Osmium\State\assume_logged_in($ctx->relative);
 

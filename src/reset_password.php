@@ -67,7 +67,7 @@ if(isset($_POST['key_id'])) {
 				array($hash, $a['accountid'])
 			);
 
-			$p->contents->appendCreate('p.notice_box', [
+			$p->content->appendCreate('p.notice_box', [
 				'Password reset was successful. You can now login on the account ',
 				[ 'strong', $a['accountname'] ],
 				' using your new password.',
