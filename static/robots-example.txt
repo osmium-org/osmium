@@ -1,4 +1,27 @@
 # Should match the values in config.ini
 Sitemap: http://my-domain.tld/sitemap.xml.gz
 
+# Disallow internal pages to save resources. All these pages should
+# have a meta noindex when applicable, but at lesat robots won't
+# follow links leading to these pages.
+User-agent: *
+Disallow: /internal/
+Disallow: /api/
+Disallow: /loadout/private/
+Disallow: /moderation
+Disallow: /moderation/
+Disallow: /edit/
+Disallow: /editcomment/
+Disallow: /editcommentreply/
+Disallow: /delete/
+Disallow: /deletecomment/
+Disallow: /deletecommentreply/
+Disallow: /fork/
+Disallow: /flag/
+Disallow: /flagcomment/
+Disallow: /flagcommentreply/
+Disallow: /new
+Disallow: /new/
+
+
 # Add your own rules here…
