@@ -24,6 +24,8 @@ if(!isset($_GET['accountid'])) {
 	\Osmium\fatal(404);
 }
 
+
+
 $row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 	'SELECT accountid, creationdate, lastlogindate, apiverified,
 	nickname, characterid, charactername, corporationid, corporationname,
@@ -36,7 +38,7 @@ if($row === false) {
 	\Osmium\fatal(404);
 }
 
-$a = \Osmium\State\get_state('a', array());
+$a = \Osmium\State\get_state('a', [ 'accountid' => 0 ]);
 $myprofile = \Osmium\State\is_logged_in() && $a['accountid'] == $_GET['accountid'];
 $ismoderator = isset($a['ismoderator']) && $a['ismoderator'] === 't';
 
@@ -251,6 +253,7 @@ if($myprofile) {
 }
 
 
+
 $preputation = $content->appendCreate('section', [ 'id' => 'reputation', 'class' => 'psection' ]);
 $preputation->appendCreate('h2', [
 	'Reputation changes this month',
@@ -262,24 +265,30 @@ $repchangesq = \Osmium\Db\query_params(
 	'SELECT v.creationdate, reputationgiventodest, type, targettype, targetid1, targetid2, targetid3,
 		sl.loadoutid, f.name
 	FROM osmium.votes AS v
-	LEFT JOIN osmium.searchableloadouts AS sl ON ((v.targettype = $3 AND v.targetid1 = sl.loadoutid
+	LEFT JOIN osmium.searchableloadouts AS sl ON (sl.accountid = $5) AND (
+		(v.targettype = $3 AND v.targetid1 = sl.loadoutid
 		AND v.targetid2 IS NULL AND v.targetid3 IS NULL)
-		OR (v.targettype = $4 AND v.targetid2 = sl.loadoutid AND v.targetid3 IS NULL))
+		OR (v.targettype = $4 AND v.targetid2 = sl.loadoutid AND v.targetid3 IS NULL)
+	)
 	LEFT JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = sl.loadoutid
 	LEFT JOIN osmium.loadouthistory AS lh ON lh.loadoutid = sl.loadoutid AND lh.revision = llr.latestrevision
 	LEFT JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
 	WHERE v.accountid = $1 AND v.creationdate >= $2 AND reputationgiventodest <> 0
 	ORDER BY creationdate DESC',
-	array($_GET['accountid'],
-	      time() - 86400 * 365.25 / 12,
-	      \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
-	      \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
-		)
-	);
+	array(
+		$_GET['accountid'],
+		time() - 86400 * 365.25 / 12,
+		\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
+		\Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
+		$a['accountid'],
+	)
+);
 $lastday = null;
 $first = true;
 $data = array();
 $ul = $preputation->appendCreate('ul');
+
+
 
 function make_target(\Osmium\DOM\Document $p, $d) {
 	if($d['targettype'] == \Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT) {
@@ -399,7 +408,7 @@ $votesq = \Osmium\Db\query_params(
 		\Osmium\Reputation\VOTE_TARGET_TYPE_LOADOUT,
 		\Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT,
 		$offset,
-		isset($a['accountid']) ? $a['accountid'] : 0,
+		$a['accountid'],
 	)
 );
 
