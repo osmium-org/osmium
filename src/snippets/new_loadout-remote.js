@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -141,6 +141,7 @@ osmium_gen_projected = function() {
 		}
 
 		alert('Could not delete connection in CLF – please report!');
+		console.log('connection not found in CLF', stid, sidx, m);
 	});
 
 	var list = $("section#projected form#projected-list");
@@ -538,7 +539,6 @@ osmium_create_projected = function(key, clf, index) {
 
 			var source = 
 				$(document.createElement('li'))
-				.data('location', 'module-' + p[i].typeid + '-' + p[i].index)
 				.data('typeid', p[i].typeid)
 				.data('index', p[i].index)
 				.append(
@@ -947,7 +947,8 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 		stale.find('ul > li').each(function() {
 			var source = $(this);
 			var newsource = fresh.find('ul > li').filter(function() {
-				return $(this).data('location') === source.data('location')
+				var t = $(this);
+				return t.data('typeid') == source.data('typeid') && t.data('index') == source.data('index');
 			}).first();
 
 			var connections = jsPlumb.select({

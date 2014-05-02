@@ -118,7 +118,6 @@ osmium_init_modules = function() {
 		},
 		update: function() {
 			var z = 0;
-			var mp = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
 			var map = {};
 
 			$("section#modules > div.slots").find('li').each(function() {
@@ -129,16 +128,11 @@ osmium_init_modules = function() {
 				if(!(t in map)) map[t] = {};
 
 				map[t][i] = z;
-				$(this).data('index', z);
 				++z;
 			});
 
-			for(var i = 0; i < mp.length; ++i) {
-				mp[i].index = map[mp[i].typeid][mp[i].index];
-			}
-
-			mp.sort(function(x, y) {
-				return x.index - y.index;
+			osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.sort(function(x, y) {
+				return map[x.typeid][x.index] - map[y.typeid][y.index];
 			});
 
 			osmium_commit_clf();
@@ -397,25 +391,40 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 	li.on('remove_module', function() {
 		var modules = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules;
+		var li = $(this);
 		var slotsdiv = li.closest('div.slots');
 
 		if(osmium_types[typeid][8] === 1) {
 			osmium_user_initiated_push(false);
-			$("section#projected div.pr-loadout.projected-local").find('li').filter(function() {
-				var li = $(this);
-				return li.data('typeid') === typeid && li.data('index') === index;
-			}).each(function() {
-				var li = $(this);
-				jsPlumb.select({ source: $(this) }).detach();
-			}).remove();
+			var lis = $("section#projected div.pr-loadout.projected-local").find('li').filter(function() {
+				var sli = $(this);
+				return sli.data('typeid') === typeid && sli.data('index') === index;
+			});
+
+			if(lis.length !== 1) {
+				alert('could not detach module – please report!');
+				console.log(typeid, index, modules);
+				return;
+			}
+
+			var fli = lis.first();
+			jsPlumb.select({ source: fli }).detach();
+
 			osmium_user_initiated_pop();
 		}
 
+		var found = false;
 		for(var i = 0; i < modules.length; ++i) {
 			if(modules[i].index === index && modules[i].typeid === typeid) {
 				osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']].modules.splice(i, 1);
+				found = true;
 				break;
 			}
+		}
+
+		if(!found) {
+			alert('could not delete module in CLF – please report!');
+			return;
 		}
 
 		li.remove();

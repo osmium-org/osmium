@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -1176,9 +1176,11 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 		);
 
 	$clfmods = array();
+	$clfmodsorder = array();
 	$clfcharges = array();
 	$clfimplants = array();
 	$clfsideeffects = array();
+	$z = 0;
 
 	foreach(isset($clfp['modules']) ? $clfp['modules'] : array() as $m) {
 		/* add_module() is lazy, it's okay to blindly call it here */
@@ -1203,6 +1205,7 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
         }
 
 		$clfmods[$type][$m['index']] = $m['typeid'];
+		$clfmodsorder[$type][$m['index']] = ++$z;
 	}
 
 	foreach(isset($clfp['implants']) ? $clfp['implants'] : array() as $i) {
@@ -1241,7 +1244,9 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 			remove_module($fit, $index, $m['typeid']);
 		}
 
-		ksort($mods);
+		uksort($mods, function($i, $j) use($type, $clfmodsorder) {
+			return $clfmodsorder[$type][$i] - $clfmodsorder[$type][$j];
+		});
 	}
 
 	foreach($fit['implants'] as $typeid => $i) {
