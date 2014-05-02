@@ -64,7 +64,7 @@ class Page extends \Osmium\DOM\Page {
 
 		$snippets->before($this->element('script', [
 			'type' => 'application/javascript',
-			'src' => $ctx->relative.'/static-1/jquery.jsPlumb-1.5.4-min.js',
+			'src' => $ctx->relative.'/static-1/jquery.jsPlumb-1.6.0-min.js',
 		]));
 
 		$snippets->before($this->element('script', [

@@ -1,0 +1,1 @@
+../lib/jsPlumb/dist/js/jquery.jsPlumb-1.6.0-min.js

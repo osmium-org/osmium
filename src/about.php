@@ -83,11 +83,11 @@ $js = [
 		'https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js',
 	],
 	[
-		'jquery.jsPlumb-1.5.4.min.js',
-		'./static/jquery.jsPlumb-1.5.4.min.js',
+		'jquery.jsPlumb-1.6.0.min.js',
+		'./static/jquery.jsPlumb-1.6.0.min.js',
 		'MIT',
-		'https://github.com/sporritt/jsPlumb/blob/1.5.4/jsPlumb-MIT-LICENSE.txt',
-		'https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js',
+		'https://github.com/sporritt/jsPlumb/blob/1.6.0/jsPlumb-MIT-LICENSE.txt',
+		'https://raw.github.com/sporritt/jsPlumb/1.6.0/dist/js/jquery.jsPlumb-1.6.0.js',
 	],
 	[
 		'rawdeflate.min.js (rawdeflate)',
