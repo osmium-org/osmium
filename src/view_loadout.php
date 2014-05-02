@@ -35,9 +35,6 @@ $ctx = new \Osmium\DOM\RenderContext();
  * $revision_overridden variables. Fills $ctx->relative. */
 require __DIR__.'/../inc/view_loadout-access.php';
 
-$capacitors = \Osmium\Fit\get_all_capacitors($fit);
-$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
-
 
 
 $loggedin = \Osmium\State\is_logged_in();
@@ -148,6 +145,11 @@ foreach(array('', 'charge', 'drone') as $ptype) {
 		$preset_overridden = true;
 	}
 }
+
+
+
+$capacitors = \Osmium\Fit\get_all_capacitors($fit);
+$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
 
 
 
