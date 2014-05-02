@@ -339,40 +339,53 @@ osmium_init_projected = function() {
 
 		$("body").scrollTop(0);
 
-		if(fs) {
-			$("div#fsbg").remove();
-		} else {
-			var bg = $(document.createElement('div'));
-			bg.prop('id', 'fsbg');
-			$("section#projected").append(bg);
-		}
+		section.animate({ opacity: 0 }, 250, function() {
+			jsPlumb.doWhileSuspended(function() {
+				jsPlumb.toggleDraggable(
+					section.find('div.pr-loadout')
+						.draggable("option", "disabled", fs)
+				);
 
-		jsPlumb.doWhileSuspended(function() {
-			jsPlumb.toggleDraggable(
-				section.find('div.pr-loadout')
-					.draggable("option", "disabled", fs)
-			);
+				section.toggleClass('fs');
+				var exitfs = function() {
+					$("section#projected input#projectedfstoggle").click();
+				};
 
-			section.toggleClass('fs');
+				if(fs) {
+					$(document).off('keyup.exitfs');
+					$("div#fsbg").remove();
+				} else {
+					var bg = $(document.createElement('div'));
+					bg.prop('id', 'fsbg');
+					bg.click(exitfs);
+					$("section#projected").prepend(bg);
+					$(document).on('keyup.exitfs', function(e) {
+						if(e.which == 27) exitfs();
+					});
+				}
 
-			/* Swap fixed and draggable positions */
-			$("section#projected div.pr-loadout").each(function() {
-				var t = $(this);
-				var otop = t.css('top');
-				var oleft = t.css('left');
-				t.css('top', t.data('top')).data('top', otop);
-				t.css('left', t.data('left')).data('left', oleft);
+				/* Swap fixed and draggable positions */
+				$("section#projected div.pr-loadout").each(function() {
+					var t = $(this);
+					var otop = t.css('top');
+					var oleft = t.css('left');
+
+					t.css('top', t.data('top')).data('top', otop);
+					t.css('left', t.data('left')).data('left', oleft);
+				});
+
+				/* Auto-rearrange if necessary */
+				var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
+				if(section.hasClass('fs') && (!localtop || localtop === 'auto' || localtop === '0px')) {
+					if($("section#projected div.pr-loadout").length <= 8) {
+						$("section#projected a#rearrange-circle").click();
+					} else {
+						$("section#projected a#rearrange-grid").click();
+					}
+				}
 			});
 
-			/* Auto-rearrange if necessary */
-			var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
-			if(section.hasClass('fs') && (!localtop || localtop === 'auto')) {
-				if($("section#projected div.pr-loadout").length <= 8) {
-					$("section#projected a#rearrange-circle").click();
-				} else {
-					$("section#projected a#rearrange-grid").click();
-				}
-			}
+			section.animate({ opacity: 1 }, 250);		
 		});
 	});
 

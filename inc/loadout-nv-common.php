@@ -182,6 +182,8 @@ class Page extends \Osmium\DOM\Page {
 			'id' => 'projectedfstoggle',
 		]);
 		$projected->appendCreate('p#rearrange', [
+			'Press ESC or click background to exit',
+			[ 'br' ],
 			'Rearrange loadouts: ',
 			[ 'a#rearrange-grid', 'grid' ],
 			', ',

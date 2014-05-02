@@ -309,11 +309,10 @@ section#remote > section#projected {
 
 	&.fs {
 		position: absolute;
-		top: $nav-height;
+		top: 0;
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: $main-bg-color;
 
 		&> h2 {
 			margin: 0.5em 0.25em;
@@ -328,6 +327,10 @@ section#remote > section#projected {
 			margin: 0;
 			z-index: 501;
 		}
+
+		svg {
+			z-index: 1;
+		}
 	}
 
 	&> div#fsbg {
@@ -336,8 +339,7 @@ section#remote > section#projected {
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: $main-bg-color;
-		z-index: -15;
+		background-color: rgba($main-bg-color, .9);
 	}
 
 	&> h2 {
@@ -356,6 +358,7 @@ section#remote > section#projected {
 		position: absolute;
 		right: 0.5em;
 		top: 1.5em;
+		text-align: right;
 
 		visibility: hidden;
 	}
