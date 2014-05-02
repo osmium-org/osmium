@@ -16,7 +16,13 @@
  */
 
 $(function() {
+	$("section#remote").on('made_visible', function() {
+		jsPlumb.setSuspendDrawing(false);
+	});
+
 	osmium_tabify($("div#vlmain > ul.tabs"), 0);
+
+	jsPlumb.setSuspendDrawing(true);
 
 	var odata = $("div#osmium-data");
 
@@ -28,8 +34,15 @@ $(function() {
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
+
+		if($("a[href='#remote']").parent().hasClass('active')) {
+			$("section#remote").trigger('made_visible');
+		}
+
 		osmium_highlight_missing_prereqs(odata.data('missingprereqs'));
+
 		osmium_user_initiated_push(true);
+
 		osmium_undo_push();
 		osmium_init_votes();
 		osmium_init_comment_replies();

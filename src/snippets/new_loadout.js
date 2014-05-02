@@ -16,18 +16,28 @@
  */
 
 $(function() {
-	osmium_load_common_data();
-	osmium_shortlist = $("div#osmium-data").data('shortlist');
+	$("section#remote").on('made_visible', function() {
+		jsPlumb.setSuspendDrawing(false);
+	});
+
+	osmium_tabify($('div#nlmain > ul.tabs'), 0);
 
 	$('div#nlsources > ul.tabs').each(function() {
 		osmium_tabify($(this), 0);
 	});
 
+	jsPlumb.setSuspendDrawing(true);
+
+	osmium_load_common_data();
+	osmium_shortlist = $("div#osmium-data").data('shortlist');
+
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
 
-		osmium_tabify($('div#nlmain > ul.tabs'), 0);
+		if($("a[href='#remote']").parent().hasClass('active')) {
+			$("section#remote").trigger('made_visible');
+		}
 
 		/* Fetch computed attributes, etc. */
 		osmium_commit_clf();

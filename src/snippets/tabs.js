@@ -84,7 +84,8 @@ osmium_tabify = function(ul, selected) {
 		if(i !== selected) {
 			tget.hide().trigger('made_hidden');
 		} else {
-			t.addClass('active').trigger('made_visible');
+			t.addClass('active');
+			tget.trigger('made_visible');
 		}
 		++i;
 	});

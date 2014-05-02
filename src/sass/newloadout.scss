@@ -303,8 +303,7 @@ section#remote {
 }
 
 section#remote > section#projected {
-	position: relative;
-	z-index: 500;
+	z-index: 499;
 	@include no-user-select;
 
 	&.fs {
@@ -323,13 +322,18 @@ section#remote > section#projected {
 			visibility: visible;
 		}
 
-		&> form#projected-list > div.pr-loadout {
-			margin: 0;
-			z-index: 501;
-		}
+		&> form#projected-list {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 0px;
+			height: 0px;
 
-		svg {
-			z-index: 1;
+			&> div.pr-loadout {
+				margin: 0;
+				position: absolute;
+				z-index: 501;
+			}
 		}
 	}
 
@@ -364,6 +368,9 @@ section#remote > section#projected {
 	}
 
 	&> form#projected-list {
+		position: relative;
+		z-index: 500;
+
 		&> div.pr-loadout {
 			display: inline-block;
 			vertical-align: middle;

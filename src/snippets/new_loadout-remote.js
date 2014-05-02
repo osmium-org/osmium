@@ -58,7 +58,7 @@ osmium_projected_clean = function() {
 }
 
 osmium_gen_projected = function() {
-	jsPlumb.Defaults.Container = $("section#projected");
+	jsPlumb.Defaults.Container = $("section#projected form#projected-list");
 	jsPlumb.Defaults.Endpoints = [ "Blank", "Blank" ];
 
 	osmium_projected_clean();
@@ -333,6 +333,13 @@ osmium_init_projected = function() {
 		});
 	}
 
+	$("section#remote").on('made_visible', function() {
+		osmium_regen_offsets();
+		jsPlumb.repaintEverything();
+
+		$("section#remote").off('made_visible');
+	});
+
 	$("section#projected input#projectedfstoggle").on('click', function() {
 		var section = $("section#projected");
 		var fs = section.hasClass('fs');
@@ -373,6 +380,8 @@ osmium_init_projected = function() {
 					t.css('top', t.data('top')).data('top', otop);
 					t.css('left', t.data('left')).data('left', oleft);
 				});
+
+				osmium_regen_offsets();
 
 				/* Auto-rearrange if necessary */
 				var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
@@ -997,6 +1006,8 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 			jsPlumb.connect(newconnections[i]);
 		}
 	});
+
+	jsPlumb.recalculateOffsets(fresh);
 };
 
 osmium_regen_remote_capacitor = function(key_or_element) {
@@ -1037,6 +1048,13 @@ osmium_regen_remote_capacitor = function(key_or_element) {
 
 	s.trigger('redraw');
 };
+
+osmium_regen_offsets = function() {
+	var divs = $("section#projected form#projected-list").children('div.pr-loadout');
+	divs.each(function() {
+		jsPlumb.recalculateOffsets($(this));
+	});
+}
 
 osmium_commit_undo_deferred_timeoutid = undefined;
 osmium_commit_undo_deferred = function(delay) {
