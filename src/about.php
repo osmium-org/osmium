@@ -103,6 +103,13 @@ $js = [
 		'http://opensource.org/licenses/mit-license',
 		'https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js',
 	],
+	[
+		'mousetrap.min.js',
+		'./static-1/mousetrap.min.js',
+		'Apache-2.0',
+		'http://www.apache.org/licenses/LICENSE-2.0',
+		'https://raw.githubusercontent.com/ccampbell/mousetrap/1.4.6/mousetrap.js',
+	],
 ];
 
 chdir(__DIR__.'/../static/cache');

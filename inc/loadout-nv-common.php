@@ -47,6 +47,7 @@ class Page extends \Osmium\DOM\Page {
 			'tabs',
 			'modal',
 			'context_menu',
+			'keyboard',
 			'loadout_common',
 			'graph_common',
 			'sprite',
@@ -70,6 +71,11 @@ class Page extends \Osmium\DOM\Page {
 		$snippets->before($this->element('script', [
 			'type' => 'application/javascript',
 			'src' => $ctx->relative.'/static-1/rawdeflate.min.js',
+		]));
+
+		$snippets->before($this->element('script', [
+			'type' => 'application/javascript',
+			'src' => $ctx->relative.'/static-1/mousetrap.min.js',
 		]));
 	}
 

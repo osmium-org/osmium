@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -120,6 +120,15 @@ osmium_undo_pop = function() {
 	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
 	osmium_undo_trim();
 }
+
+osmium_register_keyboard_command('ctrl+z', 'undo', 'Undo the last change made to the loadout.', function() {
+	osmium_undo_pop();
+	osmium_commit_clf();
+	osmium_user_initiated_push(false);
+	osmium_gen();
+	osmium_user_initiated_pop();
+	return false;
+});
 
 /**
  * Synchronize the CLF with the server and update the attribute list,

@@ -654,3 +654,50 @@ span.spinner {
 body > div#osmium-data {
 	display: none;
 }
+
+body > div#mx-cont {
+	position: fixed;
+	z-index: 4999999;
+
+	&> div#mx-bg {
+		position: absolute;
+		background-color: rgba($main-bg-color, .9);
+	}
+
+	&, &> div#mx-bg {
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	&> form {
+		position: absolute;
+		top: 50%;
+		left: 25%;
+		width: 50%;
+		margin-top: -1em;
+		height: 2em;
+
+		&> input[type='submit'] {
+			display: none;
+		}
+
+		&> input[type='text'] {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			font-family: $mono-font;
+
+			&.error {
+				border-color: $error-border-color;
+			}
+
+			&.success {
+				border-color: $success-border-color;
+			}
+		}
+	}
+}

@@ -4,3 +4,6 @@
 [submodule "lib/jsPlumb"]
 	path = lib/jsPlumb
 	url = git://github.com/sporritt/jsPlumb.git
+[submodule "lib/mousetrap"]
+	path = lib/mousetrap
+	url = git://github.com/ccampbell/mousetrap.git

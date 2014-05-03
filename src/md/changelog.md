@@ -1,3 +1,8 @@
+# master
+
+* Changed keyboard shortcut for Undo from `C-_` to `C-z` for
+  compatibility reasons.
+
 # Version 0.12
 
 ## Version 0.12.1, released 2014-04-28
