@@ -447,6 +447,5 @@ if(!$haschars) {
 }
 
 
-$p->snippets[] = 'tabs';
 $p->snippets[] = 'settings';
 $p->render($ctx);

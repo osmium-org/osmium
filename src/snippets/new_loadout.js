@@ -15,6 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet loadout_common >>>*/
+/*<<< require snippet new_loadout-control >>>*/
+/*<<< require snippet new_loadout-sources >>>*/
+/*<<< require snippet new_loadout-ship >>>*/
+/*<<< require snippet new_loadout-presets >>>*/
+/*<<< require snippet new_loadout-metadata >>>*/
+/*<<< require snippet new_loadout-modules >>>*/
+/*<<< require snippet new_loadout-drones >>>*/
+/*<<< require snippet new_loadout-implants >>>*/
+/*<<< require snippet new_loadout-remote >>>*/
+
 $(function() {
 	$("section#remote").on('made_visible', function() {
 		jsPlumb.setSuspendDrawing(false);

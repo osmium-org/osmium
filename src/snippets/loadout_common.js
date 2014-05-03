@@ -16,6 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet keyboard >>>*/
+/*<<< require snippet localstorage_fallback >>>*/
+/*<<< require snippet new_loadout-fattribs >>>*/
+/*<<< require snippet show_info >>>*/
+/*<<< require snippet context_menu >>>*/
+/*<<< require snippet formatted_attributes >>>*/
+/*<<< require snippet graph_common >>>*/
+/*<<< require snippet capacitor >>>*/
+
 osmium_user_initiated = false;
 osmium_user_initiated_stack = [];
 

@@ -795,15 +795,7 @@ $p->data['capacitors'] = $capacitors;
 $p->data['ia'] = $ia_;
 $p->data['clfslots'] = \Osmium\AjaxCommon\get_slot_usage($fit);
 
-$p->snippets = array_merge($p->snippets, [
-	'view_loadout',
-	'view_loadout-presets',
-	'new_loadout-ship',
-	'new_loadout-modules',
-	'new_loadout-drones',
-	'new_loadout-implants',
-	'new_loadout-remote',
-]);
+$p->snippets[] = 'view_loadout';
 
 /* The phony CLF token is obviously not a valid token, and process_clf
  * will pick it up and create a new token on demand. So if the user

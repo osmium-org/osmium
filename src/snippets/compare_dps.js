@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet graph_common >>>*/
+
 osmium_ia_map = {};
 
 $(function() {

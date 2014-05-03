@@ -15,6 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet modal >>>*/
+/*<<< require snippet sprite >>>*/
+/*<<< require snippet tabs >>>*/
+/*<<< require snippet loadout_common >>>*/
+
 osmium_showinfo_sprite_position = [ 6, 58, 16, 16 ];
 
 osmium_showinfo = function(opts) {

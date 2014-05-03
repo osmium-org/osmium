@@ -434,7 +434,6 @@ if($first) {
 
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';
-$p->snippets[] = 'tabs';
 $p->snippets[] = 'view_profile';
 $p->data['defaulttab'] = $myprofile ? 2 : 0;
 $p->render($ctx);

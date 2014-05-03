@@ -95,12 +95,87 @@ class Page extends RawPage {
 	 */
 	private static function _minify(array $snippets) {
 		if($snippets === []) return null;
-		/* Like array_unique(), but O(n) */
-		$snippets = array_flip(array_flip($snippets));
+		$snippets = array_values($snippets);
+		$c = count($snippets);
+		$hasit  = [];
 
-		$name = 'JS_'.substr(sha1(implode("\n", $snippets)), 0, 7);
+		$name = 'js.'.implode('.', ($snippets === [ 'common' ] ? $snippets : array_slice($snippets, 1)));
+		$cacheminfile = \Osmium\ROOT.'/static'.($finaluri = '/cache/'.$name.'.min.js');
+
+		if(file_exists($cacheminfile)) return $finaluri;
 		$cachefile = \Osmium\ROOT.'/static/cache/'.$name.'.js';
-		$cacheminfile = \Osmium\ROOT.'/static/cache/'.$name.'.min.js';
+
+		$sem = \Osmium\State\semaphore_acquire($name);
+		if(file_exists($cacheminfile)) {
+			\Osmium\State\semaphore_release($name);
+			return $finaluri;
+		}
+
+		do {
+			$added = 0;
+
+			for($i = 0; $i < $c; ++$i) {
+				$s = $snippets[$i];
+				if(isset($hasit[$s])) continue;
+				$hasit[$s] = true;
+
+				if(!file_exists($sfile = \Osmium\ROOT.'/src/snippets/'.$s.'.js')) {
+					throw new \Exception("snippet $s does not exist");
+				}
+
+				preg_match_all(
+					'%^/\*<<<\s+require\s+(?<type>snippet)\s+(?<src>.+?)(\s+(?<position>first|last|before|after|anywhere))?\s+>>>\*/$%m',
+					file_get_contents($sfile),
+					$matches,
+					\PREG_SET_ORDER
+				);
+
+				foreach($matches as $m) {
+					if(!isset($m['position']) || $m['position'] === '') $m['position'] = 'anywhere';
+
+					if(isset($hasit[$m['src']])) {
+						/* Dependency already included, check order consistency */
+
+						$pos = array_search($m['src'], $snippets, true);
+						if((($m['position'] === 'first' || $m['position'] === 'before') && $pos >= $i)
+						   || (($m['position'] === 'last' || $m['position'] === 'after') && $pos <= $i)) {
+							throw new \Exception(
+								"snippet $s($i) requires {$m['src']}($pos) {$m['position']} but order is inconsistent"
+							);
+						}
+
+						continue;
+					}
+
+					/* Insert the dependency */
+					++$added;
+					++$c;
+
+					switch($m['position']) {
+
+					case 'before':
+					case 'anywhere':
+						array_splice($snippets, $i, 0, $m['src']);
+						++$i;
+						break;
+
+					case 'after':
+						array_splice($snippets, $i + 1, 0, $m['src']);
+						break;
+
+					case 'first':
+						array_unshift($snippets, $m['src']);
+						++$i;
+						break;
+
+					case 'last':
+						array_push($snippets, $m['src']);
+						break;
+
+					}
+				}
+			}
+		} while($added > 0);
 
 		foreach($snippets as &$s) {
 			$s = escapeshellarg(\Osmium\ROOT.'/src/snippets/'.$s.'.js');
@@ -108,29 +183,24 @@ class Page extends RawPage {
 
 		$snippets = implode(' ', $snippets);
 
-		if(!file_exists($cacheminfile)) {
-			$sem = \Osmium\State\semaphore_acquire($name);
+		$ecf = escapeshellarg($cachefile);
+		$ecmf = escapeshellarg($cacheminfile);
+		shell_exec('cat '.$snippets.' >> '.$ecf);
 
-			if(!file_exists($cacheminfile)) {
-				shell_exec('cat '.$snippets.' >> '.escapeshellarg($cachefile));
+		if($min = \Osmium\get_ini_setting('minify_js')) {
+			$command = \Osmium\get_ini_setting('minify_command');
 
-				if($min = \Osmium\get_ini_setting('minify_js')) {
-					$command = \Osmium\get_ini_setting('minify_command');
-
-					/* Concatenate & minify */
-					shell_exec('cat '.$snippets.' | '.$command.' >> '.escapeshellarg($cacheminfile));
-				}
-
-				if(!$min || !file_exists($cachefile)) {
-					/* Not minifying, or minifier failed for some reason */
-					shell_exec('ln -s '.escapeshellarg($cachefile).' '.escapeshellarg($cacheminfile));
-				}
-			}
-
-			\Osmium\State\semaphore_release($sem);
+			/* Concatenate & minify */
+			shell_exec('cat '.$ecf.' | '.$command.' >> '.$ecmf);
 		}
 
-		return '/cache/'.$name.'.min.js';
+		if(!$min || !file_exists($cachefile)) {
+			/* Not minifying, or minifier failed for some reason */
+			shell_exec('ln -s '.$ecf.' '.$ecmf);
+		}
+
+		\Osmium\State\semaphore_release($sem);
+		return $finaluri;
 	}
 
 
@@ -177,9 +247,7 @@ class Page extends RawPage {
 			$flink->attr('o-static-href', '/'.$favicon);
 		}
 
-		$this->snippets[] = 'persistent_theme';
-		$this->snippets[] = 'notifications';
-		$this->snippets[] = 'feedback';
+		array_unshift($this->snippets, 'common');
 
 		$this->data['relative'] = $ctx->relative;
 

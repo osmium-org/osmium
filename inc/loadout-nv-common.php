@@ -42,21 +42,6 @@ class Page extends \Osmium\DOM\Page {
 		$cdp = \Osmium\State\get_setting('custom_damage_profiles', []);
 		$this->data['customdamageprofiles'] = $cdp === [] ? new \stdClass() : $cdp;
 
-		$this->snippets = array_merge([
-			'localstorage_fallback',
-			'tabs',
-			'modal',
-			'context_menu',
-			'keyboard',
-			'loadout_common',
-			'graph_common',
-			'sprite',
-			'show_info',
-			'formatted_attributes',
-			'capacitor',
-			'new_loadout-fattribs',
-		], $this->snippets);
-
 		$this->finalize($ctx);
 
 		$snippets = (new \DOMXPath($this))->query('//script[@id=\'snippets\']')->item(0);

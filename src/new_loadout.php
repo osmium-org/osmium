@@ -549,18 +549,7 @@ if(\Osmium\State\is_logged_in()) {
 }
 
 
-$p->snippets = array_merge($p->snippets, [
-	'new_loadout',
-	'new_loadout-control',
-	'new_loadout-sources',
-	'new_loadout-ship',
-	'new_loadout-presets',
-	'new_loadout-metadata',
-	'new_loadout-modules',
-	'new_loadout-drones',
-	'new_loadout-implants',
-	'new_loadout-remote',
-]);
+$p->snippets[] = 'new_loadout';
 $p->data['shortlist'] = \Osmium\AjaxCommon\get_module_shortlist();
 
 $p->finalizeWithFit($ctx, $fit, $tok);

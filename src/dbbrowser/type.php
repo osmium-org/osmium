@@ -392,7 +392,6 @@ if($ntabs <= 1) {
 
 RenderStage:
 $p->title = \Osmium\Fit\get_typename($typeid).' / Type '.$typeid;
-$p->snippets[] = 'tabs';
 $p->snippets[] = 'dbbrowser';
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '../..';

@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet tabs >>>*/
+
 $(function() {
 	osmium_tabify($("div#account_settings > ul.tindex"), 1);
 });

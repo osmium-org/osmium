@@ -113,8 +113,8 @@ $js = [
 ];
 
 chdir(__DIR__.'/../static/cache');
-foreach(glob('JS_*.min.js') as $min) {
-	$full = substr($min, 0, -strlen('.min.js')).".js";
+foreach(glob('js.*.min.js') as $min) {
+	$full = substr($min, 0, -strlen('.min.js')).'.js';
 
 	$js[] = [
 		$min,
