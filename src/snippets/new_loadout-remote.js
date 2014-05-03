@@ -356,19 +356,20 @@ osmium_init_projected = function() {
 				section.toggleClass('fs');
 				var exitfs = function() {
 					$("section#projected input#projectedfstoggle").click();
+					return false;
 				};
 
 				if(fs) {
-					$(document).off('keyup.exitfs');
+					osmium_unregister_keyboard_command('exit-fullscreen-projected');
 					$("div#fsbg").remove();
 				} else {
 					var bg = $(document.createElement('div'));
 					bg.prop('id', 'fsbg');
 					bg.click(exitfs);
 					$("section#projected").prepend(bg);
-					$(document).on('keyup.exitfs', function(e) {
-						if(e.which == 27) exitfs();
-					});
+					osmium_register_keyboard_command(
+						'esc', 'exit-fullscreen-projected', 'Exit fullscreen projected mode.', exitfs
+					);
 				}
 
 				/* Swap fixed and draggable positions */
@@ -487,6 +488,19 @@ osmium_init_projected = function() {
 			});
 		});
 	});
+
+	osmium_register_keyboard_command(null, 'debug-jsplumb-repaint', 'Call jsPlumb.repaintEverything().',
+									 function() {
+										 jsPlumb.repaintEverything();
+										 return false;
+									 });
+
+	osmium_register_keyboard_command(
+		null, 'debug-jsplumb-recalculate-offsets', 'Recalculate jsPlumb offsets of remotes.',
+		function() {
+			osmium_regen_offsets();
+		}
+	);
 };
 
 osmium_create_projected = function(key, clf, index) {

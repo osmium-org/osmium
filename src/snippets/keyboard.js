@@ -30,6 +30,10 @@ osmium_keyboard_commands = {};
  * @param action called when the command is used.
  */
 osmium_register_keyboard_command = function(shortnames, longname, description, action) {
+	if(longname in osmium_keyboard_commands) {
+		osmium_unregister_keyboard_command(longname);
+	}
+
 	if($.isEmptyObject(osmium_keyboard_commands)) {
 		/* Bind M-x */
 		Mousetrap.bind([ 'meta+x', 'alt+x', 'command+x' ], function() {

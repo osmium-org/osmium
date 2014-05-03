@@ -130,6 +130,29 @@ osmium_register_keyboard_command('ctrl+z', 'undo', 'Undo the last change made to
 	return false;
 });
 
+
+
+osmium_register_keyboard_command(
+	'ctrl+l', 'regen-from-clf',
+	'Regenerate most DOM elements from the CLF.',
+	function() {
+		osmium_gen();
+		return false;
+	}
+);
+
+osmium_register_keyboard_command(
+	null, 'debug-log-clf',
+	'Log the current CLF to the Javascript console.',
+	function() {
+		console.log(osmium_clf);
+		console.log(JSON.stringify(osmium_clf));
+		return false;
+	}
+);
+
+
+
 /**
  * Synchronize the CLF with the server and update the attribute list,
  * etc. It is safe to call this function repeatedly in a short amount
