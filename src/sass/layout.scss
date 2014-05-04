@@ -700,4 +700,27 @@ body > div#mx-cont {
 			}
 		}
 	}
+
+	&> ul {
+		position: absolute;
+		top: 50%;
+		left: 25%;
+		margin: 2em;
+		padding: 0;
+		width: 50%;
+
+		list-style-type: none;
+		opacity: .5;
+
+		@include columnize(20em);
+
+		&> li {
+			font-family: $mono-font;
+			font-size: .8em;
+			margin: 0;
+			padding: 0;
+
+			@include ellipsis;
+		}
+	}
 }

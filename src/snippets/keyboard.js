@@ -43,6 +43,7 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 			}
 
 			var c = $(document.createElement('div')).prop('id', 'mx-cont');
+			c.data('tabcount', 0);
 
 			var bg = $(document.createElement('div')).prop('id', 'mx-bg');
 			c.append(bg);
@@ -56,11 +57,28 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 			inp.prop('type', 'text');
 			inp.prop('placeholder', 'Enter command… (Press C-g or ESC twice to exit)');
 			inp.addClass('mousetrap'); /* Fire events even if this input has focus */
+			inp.data('lastval', inp.val());
 			form.append(inp);
 
 			var submit = $(document.createElement('input'));
 			submit.prop('type', 'submit');
 			form.append(submit); /* Form won't submit on RET without a submit button */
+
+			var ul = $(document.createElement('ul'));
+			c.append(ul);
+			for(var lc in osmium_keyboard_commands) {
+				ul.append(
+					$(document.createElement('li'))
+						.text(lc)
+						.prop('title', lc + ' – ' + osmium_keyboard_commands[lc].description)
+				);
+			}
+			ul.find('li').sort(function(a, b) {
+				var at = $(a).text();
+				var bt = $(b).text();
+				return (at < bt) ? -1 : ((at > bt) ? 1 : 0);
+
+			}).appendTo(ul);
 
 			var exit = function(e, after) {
 				Mousetrap.unbind([ 'esc esc', 'ctrl+g' ]);
@@ -90,6 +108,66 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 					inp.addClass('error');
 				}
 
+				return false;
+			});
+
+			inp.on('keyup', function() {
+				if(inp.val() !== inp.data('lastval')) {
+					inp.data('lastval', inp.val());
+					c.data('tabcount', 0);
+					inp.removeClass('error');
+				}
+			});
+
+			Mousetrap.bind('tab', function() {
+				var tc = c.data('tabcount');
+				var buf = inp.val();
+
+				if(tc == 0) {
+					/* Hide non-matching commands, fill up input with
+					 * largest prefix of matched commands */
+					ul.find('li').each(function() {
+						var li = $(this);
+						if(li.text().substring(0, buf.length) === buf) {
+							li.show();
+						} else {
+							li.hide();
+						}
+					});
+
+					var matches = ul.find('li:visible');
+					if(matches.length === 0) {
+						inp.addClass('error');
+					} else {
+						inp.removeClass('error');
+						var largestprefix = matches.first().text();
+
+						matches.each(function() {
+							var v = $(this).text();
+							var i = 0;
+							var ml = largestprefix.length;
+
+							while(i <= ml && largestprefix.substring(0, i) === v.substring(0, i)) {
+								++i;
+							}
+
+							largestprefix = v.substring(0, i-1);
+						});
+
+						inp.val(largestprefix);
+						inp.data('lastval', inp.val());
+					}
+				} else if(tc >= 2) {
+					/* Cycle through matches */
+
+					var matches = ul.find('li:visible');
+					if(matches.length >= 1) {
+						inp.val($(matches[(tc - 2) % matches.length]).text());
+						inp.data('lastval', inp.val());
+					}
+				}
+
+				c.data('tabcount', tc+1);
 				return false;
 			});
 
