@@ -15,6 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet localstorage_fallback >>>*/
+
+
+
 osmium_keyboard_commands = {};
 
 /* Register a keyboard command.
@@ -42,8 +46,13 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 				return false;
 			}
 
+			var history = sessionStorage.getItem('mx-history');
+			history = (typeof(history) === 'string') ? JSON.parse(history) : [];
+			var histposition = history.length;
+			var histlast = '';
+
 			var c = $(document.createElement('div')).prop('id', 'mx-cont');
-			c.data('tabcount', 0);
+			var tabcount = 0;
 
 			var bg = $(document.createElement('div')).prop('id', 'mx-bg');
 			c.append(bg);
@@ -57,8 +66,13 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 			inp.prop('type', 'text');
 			inp.prop('placeholder', 'Enter command… (Press C-g or ESC twice to exit)');
 			inp.addClass('mousetrap'); /* Fire events even if this input has focus */
-			inp.data('lastval', inp.val());
+			var lastval = inp.val();
 			form.append(inp);
+
+			var setinpval = function(val) {
+				inp.val(val);
+				inp.get(0).setSelectionRange(val.length, val.length);
+			};
 
 			var submit = $(document.createElement('input'));
 			submit.prop('type', 'submit');
@@ -67,10 +81,23 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 			var ul = $(document.createElement('ul'));
 			c.append(ul);
 			for(var lc in osmium_keyboard_commands) {
+				var cmd = osmium_keyboard_commands[lc];
+
 				ul.append(
 					$(document.createElement('li'))
 						.text(lc)
-						.prop('title', lc + ' – ' + osmium_keyboard_commands[lc].description)
+						.prop(
+							'title',
+							lc + "\n"
+								+ (
+									cmd.shortnames !== null ?
+										(((typeof(cmd.shortnames) === 'string') ?
+										 cmd.shortnames
+										 : cmd.shortnames.join(', ')) + "\n")
+									: ''
+								)
+								+ cmd.description
+						)
 				);
 			}
 			ul.find('li').sort(function(a, b) {
@@ -82,6 +109,9 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 
 			var exit = function(e, after) {
 				Mousetrap.unbind([ 'esc esc', 'ctrl+g' ]);
+				Mousetrap.unbind('tab');
+				Mousetrap.unbind('up');
+				Mousetrap.unbind('down');
 
 				c.fadeOut(100, function() {
 					c.remove();
@@ -101,6 +131,10 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 				if(command in osmium_keyboard_commands) {
 					inp.removeClass('error');
 					inp.addClass('success');
+
+					history.push(command);
+					sessionStorage.setItem('mx-history', JSON.stringify(history));
+
 					exit(e, function() {
 						osmium_keyboard_commands[command].action();
 					});
@@ -112,18 +146,17 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 			});
 
 			inp.on('keyup', function() {
-				if(inp.val() !== inp.data('lastval')) {
-					inp.data('lastval', inp.val());
-					c.data('tabcount', 0);
+				if(inp.val() !== lastval) {
+					lastval = inp.val();
+					tabcount = 0;
 					inp.removeClass('error');
 				}
 			});
 
 			Mousetrap.bind('tab', function() {
-				var tc = c.data('tabcount');
 				var buf = inp.val();
 
-				if(tc == 0) {
+				if(tabcount === 0) {
 					/* Hide non-matching commands, fill up input with
 					 * largest prefix of matched commands */
 					ul.find('li').each(function() {
@@ -154,20 +187,48 @@ osmium_register_keyboard_command = function(shortnames, longname, description, a
 							largestprefix = v.substring(0, i-1);
 						});
 
-						inp.val(largestprefix);
-						inp.data('lastval', inp.val());
+						setinpval(largestprefix);
+						lastval = largestprefix;
 					}
-				} else if(tc >= 2) {
+				} else if(tabcount >= 2) {
 					/* Cycle through matches */
 
 					var matches = ul.find('li:visible');
 					if(matches.length >= 1) {
-						inp.val($(matches[(tc - 2) % matches.length]).text());
-						inp.data('lastval', inp.val());
+						setinpval($(matches[(tabcount - 2) % matches.length]).text());
+						lastval = inp.val();
 					}
 				}
 
-				c.data('tabcount', tc+1);
+				++tabcount;
+				return false;
+			});
+
+			Mousetrap.bind('up', function() {
+				--histposition;
+
+				if(histposition < 0) {
+					histposition = history.length;
+					setinpval(histlast);
+				} else {
+					if(histposition === history.length - 1) histlast = inp.val();
+					setinpval(history[histposition]);
+				}
+
+				return false;
+			});
+			Mousetrap.bind('down', function() {
+				++histposition;
+
+				if(histposition === history.length) {
+					setinpval(histlast);
+				}
+
+				if(histposition >= history.length) histposition = history.length;
+				else {
+					setinpval(history[histposition]);
+				}
+
 				return false;
 			});
 
