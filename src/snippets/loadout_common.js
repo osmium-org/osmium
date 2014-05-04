@@ -24,12 +24,10 @@
 /*<<< require snippet formatted_attributes >>>*/
 /*<<< require snippet graph_common >>>*/
 /*<<< require snippet capacitor >>>*/
+/*<<< require snippet loadout_undo >>>*/
 
 osmium_user_initiated = false;
 osmium_user_initiated_stack = [];
-
-osmium_undo_stack = [];
-osmium_undo_stack_position = 0;
 
 osmium_clfspinner = undefined;
 osmium_clfspinner_level = 0;
@@ -102,42 +100,6 @@ osmium_user_initiated_push = function(value) {
 osmium_user_initiated_pop = function() {
 	osmium_user_initiated = osmium_user_initiated_stack.pop();
 };
-
-osmium_undo_trim = function() {
-	while(osmium_undo_stack.length > 512) {
-		osmium_undo_stack.shift();
-		--osmium_undo_stack_position;
-	}
-}
-
-osmium_undo_push = function() {
-	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
-	osmium_undo_stack_position = osmium_undo_stack.length - 1;
-	osmium_undo_trim();
-};
-
-osmium_undo_pop = function() {
-	if(osmium_undo_stack_position < 1) {
-		/* No more history to undo */
-		return;
-	}
-
-	/*  Very similar to the "undo" feature of Emacs. Powerful and
-	 *  cannot lose data by undoing stuff then doing modifications. */
-	--osmium_undo_stack_position;
-	osmium_clf = $.extend(true, {}, osmium_undo_stack[osmium_undo_stack_position]);
-	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
-	osmium_undo_trim();
-}
-
-osmium_register_keyboard_command('ctrl+z', 'undo', 'Undo the last change made to the loadout.', function() {
-	osmium_undo_pop();
-	osmium_commit_clf();
-	osmium_user_initiated_push(false);
-	osmium_gen();
-	osmium_user_initiated_pop();
-	return false;
-});
 
 
 

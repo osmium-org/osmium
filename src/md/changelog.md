@@ -3,6 +3,8 @@
 * Changed keyboard shortcut for Undo from `C-_` to `C-z` for
   compatibility reasons.
 
+* Undo history now interacts with browser history when possible.
+
 # Version 0.12
 
 ## Version 0.12.1, released 2014-04-28
