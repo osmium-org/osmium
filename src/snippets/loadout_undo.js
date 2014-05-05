@@ -30,8 +30,10 @@ osmium_undo_push = function() {
 	osmium_set_history_undo();
 };
 
-/* Restore the previous CLF in the undo history. */
-osmium_undo_pop = function(nsteps) {
+/* Restore the previous CLF in the undo history. Negative values also
+ * supported, in which case, use fallback_clf if going too far in the
+ * future. */
+osmium_undo_pop = function(nsteps, fallback_clf) {
 	if(nsteps === undefined) nsteps = 1;
 
 	if(osmium_undo_stack_position < nsteps) {
@@ -41,11 +43,21 @@ osmium_undo_pop = function(nsteps) {
 
 	/*  Very similar to the "undo" feature of Emacs. Powerful and
 	 *  cannot lose data by undoing stuff then doing modifications. */
-	osmium_undo_stack_position -= nsteps;
-	osmium_clf = $.extend(true, {}, osmium_undo_stack[osmium_undo_stack_position]);
-	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
-	osmium_set_history_undo();
 
+	osmium_undo_stack_position -= nsteps;
+
+	if(fallback_clf !== undefined) {
+		osmium_undo_stack[osmium_undo_stack_position] = $.extend(true, {}, fallback_clf);
+	}
+
+	var clf = osmium_undo_stack[osmium_undo_stack_position];
+	if(clf === undefined) {
+		return false;
+	}
+
+	osmium_clf = $.extend(true, {}, clf);
+	osmium_undo_stack.push($.extend(true, {}, clf));
+	osmium_set_history_undo();
 	return true;
 }
 
@@ -62,7 +74,10 @@ osmium_set_history_undo = function() {
 
 	while(osmium_pushed_state_count < osmium_undo_stack_position) {
 		++osmium_pushed_state_count;
-		history.pushState(osmium_pushed_state_count, null);
+		history.pushState([
+			osmium_pushed_state_count,
+			osmium_undo_stack[osmium_pushed_state_count],
+		], null);
 	}
 };
 
@@ -104,10 +119,12 @@ $(function() {
 			return;
 		}
 
-		var nsteps = osmium_undo_stack_position - e.originalEvent.state;
+		var state = e.originalEvent.state;
+		if(state === null) state = [ 0, undefined ];
+		var nsteps = osmium_undo_stack_position - state[0];
 
 		osmium_pushed_state_count -= nsteps;
-		osmium_undo_pop(nsteps);
+		if(osmium_undo_pop(nsteps, state[1]) === false) return;
 		osmium_commit_clf();
 		osmium_user_initiated_push(false);
 		osmium_gen();
