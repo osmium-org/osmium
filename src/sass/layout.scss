@@ -345,6 +345,16 @@ a {
 	&> img {
 		border: none;
 	}
+
+	&.external[target='_blank']:before {
+		background-image: url('./icons/external.svg');
+		background-size: contain;
+		content: ' ';
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		margin-right: .125em;
+	}
 }
 
 ul {

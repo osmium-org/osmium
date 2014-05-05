@@ -108,6 +108,8 @@ osmium_showinfo_internal = function(opts, onerror) {
 
 			ul.after($(document.createElement('p')).addClass('compare').append(
 				$(document.createElement('a'))
+					.prop('target', '_blank')
+					.addClass('external')
 					.prop('href', osmium_relative + '/db/comparetypes/'
 						  + vartypeids.join(',') + '/auto')
 					.text('Compare these types')

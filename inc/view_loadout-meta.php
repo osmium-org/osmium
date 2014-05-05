@@ -549,7 +549,7 @@ if(isset($fit['ship']['typeid'])) {
 	}
 
 	$actions[] = [
-		'external.svg',
+		null,
 		$anchor,
 	];
 }
