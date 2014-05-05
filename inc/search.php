@@ -447,14 +447,18 @@ function get_search_cond_from_advanced() {
 		$cond .= " AND build ".$operators[$_GET['op']][0]." ".((int)$_GET['build']);
 	}
 
-	if(isset($_GET['sr']) && $_GET['sr'] && isset($_GET['ss']) && \Osmium\State\is_logged_in()) {
-		/* XXX: cache this somewhat */
-		$ss = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-			'SELECT importedskillset, overriddenskillset
-			FROM osmium.accountcharacters
-			WHERE accountid = $1 AND name = $2',
-			array(\Osmium\State\get_state('a')['accountid'], $_GET['ss'])
-		));
+	if(isset($_GET['sr']) && $_GET['sr'] && \Osmium\State\is_logged_in()) {
+		$ss = isset($_GET['ss']) ? $_GET['ss'] : $ss;
+
+		if($ss !== false) {
+			/* XXX: cache this somewhat */
+			$ss = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+				'SELECT importedskillset, overriddenskillset
+				FROM osmium.accountcharacters
+				WHERE accountid = $1 AND name = $2',
+				array(\Osmium\State\get_state('a')['accountid'], $ss)
+			));
+		}
 
 		if($ss !== false) {
 			$skills = (array)json_decode($ss['importedskillset'], true);
