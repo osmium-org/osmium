@@ -128,7 +128,10 @@ osmium_register_keyboard_command(
  * Synchronize the CLF with the server and update the attribute list,
  * etc. It is safe to call this function repeatedly in a short amount
  * of time, it has built-in rate limiting. Requires osmium_clftype and
- * osmium_on_clf_payload global variables to be set.
+ * to be set. Will call osmium_on_clf_payload if defined with the
+ * payload as parameter. Will also call osmium_on_clftoken_change if
+ * defined when the clf token changes, with the old and new tokens as
+ * parameters.
  *
  * If specified, opts is an object which can contain any of the following properties:
  *
@@ -201,7 +204,13 @@ osmium_send_clf = function(opts) {
 			setTimeout(osmium_send_clf, 500);
 		},
 		success: function(payload) {
-			osmium_clftoken = payload.clftoken;
+			if(osmium_clftoken !== payload.clftoken) {
+				if(typeof(osmium_on_clf_token_change) === 'function') {
+					osmium_on_clf_token_change(osmium_clftoken, payload.clftoken);
+				}
+				osmium_clftoken = payload.clftoken;
+			}
+
 			osmium_capacitors = payload.capacitors;
 			osmium_ia = payload.ia;
 
@@ -331,7 +340,10 @@ osmium_send_clf = function(opts) {
 			);
 			osmium_clf_rawattribs.activedrones = ndrones;
 
-			osmium_on_clf_payload(payload);
+			if(typeof(osmium_on_clf_payload) === 'function') {
+				osmium_on_clf_payload(payload);
+			}
+
 			if("success" in opts) opts.success(payload);
 			setTimeout(osmium_send_clf, 500);
 		}

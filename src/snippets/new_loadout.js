@@ -92,12 +92,12 @@ osmium_on_clf_payload = function(payload) {
 
 		$("input#tags").closest('tr').after(tr);
 	}
-
-	if(window.history && window.history.replaceState) {
-		/* Refresh URI in case token changed and user refreshes the page */
-		window.history.replaceState(null, null, './' + osmium_clftoken + window.location.hash);
-	}
 };
+osmium_on_clf_token_change = function(oldtok, newtok) {
+	osmium_replace_uri('./' + newtok + location.hash);
+};
+
+
 
 /* Generate all the missing DOM elements from the CLF */
 osmium_gen = function() {

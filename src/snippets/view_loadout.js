@@ -157,7 +157,6 @@ $(function() {
 
 osmium_loadout_readonly = true;
 osmium_clftype = 'view';
-osmium_on_clf_payload = function(payload) {};
 
 osmium_init = function() {
 	osmium_init_ship();
