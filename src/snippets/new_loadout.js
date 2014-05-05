@@ -94,7 +94,9 @@ osmium_on_clf_payload = function(payload) {
 	}
 };
 osmium_on_clf_token_change = function(oldtok, newtok) {
-	osmium_replace_uri('./' + newtok + location.hash);
+	if(window.history && window.history.replaceState) {
+		history.replaceState(history.state, null, './' + newtok + location.hash);
+	}
 };
 
 
@@ -139,8 +141,6 @@ osmium_add_to_clf = function(item) {
 		osmium_user_initiated_push(false);
 		osmium_gen();
 		osmium_user_initiated_pop();
-
-		osmium_undo_push();
 	} else if(cat === 'module') {
 		var state, index, m;
 		var slotsdiv = $("section#modules > div.slots." + sub);
@@ -190,7 +190,6 @@ osmium_add_to_clf = function(item) {
 		}
 
 		osmium_update_slotcounts();
-		osmium_undo_push();
 	} else if(cat === 'charge') {
 		var location = osmium_get_best_location_for_charge(typeid);
 
@@ -230,7 +229,6 @@ osmium_add_to_clf = function(item) {
 		}
 		osmium_add_drone_to_clf(typeid, qty, dest);
 		osmium_gen_drones();
-		osmium_undo_push();
 	} else if(cat === 'implant') {
 		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
 		var implantness = osmium_types[typeid][3];
@@ -246,7 +244,6 @@ osmium_add_to_clf = function(item) {
 		p.implants.push({ typeid: typeid });
 
 		osmium_gen_implants();
-		osmium_undo_push();
 
 		if(osmium_user_initiated) {
 			$('a[href="#implants"]').parent().click();
@@ -266,7 +263,6 @@ osmium_add_to_clf = function(item) {
 		p.boosters.push({ typeid: typeid });
 
 		osmium_gen_implants();
-		osmium_undo_push();
 
 		if(osmium_user_initiated) {
 			$('a[href="#implants"]').parent().click();
@@ -274,4 +270,5 @@ osmium_add_to_clf = function(item) {
 	}
 
 	osmium_commit_clf();
+	osmium_undo_push();
 };

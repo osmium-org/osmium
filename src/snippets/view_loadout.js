@@ -153,6 +153,12 @@ $(function() {
 		form.show();
 		inp.focus();
 	});
+
+	if(window.history && Array.isArray(history.state) && history.state.length === 2) {
+		osmium_clf = $.extend(true, {}, history.state[1]);
+		osmium_commit_clf();
+		osmium_gen();
+	}
 });
 
 osmium_loadout_readonly = true;

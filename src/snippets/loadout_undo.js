@@ -19,7 +19,6 @@ osmium_undo_stack = [];
 osmium_undo_stack_position = 0;
 osmium_pushed_state_count = 0;
 osmium_popstate_disablefor = 0;
-osmium_replace_state_stack = [];
 
 
 
@@ -81,36 +80,7 @@ osmium_set_history_undo = function() {
 	}
 };
 
-/* Replace the current URI in the history with another URI. Plays nice
- * with pushed state. */
-osmium_replace_uri = function(uri) {
-	if(!window.history || !window.history.pushState) return;
 
-	/* XXX this is hideous */
-
-	var storestate = function(e) {
-		osmium_replace_state_stack.push(e.originalEvent.state);
-
-		if(osmium_replace_state_stack.length !== osmium_pushed_state_count) return;
-		$(window).off(storestate);
-		osmium_popstate_disablefor += osmium_pushed_state_count;
-
-		var i;
-		for(i = 0; i < osmium_pushed_state_count; ++i) {
-			history.back();
-		}
-
-		history.replaceState(null, null, uri);
-
-		for(i = 0; i < osmium_pushed_state_count; ++i) {
-			history.pushState(states[i], null);
-		}
-
-		osmium_replace_state_stack = [];
-	};
-
-	$(window).on('popstate', storestate);
-}
 
 $(function() {
 	$(window).on('popstate', function(e) {

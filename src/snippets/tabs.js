@@ -137,7 +137,7 @@ osmium_tab_click = function(e) {
 	osmium_selected_tabs[ul_index] = want;
 
 	if(window.history && window.history.replaceState) {
-		window.history.replaceState(null, null, '#' + osmium_selected_tabs.join(','));
+		history.replaceState(history.state, null, '#' + osmium_selected_tabs.join(','));
 	}
 
 	e.preventDefault();
