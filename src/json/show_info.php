@@ -74,19 +74,14 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$typename = $fit['drones'][$typeid]['typename'];
 	$loc = [ DOGMA_LOC_Drone, 'drone_typeid' => (int)$typeid ];
 
-	if($temptransfer = ($fit['drones'][$typeid]['quantityinspace'] == 0)) {
-		/* libdogma only knows about drones in space */
-		\Osmium\Fit\transfer_drone($fit, $typeid, 'bay', 1);
+	if($fit['drones'][$typeid]['quantityinspace'] == 0) {
+		/* libdogma only knows about drones in space. */
+		\Osmium\Fit\transfer_drone($fit, $typeid, 'bay');
 	}
 
 	$getatt = function($aname) use(&$fit, $typeid) {
 		return \Osmium\Dogma\get_drone_attribute($fit, $typeid, $aname);
 	};
-
-	if($temptransfer) {
-		dogma_get_affectors($fit['__dogma_context'], $loc, $affectors);
-		\Osmium\Fit\transfer_drone($fit, $typeid, 'space', 1);
-	}
 } else if(($_POST['type'] === 'implant' || $_POST['type'] === 'booster')
           && isset($_POST['typeid'])
           && isset($fit['implants'][$_POST['typeid']])) {

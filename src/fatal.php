@@ -21,6 +21,6 @@ namespace Osmium\Page\Fatal;
 require __DIR__.'/../inc/root.php';
 
 $code = isset($_GET['code']) ? $_GET['code'] : 500;
-$message = isset($_GET['message']) ? $_GET['message'] : "Internal Server Error";
+$message = isset($_GET['message']) ? \Osmium\Chrome\escape($_GET['message']) : "Internal Server Error";
 
 \Osmium\fatal($code, $message);

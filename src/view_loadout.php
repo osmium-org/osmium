@@ -35,9 +35,6 @@ $ctx = new \Osmium\DOM\RenderContext();
  * $revision_overridden variables. Fills $ctx->relative. */
 require __DIR__.'/../inc/view_loadout-access.php';
 
-$capacitors = \Osmium\Fit\get_all_capacitors($fit);
-$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
-
 
 
 $loggedin = \Osmium\State\is_logged_in();
@@ -137,17 +134,22 @@ if(isset($_GET['dpid']) && !isset($_GET['dronepreset'])) {
 $preset_overridden = false;
 foreach(array('', 'charge', 'drone') as $ptype) {
 	if(isset($_GET[$ptype.'preset']) && $_GET[$ptype.'preset'] !== '') {
-		$p = intval($_GET[$ptype.'preset']);
-		if(!isset($fit[$ptype.'presets'][$p])) {
+		$pid = intval($_GET[$ptype.'preset']);
+		if(!isset($fit[$ptype.'presets'][$pid])) {
 			\Osmium\Fatal(404, "Invalid ".$ptype." preset");
 		}
 		call_user_func_array(
 			'Osmium\Fit\use_'.$ptype.($ptype ? '_' : '').'preset',
-			array(&$fit, $p)
+			array(&$fit, $pid)
 		);
 		$preset_overridden = true;
 	}
 }
+
+
+
+$capacitors = \Osmium\Fit\get_all_capacitors($fit);
+$ia_ = \Osmium\Fit\get_interesting_attributes($fit);
 
 
 
@@ -741,7 +743,7 @@ foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
 		$tbody->append($p->makeFormSeparatorRow());
 	}
 
-	$select = $p->element('select', [
+	$select = $p->element('o-select', [
 		'name' => $name,
 		'id' => $name,
 		'selected' => $fit[$pkey.'id'],
