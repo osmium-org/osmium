@@ -48,13 +48,14 @@ trait LoadoutFormatter {
 		/* Yes, query in a loop (usually), bad. But it's better to do
 		 * this and cache the whole result per-loadout. */
 		$lrow = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-			'SELECT loadoutid, privatetoken, latestrevision, viewpermission, visibility,
-			hullid, typename, creationdate, updatedate, name, evebuildnumber, nickname,
-			apiverified, charactername, characterid, corporationname, corporationid,
-			alliancename, allianceid, accountid, taglist, reputation,
-			votes, upvotes, downvotes, comments, dps, ehp, estimatedprice
-			FROM osmium.loadoutssearchresults lsr
-			WHERE lsr.loadoutid = $1',
+			'SELECT loadoutid, privatetoken, latestrevision, viewpermission,
+			visibility, passwordmode, hullid, typename, creationdate,
+			updatedate, name, evebuildnumber, nickname, apiverified,
+			charactername, characterid, corporationname,
+			corporationid, alliancename, allianceid, accountid,
+			taglist, reputation, votes, upvotes, downvotes, comments,
+			dps, ehp, estimatedprice FROM osmium.loadoutssearchresults
+			lsr WHERE lsr.loadoutid = $1',
 			array($loadoutid)
 		));
 
@@ -102,11 +103,6 @@ trait LoadoutFormatter {
 		if($lrow['viewpermission'] > 0) {
 			switch((int)$lrow['viewpermission']) {
 
-			case \Osmium\Fit\VIEW_PASSWORD_PROTECTED:
-				$sp = [ 0, 25, 32, 32 ];
-				$alt = '(password-protected)';
-				break;
-
 			case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
 				$sp = [ 2, 13, 64, 64 ];
 				$aname=  ($lrow['apiverified'] === 't' && $lrow['allianceid'] > 0)
@@ -153,6 +149,16 @@ trait LoadoutFormatter {
 				'width' => 16, 'height' => 16,
 				'alt' => '(hidden loadout)',
 				'title' => '(hidden loadout)',
+			]);
+		}
+
+		if((int)$lrow['passwordmode'] === \Osmium\Fit\PASSWORD_EVERYONE) {
+			$sideicons->appendCreate('o-sprite', [
+				'x' => 0, 'y' => 25,
+				'gridwidth' => 32, 'gridheight' => 32,
+				'width' => 16, 'height' => 16,
+				'alt' => '(requires password)',
+				'title' => '(requires password)',
 			]);
 		}
 

@@ -37,9 +37,17 @@ const LOADOUT_TYPE_VIEW = 2;
 function can_view_fit($loadoutid) {
 	if(is_logged_in()) {
 		$a = get_state('a');
-		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsbyaccount
+			WHERE loadoutid = $1 AND accountid = $2',
+			array($loadoutid, $a['accountid'])
+		));
 	} else {
-		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous WHERE loadoutid = $1', array($loadoutid)));
+		list($count) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(loadoutid) FROM osmium.allowedloadoutsanonymous
+			WHERE loadoutid = $1',
+			array($loadoutid)
+		));
 	}
 
 	return (boolean)$count;
@@ -50,7 +58,7 @@ function can_view_fit($loadoutid) {
  * the privatetoken is correct, and that the user has been granted
  * access if the fit is password protected.
  */
-function can_access_fit($fit) {
+function can_access_fit($fit, $canview = null) {
 	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 		/* Require private token */
 		if(!isset($_GET['privatetoken']) || (string)$_GET['privatetoken'] !== (string)$fit['metadata']['privatetoken']) {
@@ -58,7 +66,20 @@ function can_access_fit($fit) {
 		}
 	}
 
-	if($fit['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED) {
+	if($fit['metadata']['password_mode'] != \Osmium\Fit\PASSWORD_NONE) {
+		if($fit['metadata']['password_mode'] == \Osmium\Fit\PASSWORD_FOREIGN_ONLY) {
+			/* XXX: this feels hackish */
+			if($canview === null) $canview = can_view_fit($fit['metadata']['loadoutid']);
+			if($canview) {
+				/* Password is only required for foreign viewers, and we're not one of them… */
+				return true;
+			}
+		}
+
+		/* Password is required at this point. Either the mode is
+		 * PASSWORD_EVERYONE, or PASSWORD_FOREIGN_ONLY and we are
+		 * foreign. */
+
 		$pw = get_state('pw_fits', array());
 		$a = get_state('a', array());
 
@@ -67,7 +88,6 @@ function can_access_fit($fit) {
 			return true;
 		}
 
-		/* Require password authorization */
 		if(isset($pw[$fit['metadata']['loadoutid']]) && $pw[$fit['metadata']['loadoutid']] > time()) {
 			return true;
 		}
@@ -90,7 +110,11 @@ function can_edit_fit($loadoutid) {
 	$can_edit = false;
 	if(is_logged_in()) {
 		$a = get_state('a');
-		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params('SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount WHERE loadoutid = $1 AND accountid = $2', array($loadoutid, $a['accountid'])));
+		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(loadoutid) FROM osmium.editableloadoutsbyaccount
+			WHERE loadoutid = $1 AND accountid = $2',
+			array($loadoutid, $a['accountid'])
+		));
 		$can_edit = ($c == 1);
 	}
 

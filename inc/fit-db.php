@@ -599,19 +599,22 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 	}
 
 	$loadoutid = null;
-	$password = ($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) ?
-		$fit['metadata']['password'] : '';
+	$password = ($fit['metadata']['password_mode'] != PASSWORD_NONE) ? $fit['metadata']['password'] : '';
 
 	if(!isset($fit['metadata']['loadoutid'])) {
 		/* Insert a new loadout */
 		$ret = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'INSERT INTO osmium.loadouts (accountid, viewpermission, editpermission, visibility, passwordhash) VALUES ($1, $2, $3, $4, $5) RETURNING loadoutid, privatetoken',
+			'INSERT INTO osmium.loadouts (
+			accountid, viewpermission, editpermission, visibility, passwordmode, passwordhash
+			) VALUES ($1, $2, $3, $4, $5, $6)
+			RETURNING loadoutid, privatetoken',
 			array(
 				$ownerid,
 				$fit['metadata']['view_permission'],
 				$fit['metadata']['edit_permission'],
 				$fit['metadata']['visibility'],
-				$password
+				$fit['metadata']['password_mode'],
+				$password,
 			)
 		));
 
@@ -630,14 +633,18 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 		$loadoutid = $fit['metadata']['loadoutid'];
 
 		$ret = \Osmium\Db\query_params(
-			'UPDATE osmium.loadouts SET accountid = $1, viewpermission = $2, editpermission = $3, visibility = $4, passwordhash = $5 WHERE loadoutid = $6',
+			'UPDATE osmium.loadouts SET
+			accountid = $1, viewpermission = $2, editpermission = $3, visibility = $4,
+			passwordmode = $5, passwordhash = $6
+			WHERE loadoutid = $7',
 			array(
 				$ownerid,
 				$fit['metadata']['view_permission'],
 				$fit['metadata']['edit_permission'],
 				$fit['metadata']['visibility'],
+				$fit['metadata']['password_mode'],
 				$password,
-				$loadoutid
+				$loadoutid,
 			)
 		);
 
@@ -1108,7 +1115,8 @@ function get_fit($loadoutid, $revision = null) {
 	}
 
 	$loadout = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, viewpermission, editpermission, visibility, passwordhash, privatetoken
+		'SELECT accountid, viewpermission, editpermission,
+		visibility, passwordmode, passwordhash, privatetoken
 		FROM osmium.loadouts WHERE loadoutid = $1',
 		array($loadoutid)
 	));
@@ -1132,14 +1140,15 @@ function get_fit($loadoutid, $revision = null) {
 
 	$fit = get_fitting($hash[0]);
 
-	$fit['metadata']['loadoutid'] = $loadoutid;
+	$fit['metadata']['loadoutid'] = (int)$loadoutid;
 	$fit['metadata']['privatetoken'] = $loadout['privatetoken'];
-	$fit['metadata']['view_permission'] = $loadout['viewpermission'];
-	$fit['metadata']['edit_permission'] = $loadout['editpermission'];
-	$fit['metadata']['visibility'] = $loadout['visibility'];
+	$fit['metadata']['view_permission'] = (int)$loadout['viewpermission'];
+	$fit['metadata']['edit_permission'] = (int)$loadout['editpermission'];
+	$fit['metadata']['visibility'] = (int)$loadout['visibility'];
+	$fit['metadata']['password_mode'] = (int)$loadout['passwordmode'];
 	$fit['metadata']['password'] = $loadout['passwordhash'];
-	$fit['metadata']['revision'] = $revision;
-	$fit['metadata']['accountid'] = $loadout['accountid'];
+	$fit['metadata']['revision'] = (int)$revision;
+	$fit['metadata']['accountid'] = (int)$loadout['accountid'];
 
 	if(isset($latest_revision) && $latest_revision === true) {
 		\Osmium\State\put_cache('loadout-'.$loadoutid, $fit, null, 'Loadout_Cache_');

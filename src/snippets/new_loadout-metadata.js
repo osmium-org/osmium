@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,23 +16,30 @@
  */
 
 osmium_init_metadata = function() {
-	$('section#metadata select#view_perms').change(function() {
-		var t = $(this);
+	$('section#metadata select#password_mode').change(function() {
+		var pm = $(this);
 		var pw = $('section#metadata input#pw');
 		var vis = $('section#metadata select#visibility');
 
-		if(t.val() === "1") {
+		if(pm.val() !== '0') {
+			pw.prop('placeholder', 'Leave blank to keep current password');
 			pw.prop('disabled', false);
-			vis.val('1');
-			vis.prop('disabled', true);
 		} else {
-			pw.val('');
+			pw.prop('placeholder', '');
 			pw.prop('disabled', true);
+			pw.val('');
+		}
+
+		if(pm.val() === '2') {
+			vis.prop('disabled', true);
+			vis.val('1');
+		} else {
 			vis.prop('disabled', false);
+			vis.val('0');
 		}
 	}).change();
 
-	$('div#nlmain > section#metadata input, div#nlmain > section#metadata textarea, div#nlmain > section#metadata select').change(function() {
+	$('div#nlmain > section#metadata').find('input, textarea, select').change(function() {
 		if(!("metadata" in osmium_clf)) {
 			osmium_clf.metadata = {};
 		}
@@ -44,6 +51,7 @@ osmium_init_metadata = function() {
 		osmium_clf.metadata['X-Osmium-view-permission'] = $("section#metadata select#view_perms").val();
 		osmium_clf.metadata['X-Osmium-edit-permission'] = $("section#metadata select#edit_perms").val();
 		osmium_clf.metadata['X-Osmium-visibility'] = $("section#metadata select#visibility").val();
+		osmium_clf.metadata['X-Osmium-password-mode'] = $("section#metadata select#password_mode").val();
 		osmium_clf.metadata['X-Osmium-clear-password'] = $("section#metadata input#pw").val();
 
 		osmium_commit_clf();
@@ -89,4 +97,5 @@ osmium_gen_metadata = function() {
 	section.find('select#edit_perms').val(osmium_clf.metadata['X-Osmium-edit-permission']);
 	section.find('select#visibility').val(osmium_clf.metadata['X-Osmium-visibility']);
 	section.find('select#view_perms').val(osmium_clf.metadata['X-Osmium-view-permission']);
+	section.find('select#password_mode').val(osmium_clf.metadata['X-Osmium-password-mode']);
 };

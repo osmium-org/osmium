@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -608,8 +608,9 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 		$json['metadata']['X-Osmium-view-permission'] = (int)$fit['metadata']['view_permission'];
 		$json['metadata']['X-Osmium-edit-permission'] = (int)$fit['metadata']['edit_permission'];
 		$json['metadata']['X-Osmium-visibility'] = (int)$fit['metadata']['visibility'];
+		$json['metadata']['X-Osmium-password-mode'] = (int)$fit['metadata']['password_mode'];
 
-		if($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) {
+		if($fit['metadata']['password_mode'] != PASSWORD_NONE) {
 			$json['metadata']['X-Osmium-hashed-password'] = 
             isset($fit['metadata']['password']) ? $fit['metadata']['password'] : '*';
 		}
@@ -898,15 +899,19 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 		}
 
 		if(isset($meta['X-Osmium-view-permission'])) {
-			$fit['metadata']['view_permission'] = $meta['X-Osmium-view-permission'];
+			$fit['metadata']['view_permission'] = (int)$meta['X-Osmium-view-permission'];
 		}
 
 		if(isset($meta['X-Osmium-edit-permission'])) {
-			$fit['metadata']['edit_permission'] = $meta['X-Osmium-edit-permission'];
+			$fit['metadata']['edit_permission'] = (int)$meta['X-Osmium-edit-permission'];
 		}
 
 		if(isset($meta['X-Osmium-visibility'])) {
-			$fit['metadata']['visibility'] = $meta['X-Osmium-visibility'];
+			$fit['metadata']['visibility'] = (int)$meta['X-Osmium-visibility'];
+		}
+
+		if(isset($meta['X-Osmium-password-mode'])) {
+			$fit['metadata']['password_mode'] = (int)$meta['X-Osmium-password-mode'];
 		}
 
 		if(isset($meta['X-Osmium-clear-password'])

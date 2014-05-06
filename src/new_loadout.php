@@ -481,10 +481,6 @@ if(\Osmium\State\is_logged_in()) {
 		'everyone',
 	]);
 	$select->appendCreate('option', [
-		'value' => \Osmium\Fit\VIEW_PASSWORD_PROTECTED,
-		'anyone with the password',
-	]);
-	$select->appendCreate('option', [
 		'value' => \Osmium\Fit\VIEW_GOOD_STANDING,
 		'my alliance mates and my contacts with good standing (≥0.01)',
 	]);
@@ -531,6 +527,8 @@ if(\Osmium\State\is_logged_in()) {
 		$select
 	));
 
+	$tbody->append($p->makeFormSeparatorRow());
+
 	$select = $p->element('select#visibility', [ 'name' => 'visibility' ]);
 	$select->appendCreate('option', [
 		'value' => \Osmium\Fit\VISIBILITY_PUBLIC,
@@ -542,6 +540,24 @@ if(\Osmium\State\is_logged_in()) {
 	]);
 	$tbody->append($p->makeFormRawRow(
 		[[ 'label', [ 'for' => 'visibility', 'Visibility' ] ]],
+		$select
+	));
+
+	$select = $p->element('select#password_mode', [ 'name' => 'password_mode' ]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\PASSWORD_NONE,
+		'none (not password-protected)',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\PASSWORD_FOREIGN_ONLY,
+		'foreign only (require password only for viewers not satisfying the view permission)',
+	]);
+	$select->appendCreate('option', [
+		'value' => \Osmium\Fit\PASSWORD_EVERYONE,
+		'everyone (require password for everyone but the owner)',
+	]);
+	$tbody->append($p->makeFormRawRow(
+		[[ 'label', [ 'for' => 'password_mode', 'Password mode' ] ]],
 		$select
 	));
 

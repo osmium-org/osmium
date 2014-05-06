@@ -140,7 +140,9 @@ CREATE TABLE loadouts (
     visibility integer NOT NULL,
     passwordhash text,
     allowcomments boolean DEFAULT true NOT NULL,
-    privatetoken bigint DEFAULT ((random() * ((2)::double precision ^ (63)::double precision)))::bigint NOT NULL
+    privatetoken bigint DEFAULT ((random() * ((2)::double precision ^ (63)::double precision)))::bigint NOT NULL,
+    passwordmode integer NOT NULL,
+    CONSTRAINT loadouts_passwordeveryone_implies_private_check CHECK (((passwordmode <> 2) OR (visibility = 1)))
 );
 
 
@@ -151,7 +153,7 @@ CREATE TABLE loadouts (
 CREATE VIEW allowedloadoutsanonymous AS
  SELECT loadouts.loadoutid
    FROM loadouts
-  WHERE ((loadouts.viewpermission = 0) OR (loadouts.viewpermission = 1));
+  WHERE ((loadouts.viewpermission = 0) OR (loadouts.passwordmode = 1));
 
 
 --
@@ -176,7 +178,7 @@ CREATE VIEW allowedloadoutsbyaccount AS
    FROM (((loadouts l
    JOIN accounts author ON ((author.accountid = l.accountid)))
    LEFT JOIN contacts c ON ((((author.apiverified = true) AND (author.accountid = c.accountid)) AND (l.viewpermission = ANY (ARRAY[5, 6])))))
-   JOIN accounts a ON ((((((((l.viewpermission = 0) OR (l.viewpermission = 1)) OR ((((l.viewpermission = 2) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.allianceid = author.allianceid))) OR ((((l.viewpermission = 3) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.corporationid = author.corporationid))) OR (a.accountid = author.accountid)) OR ((l.viewpermission = 5) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (0)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid)))))) OR ((l.viewpermission = 6) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (5)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid))))))));
+   JOIN accounts a ON ((((((((l.viewpermission = 0) OR (l.passwordmode = 1)) OR ((((l.viewpermission = 2) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.allianceid = author.allianceid))) OR ((((l.viewpermission = 3) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.corporationid = author.corporationid))) OR (a.accountid = author.accountid)) OR ((l.viewpermission = 5) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (0)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid)))))) OR ((l.viewpermission = 6) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (5)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid))))))));
 
 
 --
@@ -1151,6 +1153,7 @@ CREATE VIEW loadoutssearchresults AS
     loadoutslatestrevision.latestrevision,
     loadouts.viewpermission,
     loadouts.visibility,
+    loadouts.passwordmode,
     fittings.hullid,
     invtypes.typename,
     fittings.creationdate,

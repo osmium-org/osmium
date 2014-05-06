@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -168,17 +168,17 @@ if($type === 'new') {
 				'metadata', 'input#name',
 				'Please enter a name for your loadout.',
 			);
-		} else if($local['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
+		} else if($local['metadata']['password_mode'] != \Osmium\Fit\PASSWORD_NONE
 		          && empty($local['metadata']['password'])) {
 			$payload['form-errors'][] = array(
 				'metadata', 'input#pw',
 				'If you want your fit to be password-protected, please enter a non-empty password.',
 			);
-		} else if($local['metadata']['view_permission'] == \Osmium\Fit\VIEW_PASSWORD_PROTECTED
+		} else if($local['metadata']['password_mode'] == \Osmium\Fit\PASSWORD_EVERYONE
 		          && $local['metadata']['visibility'] != \Osmium\Fit\VISIBILITY_PRIVATE) {
 			$payload['form-errors'][] = array(
 				'metadata', 'input#visibility',
-				'You cannot have a public password-protected fit. Make it private.',
+				'The selected password mode requires a private visibility.',
 			);
 		} else if(count($tag_errors) > 0) {
 			foreach($tag_errors as $err) {

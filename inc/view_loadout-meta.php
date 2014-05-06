@@ -209,70 +209,56 @@ if(!isset($fit['ship']['typeid'])) {
 
 $perms = array();
 
+$fvp = [ null, '' ];
 switch($fit['metadata']['view_permission']) {
 
 case \Osmium\Fit\VIEW_EVERYONE:
-	$perms[] =  [
+	$fvp =  [
 		null,
 		'This loadout can be viewed by ',
 		[ 'strong', 'anyone' ],
-		'.',
-	];
-	break;
-
-case \Osmium\Fit\VIEW_PASSWORD_PROTECTED:
-	$perms[] = [
-		[ 0, 25, 32, 32 ],
-		'This loadout can be viewed by ',
-		[ 'strong', 'anyone' ],
-		', provided they have the ',
-		[ 'strong', 'password' ],
-		'.',
 	];
 	break;
 
 case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
 	if($author['apiverified'] === 't' && $author['allianceid'] > 0) {
-		$perms[] = [
+		$fvp = [
 			[ 2, 13, 64, 64 ],
 			'This loadout can only be viewed by members of ',
-			[ 'strong', $author['alliancename'] ],
-			'.',
+			[ 'strong', $author['alliancename'] ]
 		];
 	} else {
-		$perms[] = [
+		$fvp = [
 			[ 1, 25, 32, 32 ],
-			'This loadout is marked as ',
-			[ 'strong', 'alliance only' ],
-			', but the owner is not in any alliance or the owner\'s account is not API-verified.',
+			'This loadout can only be viewed by members of ',
+			[ 'strong', 'the owner\'s alliance' ],
+			' (but the owner is not API-verified)',
 		];
 	}
 	break;
 
 case \Osmium\Fit\VIEW_CORPORATION_ONLY:
 	if($author['apiverified'] === 't') {
-		$perms[] = [
+		$fvp = [
 			[ 3, 13, 64, 64 ],
 			'This loadout can only be viewed by members of ',
 			[ 'strong', $author['corporationname'] ],
-			'.',
 		];
 	} else {
-		$perms[] = [
+		$fvp = [
 			[ 1, 25, 32, 32 ],
-			'This loadout is marked as ',
-			[ 'strong', 'corporation only' ],
-			', but the owner\'s account is not API-verified.',
+			'This loadout can only be viewed by members of ',
+			[ 'strong', 'the owner\'s corporation' ],
+			' (but the owner is not API-verified)',
 		];
 	}
 	break;
 
 case \Osmium\Fit\VIEW_OWNER_ONLY:
-	$perms[] = [
+	$fvp = [
 		[ 1, 25, 32, 32 ],
 		'This loadout can be viewed by its ',
 		[ 'strong', 'owner only' ],
-		'.',
 	];
 	break;
 
@@ -283,37 +269,61 @@ case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
 		? 'good' : 'excellent';
 
 	if($author['apiverified'] !== 't') {
-		$text = [
-			'This loadout is marked as ',
-			[ 'strong', $level.' standings only' ],
-			', but the owner\'s account is not API-verified.',
+		$fvp = [
+			'This loadout can be viewed by members of ',
+			[ 'strong', 'the owner\'s alliance' ],
+			' and the owner\'s contacts with a ',
+			[ 'strong', $level.' standing' ],
+			' (but the owner is not API-verified)',
 		];
 	} else if($author['allianceid'] > 0) {
-		$text = [
+		$fvp = [
 			'This loadout can be viewed by members of ',
 			[ 'strong', $author['alliancename'] ],
 			' and contacts of ',
 			[ 'strong', $author['charactername'] ],
 			' with a ',
 			[ 'strong', $level.' standing' ],
-			'.',
 		];
 	} else {
-		$text = [
+		$fvp = [
 			'This loadout can be viewed by members of ',
 			[ 'strong', $author['corporationname'] ],
 			' and contacts of ',
 			[ 'strong', $author['charactername'] ],
 			' with a ',
 			[ 'strong', $level.' standing' ],
-			'.',
 		];
 	}
+
 	array_unshift($text, [ 5, 28, 32, 32 ]);
-	$perms[] = $text;
+	$fvp = $text;
 	break;
 
 }
+
+switch((int)$fit['metadata']['password_mode']) {
+
+case \Osmium\Fit\PASSWORD_NONE:
+	$fvp[] = '.';
+	break;
+
+case \Osmium\Fit\PASSWORD_FOREIGN_ONLY:
+	$fvp[] = ', or by anyone provided they have the ';
+	$fvp[] = [ 'strong', 'password' ];
+	$fvp[] = '.';
+	break;
+
+case \Osmium\Fit\PASSWORD_EVERYONE:
+	$fvp[0] = [ 0, 25, 32, 32 ]; /* Override icon */
+	$fvp[] = ', and is ';
+	$fvp[] = [ 'strong', 'password protected' ];
+	$fvp[] = ' for everyone but the owner.';
+	break;
+
+}
+
+$perms[] = $fvp;
 
 if($loadoutid !== false) {
 	switch($fit['metadata']['edit_permission']) {

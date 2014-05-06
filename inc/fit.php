@@ -39,10 +39,6 @@ require __DIR__.'/fit-importexport.php';
 /** The loadout can be viewed by everyone. */
 const VIEW_EVERYONE = 0;
 
-/** The loadout can be viewed by everyone, provided they have the
- * password. This mode implies VISIBILITY_PRIVATE.*/
-const VIEW_PASSWORD_PROTECTED = 1;
-
 /** The loadout can only be viewed by characters in the same alliance
  * than the author. */
 const VIEW_ALLIANCE_ONLY = 2;
@@ -75,6 +71,19 @@ const EDIT_CORPORATION_ONLY = 2;
 /** The loadout can be edited by its author and everyone in the same
  * alliance. */
 const EDIT_ALLIANCE_ONLY = 3;
+
+
+
+/** The loadout is not password-protected. (The default.) */
+const PASSWORD_NONE = 0;
+
+/** The loadout is password-protected, but only for visitors that do
+ * not satisfy the view permission. */
+const PASSWORD_FOREIGN_ONLY = 1;
+
+/** The loadout is password-protected. Everyone but the owner must
+ * enter a password. Implies VISIBILITY_PRIVATE. */
+const PASSWORD_EVERYONE = 2;
 
 
 
@@ -225,6 +234,7 @@ function create(&$fit) {
 			'view_permission' => VIEW_EVERYONE,
 			'edit_permission' => EDIT_OWNER_ONLY,
 			'visibility' => VISIBILITY_PUBLIC,
+			'password_mode' => PASSWORD_NONE,
 			)
 		);
 
@@ -1219,40 +1229,50 @@ function sanitize(&$fit, &$errors = null, $interactive = false) {
 	sanitize_tags($fit, $errors, $interactive);
 
 	/* Enforce permissions consistency */
-	if(!in_array($fit['metadata']['view_permission'], array(
-		             VIEW_EVERYONE,
-		             VIEW_PASSWORD_PROTECTED,
-		             VIEW_ALLIANCE_ONLY,
-		             VIEW_CORPORATION_ONLY,
-		             VIEW_OWNER_ONLY,
-		             VIEW_GOOD_STANDING,
-		             VIEW_EXCELLENT_STANDING,
-		             ))) {
+	if(!in_array($fit['metadata']['view_permission'], [
+		VIEW_EVERYONE,
+		VIEW_ALLIANCE_ONLY,
+		VIEW_CORPORATION_ONLY,
+		VIEW_OWNER_ONLY,
+		VIEW_GOOD_STANDING,
+		VIEW_EXCELLENT_STANDING,
+	])) {
 		$errors[] = 'Incorrect view permission, reset to viewable by everyone.';
 		$fit['metadata']['view_permission'] = VIEW_EVERYONE;
 	}
-	if(!in_array($fit['metadata']['edit_permission'], array(
-		             EDIT_OWNER_ONLY,
-		             EDIT_OWNER_AND_FITTING_MANAGER_ONLY,
-		             EDIT_CORPORATION_ONLY,
-		             EDIT_ALLIANCE_ONLY,
-		             ))) {
+	if(!in_array($fit['metadata']['edit_permission'], [
+		EDIT_OWNER_ONLY,
+		EDIT_OWNER_AND_FITTING_MANAGER_ONLY,
+		EDIT_CORPORATION_ONLY,
+		EDIT_ALLIANCE_ONLY,
+	])) {
 		$errors[] = 'Incorrect edit permission, reset to editable by owner only.';
 		$fit['metadata']['edit_permission'] = EDIT_OWNER_ONLY;
 	}
-	if(!in_array($fit['metadata']['visibility'], array(
-		             VISIBILITY_PUBLIC,
-		             VISIBILITY_PRIVATE,
-		             ))) {
+	if(!in_array($fit['metadata']['visibility'], [
+		VISIBILITY_PUBLIC,
+		VISIBILITY_PRIVATE,
+	])) {
 		$errors[] = 'Incorrect visibility, reset to public visibility.';
 		$fit['metadata']['visibility'] = VISIBILITY_PUBLIC;
 	}
-	if($fit['metadata']['view_permission'] == VIEW_PASSWORD_PROTECTED) {
-		$fit['metadata']['visibility'] = VISIBILITY_PRIVATE;
+	if(!in_array($fit['metadata']['password_mode'], [
+		PASSWORD_NONE,
+		PASSWORD_FOREIGN_ONLY,
+		PASSWORD_EVERYONE,
+	])) {
+		$fit['metadata']['password_mode'] = PASSWORD_NONE;
+		$errors[] = 'Incorrect password mode, reset to no password.';
+	}
+
+	if($fit['metadata']['password_mode'] != PASSWORD_NONE) {
+		if($fit['metadata']['password_mode'] == PASSWORD_EVERYONE) {
+			$fit['metadata']['visibility'] = VISIBILITY_PRIVATE;
+		}
 
 		if(!isset($fit['metadata']['password']) || !$fit['metadata']['password']) {
-			$errors[] = 'Loadout is password-protected but does not have a password, view permission reset to viewable by everyone.';
-			$fit['metadata']['view_permission'] = VIEW_EVERYONE;
+			$errors[] = 'Loadout is password-protected but does not have a password, password mode reset to no password.';
+			$fit['metadata']['password_mode'] = PASSWORD_NONE;
 		}
 	}
 

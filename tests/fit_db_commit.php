@@ -28,6 +28,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		$fit['metadata']['view_permission'] = \Osmium\Fit\VIEW_OWNER_ONLY;
 		$fit['metadata']['edit_permission'] = \Osmium\Fit\EDIT_OWNER_ONLY;
 		$fit['metadata']['visibility'] = \Osmium\Fit\VISIBILITY_PRIVATE;
+		$fit['metadata']['password_mode'] = \Osmium\Fit\PASSWORD_NONE;
 		$fit['metadata']['tags'] = array('test', 'do-not-use');
 
 		$accountq = \Osmium\Db\query('SELECT accountid FROM osmium.accounts ORDER BY accountid ASC LIMIT 1');

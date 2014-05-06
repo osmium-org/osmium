@@ -8,6 +8,12 @@
 * The API documentation has been completely overhauled and should be
   easier to navigate.
 
+* More flexible password protected loadouts: can now choose between
+  requiring a password for everyone or for people not satisfying the
+  view permission. The latter can be made public. Old
+  password-protected loadouts will still behave the same as they used
+  to.
+
 # Version 0.12
 
 ## Version 0.12.1, released 2014-04-28
