@@ -307,6 +307,9 @@ $div->appendCreate('div')->appendCreate('input', [
 	'name' => 'q',
 	'placeholder' => 'Example query: '.$searchexamples[mt_rand(0, count($searchexamples) - 1)],
 	'title' => 'Search items by name, by group, by abbreviation',
+	/* XXX: autocompletion can be useful, but it just gets in the way
+	 * of search results. Disable them for now. */
+	'autocomplete' => 'off',
 ]);
 $div->appendCreate('input', [ 'type' => 'submit', 'value' => 'Search' ]);
 $section->appendCreate('ul.results');
