@@ -682,13 +682,17 @@ class Page extends RawPage {
 			$narrow = $this->element('span', [ 'class' => 'narrow' ]);
 			$narrow->appendCreate('a', [ 'o-rel-href' => '/login', 'Login' ]);
 
-			$reglink = [ 'a', [ 'o-rel-href' => '/register', 'Register' ] ];
-			$requri = [ 'input', [
-				'type' => 'hidden',
-				'name' => 'request_uri',
-				'value' => $_SERVER['REQUEST_URI'],
-			]];
-			$p = $form->appendCreate('p', [ $wide, $narrow, ' or ', $reglink, $requri ]);
+			$p = $form->appendCreate('p', [ $wide, $narrow ]);
+
+			if(\Osmium\get_ini_setting('registration_enabled')) {
+				$reglink = [ 'a', [ 'o-rel-href' => '/register', 'Register' ] ];
+				$requri = [ 'input', [
+					'type' => 'hidden',
+					'name' => 'request_uri',
+					'value' => $_SERVER['REQUEST_URI'],
+				]];
+				$p->append([ ' or ', $reglink, $requri ]);
+			}
 		}
 
 		return $div;

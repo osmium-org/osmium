@@ -109,3 +109,16 @@ require ROOT.'/inc/reputation.php';
 if(!\Osmium\State\is_logged_in()) {
 	\Osmium\State\try_recover();
 }
+
+if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
+	header('X-Robots-Tag: noindex, nofollow');
+
+	if(!\Osmium\State\is_logged_in()) {
+		$prefix = rtrim(get_ini_setting('relative_path'), '/');
+		$req = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
+
+		if($req !== $prefix.'/login' && $req !== $prefix.'/register' && $req !== $prefix.'/resetpassword') {
+			\Osmium\State\assume_logged_in();
+		}
+	}
+}

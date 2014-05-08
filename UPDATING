@@ -1,7 +1,7 @@
 staging
 =======
 
-The [sysv] section has been added to config.ini.
+The [sysv] and [auth] sections have been added to config.ini.
 
 Some changes have been made to the example robots.txt.
 

@@ -95,11 +95,13 @@ $tbody->appendCreate('tr')->append([
 $p->content->appendCreate('h1', 'Other actions');
 $ul = $p->content->appendCreate('ul');
 
-$ul->appendCreate('li', [
-	'Don\'t have an account yet? ',
-	[ 'a', [ 'o-rel-href' => '/register', 'Create one.' ] ],
-	' It takes less than a minute.',
-]);
+if(\Osmium\get_ini_setting('registration_enabled')) {
+	$ul->appendCreate('li', [
+		'Don\'t have an account yet? ',
+		[ 'a', [ 'o-rel-href' => '/register', 'Create one.' ] ],
+		' It takes less than a minute.',
+	]);
+}
 
 $ul->appendCreate('li', [
 	'Forgot your password? ',

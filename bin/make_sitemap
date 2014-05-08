@@ -46,30 +46,37 @@ $loc->appendChild($idx->createTextNode($root.'/sitemap-static.xml.gz'));
 $lastmod = $s->appendChild($idx->createElement('lastmod'));
 $lastmod->appendChild($idx->createTextNode($fdate(filemtime(__DIR__.'/../inc/root.php'))));
 
-$static = [
-	'/',
-	'/search',
-	'/import',
-	'/convert',
-	'/login',
-	'/register',
-	'/resetpassword',
-	'/browse/new',
-	'/browse/best',
-	'/changelog',
-	'/about',
-	'/help',
-	'/help/search',
-	'/help/formats',
-	'/help/db',
-	'/help/api/common',
-	'/help/api/loadout-dna',
-	'/help/api/loadout-convert',
-	'/help/api/loadout-query',
-	'/help/api/loadout-attributes',
-	'/compare/dps',
-	'/privileges',
-];
+if(\Osmium\get_ini_setting('anonymous_access')) {
+	$static = [
+		'/',
+		'/search',
+		'/import',
+		'/convert',
+		'/login',
+		'/resetpassword',
+		'/browse/new',
+		'/browse/best',
+		'/changelog',
+		'/about',
+		'/help',
+		'/help/search',
+		'/help/formats',
+		'/help/db',
+		'/help/api/common',
+		'/help/api/loadout-dna',
+		'/help/api/loadout-convert',
+		'/help/api/loadout-query',
+		'/help/api/loadout-attributes',
+		'/compare/dps',
+		'/privileges',
+	];
+
+	if(\Osmium\get_ini_setting('registration_enabled')) {
+		$static[] = '/register';
+	}
+} else {
+	$static = [];
+}
 
 $subidx = new \DOMDocument();
 $urlset = $subidx->appendChild($subidx->createElement('urlset'));
@@ -87,6 +94,8 @@ $subidx->encoding = 'UTF-8';
 file_put_contents(\Osmium\ROOT.'/static/cache/sitemap-static.xml', $subidx->saveXML());
 
 echo ".";
+
+if(!\Osmium\get_ini_setting('anonymous_access')) goto PruneAndCompress;
 
 
 
@@ -274,6 +283,7 @@ echo "\n";
 
 
 /* ----- Delete old sitemaps, compress new sitemaps ----- */
+PruneAndCompress:
 
 $idx->formatOutput = true;
 $idx->encoding = 'UTF-8';

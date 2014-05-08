@@ -19,6 +19,11 @@
 namespace Osmium\Page\Register;
 
 require __DIR__.'/../inc/root.php';
+
+if(!\Osmium\get_ini_setting('registration_enabled')) {
+	\Osmium\fatal(403, 'Registration has been disabled. Contact the site administrators for more information.');
+}
+
 require \Osmium\ROOT.'/inc/login-common.php';
 
 \Osmium\State\assume_logged_out('.');
