@@ -87,6 +87,8 @@ function fetch_row($result) {
 }
 
 function get_meta() {
+	/* TODO: since this is only used to get total matches, use LIKE
+	 * syntax when 2.1.x is widespread enough. */
 	$q = query('SHOW META;');
 	$meta = array();
 
@@ -97,13 +99,14 @@ function get_meta() {
 	return $meta;
 }
 
-function get_total_matches($search_query, $more_cond = '') {
+function get_total_matches($search_query, $more_cond = '', &$hasmore = null) {
 	$q = query(get_search_query($search_query).' '.$more_cond);
 	
 	if($q === false) return 0;
 
 	$meta = get_meta();
-	return $meta['total_found'];
+	$hasmore = $meta['total_found'] > $meta['total'];
+	return $meta['total'];
 }
 
 
@@ -392,7 +395,7 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 
 function make_pretty_results(\Osmium\DOM\RawPage $p, $query, $more = '', $paginate = false, $perpage = 20, $pagename = 'p', $message = 'No loadouts matched your query.') {
 
-	$total = get_total_matches($query, $more);
+	$total = get_total_matches($query, $more, $hasmore);
 	if($paginate && $total > 0) {
 		$offset = \Osmium\Chrome\paginate($pagename, $perpage, $total, $pageresult, $pageinfo);
 	} else $offset = 0;
