@@ -124,6 +124,13 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 
 	if(!headers_sent()) {
 		http_response_code($code);
+
+		header(
+			'Content-Security-Policy: default-src \'none\''
+			.' ; style-src \'self\' https://fonts.googleapis.com'
+			.' ; font-src https://themes.googleusercontent.com'
+			.' ; img-src \'self\''
+		);
 	}
 
 	require_once __DIR__.'/root.php';
@@ -146,17 +153,16 @@ function fatal($code, $message = '', $title = null, $showbt = null, $die = true)
 
 	if($showbt === null) $showbt = ($code >= 500);
 	if($title === null && $code >= 500) $title = $internaltitles[time() % count($internaltitles)];
-	$hue = ($code >= 400 && $code < 500) ? 10 : 210;
 
 	$relprefix = rtrim(get_ini_setting('relative_path'), '/');
 
 	echo "<!DOCTYPE html>\n<html xmlns='http://www.w3.org/1999/xhtml'>\n<head>\n";
 	echo "<meta name='robots' content='noindex' />\n";
 	echo "<meta charset='utf-8' />\n";
-	echo "<link href='//fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
+	echo "<link href='https://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono' rel='stylesheet' type='text/css' />\n";
 	echo "<link rel='stylesheet' href='".$relprefix."/static-".\Osmium\CSS_STATICVER."/fatal.css' type='text/css' />\n";
 	echo "<title>{$code} / Osmium</title>\n";
-	echo "</head>\n<body style='background: hsl({$hue}, 80%, 10%);'><div class='bg'></div>\n<div class='w'>\n";
+	echo "</head>\n<body".($code >= 400 && $code < 500 ? ' class="client"' : '')."><div class='bg'></div>\n<div class='w'>\n";
 
 	if($title) {
 		echo "<h1>{$title}</h1>\n";

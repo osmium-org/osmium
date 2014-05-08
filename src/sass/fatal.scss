@@ -10,6 +10,12 @@ body {
 	height: 100%;
 	margin: 0;
 	padding: 0;
+
+	background-color: hsl(210, 80%, 10%);
+
+	&.client {
+		background-color: hsl(10, 80%, 10%);
+	}
 }
 
 body > div.w {
