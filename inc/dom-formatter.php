@@ -294,11 +294,8 @@ trait Formatter {
 	static function formatQueryString() {
 		$g = call_user_func_array('array_merge', func_get_args()); /* 5.6: use ... */
 		if($g === []) return '';
-
-		array_walk($g, function(&$val, $key) {
-				$val = rawurlencode($key).'='.rawurlencode($val);
-			});
-		return '?'.implode('&', $g);
+		/* DOM will take care of escaping the ampersands */
+		return '?'.http_build_query($g, 'n', '&', \PHP_QUERY_RFC3986);
 	}
 
 
