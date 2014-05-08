@@ -382,6 +382,33 @@ function put_setting($key, $value) {
  * will not use semaphores automatically, you will have to do it when
  * necessary. */
 
+/**
+ * Acquire a semaphore. Unlike semaphore_acquire(), this call has no
+ * chance of colliding with other semaphore names. This is recommended
+ * if you plan to acquire the semaphore for a long time (more than a
+ * few seconds).
+ *
+ * Semaphores returned by semaphore_acquire_nc() and
+ * semaphore_acquire() use a different namespace.
+ */
+function semaphore_acquire_nc($name, $prefix = 'Sem_NC') {
+		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/'.$prefix.'_'.str_replace('/', '_', $name), 'cb');
+		touch($filename, 0);
+		if($f === false) return false;
+		if(flock($f, LOCK_EX) === false) return false;
+		$ret = [ $f, $filename ];
+		register_shutdown_function(__NAMESPACE__.'\semaphore_release_nc', $ret);
+		return $ret;
+	}
+
+/**
+ * Release a semaphore acquired with semaphore_acquire_nc(). This is
+ * automatically done when the process terminates.
+ */
+function semaphore_release_nc($semaphore) {
+	flock($semaphore[0], LOCK_UN);
+}
+
 if(function_exists('sem_acquire')) {
 	/* Use the builtin semaphore functions */
 
@@ -403,30 +430,13 @@ if(function_exists('sem_acquire')) {
 
 	/**
 	 * Release a semaphore. This is automatically done when the
-	 * process terminates (but will generate a warning).
+	 * process terminates.
 	 */
 	function semaphore_release($semaphore) {
 		sem_release($semaphore);
 	}
 } else {
-	/* Use flock() as a fallback */
-
-	/** @see semaphore_acquire() */
-	function semaphore_acquire($name) {
-		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/Semaphore_'.str_replace('/', '_', $name), 'cb');
-		touch($f, time() + 600); /* This semaphore will probably be stale in 10 minutes */
-		if($f === false) return false;
-		if(flock($f, LOCK_EX) === false) return false;
-		return [ $f, $filename ];
-	}
-
-	/** @see semaphore_release() */
-	function semaphore_release($semaphore) {
-		flock($semaphore[0], LOCK_UN);
-		/* unlink() will remove the file when it is no longer opened
-		 * by any process. So if the file is already opened by other
-		 * processes (aka other processes are waiting to acquire the
-		 * semaphore), it will still work as expected. */
-		unlink($semaphore[1]);
-	}
+	/* Use the *_nc semaphores as a fallback */
+	function semaphore_acquire($name) { return semaphore_acquire_nc($name, 'Sem'); }
+	function semaphore_release($sem) { return semaphore_release_nc($sem); }
 }

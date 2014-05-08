@@ -49,7 +49,7 @@ function run($id, callable $cron, $staggerdelay = 1200, $semmaxtime = 1800) {
 	if($semmaxtime > 0) {
 		$start = time();
 		cli_set_process_title("osmium({$id}): waiting for other instance to terminate");
-		$sem = \Osmium\State\semaphore_acquire($id);
+		$sem = \Osmium\State\semaphore_acquire_nc($id);
 		if($sem === false) {
 			fwrite(STDERR, "Could not acquire semaphore {$id}.\n");
 			die(1);
@@ -62,16 +62,7 @@ function run($id, callable $cron, $staggerdelay = 1200, $semmaxtime = 1800) {
 			die(2);
 		}
 
-		/* Last case scenario, if $cron throws a fatal error. It
-		 * should be released automatically anyway, but it doesn't
-		 * hurt to do it explicitely. */
-		register_shutdown_function(function() use($sem) {
-				@\Osmium\State\semaphore_release($sem);
-			});
-
 		cli_set_process_title("osmium({$id}): running task");
 		$cron();
-
-		\Osmium\State\semaphore_release($sem);
 	}
 }
