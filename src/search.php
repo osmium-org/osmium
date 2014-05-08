@@ -55,11 +55,6 @@ if($query === false) {
 			/* Redirect to type page */
 			header('Location: ./db/type/'.$typeids[0]);
 			die();
-		} else if($ntypes === 0 && $nloadouts === 1) {
-			/* Redirect to loadout */
-			reset($loadoutids);
-			header('Location: ./loadout/'.current($loadoutids));
-			die();
 		}
 	}
 

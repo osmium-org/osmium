@@ -35,7 +35,6 @@ osmium_init_metadata = function() {
 			vis.val('1');
 		} else {
 			vis.prop('disabled', false);
-			vis.val('0');
 		}
 	}).change();
 

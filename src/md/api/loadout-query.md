@@ -8,8 +8,9 @@
 
 Get a list of loadouts matching a given query. JSON equivalent of the
 browse/search pages. May return account, corporation or alliance-only
-loadouts if the request is made from a logged-in session. Will never
-return hidden lodaouts.
+loadouts if the request is made from a logged-in session. Will not
+return hidden loadouts, unless you are the owner and the request is
+made from a logged-in session.
 
 
 ## Parameters

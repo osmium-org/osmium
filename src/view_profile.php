@@ -70,17 +70,23 @@ if($row['apiverified'] === 't') {
 
 	$pp->append([
 		[ 'a', [
-			'o-rel-href' => '/search?q=@restrictedtoaccountid > 0',
+			'o-rel-href' => '/search'.$p->formatQueryString([
+				'ad' => 1, 'vr' => 1, 'vrs' => 'private', 'q' => '',
+			]),
 			[ 'o-eve-img', [ 'src' => '/Character/'.$row['characterid'].'_512.jpg', 'alt' => 'portrait' ] ],
 		]],
 		[ 'br' ],
 		[ 'a', [
-			'o-rel-href' => '/search?q=@restrictedtocorporationid > 0',
+			'o-rel-href' => '/search'.$p->formatQueryString([
+				'ad' => 1, 'vr' => 1, 'vrs' => 'corporation', 'q' => '',
+			]),
 			[ 'o-eve-img', [ 'src' => '/Corporation/'.$corpid.'_256.png',
 			                 'alt' => 'corporation logo', 'title' => $corpname ] ],
 		]],
 		[ 'a', [
-			'o-rel-href' => '/search?q=@restrictedtoallianceid > 0',
+			'o-rel-href' => '/search'.$p->formatQueryString([
+				'ad' => 1, 'vr' => 1, 'vrs' => 'alliance', 'q' => '',
+			]),
 			[ 'o-eve-img', [ 'src' => '/Alliance/'.$allianceid.'_128.png',
 			                 'alt' => 'alliance logo', 'title' => $alliancename ] ],
 		]],
@@ -149,7 +155,6 @@ if($myprofile || $ismoderator) {
 $content->appendCreate('ul', [
 	'class' => 'tabs',
 	$myprofile ? [ 'li', [[ 'a', [ 'href' => '#pfavorites', 'Favorites' ] ]] ] : '',
-	$myprofile ? [ 'li', [[ 'a', [ 'href' => '#phidden', 'Hidden' ] ]] ] : '',
 	[ 'li', [[ 'a', [ 'href' => '#ploadouts', 'Recent' ] ]] ],
 	[ 'li', [[ 'a', [ 'href' => '#reputation', 'Reputation' ] ]] ],
 	[ 'li', [[ 'a', [ 'href' => '#votes', 'Votes' ] ]] ],
@@ -159,7 +164,13 @@ $content->appendCreate('ul', [
 
 $ploadouts = $content->appendCreate('section', [ 'id' => 'ploadouts', 'class' => 'psection' ]);
 $ploadouts->appendCreate('h2', 'Loadouts recently submitted')->appendCreate('small')->appendCreate('a', [
-	'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@author "'.$name.'"' ]),
+	'o-rel-href' => '/search'.$p->formatQueryString([
+		'q' => '@author "'.$name.'"',
+		/* Show all loadouts by default (don't filter on dogma ver) */
+		'ad' => 1,
+		'build' => \Osmium\Fit\get_closest_version_by_build(0)['build'],
+		'op' => 'gt',
+	]),
 	'(browse all)'
 ]);
 $ploadouts->append(\Osmium\Search\make_pretty_results(
@@ -218,36 +229,6 @@ if($myprofile) {
 		$pfavs->appendCreate('p', [
 			'class' => 'placeholder',
 			'You have no favorite loadouts.',
-		]);
-	}
-
-
-
-	/* TODO pagination */
-	$phidden = $content->appendCreate('section', [ 'id' => 'phidden', 'class' => 'psection' ]);
-	$phidden->appendCreate('h2', 'My hidden loadouts');
-
-	$hidden = array();
-	$hiddenq = \Osmium\Db\query_params(
-		'SELECT loadoutid
-		FROM osmium.loadouts
-		WHERE accountid = $1 AND visibility = $2
-		ORDER BY loadoutid DESC',
-		array(
-			$a['accountid'],
-			\Osmium\Fit\VISIBILITY_PRIVATE
-		)
-	);
-	while($r = \Osmium\Db\fetch_row($hiddenq)) {
-		$hidden[] = $r[0];
-	}
-
-	if($hidden !== []) {
-		$phidden->append($p->makeLoadoutGridLayout($hidden));
-	} else {
-		$phidden->appendCreate('p', [
-			'class' => 'placeholder',
-			'You have no hidden loadouts.',
 		]);
 	}
 }
@@ -436,5 +417,5 @@ $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';
 $p->snippets[] = 'tabs';
 $p->snippets[] = 'view_profile';
-$p->data['defaulttab'] = $myprofile ? 2 : 0;
+$p->data['defaulttab'] = $myprofile ? 1 : 0;
 $p->render($ctx);

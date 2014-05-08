@@ -536,7 +536,7 @@ if(\Osmium\State\is_logged_in()) {
 	]);
 	$select->appendCreate('option', [
 		'value' => \Osmium\Fit\VISIBILITY_PRIVATE,
-		'private (will not appear in search results)',
+		'private (will have an obfuscated URI and only appear in your search results)',
 	]);
 	$tbody->append($p->makeFormRawRow(
 		[[ 'label', [ 'for' => 'visibility', 'Visibility' ] ]],

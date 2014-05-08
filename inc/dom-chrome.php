@@ -384,6 +384,19 @@ class Page extends RawPage {
 				$this->snippets[] = 'searchform';
 			}
 
+			$vtypes = $this->element('o-select', [ 'name' => 'vrs', 'id' => 'vrs' ]);
+			foreach([ 'private', 'corporation', 'alliance', 'public' ] as $t) {
+				$vtypes->appendCreate('option', [ 'value' => $t, $t ]);
+			}
+
+			$p->append([
+				[ 'br' ],
+				[ 'o-input', [ 'type' => 'checkbox', 'name' => 'vr', 'id' => 'vr' ] ],
+				[ 'label', [ 'for' => 'vr', ' only show ' ] ],
+				$vtypes,
+				[ 'label', [ 'for' => 'vr', ' loadouts' ] ],
+			]);
+
 			$p->append([
 				[ 'input', [ 'type' => 'hidden', 'name' => 'ad', 'value' => 1 ] ], [ 'br' ],
 				[ 'a', [ 'o-rel-href' => '/help/search', [ 'small', 'Help' ] ] ],

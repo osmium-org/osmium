@@ -404,7 +404,7 @@ function round_sd($number, $digits = 0) {
  */
 function paginate($name, $perpage, $total, &$result, &$metaresult,
                   $pageoverride = null, $format = 'Showing rows %1-%2 of %3.',
-                  $anchor = '') {
+                  $anchor = '', $hasmore = false) {
 	if($pageoverride !== null) {
 		$page = $pageoverride;
 	} else if(isset($_GET[$name])) {
@@ -421,7 +421,7 @@ function paginate($name, $perpage, $total, &$result, &$metaresult,
 	$offset = ($page - 1) * $perpage;
 	$max = min($total, $offset + $perpage);
 
-	$replacement = ($total > 0) ? array($offset + 1, $max, $total) : array(0, 0, 0);
+	$replacement = ($total > 0) ? array($offset + 1, $max, $hasmore ? $total.'+' : $total) : array(0, 0, 0);
 	$metaresult = "<p class='pagination'>\n";
 	$metaresult .= str_replace(array('%1', '%2', '%3'), $replacement, $format);
 	$metaresult .= "\n</p>\n";

@@ -422,7 +422,7 @@ if(function_exists('sem_acquire')) {
 	function semaphore_acquire($name) {
 		$key = (int)\Osmium\get_ini_setting('sem_start')
 			+ (crc32($name) & 0x8FFFFFFF) % (int)\Osmium\get_ini_setting('num_sems');
-		$id = sem_get($key);
+		$id = sem_get($key, 1, 0600, 1);
 		if($id === false) return false;
 		if(sem_acquire($id) === false) return false;
 		return $id;

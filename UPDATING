@@ -9,6 +9,8 @@ The fittinghash generation algorithm has changed. If you don't want to
 create empty revisions and store most fittings twice with different
 hashes, you should run `./bin/rehash_fittings`.
 
+Private loadouts are now indexed; you should run `make reindex-loadouts`.
+
 v0.12.1, released 2014-04-28
 ============================
 

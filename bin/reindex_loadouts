@@ -35,11 +35,10 @@ do {
 	$q = \Osmium\Db\query_params(
 		'SELECT loadoutid
 		FROM osmium.loadouts
-		WHERE visibility = $1 AND mod(loadoutid, $4) = $5
+		WHERE mod(loadoutid, $3) = $4
 		ORDER BY loadoutid DESC
-		LIMIT $2 OFFSET $3',
+		LIMIT $1 OFFSET $2',
 		array(
-			\Osmium\Fit\VISIBILITY_PUBLIC,
 			BATCH_SIZE,
 			$offset,
 			$modtotal,
@@ -56,11 +55,11 @@ do {
 	if($ids === array()) break;
 
 	$in = implode(',', $ids);
-	$q = \Osmium\Search\query_select_searchdata('WHERE loadoutid IN ('.$in.')', array());
+	$q = \Osmium\Search\query_select_searchdata('WHERE loadoutid IN ('.$in.') ORDER BY loadoutid DESC', array());
 
 	while($row = \Osmium\Db\fetch_assoc($q)) {
 		\Osmium\Search\index($row);
-		echo ".";
+		echo ".\n";
 	}
 } while(true);
 

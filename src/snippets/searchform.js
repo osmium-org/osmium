@@ -20,9 +20,19 @@ $(function() {
 		var inp = $(this);
 		var select = inp.closest('form').find('select#ss');
 		if(inp.prop('checked')) {
-			select.removeProp('disabled');
+			select.removeAttr('disabled');
 		} else {
-			select.prop('disabled', 'disabled');
+			select.attr('disabled', 'disabled');
+		}
+	}).change();
+
+	$("div#search_full, div#search_mini").find('input#vr').on('change', function() {
+		var inp = $(this);
+		var select = inp.closest('form').find('select#vrs');
+		if(inp.prop('checked')) {
+			select.removeAttr('disabled');
+		} else {
+			select.attr('disabled', 'disabled');
 		}
 	}).change();
 });

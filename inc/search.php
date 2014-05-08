@@ -472,6 +472,28 @@ function get_search_cond_from_advanced() {
 		}
 	}
 
+	if(isset($_GET['vr']) && $_GET['vr'] && isset($_GET['vrs'])) {
+		switch($_GET['vrs']) {
+
+		case 'private':
+			$cond .= ' AND restrictedtoaccountid > 0';
+			break;
+
+		case 'corporation':
+			$cond .= ' AND restrictedtocorporationid > 0';
+			break;
+
+		case 'alliance':
+			$cond .= ' AND restrictedtoallianceid > 0';
+			break;
+
+		case 'public':
+			$cond .= ' AND restrictedtoaccountid = 0 AND restrictedtocorporationid = 0 AND restrictedtoallianceid = 0';
+			break;
+
+		}
+	}
+
 	if(isset($_GET['sort']) && isset($orderby[$_GET['sort']]) && $_GET['sort'] !== '') {
 		$order = isset($_GET['order']) && in_array($_GET['order'], [ 'asc', 'desc' ]) ? $_GET['order'] : 'DESC';
 		$cond .= ' ORDER BY '.$_GET['sort'].' '.$order;

@@ -14,6 +14,10 @@
   password-protected loadouts will still behave the same as they used
   to.
 
+* Private loadouts will now show in search results, provided you are
+  the owner. Advanced search now allows you to filter public, private,
+  corporation or alliance loadouts more easily.
+
 # Version 0.12
 
 ## Version 0.12.1, released 2014-04-28
@@ -70,7 +74,7 @@
 
 * New Mastery section in the loadout side bar, shows the missing
   skills and an estimated training time to be able to fly the
-  lodaout. Thanks jboning.
+  loadout. Thanks jboning.
 
 * New "browse to market group" context menu action.
 
