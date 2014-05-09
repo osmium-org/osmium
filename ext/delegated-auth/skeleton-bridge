@@ -1,0 +1,39 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * 
+ * This work is free. You can redistribute it and/or modify it under
+ * the terms of the Do What The Fuck You Want To Public License,
+ * Version 2, as published by Sam Hocevar. See the COPYING.WTFPL file
+ * for more details.
+ */
+
+$in = file_get_contents('php://stdin');
+$in = json_decode($in);
+
+/* Be a little defensive about the input. It can't hurt. */
+if(json_last_error() !== JSON_ERROR_NONE) {
+	fprintf(STDERR, "Expected valid JSON in stdin.\n");
+	die(10);
+}
+
+if(!isset($in['accountname']) || !isset($in['password'])) {
+	fprintf(STDERR, "Expected accountname and password.\n");
+	die(11);
+}
+
+
+
+/* Perform authentication check here */
+
+
+
+/* Example code for success: */
+echo json_encode([ 'characterid' => $characterid ]);
+die();
+
+
+
+/* Example code for failure: */
+die(1); /* Any nonzero value will work */
