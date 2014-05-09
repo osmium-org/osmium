@@ -27,8 +27,11 @@ const MINIMUM_PASSWORD_ENTROPY = 40;
 const COOKIE_AUTH_DURATION = 604800;
 
 const CHARACTER_SHEET_ACCESS_MASK = 8;
-const REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS = 33554440; /* CharacterSheet+AccountStatus*/
-const REQUIRED_ACCESS_MASK_WITH_CONTACTS = 33554456; /* CharacterSheet+AccountStatus+Contacts*/
+const CONTACT_LIST_ACCESS_MASK = 16;
+const ACCOUNT_STATUS_ACCESS_MASK = 33554432;
+
+const REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS = 33554440; /* CharacterSheet & AccountStatus*/
+const REQUIRED_ACCESS_MASK_WITH_CONTACTS = 33554456; /* CharacterSheet & AccountStatus & Contacts*/
 
 /**
  * Checks whether the current user is logged in.
@@ -62,6 +65,10 @@ function do_post_login($account_name, $use_cookie = false) {
 	);
 	$a = \Osmium\Db\fetch_assoc($q);
 	check_api_key($a);
+
+	if(\Osmium\get_ini_setting('whitelist') && !check_whitelist($a)) {
+		$a['notwhitelisted'] = true;
+	}
 
 	session_id("Account-".$a['accountid']."-".session_id());
 	session_start();
@@ -177,8 +184,8 @@ function make_api_link() {
 	return [
 		[ 'p', 'You can create an API key here:' ],
 		[ 'ul', [
-			[ 'li', [ 'With contact list access: ', [ 'strong', [[ 'a', 'href' => $curi, $curi ]] ] ] ],
-			[ 'li', [ 'Without contact list access: ', [ 'strong', [[ 'a', 'href' => $uri, $uri ]] ] ] ],
+			[ 'li', [ 'With contact list access: ', [ 'strong', [[ 'a', [ 'href' => $curi, $curi ] ]] ] ] ],
+			[ 'li', [ 'Without contact list access: ', [ 'strong', [[ 'a', [ 'href' => $uri, $uri ] ]] ] ] ],
 		] ],
 		[ 'p', [
 			'You need the contact list access if you want to use the standings-based visibility settings.',
@@ -393,7 +400,7 @@ function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, 
 		));
 
 		if($c > 0) {
-			return [ 'Character', [ 'strong', $charactername ], ' is already used by another account.' ];
+			return [ 'Character ', [ 'strong', $charactername ], ' is already used by another account.' ];
 		}
 	}
 
@@ -757,4 +764,72 @@ function assume_logged_out() {
 	header('HTTP/1.1 303 See Other', true, 303);
 	header('Location: '.\Osmium\get_ini_setting('relative_path'), true, 303);
 	die();
+}
+
+/**
+ * Check whether the current account matches the whitelist.
+ */
+function check_whitelist($a) {
+	if($a['apiverified'] !== 't') return false;
+
+	$ids = array_flip(\Osmium\get_ini_setting('whitelisted_ids', []));
+
+	foreach([ 'characterid', 'corporationid', 'allianceid' ] as $t) {
+		if(isset($a[$t]) && $a[$t] > 0 && isset($ids[$a[$t]])) {
+			return true;
+		}
+	}
+
+	foreach([ 'corp', 'char' ] as $cltype) {
+
+		foreach(\Osmium\get_ini_setting($cltype.'_contactlist', []) as $k => $cl) {
+			list($keyid, $vcode, $threshold) = explode(':', $cl, 3);
+			$threshold = (float)$threshold;
+
+			$ki = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', [
+				'keyID' => $keyid,
+				'vCode' => $vcode,
+			]);
+
+			if(!($ki instanceof \SimpleXMLElement)) {
+				trigger_error($cltype.'_whitelist('.$k.'): could not fetch key info', E_USER_NOTICE);
+				continue;
+			}
+
+			$charid = (int)$ki->result->key->rowset->row['characterID'];
+			$mask = (int)$ki->result->key['accessMask'];
+
+			if(!($mask & CONTACT_LIST_ACCESS_MASK)) {
+				trigger_error($cltype.'_whitelist('.$k.'): no access to contact list', E_USER_NOTICE);
+				continue;
+			}
+
+			$x = \Osmium\EveApi\fetch('/'.$cltype.'/ContactList.xml.aspx', [
+				'keyID' => $keyid,
+				'vCode' => $vcode,
+				'characterID' => $charid,
+			]);
+
+			if(!($x instanceof \SimpleXMLElement)) {
+				trigger_error($cltype.'_whitelist('.$k.'): could not fetch contact list', E_USER_NOTICE);
+				continue;
+			}
+
+			foreach($x->result->rowset as $rs) {
+				foreach($rs->children() as $row) {
+					if((float)$row['standing'] < $threshold) continue;
+					$id = $row['contactID'];
+
+					foreach([ 'characterid', 'corporationid', 'allianceid' ] as $t) {
+						if(isset($a[$t]) && $a[$t] == $id) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	return false;
 }

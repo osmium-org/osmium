@@ -103,6 +103,13 @@ $p->title = 'Account creation';
 $p->content->appendCreate('h1', 'Account creation');
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
+if(\Osmium\get_ini_setting('whitelist')) {
+	$p->content->appendCreate(
+		'p.warning_box',
+		'This Osmium instance has whitelisted access. You will need to verify your API in order to use your account.'
+	);
+}
+
 $p->content->appendCreate('p', 'Creating an account allows you to:');
 $p->content->appendCreate('ul', [
 	[ 'li', 'Save and create public (and private) loadouts;' ],
@@ -120,36 +127,26 @@ $tbody = $p->content->appendCreate('o-form', [
 	'method' => 'post',
 ])->appendCreate('table')->appendCreate('tbody');
 
-$tbody->appendCreate('tr')->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('p', 'The account name is only used for logging in (and never displayed), while the nickname will be used as a display name.');
+$tbody->append($p->makeFormInputRow(
+	'text', 'account_name',
+	[ 'Account name', [ 'br' ], [ 'small', '(used for logging in)' ] ]
+));
+$tbody->append($p->makeFormInputRow(
+	'text', 'nickname',
+	[ 'Nickname', [ 'br' ], [ 'small', '(display name)' ] ]
+));
 
-$tbody->appendCreate('tr')->append([
-	[ 'th', [[ 'label', [ 'for' => 'account_name', 'Account name' ] ]] ],
-	[ 'td', [[ 'o-input', [ 'type' => 'text', 'name' => 'account_name', 'id' => 'account_name' ] ]] ],
-]);
+$tbody->append($p->makeFormSeparatorRow());
 
-$tbody->appendCreate('tr')->append([
-	[ 'th', [[ 'label', [ 'for' => 'nickname', 'Nickname' ] ]] ],
-	[ 'td', [[ 'o-input', [ 'type' => 'text', 'name' => 'nickname', 'id' => 'nickname' ] ]] ],
-]);
+$tbody->append($p->makeFormInputRow('password', 'password_0', 'Password'));
+$tbody->append($p->makeFormInputRow(
+	'password', 'password_1',
+	[ 'Password', [ 'br' ], [ 'small', '(confirm)' ] ]
+));
 
-$tbody->appendCreate('tr', [ 'class' => 'separator'])->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
+$tbody->append($p->makeFormSeparatorRow());
 
-$tbody->appendCreate('tr')->append([
-	[ 'th', [[ 'label', [ 'for' => 'password_0', 'Password' ] ]] ],
-	[ 'td', [[ 'o-input', [ 'type' => 'password', 'name' => 'password_0', 'id' => 'password_0' ] ]] ],
-]);
-$tbody->appendCreate('tr')->append([
-	[ 'th', [[ 'label', [ 'for' => 'password_1', 'Password (confirm)' ] ]] ],
-	[ 'td', [[ 'o-input', [ 'type' => 'password', 'name' => 'password_1', 'id' => 'password_1' ] ]] ],
-]);
-
-$tbody->appendCreate('tr', [ 'class' => 'separator'])->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
-
-$tbody->appendCreate('tr')->append([
-	[ 'th' ], [ 'td', [
-		[ 'o-input', [ 'type' => 'submit', 'value' => 'Create account' ] ]
-	]],
-]);
+$tbody->append($p->makeFormSubmitRow('Create account'));
 
 
 $ctx = new \Osmium\DOM\RenderContext();

@@ -58,6 +58,13 @@ if(isset($_POST['key_id'])) {
 		\Osmium\State\check_api_key($a, true);
 		$a = \Osmium\State\get_state('a');
 	}
+
+	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+		if(\Osmium\State\check_whitelist($a)) {
+			unset($a['notwhitelisted']);
+			\Osmium\State\put_state('a', $a);
+		}
+	}
 } else {
 	if(isset($a['keyid'])) {
 		$_POST['key_id'] = $a['keyid'];
@@ -131,13 +138,27 @@ $section = $div->appendCreate('section#s_apiauth');
 $section->appendCreate('h1', 'Account status');
 
 if($a['apiverified'] === 't') {
-	$section->appendCreate('p.notice_box', 'Your account is API-verified.');
+	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+		$section->appendCreate(
+			'p.error_box',
+			'Your API credentials are correct, but your character is not allowed to access this Osmium instance. Please contact the administrators if you have trouble authenticating your character.'
+		);
+	} else {
+		$section->appendCreate('p.notice_box', 'Your account is API-verified.');
+	}
 } else {
-	$section->appendCreate('p.warning_box', [
-		'Your account is ',
-		[ 'strong', 'not' ],
-		' API-verified.',
-	]);
+	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+		$section->appendCreate(
+			'p.error_box',
+			'You need to API-verify your account before you can access this Osmium instance.'
+		);
+	} else {
+		$section->appendCreate('p.warning_box', [
+			'Your account is ',
+			[ 'strong', 'not' ],
+			' API-verified.',
+		]);
+	}
 
 	$section->appendCreate('p', 'Verifying your account with an API key will allow you to:');
 	$ul = $section->appendCreate('ul');

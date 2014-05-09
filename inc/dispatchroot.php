@@ -71,7 +71,7 @@ function ticktock() {
 	$prev = $new;
 }
 
-function get_ini_setting($key) {
+function get_ini_setting($key, $default = null) {
 	static $cnf = null;
 	if($cnf === null) {
 		if(!file_exists(INI_CONFIGURATION_FILE) || !is_readable(INI_CONFIGURATION_FILE)) {
@@ -83,7 +83,7 @@ function get_ini_setting($key) {
 		$cnf = parse_ini_file(INI_CONFIGURATION_FILE);
 	}
 
-	return isset($cnf[$key]) ? $cnf[$key] : null;
+	return isset($cnf[$key]) ? $cnf[$key] : $default;
 }
 
 function get_osmium_version() {

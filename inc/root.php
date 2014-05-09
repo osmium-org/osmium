@@ -113,12 +113,26 @@ if(!\Osmium\State\is_logged_in()) {
 if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 	header('X-Robots-Tag: noindex, nofollow');
 
-	if(!\Osmium\State\is_logged_in()) {
-		$prefix = rtrim(get_ini_setting('relative_path'), '/');
-		$req = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
+	$prefix = rtrim(get_ini_setting('relative_path'), '/');
+	$req = substr(explode('?', $_SERVER['REQUEST_URI'], 2)[0], strlen($prefix));
 
-		if($req !== $prefix.'/login' && $req !== $prefix.'/register' && $req !== $prefix.'/resetpassword') {
+	if(!\Osmium\State\is_logged_in()) {
+
+		if(!in_array($req, [
+			'/login',
+			'/register',
+			'/resetpassword',
+		], true)) {
 			\Osmium\State\assume_logged_in();
+		}
+	} else {
+		$a = \Osmium\State\get_state('a');
+		if(isset($a['notwhitelisted']) && $a['notwhitelisted'] && !in_array($req, [
+			'/logout/'.\Osmium\State\get_token(),
+			'/settings',
+		], true)) {
+			header('Location: '.$prefix.'/settings#s_apiauth');
+			die();
 		}
 	}
 }
