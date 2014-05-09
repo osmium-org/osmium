@@ -70,7 +70,7 @@ $ids[] = -1;
 
 /* XXX: use loadoutssearchresults */
 $q = \Osmium\Db\query(
-'SELECT l.loadoutid, l.visibility, f.name, f.hullid, stn.typename, lh.updatedate,
+'SELECT l.loadoutid, l.visibility, l.privatetoken, f.name, f.hullid, stn.typename, lh.updatedate,
 a.nickname, a.charactername, a.apiverified,
 fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score, COALESCE(lcc.count, 0) AS comments,
 f.evebuildnumber
@@ -104,8 +104,11 @@ foreach($ids as $id) {
 	if($id === -1) continue;
 
 	$r = array();
-	/* Use dummy private token as a safeguard in case this ever spits out private loadouts */
-	$r['uri'] = $uriprefix.'/'.\Osmium\Fit\get_fit_uri($rows[$id]['loadoutid'], $rows[$id]['visibility'], '0');
+	$r['uri'] = $uriprefix.'/'.\Osmium\Fit\get_fit_uri(
+		$rows[$id]['loadoutid'],
+		$rows[$id]['visibility'],
+		$rows[$id]['privatetoken']
+	);
 	$r['name'] = $rows[$id]['name'];
 	$r['shiptypeid'] = (int)$rows[$id]['hullid'];
 	$r['shiptypename'] = $rows[$id]['typename'];
