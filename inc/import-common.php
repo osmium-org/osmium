@@ -95,11 +95,18 @@ function get_source(\Osmium\DOM\RawPage $p, $textarea_name, $uri_name, $file_nam
 }
 
 function fetch($uri) {
-	$f = @fopen($uri, 'rb');
-	if($f === false) return false;
-	$contents = stream_get_contents($f, MAX_FILESIZE);
-	fclose($f);
-	return $contents;
+	$c = \Osmium\curl_init_branded($uri);
+	$remaining = MAX_FILESIZE;
+
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($c, CURLOPT_READFUNCTION, function($c, $stream, $maxlen) use(&$remaining) {
+		if($remaining === 0) return '';
+		$data = fread($stream, min($maxlen, $remaining));
+		$remaining -= strlen($data);
+		return $data;
+	});
+
+	return curl_exec($c);
 }
 
 function truncate($text) {

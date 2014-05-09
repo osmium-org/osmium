@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* XXX: limit to at most 30 reqs/s to avoid bans */
+
 namespace Osmium\EveApi;
 
 /* Change this if you want to use an API proxy. BEWARE: whoever
@@ -68,7 +70,7 @@ function fetch($name, array $params, $timeout = null) {
 
 	if($timeout === null) $timeout = DEFAULT_API_TIMEOUT;
 
-	$c = curl_init(API_ROOT.$name);
+	$c = \Osmium\curl_init_branded(API_ROOT.$name);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($c, CURLOPT_CAINFO, \Osmium\ROOT.'/ext/ca/GeoTrustGlobalCA.pem');

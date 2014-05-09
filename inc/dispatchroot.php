@@ -109,11 +109,14 @@ function get_osmium_version() {
 }
 
 function curl_init_branded() {
-	$c = curl_init();
+	$c = call_user_func_array('\curl_init', func_get_args());
 	$cver = curl_version();
 	$over = ltrim(get_osmium_version(), 'v');
 	$pver = phpversion();
-	curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} (PHP/{$pver}; libcurl/{$cver['version']}; {$cver['ssl_version']}; +http://artefact2.com/osmium/)");
+	$kern = trim(shell_exec('uname'));
+	$kver = trim(shell_exec('uname -r'));
+	$contact = get_ini_setting('uacontact');
+	curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} ({$kern}/{$kver}; PHP/{$pver}; libcurl/{$cver['version']}; {$cver['ssl_version']}; {$contact})");
 	return $c;
 }
 
