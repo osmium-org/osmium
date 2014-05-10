@@ -124,7 +124,8 @@ function put_cache($key, $value, $expires = null, $prefix = 'OsmiumCache_') {
 	}
 
 	$f = get_cache_file($key, $prefix);
-    return file_put_contents($f, serialize($value)) && touch($f, $expires);
+	if(file_put_contents($f, serialize($value)) === false) return false;
+	return touch($f, $expires);
 }
 
 /**

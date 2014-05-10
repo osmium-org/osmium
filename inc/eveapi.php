@@ -26,6 +26,10 @@ const API_ROOT = 'https://api.eveonline.com';
  * mean longer login times if the API server is busy. */
 const DEFAULT_API_TIMEOUT = 5;
 
+/* Rate limit to no more than 20 seconds over any one second
+ * period. */
+const MAX_API_REQUESTS_IN_ONE_SECOND = 20;
+
 if(!function_exists('curl_strerror')) {
 	/* Fallback for PHP < 5.5 users */
 	function curl_strerror($no) { return $no; }
@@ -66,6 +70,27 @@ function fetch($name, array $params, $timeout = null) {
 		return new \SimpleXMLElement($xmltext);
 	}
 
+	/* Rate limit API calls to avoid getting banned */
+	$lsem = \Osmium\State\semaphore_acquire('latest_eve_api_calls');
+	$latest = \Osmium\State\get_cache('latest_eve_api_calls', []);
+
+	$time = microtime(true);
+	$cutoff = $time - 1;
+
+	while($latest !== [] && $latest[0] < $cutoff) array_shift($latest);
+	if(count($latest) > MAX_API_REQUESTS_IN_ONE_SECOND) {
+		$waitms = 1000.0 * (1.0 - ($time - $latest[0])) + 5.0;
+		usleep($waitms);
+		/* The process will sleep WHILE keeping the semaphore, so
+		 * other API requests should queue up nicely too. */
+	}
+
+	$latest[] = $time;
+	\Osmium\State\put_cache('latest_eve_api_calls', $latest, 2);
+	\Osmium\State\semaphore_release($lsem);
+
+
+
 	if($timeout === null) $timeout = DEFAULT_API_TIMEOUT;
 
 	$c = curl_init(API_ROOT.$name);
@@ -100,11 +125,13 @@ function fetch($name, array $params, $timeout = null) {
 		return null;
 	}
 
+	/* This is timezone safe and clock-skew safe. */
 	$expires = strtotime((string)$xml->cachedUntil);
 	$curtime = strtotime((string)$xml->currentTime);
+
 	/* Cache for at least 1 minute, in case the cachedUntil values are
 	 * erroneous */
-	$ttl = min($expires - $curtime + 1, 60);
+	$ttl = max($expires - $curtime + 1, 60);
 
 	\Osmium\State\put_cache($key, $raw_xml, $ttl, 'API_');
 	\Osmium\State\semaphore_release($sem);
