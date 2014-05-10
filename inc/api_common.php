@@ -24,7 +24,6 @@ function get_fit_from_input_post_get() {
 	}
 
 	$src = $_GET['source_fmt'];
-	$fit = false;
 
 	if(is_numeric($src)) {
 		/* Assume loadout ID */
