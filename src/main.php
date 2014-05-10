@@ -332,7 +332,7 @@ function get_cached_li(\Osmium\DOM\Page $p, callable $getcount, $key, $ttl, $sin
 function get_cache_memory_or_gen($key, $ttl, $genfunc, $prefix = 'Metrics_') {
 	$val = \Osmium\State\get_cache_memory($key, null, $prefix);
 	if($val === null) {
-		$sem = \Osmium\State\semaphore_acquire($prefix.$key);
+		$sem = \Osmium\State\semaphore_acquire_nc($prefix.$key);
 		if($sem === false) return false;
 
 		$val = \Osmium\State\get_cache_memory($key, null, $prefix);
@@ -340,7 +340,7 @@ function get_cache_memory_or_gen($key, $ttl, $genfunc, $prefix = 'Metrics_') {
 			$val = $genfunc();
 			\Osmium\State\put_cache_memory($key, $val, $ttl, $prefix);
 		}
-		\Osmium\State\semaphore_release($sem);
+		\Osmium\State\semaphore_release_nc($sem);
 	}
 
 	return $val;

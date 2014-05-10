@@ -392,14 +392,14 @@ function put_setting($key, $value) {
  * semaphore_acquire() use a different namespace.
  */
 function semaphore_acquire_nc($name, $prefix = 'Sem_NC') {
-		$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/'.$prefix.'_'.str_replace('/', '_', $name), 'cb');
-		touch($filename, 0);
-		if($f === false) return false;
-		if(flock($f, LOCK_EX) === false) return false;
-		$ret = [ $f, $filename ];
-		register_shutdown_function(__NAMESPACE__.'\semaphore_release_nc', $ret);
-		return $ret;
-	}
+	$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/'.$prefix.'_'.str_replace('/', '_', $name), 'cb');
+	touch($filename, 0);
+	if($f === false) return false;
+	if(flock($f, LOCK_EX) === false) return false;
+	$ret = [ $f, $filename ];
+	register_shutdown_function(__NAMESPACE__.'\semaphore_release_nc', $ret);
+	return $ret;
+}
 
 /**
  * Release a semaphore acquired with semaphore_acquire_nc(). This is
@@ -415,6 +415,11 @@ if(function_exists('sem_acquire')) {
 	/**
      * Acquire a semaphore. This will block until the semaphore can be
      * acquired.
+     *
+     * @warning Do NOT nest multiple semaphore_acquire() calls, as
+     * they can collide and the second call will block
+     * indefinitely. Use the *_nc() variants for all but at most one
+     * _acquire() call.
      *
      * @returns the semaphore resource to be given to
      * semaphore_release().

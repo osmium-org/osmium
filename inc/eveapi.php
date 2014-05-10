@@ -57,14 +57,14 @@ function fetch($name, array $params, $timeout = null) {
 	}
 
 	/* Avoid concurrent accesses to the same API call */
-	$sem = \Osmium\State\semaphore_acquire('API_'.$key);
+	$sem = \Osmium\State\semaphore_acquire_nc('API_'.$key);
 	if($sem === false) return null;
 
 	/* See if another process already cached the call while
-	 * semaphore_acquire() blocked */
+	 * semaphore_acquire_nc() blocked */
 	$xmltext = \Osmium\State\get_cache($key, null, 'API_');
 	if($xmltext !== null) {
-		\Osmium\State\semaphore_release($sem);
+		\Osmium\State\semaphore_release_nc($sem);
 		return new \SimpleXMLElement($xmltext);
 	}
 
@@ -83,7 +83,7 @@ function fetch($name, array $params, $timeout = null) {
 
 	if($errno = curl_errno($c)) {
 		trigger_error('Got cURL error '.$errno.': '.curl_strerror($errno).' for call '.$name);
-		\Osmium\State\semaphore_release($sem);
+		\Osmium\State\semaphore_release_nc($sem);
 		return null;
 	}
 
@@ -98,7 +98,7 @@ function fetch($name, array $params, $timeout = null) {
 	}
 
 	if($xml === false || $raw_xml === false) {
-		\Osmium\State\semaphore_release($sem);
+		\Osmium\State\semaphore_release_nc($sem);
 		return null;
 	}
 
@@ -109,6 +109,6 @@ function fetch($name, array $params, $timeout = null) {
 	$ttl = min($expires - $curtime + 1, 60);
 
 	\Osmium\State\put_cache($key, $raw_xml, $ttl, 'API_');
-	\Osmium\State\semaphore_release($sem);
+	\Osmium\State\semaphore_release_nc($sem);
 	return $xml;
 }
