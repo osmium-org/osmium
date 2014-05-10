@@ -396,8 +396,12 @@ function get_search_ids($search_query, $more_cond = '', $offset = 0, $limit = 10
 function make_pretty_results(\Osmium\DOM\RawPage $p, $query, $more = '', $paginate = false, $perpage = 20, $pagename = 'p', $message = 'No loadouts matched your query.') {
 
 	$total = get_total_matches($query, $more, $hasmore);
+
 	if($paginate && $total > 0) {
-		$offset = \Osmium\Chrome\paginate($pagename, $perpage, $total, $pageresult, $pageinfo);
+		list($offset, $pmeta, $pol) = $p->makePagination(
+			$pagename, $total,
+			[ 'perpage' => $perpage ]
+		);
 	} else $offset = 0;
 
 	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $perpage);
@@ -413,16 +417,8 @@ function make_pretty_results(\Osmium\DOM\RawPage $p, $query, $more = '', $pagina
 
 	$ol = $p->makeLoadoutGridLayout($ids);
 
-	if($paginate && $total > 0 && $pageresult !== '') {
-		return [
-			$ids,
-			[
-				$p->fragment($pageinfo), /* XXX */
-				$p->fragment($pageresult), /* XXX */
-				$ol,
-				$p->fragment($pageresult), /* XXX */
-			]
-		];
+	if($paginate && $total > 0 && $pol !== '') {
+		return [ $ids, [ $pmeta, $pol, $ol, $pol->cloneNode(true) ] ];
 	} else if($ids !== []) {
 		return [ $ids, $ol ];
 	}

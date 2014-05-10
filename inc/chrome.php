@@ -399,6 +399,8 @@ function round_sd($number, $digits = 0) {
  *
  * @return offset of the current page
  *
+ * @deprecated
+ *
  * TODO port this to DOM
  * TODO add <link rel="next" /> and <link rel="prev" /> when appropriate
  */

@@ -462,6 +462,132 @@ class Page extends RawPage {
 
 
 
+	/**
+	 * Generate pagination links and get the offset of the current page.
+	 *
+	 * @param $wrap insert pagination links before/after this element.
+	 * @param array $opts an array of options.
+	 * @param integer $total the total number of elements.
+	 *
+	 * @return [ offset of the current page, <p> with meta info, <ol>
+	 * of pagination links ]
+	 */
+	public function makePagination($name, $total, array $opts = []) {
+		$opts += [
+			/* Name of the $_GET parameter for the page number */
+			'name' => 'p',
+
+			/* Number of elements per page */
+			'perpage' => 50,
+
+			/* Override the current page number */
+			'pageoverride' => false,
+
+			/* Format of the shown text indicating the position within the result set */
+			'format' => 'Showing rows %1-%2 of %3.',
+
+			/* Override the shown total */
+			'ftotal' => $this->formatExactInteger($total),
+
+			/* Append this to generated link URIs */
+			'anchor' => '',
+
+			/* Add <link rel='next'> <link rel='prev'> to <head> when appropriate. */
+			'addlinks' => true,
+
+			/* Append (page X) to the page's title when appropriate. */
+			'appendtitle' => true,
+		];
+
+		$name = $opts['name'];
+		$page = $opts['pageoverride'] !== false ? $opts['pageoverride'] :
+			(isset($_GET[$name]) ? $_GET[$name] : 1);
+		$maxpage = max(1, ceil($total / $opts['perpage']));
+
+		if($page < 1) $page = 1;
+		if($page > $maxpage) $page = $maxpage;
+
+		$offset = ($page - 1) * $opts['perpage'];
+		$max = min($total, $offset + $opts['perpage']);
+
+		$replacement = ($total > 0) ? [
+			$this->formatExactInteger($offset + 1),
+			$this->formatExactInteger($max),
+			$opts['ftotal']
+		] : [ 0, 0, 0 ];
+		$p = $this->element('p.pagination', str_replace(
+			[ '%1', '%2', '%3' ],
+			$replacement,
+			$opts['format']
+		));
+
+		if($maxpage == 1) {
+			return [ $offset, '', '' ];
+		}
+
+		$ol = $this->element('ol.pagination');
+		$inf = max(1, $page - 5);
+		$sup = min($maxpage, $page + 4);
+		$params = $_GET;
+
+		$this->title .= ' / Page '.$this->formatExactInteger($page);
+
+		$li = $ol->appendCreate('li', [ 'value' => $page - 1 ]);
+		if($page > 1) {
+			$params[$name] = $page - 1;
+			$uri = $this->formatQueryString($params).$opts['anchor'];
+
+			if($opts['addlinks']) {
+				$this->head->appendCreate('link', [
+					'rel' => 'prev',
+					'href' => $uri,
+				]);
+			}
+
+			$li->appendCreate('a', [ 'title' => 'go to previous page', 'href' => $uri, 'Previous' ]);
+		} else {
+			$li->addClass('dummy')->appendCreate('span', 'Previous');
+		}
+
+		for($i = $inf; $i <= $sup; ++$i) {
+			$li = $ol->appendCreate('li', [ 'value' => $i ]);
+
+			if($i == $page) {
+				$li->addClass('current')->appendCreate('span', $this->formatExactInteger($i));
+				continue;
+			}
+
+			$params[$name] = $i;
+			$fi = $this->formatExactInteger($i);
+			$li->appendCreate('a', [
+				'title' => 'go to page '.$fi,
+				'href' => $this->formatQueryString($params).$opts['anchor'],
+				$fi,
+			]);
+		}
+
+		$li = $ol->appendCreate('li', [ 'value' => $page + 1 ]);
+		if($page < $maxpage) {
+			$params[$name] = $page + 1;
+			$uri = $this->formatQueryString($params).$opts['anchor'];
+
+			if($opts['addlinks']) {
+				$this->head->appendCreate('link', [
+					'rel' => 'next',
+					'href' => $uri,
+				]);
+			}
+
+			$li->appendCreate('a', [ 'title' => 'go to next page', 'href' => $uri, 'Next' ]);
+		} else {
+			$li->addClass('dummy')->appendCreate('span', 'Next');
+		}
+
+		return [ $offset, $p, $ol ];
+	}
+
+
+
 	/* @internal */
 	private function renderThemes() {
 		if($this->theme === 'auto') {
