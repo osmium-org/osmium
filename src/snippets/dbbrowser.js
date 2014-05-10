@@ -16,6 +16,7 @@
  */
 
 /*<<< require snippet tabs >>>*/
+/*<<< require external //cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js >>>*/
 
 $(function() {
 	var tabs = $("ul.tabs");

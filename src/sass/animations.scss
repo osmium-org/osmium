@@ -45,3 +45,18 @@ div.spinner, span.spinner {
 	from { @include prefixize(transform, rotate(0deg)); }
 	to { @include prefixize(transform, rotate(359deg)); }
 }
+
+div#wrapper > div#glob_feedback {
+	&.notextended {
+		@include prefixize(animation, fb-translate-left 0.5s ease 1 reverse);
+	}
+
+	&.extended {
+		@include prefixize(animation, fb-translate-left 0.5s ease 1 normal);
+	}
+}
+
+@include keyframes(fb-translate-left) {
+	from { right: -30em; }
+	to { right: -1px; }
+}

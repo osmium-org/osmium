@@ -333,9 +333,5 @@ $p->head->appendCreate('link', [
 	'rel' => 'stylesheet',
 	'type' => 'text/css',
 ]);
-$p->body->appendCreate('script', [
-	'type' => 'application/javascript',
-	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
-]);
 
 $p->render($ctx);

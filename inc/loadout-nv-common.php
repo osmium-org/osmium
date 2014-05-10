@@ -43,25 +43,6 @@ class Page extends \Osmium\DOM\Page {
 		$this->data['customdamageprofiles'] = $cdp === [] ? new \stdClass() : $cdp;
 
 		$this->finalize($ctx);
-
-		$snippets = (new \DOMXPath($this))->query('//script[@id=\'snippets\']')->item(0);
-
-		/* If these scripts change, update the license info in about.php */
-
-		$snippets->before($this->element('script', [
-			'type' => 'application/javascript',
-			'src' => $ctx->relative.'/static-1/jquery.jsPlumb-1.6.0-min.js',
-		]));
-
-		$snippets->before($this->element('script', [
-			'type' => 'application/javascript',
-			'src' => $ctx->relative.'/static-1/rawdeflate.min.js',
-		]));
-
-		$snippets->before($this->element('script', [
-			'type' => 'application/javascript',
-			'src' => $ctx->relative.'/static-1/mousetrap.min.js',
-		]));
 	}
 
 	function makeRemoteSection(array $fit, $readonly = false) {

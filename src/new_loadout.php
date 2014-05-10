@@ -556,9 +556,4 @@ $p->snippets[] = 'new_loadout';
 $p->data['shortlist'] = \Osmium\AjaxCommon\get_module_shortlist();
 
 $p->finalizeWithFit($ctx, $fit, $tok);
-$p->body->appendCreate('script', [
-	'type' => 'application/javascript',
-	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
-]);
-
 $p->render($ctx);
