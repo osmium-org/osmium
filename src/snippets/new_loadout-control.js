@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,19 +20,29 @@ osmium_gen_control = function() {
 		.prop('disabled', 'disabled')
 		.prop('title', 'Select a ship before submitting your loadout.')
 	;
+
+	if(!("metadata" in osmium_clf)) return;
+	if(!("X-Osmium-update-reason" in osmium_clf.metadata)) return;
+	$("section#control input#ureason").val(osmium_clf.metadata['X-Osmium-update-reason']);
 };
 
 osmium_init_control = function() {
-	$("section#control input#reset_loadout").click(function() {
-		if(confirm("Are you sure you want to reset your current work? This cannot be undone.")) {
-			/* This is a hack, rather than resetting the CLF to the
-			 * true "blank fit", we just create a new fit
-			 * altogether */
-			window.location.replace('../new');
-		}
-
+	$("section#control form").submit(function() {
 		return false;
 	});
+
+
+	var lockcontrol = function() {
+		var s = $("section#control");
+		s.find('input, select').prop('disabled', true);
+		s.append($(document.createElement('span')).addClass('spinner'));
+	};
+
+	var unlockcontrol = function() {
+		var s = $("section#control");
+		s.find('input, select').prop('disabled', false);
+		s.find('span.spinner').remove();
+	};
 
 	$("section#control input#export_loadout").click(function() {
 		var b = $(this);
@@ -46,19 +56,8 @@ osmium_init_control = function() {
 			success: function(payload) {
 				osmium_modal_rotextarea('Exported loadout (' + exporttype + ')', payload['export-payload']);
 			},
-			before: (function(b) {
-				return function() {
-					b.prop('disabled', true).parent().after(
-						$(document.createElement('span')).addClass('spinner')
-					);
-				};
-			})(b),
-			after: (function(b) {
-				return function() {
-					b.prop('disabled', false).parent()
-						.parent().find('span.spinner').remove();
-				};
-			})(b)
+			before: lockcontrol,
+			after: unlockcontrol,
 		});
 	});
 
@@ -76,20 +75,19 @@ osmium_init_control = function() {
 					window.location.replace(payload['submit-loadout-uri']);
 				}
 			},
-			before: (function(b) {
-				return function() {
-					b.prop('disabled', true).parent().after(
-						$(document.createElement('span')).addClass('spinner')
-					);
-				};
-			})(b),
-			after: (function(b) {
-				return function() {
-					b.prop('disabled', false).parent()
-						.parent().find('span.spinner').remove();
-				};
-			})(b)
+			before: lockcontrol,
+			after: unlockcontrol,
 		});
+	});
+
+	$("section#control input#ureason").change(function() {
+		if(!("metadata" in osmium_clf)) {
+			osmium_clf.metadata = {};
+		}
+
+		osmium_clf.metadata['X-Osmium-update-reason'] = $("section#control input#ureason").val();
+		osmium_commit_clf();
+		osmium_undo_push();
 	});
 };
 

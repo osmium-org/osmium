@@ -605,6 +605,10 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 			$json['metadata']['X-Osmium-revision'] = (int)$fit['metadata']['revision'];
 		}
 
+		if(isset($fit['metadata']['updatereason'])) {
+			$json['metadata']['X-Osmium-update-reason'] = $fit['metadata']['updatereason'];
+		}
+
 		$json['metadata']['X-Osmium-view-permission'] = (int)$fit['metadata']['view_permission'];
 		$json['metadata']['X-Osmium-edit-permission'] = (int)$fit['metadata']['edit_permission'];
 		$json['metadata']['X-Osmium-visibility'] = (int)$fit['metadata']['visibility'];
@@ -891,6 +895,10 @@ function synchronize_from_clf_1(&$fit, $clf, array &$errors = array()) {
 
 		if(isset($meta['description'])) {
 			$fit['metadata']['description'] = $meta['description'];
+		}
+
+		if(isset($meta['X-Osmium-update-reason'])) {
+			$fit['metadata']['updatereason'] = $meta['X-Osmium-update-reason'];
 		}
 
 		if(isset($meta['X-tags']) && is_array($meta['X-tags'])) {

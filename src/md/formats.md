@@ -81,8 +81,8 @@ client-server communication.
 - `X-Osmium-loadouthash`, `X-Osmium-loadoutid`, `X-Osmium-revision`,
   `X-Osmium-view-permission`, `X-Osmium-edit-permission`,
   `X-Osmium-visibility`, `X-Osmium-password-mode`,
-  `X-Osmium-hashed-password`: additional keys in the metadata
-  object. Self-explanatory.
+  `X-Osmium-hashed-password`, `X-Osmium-update-reason`: additional
+  keys in the metadata object. Self-explanatory.
 
 - `X-Osmium-current-presetid`, `X-Osmium-current-chargepresetid`,
   `X-Osmium-current-dronepresetid`: additional keys in the root

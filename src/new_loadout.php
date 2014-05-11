@@ -234,37 +234,45 @@ $nla->appendCreate('section#ship');
 
 $section = $nla->appendCreate('section#control');
 $form = $section->appendCreate('form', [ 'method' => 'get', 'action' => './'.$tok ]);
-
-$form->appendCreate('input', [
-	'type' => 'button',
-	'name' => 'reset_loadout',
-	'id' => 'reset_loadout',
-	'value' => 'Reset loadout',
-]);
-
-$form->appendCreate('input', [
-	'type' => 'button',
-	'name' => 'export_loadout',
-	'id' => 'export_loadout',
-	'value' => 'Export loadout',
-]);
+$tbody = $form->appendCreate('table')->appendCreate('tbody');
 
 if(\Osmium\State\is_logged_in()) {
-	$form->appendCreate('input', [
+	$tr = $tbody->appendCreate('tr');
+
+	$save = $tr->appendCreate('td')->appendCreate('input', [
 		'type' => 'button',
 		'name' => 'submit_loadout',
 		'id' => 'submit_loadout',
 		'value' => 'Save loadout',
 	]);
+
+	if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid']) {
+		$save->setAttribute('value', 'Update loadout');
+
+		$tr->appendCreate('td')->appendCreate('input', [
+			'id' => 'ureason',
+			'name' => 'ureason',
+			'placeholder' => 'Brief summary of your changes…',
+			'type' => 'text',
+		]);
+	} else {
+		$save->parentNode->setAttribute('colspan', '2');
+	}
 }
 
-$form->appendCreate('br');
-$form->append('Export format: ');
-
-$select = $form->appendCreate('select', [ 'name' => 'export_type', 'id' => 'export_type' ]);
+$tr = $tbody->appendCreate('tr');
+$tr->appendCreate('td')->appendCreate('input', [
+	'type' => 'button',
+	'name' => 'export_loadout',
+	'id' => 'export_loadout',
+	'value' => 'Export loadout',
+]);
+$select = $tr->appendCreate('td')->appendCreate('select', [ 'name' => 'export_type', 'id' => 'export_type' ]);
 foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
 	$select->appendCreate('option', [ 'value' => $k, $f[0] ]);
 }
+
+
 
 $nla
 ->appendCreate('section#attributes')
@@ -412,6 +420,7 @@ $tbody = $section->appendCreate('form', [ 'method' => 'get', 'action' => '?' ])
 	->appendCreate('table')->appendCreate('tbody');
 
 $tbody->append($p->makeFormInputRow('text', 'name', 'Loadout title'));
+
 $tbody->append($p->makeFormRawRow(
 	[[ 'label', [
 		'for' => 'textarea',

@@ -213,22 +213,25 @@ div#nlsources > section {
 }
 
 div#nlattribs > section#control {
+	margin: 1em 0em 1em 1em;
 	text-align: center;
-	margin: 1em;
+}
 
-	&> form > input {
-		padding: 1em;
-		margin: 0.5em;
-		font-weight: bold;
+div#nlattribs > section#control > form > table {
+	width: 100%;
 
-		&#reset_loadout {
-			font-weight: normal;
-			opacity: 0.5;
+	&> tbody > tr > td {
+		vertical-align: middle;
+		padding: 0.25em;
 
-			&:hover {
-				opacity: 0.8;
-			}
+		&> input, &> select {
+			width: 100%;
+			min-width: 0;
+			height: 1.7em;
+			line-height: 1em;
 		}
+
+		&> input[type='button'], &> select { height: 2em; }
 	}
 }
 

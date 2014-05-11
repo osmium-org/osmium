@@ -190,7 +190,7 @@ function get_state_names() {
  *
  * damageprofile => array(name, damages => array(em, explosive, kinetic, thermal))
  *
- * metadata => array(name, description, tags, evebuildnumber,
+ * metadata => array(name, description, updatereason, tags, evebuildnumber,
  *					 view_permission, edit_permission, visibility,
  *					 password, loadoutid, hash, revision,
  *					 privatetoken)

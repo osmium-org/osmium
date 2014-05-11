@@ -92,7 +92,7 @@ $p->content->appendCreate('h1', 'Revision history of loadout ')->appendCreate(
 
 $histq = \Osmium\Db\query_params(
 	'SELECT loadouthistory.fittinghash, loadouthistory.revision, loadouthistory.updatedate,
-	delta, accounts.accountid, nickname, apiverified, characterid, charactername,
+	loadouthistory.reason, delta, accounts.accountid, nickname, apiverified, characterid, charactername,
 	corporationid, corporationname, allianceid, alliancename, ismoderator
 	FROM osmium.loadouthistory
 	LEFT JOIN osmium.loadouthistory AS previousrev ON loadouthistory.loadoutid = previousrev.loadoutid
@@ -144,6 +144,10 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 	}
 
 	$par->appendCreate('br');
+	if($rev['reason'] !== null) {
+		$par->appendCreate('em', $rev['reason']);
+		$par->appendCreate('br');
+	}
 	$par->appendCreate('code', 'fittinghash '.$rev['fittinghash']);
 
 	if($rev['revision'] > 1 && $rev['delta']) {

@@ -696,14 +696,21 @@ function commit_loadout(&$fit, $ownerid, $accountid, &$error = null) {
 
 	if($row === false || $row[0] != $fit['metadata']['hash']) {
 		$nextrev = ($row === false) ? 1 : ($row[1] + 1);
+		$reason = isset($fit['metadata']['updatereason']) ?
+			\Osmium\Chrome\trim($fit['metadata']['updatereason']) : null;
+		if($reason === '') $reason = null;
+
 		$ret = \Osmium\Db\query_params(
-			'INSERT INTO osmium.loadouthistory (loadoutid, revision, fittinghash, updatedbyaccountid, updatedate) VALUES ($1, $2, $3, $4, $5)',
+			'INSERT INTO osmium.loadouthistory (
+			loadoutid, revision, fittinghash, updatedbyaccountid, updatedate, reason
+			) VALUES ($1, $2, $3, $4, $5, $6)',
 			array(
 				$loadoutid,
 				$nextrev,
 				$fit['metadata']['hash'],
 				$accountid,
-				time()
+				time(),
+				$reason,
 			)
 		);
 
