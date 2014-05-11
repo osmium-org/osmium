@@ -219,7 +219,7 @@ function get_type_search_query($q, $mgfilters = array(), $limit = 50) {
 	OPTION field_weights=(
 	typename=1000,synonyms=1000,parenttypename=100,parentsynonyms=100,
 	groupname=100,marketgroupname=100
-	)';
+	), ranker=sph04';
 }
 
 function get_skillids() {
