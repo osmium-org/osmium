@@ -35,16 +35,12 @@ if($commentcount === 0) {
 	                  * wasting one indentation level */
 }
 
-$offset = \Osmium\Chrome\paginate(
-	'pagec',
-	$commentsperpage,
-	$commentcount,
-	$result,
-	$metaresult,
-	null,
-	'',
-	'#comments'
-);
+list($offset, $pmeta, $pol) = $p->makePagination(
+	$commentcount, [
+		'name' => 'pagec',
+		'perpage' => $commentsperpage,
+		'anchor' => '#comments',
+	]);
 
 $commentidsq = \Osmium\Db\query_params(
 	'SELECT commentid FROM osmium.loadoutcomments
@@ -309,6 +305,10 @@ function format_comment_reply($row) {
 	return $li;
 }
 
+if($pol !== '') {
+	$section->append($pmeta)->append($pol);
+}
+
 $prevcid = null;
 $replybefore = null;
 while($row = \Osmium\Db\fetch_assoc($cq)) {
@@ -320,6 +320,10 @@ while($row = \Osmium\Db\fetch_assoc($cq)) {
 
 	if($row['commentreplyid'] === null) continue;
 	$replybefore->before(format_comment_reply($row));
+}
+
+if($pol !== '') {
+	$section->append($pol->cloneNode(true));
 }
 
 AddComment:

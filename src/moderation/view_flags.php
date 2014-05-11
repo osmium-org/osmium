@@ -80,8 +80,9 @@ $div->appendCreate('h2', $p->title);
 $total = (int)\Osmium\Db\fetch_row(\Osmium\Db\query(
 	'SELECT COUNT(flagid) FROM osmium.flags'
 ))[0];
-$offset = \Osmium\Chrome\paginate('p', 50, $total, $result, $meta); /* XXX */
-$div->append($p->fragment($result.$meta)); /* XXX */
+
+list($offset, $pmeta, $pol) = $p->makePagination($total);
+$div->append($pmeta)->append($pol);
 
 $tablehdr = $p->createElement('tr');
 $tablehdr->appendCreate('th', 'Flag ID');
@@ -193,7 +194,9 @@ if($total === 0) {
 	]);
 }
 
-$div->append($p->fragment($result)); /* XXX */
+if($pol !== '') {
+	$div->append($pol->cloneNode(true));
+}
 
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';

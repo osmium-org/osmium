@@ -399,9 +399,11 @@ function make_pretty_results(\Osmium\DOM\RawPage $p, $query, $more = '', $pagina
 
 	if($paginate && $total > 0) {
 		list($offset, $pmeta, $pol) = $p->makePagination(
-			$pagename, $total,
-			[ 'perpage' => $perpage ]
-		);
+			$total, [
+				'name' => $pagename,
+				'perpage' => $perpage,
+				'ftotal' => $p->formatExactInteger($total).($hasmore ? '+' : ''),
+			]);
 	} else $offset = 0;
 
 	$ids = \Osmium\Search\get_search_ids($query, $more, $offset, $perpage);

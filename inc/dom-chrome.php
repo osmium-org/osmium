@@ -472,7 +472,7 @@ class Page extends RawPage {
 	 * @return [ offset of the current page, <p> with meta info, <ol>
 	 * of pagination links ]
 	 */
-	public function makePagination($name, $total, array $opts = []) {
+	public function makePagination($total, array $opts = []) {
 		$opts += [
 			/* Name of the $_GET parameter for the page number */
 			'name' => 'p',
@@ -530,7 +530,9 @@ class Page extends RawPage {
 		$sup = min($maxpage, $page + 4);
 		$params = $_GET;
 
-		$this->title .= ' / Page '.$this->formatExactInteger($page);
+		if($opts['appendtitle'] && $page > 1) {
+			$this->title .= ' / Page '.$this->formatExactInteger($page);
+		}
 
 		$li = $ol->appendCreate('li', [ 'value' => $page - 1 ]);
 		if($page > 1) {

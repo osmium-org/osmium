@@ -57,8 +57,8 @@ while($row = \Osmium\Db\fetch_row($summaryq)) {
 }
 $ul->appendCreate('li', $p->formatExactInteger($total).' total');
 
-$offset = \Osmium\Chrome\paginate('p', 50, $total, $result, $meta);
-$div->append($p->fragment($meta.$result)); /* XXX */
+list($offset, $pmeta, $pol) = $p->makePagination($total);
+$div->append($pmeta)->append($pol);
 
 $table = $div->appendCreate('table.d');
 $tablehdr = $table->appendCreate('thead')->appendCreate('tr', [
@@ -143,5 +143,5 @@ if($total === 0) {
 
 
 
-$div->append($p->fragment($result)); /* XXX */
+if($pol !== '') $div->append($pol->cloneNode(true));
 $p->render($ctx);

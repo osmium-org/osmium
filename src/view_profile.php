@@ -363,14 +363,14 @@ list($total) = \Osmium\Db\fetch_row(
 		'SELECT COUNT(voteid) FROM osmium.votes WHERE fromaccountid = $1',
 		array($_GET['accountid'])
 		));
-$offset = \Osmium\Chrome\paginate('vp', 25, $total, $result, $metaresult, null, '', '#votes');
+list($offset, , $pol) = $p->makePagination($total, [ 'name' => 'vp', 'perpage' => 25, 'anchor' => '#votes' ]);
 
 $pvotes->appendCreate('h2', [
 	'Votes cast',
 	[ 'small', $p->formatExactInteger($total).' votes cast' ]
 ]);
 
-if($result !== '') $pvotes->append($p->fragment($result)); /* XXX */
+if($pol !== '') $pvotes->append($pol);
 
 $votesq = \Osmium\Db\query_params(
 	'SELECT v.creationdate, type, targettype, targetid1, targetid2, targetid3, sl.loadoutid, f.name
