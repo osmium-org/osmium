@@ -206,19 +206,6 @@ ol.pagination {
 		min-width: 2em;
 		margin: 0.125em;
 
-		&:first-child, &:last-child {
-			min-width: 6em;
-			font-weight: normal;
-		}
-
-		&:first-child span:before, &:first-child a:before {
-			content: "⇦ ";
-		}
-
-		&:last-child span:after, &:last-child a:after {
-			content: " ⇨";
-		}
-
 		&> a {
 			font-weight: normal;
 			text-decoration: none;

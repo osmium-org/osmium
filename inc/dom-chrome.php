@@ -534,7 +534,8 @@ class Page extends RawPage {
 			$this->title .= ' / Page '.$this->formatExactInteger($page);
 		}
 
-		$li = $ol->appendCreate('li', [ 'value' => $page - 1 ]);
+		$first = $ol->appendCreate('li.first', [ 'value' => 1 ]);
+		$prev = $ol->appendCreate('li.prev', [ 'value' => $page - 1 ]);
 		if($page > 1) {
 			$params[$name] = $page - 1;
 			$uri = $this->formatQueryString($params).$opts['anchor'];
@@ -545,10 +546,17 @@ class Page extends RawPage {
 					'href' => $uri,
 				]);
 			}
+			$prev->appendCreate('a', [ 'title' => 'go to previous page', 'href' => $uri, '⇦' ]);
 
-			$li->appendCreate('a', [ 'title' => 'go to previous page', 'href' => $uri, 'Previous' ]);
+			$params[$name] = 1;
+			$first->appendCreate('a', [
+				'href' => $this->formatQueryString($params).$opts['anchor'],
+				'title' => 'go to first page',
+				'⇤',
+			]);
 		} else {
-			$li->addClass('dummy')->appendCreate('span', 'Previous');
+			$prev->addClass('dummy')->appendCreate('span', '⇦');
+			$first->addClass('dummy')->appendCreate('span', '⇤');
 		}
 
 		for($i = $inf; $i <= $sup; ++$i) {
@@ -568,7 +576,8 @@ class Page extends RawPage {
 			]);
 		}
 
-		$li = $ol->appendCreate('li', [ 'value' => $page + 1 ]);
+		$next = $ol->appendCreate('li.next', [ 'value' => $page + 1 ]);
+		$last = $ol->appendCreate('li.last', [ 'value' => $maxpage ]);
 		if($page < $maxpage) {
 			$params[$name] = $page + 1;
 			$uri = $this->formatQueryString($params).$opts['anchor'];
@@ -579,10 +588,17 @@ class Page extends RawPage {
 					'href' => $uri,
 				]);
 			}
+			$next->appendCreate('a', [ 'title' => 'go to next page', 'href' => $uri, '⇨' ]);
 
-			$li->appendCreate('a', [ 'title' => 'go to next page', 'href' => $uri, 'Next' ]);
+			$params[$name] = $maxpage;
+			$last->appendCreate('a', [
+				'href' => $this->formatQueryString($params).$opts['anchor'],
+				'title' => 'go to last page',
+				'⇥',
+			]);
 		} else {
-			$li->addClass('dummy')->appendCreate('span', 'Next');
+			$next->addClass('dummy')->appendCreate('span', '⇨');
+			$last->addClass('dummy')->appendCreate('span', '⇥');
 		}
 
 		return [ $offset, $p, $ol ];
