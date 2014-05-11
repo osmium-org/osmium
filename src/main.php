@@ -37,6 +37,10 @@ $p->head->appendCreate('link', [
 	'rel' => 'alternate',
 	'title' => 'Recently updated',
 ]);
+$p->head->appendCreate('link', [
+	'rel' => 'canonical',
+	'o-rel-href' => '/',
+]);
 
 
 

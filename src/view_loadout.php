@@ -161,9 +161,13 @@ if(count($fit['metadata']['tags']) > 0) {
 
 if(isset($fit['ship']['typename'])) {
 	$p->title .= ' / '.$fit['ship']['typename'].' fitting';
-}
-if($revision_overridden) {
-	$p->title .= ' (revision '.$revision.')';
+	if($loadoutid > 0) {
+		$p->title .= ' #'.$loadoutid;
+
+		if($revision_overridden) {
+			$p->title .= ' (revision '.$revision.')';
+		}
+	}
 }
 
 $p->index = $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
