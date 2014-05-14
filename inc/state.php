@@ -23,8 +23,8 @@ require __DIR__.'/state-fit.php';
 
 const MINIMUM_PASSWORD_ENTROPY = 40;
 
-/** Default expire duration for the token cookie. 7 days. */
-const COOKIE_AUTH_DURATION = 604800;
+/** Default expire duration for the token cookie. 14 days. */
+const COOKIE_AUTH_DURATION = 1209600;
 
 const CHARACTER_SHEET_ACCESS_MASK = 8;
 const CONTACT_LIST_ACCESS_MASK = 16;
@@ -70,14 +70,14 @@ function do_post_login($account_name, $use_cookie = false) {
 		$a['notwhitelisted'] = true;
 	}
 
-	session_id("Account-".$a['accountid']."-".session_id());
+	session_id('Account-'.$a['accountid'].'-'.get_nonce());
 	session_start();
 	$_SESSION['__osmium_state'] = array(
 		'a' => $a
 	);
 
 	if($use_cookie) {
-		$token = uniqid('Osmium_', true);
+		$token = get_nonce().'.'.(string)microtime(true);
 		$account_id = $a['accountid'];
 		$attributes = get_client_attributes();
 		$expiration_date = time() + COOKIE_AUTH_DURATION;
@@ -95,7 +95,7 @@ function do_post_login($account_name, $use_cookie = false) {
 		);
 
 		setcookie(
-			'Osmium', $token, $expiration_date,
+			'T', $token, $expiration_date,
 			\Osmium\get_ini_setting('relative_path'),
 			\Osmium\HOST,
 			\Osmium\HTTPS,
@@ -130,7 +130,7 @@ function logoff($global = false) {
 	}
 
 	setcookie(
-		'Osmium', false, 0,
+		'T', false, 0,
 		\Osmium\get_ini_setting('relative_path'),
 		\Osmium\HOST,
 		\Osmium\HTTPS,
@@ -160,12 +160,12 @@ function get_client_attributes() {
 		return 'CLI';
 	}
 
-	return hash('sha256', serialize(array(
+	return \Osmium\hashcode([
 		$_SERVER['REMOTE_ADDR'],
 		isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Unknown',
 		isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : 'Unknown',
 		$_SERVER['HTTP_HOST'],
-	)));
+	]);
 }
 
 /**
@@ -315,44 +315,35 @@ function try_login() {
  */
 function try_recover() {
 	if(is_logged_in()) return;
-
-	if(!isset($_COOKIE['Osmium']) || empty($_COOKIE['Osmium'])) return;
-	$token = $_COOKIE['Osmium'];
-	$now = time();
-	$login = false;
+	$token = isset($_COOKIE['T']) ? $_COOKIE['T'] : (isset($_COOKIE['Osmium']) ? $_COOKIE['Osmium'] : '');
+	if($token === '') return;
 
 	list($has_token) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
 		'SELECT COUNT(token) FROM osmium.cookietokens
 		WHERE token = $1 AND expirationdate >= $2',
-		array($token, $now)
+		array($token, time())
 	));
 
-	if($has_token == 1) {
-		list($account_id, $client_attributes) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'SELECT accountid, clientattributes
-			FROM osmium.cookietokens WHERE token = $1',
-			array($token)
+	if($has_token < 1) return;
+
+	list($account_id, $client_attributes) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT accountid, clientattributes
+		FROM osmium.cookietokens WHERE token = $1',
+		array($token)
+	));
+
+	if(check_client_attributes($client_attributes)) {
+		$k = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT accountname FROM osmium.accounts WHERE accountid = $1',
+			array($account_id)
 		));
-
-		if(check_client_attributes($client_attributes)) {
-			$k = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-				'SELECT accountname FROM osmium.accounts WHERE accountid = $1',
-				array($account_id)
-			));
-			if($k !== false) {
-				list($name) = $k;
-				do_post_login($name, true);
-				$login = true;
-			}
+		if($k !== false) {
+			list($name) = $k;
+			do_post_login($name, true);
 		}
-
-		\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', array($token));
 	}
 
-	if(!$login) {
-		/* XXX */
-		//logoff(false); /* Delete that erroneous cookie */
-	}
+	\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', array($token));
 }
 
 /**

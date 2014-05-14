@@ -82,7 +82,7 @@ if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 if(isset($_SERVER['REMOTE_ADDR'])) {
 	session_set_cookie_params(0, get_ini_setting('relative_path'), HOST, HTTPS, true);
 	session_save_path(CACHE_DIRECTORY);
-	session_name("SID");
+	session_name("O");
 	session_start();
 }
 

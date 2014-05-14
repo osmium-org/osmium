@@ -9,6 +9,7 @@ require __DIR__.'/../inc/cron.php';
 \Osmium\Cron\run(
 	'cron.daily',
 	function() {
+		passthru('./bin/prune_database');
 		passthru('make update-charinfo');
 		passthru('./bin/reindex_loadouts');
 		passthru('./bin/make_sitemap');
