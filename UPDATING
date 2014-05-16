@@ -2,7 +2,8 @@ staging
 =======
 
 The [sysv] and [auth] sections have been added to config.ini. The
-uacontact setting has been added in [branding].
+uacontact setting has been added in [branding]. Two trust_x_* have
+been added in [osmium].
 
 Some changes have been made to the example robots.txt.
 

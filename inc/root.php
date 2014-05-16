@@ -22,6 +22,24 @@ if(!defined('Osmium\ROOT')) {
 	require __DIR__.'/dispatchroot.php';
 }
 
+if(get_ini_setting('trust_x_forwarded_for') && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+	/* XXX: first entry or last? */
+	$_SERVER['REMOTE_ADDR'] = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+}
+
+if(get_ini_setting('trust_x_forwarded_proto')) {
+	define(
+		__NAMESPACE__.'\HTTPS',
+		isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+		&& stripos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false
+	);
+} else {
+	define(
+		__NAMESPACE__.'\HTTPS',
+		isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
+	);
+}
+
 if(!get_ini_setting('tolerate_errors') && PHP_SAPI !== "cli") {
 	ob_start();
 	error_reporting(-1);

@@ -25,10 +25,7 @@ define(__NAMESPACE__.'\T0', microtime(true));
 define(__NAMESPACE__.'\ROOT', realpath(__DIR__.'/../'));
 define(__NAMESPACE__.'\INI_CONFIGURATION_FILE', ROOT.'/config.ini');
 
-define(
-	__NAMESPACE__.'\HTTPS',
-	isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-);
+
 
 /* Also used in try_get_fit_from_remote_format() */
 const PUBLIC_LOADOUT_RULE = '%^/loadout/(?<loadoutid>[1-9][0-9]*)(R(?<revision>[1-9][0-9]*))?(P(?<preset>[0-9]+))?(C(?<chargepreset>[0-9]+))?(D(?<dronepreset>[0-9]+))?(/booster/(?<fleet>(fleet|wing|squad)))?(/remote/(?<remote>.+))?$%D';
@@ -112,11 +109,8 @@ function curl_init_branded() {
 	$c = call_user_func_array('\curl_init', func_get_args());
 	$cver = curl_version();
 	$over = ltrim(get_osmium_version(), 'v');
-	$pver = phpversion();
-	$kern = trim(shell_exec('uname'));
-	$kver = trim(shell_exec('uname -r'));
 	$contact = get_ini_setting('uacontact');
-	curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} ({$kern}/{$kver}; PHP/{$pver}; libcurl/{$cver['version']}; {$cver['ssl_version']}; {$contact})");
+	curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} (curl/{$cver['version']}; {$contact})");
 	return $c;
 }
 

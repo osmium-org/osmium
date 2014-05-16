@@ -1,20 +1,24 @@
 /* This is a suggestion for a Varnish configuration if you decide to *
  * use Varnish. Tweak to your liking. */
 
+/* For varnish 4 users: uncomment the line below and replace all
+ * "remove" commands by "unset". */
+/*vcl 4.0;*/
+
 backend default {
 		.host = "127.0.0.1";
 		.port = "81";
 }
 
 sub vcl_recv {
-	/* Transfer the original client IP to X-Forwarded-For. Osmium
-	 * won't use X-Forwarded-For, so you have to configure your
-	 * webserver to translate X-Forwarded-For to something that will
-	 * show up in $_SERVER['REMOTE_ADDR']. For lighttpd, you can use
-	 * mod_extforward. */
+	/* Transfer the original client IP to X-Forwarded-For. Use this if
+	 * varnish is the proxy that communicates with the actual
+	 * clients. You will have to change the trust_x_forwarded_for
+	 * setting in config.ini to On. */
 	remove req.http.X-Forwarded-For;
 	set req.http.X-Forwarded-For = client.ip;
 
+	/* For varnish 4 users, replace req.request by req.method. */
 	if(req.request != "GET" && req.request != "HEAD") {
 		return(pass);
 	}
@@ -43,9 +47,11 @@ sub vcl_recv {
 		error 750 "Moved Temporarily";
 	}
 
-	return(lookup);    
+	/* For varnish 4 users, use return(hash); instead. */
+	return(lookup);
 }
 
+/* For varnish 4 users, this is called vcl_backend_response, not vcl_fetch. */
 sub vcl_fetch {
 	unset beresp.http.Server;
 
