@@ -98,21 +98,19 @@ class Page extends RawPage {
 
 		$name = 'js.'.implode('.', ($snippets === [ 'common' ] ? $snippets : array_slice($snippets, 1)));
 		$cacheminfile = \Osmium\ROOT.'/static'.($finaluri = '/cache/'.$name.'.min.js');
-		$before = \Osmium\State\get_cache_memory_fb($bname = $name.'.before', null);
-		$after = \Osmium\State\get_cache_memory_fb($aname = $name.'.after', null);
+		$meta = \Osmium\State\get_cache_memory_fb($metaname = $name.'.meta', null);
 
-		if(!file_exists($cacheminfile) || $before === null || $after === null) {
+		if(!file_exists($cacheminfile) || $meta === null) {
 			$sem = \Osmium\State\semaphore_acquire('snippet.'.$name);
 
 			/* Maybe another process already made the file while
 			 * waiting for the semaphore? */
 			clearstatcache(true, $cacheminfile);
 			if($hassnippet = file_exists($cacheminfile)) {
-				$before = \Osmium\State\get_cache_memory_fb($bname, null);
-				$after = \Osmium\State\get_cache_memory_fb($aname, null);
+				$meta = \Osmium\State\get_cache_memory_fb($metaname, null);
 			}
 
-			if(!$hassnippet || $before === null || $after === null) {
+			if(!$hassnippet || $meta === null) {
 				/* This is a fairly expensive operation (especially if the
 				 * output is piped in a minifier), hence the
 				 * semaphores. */
@@ -121,29 +119,36 @@ class Page extends RawPage {
 					$snippets,
 					\Osmium\ROOT.'/static/cache/'.$name.'.js',
 					$cacheminfile,
-					$before, $after /* Passed by reference */
+					$meta /* Passed by reference */
 				);
-				\Osmium\State\put_cache_memory_fb($bname, $before, 86400);
-				\Osmium\State\put_cache_memory_fb($aname, $after, 86400);
+				\Osmium\State\put_cache_memory_fb($metaname, $meta, 86400);
 			}
 
 			\Osmium\State\semaphore_release($sem);
 		}
 
-		$this->body->append($this->fragment($before));
+		if(isset($meta['head']) && $meta['head'] !== '') {
+			$this->head->append($this->fragment($meta['head']));
+		}
+		if(isset($meta['before']) && $meta['before'] !== '') {
+			$this->body->append($this->fragment($meta['before']));
+		}
 		$this->body->appendCreate('script', [
 			'type' => 'application/javascript',
 			'id' => 'snippets',
 			'o-static-js-src' => $finaluri,
 		]);
-		$this->body->append($this->fragment($after));
+		if(isset($meta['after']) && $meta['after'] !== '') {
+			$this->body->append($this->fragment($meta['after']));
+		}
 	}
 
 	/* @internal */
-	private function compileSnippets(RenderContext $ctx, array $snippets, $out, $minout, &$before, &$after) {
+	private function compileSnippets(RenderContext $ctx, array $snippets, $out, $minout, &$meta = []) {
 		$hasit = [];
-		$before = '';
-		$after = '';
+		$meta['before'] = '';
+		$meta['after'] = '';
+		$meta['head'] = '';
 		$c = count($snippets);
 
 		do {
@@ -159,7 +164,7 @@ class Page extends RawPage {
 				}
 
 				preg_match_all(
-					'%^/\*<<<\s+require\s+(?<type>snippet|external)\s+(?<src>.+?)(\s+(?<position>first|last|before|after|anywhere))?\s+>>>\*/$%m',
+					'%^/\*<<<\s+require\s+(?<type>snippet|external|css)\s+(?<src>.+?)(\s+(?<position>first|last|before|after|anywhere))?\s+>>>\*/$%m',
 					file_get_contents($sfile),
 					$matches,
 					\PREG_SET_ORDER
@@ -187,7 +192,7 @@ class Page extends RawPage {
 						continue;
 					}
 
-					if($m['type'] === 'external') {
+					if($m['type'] === 'external' || $m['type'] === 'css') {
 						$hasit[$m['src']] = true;
 
 					    if(
@@ -198,31 +203,46 @@ class Page extends RawPage {
 						    $m['src'] = $ctx->relative.$m['src'];
 					    }
 
-						$scriptxml = $this->element('script', [
-							'type' => 'application/javascript',
-							'src' => $m['src'],
-						])->renderNode();
+					    if($m['type'] === 'css') {
+						    $xml = $this->element('link', [
+							    'rel' => 'stylesheet',
+							    'type' => 'text/css',
+							    'href' => $m['src'],
+						    ])->renderNode();
+						    $before =& $meta['head'];
+						    $after =& $meta['head'];
+					    } else if($m['type'] === 'external') {
+						    $xml = $this->element('script', [
+							    'type' => 'application/javascript',
+							    'src' => $m['src'],
+						    ])->renderNode();
+						    $before =& $meta['before'];
+						    $after =& $meta['after'];
+					    }
 
 						switch($m['position']) {
 
 						case 'before':
 						case 'anywhere':
-							$before .= $scriptxml;
+							$before .= $xml;
 							break;
 
 						case 'after':
-							$after = $scriptxml.$after;
+							$after = $xml.$after;
 							break;
 
 						case 'first':
-							$before = $scriptxml.$before;
+							$before = $xml.$before;
 							break;
 
 						case 'last':
-							$after .= $scriptxml;
+							$after .= $xml;
 							break;
 
 						}
+
+						unset($before);
+						unset($after);
 
 						continue;
 					}

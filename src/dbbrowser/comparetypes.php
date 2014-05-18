@@ -327,11 +327,4 @@ $p->index = false;
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '../../..';
 $p->finalize($ctx);
-
-$p->head->appendCreate('link', [
-	'href' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css',
-	'rel' => 'stylesheet',
-	'type' => 'text/css',
-]);
-
 $p->render($ctx);

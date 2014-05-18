@@ -206,12 +206,6 @@ $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';
 $p->index = false;
 
-$p->head->appendCreate('link', [
-	'href' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css',
-	'rel' => 'stylesheet',
-	'type' => 'text/css',
-]);
-
 if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid'] > 0) {
 	$p->title = 'Editing loadout #'.$fit['metadata']['loadoutid'];
 	$p->content
