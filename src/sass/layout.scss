@@ -448,23 +448,8 @@ body > div#modal {
 	z-index: 70001;
 	background-color: $modal-bg-color;
 	background-clip: padding-box;
-	overflow: auto;
+	overflow: hidden;
 
-	&> a#closemodal {
-		position: absolute;
-		top: 0.25em;
-		right: 0.25em;
-		z-index: 70002;
-		color: $close-modal-text-color;
-		border: 1px solid $close-modal-border-color;
-		font-weight: bold;
-		width: 1.5em;
-		height: 1.5em;
-		line-height: 1.5em;
-		display: block;
-		text-align: center;
-		background-color: $close-modal-bg-color;
-	}
 
 	&> header:first-child {
 		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);
