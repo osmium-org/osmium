@@ -186,12 +186,16 @@ function get_synonyms($name) {
 
 	$name = str_replace(
 		array(
+			'Autocannon',
+			'AutoCannon',
 			'Afterburner',
 			'Microwarpdrive',
 			'Low-grade',
 			'Smartbomb',
 			),
 		array(
+			'AC',
+			'AC',
 			'AB',
 			'MWD',
 			'LG',

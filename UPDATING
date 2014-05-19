@@ -13,6 +13,13 @@ hashes, you should run `./bin/rehash_fittings`.
 
 Private loadouts are now indexed; you should run `make reindex-loadouts`.
 
+The type index has changed:
+
+* stop sphinx-searchd;
+* delete all types.* files;
+* run `sphinx-indexer osmium_types`;
+* start sphinx-searchd.
+
 v0.12.1, released 2014-04-28
 ============================
 

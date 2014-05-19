@@ -295,6 +295,7 @@ $searchexamples = array(
 	'cn bcs', 'med cdfe', 'rcu 2', '1mn mwd',
 	'fn web', 'c-type aif', 'eanm ii', 'pds',
 	'mjd', 'rf disru', 'pwnage', 'tachyon ii',
+	'425mm ac',
 
 	/* Ship synonyms */
 	'sni', 'rni', 'sfi', 'pirate frig',
