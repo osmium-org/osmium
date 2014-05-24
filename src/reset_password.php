@@ -22,7 +22,7 @@ require __DIR__.'/../inc/root.php';
 require \Osmium\ROOT.'/inc/login-common.php';
 
 $p = new \Osmium\DOM\Page();
-$p->title = 'Reset password';
+$p->title = 'Reset passphrase';
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '.';
 
@@ -58,7 +58,7 @@ if(isset($_POST['key_id'])) {
 		} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
 			$p->formerrors['password_0'][] = $s;
 		} else if($pw !== $pw1) {
-			$p->formerrors['password_1'][] = 'The two passwords are not equal.';
+			$p->formerrors['password_1'][] = 'The two passphrases are not equal.';
 		} else {
 			$hash = \Osmium\State\hash_password($pw);
 
@@ -68,16 +68,16 @@ if(isset($_POST['key_id'])) {
 			);
 
 			$p->content->appendCreate('p.notice_box', [
-				'Password reset was successful. You can now login on the account ',
+				'Passphrase reset was successful. You can now login on the account ',
 				[ 'strong', $a['accountname'] ],
-				' using your new password.',
+				' using your new passphrase.',
 			]);
 		}
 	}
 }
 
 $p->content->appendCreate('p')->append([
-	'If you forgot the password of your API-verified account, you can reset it by re-entering the API key associated with your account below.',
+	'If you forgot the passphrase of your API-verified account, you can reset it by re-entering the API key associated with your account below.',
 	[ 'br' ],
 	'You can see a list of your API keys here: ',
 	[ 'strong', [[ 'a', [ 'href' => 'https://support.eveonline.com/api', 'https://support.eveonline.com/api' ] ]] ]
@@ -94,8 +94,12 @@ $tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
 
 $tbody->append($p->makeFormSeparatorRow());
 
-$tbody->append($p->makeFormInputRow('password', 'password_0', 'New password'));
-$tbody->append($p->makeFormInputRow('password', 'password_1', 'New password (confirm)'));
+$tbody->append($p->makeFormInputRow('password', 'password_0', 'New passphrase'));
+$tbody->append($p->makeFormInputRow('password', 'password_1', [
+	'New passphrase',
+	[ 'br' ],
+	[ 'small', '(confirm)' ],
+]));
 
 $tbody->append($p->makeFormSubmitRow('Check API key'));
 

@@ -59,7 +59,7 @@ if(isset($_POST['account_name'])) {
 	} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
 		$p->formerrors['password_0'][] = $s;
 	} else if($pw !== $pw1) {
-		$p->formerrors['password_1'][] = 'The two passwords did not match.';
+		$p->formerrors['password_1'][] = 'The two passphrases do not match.';
 	} else {
 		$hash = \Osmium\State\hash_password($pw);
 
@@ -98,9 +98,9 @@ if(isset($_POST['account_name'])) {
 	}
 }
 
-$p->title = 'Account creation';
+$p->title = 'Sign up: create an account';
 
-$p->content->appendCreate('h1', 'Account creation');
+$p->content->appendCreate('h1', $p->title);
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
 if(\Osmium\get_ini_setting('whitelist')) {
@@ -138,15 +138,15 @@ $tbody->append($p->makeFormInputRow(
 
 $tbody->append($p->makeFormSeparatorRow());
 
-$tbody->append($p->makeFormInputRow('password', 'password_0', 'Password'));
+$tbody->append($p->makeFormInputRow('password', 'password_0', 'Passphrase'));
 $tbody->append($p->makeFormInputRow(
 	'password', 'password_1',
-	[ 'Password', [ 'br' ], [ 'small', '(confirm)' ] ]
+	[ 'Passphrase', [ 'br' ], [ 'small', '(confirm)' ] ]
 ));
 
 $tbody->append($p->makeFormSeparatorRow());
 
-$tbody->append($p->makeFormSubmitRow('Create account'));
+$tbody->append($p->makeFormSubmitRow('Sign up'));
 
 
 $ctx = new \Osmium\DOM\RenderContext();

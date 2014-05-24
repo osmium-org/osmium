@@ -745,7 +745,6 @@ class Page extends RawPage {
 			}
 
 			$p->append([
-				[ 'span', [ 'class' => 'wide' , 'Logged in as ' ] ],
 				$portrait,
 				' ',
 				[ 'strong', $this->makeAccountLink($a) ],
@@ -763,12 +762,13 @@ class Page extends RawPage {
 					(string)$ncount
 				]],
 				' ',
-				[ 'a', [ 'o-rel-href' => '/logout/'.$tok, 'Logout' ] ],
+				[ 'a', [ 'o-rel-href' => '/logout/'.$tok, 'Sign out' ] ],
 				' ',
 				[ 'small', [
 					'(',
 					[ 'a', [
 						'o-rel-href' => '/logout/'.$tok.self::formatQueryString([ 'global' => '1' ]),
+						'title' => 'Terminate all my sessions, even on other computers or browsers',
 						'all',
 					]],
 					')',
@@ -803,13 +803,13 @@ class Page extends RawPage {
 			$wide->appendCreate('input', [
 				'type' => 'password',
 				'name' => 'password',
-				'placeholder' => 'Password',
+				'placeholder' => 'Passphrase',
 			]);
 			$wide->append(' ');
 			$wide->appendCreate('input', [
 				'type' => 'submit',
 				'name' => '__osmium_login',
-				'value' => 'Login',
+				'value' => 'Sign in',
 			]);
 			$wide->append([
 				' (',
@@ -824,12 +824,12 @@ class Page extends RawPage {
 			]);
 
 			$narrow = $this->element('span', [ 'class' => 'narrow' ]);
-			$narrow->appendCreate('a', [ 'o-rel-href' => '/login', 'Login' ]);
+			$narrow->appendCreate('a', [ 'o-rel-href' => '/login', 'Sign in' ]);
 
 			$p = $form->appendCreate('p', [ $wide, $narrow ]);
 
 			if(\Osmium\get_ini_setting('registration_enabled')) {
-				$reglink = [ 'a', [ 'o-rel-href' => '/register', 'Register' ] ];
+				$reglink = [ 'a', [ 'o-rel-href' => '/register', [ 'strong', 'Sign up' ] ] ];
 				$requri = [ 'input', [
 					'type' => 'hidden',
 					'name' => 'request_uri',

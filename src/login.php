@@ -30,7 +30,7 @@ if(\Osmium\State\is_logged_in()) {
 }
 
 $p = new \Osmium\DOM\Page();
-$p->title = 'Login';
+$p->title = 'Sign in';
 
 if(isset($_POST['__osmium_login'])) {
 	if(($errormsg = \Osmium\State\try_login()) === true) {
@@ -42,7 +42,7 @@ if(isset($_POST['__osmium_login'])) {
 	$p->formerrors['password'][] = '';
 }
 
-$p->content->appendCreate('h1', 'Login');
+$p->content->appendCreate('h1', $p->title);
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
 $tbody = $p->content->appendCreate('o-form', [
@@ -50,34 +50,19 @@ $tbody = $p->content->appendCreate('o-form', [
 	'method' => 'post',
 ])->appendCreate('table')->appendCreate('tbody');
 
-if($redirect !== './') {
+if(isset($_GET['m']) && $_GET['m']) {
 	$tbody->appendCreate('tr')
 		->appendCreate('td', [ 'colspan' => '2' ])
 		->appendCreate('p', [
 			'class' => 'error_box',
-			'You need to log in to access ',
+			'You need to sign in to access ',
 			[ 'strong', [[ 'code', $redirect ]] ],
 			'.',
 		]);
 }
 
-$tbody->appendCreate('tr')->append([
-	[ 'th', [[ 'label', [ 'for' => 'account_name', 'Account name' ] ]] ],
-	[ 'td', [[ 'o-input', [
-		'type' => 'text',
-		'name' => 'account_name',
-		'id' => 'account_name',
-	]]]],
-]);
-
-$tbody->appendCreate('tr')->append([
-	[ 'th', [[ 'label', [ 'for' => 'password', 'Password' ] ]] ],
-	[ 'td', [[ 'o-input', [
-		'type' => 'password',
-		'name' => 'password',
-		'id' => 'password',
-	]]]],
-]);
+$tbody->append($p->makeFormInputRow('o-input', 'account_name', 'Account name'));
+$tbody->append($p->makeFormInputRow('password', 'password', 'Passphrase'));
 
 $tbody->appendCreate('tr')->append([
 	[ 'th' ], [ 'td', [
@@ -86,11 +71,9 @@ $tbody->appendCreate('tr')->append([
 	]],
 ]);
 
-$tbody->appendCreate('tr')->append([
-	[ 'th' ], [ 'td', [
-		[ 'o-input', [ 'type' => 'submit', 'name' => '__osmium_login', 'value' => 'Login' ] ],
-	]],
-]);
+$tbody->append($p->makeFormSubmitRow('Sign in'));
+
+
 
 $p->content->appendCreate('h1', 'Other actions');
 $ul = $p->content->appendCreate('ul');
@@ -98,14 +81,14 @@ $ul = $p->content->appendCreate('ul');
 if(\Osmium\get_ini_setting('registration_enabled')) {
 	$ul->appendCreate('li', [
 		'Don\'t have an account yet? ',
-		[ 'a', [ 'o-rel-href' => '/register', 'Create one.' ] ],
-		' It takes less than a minute.',
+		[ 'a', [ 'o-rel-href' => '/register', 'Sign up.' ] ],
+		' It\'s free and takes less than a minute.',
 	]);
 }
 
 $ul->appendCreate('li', [
-	'Forgot your password? ',
-	[ 'a', [ 'o-rel-href' => '/resetpassword', 'Reset your password.' ] ],
+	'Forgot your passphrase? ',
+	[ 'a', [ 'o-rel-href' => '/resetpassword', 'Reset your passphrase.' ] ],
 ]);
 
 

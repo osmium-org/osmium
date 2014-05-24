@@ -214,7 +214,7 @@ function is_password_sane($pw) {
 	$entropy = strlen($pw) * log(max(1, $choices)) / log(2);
 
 	if($entropy < MINIMUM_PASSWORD_ENTROPY) {
-		return "This password is too weak (score: ".round($entropy, 2).", needs at least ".MINIMUM_PASSWORD_ENTROPY."). Try a longer password, or try adding symbols, numbers, or mixed case letters.";
+		return "This passphrase is too weak (score: ".round($entropy, 2).", needs at least ".MINIMUM_PASSWORD_ENTROPY."). Try a longer passphrase, or try adding symbols, numbers, or mixed case letters.";
 	}
 
 	return true;
@@ -305,7 +305,7 @@ function try_login() {
 		do_post_login($account_name, $remember);
 		return true;
 	} else {
-		return 'Invalid credentials. Please check your account name and password.';
+		return 'Invalid credentials. Please check your account name and passphrase.';
 	}
 }
 
@@ -740,7 +740,10 @@ function assume_logged_in() {
 	header(
 		'Location: '
 		.rtrim(\Osmium\get_ini_setting('relative_path'), '/')
-		.'/login?r='.urlencode($_SERVER['REQUEST_URI']),
+		.'/login'.\Osmium\DOM\Page::formatQueryString([
+			'r' => $_SERVER['REQUEST_URI'],
+			'm' => 1,
+		]),
 		true, 303
 	);
 	die();

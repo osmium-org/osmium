@@ -29,7 +29,7 @@ function make_https_warning(\Osmium\DOM\RawPage $d) {
 	$p->append([
 		[ 'strong', 'You are not using HTTPS.' ],
 		[ 'br' ],
-		'Your login credentials (and your session token) will be sent in plaintext over the network.',
+		'Your account credentials (and your session token) will be sent in plaintext over the network.',
 		[ 'br' ],
 		[ 'a', [
 			'href' => 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],

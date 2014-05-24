@@ -75,21 +75,21 @@ if(isset($_POST['key_id'])) {
 $div = $p->content->appendCreate('div#account_settings');
 
 $ul = $div->appendCreate('ul.tindex');
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changepw', 'Change password' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changepw', 'Change passphrase' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_characters', 'Characters and skills' ]);
 
 
 
 $section = $div->appendCreate('section#s_changepw');
-$section->appendCreate('h1', 'Change password');
+$section->appendCreate('h1', 'Change passphrase');
 
 if(isset($_POST['curpw'])) {
 	$cur = $_POST['curpw'];
 	$new = $_POST['newpw'];
 
 	if($new !== $_POST['newpw2']) {
-		$p->formerrors['newpw2'][] = 'The two passwords are not equal.';
+		$p->formerrors['newpw2'][] = 'The two passphrases are not equal.';
 	} else if(($s = \Osmium\State\is_password_sane($new)) !== true) {
 		$p->formerrors['newpw'][] = $s;
 	} else {
@@ -104,8 +104,8 @@ if(isset($_POST['curpw'])) {
 
 		if(!\Osmium\State\check_password($cur, $apw)) {
 			$p->formerrors['curpw'][] = [
-				'Incorrect password. If you forgot your password, log out and use the ',
-				[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset password' ] ],
+				'Incorrect passphrase. If you forgot your passphrase, sign out and use the ',
+				[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset passphrase' ] ],
 				' page.',
 			];
 		} else {
@@ -116,7 +116,7 @@ if(isset($_POST['curpw'])) {
 				array($newhash, $accountid)
 			);
 
-			$section->appendCreate('p.notice_box', 'Password was successfully changed.');
+			$section->appendCreate('p.notice_box', 'Passphrase was successfully changed.');
 		}
 	}
 }
@@ -127,10 +127,14 @@ $tbody = $section
 	->appendCreate('tbody')
 	;
 
-$tbody->append($p->makeFormInputRow('password', 'curpw', 'Current password'));
-$tbody->append($p->makeFormInputRow('password', 'newpw', 'New password'));
-$tbody->append($p->makeFormInputRow('password', 'newpw2', 'New password (confirm)'));
-$tbody->append($p->makeFormSubmitRow('Update password'));
+$tbody->append($p->makeFormInputRow('password', 'curpw', 'Current passphrase'));
+$tbody->append($p->makeFormInputRow('password', 'newpw', 'New passphrase'));
+$tbody->append($p->makeFormInputRow('password', 'newpw2', [
+	'New passphrase',
+	[ 'br' ],
+	[ 'small', '(confirm)' ],
+]));
+$tbody->append($p->makeFormSubmitRow('Update passphrase'));
 
 
 
@@ -164,7 +168,7 @@ if($a['apiverified'] === 't') {
 	$ul = $section->appendCreate('ul');
 	$ul->appendCreate('li', 'Share loadouts with your corporation or alliance, and access corporation or alliance-restricted loadouts;');
 	$ul->appendCreate('li', 'Have your character name used instead of your nickname;');
-	$ul->appendCreate('li', 'Reset your password if you ever forget it.');
+	$ul->appendCreate('li', 'Reset your passphrase if you ever forget it.');
 }
 
 $section->appendCreate('h2', 'API credentials');
