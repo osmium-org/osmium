@@ -76,6 +76,10 @@ div#dbb {
 			&.memberof:before {
 				content: "∋";
 			}
+
+			&.related:before {
+				content: "⇜";
+			}
 		}
 	}
 

@@ -26,13 +26,16 @@ const MAX_ATTRIBS = 50;
 $p = new \Osmium\DOM\Page();
 
 
+/* XXX: refactor navigation code, very similar to the one in type.php */
 
 if($_GET['groupid'] > 0) {
-	$gn = \Osmium\Db\fetch_row(
+	$gid = (int)$_GET['groupid'];
+	$gn = \Osmium\Db\fetch_assoc(
 		\Osmium\Db\query_params(
-			'SELECT groupname FROM eve.invgroups
-			WHERE groupid = $1',
-			array($_GET['groupid'])
+			'SELECT ig.groupname, ic.categoryid, ic.categoryname FROM eve.invgroups ig
+			LEFT JOIN eve.invcategories ic ON ic.categoryid = ig.categoryid
+			WHERE ig.groupid = $1',
+			array($gid)
 		)
 	);
 	if($gn === false) \Osmium\fatal(404);
@@ -44,27 +47,63 @@ if($_GET['groupid'] > 0) {
 		WHERE groupid = $1 AND published = true
 		ORDER BY typename ASC
 		LIMIT '.MAX_TYPES,
-		[ $_GET['groupid'] ]
+		[ $gid ]
 	);
 	while($t = \Osmium\Db\fetch_row($tq)) {
 		$typeids[] = $t[0];
 	}
 
-	$p->title = 'Compare group: '.$gn[0];
+	$p->title = 'Compare group: '.$gn['groupname'];
+
+	if($gn['categoryid'] !== null) {
+		$nav = $p->createElement('nav');
+		$ul = $nav->appendCreate('ul');
+		$ul->appendCreate('li', [
+			[ 'a', [ 'o-rel-href' => '/db/category/'.$gn['categoryid'], $gn['categoryname'] ] ]
+		]);
+		$ul->appendCreate('li', [
+			[ 'a', [ 'o-rel-href' => '/db/group/'.$gid, $gn['groupname'] ] ]
+		]);
+		$ul->appendCreate('li', [ 'class' => 'lst related', 'Compare contents' ]);
+	}
 
 } else if($_GET['marketgroupid'] > 0) {
-	$mgn = \Osmium\Db\fetch_row(
+	$mg = \Osmium\Db\fetch_assoc(
 		\Osmium\Db\query_params(
-			'SELECT mg1.marketgroupname AS mgname1, mg0.marketgroupname AS mgname0
+			'SELECT
+			mg4.marketgroupid AS mgid4, mg4.marketgroupname AS mgname4,
+			mg3.marketgroupid AS mgid3, mg3.marketgroupname AS mgname3,
+			mg2.marketgroupid AS mgid2, mg2.marketgroupname AS mgname2,
+			mg1.marketgroupid AS mgid1, mg1.marketgroupname AS mgname1,
+			mg0.marketgroupid AS mgid0, mg0.marketgroupname AS mgname0
 			FROM eve.invmarketgroups mg0
 			LEFT JOIN eve.invmarketgroups mg1 ON mg1.marketgroupid = mg0.parentgroupid
+			LEFT JOIN eve.invmarketgroups mg2 ON mg2.marketgroupid = mg1.parentgroupid
+			LEFT JOIN eve.invmarketgroups mg3 ON mg2.marketgroupid = mg2.parentgroupid
+			LEFT JOIN eve.invmarketgroups mg4 ON mg2.marketgroupid = mg3.parentgroupid
 			WHERE mg0.marketgroupid = $1',
 			array($_GET['marketgroupid'])
 		)
 	);
-	if($mgn === false) \Osmium\fatal(404);
-	$mgn = implode(', ', array_filter($mgn));
+	if($mg === false) \Osmium\fatal(404);
+	$mgn = implode(', ', array_filter([
+		$mg['mgname4'], $mg['mgname3'],
+		$mg['mgname2'], $mg['mgname1'],
+		$mg['mgname0'],
+	]));
 	$p->title = 'Compare market group: '.$mgn;
+	$title = 'Compare market group: '.$mg['mgname0'];
+
+	$nav = $p->createElement('nav');
+	$ul = $nav->appendCreate('ul');
+	for($i = 4; $i >= 0; --$i) {
+		if($mg['mgid'.$i] !== null) {
+			$ul->appendCreate('li', [
+				[ 'a', [ 'o-rel-href' => '/db/marketgroup/'.$mg['mgid'.$i], $mg['mgname'.$i] ] ]
+			]);
+		}
+	}
+	$ul->appendCreate('li', [ 'class' => 'lst related', 'Compare contents' ]);
 
 	$typeids = [];
 	$tq = \Osmium\Db\query_params(
@@ -80,17 +119,36 @@ if($_GET['groupid'] > 0) {
 	}
 
 } else if($_GET['typeid'] > 0) {
+	$tid = (int)$_GET['typeid'];
 	$typeids = [];
 	$vq = \Osmium\Db\query_params(
 		'SELECT vartypeid
 		FROM osmium.invtypevariations
 		WHERE typeid = $1
 		ORDER BY varml ASC',
-		array($_GET['typeid'])
+		array($tid)
 	);
 	while($row = \Osmium\Db\fetch_row($vq)) $typeids[] = $row[0];
 
-	$p->title = 'Compare variations of '.\Osmium\Fit\get_typename($_GET['typeid']);
+	$type = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT it.typename, ig.groupid, ig.groupname, ic.categoryid, ic.categoryname
+		FROM eve.invtypes it
+		LEFT JOIN eve.invgroups ig ON ig.groupid = it.groupid
+		LEFT JOIN eve.invcategories ic ON ic.categoryid = ig.categoryid
+		WHERE it.typeid = $1',
+		array($tid)
+	));
+
+	$nav = $p->createElement('nav');
+	$ul = $nav->appendCreate('ul');
+	$ul->append([
+		[ 'li', [ [ 'a', [ 'o-rel-href' => '/db/category/'.$type['categoryid'], $type['categoryname'] ] ] ] ],
+		[ 'li', [ [ 'a', [ 'o-rel-href' => '/db/group/'.$type['groupid'], $type['groupname'] ] ] ] ],
+		[ 'li.memberof', [ [ 'a', [ 'o-rel-href' => '/db/type/'.$tid, $type['typename'] ] ] ] ],
+		[ 'li.lst.related', 'Compare variations' ],
+	]);
+
+	$p->title = 'Compare variations of '.$type['typename'];
 
 
 } else {
@@ -102,7 +160,8 @@ if($_GET['groupid'] > 0) {
 		}
 	}
 
-	$p->title = 'Compare types';
+	$p->title = 'Compare types '.implode(', ', $typeids);
+	$title = 'Compare types';
 }
 
 $tlist = implode(',', $typeids);
@@ -154,7 +213,8 @@ foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
 
 
 $dbb = $p->content->appendCreate('div', [ 'id' => 'dbb', 'class' => 'compare' ]);
-$dbb->appendCreate('header')->appendCreate('h2', $p->title);
+$dbb->appendCreate('header')->appendCreate('h2', isset($title) ? $title : $p->title);
+if(isset($nav)) $dbb->append($nav);
 
 
 
