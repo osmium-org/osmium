@@ -1,6 +1,6 @@
 THEMES=dark light
 
-default: themes static/cache/clientdata.json cache/OsmiumCache_top_kills
+default: themes static/cache/clientdata.json cache/OsmiumCache_top_kills static/cache/sitemap-root.xml.gz
 
 themes: $(addprefix static/, $(addsuffix .css, $(THEMES))) static/fatal.css
 
@@ -13,23 +13,26 @@ static/%.css: src/sass/themes/%.scss src/sass/*.scss
 static/cache/clientdata.json:
 	./bin/make_static_client_data
 
+static/cache/sitemap-root.xml.gz:
+	./bin/make_sitemap
+
 cache/OsmiumCache_top_kills:
 	./bin/cache_top_kills
 
 tests:
-	@make -s clear-harmless-cache
+	@$(MAKE) -s clear-harmless-cache
 	phpunit --exclude-group expensive,database
 
 db-tests:
-	@make -s clear-harmless-cache
+	@$(MAKE) -s clear-harmless-cache
 	phpunit --group database
 
 all-tests:
-	@make -s clear-harmless-cache
+	@$(MAKE) -s clear-harmless-cache
 	phpunit
 
 test-coverage:
-	@make -s clear-harmless-cache
+	@$(MAKE) -s clear-harmless-cache
 	phpunit --coverage-html tests/coverage
 
 tags:
@@ -38,7 +41,7 @@ tags:
 clear-harmless-cache:
 	find ./cache -maxdepth 1 -type f -not \( -name ".empty_file" -or -name "API_*" -or -name "sess_*" \) -delete
 	find ./static/cache -maxdepth 1 -type f -not -name ".empty_file" -delete
-	make
+	$(MAKE)
 
 clear-api-cache:
 	find ./cache -name "API_*" -delete
