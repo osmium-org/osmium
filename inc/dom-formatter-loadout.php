@@ -28,7 +28,7 @@ trait LoadoutFormatter {
 		}
 
 		return $this->element('div', [ 'class' => 'ship-icon' ])->append([
-			[ 'o-eve-img', [ 'src' => '/Render/'.$typeid.'_256.png', 'title' => $typename, 'alt' => $typename ] ],
+			[ 'o-eve-img', [ 'src' => '/Render/'.$typeid.'_128.png', 'title' => $typename, 'alt' => $typename ] ],
 			[ 'span', [ 'class' => 'name', $typename ] ],
 		]);
 	}
