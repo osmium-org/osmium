@@ -13,6 +13,7 @@ div#vprofile {
 
 		&> p > a > img {
 			width: $portrait-width / 2;
+			border-radius: 1em;
 		}
 
 		&> p > a:first-child > img {

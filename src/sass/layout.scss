@@ -248,6 +248,8 @@ div#wrapper > nav:first-child {
 
 		&> p > img {
 			height: 2em;
+
+			&.portrait { border-radius: .25em; }
 		}
 
 		&> form > p.error_box {
