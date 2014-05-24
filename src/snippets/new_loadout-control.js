@@ -16,10 +16,13 @@
  */
 
 osmium_gen_control = function() {
-	$("section#control input#submit_loadout")
-		.prop('disabled', 'disabled')
-		.prop('title', 'Select a ship before submitting your loadout.')
-	;
+	var submit = $("section#control input#submit_loadout");
+	if(!submit.hasClass('force')) {
+		submit
+			.prop('disabled', 'disabled')
+			.prop('title', 'Select a ship before submitting your loadout.')
+		;
+	}
 
 	if(!("metadata" in osmium_clf)) return;
 	if(!("X-Osmium-update-reason" in osmium_clf.metadata)) return;
@@ -92,8 +95,11 @@ osmium_init_control = function() {
 };
 
 osmium_loadout_can_be_submitted = function() {
-	$("section#control input#submit_loadout")
-		.removeProp('disabled')
-		.prop('title', '')
-	;
+	var submit = $("section#control input#submit_loadout");
+	if(!submit.hasClass('force')) {
+		submit
+			.removeProp('disabled')
+			.prop('title', '')
+		;
+	}
 };

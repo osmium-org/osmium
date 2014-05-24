@@ -80,6 +80,11 @@ form > table {
 			}
 		}
 
+		&> tr.error_message > td > p {
+			@include error;
+			margin: 0;
+		}
+
 		&> tr > td > p.error_box {
 			margin-top: 0;
 		}

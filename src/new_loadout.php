@@ -236,28 +236,33 @@ $section = $nla->appendCreate('section#control');
 $form = $section->appendCreate('form', [ 'method' => 'get', 'action' => './'.$tok ]);
 $tbody = $form->appendCreate('table')->appendCreate('tbody');
 
-if(\Osmium\State\is_logged_in()) {
-	$tr = $tbody->appendCreate('tr');
+$tr = $tbody->appendCreate('tr');
 
-	$save = $tr->appendCreate('td')->appendCreate('input', [
-		'type' => 'button',
-		'name' => 'submit_loadout',
-		'id' => 'submit_loadout',
-		'value' => 'Save loadout',
+$save = $tr->appendCreate('td')->appendCreate('input', [
+	'type' => 'button',
+	'name' => 'submit_loadout',
+	'id' => 'submit_loadout',
+	'value' => 'Save loadout',
+]);
+
+if(!\Osmium\State\is_logged_in()) {
+	$save->setAttribute('disabled', 'disabled');
+	$save->setAttribute('title', 'You need to sign in before you can save loadouts.');
+	$save->addClass('force');
+	$save->setAttribute('value', $save->getAttribute('value').' (requires account)');
+}
+
+if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid']) {
+	$save->setAttribute('value', 'Update loadout');
+
+	$tr->appendCreate('td')->appendCreate('input', [
+		'id' => 'ureason',
+		'name' => 'ureason',
+		'placeholder' => 'Brief summary of your changes…',
+		'type' => 'text',
 	]);
-
-	if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid']) {
-		$save->setAttribute('value', 'Update loadout');
-
-		$tr->appendCreate('td')->appendCreate('input', [
-			'id' => 'ureason',
-			'name' => 'ureason',
-			'placeholder' => 'Brief summary of your changes…',
-			'type' => 'text',
-		]);
-	} else {
-		$save->parentNode->setAttribute('colspan', '2');
-	}
+} else {
+	$save->parentNode->setAttribute('colspan', '2');
 }
 
 $tr = $tbody->appendCreate('tr');
