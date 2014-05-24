@@ -20,9 +20,12 @@ namespace Osmium\Json\SearchTypes;
 
 require __DIR__.'/../../inc/root.php';
 
-const MAX_TYPES = 10;
+const MAX_TYPES = 100;
 
-$q = $_GET['q'];
+$q = \Osmium\Chrome\trim($_GET['q']);
+if($q === '') {
+	\Osmium\Chrome\return_json([ 'payload' => [] ]);
+}
 
 $filters = array_keys(array_filter(
 	isset($_POST['mg']) && is_array($_POST['mg']) ? $_POST['mg'] : array(),

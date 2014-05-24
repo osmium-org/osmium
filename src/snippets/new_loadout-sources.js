@@ -129,11 +129,18 @@ osmium_init_sources = function() {
 
 					ul.after(p);
 				}
+
+				ul.closest('section').trigger('osmium-update-overflow');
 			},
 			complete: function() {
+				if(ul.children('li').length === 0) {
+					s.prop('dirty', true);
+				} else {
+					s.val('Add');
+				}
+
 				s.prop('disabled', false);
 				spinner.remove();
-				s.val('Add');
 			}
 		});
 
@@ -178,6 +185,8 @@ osmium_init_sources = function() {
 		} else {
 			s.perfectScrollbar('destroy');
 		}
+
+		return false;
 	});
 
 	$(window).resize(function() { $("div#nlsources > section").trigger('osmium-update-overflow'); });
