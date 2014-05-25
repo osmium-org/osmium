@@ -52,8 +52,8 @@ function is_logged_in() {
  */
 function do_post_login($account_name, $use_cookie = false) {
 	/* Get rid of old $_SESSION */
-	$_SESSION = array();
-	session_write_close();
+	unset($_SESSION);
+	session_destroy();
 
 	$q = \Osmium\Db\query_params(
 		'SELECT accountid, accountname, nickname,
@@ -64,7 +64,6 @@ function do_post_login($account_name, $use_cookie = false) {
 		array($account_name)
 	);
 	$a = \Osmium\Db\fetch_assoc($q);
-	check_api_key($a);
 
 	if(\Osmium\get_ini_setting('whitelist') && !check_whitelist($a)) {
 		$a['notwhitelisted'] = true;
@@ -75,6 +74,8 @@ function do_post_login($account_name, $use_cookie = false) {
 	$_SESSION['__osmium_state'] = array(
 		'a' => $a
 	);
+
+	check_api_key($a);
 
 	if($use_cookie) {
 		$token = get_nonce().'.'.(string)microtime(true);
@@ -131,15 +132,22 @@ function logoff($global = false) {
 
 	setcookie(
 		'T', false, 0,
-		\Osmium\get_ini_setting('relative_path'),
+		$rel = \Osmium\get_ini_setting('relative_path'),
 		\Osmium\HOST,
 		\Osmium\HTTPS,
 		true
 	);
 
-	$_SESSION = array();
-	session_regenerate_id(true);
-	$_SESSION['__osmium_state'] = array();
+	setcookie(
+		'O', false, 0,
+		$rel,
+		\Osmium\HOST,
+		\Osmium\HTTPS,
+		true
+	);
+
+	session_destroy();
+	unset($_SESSION);
 
 	if($global) {
 		/* Remove all the other sessions with the same account ID */

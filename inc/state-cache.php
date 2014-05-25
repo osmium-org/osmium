@@ -325,6 +325,10 @@ function get_state($key, $default = null) {
  * not persist between sessions.
  */
 function put_state($key, $value) {
+	if(!isset($_SESSION) && isset($_SERVER['REMOTE_ADDR'])) {
+		session_start();
+	}
+
 	if(!isset($_SESSION['__osmium_state']) || !is_array($_SESSION['__osmium_state'])) {
 		$_SESSION['__osmium_state'] = array();
 	}
