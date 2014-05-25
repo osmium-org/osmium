@@ -39,7 +39,6 @@ osmium_settheme = function(title) {
 	}
 
 	if(foundit) {
-		$("svg").trigger('redraw');
 		return;
 	}
 	alert('not found');

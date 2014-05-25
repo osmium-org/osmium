@@ -23,56 +23,33 @@ osmium_gen_capacitor = function(capacity, current) {
 	 * same page */
 	var idsuffix = Math.random().toFixed(20).substring(2);
 
-	var dark = $("head > link[title]").filter(function() {
-		return $(this).get(0).disabled !== true
-	}).first().prop('title') === 'Dark';
-
-	var colors = {
-		full: dark ? 'hsl(20, 85%, 95%)' : 'hsl(200, 85%, 35%)',
-		empty: dark ? 'hsl(0, 0%, 35%)' : 'hsl(0, 0%, 65%)',
-	};
-
 	var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 	svg.setAttribute('viewBox', '-1 -1 2 2');
-	svg.setAttribute('width', '32');
-	svg.setAttribute('height', '32');
+	svg.setAttribute('class', 'capacitorwheel');
 
 	var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
 
-	var f = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-	f.setAttribute('id', 'gbf-' + idsuffix);
-	var gb = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
-	gb.setAttribute('stdDeviation', '0.02');
-	defs.appendChild(f).appendChild(gb);
-
-	for(var t in colors) {
+	for(var t in { full: 1, empty: 1 }) {
 		var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
 		lg.setAttribute('id', 'gradient-' + t + '-' + idsuffix);
+		lg.setAttribute('class', t);
 
 		var stop;
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
 		stop.setAttribute('offset', '0%');
-		stop.setAttribute('stop-color', colors[t]);
-		stop.setAttribute('stop-opacity', 0);
 		lg.appendChild(stop);
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-		stop.setAttribute('offset', '30%');
-		stop.setAttribute('stop-color', colors[t]);
-		stop.setAttribute('stop-opacity', 1);
+		stop.setAttribute('offset', '33%');
 		lg.appendChild(stop);
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-		stop.setAttribute('offset', '70%');
-		stop.setAttribute('stop-color', colors[t]);
-		stop.setAttribute('stop-opacity', 1);
+		stop.setAttribute('offset', '67%');
 		lg.appendChild(stop);
 
 		stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
 		stop.setAttribute('offset', '100%');
-		stop.setAttribute('stop-color', colors[t]);
-		stop.setAttribute('stop-opacity', 0);
 		lg.appendChild(stop);
 
 		defs.appendChild(lg);
@@ -95,7 +72,6 @@ osmium_gen_capacitor = function(capacity, current) {
 			bubble.setAttribute('y', (-0.9 + 0.8 * (nbubbles - j - 1) / nbubbles) + '');
 			bubble.setAttribute('rx', '0.075');
 			bubble.setAttribute('ry', '0.075');
-			bubble.setAttribute('filter', 'url(#gbf-' + idsuffix + ')');
 			bubble.setAttribute(
 				'fill',
 				(progress < current) ?
@@ -115,7 +91,7 @@ osmium_gen_capacitor = function(capacity, current) {
 
 	var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
 	title.appendChild(document.createTextNode('Capacity: ' + capacity.toFixed(0) + ' GJ'));
-	g.setAttribute('opacity', '0');
+	g.setAttribute('class', 'overlay');
 	g.appendChild(title);
 
 	var r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -123,7 +99,6 @@ osmium_gen_capacitor = function(capacity, current) {
 	r.setAttribute('y', '-1');
 	r.setAttribute('width', '2');
 	r.setAttribute('height', '2');
-	r.setAttribute('fill-opacity', '0');
 	g.appendChild(r);
 
 	svg = $(svg);

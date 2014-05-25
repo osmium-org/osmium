@@ -1,0 +1,23 @@
+svg.capacitorwheel {
+	&> defs > linearGradient{
+		&.full > stop {
+			stop-color: $capacitor-full-color;
+		}
+
+		&.empty > stop {
+			stop-color: $capacitor-empty-color;
+		}
+
+		&> stop {
+			stop-opacity: 1;
+
+			&:first-child, &:last-child {
+				stop-opacity: 0;
+			}
+		}
+	}
+
+	&> g.overlay {
+		opacity: 0;
+	}
+}

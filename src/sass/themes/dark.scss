@@ -227,6 +227,13 @@ $reputation-loss-text-color: hsl(0, 100%, 50%);
 $privilege-progress-bg-color: $subsection-bg-color;
 $privilege-progress-done-bg-color: $reputation-gain-text-color;
 
+//
+// Capacitor
+//
+
+$capacitor-full-color: hsl(20, 85%, 95%);
+$capacitor-empty-color: hsl(0, 0%, 35%);
+
 /////////////////////////////////////
 
 @import "../root.scss";
