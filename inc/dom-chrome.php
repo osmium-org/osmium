@@ -868,7 +868,9 @@ class Page extends RawPage {
 			]);
 
 			$narrow = $this->element('span', [ 'class' => 'narrow' ]);
-			$narrow->appendCreate('a', [ 'o-rel-href' => '/login', 'Sign in' ]);
+			$narrow->appendCreate('a', [ 'o-rel-href' => '/login'.$this->formatQueryString([
+				'r' => $_SERVER['REQUEST_URI'],
+			]), 'Sign in' ]);
 
 			$p = $form->appendCreate('p', [ $wide, $narrow ]);
 
