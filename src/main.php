@@ -37,10 +37,6 @@ $p->head->appendCreate('link', [
 	'rel' => 'alternate',
 	'title' => 'Recently updated',
 ]);
-$p->head->appendCreate('link', [
-	'rel' => 'canonical',
-	'o-rel-href' => '/',
-]);
 
 
 
@@ -310,6 +306,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('doctrines', 604, functio
 $p->title = $name.' / '.$desc;
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '.';
+$p->canonical = '/';
 $p->render($ctx);
 die();
 

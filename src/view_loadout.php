@@ -172,11 +172,7 @@ if(isset($fit['ship']['typename'])) {
 
 $p->index = $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC
 	&& !$revision_overridden && !$preset_overridden;
-
-$p->head->appendCreate('link', [
-	'rel' => 'canonical',
-	'o-rel-href' => $canonicaluri,
-]);
+$p->canonical = $canonicaluri;
 
 $dna = \Osmium\Fit\export_to_dna($fit);
 
