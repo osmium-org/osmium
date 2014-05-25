@@ -16,6 +16,9 @@
  */
 
 osmium_gen_capacitor = function(capacity, current) {
+	if(capacity === null) capacity = 0;
+	if(current === null) current = 0;
+
 	var nbranches = Math.min(10, Math.max(2, Math.floor(capacity / 50.0)));
 	var nbubbles = 3;
 	var bubblecapacity = (capacity > 0) ? (capacity / (nbubbles * nbranches)) : 0;
