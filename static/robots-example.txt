@@ -3,5 +3,7 @@ Sitemap: http://my-domain.tld/sitemap.xml.gz
 
 User-agent: *
 Disallow: /api/
+Disallow: /loadout/dna/
+Disallow: /loadouthistory/
 
 # Add your own rules here…

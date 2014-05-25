@@ -83,7 +83,7 @@ $p = new \Osmium\DOM\Page();
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';
 $p->title = 'Revision history of loadout #'.$loadoutid;
-$p->index = $fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PUBLIC;
+$p->index = false;
 $p->snippets[] = 'loadout_history';
 
 $p->content->appendCreate('h1', 'Revision history of loadout ')->appendCreate(
