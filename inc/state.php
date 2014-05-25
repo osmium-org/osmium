@@ -51,9 +51,11 @@ function is_logged_in() {
  * "remember me" feature.
  */
 function do_post_login($account_name, $use_cookie = false) {
-	/* Get rid of old $_SESSION */
-	unset($_SESSION);
-	session_destroy();
+	if(isset($_SESSION)) {
+		/* Get rid of old $_SESSION */
+		unset($_SESSION);
+		session_destroy();
+	}
 
 	$q = \Osmium\Db\query_params(
 		'SELECT accountid, accountname, nickname,
