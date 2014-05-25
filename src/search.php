@@ -47,6 +47,11 @@ if($query === false) {
 		$ntypes = 0;
 	}
 
+	$p->title = 'Search results';
+	if($query !== '') {
+		$p->title .= ' / '.$query;
+	}
+
 	list($loadoutids, $loadoutsr) = \Osmium\Search\make_pretty_results($p, $query, $cond, true, 24);
 	$nloadouts = count($loadoutids);
 
@@ -59,11 +64,6 @@ if($query === false) {
 	}
 
 
-
-	$p->title = 'Search results';
-	if($query !== '') {
-		$p->title .= ' / '.$query;
-	}
 
 	$p->content->appendCreate('div', [ 'id' => 'search_mini' ])->append(
 		$p->makeSearchBox()
@@ -83,9 +83,4 @@ if($query === false) {
 	}
 }
 
-$p->finalize($ctx);
-$p->head->appendCreate('link', [
-	'rel' => 'canonical',
-	'o-rel-href' => '/search',
-]);
 $p->render($ctx);
