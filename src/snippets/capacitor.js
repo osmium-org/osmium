@@ -110,6 +110,22 @@ osmium_gen_capacitor = function(capacity, current) {
 		svg.appendChild(g);
 	}
 
+	var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+	svg.appendChild(g);
+
+	var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+	title.appendChild(document.createTextNode('Capacity: ' + capacity.toFixed(0) + ' GJ'));
+	g.setAttribute('opacity', '0');
+	g.appendChild(title);
+
+	var r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+	r.setAttribute('x', '-1');
+	r.setAttribute('y', '-1');
+	r.setAttribute('width', '2');
+	r.setAttribute('height', '2');
+	r.setAttribute('fill-opacity', '0');
+	g.appendChild(r);
+
 	svg = $(svg);
 
 	svg.data('capacity', capacity);

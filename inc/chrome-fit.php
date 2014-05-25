@@ -173,7 +173,9 @@ function print_formatted_engineering(&$fit, $relative, $capacitor) {
 		."' data-usage='"
 		.($capacitor['stable'] ? ($capacitor['capacity'] * $capacitor['stable_fraction']) : 0)."'>"
 		.sprite($relative, 'Capacitor', 2, 0, 64, 64, 32)
-		."<span><span title='Capacitor stability percentage / depletion time (estimated)'>".$captime."</span><br /><span title='Capacitor delta at peak recharge rate'>".$capdelta."</span></span></p>\n";
+		."<span><span title='Capacitor stability percentage / estimated depletion time'>"
+		.$captime."</span><br /><span title='Capacitor delta at peak recharge rate'>"
+		.$capdelta."</span></span></p>\n";
 
 	$cpuUsed = \Osmium\Dogma\get_ship_attribute($fit, 'cpuLoad');
 	$cpuTotal = \Osmium\Dogma\get_ship_attribute($fit, 'cpuOutput');
