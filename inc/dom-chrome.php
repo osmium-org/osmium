@@ -59,6 +59,12 @@ class Page extends RawPage {
 	/* Decides whether robots can index this page or not. */
 	public $index = true;
 
+	/* Whether the URI in $canonical is relative or absolute. */
+	public $relativecanonical = true;
+
+	/* The canonical URI of this page. */
+	public $canonical = null;
+
 	/* The theme to use. Must be a key of the array $_themes (see
 	 * below), or the value 'auto' to guess from cookie or use the
 	 * default. */
@@ -156,6 +162,44 @@ class Page extends RawPage {
 
 		if(!$this->index) {
 			$this->head->appendCreate('meta', [ 'name' => 'robots', 'content' => 'noindex' ]);
+		} else {
+			if(\Osmium\get_ini_setting('https_available')) {
+				$httpscanonical = \Osmium\get_ini_setting('https_canonical');
+
+				if(($httpscanonical XOR \Osmium\HTTPS) && $this->canonical === null) {
+					$this->relativecanonical = false;
+					$this->canonical = $_SERVER['REQUEST_URI'];
+				}
+			} else {
+				$httpscanonical = false;
+			}
+
+			if($this->canonical !== null) {
+				if($this->relativecanonical === true) {
+					$this->canonical = rtrim(\Osmium\get_ini_setting('relative_path'), '/')
+						.'/'.ltrim($this->canonical, '/');
+				}
+
+				if(!preg_match('%^((?<proto>https?):)?(//(?<host>[^/]+))?(?<path>/(.*))?$%',
+				               $this->canonical, $match)) {
+					throw new \Exception('Unintelligible canonical URI: '.$this->canonical);
+				}
+
+				if(!isset($match['path']) || $match['path'] === '') $match['path'] = '/';
+				if($match['host'] === '') $match['host'] = $_SERVER['HTTP_HOST'];
+
+				if($match['host'] === $_SERVER['HTTP_HOST']) {
+					$match['proto'] = $httpscanonical ? 'https' : 'http';
+				}
+
+				if($match['proto'] !== '') $match['proto'] .= ':';
+				$match['proto'] .= '//';
+
+				$this->head->appendCreate('link', [
+					'rel' => 'canonical',
+					'href' => $match['proto'].$match['host'].$match['path'],
+				]);
+			}
 		}
 
 		$this->head->appendCreate('link', [
