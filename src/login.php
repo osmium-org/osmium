@@ -32,7 +32,7 @@ if(\Osmium\State\is_logged_in()) {
 $p = new \Osmium\DOM\Page();
 $p->title = 'Sign in';
 
-if(isset($_POST['__osmium_login'])) {
+if(isset($_POST['account_name']) && isset($_POST['password'])) {
 	if(($errormsg = \Osmium\State\try_login()) === true) {
 		header('Location: '.$redirect, true, 303);
 		die();
