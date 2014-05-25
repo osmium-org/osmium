@@ -68,9 +68,8 @@ below (for example, Debian uses `www-data`).
     `/static/foo/bar.png`).
 
   - For optimal performance, it is recommended to set an expiration
-    date for static files far in the future, and set `Cache-Control`
-    to `public`. Static files all have URIs that match
-    `^/static(-[1-9][0-9]*)?/`.
+    date for static files far in the future. Static files all have
+    URIs that match `^/static(-[1-9][0-9]*)?/`.
 
   - To minimize bandwidth usage, be sure to enable gzip compression
     (especially on all the files (except images) under static/).
