@@ -16,6 +16,24 @@
  */
 
 $(function() {
+	$('p#needjs').css({ visibility: 'hidden' });
+
+	var overlayt = setTimeout(function() {
+		overlayt = null;
+
+		var odiv = $("div#loadingoverlay");
+		if(odiv.length === 0) return;
+
+		var p = $(document.createElement('p'))
+			.addClass('warning_box')
+			.text('Still loading? Try refreshing the page, or report the issue if it persists.')
+			.hide()
+		;
+
+		odiv.children('div').append(p);
+		p.fadeIn(250);
+	}, 8000);
+
 	osmium_load_common_data();
 	osmium_shortlist = $("div#osmium-data").data('shortlist');
 
@@ -30,12 +48,17 @@ $(function() {
 		osmium_tabify($('div#nlmain > ul.tabs'), 0);
 
 		/* Fetch computed attributes, etc. */
-		osmium_commit_clf();
+		osmium_commit_clf({
+			success: function() {
+				$("div#loadingoverlay").fadeOut(100);
+				if(overlayt !== null) clearTimeout(overlayt);
+			},
+		});
 
 		/* Everything done from now on is user initiated */
-		 osmium_user_initiated_push(true);
+		osmium_user_initiated_push(true);
 
-		 osmium_undo_push();
+		osmium_undo_push();
 	 });
  });
 

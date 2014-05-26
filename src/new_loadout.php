@@ -279,12 +279,7 @@ foreach(\Osmium\Fit\get_export_formats() as $k => $f) {
 
 
 
-$nla
-->appendCreate('section#attributes')
-->appendCreate('div.compact#computed_attributes')
-->appendCreate('p.placeholder.loading', 'Loading attributes…')
-->appendCreate('span.spinner')
-;
+$nla->appendCreate('section#attributes')->appendCreate('div.compact#computed_attributes');
 
 
 
@@ -327,11 +322,9 @@ $section->appendCreate('ul.results');
 
 $section = $nls->appendCreate('section#browse');
 $section->appendCreate('ul.filters');
-$section->appendCreate('p.placeholder.loading', 'Fetching type list…')->appendCreate('span.spinner');
 
 $section = $nls->appendCreate('section#shortlist');
 $section->appendCreate('ul.filters');
-$section->appendCreate('p.placeholder.loading', 'Fetching shortlist…')->appendCreate('span.spinner');
 
 
 
@@ -578,6 +571,16 @@ if(\Osmium\State\is_logged_in()) {
 
 	$tbody->append($p->makeFormInputRow('password', 'pw', 'Password'));
 }
+
+
+$loverlay = $p->content->appendCreate('div#loadingoverlay');
+$loverlay = $loverlay->appendCreate('div');
+$lh = $loverlay->appendCreate('h1', 'Osmium is initializing the awesome');
+$ls = $lh->appendcreate('span.loading');
+for($i = 0; $i < 6; ++$i) {
+	$ls->appendCreate('span.p'.$i, '.');
+}
+$loverlay->appendCreate('p.error_box#needjs', 'Not loading? Try enabling Javascript.');
 
 
 $p->snippets = array_merge($p->snippets, [

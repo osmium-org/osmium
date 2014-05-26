@@ -589,11 +589,21 @@ ul.tags {
 	}
 }
 
-span#clfspinner.spinner {
+span#clfspinner {
 	position: fixed;
 	right: 0.25em;
 	bottom: 0.75em;
 	z-index: 1000;
+}
+
+span#syncwait {
+	position: absolute;
+	z-index: 1000;
+
+	display: block;
+	text-align: center;
+	left: 0;
+	width: 100%;
 }
 
 section#modules, section#drones, section#ship, section#implants {

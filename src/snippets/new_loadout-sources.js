@@ -254,7 +254,6 @@ osmium_init_browser = function() {
 	};
 	displaymg(div, 'root');
 
-	section.children('p.placeholder.loading').remove();
 	section.append(div);
 
 	section.on('click', 'li.uninitialized', function() {
@@ -283,7 +282,6 @@ osmium_init_shortlist = function() {
 	var ul, li, img, section;
 
 	section = $('div#nlsources > section#shortlist');
-	section.children('p.placeholder.loading').remove();
 
 	ul = $(document.createElement('ul'));
 	ul.addClass('types');

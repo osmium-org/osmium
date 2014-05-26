@@ -579,3 +579,49 @@ div#m-dpsg-ctx {
 		border-bottom: 1px solid $section-border-color;
 	}
 }
+
+div#loadingoverlay {
+	position: fixed;
+	background-color: rgba($main-bg-color, .9);
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1999;
+
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+
+	&> div {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+
+		text-align: center;
+
+		-webkit-transform: translateX(-50%) translateY(-50%);
+		-moz-transform: translateX(-50%) translateY(-50%);
+		-ms-transform: translateX(-50%) translateY(-50%);
+		transform: translateX(-50%) translateY(-50%);
+
+
+		p#needjs {
+			@include prefixize(animation, fadein 5s);
+		}
+
+		span.loading {
+			&> span {
+				$duration: 0.5s;
+				@include prefixize(animation, bounce $duration ease 0s infinite alternate);
+				position: relative;
+
+				&.p1 { @include prefixize(animation-delay, 1 * $duration / 6); }
+				&.p2 { @include prefixize(animation-delay, 2 * $duration / 6); }
+				&.p3 { @include prefixize(animation-delay, 3 * $duration / 6); }
+				&.p4 { @include prefixize(animation-delay, 4 * $duration / 6); }
+				&.p5 { @include prefixize(animation-delay, 5 * $duration / 6); }
+			}
+		}
+	}
+}
