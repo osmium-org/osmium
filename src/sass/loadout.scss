@@ -591,9 +591,10 @@ ul.tags {
 
 span#clfspinner {
 	position: fixed;
-	right: 0.25em;
-	bottom: 0.75em;
+	right: 0.5em;
+	bottom: 1.25em;
 	z-index: 1000;
+	color: $strong-emphasis-text-color;
 }
 
 span#syncwait {

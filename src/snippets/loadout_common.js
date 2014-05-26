@@ -350,9 +350,15 @@ osmium_clfspinner_push = function() {
 		if(osmium_clfspinner === undefined) {
 			osmium_clfspinner = $(document.createElement('span'))
 				.prop('id', 'clfspinner')
-				.addClass('spinner')
-				.hide();
-			$("body").append(osmium_clfspinner);
+				.hide()
+			;
+
+			osmium_clfspinner
+				.append($(document.createElement('span')).addClass('spinner'))
+				.append(' Osmium is thinking!')
+			;
+
+			$('body').append(osmium_clfspinner);
 		}
 
 		osmium_clfspinner.fadeIn(100);
@@ -365,7 +371,7 @@ osmium_clfspinner_pop = function() {
 	--osmium_clfspinner_level;
 
 	if(osmium_clfspinner_level === 0) {
-		osmium_clfspinner.fadeOut(250);
+		osmium_clfspinner.fadeOut(1000);
 	}
 };
 
