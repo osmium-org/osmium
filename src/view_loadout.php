@@ -402,19 +402,19 @@ $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#meta', 'Meta' ]);
 
 if($maxrev !== false && $historyuri !== false) {
-	$ul->appendCreate('li.external')->appendCreate('a', [
+	$ul->prepend($p->element('li.external')->append([[ 'a', [
 		'o-rel-href' => $historyuri,
 		'title' => 'View different revisions of this loadout, and compare changes',
 		'History ('.($maxrev - 1).')',
-	]);
+	]]]));
 }
 
-$ul->appendCreate('li.external')->appendCreate('a', [
+$ul->prepend($p->element('li.external')->append([[ 'a', [
 	'rel' => 'nofollow',
 	'o-rel-href' => $forkuri,
 	'title' => 'Make a copy of this loadout and start editing it',
 	'Fork',
-]);
+]]]));
 
 if($can_edit) {
 	$editparams = [
@@ -426,11 +426,11 @@ if($can_edit) {
 		$editparams['privatetoken'] = $fit['metadata']['privatetoken'];
 	}
 
-	$ul->appendCreate('li.external')->appendCreate('a', [
+	$ul->prepend($p->element('li.external')->append([[ 'a', [
 		'rel' => 'nofollow',
 		'o-rel-href' => '/edit/'.$loadoutid.$p->formatQueryString($editparams),
 		'Edit',
-	]);
+	]]]));
 }
 
 

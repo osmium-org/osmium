@@ -1,46 +1,74 @@
 @mixin tabs {
 	list-style-type: none;
 	margin: 0;
-	padding: 0 1em;
+	padding: 0.5em 1em 0 1em;
 	text-align: center;
+	overflow: hidden;
 
-	border-bottom: 1px solid $tab-border-color;
+	// XXX This is just a mess
 
 	&> li {
-		position: relative;
-		bottom: -1px;
-
 		display: inline-block;
-		border: 1px solid $tab-border-color;
-		border-bottom: 1px solid rgba(0, 0, 0, 0);
-		opacity: 0.7;
-		margin: 0 0.125em;
+		position: relative;
 
-		&.active {
-			border-bottom: 2px solid $main-bg-color;
+		&.active > a {
+			padding-top: 0.4em;
+			color: $tab-active-text-color;
+			text-decoration: none;
+			font-weight: bold;
 
-			&> a {
-				padding-top: 0.4em;
-				color: $tab-active-text-color;
-				text-decoration: none;
-				font-weight: bold;
-			}
-
+			border-bottom-color: transparent !important;
 			opacity: 1.0;
 		}
 
+		&:before, &:after {
+			content: " ";
+			display: inline-block;
+			vertical-align: bottom;
+			width: 0.15em;
+
+			border-bottom: 1px solid $tab-border-color;
+			opacity: .7;
+		}
+
+		&:first-child:not(.external):before, &.external + li:not(.external):before {
+			position: absolute;
+			z-index: 1;
+			width: 500em;
+			left: -500em;
+			bottom: 0;
+		}
+
+		&:last-child:after {
+			position: absolute;
+			z-index: 1;
+			width: 500em;
+			left: 0;
+			bottom: 0;
+		}
+
 		&> a {
-			display: block;
+			vertical-align: bottom;
+			display: inline-block;
 			padding: 0.25em 0.5em;
 			text-decoration: underline;
+
+			position: relative;
+			z-index: 2;
+
+			border: 1px solid $tab-border-color;
+			border-bottom-color: $tab-border-color !important;
+			opacity: .7;
 		}
 
 		&.external {
 			float: right;
-			bottom: -3px;
 			margin-left: 0.3em;
 
-			&> a { color: $aside-text-color; }
+			bottom: -1px;
+
+			&> a { color: $aside-text-color; border-bottom: 0 !important; }
+			&:before, &:after { display: none; }
 		}
 	}
 }
