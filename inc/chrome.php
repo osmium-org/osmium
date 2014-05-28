@@ -393,10 +393,43 @@ function sanitize_html_trust($html) {
 	if($purifier === null) {
 		$config = \HTMLPurifier_Config::createDefault();
 		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
+		$config->set('HTML.DefinitionID', 'Osmium-trusted');
+		$config->set('HTML.DefinitionRev', 2);
+		$config->set('HTML.Doctype', 'XHTML 1.1');
 		$purifier = new \HTMLPurifier($config);
 	}
 
 	return $purifier->purify($html);
+}
+
+function make_untrusted_htmlpurifier_config() {
+	$config = \HTMLPurifier_Config::createDefault();
+
+	$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
+	$config->set('HTML.Doctype', 'XHTML 1.1');
+
+	/* For convenience */
+	$config->set('AutoFormat.Linkify', true);
+
+	/* Better safe than sorry */
+	$config->set('Attr.AllowedClasses', array());
+	$config->set('CSS.AllowedProperties', array());
+	$config->set('HTML.Nofollow', true);
+
+	/* Disallow pictures. Better safe than sorry, as this makes CSRF
+	 * attacks a little harder. */
+	$config->set('URI.DisableResources', true);
+
+	/* Do not leak referrers on external links. Also an incentive for
+	 * bad people as this makes spamming links less effective. */
+	$config->set('URI.Munge', rtrim(\Osmium\get_ini_setting('relative_path'), '/').'/internal/redirect/%t/%s');
+
+	/* Using hashes to verify redirected URIs hopefully prevent
+	 * redirect loops and also prevent others from freeloading off
+	 * this nifty redirection page. */
+	$config->set('URI.MungeSecretKey', \Osmium\get_ini_setting('uri_munge_secret'));
+
+	return $config;
 }
 
 function sanitize_html($html) {
@@ -405,18 +438,9 @@ function sanitize_html($html) {
 	require_once 'HTMLPurifier.auto.php';
 
 	if($purifier === null) {
-		$config = \HTMLPurifier_Config::createDefault();
-
-		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-		$config->set('HTML.DefinitionID', 'Osmium-full');
-		$config->set('HTML.DefinitionRev', 1);
-		$config->set('HTML.Doctype', 'XHTML 1.1');
-
-		$config->set('Attr.AllowedClasses', array());
-		$config->set('HTML.Nofollow', true);
-		$config->set('CSS.AllowedProperties', array());
-		$config->set('AutoFormat.Linkify', true);
-
+		$config = make_untrusted_htmlpurifier_config();
+		$config->set('HTML.DefinitionID', 'Osmium-untrusted-full');
+		$config->set('HTML.DefinitionRev', 3);
 		$purifier = new \HTMLPurifier($config);
 	}
 
@@ -429,18 +453,15 @@ function sanitize_html_phrasing($html) {
 	require_once 'HTMLPurifier.auto.php';
 
 	if($purifier === null) {
-		$config = \HTMLPurifier_Config::createDefault();
+		$config = make_untrusted_htmlpurifier_config();
+		$config->set('HTML.DefinitionID', 'Osmium-untrusted-phrasing');
+		$config->set('HTML.DefinitionRev', 3);
 
-		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-		$config->set('HTML.DefinitionID', 'Osmium-phrasing');
-		$config->set('HTML.DefinitionRev', 1);
-		$config->set('HTML.Doctype', 'XHTML 1.1');
-
-		$config->set('Attr.AllowedClasses', array());
-		$config->set('HTML.Nofollow', true);
-		$config->set('CSS.AllowedProperties', array());
-		$config->set('HTML.AllowedElements', 'a, abbr, b, cite, code, del, em, i, ins, kbd, q, s, samp, small, span, strong, sub, sup');
-		$config->set('AutoFormat.Linkify', true);
+		/* Only allow some inline elements typically used in phrasing content. */
+		$config->set(
+			'HTML.AllowedElements',
+			'a, abbr, b, cite, code, del, em, i, ins, kbd, q, s, samp, small, span, strong, sub, sup'
+		);
 
 		$purifier = new \HTMLPurifier($config);
 	}

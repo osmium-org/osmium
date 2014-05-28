@@ -3,6 +3,7 @@ Sitemap: http://my-domain.tld/sitemap.xml.gz
 
 User-agent: *
 Disallow: /api/
+Disallow: /internal/
 Disallow: /loadout/dna/
 Disallow: /loadouthistory/
 

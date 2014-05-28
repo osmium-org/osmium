@@ -19,6 +19,7 @@
 
 define('CHECK_REQUIRED', 1);
 define('MIN_PHP_VER', '5.4.0');
+define('MIN_HP_VER', '4.6.0');
 
 function check($label, $checkfunc, $opts = 0) {
 	echo str_pad("checking ".$label.' ', 70, '.').' ';
@@ -98,6 +99,10 @@ check_method('Normalizer', 'normalize');
 @include_once 'HTMLPurifier.auto.php';
 check_method('HTMLPurifier', 'purify', CHECK_REQUIRED);
 
+check('for HTMLPurifier >= '.MIN_HP_VER, function() {
+	return array(version_compare(HTMLPurifier::VERSION, MIN_HP_VER, '>='), HTMLPurifier::VERSION);
+}, CHECK_REQUIRED);
+
 check('whether config.ini exists', function() {
 	$ini = __DIR__.'/../config.ini';
 	return file_exists($ini) && is_readable($ini);
@@ -156,7 +161,7 @@ check('whether static/cache directory is writeable', function() {
 });
 
 if(defined('FAIL')) {
-	echo "\nRequired checks failed. Stopping now.\n";
+	echo "\nOne or more required checks failed. Stopping now.\n";
 	die(1);
 }
 

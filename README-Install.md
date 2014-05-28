@@ -114,7 +114,7 @@ Dependencies
 * Sphinx search server >= 2.0.4 
   (using the `sphinx.conf` from the `sphinx/` directory)
 
-* HTMLPurifier PEAR package, see http://htmlpurifier.org/download#PEAR
+* HTMLPurifier >= 4.6.0 (PEAR package, see http://htmlpurifier.org/download#PEAR)
 
 * Sass >= 3.2 (http://sass-lang.com/)
 

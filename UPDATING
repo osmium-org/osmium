@@ -6,6 +6,11 @@ uacontact setting has been added in [branding]. Two trust_x_* have
 been added in [osmium]. The https_canonical setting has been added in
 [https].
 
+The required minimum version of HTMLPurifier is now 4.6.0. If you are
+using the PEAR version of HTMLPurifier, run `pear upgrade hp/HTMLPurifier`.
+Also add and appropriately fill the uri_munge_secret in the [osmium]
+section, in the configuration file, then run `./bin/reformat_sanitized_html`.
+
 Some changes have been made to the example robots.txt.
 
 The fittinghash generation algorithm has changed. If you don't want to

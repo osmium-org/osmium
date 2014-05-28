@@ -160,6 +160,9 @@ class Page extends RawPage {
 
 		$this->head->appendCreate('title', $this->title.' / '.\Osmium\get_ini_setting('name'));
 
+		/* Don't ever risk leaking a private URI via referrers. */
+		$this->head->appendCreate('meta', [ 'name' => 'referrer', 'content' => 'origin' ]);
+
 		if(!$this->index) {
 			$this->head->appendCreate('meta', [ 'name' => 'robots', 'content' => 'noindex' ]);
 		} else {
