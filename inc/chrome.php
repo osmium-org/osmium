@@ -495,11 +495,6 @@ function format_sanitize_md($markdowntext) {
 	return sanitize_html(format_md($markdowntext));
 }
 
-/* @deprecated use filter_content() */
-function format_sanitize_md_phrasing($markdowntext) {
-	return sanitize_html_phrasing(format_md($markdowntext));
-}
-
 /* Filter some content.
  *
  * @param $filter a bitmask of CONTENT_FILTER_* constants.

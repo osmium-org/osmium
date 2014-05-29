@@ -8,9 +8,12 @@ been added in [osmium]. The https_canonical setting has been added in
 
 The required minimum version of HTMLPurifier is now 4.6.0. If you are
 using the PEAR version of HTMLPurifier, run `pear upgrade
-hp/HTMLPurifier`.  Also add and appropriately fill the
-uri_munge_secret in the [osmium] section, in the configuration file,
-then run `make reformat-editable-formatted-contents`.
+hp/HTMLPurifier`.
+
+IMPORTANT: after upgrading HTMLPurifier and running the database
+patches, add and appropriately fill the uri_munge_secret in the
+[osmium] section, in the configuration file, then run `make
+reformat-editable-formatted-contents`.
 
 Some changes have been made to the example robots.txt.
 

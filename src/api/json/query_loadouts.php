@@ -72,12 +72,13 @@ $ids[] = -1;
 $q = \Osmium\Db\query(
 'SELECT l.loadoutid, l.visibility, l.privatetoken, f.name, f.hullid, stn.typename, lh.updatedate,
 a.nickname, a.charactername, a.apiverified,
-fat.taglist, f.description, ls.upvotes, ls.downvotes, ls.score, COALESCE(lcc.count, 0) AS comments,
-f.evebuildnumber
+fat.taglist, efc.rawcontent AS description, efc.formattedcontent AS fdescription,
+ls.upvotes, ls.downvotes, ls.score, COALESCE(lcc.count, 0) AS comments, f.evebuildnumber
 FROM osmium.loadouts AS l
 JOIN osmium.loadoutslatestrevision AS llr ON llr.loadoutid = l.loadoutid
 JOIN osmium.loadouthistory AS lh ON lh.loadoutid = l.loadoutid AND lh.revision = llr.latestrevision
 JOIN osmium.fittings AS f ON f.fittinghash = lh.fittinghash
+LEFT JOIN osmium.editableformattedcontents AS efc ON efc.contentid = f.descriptioncontentid
 JOIN eve.invtypes AS stn ON stn.typeid = f.hullid
 JOIN osmium.accounts AS a ON a.accountid = l.accountid
 LEFT JOIN osmium.fittingaggtags AS fat ON fat.fittinghash = lh.fittinghash
@@ -117,7 +118,7 @@ foreach($ids as $id) {
 	$r['tags'] = explode(' ', $rows[$id]['taglist']);
 	$r['creationdate'] = (int)$rows[$id]['updatedate'];
 	$r['rawdescription'] = $rows[$id]['description'];
-	$r['fdescription'] = \Osmium\Chrome\format_sanitize_md($rows[$id]['description']);
+	$r['fdescription'] = $rows[$id]['fdescription'];
 	$r['score'] = (float)$rows[$id]['score'];
 	$r['upvotes'] = (int)$rows[$id]['upvotes'];
 	$r['downvotes'] = (int)$rows[$id]['downvotes'];

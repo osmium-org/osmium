@@ -714,15 +714,11 @@ foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) 
 $dsection = $section->appendCreate('section#description');
 $dsection->appendCreate('h3', 'Fitting description');
 
-$desc = \Osmium\Chrome\trim($fit['metadata']['description']);
-if(empty($desc)) {
+$desc = $fit['metadata']['fdescription'];
+if($desc === '') {
 	$dsection->appendCreate('p.placeholder', 'No description given.');
 } else {
-	/* XXX: potential resource hog */
-	/* XXX */
-	$dsection->appendCreate('div')->append($p->fragment(
-		\Osmium\Chrome\format_sanitize_md($desc)
-	));
+	$dsection->appendCreate('div')->append($p->fragment($desc));
 }
 
 

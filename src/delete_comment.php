@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,7 +30,7 @@ $a = \Osmium\State\get_state('a');
 
 if($type == 'comment') {
 	$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, loadoutid FROM osmium.loadoutcomments WHERE commentid = $1',
+		'SELECT accountid, loadoutid, bodycontentid FROM osmium.loadoutcomments WHERE commentid = $1',
 		array($id)
 	));
 
@@ -43,9 +43,20 @@ if($type == 'comment') {
 	}
 
 	\Osmium\Db\query('BEGIN;');
-	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentreplies WHERE commentid = $1', array($id));
-	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentrevisions WHERE commentid = $1', array($id));
-	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE commentid = $1', array($id));
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.editableformattedcomments WHERE contentid = $1',
+		[ $row['bodycontentid'] ]
+	);
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.editableformattedcomments WHERE contentid IN (
+		SELECT bodycontentid FROM osmium.loadoutcommentreplies WHERE commentid = $1
+		)',
+		[ $id ]
+	);
+	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentreplies WHERE commentid = $1', [ $id ]);
+	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentrevisions WHERE commentid = $1', [ $id ]);
+	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE commentid = $1', [ $id ]);
+
 	\Osmium\Reputation\nullify_votes(
 		'targettype = $1 AND targetid1 = $2 AND targetid2 = $3 AND targetid3 IS NULL',
 		array(

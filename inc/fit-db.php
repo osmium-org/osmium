@@ -226,6 +226,21 @@ function commit_damage_profile($dp, &$error = null) {
 	return (int)\Osmium\Db\fetch_row($q)[0];
 }
 
+/** @internal */
+function commit_description($rawdesc, &$fdesc = null) {
+	$rawdesc = \Osmium\Chrome\trim($rawdesc);
+	if($rawdesc === '') return null;
+	return \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'INSERT INTO osmium.editableformattedcontents (rawcontent, filtermask, formattedcontent)
+		VALUES ($1, $2, $3) RETURNING contentid',
+		[
+			$rawdesc,
+			$mask = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE,
+			$fdesc = \Osmium\Chrome\filter_content($rawdesc, $mask),
+		]
+	))[0];
+}
+
 /**
  * Insert a fitting in the database, if necessary. The fitting hash
  * will be updated. The function will try to avoid inserting
@@ -252,16 +267,18 @@ function commit_fitting(&$fit, &$error = null) {
 		return false;
 	}
 
+	$desccontentid = commit_description($fit['metadata']['description'], $fit['metadata']['fdescription']);
+
 	/* Insert the new fitting */
 	$ret = \Osmium\Db\query_params(
 		'INSERT INTO osmium.fittings (
-		fittinghash, name, description, evebuildnumber, hullid, creationdate,
+		fittinghash, name, descriptioncontentid, evebuildnumber, hullid, creationdate,
 		damageprofileid
 		) VALUES ($1, $2, $3, $4, $5, $6, $7)',
 		array(
 			$fittinghash,
 			$fit['metadata']['name'],
-			$fit['metadata']['description'],
+			$desccontentid,
 			$fit['metadata']['evebuildnumber'],
 			isset($fit['ship']['typeid']) ? $fit['ship']['typeid'] : null,
 			time(),
@@ -830,10 +847,11 @@ function commit_loadout_dogma_attribs(&$fit) {
  */
 function get_fitting($fittinghash) {
 	$fitting = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT name, description,
+		'SELECT name, efc.rawcontent AS description, efc.formattedcontent AS fdescription,
 		evebuildnumber, hullid, creationdate, damageprofileid
-		FROM osmium.fittings
-		WHERE fittinghash = $1',
+		FROM osmium.fittings f
+		LEFT JOIN osmium.editableformattedcontents efc ON efc.contentid = f.descriptioncontentid
+		WHERE f.fittinghash = $1',
 		array($fittinghash)
 	));
 
@@ -846,7 +864,8 @@ function get_fitting($fittinghash) {
 
 	$fit['metadata']['hash'] = $fittinghash;
 	$fit['metadata']['name'] = $fitting['name'];
-	$fit['metadata']['description'] = $fitting['description'];
+	$fit['metadata']['description'] = (string)$fitting['description'];
+	$fit['metadata']['fdescription'] = (string)$fitting['fdescription'];
 	$fit['metadata']['evebuildnumber'] = $fitting['evebuildnumber'];
 	$fit['metadata']['creation_date'] = $fitting['creationdate'];
 
