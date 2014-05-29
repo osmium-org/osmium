@@ -30,7 +30,7 @@ $a = \Osmium\State\get_state('a');
 
 if($type == 'comment') {
 	$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, loadoutid, bodycontentid FROM osmium.loadoutcomments WHERE commentid = $1',
+		'SELECT accountid, loadoutid FROM osmium.loadoutcomments WHERE commentid = $1',
 		array($id)
 	));
 
@@ -43,18 +43,41 @@ if($type == 'comment') {
 	}
 
 	\Osmium\Db\query('BEGIN;');
-	\Osmium\Db\query_params(
-		'DELETE FROM osmium.editableformattedcomments WHERE contentid = $1',
-		[ $row['bodycontentid'] ]
-	);
-	\Osmium\Db\query_params(
-		'DELETE FROM osmium.editableformattedcomments WHERE contentid IN (
-		SELECT bodycontentid FROM osmium.loadoutcommentreplies WHERE commentid = $1
-		)',
+
+	$rq = \Osmium\Db\query_params(
+		'SELECT commentreplyid, bodycontentid
+		FROM osmium.loadoutcommentreplies
+		WHERE commentid = $1',
 		[ $id ]
 	);
-	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentreplies WHERE commentid = $1', [ $id ]);
-	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcommentrevisions WHERE commentid = $1', [ $id ]);
+	while($rep = \Osmium\Db\fetch_assoc($rq)) {
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.loadoutcommentreplies WHERE commentreplyid = $1',
+			[ $rep['commentreplyid'] ]
+		);
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.editableformattedcontents WHERE contentid = $1',
+			[ $rep['bodycontentid'] ]
+		);
+	}
+
+	$rq = \Osmium\Db\query_params(
+		'SELECT revision, bodycontentid
+		FROM osmium.loadoutcommentrevisions
+		WHERE commentid = $1',
+		[ $id ]
+	);
+	while($rev = \Osmium\Db\fetch_assoc($rq)) {
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.loadoutcommentrevisions WHERE commentid = $1 AND revision = $2',
+			[ $id, $rev['revision'] ]
+		);
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.editableformattedcontents WHERE contentid = $1',
+			[ $rev['bodycontentid'] ]
+		);
+	}
+
 	\Osmium\Db\query_params('DELETE FROM osmium.loadoutcomments WHERE commentid = $1', [ $id ]);
 
 	\Osmium\Reputation\nullify_votes(
@@ -71,9 +94,9 @@ if($type == 'comment') {
 	$afteruri = '#vcomments';
 } else if($type == 'commentreply') {
 	$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT loadoutcommentreplies.accountid, loadoutcommentreplies.commentid, loadoutid
-		FROM osmium.loadoutcommentreplies
-		JOIN osmium.loadoutcomments ON loadoutcomments.commentid = loadoutcommentreplies.commentid
+		'SELECT lcr.accountid, lcr.commentid, loadoutid, lcr.bodycontentid
+		FROM osmium.loadoutcommentreplies lcr
+		JOIN osmium.loadoutcomments lc ON lc.commentid = lcr.commentid
 		WHERE commentreplyid = $1',
 		array($id)
 	));
@@ -87,14 +110,22 @@ if($type == 'comment') {
 	}
 
 	\Osmium\Db\query('BEGIN;');
+
 	\Osmium\Db\query_params(
 		'DELETE FROM osmium.loadoutcommentreplies WHERE commentreplyid = $1',
-		array($id)
+		[ $id ]
 	);
+
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.editableformattedcontents WHERE contentid = $1',
+		[ $row['bodycontentid'] ]
+	);
+
 	\Osmium\Log\add_log_entry(
 		\Osmium\Log\LOG_TYPE_DELETE_COMMENT_REPLY, null,
 		$id, $row['commentid'], $row['loadoutid']
 	);
+
 	\Osmium\Db\query('COMMIT;');
 
 	$afteruri = '?jtc='.$row['commentid'].'#c'.$row['commentid'];
