@@ -190,10 +190,10 @@ function get_state_names() {
  *
  * damageprofile => array(name, damages => array(em, explosive, kinetic, thermal))
  *
- * metadata => array(name, description, updatereason, tags, evebuildnumber,
- *					 view_permission, edit_permission, visibility,
- *					 password, loadoutid, hash, revision,
- *					 privatetoken)
+ * metadata => array(name, description, fdescription, updatereason,
+ *					 tags, evebuildnumber, view_permission,
+ *					 edit_permission, visibility, password, loadoutid,
+ *					 hash, revision, privatetoken)
  *
  * __dogma_context => (Dogma context resource)
  * __dogma_fleet_context => (Dogma fleet context resource)
@@ -229,6 +229,7 @@ function create(&$fit) {
 		'metadata' => array(
 			'name' => 'Unnamed loadout',
 			'description' => '',
+			'fdescription' => '',
 			'tags' => array(),
 			'evebuildnumber' => get_latest_eve_db_version()['build'],
 			'view_permission' => VIEW_EVERYONE,

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,7 +24,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 
 	private function commitLoadoutPlumbing(&$fit) {
 		$fit['metadata']['name'] = 'Test loadout (PHPUnit-generated)';
-		$fit['metadata']['description'] = '(Not intended for public usage.)';
+		$fit['metadata']['description'] = '';
 		$fit['metadata']['view_permission'] = \Osmium\Fit\VIEW_OWNER_ONLY;
 		$fit['metadata']['edit_permission'] = \Osmium\Fit\EDIT_OWNER_ONLY;
 		$fit['metadata']['visibility'] = \Osmium\Fit\VISIBILITY_PRIVATE;
@@ -214,11 +214,13 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		$l = implode(',', $this->loadoutids);
 		$h = implode(',', array_map(function($x) { return "'$x'"; }, $this->hashes));
 
+		/* XXX: not deleting descriptions in editableformattedcontents */
+
 		\Osmium\Db\query('BEGIN;');
 		\Osmium\Db\query('DELETE FROM osmium.loadoutdogmaattribs WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.accountfavorites WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.loadouthistory WHERE loadoutid IN ('.$l.')');
-		\Osmium\Db\query('DELETE FROM osmium.loadouts WHERE loadoutid IN ('.$l.')');
+		\Osmium\Db\query('DELETE FROM osmium.loadouts WHERE loadoutid IN ('.$l.')');_
 		\Osmium\Db\query('DELETE FROM osmium.fittingfleetboosters WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingcharges WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingchargepresets WHERE fittinghash IN ('.$h.')');
