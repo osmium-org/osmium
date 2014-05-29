@@ -390,28 +390,36 @@ function round_sd($number, $digits = 0) {
 	return $normalized * $m;
 }
 
-function sanitize_html_trust($html) {
-	static $purifier = null;
+function make_htmlpurifier_config() {
 	require_once 'HTMLPurifier.includes.php';
 	require_once 'HTMLPurifier.auto.php';
 
-	if($purifier === null) {
-		$config = \HTMLPurifier_Config::createDefault();
-		$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-		$config->set('HTML.DefinitionID', 'Osmium-trusted');
-		$config->set('HTML.DefinitionRev', 2);
-		$config->set('HTML.Doctype', 'XHTML 1.1');
-		$purifier = new \HTMLPurifier($config);
-	}
+	return \HTMLPurifier_Config::createDefault();
+}
 
-	return $purifier->purify($html);
+function finalize_htmlpurifier_config(\HTMLPurifier_Config $config, $name, $rev) {
+	$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
+	$config->set('HTML.DefinitionID', 'Osmium-'.$name);
+	$config->set('HTML.DefinitionRev', $rev);
+
+	$def = $config->maybeGetRawHTMLDefinition();
+
+	/* Check if cached definition is available */
+	if($def === null) return $config;
+
+	$def->addElement(
+		's',
+		'Inline',
+		'Inline',
+		'Common',
+		[]
+	);
+
+	return $config;
 }
 
 function make_untrusted_htmlpurifier_config() {
-	$config = \HTMLPurifier_Config::createDefault();
-
-	$config->set('Cache.SerializerPath', \Osmium\CACHE_DIRECTORY);
-	$config->set('HTML.Doctype', 'XHTML 1.1');
+	$config = make_htmlpurifier_config();
 
 	/* For convenience */
 	$config->set('AutoFormat.Linkify', true);
@@ -437,16 +445,23 @@ function make_untrusted_htmlpurifier_config() {
 	return $config;
 }
 
+function sanitize_html_trust($html) {
+	static $purifier = null;
+
+	if($purifier === null) {
+		$config = make_htmlpurifier_config();
+		$purifier = new \HTMLPurifier(finalize_htmlpurifier_config($config, 'trusted', 2));
+	}
+
+	return $purifier->purify($html);
+}
+
 function sanitize_html($html) {
 	static $purifier = null;
-	require_once 'HTMLPurifier.includes.php';
-	require_once 'HTMLPurifier.auto.php';
 
 	if($purifier === null) {
 		$config = make_untrusted_htmlpurifier_config();
-		$config->set('HTML.DefinitionID', 'Osmium-untrusted-full');
-		$config->set('HTML.DefinitionRev', 3);
-		$purifier = new \HTMLPurifier($config);
+		$purifier = new \HTMLPurifier(finalize_htmlpurifier_config($config, 'untrusted-full', 3));
 	}
 
 	return $purifier->purify($html);
@@ -454,13 +469,9 @@ function sanitize_html($html) {
 
 function sanitize_html_phrasing($html) {
 	static $purifier = null;
-	require_once 'HTMLPurifier.includes.php';
-	require_once 'HTMLPurifier.auto.php';
 
 	if($purifier === null) {
 		$config = make_untrusted_htmlpurifier_config();
-		$config->set('HTML.DefinitionID', 'Osmium-untrusted-phrasing');
-		$config->set('HTML.DefinitionRev', 3);
 
 		/* Only allow some inline elements typically used in phrasing content. */
 		$config->set(
@@ -468,7 +479,7 @@ function sanitize_html_phrasing($html) {
 			'a, abbr, b, cite, code, del, em, i, ins, kbd, q, s, samp, small, span, strong, sub, sup'
 		);
 
-		$purifier = new \HTMLPurifier($config);
+		$purifier = new \HTMLPurifier(finalize_htmlpurifier_config($config, 'untrusted-phrasing', 3));
 	}
 
 	return $purifier->purify($html);
