@@ -26,5 +26,6 @@ Disallow: /moderation
 Disallow: /moderation/
 Disallow: /new
 Disallow: /new/
+Disallow: /src/
 
 # Add your own rules here…
