@@ -26,10 +26,11 @@ $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if($_GET['type'] == 'comment') {
 	$comment = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT commentbody, accountid, loadoutid, latestrevision
+		'SELECT efc.rawcontent AS commentbody, accountid, loadoutid, latestrevision, efc.contentid
 		FROM osmium.loadoutcommentslatestrevision AS lclr
 		JOIN osmium.loadoutcommentrevisions AS lcr ON lcr.commentid = lclr.commentid
 		AND lcr.revision = lclr.latestrevision
+		JOIN osmium.editableformattedcontents efc ON efc.contentid = lcr.bodycontentid
 		JOIN osmium.loadoutcomments lc ON lc.commentid = lclr.commentid
 		WHERE lclr.commentid = $1',
 		array($id)
@@ -70,36 +71,46 @@ if($_GET['type'] == 'comment') {
 if(isset($_POST['body'])) {
 	if($_GET['type'] == 'comment') {
 		$body = trim($_POST['body']);
-		$formatted = \Osmium\Chrome\format_sanitize_md($body);
+		$filtermask = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE;
+		$formatted = \Osmium\Chrome\filter_content($body, $filtermask);
 
 		if($_POST['body'] == $comment['commentbody'] && $a['accountid'] == $comment['accountid']) {
 			/* Keep the same revision, but update the formattedbody */
 			\Osmium\Db\query_params(
-				'UPDATE osmium.loadoutcommentrevisions
-				SET commentformattedbody = $1
-				WHERE commentid = $2 AND revision = $3',
+				'UPDATE osmium.editableformattedcontents
+				SET filtermask = $2, formattedcontent = $1
+				WHERE contentid = $3',
 				array(
 					$formatted,
-					$id,
-					$comment['latestrevision'],
+					$filtermask,
+					$comment['contentid'],
 				)
 			);
 		} else {
 			/* Insert a new revision */
+			\Osmium\Db\query('BEGIN');
+
+			list($newcontentid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+				'INSERT INTO osmium.editableformattedcontents (rawcontent, filtermask, formattedcontent)
+				VALUES ($1, $2, $3) RETURNING contentid',
+				[ $_POST['body'], $filtermask, $formatted ]
+			));
+
 			$newrevision = $comment['latestrevision'] + 1;
 			\Osmium\Db\query_params(
 				'INSERT INTO osmium.loadoutcommentrevisions (
-				commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody
-				) VALUES ($1, $2, $3, $4, $5, $6)',
+				commentid, revision, updatedbyaccountid, updatedate, bodycontentid
+				) VALUES ($1, $2, $3, $4, $5)',
 				array(
 					$id,
 					$newrevision,
 					$a['accountid'],
 					time(),
-					$_POST['body'],
-					$formatted,
+					$newcontentid,
 				)
 			);
+
+			\Osmium\Db\query('COMMIT');
 		}
 
 		\Osmium\Db\query_params(

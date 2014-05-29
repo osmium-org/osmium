@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -78,7 +78,10 @@ if(isset($_POST['commentbody'])) {
 	) && $a['accountid'] != $author['accountid']) return;
 
 	$body = \Osmium\Chrome\trim($_POST['commentbody']);
-	$formatted = \Osmium\Chrome\format_sanitize_md($body);
+	$formatted = \Osmium\Chrome\filter_content(
+		$body,
+		$commentfilter = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE
+	);
 
 	if(empty($body) || empty($formatted)) {
 		/* Cowardly refusing to insert a blank comment */
@@ -89,7 +92,8 @@ if(isset($_POST['commentbody'])) {
 
 	$r = \Osmium\Db\query_params(
 		'INSERT INTO osmium.loadoutcomments (loadoutid, accountid, creationdate, revision)
-		VALUES ($1, $2, $3, $4) RETURNING commentid',
+		VALUES ($1, $2, $3, $4)
+		RETURNING commentid',
 		array(
 			$loadoutid,
 			$a['accountid'],
@@ -102,19 +106,35 @@ if(isset($_POST['commentbody'])) {
 		\Osmium\Db\query('ROLLBACK;'); /* XXX: warn user about this failure */
 		return;
 	}
-
 	list($commentid) = \Osmium\Db\fetch_row($r);
+
+	$r = \Osmium\Db\query_params(
+		'INSERT INTO osmium.editableformattedcontents (rawcontent, filtermask, formattedcontent)
+		VALUES ($1, $2, $3)
+		RETURNING contentid',
+		[
+			$_POST['commentbody'],
+			$commentfilter,
+			$formatted,
+		]
+	);
+
+	if($r === false) {
+		\Osmium\Db\query('ROLLBACK;'); /* XXX: warn user about this failure */
+		return;
+	}
+	list($contentid) = \Osmium\Db\fetch_row($r);
+
 	$r = \Osmium\Db\query_params(
 		'INSERT INTO osmium.loadoutcommentrevisions
-		(commentid, revision, updatedbyaccountid, updatedate, commentbody, commentformattedbody)
-		VALUES ($1, $2, $3, $4, $5, $6)',
+		(commentid, revision, updatedbyaccountid, updatedate, bodycontentid)
+		VALUES ($1, $2, $3, $4, $5)',
 		array(
 			$commentid,
 			1,
 			$a['accountid'],
 			$t,
-			$_POST['commentbody'],
-			$formatted
+			$contentid,
 		)
 	);
 

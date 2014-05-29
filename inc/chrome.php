@@ -26,6 +26,11 @@ define(
 	)
 );
 
+const CONTENT_FILTER_MARKDOWN = 1;
+const CONTENT_FILTER_SANITIZE_TRUST = 2;
+const CONTENT_FILTER_SANITIZE = 4;
+const CONTENT_FILTER_SANITIZE_PHRASING = 8;
+
 const F_USED_SHOW_ABSOLUTE = 1;
 const F_USED_SHOW_DIFFERENCE = 2;
 const F_USED_SHOW_PERCENTAGE = 4;
@@ -474,12 +479,34 @@ function format_md($markdowntext) {
     return \Markdown($markdowntext);
 }
 
+/* @deprecated use filter_content() */
 function format_sanitize_md($markdowntext) {
 	return sanitize_html(format_md($markdowntext));
 }
 
+/* @deprecated use filter_content() */
 function format_sanitize_md_phrasing($markdowntext) {
 	return sanitize_html_phrasing(format_md($markdowntext));
+}
+
+/* Filter some content.
+ *
+ * @param $filter a bitmask of CONTENT_FILTER_* constants.
+ */
+function filter_content($content, $filter) {
+	if($filter & CONTENT_FILTER_MARKDOWN)
+		$content = format_md($content);
+
+	if($filter & CONTENT_FILTER_SANITIZE_TRUST)
+		$content = sanitize_html_trust($content);
+
+	if($filter & CONTENT_FILTER_SANITIZE)
+		$content = sanitize_html($content);
+
+	if($filter & CONTENT_FILTER_SANITIZE_PHRASING)
+		$content = sanitize_html_phrasing($content);
+
+	return $content;
 }
 
 function format_showinfo_links($desc) {

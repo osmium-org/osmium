@@ -62,4 +62,10 @@ reformat-deltas:
 	./bin/truncate osmium.fittingdeltas
 	./bin/parallelize 8 ./bin/reformat_deltas
 
-.PHONY: default tags tests db-tests all-tests test-coverage clear-harmless-cache clear-api-cache clear-sessions themes staticcache post-eve-schema-update reindex-loadouts reformat-deltas
+reformat-editable-formatted-contents:
+	./bin/parallelize 8 ./bin/reformat_editable_formatted_contents
+
+.PHONY: default tags tests db-tests all-tests test-coverage		\
+ clear-harmless-cache clear-api-cache clear-sessions themes		\
+ staticcache post-eve-schema-update reindex-loadouts reformat-deltas	\
+ reformat-editable-formatted-contents
