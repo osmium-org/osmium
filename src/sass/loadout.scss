@@ -193,6 +193,7 @@ div#computed_attributes > section {
 			bottom: 0;
 			font-size: 0.9em;
 			color: $aside-text-color;
+			text-shadow: none;
 		}
 	}
 
@@ -480,6 +481,7 @@ section.sivariations {
 
 .overflow {
 	color: $overflow-text-color !important;
+	text-shadow: rgba($overflow-text-color, .75) 0 0 0.5em !important;
 }
 
 
@@ -610,6 +612,7 @@ span#syncwait {
 section#modules, section#drones, section#ship, section#implants {
 	& span.name.missingskill {
 		color: $missing-skill-text-color;
+		text-shadow: rgba($missing-skill-text-color, .5) 0 0 .5em;
 	}
 }
 

@@ -275,9 +275,9 @@ h1#vltitle > ul.tags {
 	font-size: 0.6em;
 	font-weight: normal;
 	font-family: $sans-font;
-	opacity: 0.7;
 	vertical-align: middle;
 	margin: 0;
+	margin-left: 1em;
 
 	&> li.retag {
 		background: transparent;
