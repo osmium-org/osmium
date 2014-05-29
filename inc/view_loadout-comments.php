@@ -183,7 +183,8 @@ else if(isset($_POST['replybody']) && isset($_POST['commentid'])) {
 	) && $a['accountid'] != $commentdata['accountid']) return;
 
 	$body = \Osmium\Chrome\trim($_POST['replybody']);
-	$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);
+	$filtermask = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE_PHRASING;
+	$formatted = \Osmium\Chrome\filter_content($body, $filtermask);
 
 	if(empty($body) || empty($formatted)) {
 		return;
@@ -192,15 +193,26 @@ else if(isset($_POST['replybody']) && isset($_POST['commentid'])) {
 	\Osmium\Db\query('BEGIN;');
 
 	$r = \Osmium\Db\query_params(
+		'INSERT INTO osmium.editableformattedcontents (rawcontent, filtermask, formattedcontent)
+		VALUES ($1, $2, $3) RETURNING contentid',
+		[ $_POST['replybody'], $filtermask, $formatted ]
+	);
+
+	if($r === false) {
+		\Osmium\Db\query('ROLLBACK;'); /* XXX: warn user about this failure */
+		return;
+	}
+	list($contentid) = \Osmium\Db\fetch_row($r);
+
+	$r = \Osmium\Db\query_params(
 		'INSERT INTO osmium.loadoutcommentreplies
-		(commentid, accountid, creationdate, replybody, replyformattedbody, updatedate, updatedbyaccountid)
-		VALUES ($1, $2, $3, $4, $5, null, null) RETURNING commentreplyid',
+		(commentid, accountid, creationdate, updatedate, updatedbyaccountid, bodycontentid)
+		VALUES ($1, $2, $3, null, null, $4) RETURNING commentreplyid',
 		array(
 			$_POST['commentid'],
 			$a['accountid'],
 			time(),
-			$body,
-			$formatted
+			$contentid,
 		)
 	);
 

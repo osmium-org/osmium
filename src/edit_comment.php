@@ -48,8 +48,9 @@ if($_GET['type'] == 'comment') {
 	$ftype = 'Comment';
 } else if($_GET['type'] == 'commentreply') {
 	$reply = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT replybody, accountid, commentid
-		FROM osmium.loadoutcommentreplies
+		'SELECT efc.rawcontent AS replybody, accountid, commentid, efc.contentid
+		FROM osmium.loadoutcommentreplies lcr
+		JOIN osmium.editableformattedcontents efc ON efc.contentid = lcr.bodycontentid
 		WHERE commentreplyid = $1',
 		array($id)
 	));
@@ -126,20 +127,35 @@ if(isset($_POST['body'])) {
 		$jump = '?jtc='.$id;
 	} else if($_GET['type'] == 'commentreply') {
 		$body = trim($_POST['body']);
-		$formatted = \Osmium\Chrome\format_sanitize_md_phrasing($body);
+		$filtermask = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE_PHRASING;
+		$formatted = \Osmium\Chrome\filter_content($body, $filtermask);
+
+		\Osmium\Db\query('BEGIN');
+
+		\Osmium\Db\query_params(
+			'UPDATE osmium.editableformattedcontents
+			SET rawcontent = $1, filtermask = $2, formattedcontent = $3
+			WHERE contentid = $4',
+			[
+				$_POST['body'],
+				$filtermask,
+				$formatted,
+				$reply['contentid'],
+			]
+		);
 
 		\Osmium\Db\query_params(
 			'UPDATE osmium.loadoutcommentreplies
-			SET replybody = $1, replyformattedbody = $2, updatedate = $3, updatedbyaccountid = $4
-			WHERE commentreplyid = $5',
+			SET updatedate = $1, updatedbyaccountid = $2
+			WHERE commentreplyid = $3',
 			array(
-				$_POST['body'],
-				$formatted,
 				time(),
 				$a['accountid'],
 				$id,
 			)
 		);
+
+		\Osmium\Db\query('COMMIT');
 
 		$replyid = $id;
 		$id = $reply['commentid'];

@@ -71,7 +71,7 @@ $cq = \Osmium\Db\query_params(
 	lcrev.updatedbyaccountid, lcrev.updatedate, efc.formattedcontent AS commentformattedbody,
 
 	lcrep.commentreplyid, lcrep.creationdate AS repcreationdate,
-	lcrep.replyformattedbody, lcrep.updatedate AS repupdatedate,
+	lcrefc.formattedcontent AS replyformattedbody, lcrep.updatedate AS repupdatedate,
 
 	cacc.accountid, cacc.nickname, cacc.apiverified, cacc.characterid,
 	cacc.charactername, cacc.ismoderator, cacc.reputation,
@@ -93,9 +93,10 @@ $cq = \Osmium\Db\query_params(
 	JOIN osmium.loadoutcommentslatestrevision AS lclr ON lc.commentid = lclr.commentid
 	JOIN osmium.loadoutcommentrevisions AS lcrev ON lcrev.commentid = lc.commentid
 	AND lcrev.revision = lclr.latestrevision
-	JOIN editableformattedcontents efc ON efc.contentid = lcrev.bodycontentid
+	JOIN osmium.editableformattedcontents efc ON efc.contentid = lcrev.bodycontentid
 	JOIN osmium.accounts AS uacc ON uacc.accountid = lcrev.updatedbyaccountid
 	LEFT JOIN osmium.loadoutcommentreplies AS lcrep ON lcrep.commentid = lc.commentid
+	LEFT JOIN osmium.editableformattedcontents lcrefc ON lcrefc.contentid = lcrep.bodycontentid
 	LEFT JOIN osmium.accounts AS racc ON racc.accountid = lcrep.accountid
 	WHERE lc.commentid IN ('.implode(',', $commentids).')
 	ORDER BY lc.revision DESC, lcrep.creationdate ASC',

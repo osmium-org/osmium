@@ -40,6 +40,36 @@ ALTER TABLE loadoutcommentrevisions
       REFERENCES editableformattedcontents (contentid) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION;
 
+UPDATE editableformattedcontents SET tempid1 = NULL, tempid2 = NULL;
+
+
+
+--
+-- Comment replies
+--
+
+ALTER TABLE loadoutcommentreplies ADD COLUMN bodycontentid integer;
+
+INSERT INTO editableformattedcontents (rawcontent, filtermask, formattedcontent, tempid1)
+SELECT replybody, 9, replyformattedbody, commentreplyid FROM loadoutcommentreplies
+ORDER BY commentreplyid ASC;
+
+UPDATE loadoutcommentreplies SET bodycontentid = (
+       SELECT contentid FROM editableformattedcontents efc
+       WHERE efc.tempid1 = commentreplyid
+);
+
+ALTER TABLE loadoutcommentreplies DROP COLUMN replybody;
+ALTER TABLE loadoutcommentreplies DROP COLUMN replyformattedbody;
+ALTER TABLE loadoutcommentreplies ALTER COLUMN bodycontentid SET NOT NULL;
+
+ALTER TABLE loadoutcommentreplies
+  ADD CONSTRAINT loadoutcommentreplies_bodycontentid_fkey FOREIGN KEY (bodycontentid)
+      REFERENCES editableformattedcontents (contentid) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION;
+
+UPDATE editableformattedcontents SET tempid1 = NULL;
+
 
 
 ALTER TABLE editableformattedcontents DROP COLUMN tempid1;
