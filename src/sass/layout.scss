@@ -92,6 +92,10 @@ $nav-height: 2.5em;
 	column-width: $width;
 }
 
+html {
+	overflow-y: scroll;
+}
+
 html, body {
 	margin: 0;
 	padding: 0;

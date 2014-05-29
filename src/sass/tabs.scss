@@ -15,7 +15,7 @@
 			padding-top: 0.4em;
 			color: $tab-active-text-color;
 			text-decoration: none;
-			font-weight: bold;
+			text-shadow: $tab-active-text-color 0 0 1px;
 
 			border-bottom-color: transparent !important;
 			opacity: 1.0;
