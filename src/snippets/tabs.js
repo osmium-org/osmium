@@ -84,7 +84,8 @@ osmium_tabify = function(ul, selected) {
 		if(i !== selected) {
 			tget.hide().trigger('made_hidden');
 		} else {
-			t.addClass('active').trigger('made_visible');
+			t.addClass('active');
+			tget.trigger('made_visible');
 		}
 		++i;
 	});
@@ -136,7 +137,7 @@ osmium_tab_click = function(e) {
 	osmium_selected_tabs[ul_index] = want;
 
 	if(window.history && window.history.replaceState) {
-		window.history.replaceState(null, null, '#' + osmium_selected_tabs.join(','));
+		history.replaceState(history.state, null, '#' + osmium_selected_tabs.join(','));
 	}
 
 	e.preventDefault();

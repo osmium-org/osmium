@@ -15,8 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet loadout_common >>>*/
+/*<<< require snippet view_loadout-presets >>>*/
+/*<<< require snippet new_loadout-ship >>>*/
+/*<<< require snippet new_loadout-modules >>>*/
+/*<<< require snippet new_loadout-drones >>>*/
+/*<<< require snippet new_loadout-implants >>>*/
+/*<<< require snippet new_loadout-remote >>>*/
+
 $(function() {
+	$("section#remote").on('made_visible', function() {
+		jsPlumb.setSuspendDrawing(false);
+	});
+
 	osmium_tabify($("div#vlmain > ul.tabs"), 0);
+
+	jsPlumb.setSuspendDrawing(true);
 
 	var odata = $("div#osmium-data");
 
@@ -28,8 +42,15 @@ $(function() {
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
+
+		if($("a[href='#remote']").parent().hasClass('active')) {
+			$("section#remote").trigger('made_visible');
+		}
+
 		osmium_highlight_missing_prereqs(odata.data('missingprereqs'));
+
 		osmium_user_initiated_push(true);
+
 		osmium_undo_push();
 		osmium_init_votes();
 		osmium_init_comment_replies();
@@ -132,11 +153,16 @@ $(function() {
 		form.show();
 		inp.focus();
 	});
+
+	if(window.history && Array.isArray(history.state) && history.state.length === 2) {
+		osmium_clf = $.extend(true, {}, history.state[1]);
+		osmium_commit_clf();
+		osmium_gen();
+	}
 });
 
 osmium_loadout_readonly = true;
 osmium_clftype = 'view';
-osmium_on_clf_payload = function(payload) {};
 
 osmium_init = function() {
 	osmium_init_ship();

@@ -95,48 +95,216 @@ class Page extends RawPage {
 
 
 
-	/* Minify a bunch of JS snippets.
-	 *
-	 * @returns URI of minified JS file, from /static/
-	 */
-	private static function _minify(array $snippets) {
-		if($snippets === []) return null;
+	/* Compiles the specified snippets and adds the relevant <script>s to the page body. */
+	private function renderScripts(RenderContext $ctx) {
+		if($this->snippets === []) return;
+
 		/* Like array_unique(), but O(n) */
-		$snippets = array_flip(array_flip($snippets));
+		$snippets = array_flip(array_flip($this->snippets));
 
-		$name = 'JS_'.substr(sha1(implode("\n", $snippets)), 0, 7);
-		$cachefile = \Osmium\ROOT.'/static/cache/'.$name.'.js';
-		$cacheminfile = \Osmium\ROOT.'/static/cache/'.$name.'.min.js';
+		$name = 'js.'.implode('.', ($snippets === [ 'common' ] ? $snippets : array_slice($snippets, 1)));
+		$cacheminfile = \Osmium\ROOT.'/static'.($finaluri = '/cache/'.$name.'.min.js');
+		$meta = \Osmium\State\get_cache_memory_fb($metaname = $name.'.meta', null);
 
-		foreach($snippets as &$s) {
-			$s = escapeshellarg(\Osmium\ROOT.'/src/snippets/'.$s.'.js');
-		}
+		if(!file_exists($cacheminfile) || $meta === null) {
+			$sem = \Osmium\State\semaphore_acquire('snippet.'.$name);
 
-		$snippets = implode(' ', $snippets);
+			/* Maybe another process already made the file while
+			 * waiting for the semaphore? */
+			clearstatcache(true, $cacheminfile);
+			if($hassnippet = file_exists($cacheminfile)) {
+				$meta = \Osmium\State\get_cache_memory_fb($metaname, null);
+			}
 
-		if(!file_exists($cacheminfile)) {
-			$sem = \Osmium\State\semaphore_acquire($name);
-
-			if(!file_exists($cacheminfile)) {
-				shell_exec('cat '.$snippets.' >> '.escapeshellarg($cachefile));
-
-				if($min = \Osmium\get_ini_setting('minify_js')) {
-					$command = \Osmium\get_ini_setting('minify_command');
-
-					/* Concatenate & minify */
-					shell_exec('cat '.$snippets.' | '.$command.' >> '.escapeshellarg($cacheminfile));
-				}
-
-				if(!$min || !file_exists($cachefile)) {
-					/* Not minifying, or minifier failed for some reason */
-					shell_exec('ln -s '.escapeshellarg($cachefile).' '.escapeshellarg($cacheminfile));
-				}
+			if(!$hassnippet || $meta === null) {
+				/* This is a fairly expensive operation (especially if the
+				 * output is piped in a minifier), hence the
+				 * semaphores. */
+				$this->compileSnippets(
+					$ctx,
+					$snippets,
+					\Osmium\ROOT.'/static/cache/'.$name.'.js',
+					$cacheminfile,
+					$meta /* Passed by reference */
+				);
+				\Osmium\State\put_cache_memory_fb($metaname, $meta, 86400);
 			}
 
 			\Osmium\State\semaphore_release($sem);
 		}
 
-		return '/cache/'.$name.'.min.js';
+		if(isset($meta['head']) && $meta['head'] !== '') {
+			$this->head->append($this->fragment($meta['head']));
+		}
+		if(isset($meta['before']) && $meta['before'] !== '') {
+			$this->body->append($this->fragment($meta['before']));
+		}
+		$this->body->appendCreate('script', [
+			'type' => 'application/javascript',
+			'id' => 'snippets',
+			'o-static-js-src' => $finaluri,
+		]);
+		if(isset($meta['after']) && $meta['after'] !== '') {
+			$this->body->append($this->fragment($meta['after']));
+		}
+	}
+
+	/* @internal */
+	private function compileSnippets(RenderContext $ctx, array $snippets, $out, $minout, &$meta = []) {
+		$hasit = [];
+		$meta['before'] = '';
+		$meta['after'] = '';
+		$meta['head'] = '';
+		$c = count($snippets);
+
+		do {
+			$added = 0;
+
+			for($i = 0; $i < $c; ++$i) {
+				$s = $snippets[$i];
+				if(isset($hasit[$s])) continue;
+				$hasit[$s] = true;
+
+				if(!file_exists($sfile = \Osmium\ROOT.'/src/snippets/'.$s.'.js')) {
+					throw new \Exception("snippet $s does not exist");
+				}
+
+				preg_match_all(
+					'%^/\*<<<\s+require\s+(?<type>snippet|external|css)\s+(?<src>.+?)(\s+(?<position>first|last|before|after|anywhere))?\s+>>>\*/$%m',
+					file_get_contents($sfile),
+					$matches,
+					\PREG_SET_ORDER
+				);
+
+				foreach($matches as $m) {
+					if(!isset($m['position']) || $m['position'] === '') $m['position'] = 'anywhere';
+
+					if(isset($hasit[$m['src']])) {
+						if($m['type'] !== 'snippet') {
+							/* TODO */
+							continue;
+						}
+
+						/* Dependency already included, check order consistency */
+
+						$pos = array_search($m['src'], $snippets, true);
+						if((($m['position'] === 'first' || $m['position'] === 'before') && $pos >= $i)
+						   || (($m['position'] === 'last' || $m['position'] === 'after') && $pos <= $i)) {
+							throw new \Exception(
+								"snippet $s($i) requires {$m['src']}($pos) {$m['position']} but order is inconsistent"
+							);
+						}
+
+						continue;
+					}
+
+					if($m['type'] === 'external' || $m['type'] === 'css') {
+						$hasit[$m['src']] = true;
+
+					    if(
+							substr($m['src'], 0, 2) !== '//'
+							&& substr($m['src'], 0, 7) !== 'http://'
+							&& substr($m['src'], 0, 8) !== 'https://'
+					    ) {
+						    $m['src'] = $ctx->relative.$m['src'];
+					    }
+
+					    if($m['type'] === 'css') {
+						    $xml = $this->element('link', [
+							    'rel' => 'stylesheet',
+							    'type' => 'text/css',
+							    'href' => $m['src'],
+						    ])->renderNode();
+						    $before =& $meta['head'];
+						    $after =& $meta['head'];
+					    } else if($m['type'] === 'external') {
+						    $xml = $this->element('script', [
+							    'type' => 'application/javascript',
+							    'src' => $m['src'],
+						    ])->renderNode();
+						    $before =& $meta['before'];
+						    $after =& $meta['after'];
+					    }
+
+						switch($m['position']) {
+
+						case 'before':
+						case 'anywhere':
+							$before .= $xml;
+							break;
+
+						case 'after':
+							$after = $xml.$after;
+							break;
+
+						case 'first':
+							$before = $xml.$before;
+							break;
+
+						case 'last':
+							$after .= $xml;
+							break;
+
+						}
+
+						unset($before);
+						unset($after);
+
+						continue;
+					}
+
+					/* Insert the dependency */
+					++$added;
+					++$c;
+
+					switch($m['position']) {
+
+					case 'before':
+					case 'anywhere':
+						array_splice($snippets, $i, 0, $m['src']);
+						++$i;
+						break;
+
+					case 'after':
+						array_splice($snippets, $i + 1, 0, $m['src']);
+						break;
+
+					case 'first':
+						array_unshift($snippets, $m['src']);
+						++$i;
+						break;
+
+					case 'last':
+						array_push($snippets, $m['src']);
+						break;
+
+					}
+				}
+			}
+		} while($added > 0);
+
+		$snippets = implode(' ', array_map(function($s) {
+			return escapeshellarg(\Osmium\ROOT.'/src/snippets/'.$s.'.js');
+		}, $snippets));
+		$ecf = escapeshellarg($out);
+		$ecmf = escapeshellarg($minout);
+
+		\Osmium\debug($snippets);
+		shell_exec($cmd = 'cat '.$snippets.' > '.$ecf);
+		\Osmium\debug($cmd);
+
+		if($min = \Osmium\get_ini_setting('minify_js')) {
+			$command = \Osmium\get_ini_setting('minify_command');
+
+			/* Concatenate & minify */
+			shell_exec('cat '.$ecf.' | '.$command.' >> '.$ecmf);
+		}
+
+		clearstatcache(true, $minout);
+		if(!$min || !file_exists($minout)) {
+			/* Not minifying, or minifier failed for some reason */
+			shell_exec('ln -s '.$ecf.' '.$ecmf);
+		}
 	}
 
 
@@ -224,15 +392,14 @@ class Page extends RawPage {
 			$flink->attr('o-static-href', '/'.$favicon);
 		}
 
-		$this->snippets[] = 'persistent_theme';
-		$this->snippets[] = 'notifications';
-		$this->snippets[] = 'feedback';
+		array_unshift($this->snippets, 'common');
 
 		$this->data['relative'] = $ctx->relative;
 
 		$this->renderThemes();
 		$this->renderHeader();
 		$this->renderFooter();
+		$this->renderScripts($ctx);
 
 		parent::finalize($ctx);
 	}
@@ -910,23 +1077,5 @@ class Page extends RawPage {
 		foreach($this->data as $k => $v) {
 			$datadiv->setAttribute('data-'.$k, is_string($v) ? $v : json_encode($v));
 		}
-
-		/* If these scripts are changed, also change the license
-		 * information in about.php */
-		$this->body->append([
-		    [ 'script', [
-				'type' => 'application/javascript',
-				'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js'
-			]],
-		    [ 'script', [
-				'type' => 'application/javascript',
-				'src' => '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js'
-			]],
-			[ 'script', [
-				'type' => 'application/javascript',
-				'id' => 'snippets',
-				'o-static-js-src' => self::_minify($this->snippets),
-			]],
-		]);
 	}
 }

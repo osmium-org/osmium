@@ -1,10 +1,30 @@
 # Should match the values in config.ini
 Sitemap: http://my-domain.tld/sitemap.xml.gz
 
+# Disallow internal pages to save resources. All these pages should
+# have a meta noindex when applicable, but at least robots won't
+# follow links leading to these pages. It is highly recommended that
+# you use these rules in your own robots.txt.
+
 User-agent: *
 Disallow: /api/
+Disallow: /delete/
+Disallow: /deletecomment/
+Disallow: /deletecommentreply/
+Disallow: /edit/
+Disallow: /editcomment/
+Disallow: /editcommentreply/
+Disallow: /flag/
+Disallow: /flagcomment/
+Disallow: /flagcommentreply/
+Disallow: /fork/
 Disallow: /internal/
 Disallow: /loadout/dna/
+Disallow: /loadout/private/
 Disallow: /loadouthistory/
+Disallow: /moderation
+Disallow: /moderation/
+Disallow: /new
+Disallow: /new/
 
 # Add your own rules here…

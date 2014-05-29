@@ -15,6 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet modal >>>*/
+/*<<< require snippet sprite >>>*/
+/*<<< require snippet tabs >>>*/
+/*<<< require snippet loadout_common >>>*/
+
 osmium_showinfo_sprite_position = [ 6, 58, 16, 16 ];
 
 osmium_showinfo = function(opts) {
@@ -103,6 +108,8 @@ osmium_showinfo_internal = function(opts, onerror) {
 
 			ul.after($(document.createElement('p')).addClass('compare').append(
 				$(document.createElement('a'))
+					.prop('target', '_blank')
+					.addClass('external')
 					.prop('href', osmium_relative + '/db/comparetypes/'
 						  + vartypeids.join(',') + '/auto')
 					.text('Compare these types')

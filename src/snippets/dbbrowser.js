@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet tabs >>>*/
+/*<<< require snippet perfectscrollbar >>>*/
+
 $(function() {
 	var tabs = $("ul.tabs");
 	if(tabs.length > 0) {
@@ -120,7 +123,6 @@ $(function() {
 						var highisgood = ctable.children('thead')
 							.children('tr').children()
 							.eq(td.index()).data('hig');
-						console.log(td.index(), highisgood);
 						var gain = delta >= 0;
 						if(highisgood) {
 							td.addClass(gain ? 'gain' : 'loss');

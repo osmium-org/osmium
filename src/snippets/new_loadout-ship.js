@@ -75,7 +75,7 @@ osmium_init_ship = function() {
 	osmium_ctxmenu_bind($("section#ship"), function() {
 		var menu = osmium_ctxmenu_create();
 
-		osmium_ctxmenu_add_option(menu, "Undo (Ctrl+_)", function() {
+		osmium_ctxmenu_add_option(menu, "Undo (C-z)", function() {
 			osmium_undo_pop();
 			osmium_commit_clf();
 			osmium_user_initiated_push(false);
@@ -283,32 +283,5 @@ osmium_init_ship = function() {
 		}
 
 		return menu;
-	});
-
-	/* This isn't pretty */
-	$(document).keydown(function(e) {
-		/* Chromium doesn't issue a keypress event */
-		if(!e.ctrlKey || e.which != 189) return true;
-		e.preventDefault();
-
-		osmium_undo_pop();
-		osmium_commit_clf();
-		osmium_user_initiated_push(false);
-		osmium_gen();
-		osmium_user_initiated_pop();
-
-		return false;
-	}).keypress(function(e) {
-		/* Firefox behaves as expected */
-		if(!e.ctrlKey || e.which != 95) return true;
-		e.preventDefault();
-
-		osmium_undo_pop();
-		osmium_commit_clf();
-		osmium_user_initiated_push(false);
-		osmium_gen();
-		osmium_user_initiated_pop();
-
-		return false;
 	});
 };

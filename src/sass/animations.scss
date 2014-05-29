@@ -24,8 +24,7 @@
 }
 
 :target, .pseudoclasstarget {
-	@include prefixize(animation-name, tfade);
-	@include prefixize(animation-duration, 15s);
+	@include prefixize(animation, tfade 15s);
 }
 
 .notarget:target, .pseudoclasstarget.notarget {
@@ -55,4 +54,19 @@ div.spinner, span.spinner {
 @include keyframes(bounce) {
 	from { opacity: 1; top: -0.5em; }
 	to { opacity: 0.2; top: 0; }
+}
+
+div#wrapper > div#glob_feedback {
+	&.notextended {
+		@include prefixize(animation, fb-translate-left 0.5s ease 1 reverse);
+	}
+
+	&.extended {
+		@include prefixize(animation, fb-translate-left 0.5s ease 1 normal);
+	}
+}
+
+@include keyframes(fb-translate-left) {
+	from { right: -30em; }
+	to { right: -1px; }
 }

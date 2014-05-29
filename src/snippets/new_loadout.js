@@ -15,6 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet loadout_common >>>*/
+/*<<< require snippet new_loadout-control >>>*/
+/*<<< require snippet new_loadout-sources >>>*/
+/*<<< require snippet new_loadout-ship >>>*/
+/*<<< require snippet new_loadout-presets >>>*/
+/*<<< require snippet new_loadout-metadata >>>*/
+/*<<< require snippet new_loadout-modules >>>*/
+/*<<< require snippet new_loadout-drones >>>*/
+/*<<< require snippet new_loadout-implants >>>*/
+/*<<< require snippet new_loadout-remote >>>*/
+
 $(function() {
 	$('p#needjs').css({ visibility: 'hidden' });
 
@@ -37,15 +48,28 @@ $(function() {
 	osmium_load_common_data();
 	osmium_shortlist = $("div#osmium-data").data('shortlist');
 
+	$("section#remote").on('made_visible', function() {
+		jsPlumb.setSuspendDrawing(false);
+	});
+
+	osmium_tabify($('div#nlmain > ul.tabs'), 0);
+
 	$('div#nlsources > ul.tabs').each(function() {
 		osmium_tabify($(this), 0);
 	});
+
+	jsPlumb.setSuspendDrawing(true);
+
+	osmium_load_common_data();
+	osmium_shortlist = $("div#osmium-data").data('shortlist');
 
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
 		osmium_init();
 
-		osmium_tabify($('div#nlmain > ul.tabs'), 0);
+		if($("a[href='#remote']").parent().hasClass('active')) {
+			$("section#remote").trigger('made_visible');
+		}
 
 		/* Fetch computed attributes, etc. */
 		osmium_commit_clf({
@@ -94,12 +118,14 @@ osmium_on_clf_payload = function(payload) {
 
 		$("input#tags").closest('tr').after(tr);
 	}
-
+};
+osmium_on_clf_token_change = function(oldtok, newtok) {
 	if(window.history && window.history.replaceState) {
-		/* Refresh URI in case token changed and user refreshes the page */
-		window.history.replaceState(null, null, './' + osmium_clftoken + window.location.hash);
+		history.replaceState(history.state, null, './' + newtok + location.hash);
 	}
 };
+
+
 
 /* Generate all the missing DOM elements from the CLF */
 osmium_gen = function() {
@@ -141,8 +167,6 @@ osmium_add_to_clf = function(item) {
 		osmium_user_initiated_push(false);
 		osmium_gen();
 		osmium_user_initiated_pop();
-
-		osmium_undo_push();
 	} else if(cat === 'module') {
 		var state, index, m;
 		var slotsdiv = $("section#modules > div.slots." + sub);
@@ -192,7 +216,6 @@ osmium_add_to_clf = function(item) {
 		}
 
 		osmium_update_slotcounts();
-		osmium_undo_push();
 	} else if(cat === 'charge') {
 		var location = osmium_get_best_location_for_charge(typeid);
 
@@ -232,7 +255,6 @@ osmium_add_to_clf = function(item) {
 		}
 		osmium_add_drone_to_clf(typeid, qty, dest);
 		osmium_gen_drones();
-		osmium_undo_push();
 	} else if(cat === 'implant') {
 		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
 		var implantness = osmium_types[typeid][3];
@@ -248,7 +270,6 @@ osmium_add_to_clf = function(item) {
 		p.implants.push({ typeid: typeid });
 
 		osmium_gen_implants();
-		osmium_undo_push();
 
 		if(osmium_user_initiated) {
 			$('a[href="#implants"]').parent().click();
@@ -268,7 +289,6 @@ osmium_add_to_clf = function(item) {
 		p.boosters.push({ typeid: typeid });
 
 		osmium_gen_implants();
-		osmium_undo_push();
 
 		if(osmium_user_initiated) {
 			$('a[href="#implants"]').parent().click();
@@ -276,4 +296,5 @@ osmium_add_to_clf = function(item) {
 	}
 
 	osmium_commit_clf();
+	osmium_undo_push();
 };

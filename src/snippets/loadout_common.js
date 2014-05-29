@@ -16,11 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* Whenever you change this script, update the information in about.php. */
+/*<<< require external //cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js >>>*/
+/*<<< require external /static-1/jquery.jsPlumb-1.6.0-min.js >>>*/
+/*<<< require external /static-1/rawdeflate.min.js >>>*/
+
+/*<<< require snippet mousetrap >>>*/
+/*<<< require snippet keyboard >>>*/
+/*<<< require snippet localstorage_fallback >>>*/
+/*<<< require snippet new_loadout-fattribs >>>*/
+/*<<< require snippet show_info >>>*/
+/*<<< require snippet context_menu >>>*/
+/*<<< require snippet formatted_attributes >>>*/
+/*<<< require snippet graph_common >>>*/
+/*<<< require snippet capacitor >>>*/
+/*<<< require snippet loadout_undo >>>*/
+
+
+
 osmium_user_initiated = false;
 osmium_user_initiated_stack = [];
-
-osmium_undo_stack = [];
-osmium_undo_stack_position = 0;
 
 osmium_clfspinner = undefined;
 osmium_clfspinner_level = 0;
@@ -94,38 +109,37 @@ osmium_user_initiated_pop = function() {
 	osmium_user_initiated = osmium_user_initiated_stack.pop();
 };
 
-osmium_undo_trim = function() {
-	while(osmium_undo_stack.length > 512) {
-		osmium_undo_stack.shift();
-		--osmium_undo_stack_position;
+
+
+osmium_register_keyboard_command(
+	'ctrl+l', 'regen-from-clf',
+	'Regenerate most DOM elements from the CLF.',
+	function() {
+		osmium_gen();
+		return false;
 	}
-}
+);
 
-osmium_undo_push = function() {
-	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
-	osmium_undo_stack_position = osmium_undo_stack.length - 1;
-	osmium_undo_trim();
-};
-
-osmium_undo_pop = function() {
-	if(osmium_undo_stack_position < 1) {
-		/* No more history to undo */
-		return;
+osmium_register_keyboard_command(
+	null, 'debug-log-clf',
+	'Log the current CLF to the Javascript console.',
+	function() {
+		console.log(osmium_clf);
+		console.log(JSON.stringify(osmium_clf));
+		return false;
 	}
+);
 
-	/*  Very similar to the "undo" feature of Emacs. Powerful and
-	 *  cannot lose data by undoing stuff then doing modifications. */
-	--osmium_undo_stack_position;
-	osmium_clf = $.extend(true, {}, osmium_undo_stack[osmium_undo_stack_position]);
-	osmium_undo_stack.push($.extend(true, {}, osmium_clf));
-	osmium_undo_trim();
-}
+
 
 /**
  * Synchronize the CLF with the server and update the attribute list,
  * etc. It is safe to call this function repeatedly in a short amount
  * of time, it has built-in rate limiting. Requires osmium_clftype and
- * osmium_on_clf_payload global variables to be set.
+ * to be set. Will call osmium_on_clf_payload if defined with the
+ * payload as parameter. Will also call osmium_on_clftoken_change if
+ * defined when the clf token changes, with the old and new tokens as
+ * parameters.
  *
  * If specified, opts is an object which can contain any of the following properties:
  *
@@ -198,7 +212,13 @@ osmium_send_clf = function(opts) {
 			setTimeout(osmium_send_clf, 500);
 		},
 		success: function(payload) {
-			osmium_clftoken = payload.clftoken;
+			if(osmium_clftoken !== payload.clftoken) {
+				if(typeof(osmium_on_clf_token_change) === 'function') {
+					osmium_on_clf_token_change(osmium_clftoken, payload.clftoken);
+				}
+				osmium_clftoken = payload.clftoken;
+			}
+
 			osmium_capacitors = payload.capacitors;
 			osmium_ia = payload.ia;
 
@@ -328,7 +348,10 @@ osmium_send_clf = function(opts) {
 			);
 			osmium_clf_rawattribs.activedrones = ndrones;
 
-			osmium_on_clf_payload(payload);
+			if(typeof(osmium_on_clf_payload) === 'function') {
+				osmium_on_clf_payload(payload);
+			}
+
 			if("success" in opts) opts.success(payload);
 			setTimeout(osmium_send_clf, 500);
 		}

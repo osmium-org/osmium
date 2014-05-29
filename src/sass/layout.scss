@@ -347,6 +347,16 @@ a {
 	&> img {
 		border: none;
 	}
+
+	&.external[target='_blank']:before {
+		background-image: url('./icons/external.svg');
+		background-size: contain;
+		content: ' ';
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		margin-right: .125em;
+	}
 }
 
 ul {
@@ -440,23 +450,8 @@ body > div#modal {
 	z-index: 70001;
 	background-color: $modal-bg-color;
 	background-clip: padding-box;
-	overflow: auto;
+	overflow: hidden;
 
-	&> a#closemodal {
-		position: absolute;
-		top: 0.25em;
-		right: 0.25em;
-		z-index: 70002;
-		color: $close-modal-text-color;
-		border: 1px solid $close-modal-border-color;
-		font-weight: bold;
-		width: 1.5em;
-		height: 1.5em;
-		line-height: 1.5em;
-		display: block;
-		text-align: center;
-		background-color: $close-modal-bg-color;
-	}
 
 	&> header:first-child {
 		@include linear-gradient-lighten-top($sub-navigation-bg-color, 7%);
@@ -654,4 +649,74 @@ span.spinner {
 
 body > div#osmium-data {
 	display: none;
+}
+
+body > div#mx-cont {
+	position: fixed;
+	z-index: 4999999;
+
+	&> div#mx-bg {
+		position: absolute;
+		background-color: rgba($main-bg-color, .9);
+	}
+
+	&, &> div#mx-bg {
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	&> form {
+		position: absolute;
+		top: 50%;
+		left: 25%;
+		width: 50%;
+		margin-top: -1em;
+		height: 2em;
+
+		&> input[type='submit'] {
+			display: none;
+		}
+
+		&> input[type='text'] {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			font-family: $mono-font;
+
+			&.error {
+				border-color: $error-border-color;
+			}
+
+			&.success {
+				border-color: $success-border-color;
+			}
+		}
+	}
+
+	&> ul {
+		position: absolute;
+		top: 50%;
+		left: 25%;
+		margin: 2em;
+		padding: 0;
+		width: 50%;
+
+		list-style-type: none;
+		opacity: .5;
+
+		@include columnize(20em);
+
+		&> li {
+			font-family: $mono-font;
+			font-size: .8em;
+			margin: 0;
+			padding: 0;
+
+			@include ellipsis;
+		}
+	}
 }

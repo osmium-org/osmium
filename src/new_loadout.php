@@ -206,12 +206,6 @@ $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '..';
 $p->index = false;
 
-$p->head->appendCreate('link', [
-	'href' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/perfect-scrollbar.css',
-	'rel' => 'stylesheet',
-	'type' => 'text/css',
-]);
-
 if(isset($fit['metadata']['loadoutid']) && $fit['metadata']['loadoutid'] > 0) {
 	$p->title = 'Editing loadout #'.$fit['metadata']['loadoutid'];
 	$p->content
@@ -316,6 +310,9 @@ $div->appendCreate('div')->appendCreate('input', [
 	'name' => 'q',
 	'placeholder' => 'Example query: '.$searchexamples[mt_rand(0, count($searchexamples) - 1)],
 	'title' => 'Search items by name, by group, by abbreviation',
+	/* XXX: autocompletion can be useful, but it just gets in the way
+	 * of search results. Disable them for now. */
+	'autocomplete' => 'off',
 ]);
 $div->appendCreate('input', [ 'type' => 'submit', 'value' => 'Search' ]);
 $section->appendCreate('ul.results');
@@ -573,6 +570,7 @@ if(\Osmium\State\is_logged_in()) {
 }
 
 
+
 $loverlay = $p->content->appendCreate('div#loadingoverlay');
 $loverlay = $loverlay->appendCreate('div');
 $lh = $loverlay->appendCreate('h1', 'Osmium is initializing the awesome');
@@ -583,24 +581,9 @@ for($i = 0; $i < 6; ++$i) {
 $loverlay->appendCreate('p.error_box#needjs', 'Not loading? Try enabling Javascript.');
 
 
-$p->snippets = array_merge($p->snippets, [
-	'new_loadout',
-	'new_loadout-control',
-	'new_loadout-sources',
-	'new_loadout-ship',
-	'new_loadout-presets',
-	'new_loadout-metadata',
-	'new_loadout-modules',
-	'new_loadout-drones',
-	'new_loadout-implants',
-	'new_loadout-remote',
-]);
+
+$p->snippets[] = 'new_loadout';
 $p->data['shortlist'] = \Osmium\AjaxCommon\get_module_shortlist();
 
 $p->finalizeWithFit($ctx, $fit, $tok);
-$p->body->appendCreate('script', [
-	'type' => 'application/javascript',
-	'src' => '//cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.min.js',
-]);
-
 $p->render($ctx);

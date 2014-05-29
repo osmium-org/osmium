@@ -83,11 +83,11 @@ $js = [
 		'https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.4.6/jquery.perfect-scrollbar-with-mousewheel.js',
 	],
 	[
-		'jquery.jsPlumb-1.5.4.min.js',
-		'./static/jquery.jsPlumb-1.5.4.min.js',
+		'jquery.jsPlumb-1.6.0-min.js',
+		'./static/jquery.jsPlumb-1.6.0-min.js',
 		'MIT',
-		'https://github.com/sporritt/jsPlumb/blob/1.5.4/jsPlumb-MIT-LICENSE.txt',
-		'https://raw.github.com/sporritt/jsPlumb/1.5.4/dist/js/jquery.jsPlumb-1.5.4.js',
+		'https://github.com/sporritt/jsPlumb/blob/1.6.0/jsPlumb-MIT-LICENSE.txt',
+		'https://raw.github.com/sporritt/jsPlumb/1.6.0/dist/js/jquery.jsPlumb-1.6.0.js',
 	],
 	[
 		'rawdeflate.min.js (rawdeflate)',
@@ -103,11 +103,18 @@ $js = [
 		'http://opensource.org/licenses/mit-license',
 		'https://raw.github.com/dankogai/js-deflate/1cc649243c7e0ada065b880180bdccce3c2dbcc2/test/base64.js',
 	],
+	[
+		'mousetrap.min.js',
+		'./static-1/mousetrap.min.js',
+		'Apache-2.0',
+		'http://www.apache.org/licenses/LICENSE-2.0',
+		'https://raw.githubusercontent.com/ccampbell/mousetrap/1.4.6/mousetrap.js',
+	],
 ];
 
 chdir(__DIR__.'/../static/cache');
-foreach(glob('JS_*.min.js') as $min) {
-	$full = substr($min, 0, -strlen('.min.js')).".js";
+foreach(glob('js.*.min.js') as $min) {
+	$full = substr($min, 0, -strlen('.min.js')).'.js';
 
 	$js[] = [
 		$min,

@@ -42,35 +42,7 @@ class Page extends \Osmium\DOM\Page {
 		$cdp = \Osmium\State\get_setting('custom_damage_profiles', []);
 		$this->data['customdamageprofiles'] = $cdp === [] ? new \stdClass() : $cdp;
 
-		$this->snippets = array_merge([
-			'localstorage_fallback',
-			'tabs',
-			'modal',
-			'context_menu',
-			'loadout_common',
-			'graph_common',
-			'sprite',
-			'show_info',
-			'formatted_attributes',
-			'capacitor',
-			'new_loadout-fattribs',
-		], $this->snippets);
-
 		$this->finalize($ctx);
-
-		$snippets = (new \DOMXPath($this))->query('//script[@id=\'snippets\']')->item(0);
-
-		/* If these scripts change, update the license info in about.php */
-
-		$snippets->before($this->element('script', [
-			'type' => 'application/javascript',
-			'src' => $ctx->relative.'/static-1/jquery.jsPlumb-1.5.4-min.js',
-		]));
-
-		$snippets->before($this->element('script', [
-			'type' => 'application/javascript',
-			'src' => $ctx->relative.'/static-1/rawdeflate.min.js',
-		]));
 	}
 
 	function makeRemoteSection(array $fit, $readonly = false) {
@@ -182,6 +154,8 @@ class Page extends \Osmium\DOM\Page {
 			'id' => 'projectedfstoggle',
 		]);
 		$projected->appendCreate('p#rearrange', [
+			'Press ESC or click background to exit',
+			[ 'br' ],
 			'Rearrange loadouts: ',
 			[ 'a#rearrange-grid', 'grid' ],
 			', ',

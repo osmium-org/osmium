@@ -46,10 +46,18 @@ $(function() {
 
 	$('div#wrapper').append(fbdiv);
 	fbdiv.children('span').first().on('click', function() {
-		if(fbdiv.hasClass('extended')) {
-			fbdiv.switchClass('extended', '', 500);
+		var fb = $(this).parent();
+		var nfb = fb.clone(true); /* Hack to restart the CSS animation */
+
+		if(nfb.hasClass('extended')) {
+			nfb.removeClass('extended');
+			nfb.addClass('notextended');
 		} else {
-			fbdiv.switchClass('', 'extended', 500);
+			nfb.removeClass('notextended');
+			nfb.addClass('extended');
 		}
+
+		fb.before(nfb);
+		fb.remove();
 	});
 });

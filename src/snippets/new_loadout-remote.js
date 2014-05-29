@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -58,7 +58,7 @@ osmium_projected_clean = function() {
 }
 
 osmium_gen_projected = function() {
-	jsPlumb.Defaults.Container = $("section#projected");
+	jsPlumb.Defaults.Container = $("section#projected form#projected-list");
 	jsPlumb.Defaults.Endpoints = [ "Blank", "Blank" ];
 
 	osmium_projected_clean();
@@ -141,6 +141,7 @@ osmium_gen_projected = function() {
 		}
 
 		alert('Could not delete connection in CLF – please report!');
+		console.log('connection not found in CLF', stid, sidx, m);
 	});
 
 	var list = $("section#projected form#projected-list");
@@ -332,46 +333,69 @@ osmium_init_projected = function() {
 		});
 	}
 
+	$("section#remote").on('made_visible', function() {
+		osmium_regen_offsets();
+		jsPlumb.repaintEverything();
+
+		$("section#remote").off('made_visible');
+	});
+
 	$("section#projected input#projectedfstoggle").on('click', function() {
 		var section = $("section#projected");
 		var fs = section.hasClass('fs');
 
 		$("body").scrollTop(0);
 
-		if(fs) {
-			$("div#fsbg").remove();
-		} else {
-			var bg = $(document.createElement('div'));
-			bg.prop('id', 'fsbg');
-			$("section#projected").append(bg);
-		}
+		section.animate({ opacity: 0 }, 250, function() {
+			jsPlumb.doWhileSuspended(function() {
+				jsPlumb.toggleDraggable(
+					section.find('div.pr-loadout')
+						.draggable("option", "disabled", fs)
+				);
 
-		jsPlumb.doWhileSuspended(function() {
-			jsPlumb.toggleDraggable(
-				section.find('div.pr-loadout')
-					.draggable("option", "disabled", fs)
-			);
+				section.toggleClass('fs');
+				var exitfs = function() {
+					$("section#projected input#projectedfstoggle").click();
+					return false;
+				};
 
-			section.toggleClass('fs');
+				if(fs) {
+					osmium_unregister_keyboard_command('exit-fullscreen-projected');
+					$("div#fsbg").remove();
+				} else {
+					var bg = $(document.createElement('div'));
+					bg.prop('id', 'fsbg');
+					bg.click(exitfs);
+					$("section#projected").prepend(bg);
+					osmium_register_keyboard_command(
+						'esc', 'exit-fullscreen-projected', 'Exit fullscreen projected mode.', exitfs
+					);
+				}
 
-			/* Swap fixed and draggable positions */
-			$("section#projected div.pr-loadout").each(function() {
-				var t = $(this);
-				var otop = t.css('top');
-				var oleft = t.css('left');
-				t.css('top', t.data('top')).data('top', otop);
-				t.css('left', t.data('left')).data('left', oleft);
+				/* Swap fixed and draggable positions */
+				$("section#projected div.pr-loadout").each(function() {
+					var t = $(this);
+					var otop = t.css('top');
+					var oleft = t.css('left');
+
+					t.css('top', t.data('top')).data('top', otop);
+					t.css('left', t.data('left')).data('left', oleft);
+				});
+
+				osmium_regen_offsets();
+
+				/* Auto-rearrange if necessary */
+				var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
+				if(section.hasClass('fs') && (!localtop || localtop === 'auto' || localtop === '0px')) {
+					if($("section#projected div.pr-loadout").length <= 8) {
+						$("section#projected a#rearrange-circle").click();
+					} else {
+						$("section#projected a#rearrange-grid").click();
+					}
+				}
 			});
 
-			/* Auto-rearrange if necessary */
-			var localtop = $("section#projected div.pr-loadout.projected-local").css('top');
-			if(section.hasClass('fs') && (!localtop || localtop === 'auto')) {
-				if($("section#projected div.pr-loadout").length <= 8) {
-					$("section#projected a#rearrange-circle").click();
-				} else {
-					$("section#projected a#rearrange-grid").click();
-				}
-			}
+			section.animate({ opacity: 1 }, 250);		
 		});
 	});
 
@@ -464,6 +488,19 @@ osmium_init_projected = function() {
 			});
 		});
 	});
+
+	osmium_register_keyboard_command(null, 'debug-jsplumb-repaint', 'Call jsPlumb.repaintEverything().',
+									 function() {
+										 jsPlumb.repaintEverything();
+										 return false;
+									 });
+
+	osmium_register_keyboard_command(
+		null, 'debug-jsplumb-recalculate-offsets', 'Recalculate jsPlumb offsets of remotes.',
+		function() {
+			osmium_regen_offsets();
+		}
+	);
 };
 
 osmium_create_projected = function(key, clf, index) {
@@ -538,7 +575,6 @@ osmium_create_projected = function(key, clf, index) {
 
 			var source = 
 				$(document.createElement('li'))
-				.data('location', 'module-' + p[i].typeid + '-' + p[i].index)
 				.data('typeid', p[i].typeid)
 				.data('index', p[i].index)
 				.append(
@@ -947,7 +983,8 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 		stale.find('ul > li').each(function() {
 			var source = $(this);
 			var newsource = fresh.find('ul > li').filter(function() {
-				return $(this).data('location') === source.data('location')
+				var t = $(this);
+				return t.data('typeid') == source.data('typeid') && t.data('index') == source.data('index');
 			}).first();
 
 			var connections = jsPlumb.select({
@@ -983,6 +1020,8 @@ osmium_projected_replace_graceful = function(stale, fresh) {
 			jsPlumb.connect(newconnections[i]);
 		}
 	});
+
+	jsPlumb.recalculateOffsets(fresh);
 };
 
 osmium_regen_remote_capacitor = function(key_or_element) {
@@ -1023,6 +1062,13 @@ osmium_regen_remote_capacitor = function(key_or_element) {
 
 	s.trigger('redraw');
 };
+
+osmium_regen_offsets = function() {
+	var divs = $("section#projected form#projected-list").children('div.pr-loadout');
+	divs.each(function() {
+		jsPlumb.recalculateOffsets($(this));
+	});
+}
 
 osmium_commit_undo_deferred_timeoutid = undefined;
 osmium_commit_undo_deferred = function(delay) {

@@ -192,6 +192,5 @@ $tbody->appendCreate('tr', [
 
 
 
-$p->snippets[] = 'graph_common';
 $p->snippets[] = 'compare_dps';
 $p->render($ctx);
