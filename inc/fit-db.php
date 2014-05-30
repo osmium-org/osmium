@@ -227,16 +227,36 @@ function commit_damage_profile($dp, &$error = null) {
 }
 
 /** @internal */
-function commit_description($rawdesc, &$fdesc = null) {
+function commit_efc($rawdesc, &$fdesc = null, $mutable = false, $mask = null, $nulls = true) {
 	$rawdesc = \Osmium\Chrome\trim($rawdesc);
-	if($rawdesc === '') return null;
+	if($rawdesc === '' && $nulls === true) return null;
+
+	if($mutable === false) {
+		$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT contentid, formattedcontent
+			FROM osmium.editableformattedcontents
+			WHERE mutable = false AND md5(rawcontent) = md5($1)',
+			[ $rawdesc ]
+		));
+
+		if($row !== false) {
+			$fdesc = $row['formattedcontent'];
+			return $row['contentid'];
+		}
+	}
+
+	if($mask === null) {
+		$mask = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE;
+	}
+
 	return \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'INSERT INTO osmium.editableformattedcontents (rawcontent, filtermask, formattedcontent)
-		VALUES ($1, $2, $3) RETURNING contentid',
+		'INSERT INTO osmium.editableformattedcontents (rawcontent, filtermask, formattedcontent, mutable)
+		VALUES ($1, $2, $3, $4) RETURNING contentid',
 		[
 			$rawdesc,
-			$mask = \Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE,
+			$mask,
 			$fdesc = \Osmium\Chrome\filter_content($rawdesc, $mask),
+			(int)((bool)$mutable),
 		]
 	))[0];
 }
@@ -267,7 +287,7 @@ function commit_fitting(&$fit, &$error = null) {
 		return false;
 	}
 
-	$desccontentid = commit_description($fit['metadata']['description'], $fit['metadata']['fdescription']);
+	$desccontentid = commit_efc($fit['metadata']['description'], $fit['metadata']['fdescription']);
 
 	/* Insert the new fitting */
 	$ret = \Osmium\Db\query_params(
@@ -300,14 +320,14 @@ function commit_fitting(&$fit, &$error = null) {
 	}
   
 	$presetid = 0;
-	foreach($fit['presets'] as $preset) {
+	foreach($fit['presets'] as &$preset) {
 		$ret = \Osmium\Db\query_params(
-			'INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, description) VALUES ($1, $2, $3, $4)',
+			'INSERT INTO osmium.fittingpresets (fittinghash, presetid, name, descriptioncontentid) VALUES ($1, $2, $3, $4)',
 			array(
 				$fittinghash,
 				$presetid,
 				$preset['name'],
-				$preset['description']
+				commit_efc($preset['description'], $preset['fdescription']),
 			)
 		);
 
@@ -342,15 +362,15 @@ function commit_fitting(&$fit, &$error = null) {
 		}
   
 		$cpid = 0;
-		foreach($preset['chargepresets'] as $chargepreset) {
+		foreach($preset['chargepresets'] as &$chargepreset) {
 			$ret = \Osmium\Db\query_params(
-				'INSERT INTO osmium.fittingchargepresets (fittinghash, presetid, chargepresetid, name, description) VALUES ($1, $2, $3, $4, $5)',
+				'INSERT INTO osmium.fittingchargepresets (fittinghash, presetid, chargepresetid, name, descriptioncontentid) VALUES ($1, $2, $3, $4, $5)',
 				array(
 					$fittinghash,
 					$presetid,
 					$cpid,
 					$chargepreset['name'],
-					$chargepreset['description']
+					commit_efc($chargepreset['description'], $chargepreset['fdescription']),
 				)
 			);
 
@@ -403,14 +423,14 @@ function commit_fitting(&$fit, &$error = null) {
 	}
   
 	$dpid = 0;
-	foreach($fit['dronepresets'] as $dronepreset) {
+	foreach($fit['dronepresets'] as &$dronepreset) {
 		$ret = \Osmium\Db\query_params(
-			'INSERT INTO osmium.fittingdronepresets (fittinghash, dronepresetid, name, description) VALUES ($1, $2, $3, $4)',
+			'INSERT INTO osmium.fittingdronepresets (fittinghash, dronepresetid, name, descriptioncontentid) VALUES ($1, $2, $3, $4)',
 			array(
 				$fittinghash,
 				$dpid,
 				$dronepreset['name'],
-				$dronepreset['description']
+				commit_efc($dronepreset['description'], $dronepreset['fdescription']),
 			)
 		);
 
@@ -905,8 +925,9 @@ function get_fitting($fittinghash) {
 
 	$firstpreset = true;
 	$presetsq = \Osmium\Db\query_params(
-		'SELECT presetid, name, description
-		FROM osmium.fittingpresets
+		'SELECT presetid, name, rawcontent AS description
+		FROM osmium.fittingpresets fp
+		LEFT JOIN osmium.editableformattedcontents efc ON efc.contentid = fp.descriptioncontentid
 		WHERE fittinghash = $1
 		ORDER BY presetid ASC',
 		array($fittinghash)
@@ -915,6 +936,8 @@ function get_fitting($fittinghash) {
 	$presetsmap = array();
 
 	while($preset = \Osmium\Db\fetch_assoc($presetsq)) {
+		/* XXX: use fdescription */
+
 		if($firstpreset === true) {
 			/* Edit the default preset instead of creating a new preset */
 			$fit['modulepresetname'] = $preset['name'];
@@ -941,8 +964,9 @@ function get_fitting($fittinghash) {
 
 		$firstchargepreset = true;
 		$chargepresetsq = \Osmium\Db\query_params(
-			'SELECT chargepresetid, name, description
-			FROM osmium.fittingchargepresets
+			'SELECT chargepresetid, name, rawcontent AS description
+			FROM osmium.fittingchargepresets fcp
+			LEFT JOIN osmium.editableformattedcontents efc ON efc.contentid = fcp.descriptioncontentid
 			WHERE fittinghash = $1 AND presetid = $2
 			ORDER BY chargepresetid ASC',
 			array($fittinghash, $preset['presetid'])
@@ -983,8 +1007,9 @@ function get_fitting($fittinghash) {
 	
 	$firstdronepreset = true;
 	$dronepresetsq = \Osmium\Db\query_params(
-		'SELECT dronepresetid, name, description
-		FROM osmium.fittingdronepresets
+		'SELECT dronepresetid, name, rawcontent AS description
+		FROM osmium.fittingdronepresets fdp
+		LEFT JOIN osmium.editableformattedcontents efc ON efc.contentid = fdp.descriptioncontentid
 		WHERE fittinghash = $1
 		ORDER BY dronepresetid ASC',
 		array($fittinghash)

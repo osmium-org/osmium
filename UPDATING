@@ -12,8 +12,8 @@ hp/HTMLPurifier`.
 
 IMPORTANT: after upgrading HTMLPurifier and running the database
 patches, add and appropriately fill the uri_munge_secret in the
-[osmium] section, in the configuration file, then run `make
-reformat-editable-formatted-contents`.
+[osmium] section, in the configuration file, then run
+`./bin/upgrade/current/refactor-formatted-comments`.
 
 Some changes have been made to the example robots.txt.
 

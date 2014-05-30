@@ -1,0 +1,154 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\Upgrade\RefactorFormattedContents;
+
+require __DIR__.'/../../../inc/root.php';
+use \Osmium\Db as Db;
+
+Db\query('BEGIN');
+
+function eval_sql_file($f) {
+	$queries = explode(";\n", file_get_contents($f));
+	foreach($queries as $q) {
+		if(trim($q)) {
+			Db\query($q);
+		}
+	}
+}
+
+eval_sql_file(__DIR__.'/sql.refactor-formatted-contents-pre.sql');
+
+
+
+$cq = Db\query('SELECT commentbody, commentid, revision FROM loadoutcommentrevisions');
+while($crow = Db\fetch_assoc($cq)) {
+	$cid = \Osmium\Fit\commit_efc(
+		$crow['commentbody'],
+		$fdesc,
+		true,
+		null,
+		false
+	);
+
+	Db\query_params(
+		'UPDATE loadoutcommentrevisions
+		SET bodycontentid = $1
+		WHERE commentid = $2 AND revision = $3',
+		[ $cid, $crow['commentid'], $crow['revision'] ]
+	);
+}
+
+
+
+$crq = Db\query('SELECT replybody, commentreplyid FROM loadoutcommentreplies');
+while($crrow = Db\fetch_assoc($crq)) {
+	$cid = \Osmium\Fit\commit_efc(
+		$crrow['replybody'],
+		$fdesc,
+		true,
+		\Osmium\Chrome\CONTENT_FILTER_MARKDOWN | \Osmium\Chrome\CONTENT_FILTER_SANITIZE_PHRASING,
+		false
+	);
+
+	Db\query_params(
+		'UPDATE loadoutcommentreplies
+		SET bodycontentid = $1
+		WHERE commentreplyid = $2',
+		[ $cid, $crrow['commentreplyid'] ]
+	);
+}
+
+
+
+$fdq = Db\query('SELECT description, fittinghash FROM fittings WHERE description <> \'\'');
+while($fdrow = Db\fetch_assoc($fdq)) {
+	$cid = \Osmium\Fit\commit_efc($fdrow['description']);
+
+	Db\query_params(
+		'UPDATE fittings
+		SET descriptioncontentid = $1
+		WHERE fittinghash = $2',
+		[ $cid, $fdrow['fittinghash'] ]
+	);
+}
+
+
+
+$pdq = Db\query('SELECT description, fittinghash, presetid FROM fittingpresets WHERE description <> \'\'');
+while($pdrow = Db\fetch_assoc($pdq)) {
+	$cid = \Osmium\Fit\commit_efc($pdrow['description']);
+
+	Db\query_params(
+		'UPDATE fittingpresets
+		SET descriptioncontentid = $1
+		WHERE fittinghash = $2 AND presetid = $3',
+		[ $cid, $pdrow['fittinghash'], $pdrow['presetid'] ]
+	);
+}
+
+
+
+$pdq = Db\query('SELECT description, fittinghash, presetid, chargepresetid FROM fittingchargepresets WHERE description <> \'\'');
+while($pdrow = Db\fetch_assoc($pdq)) {
+	$cid = \Osmium\Fit\commit_efc($pdrow['description']);
+
+	Db\query_params(
+		'UPDATE fittingchargepresets
+		SET descriptioncontentid = $1
+		WHERE fittinghash = $2 AND presetid = $3 AND chargepresetid = $4',
+		[ $cid, $pdrow['fittinghash'], $pdrow['presetid'], $pdrow['chargepresetid'] ]
+	);
+}
+
+
+
+$pdq = Db\query('SELECT description, fittinghash, dronepresetid FROM fittingdronepresets WHERE description <> \'\'');
+while($pdrow = Db\fetch_assoc($pdq)) {
+	$cid = \Osmium\Fit\commit_efc($pdrow['description']);
+
+	Db\query_params(
+		'UPDATE fittingdronepresets
+		SET descriptioncontentid = $1
+		WHERE fittinghash = $2 AND dronepresetid = $3',
+		[ $cid, $pdrow['fittinghash'], $pdrow['dronepresetid'] ]
+	);
+}
+
+
+
+Db\query('ALTER TABLE loadoutcommentrevisions DROP COLUMN commentbody');
+Db\query('ALTER TABLE loadoutcommentrevisions DROP COLUMN commentformattedbody');
+Db\query('ALTER TABLE loadoutcommentrevisions ALTER COLUMN bodycontentid SET NOT NULL');
+
+Db\query('ALTER TABLE loadoutcommentreplies DROP COLUMN replybody');
+Db\query('ALTER TABLE loadoutcommentreplies DROP COLUMN replyformattedbody');
+Db\query('ALTER TABLE loadoutcommentreplies ALTER COLUMN bodycontentid SET NOT NULL');
+
+Db\query('DROP VIEW loadoutssearchdata, fittingdescriptions');
+
+Db\query('ALTER TABLE fittings DROP COLUMN description');
+Db\query('ALTER TABLE fittingpresets DROP COLUMN description');
+Db\query('ALTER TABLE fittingchargepresets DROP COLUMN description');
+Db\query('ALTER TABLE fittingdronepresets DROP COLUMN description');
+
+
+
+eval_sql_file(__DIR__.'/sql.refactor-formatted-contents-post.sql');
+Db\query('COMMIT');

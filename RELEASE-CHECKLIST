@@ -19,7 +19,9 @@ SCM organization
 The list
 --------
 
-* Move used patches from pgsql/patches/current/ to pgsql/patches/<current_version>/
+* Move database patches from pgsql/patches/current/ to pgsql/patches/<current_version>/
+
+* Move upgrade patches from bin/upgrade/current/ to bin/upgrade/<current_version>/
 
 * `./bin/backup_osmium_schema` and `./bin/backup_eve_schema`
 
@@ -40,8 +42,7 @@ The list
   git merge master
 
 * Push production ref and new tag:
-   git push origin production:production
-   git push origin master:master
+   git push origin production:production master:master
    git push --tags
 
 * Update #osmium topic, forum thread
