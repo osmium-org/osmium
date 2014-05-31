@@ -28,44 +28,77 @@ const API_ROOT = 'https://api.eveonline.com';
  * mean longer login times if the API server is busy. */
 const DEFAULT_API_TIMEOUT = 5;
 
+
+
+/* User error: for example invalid credentials, invalid characterID,
+ * etc. Usually means that the request should not be repeated. */
+const E_USER = 0;
+
+/* Backend error: the API server is acting funky. */
+const E_BACKEND = 1;
+
+/* Network error: timeout, cURL error, etc. */
+const E_NETWORK = 2;
+
+/* Internal error: local to Osmium, like semaphores, cache, etc. */
+const E_INTERNAL = 3;
+
+
+
 if(!function_exists('curl_strerror')) {
 	/* Fallback for PHP < 5.5 users */
 	function curl_strerror($no) { return $no; }
 }
 
+
+
 /**
  * Make an EVE API call. Handles caching.
  *
- * @param $name name of the call, with the leading /
+ * @param $name name of the call, without root domain, but with the
+ * leading /.
  *
- * @param $params an array of POST parameters to send
+ * @param $params an array of POST parameters to send.
  *
- * @returns a SimpleXMLElement if the call was successful (although
- * the XML contents itself may be an error), false if the key is
- * invalid, or null on network/other error.
+ * @param $timeout how many seconds to wait for a backend reply. Leave
+ * null to use the default value.
+ *
+ * @param $errortype filled with one of the E_* constants if an error
+ * happens.
+ *
+ * @param $errorstr filled with an error message if an error happens.
+ *
+ * @returns a SimpleXMLElement if the call was successful or false on
+ * error, in which case the parameters $errortype and $errorstr will
+ * be filled accordingly.
  */
-function fetch($name, array $params, $timeout = null) {
-	/* We sort the $params array to always have the same hash even when
-	   the paramaters are not given in the same order. It makes
-	   sense. */
+function fetch($name, array $params, $timeout = null, &$errortype = null, &$errorstr = null) {
+	/* Sort parameters predictably to cache calls independently of
+	 * parameter order. */
 	ksort($params);
 	$key = serialize($name).serialize($params);
 
 	$xmltext = \Osmium\State\get_cache($key, null, 'API_');
 	if($xmltext !== null) {
-		return new \SimpleXMLElement($xmltext);
+		$xml = new \SimpleXMLElement($xmltext);
+		goto HasXML;
 	}
 
 	/* Avoid concurrent accesses to the same API call */
 	$sem = \Osmium\State\semaphore_acquire_nc('API_'.$key);
-	if($sem === false) return null;
+	if($sem === false) {
+		$errortype = E_INTERNAL;
+		$errorstr = 'Could not acquire semaphore, please report!';
+		return false;
+	}
 
 	/* See if another process already cached the call while
 	 * semaphore_acquire_nc() blocked */
 	$xmltext = \Osmium\State\get_cache($key, null, 'API_');
 	if($xmltext !== null) {
 		\Osmium\State\semaphore_release_nc($sem);
-		return new \SimpleXMLElement($xmltext);
+		$xml = new \SimpleXMLElement($xmltext);
+		goto HasXML;
 	}
 
 	if($timeout === null) $timeout = DEFAULT_API_TIMEOUT;
@@ -77,38 +110,74 @@ function fetch($name, array $params, $timeout = null) {
 	curl_setopt($c, CURLOPT_POSTFIELDS, $params);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, $timeout);
 	curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
+
 	$raw_xml = curl_exec($c);
-	$http_code = curl_getinfo($c, CURLINFO_HTTP_CODE);
-	if($http_code === 403) return false;
 
 	if($errno = curl_errno($c)) {
-		trigger_error('Got cURL error '.$errno.': '.curl_strerror($errno).' for call '.$name);
 		\Osmium\State\semaphore_release_nc($sem);
-		return null;
+		$errortype = E_NETWORK;
+		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		return false;
+	}
+
+	if(($http_code = curl_getinfo($c, CURLINFO_HTTP_CODE)) !== 200) {
+		\Osmium\State\semaphore_release_nc($sem);
+		$errortype = ($http_code >= 400 && $http_code < 500) ? E_USER : E_BACKEND;
+
+		switch($http_code) {
+
+		case 403:
+			$errorstr = 'API returned a 403 Forbidden. The API credentials are probably incorrect.';
+			break;
+
+		default:
+			$errorstr = 'API returned HTTP code '.$http_code;
+			break;
+
+		}
+
+		return false;
 	}
 
 	curl_close($c);
+
+	if($raw_xml === false) {
+		\Osmium\State\semaphore_release_nc($sem);
+		$errortype = E_BACKEND;
+		$errorstr = 'Unnumbered cURL error, please report!';
+		return false;
+	}
   
-	$xml = false;
 	try {
 		$xml = new \SimpleXMLElement($raw_xml);
 	} catch(\Exception $e) {
-		trigger_error('Got unparseable XML from the API, HTTP code was '.$http_code.' for call '.$name, E_USER_WARNING);
-		$xml = false;
-	}
-
-	if($xml === false || $raw_xml === false) {
 		\Osmium\State\semaphore_release_nc($sem);
-		return null;
+		$errortype = E_BACKEND;
+		$errorstr = 'API returned unparseable XML: '.$e->getMessage();
+		return false;
 	}
 
 	$expires = strtotime((string)$xml->cachedUntil);
 	$curtime = strtotime((string)$xml->currentTime);
+
 	/* Cache for at least 1 minute, in case the cachedUntil values are
 	 * erroneous */
-	$ttl = min($expires - $curtime + 1, 60);
+	$ttl = max($expires - $curtime + 1, 60);
 
 	\Osmium\State\put_cache($key, $raw_xml, $ttl, 'API_');
 	\Osmium\State\semaphore_release_nc($sem);
+
+HasXML:
+	if(isset($api->error) && !empty($api->error)) {
+		$code = (int)$api->error['code'];
+
+		/* http://wiki.eve-id.net/APIv2_Eve_ErrorList_XML */
+		$errortype = ($code >= 100 && $code < 300) ? E_USER : E_BACKEND;
+
+		$errorstr = 'API error '.$code.': '.(string)$api->error
+			.', retry after '.gmdate('H:i:s \U\T\C', strtotime((string)$xml->cachedUntil));
+		return false;
+	}
+
 	return $xml;
 }

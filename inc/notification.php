@@ -142,8 +142,7 @@ function get_notification_body($row) {
 	} else if($type == NOTIFICATION_TYPE_ACCOUNT_API_KEY_DISABLED) {
 		$keyid = (int)$row['targetid1'];
 
-		return "Your API key (KeyID ".$keyid
-			.") has been disabled. Maybe it expired or no longer had correct permissions.";
+		return 'An API key associated to your account (KeyID '.$keyid.') has been disabled because it returned errors. Maybe it expired or no longer had correct permissions.';
 	}
 
 

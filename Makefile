@@ -51,8 +51,8 @@ clear-sessions:
 
 post-eve-schema-update: reindex-loadouts
 
-update-charinfo:
-	./bin/parallelize 16 ./bin/update_charinfo
+update-eveapis:
+	./bin/parallelize 16 ./bin/update_eveapis
 
 reindex-loadouts:
 	./bin/truncate_loadout_index

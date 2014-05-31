@@ -10,7 +10,7 @@ require __DIR__.'/../inc/cron.php';
 	'cron.daily',
 	function() {
 		passthru('./bin/prune_database');
-		passthru('make update-charinfo');
+		passthru('make update-eveapis');
 		passthru('./bin/reindex_loadouts');
 		passthru('./bin/make_sitemap');
 	},

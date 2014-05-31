@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\CLI\UpdateCharacterInfo;
+namespace Osmium\CLI\UpdateEVEAPIKeys;
 
 require __DIR__.'/../inc/root.php';
 
@@ -33,23 +33,29 @@ if($modcurrent >= $modtotal) die();
 /* XXX: use /eve/CharacterAffiliation.xml.aspx in batch operations */
 
 $q = \Osmium\Db\query_params(
-	'SELECT accountid, keyid, verificationcode, apiverified,
-	characterid, charactername, corporationid, corporationname,
-	allianceid, alliancename, isfittingmanager
-	FROM osmium.accounts WHERE apiverified = true
-	AND mod(accountid, $1) = $2',
+	'SELECT owneraccountid, keyid, verificationcode
+	FROM osmium.eveapikeys
+	WHERE mod(keyid, $1) = $2 AND active = true
+	ORDER BY updatedate DESC',
 	array($modtotal, $modcurrent)
 );
 
-while($a = \Osmium\Db\fetch_assoc($q)) {
-	if(\Osmium\State\check_api_key($a, false, 30) === null) {
-		/* Not only printing errors to standard error is expected, it
-		 * will usually be mailed by the cron daemon to warn the
-		 * server admin that something is wrong */
-		fprintf(STDERR, "X");
-	} else {
-		echo ".";
+\Osmium\Db\query('BEGIN');
+
+while($key = \Osmium\Db\fetch_assoc($q)) {
+	$ret = \Osmium\State\register_eve_api_key(
+		$key['owneraccountid'],
+		$key['keyid'],
+		$key['verificationcode'],
+		$etype
+	);
+
+	if($ret === false) {
+		echo 'UBNI'[$etype];
 	}
+
+	echo '.';
 }
 
+\Osmium\Db\query('COMMIT');
 echo "\n";

@@ -19,19 +19,13 @@
 namespace Osmium\State;
 
 require __DIR__.'/state-cache.php';
+require __DIR__.'/state-api.php';
 require __DIR__.'/state-fit.php';
 
 const MINIMUM_PASSWORD_ENTROPY = 40;
 
 /** Default expire duration for the token cookie. 14 days. */
 const COOKIE_AUTH_DURATION = 1209600;
-
-const CHARACTER_SHEET_ACCESS_MASK = 8;
-const CONTACT_LIST_ACCESS_MASK = 16;
-const ACCOUNT_STATUS_ACCESS_MASK = 33554432;
-
-const REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS = 33554440; /* CharacterSheet & AccountStatus*/
-const REQUIRED_ACCESS_MASK_WITH_CONTACTS = 33554456; /* CharacterSheet & AccountStatus & Contacts*/
 
 /**
  * Checks whether the current user is logged in.
@@ -59,10 +53,12 @@ function do_post_login($account_name, $use_cookie = false) {
 
 	$q = \Osmium\Db\query_params(
 		'SELECT accountid, accountname, nickname,
-		creationdate, lastlogindate, keyid, verificationcode, apiverified,
+		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, apiverified,
 		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 		ismoderator, isfittingmanager
-		FROM osmium.accounts WHERE accountname = $1',
+		FROM osmium.accounts a
+		LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = accountid AND eak.keyid = a.keyid
+		WHERE accountname = $1',
 		array($account_name)
 	);
 	$a = \Osmium\Db\fetch_assoc($q);
@@ -357,284 +353,6 @@ function try_recover() {
 }
 
 /**
- * Check that a given API key can be used to API-verify an account.
- *
- * @returns true, or a string containing an error message.
- */
-function check_api_key_sanity($accountid, $keyid, $vcode, &$characterid = null, &$charactername = null) {
-	$api = \Osmium\EveApi\fetch(
-		'/account/APIKeyInfo.xml.aspx',
-		array('keyID' => $keyid, 'vCode' => $vcode)
-	);
-
-	if($api === false) {
-		return 'API server returned a 403. Invalid credentials?';
-	}
-
-	if(!($api instanceof \SimpleXMLElement)) {
-		/* Aouch */
-		return 'API sever did not return well-formed XML. Network issue, or internal CCP screwage, sorry!';
-	}
-
-	if(isset($api->error) && !empty($api->error)) {
-		return '('.((int)$api->error['code']).') '.(string)$api->error;
-	}
-
-	if((string)$api->result->key['type'] !== 'Character') {
-	    return 'Invalid key type. Make sure you only select one character.';
-	}
-
-	if((int)$api->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
-	   && (int)$api->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS ) {
-		return 'Incorrect access mask. Please set it to '.REQUIRED_ACCESS_MASK_WITH_CONTACTS
-			.' (with ContactList) or '.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
-			.' (without ContactList), or use the link above.';
-	}
-
-	$characterid = (int)$api->result->key->rowset->row['characterID'];
-	$charactername = (string)$api->result->key->rowset->row['characterName'];
-	if($accountid !== null) {
-		list($c) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'SELECT COUNT(accountid) FROM osmium.accounts
-			WHERE accountid <> $1 AND (characterid = $2 OR charactername = $3)',
-			array($accountid, $characterid, $charactername)
-		));
-
-		if($c > 0) {
-			return [ 'Character ', [ 'strong', $charactername ], ' is already used by another account.' ];
-		}
-	}
-
-	return true;
-}
-
-/**
- * Check the API key associated with the current account, and update
- * character/corp/alliance values in the database.
- *
- * @returns null on serious error, or a boolean indicating if the user
- * must revalidate his API key.
- */
-function check_api_key($a, $initial = false, $timeout = null) {
-	if(!isset($a['keyid']) || !isset($a['verificationcode'])
-	   || $a['keyid'] === null || $a['verificationcode'] === null) return null;
-
-	$key_id = $a['keyid'];
-	$v_code = $a['verificationcode'];
-	$must_renew = false;
-
-	$info = \Osmium\EveApi\fetch(
-		'/account/APIKeyInfo.xml.aspx',
-		array('keyID' => $key_id, 'vCode' => $v_code),
-		$timeout
-	);
-
-	if($info === false) {
-		$must_renew = true;
-	} else if(!($info instanceof \SimpleXMLElement)) {
-		/* Could be anything major, ignore */
-		return null;
-	}
-
-	if(isset($info->error) && !empty($info->error)) {
-		$err_code = (int)$info->error['code'];
-		/* Error code details: http://wiki.eve-id.net/APIv2_Eve_ErrorList_XML */
-		if(200 <= $err_code && $err_code < 300) {
-			$must_renew = true;
-		} else {
-			/* Most likely internal error */
-			return null;
-		}
-	}
-
-	if(!$must_renew && (
-		(string)$info->result->key["type"] !== 'Character'
-		|| (
-			(int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITH_CONTACTS
-			&& (int)$info->result->key['accessMask'] !== REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS
-		) || (
-			!$initial && (int)$info->result->key->rowset->row['characterID'] != $a['characterid']
-		)
-	)) {
-		$must_renew = true;
-	}
-
-	if($must_renew) {
-		\Osmium\Db\query_params('UPDATE osmium.accounts SET
-		characterid = null, charactername = null,
-		corporationid = null, corporationname = null,
-		allianceid = null, alliancename = null,
-		isfittingmanager = false, apiverified = false
-		WHERE accountid = $1', array($a['accountid']));
-
-		if(!$initial && $a['apiverified'] == 't') {
-			/* Notify the user his API key broke down without user intervention */
-			\Osmium\Notification\add_notification(
-				\Osmium\Notification\NOTIFICATION_TYPE_ACCOUNT_API_KEY_DISABLED,
-				null,
-				$a['accountid'],
-				$key_id
-			);
-		}
-
-		$a['characterid'] = null;
-		$a['charactername'] = null;
-		$a['corporationid'] = null;
-		$a['corporationname'] = null;
-		$a['allianceid'] = null;
-		$a['alliancename'] = null;
-		$a['apiverified'] = 'f';
-	} else if(isset($a['apiverified']) && $a['apiverified'] === 't') {
-		$character_id = (int)$info->result->key->rowset->row['characterID'];
-
-		$cinfo = \Osmium\State\get_character_info($character_id, $a, $timeout);
-		if($cinfo === false) {
-			/* API unavailable? */
-			return null;
-		}
-
-		list($character_name,
-		     $corporation_id, $corporation_name,
-		     $alliance_id, $alliance_name,
-		     $is_fitting_manager) = $cinfo;
-
-		if($character_id != $a['characterid']
-		   || $character_name != $a['charactername']
-		   || $corporation_id != $a['corporationid']
-		   || $corporation_name != $a['corporationname']
-		   || $alliance_id != $a['allianceid']
-		   || $alliance_name != $a['alliancename']
-		   || $is_fitting_manager != ($a['isfittingmanager'] === 't')) {
-
-			\Osmium\Db\query_params('UPDATE osmium.accounts SET
-			characterid = $1, charactername = $2,
-			corporationid = $3, corporationname = $4,
-		    allianceid = $5, alliancename = $6,
-			isfittingmanager = $7
-			WHERE accountid = $8', array($character_id, $character_name,
-			                             $corporation_id, $corporation_name,
-			                             $alliance_id, $alliance_name,
-			                             $is_fitting_manager ? 't' : 'f',
-			                             $a['accountid']));
-
-			$a['characterid'] = $character_id;
-			$a['charactername'] = $character_name;
-			$a['corporationid'] = $corporation_id;
-			$a['corporationname'] = $corporation_name;
-			$a['allianceid'] = $alliance_id;
-			$a['alliancename'] = $alliance_name;
-			$a['isfittingmanager'] = $is_fitting_manager ? 't' : 'f';
-		}
-
-		if((int)$info->result->key['accessMask'] === REQUIRED_ACCESS_MASK_WITH_CONTACTS) {
-			/* Only update the contact list if the key actually allows it */
-			$ret = update_character_contactlist($a, $timeout);
-			if($ret === false) return null;
-		} else {
-			/* Be safe, the access mask may have changed since the
-			 * last update and there may be stale contacts */
-			\Osmium\Db\query_params(
-				'DELETE FROM osmium.contacts WHERE accountid = $1',
-				array($a['accountid'])
-			);
-		}
-	}
-
-	\Osmium\State\put_state('a', $a);
-	return $must_renew;
-}
-
-function get_character_info($character_id, $a, $timeout = null) {
-	$char_info = \Osmium\EveApi\fetch(
-		'/eve/CharacterInfo.xml.aspx',
-		array('characterID' => $character_id),
-		$timeout
-	);
-	if($char_info === null || $char_info === false) return false;
-  
-	$character_name = (string)$char_info->result->characterName;
-	$corporation_id = (int)$char_info->result->corporationID;
-	$corporation_name = (string)$char_info->result->corporation;
-	$alliance_id = (int)$char_info->result->allianceID;
-	$alliance_name = (string)$char_info->result->alliance;
-  
-	if($alliance_id == 0) $alliance_id = null;
-	if($alliance_name == '') $alliance_name = null;
-
-	$char_sheet = \Osmium\EveApi\fetch(
-		'/char/CharacterSheet.xml.aspx',
-		array(
-			'characterID' => $character_id,
-			'keyID' => $a['keyid'],
-			'vCode' => $a['verificationcode'],
-		),
-		$timeout
-	);
-
-	if($char_sheet === null || $char_sheet === false) {
-		return false;
-	}
-
-	$is_fitting_manager = false;
-	foreach(($char_sheet->result->rowset ?: array()) as $rowset) {
-		if((string)$rowset['name'] != 'corporationRoles') continue;
-
-		foreach($rowset->children() as $row) {
-			$name = (string)$row['roleName'];
-			if($name == 'roleFittingManager' || $name == 'roleDirector') {
-				/* FIXME: roleFittingManager may be implicitly granted by other roles. */
-				$is_fitting_manager = true;
-				break;
-			}
-		}
-
-		break;
-	}
-  
-	return array($character_name, $corporation_id, $corporation_name, $alliance_id, $alliance_name, (int)$is_fitting_manager);
-}
-
-function update_character_contactlist($a, $timeout = null) {
-	$char_contactlist = \Osmium\EveApi\fetch(
-		'/char/ContactList.xml.aspx',
-		array(
-			'characterID' => $a['characterid'],
-			'keyID' => $a['keyid'],
-			'vCode' => $a['verificationcode'],
-		),
-		$timeout
-	);
-
-	if($char_contactlist === null || $char_contactlist === false) {
-		return false;
-	}
-
-	\Osmium\Db\query('BEGIN');
-	\Osmium\Db\query_params(
-		'DELETE FROM osmium.contacts WHERE accountid = $1',
-		array($a['accountid'])
-	);
-  
-	foreach(($char_contactlist->result->rowset ?: array()) as $rowset) {
-		foreach($rowset->children() as $row) {
-			if((float)$row['standing'] > 0) {
-				\Osmium\Db\query_params(
-					'INSERT INTO osmium.contacts (accountid, contactid, standing) VALUES ($1, $2, $3)',
-					array(
-						$a['accountid'],
-						(int)$row['contactID'],
-						(float)$row['standing'],
-					)
-				);
-			}
-		}
-	}
-
-	\Osmium\Db\query('COMMIT');
-	return true;
-}
-
-/**
  * Get the session token of the current session. This is randomly
  * generated data, different than $PHPSESSID. (Mainly used for CSRF
  * tokens.)
@@ -692,12 +410,12 @@ function get_eveaccount_id(&$error = null) {
 		array(
 			'keyID' => $a['keyid'],
 			'vCode' => $a['verificationcode'],
-		)
+		),
+		null, $etype, $estr
 	);
 
-	if(!($accountstatus instanceof \SimpleXMLElement)
-	   || !isset($accountstatus->result->createDate)) {
-		$error = 'Unexpected EVE API error.';
+	if($accountstatus === false || !isset($accountstatus->result->createDate)) {
+		$error = 'Could not fetch AccountStatus: ('.$etype.') '.$estr;
 		return false;
 	}
 
@@ -768,72 +486,4 @@ function assume_logged_out() {
 	header('HTTP/1.1 303 See Other', true, 303);
 	header('Location: '.\Osmium\get_ini_setting('relative_path'), true, 303);
 	die();
-}
-
-/**
- * Check whether the current account matches the whitelist.
- */
-function check_whitelist($a) {
-	if($a['apiverified'] !== 't') return false;
-
-	$ids = array_flip(\Osmium\get_ini_setting('whitelisted_ids', []));
-
-	foreach([ 'characterid', 'corporationid', 'allianceid' ] as $t) {
-		if(isset($a[$t]) && $a[$t] > 0 && isset($ids[$a[$t]])) {
-			return true;
-		}
-	}
-
-	foreach([ 'corp', 'char' ] as $cltype) {
-
-		foreach(\Osmium\get_ini_setting($cltype.'_contactlist', []) as $k => $cl) {
-			list($keyid, $vcode, $threshold) = explode(':', $cl, 3);
-			$threshold = (float)$threshold;
-
-			$ki = \Osmium\EveApi\fetch('/account/APIKeyInfo.xml.aspx', [
-				'keyID' => $keyid,
-				'vCode' => $vcode,
-			]);
-
-			if(!($ki instanceof \SimpleXMLElement)) {
-				trigger_error($cltype.'_whitelist('.$k.'): could not fetch key info', E_USER_NOTICE);
-				continue;
-			}
-
-			$charid = (int)$ki->result->key->rowset->row['characterID'];
-			$mask = (int)$ki->result->key['accessMask'];
-
-			if(!($mask & CONTACT_LIST_ACCESS_MASK)) {
-				trigger_error($cltype.'_whitelist('.$k.'): no access to contact list', E_USER_NOTICE);
-				continue;
-			}
-
-			$x = \Osmium\EveApi\fetch('/'.$cltype.'/ContactList.xml.aspx', [
-				'keyID' => $keyid,
-				'vCode' => $vcode,
-				'characterID' => $charid,
-			]);
-
-			if(!($x instanceof \SimpleXMLElement)) {
-				trigger_error($cltype.'_whitelist('.$k.'): could not fetch contact list', E_USER_NOTICE);
-				continue;
-			}
-
-			foreach($x->result->rowset as $rs) {
-				foreach($rs->children() as $row) {
-					if((float)$row['standing'] < $threshold) continue;
-					$id = $row['contactID'];
-
-					foreach([ 'characterid', 'corporationid', 'allianceid' ] as $t) {
-						if(isset($a[$t]) && $a[$t] == $id) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-
-	}
-
-	return false;
 }

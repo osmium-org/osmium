@@ -65,10 +65,10 @@ if(isset($_POST['account_name'])) {
 
 		\Osmium\Db\query_params(
 			'INSERT INTO osmium.accounts (accountname, passwordhash, nickname,
-			creationdate, lastlogindate, keyid, verificationcode, apiverified,
+			creationdate, lastlogindate, keyid, apiverified,
 			characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 			isfittingmanager, ismoderator, flagweight, reputation) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
 			)', 
 			array(
 				$_POST['account_name'],
@@ -76,7 +76,6 @@ if(isset($_POST['account_name'])) {
 				$_POST['nickname'],
 				time(),
 				0,
-				null,
 				null,
 				'f',
 				null,

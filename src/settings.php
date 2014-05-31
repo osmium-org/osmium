@@ -43,11 +43,13 @@ if(isset($_POST['key_id'])) {
 
 	if($s !== true) {
 		$p->formerrors['key_id'][] = $s;
+	} else if(\Osmium\State\register_eve_api_key($a['accountid'], $key_id, $v_code, $etype, $estr) === false) {
+		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 	} else {
 		\Osmium\Db\query_params(
-			'UPDATE osmium.accounts SET keyid = $1, verificationcode = $2, apiverified = true
-			WHERE accountid = $3',
-			array($key_id, $v_code, $a['accountid'])
+			'UPDATE osmium.accounts SET keyid = $1, apiverified = true
+			WHERE accountid = $2',
+			[ $key_id, $a['accountid'] ]
 		);
 
 		$a['apiverified'] = 't';
@@ -247,8 +249,10 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 	$cname = key($_POST['fetch']);
 
 	list($keyid, $vcode) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT keyid, verificationcode FROM osmium.accountcharacters
-		WHERE accountid = $1 AND name = $2',
+		'SELECT ac.keyid, eak.verificationcode
+		FROM osmium.accountcharacters ac
+		LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = ac.accountid AND eak.keyid = ac.keyid
+		WHERE ac.accountid = $1 AND ac.name = $2',
 		array($a['accountid'], $cname)
 	));
 
@@ -269,17 +273,14 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 	} else {
 		$keyinfo = \Osmium\EveApi\fetch(
 			'/account/APIKeyInfo.xml.aspx', 
-			array('keyID' => $pkeyid, 
-			      'vCode' => $pvcode)
+			[ 'keyID' => $pkeyid, 'vCode' => $pvcode ],
+			null, $etype, $estr
 		);
 
-		if(!($keyinfo instanceof \SimpleXMLElement)) {
-			$section->appendCreate('p.error_box', 'An error occured while fetching API key info. Please report if the issue persists.');
-		} else if(isset($keyinfo->error)) {
+		if($keyinfo === null) {
 			$section->appendCreate(
 				'p.error_box',
-				'('.(int)$keyinfo->error['code'].') '
-				.(string)$keyinfo->error
+				'An error occured while fetching API key info: ('.$etype.') '.$estr
 			);
 		} else if(!((int)$keyinfo->result->key['accessMask'] & \Osmium\State\CHARACTER_SHEET_ACCESS_MASK)) {
 			$p->formerrors['keyid['.$cname.']'][] = 'No CharacterSheet access.';
@@ -302,14 +303,15 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 
 			if($apicharid === null) {
 				$p->formerrors['keyid['.$cname.']'][] = [ 'Character ', [ 'strong', $piname ], ' not found.' ];
+			} else if(\Osmium\State\register_eve_api_key($a['accountid'], $pkeyid, $pvcode, $etype, $estr) === false) {
+				$p->formerrors['keyid['.$cname.']'][] = '('.$etype.') '.$estr;
 			} else {
 				\Osmium\Db\query_params(
 					'UPDATE osmium.accountcharacters
-					SET keyid = $1, verificationcode = $2, importname = $3
-					WHERE accountid = $4 AND name = $5',
+					SET keyid = $1, importname = $2
+					WHERE accountid = $3 AND name = $4',
 					array(
 						$pkeyid,
-						$pvcode,
 						$piname,
 						$a['accountid'],
 						$cname,
@@ -322,17 +324,14 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 						'keyID' => $pkeyid,
 						'vCode' => $pvcode,
 						'characterID' => $apicharid,
-					)
+					),
+					null, $etype, $estr
 				);
 
-				if(!($sheet instanceof \SimpleXMLElement)) {
-					$section->appendCreate('p.error_box', 'An error occured while fetching character sheet. Please report if the issue persists.');
-				} else if(isset($sheet->error)) {
+				if($sheet === false) {
 					$section->appendCreate(
 						'p.error_box',
-						'('.(int)$sheet->error['code'].') '
-						.(string)$sheet->error
-					);
+						'An error occured while fetching character sheet: ('.$etype.') '.$estr);
 				} else {
 					/* Update skills */
 					$skills = array();
@@ -410,8 +409,10 @@ $table->appendCreate('tfoot');
 $tbody = $table->appendCreate('tbody');
 
 $cq = \Osmium\Db\query_params(
-	'SELECT name, keyid, verificationcode, importname, lastimportdate
-	FROM osmium.accountcharacters WHERE accountid = $1',
+	'SELECT name, ac.keyid, eak.verificationcode, importname, lastimportdate
+	FROM osmium.accountcharacters ac
+	LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = ac.accountid AND eak.keyid = ac.keyid
+	WHERE accountid = $1',
 	array($a['accountid'])
 );
 $haschars = false;
@@ -442,7 +443,7 @@ while($c = \Osmium\Db\fetch_assoc($cq)) {
 	]);
 
 	$tr->appendCreate('td')->append(
-		$c['lastimportdate'] === null ? [ 'em', 'never' ] : $p->formatRelativeDate($c['lastimportdate'])
+		$c['lastimportdate'] === null ? $p->element('em', 'never') : $p->formatRelativeDate($c['lastimportdate'])
 	);
 
 	$td = $tr->appendCreate('td');
