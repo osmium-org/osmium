@@ -22,9 +22,6 @@ const CHARACTER_SHEET_ACCESS_MASK = 8; /* Used to determine whether character is
 const CONTACT_LIST_ACCESS_MASK = 16; /* For standing-based permissions. */
 const ACCOUNT_STATUS_ACCESS_MASK = 33554432; /* For checking alts in votes. */
 
-const REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS = 33554440; /* CharacterSheet & AccountStatus */
-const REQUIRED_ACCESS_MASK_WITH_CONTACTS = 33554456; /* CharacterSheet & AccountStatus & Contacts */
-
 
 
 /* Unverify an account. Best wrapped up in a transaction. */
@@ -102,8 +99,6 @@ function disable_eve_api_key($keyid, $vcode, $unverifyaccounts = true) {
  * API key works and updates (or inserts) it in the eveapikeys table.
  */
 function register_eve_api_key($accountid, $keyid, $vcode, &$etype = null, &$estr = null) {
-	\Osmium\Db\query('BEGIN');
-
 	$keyinfo = \Osmium\EveApi\fetch(
 		'/account/APIKeyInfo.xml.aspx',
 		[ 'keyID' => $keyid, 'vCode' => $vcode ],
@@ -170,6 +165,8 @@ function register_eve_api_key($accountid, $keyid, $vcode, &$etype = null, &$estr
 
 /* Try to API-verify an account with a given API key. */
 function register_eve_api_key_account_auth($accountid, $keyid, $vcode, &$etype = null, &$estr = null) {
+	\Osmium\Db\query('BEGIN');
+
 	$keyinfo = register_eve_api_key($accountid, $keyid, $vcode, $etype, $estr);
 	if($keyinfo === false) return false;
 
@@ -420,4 +417,19 @@ function check_whitelist($a) {
 	}
 
 	return false;
+}
+
+/** @internal */
+function make_api_link() {
+	$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.(
+		CHARACTER_SHEET_ACCESS_MASK | CONTACT_LIST_ACCESS_MASK | ACCOUNT_STATUS_ACCESS_MASK
+	);
+
+	return [
+		[ 'p', [ 'Create an API key here: ', [ 'a', [ 'href' => $uri, $uri ] ] ] ],
+		[ 'p', [
+			'You can disable contact list access, in which case standings-based permissions will not work. You can disable character sheet access, in which case fitting manager-based permissions will not work.',
+		] ],
+		[ 'p', 'If you are still having errors despite having updated your API key, either wait for the cache to expire or create a new API key to get around the caching.' ],
+	];
 }

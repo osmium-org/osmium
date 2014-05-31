@@ -193,26 +193,6 @@ function check_client_attributes($attributes) {
 	return $attributes === get_client_attributes();
 }
 
-/** @internal */
-function make_api_link() {
-	$curi = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITH_CONTACTS;
-	$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.REQUIRED_ACCESS_MASK_WITHOUT_CONTACTS;
-
-	return [
-		[ 'p', 'You can create an API key here:' ],
-		[ 'ul', [
-			[ 'li', [ 'With contact list access: ', [ 'strong', [[ 'a', [ 'href' => $curi, $curi ] ]] ] ] ],
-			[ 'li', [ 'Without contact list access: ', [ 'strong', [[ 'a', [ 'href' => $uri, $uri ] ]] ] ] ],
-		] ],
-		[ 'p', [
-			'You need the contact list access if you want to use the standings-based visibility settings.',
-			[ 'br' ],
-			[ 'strong', 'Only select one character. Do not change the checkboxes on the right.' ],
-		] ],
-		[ 'p', 'If you are still having errors despite having updated your API key, either wait for the cache to expire or create a new API key to get around the caching.' ],
-	];
-}
-
 /**
  * Check if a given password is strong enough to be used for an
  * account.
