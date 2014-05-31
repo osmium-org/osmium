@@ -30,7 +30,13 @@ $ctx->relative = '.';
 \Osmium\State\assume_logged_in($ctx->relative);
 $a = \Osmium\State\get_state('a');
 
-if(isset($_POST['key_id'])) {
+if(isset($_POST['unverify'])) {
+	\Osmium\State\unverify_account($a['accountid']);
+	\Osmium\State\do_post_login($a['accountname']);
+	$a = \Osmium\State\get_state('a');
+	unset($_POST['key_id']);
+	unset($_POST['v_code']);
+} else if(isset($_POST['verify'])) {
 	$key_id = $_POST['key_id'];
 	$v_code = $_POST['v_code'];
 
@@ -39,25 +45,15 @@ if(isset($_POST['key_id'])) {
 		$v_code = $a['verificationcode'];
 	}
 
-	$s = \Osmium\State\check_api_key_sanity($a['accountid'], $key_id, $v_code);
+	$verified = \Osmium\State\register_eve_api_key_account_auth(
+		$a['accountid'], $key_id, $v_code,
+		$etype, $estr
+	);
 
-	if($s !== true) {
-		$p->formerrors['key_id'][] = $s;
-	} else if(\Osmium\State\register_eve_api_key($a['accountid'], $key_id, $v_code, $etype, $estr) === false) {
+	if($verified === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 	} else {
-		\Osmium\Db\query_params(
-			'UPDATE osmium.accounts SET keyid = $1, apiverified = true
-			WHERE accountid = $2',
-			[ $key_id, $a['accountid'] ]
-		);
-
-		$a['apiverified'] = 't';
-		$a['keyid'] = $key_id;
-		$a['verificationcode'] = $v_code;
-
-		\Osmium\State\put_state('a', $a);
-		\Osmium\State\check_api_key($a, true);
+		\Osmium\State\do_post_login($a['accountname']);
 		$a = \Osmium\State\get_state('a');
 	}
 
@@ -184,7 +180,13 @@ $tbody = $section
 
 $tbody->append($p->makeFormInputRow('text', 'key_id', 'API Key ID'));
 $tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
-$tbody->append($p->makeFormSubmitRow('Set API credentials'));
+$tbody->append($p->makeFormRawRow(
+	'', [
+		[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Set API credentials' ] ],
+		' ',
+		[ 'input', [ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove API credentials' ] ],
+	]
+));
 
 
 

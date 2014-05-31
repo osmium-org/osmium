@@ -44,24 +44,37 @@ function is_logged_in() {
  * @param $use_tookie if true, a cookie must be set to mimic a
  * "remember me" feature.
  */
-function do_post_login($account_name, $use_cookie = false) {
+function do_post_login($account_name, $use_cookie = null) {
 	if(isset($_SESSION)) {
 		/* Get rid of old $_SESSION */
 		unset($_SESSION);
 		session_destroy();
 	}
 
-	$q = \Osmium\Db\query_params(
+	if($use_cookie === null) $use_cookie = isset($_COOKIE['T']);
+
+	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT accountid, a.keyid, eak.verificationcode
+		FROM osmium.accounts a
+		LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = accountid AND eak.keyid = a.keyid
+		AND eak.active = true
+		WHERE accountname = $1',
+		[ $account_name ]
+	));
+
+	register_eve_api_key_account_auth($a['accountid'], $a['keyid'], $a['verificationcode']);
+
+	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT accountid, accountname, nickname,
 		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, apiverified,
 		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 		ismoderator, isfittingmanager
 		FROM osmium.accounts a
 		LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = accountid AND eak.keyid = a.keyid
-		WHERE accountname = $1',
-		array($account_name)
-	);
-	$a = \Osmium\Db\fetch_assoc($q);
+		AND eak.active = true
+		WHERE accountid = $1',
+		[ $a['accountid'] ]
+	));
 
 	if(\Osmium\get_ini_setting('whitelist') && !check_whitelist($a)) {
 		$a['notwhitelisted'] = true;
@@ -72,8 +85,6 @@ function do_post_login($account_name, $use_cookie = false) {
 	$_SESSION['__osmium_state'] = array(
 		'a' => $a
 	);
-
-	check_api_key($a);
 
 	if($use_cookie) {
 		$token = get_nonce().'.'.(string)microtime(true);

@@ -37,47 +37,58 @@ if(isset($_POST['key_id'])) {
 	$pw = $_POST['password_0'];
 	$pw1 = $_POST['password_1'];
 
-	$s = \Osmium\State\check_api_key_sanity(null, $keyid, $vcode, $characterid, $charactername);
+	$keyinfo = \Osmium\EveApi\fetch(
+		'/account/APIKeyInfo.xml.aspx',
+		[ 'keyID' => $keyid, 'vCode' => $vcode ],
+		null, $etype, $estr
+	);
 
-	if($s !== true) {
-		$p->formerrors['key_id'][] = $s;
+	if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
+		$p->formerrors['password_0'][] = $s;
+
+	} else if($pw !== $pw1) {
+		$p->formerrors['password_1'][] = 'The two passphrases are not equal.';
+
+	} else if($keyinfo === false) {
+		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
+
+	} else if(($characterid = (int)$keyinfo->result->key->rowset->row['characterID']) === 0) {
+		$p->formerrors['key_id'][] = 'No character is associated with this API key.';
+
+	} else if(($a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT accountid, accountname
+		FROM osmium.accounts WHERE characterid = $1',
+		[ $characterid ]
+	))) === false) {
+		$p->formerrors['key_id'][] = 'This character is not associated with an account.';
+
+	} else if(\Osmium\State\register_eve_api_key_account_auth(
+		$a['accountid'], $keyid, $vcode,
+		$etype, $estr
+	) === false) {
+		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
+
 	} else {
-		$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-			'SELECT accountid, accountname
-			FROM osmium.accounts
-			WHERE apiverified = true AND characterid = $1',
-			array($characterid)
-		));
+		$hash = \Osmium\State\hash_password($pw);
 
-		if($a === false) {
-			$p->formerrors['key_id'][] = [
-				'Character ',
-				[ 'strong', $charactername ],
-				' is not used by any API-verified account.',
-			];
-		} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-			$p->formerrors['password_0'][] = $s;
-		} else if($pw !== $pw1) {
-			$p->formerrors['password_1'][] = 'The two passphrases are not equal.';
-		} else {
-			$hash = \Osmium\State\hash_password($pw);
+		\Osmium\Db\query_params(
+			'UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
+			array($hash, $a['accountid'])
+		);
 
-			\Osmium\Db\query_params(
-				'UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
-				array($hash, $a['accountid'])
-			);
+		$p->content->appendCreate('p')->appendCreate('strong', [
+			'Passphrase reset was successful. You can now login on the account ',
+			[ 'em', $a['accountname'] ],
+			' using your new passphrase.',
+		]);
 
-			$p->content->appendCreate('p.notice_box', [
-				'Passphrase reset was successful. You can now login on the account ',
-				[ 'strong', $a['accountname'] ],
-				' using your new passphrase.',
-			]);
-		}
+		$p->render($ctx);
+		die();
 	}
 }
 
 $p->content->appendCreate('p')->append([
-	'If you forgot the passphrase of your API-verified account, you can reset it by re-entering the API key associated with your account below.',
+	'If you forgot the passphrase of your API-verified account, you can reset it by supplying an API key associated to the character you verified your account with.',
 	[ 'br' ],
 	'You can see a list of your API keys here: ',
 	[ 'strong', [[ 'a', [ 'href' => 'https://support.eveonline.com/api', 'https://support.eveonline.com/api' ] ]] ]
