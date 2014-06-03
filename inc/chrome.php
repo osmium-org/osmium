@@ -435,7 +435,7 @@ function make_untrusted_htmlpurifier_config() {
 
 	/* Do not leak referrers on external links. Also an incentive for
 	 * bad people as this makes spamming links less effective. */
-	$config->set('URI.Munge', rtrim(\Osmium\get_ini_setting('relative_path'), '/').'/internal/redirect/%t/%s');
+	$config->set('URI.Munge', rtrim(\Osmium\get_ini_setting('relative_path'), '/').'/internal/redirect/%t?%s');
 
 	/* Using hashes to verify redirected URIs hopefully prevent
 	 * redirect loops and also prevent others from freeloading off

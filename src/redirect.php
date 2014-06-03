@@ -20,7 +20,7 @@ namespace Osmium\Page\Redirect;
 
 require __DIR__.'/../inc/root.php';
 
-$to = $_GET['to'];
+$to = urldecode($_SERVER['QUERY_STRING']);
 $hash = $_GET['hash'];
 
 if($hash !== ($foo = hash_hmac('sha256', $to, \Osmium\get_ini_setting('uri_munge_secret')))) {
