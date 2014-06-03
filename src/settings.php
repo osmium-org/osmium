@@ -279,7 +279,7 @@ if(isset($_POST['delete']) && is_array($_POST['delete'])) {
 			null, $etype, $estr
 		);
 
-		if($keyinfo === null) {
+		if($keyinfo === false) {
 			$section->appendCreate(
 				'p.error_box',
 				'An error occured while fetching API key info: ('.$etype.') '.$estr
