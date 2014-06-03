@@ -28,6 +28,10 @@ const API_ROOT = 'https://api.eveonline.com';
  * mean longer login times if the API server is busy. */
 const DEFAULT_API_TIMEOUT = 5;
 
+/* Rate limit to no more than 20 seconds over any one second
+ * period. */
+const MAX_API_REQUESTS_IN_ONE_SECOND = 20;
+
 
 
 /* User error: for example invalid credentials, invalid characterID,
@@ -101,6 +105,34 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 		goto HasXML;
 	}
 
+	/* Rate limit API calls to avoid getting banned */
+	$lsem = \Osmium\State\semaphore_acquire('latest_eve_api_calls');
+	if($lsem === false) {
+		\Osmium\State\semaphore_release_nc($sem);
+		$errortype = E_INTERNAL;
+		$errorstr = 'Could not acquire rate limiting semaphore, please report!';
+		return false;
+	}
+
+	$latest = \Osmium\State\get_cache('latest_eve_api_calls', []);
+
+	$time = microtime(true);
+	$cutoff = $time - 1;
+
+	while($latest !== [] && $latest[0] < $cutoff) array_shift($latest);
+	if(count($latest) > MAX_API_REQUESTS_IN_ONE_SECOND) {
+		$waitms = 1000.0 * (1.0 - ($time - $latest[0])) + 5.0;
+		usleep($waitms);
+		/* The process will sleep WHILE keeping the semaphore, so
+		 * other API requests should queue up nicely too. */
+	}
+
+	$latest[] = $time;
+	\Osmium\State\put_cache('latest_eve_api_calls', $latest, 2);
+	\Osmium\State\semaphore_release($lsem);
+
+
+
 	if($timeout === null) $timeout = DEFAULT_API_TIMEOUT;
 
 	$c = \Osmium\curl_init_branded(API_ROOT.$name);
@@ -157,6 +189,7 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 		return false;
 	}
 
+	/* This is timezone safe and clock-skew safe. */
 	$expires = strtotime((string)$xml->cachedUntil);
 	$curtime = strtotime((string)$xml->currentTime);
 
