@@ -201,27 +201,36 @@ class Page extends RawPage {
 					if($m['type'] === 'external' || $m['type'] === 'css') {
 						$hasit[$m['src']] = true;
 
-					    if(
-							substr($m['src'], 0, 2) !== '//'
+						$relative = substr($m['src'], 0, 2) !== '//'
 							&& substr($m['src'], 0, 7) !== 'http://'
 							&& substr($m['src'], 0, 8) !== 'https://'
-					    ) {
-						    $m['src'] = $ctx->relative.$m['src'];
-					    }
+							;
 
 					    if($m['type'] === 'css') {
 						    $xml = $this->element('link', [
 							    'rel' => 'stylesheet',
 							    'type' => 'text/css',
-							    'href' => $m['src'],
-						    ])->renderNode();
+						    ]);
+
+						    $xml->setAttribute(
+							    $relative ? 'o-rel-href' : 'href',
+							    $m['src']
+						    );
+
+						    $xml = $xml->renderNode();
 						    $before =& $meta['head'];
 						    $after =& $meta['head'];
 					    } else if($m['type'] === 'external') {
 						    $xml = $this->element('script', [
 							    'type' => 'application/javascript',
-							    'src' => $m['src'],
-						    ])->renderNode();
+						    ]);
+
+						    $xml->setAttribute(
+							    $relative ? 'o-rel-src' : 'src',
+							    $m['src']
+						    );
+
+						    $xml = $xml->renderNode();
 						    $before =& $meta['before'];
 						    $after =& $meta['after'];
 					    }

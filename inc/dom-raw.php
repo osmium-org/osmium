@@ -72,6 +72,11 @@ class RawPage extends Document {
 			$e->setAttribute('href', $ctx->relative.$v);
 		});
 
+		/* Relative src attribute. Does not include trailing /. */
+		$this->registerCustomAttribute('o-rel-src', function(Element $e, $v, RenderContext $ctx) {
+			$e->setAttribute('src', $ctx->relative.$v);
+		});
+
 		/* Same as o-rel-href, but for action. */
 		$this->registerCustomAttribute('o-rel-action', function(Element $e, $v, RenderContext $ctx) {
 			$e->setAttribute('action', $ctx->relative.$v);
