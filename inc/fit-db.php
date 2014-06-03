@@ -317,7 +317,7 @@ function commit_fitting(&$fit, &$error = null) {
 			$desccontentid,
 			$fit['metadata']['evebuildnumber'],
 			isset($fit['ship']['typeid']) ? $fit['ship']['typeid'] : null,
-			time(),
+			isset($fit['metadata']['creation_date']) ? $fit['metadata']['creation_date'] : time(),
 			$damageprofileid,
 		)
 	);
