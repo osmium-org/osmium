@@ -62,6 +62,14 @@ def processRows(tablename, columnmap, rowset):
 
     i = 0
     for row in rowset:
+        # XXX: Ugly ugly hack. Two types have unicode that is either
+        # unintelligible or that Postgres doesn't like. Until a proper
+        # fix is found, and since this blocks the whole import
+        # process, skip these for now.
+        if tablename == "eve.invtypes":
+            if row.typeID == 33857 or row.typeID == 33858:
+                continue
+
         cur.execute(querystring, [ (k(row) if callable(k) else row[k])
                                    for k in columnmap.viewvalues() ])
         i += 1

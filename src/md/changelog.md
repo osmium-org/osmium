@@ -1,4 +1,6 @@
-# staging
+# Version 0.13
+
+## Version 0.13.0, released 2014-06-03
 
 * **The syntax for the query loadouts API call has changed. Please update your
     applications. [New syntax is here.](./help/api/loadout-query)**

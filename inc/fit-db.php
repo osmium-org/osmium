@@ -52,7 +52,7 @@ function get_unique($fit) {
 
 	$pz = 0;
 	foreach($fit['presets'] as $presetid => $preset) {
-		$newpindexes[$presetid] = $pz;
+		$newpindexes['local'][$presetid] = $pz;
 		++$pz;
 
 		$uniquep = array(
@@ -64,7 +64,7 @@ function get_unique($fit) {
 			$z = 0;
 			foreach($d as $index => $module) {
 				/* Use the actual order of the array, discard indexes */
-				$newmindexes[$presetid][$type][$index] = $z;
+				$newmindexes['local'][$presetid][$type][$index] = $z;
 				++$z;
 
 				$newmodule = [
@@ -84,7 +84,7 @@ function get_unique($fit) {
 
 			foreach($chargepreset['charges'] as $type => $a) {
 				foreach($a as $index => $charge) {
-					$newindex = $newpindexes[$presetid][$type][$index];
+					$newindex = $newpindexes['local'][$presetid][$type][$index];
 					$uniquecp['charges'][$type][$newindex] = (int)$charge['typeid'];
 				}
 			}
@@ -126,6 +126,21 @@ function get_unique($fit) {
 		foreach($fit['remote'] as $k => $rf) {
 			if($k === 'local' || $k === null) continue;
 			$unique['remote'][$k] = get_unique($rf);
+
+			$pz = 0;
+			foreach($rf['presets'] as $pid => $preset) {
+				$newpindexes[$k][$pid] = $pz;
+				++$pz;
+
+				foreach($preset['modules'] as $type => $d) {
+					$z = 0;
+
+					foreach($d as $index => $module) {
+						$newmindexes[$k][$pid][$type][$index] = $z;
+						++$z;
+					}
+				}
+			}
 		}
 
 		$remotes = $fit['remote'];
@@ -137,9 +152,10 @@ function get_unique($fit) {
 					foreach($sub as $index => $m) {
 						if(!isset($m['target']) || $m['target'] === null) continue;
 						$unique['moduletargets']
-							[$newpindexes[$pid]]
+							[$key]
+							[$newpindexes[$key][$pid]]
 							[$type]
-							[$newmindexes[$pid][$type][$index]]
+							[$newmindexes[$key][$pid][$type][$index]]
 							= (string)$m['target'];
 					}
 				}

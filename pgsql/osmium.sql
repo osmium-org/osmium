@@ -30,7 +30,6 @@ CREATE TABLE accountcharacters (
     accountid integer NOT NULL,
     name character varying(255) NOT NULL,
     keyid integer,
-    verificationcode character varying(255),
     importname name,
     importedskillset text,
     overriddenskillset text,
@@ -71,7 +70,6 @@ CREATE TABLE accounts (
     creationdate integer NOT NULL,
     lastlogindate integer NOT NULL,
     keyid integer,
-    verificationcode character varying(255),
     apiverified boolean NOT NULL,
     characterid integer,
     charactername character varying(255),
@@ -260,6 +258,38 @@ ALTER SEQUENCE damageprofiles_damageprofileid_seq OWNED BY damageprofiles.damage
 
 
 --
+-- Name: editableformattedcontents; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE editableformattedcontents (
+    contentid integer NOT NULL,
+    mutable boolean DEFAULT true NOT NULL,
+    rawcontent text NOT NULL,
+    filtermask integer NOT NULL,
+    formattedcontent text
+);
+
+
+--
+-- Name: editableformattedcontents_contentid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE editableformattedcontents_contentid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: editableformattedcontents_contentid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE editableformattedcontents_contentid_seq OWNED BY editableformattedcontents.contentid;
+
+
+--
 -- Name: editableloadoutsbyaccount; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -301,6 +331,22 @@ ALTER SEQUENCE eveaccounts_eveaccountid_seq OWNED BY eveaccounts.eveaccountid;
 
 
 --
+-- Name: eveapikeys; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE eveapikeys (
+    owneraccountid integer NOT NULL,
+    keyid integer NOT NULL,
+    verificationcode text NOT NULL,
+    active boolean NOT NULL,
+    creationdate integer NOT NULL,
+    updatedate integer,
+    expirationdate bigint,
+    mask bigint NOT NULL
+);
+
+
+--
 -- Name: fittingtags; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -330,7 +376,7 @@ CREATE TABLE fittingchargepresets (
     presetid integer NOT NULL,
     chargepresetid integer NOT NULL,
     name character varying(255) NOT NULL,
-    description text
+    descriptioncontentid integer
 );
 
 
@@ -367,7 +413,7 @@ CREATE TABLE fittingdronepresets (
     fittinghash character(40) NOT NULL,
     dronepresetid integer NOT NULL,
     name character varying(255) NOT NULL,
-    description text
+    descriptioncontentid integer
 );
 
 
@@ -379,7 +425,7 @@ CREATE TABLE fittingpresets (
     fittinghash character(40) NOT NULL,
     presetid integer NOT NULL,
     name character varying(255) NOT NULL,
-    description text
+    descriptioncontentid integer
 );
 
 
@@ -390,11 +436,11 @@ CREATE TABLE fittingpresets (
 CREATE TABLE fittings (
     fittinghash character(40) NOT NULL,
     name character varying(255) NOT NULL,
-    description text,
     hullid integer,
     creationdate integer NOT NULL,
     evebuildnumber integer NOT NULL,
-    damageprofileid integer
+    damageprofileid integer,
+    descriptioncontentid integer
 );
 
 
@@ -404,22 +450,23 @@ CREATE TABLE fittings (
 
 CREATE VIEW fittingdescriptions AS
  SELECT d.fittinghash,
-    string_agg(d.description, ', '::text) AS descriptions
-   FROM (        (        (         SELECT fittings.fittinghash,
-                                    fittings.description
-                                   FROM fittings
+    string_agg(efc.rawcontent, ', '::text) AS descriptions
+   FROM ((        (        (         SELECT f.fittinghash,
+                                    f.descriptioncontentid AS contentid
+                                   FROM fittings f
                         UNION
-                                 SELECT fittingpresets.fittinghash,
-                                    fittingpresets.description
-                                   FROM fittingpresets)
+                                 SELECT f.fittinghash,
+                                    f.descriptioncontentid AS contentid
+                                   FROM fittingpresets f)
                 UNION
-                         SELECT fittingchargepresets.fittinghash,
-                            fittingchargepresets.description
-                           FROM fittingchargepresets)
+                         SELECT f.fittinghash,
+                            f.descriptioncontentid AS contentid
+                           FROM fittingchargepresets f)
         UNION
-                 SELECT fittingdronepresets.fittinghash,
-                    fittingdronepresets.description
-                   FROM fittingdronepresets) d
+                 SELECT f.fittinghash,
+                    f.descriptioncontentid AS contentid
+                   FROM fittingdronepresets f) d
+   LEFT JOIN editableformattedcontents efc ON ((d.contentid = efc.contentid)))
   GROUP BY d.fittinghash;
 
 
@@ -884,10 +931,9 @@ CREATE TABLE loadoutcommentreplies (
     commentid integer NOT NULL,
     accountid integer NOT NULL,
     creationdate integer NOT NULL,
-    replybody text NOT NULL,
-    replyformattedbody text NOT NULL,
     updatedate integer,
-    updatedbyaccountid integer
+    updatedbyaccountid integer,
+    bodycontentid integer NOT NULL
 );
 
 
@@ -919,8 +965,7 @@ CREATE TABLE loadoutcommentrevisions (
     revision integer NOT NULL,
     updatedbyaccountid integer NOT NULL,
     updatedate integer NOT NULL,
-    commentbody text NOT NULL,
-    commentformattedbody text NOT NULL
+    bodycontentid integer NOT NULL
 );
 
 
@@ -1029,7 +1074,8 @@ CREATE TABLE loadouthistory (
     revision integer NOT NULL,
     fittinghash character(40) NOT NULL,
     updatedbyaccountid integer NOT NULL,
-    updatedate integer NOT NULL
+    updatedate integer NOT NULL,
+    reason text
 );
 
 
@@ -1065,9 +1111,13 @@ CREATE VIEW loadoutslatestrevision AS
 
 CREATE VIEW loadoutssearchdata AS
  SELECT l.loadoutid,
-        CASE l.viewpermission
-            WHEN 4 THEN accounts.accountid
-            ELSE 0
+        CASE l.visibility
+            WHEN 1 THEN accounts.accountid
+            ELSE
+            CASE l.viewpermission
+                WHEN 4 THEN accounts.accountid
+                ELSE 0
+            END
         END AS restrictedtoaccountid,
         CASE l.viewpermission
             WHEN 3 THEN
@@ -1125,8 +1175,7 @@ CREATE VIEW loadoutssearchdata AS
    JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)))
    LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = l.loadoutid)))
    LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)))
-   LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = l.loadoutid)))
-  WHERE (l.visibility = 0);
+   LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = l.loadoutid)));
 
 
 --
@@ -1425,6 +1474,13 @@ ALTER TABLE ONLY damageprofiles ALTER COLUMN damageprofileid SET DEFAULT nextval
 
 
 --
+-- Name: contentid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY editableformattedcontents ALTER COLUMN contentid SET DEFAULT nextval('editableformattedcontents_contentid_seq'::regclass);
+
+
+--
 -- Name: eveaccountid; Type: DEFAULT; Schema: osmium; Owner: -
 --
 
@@ -1578,6 +1634,14 @@ ALTER TABLE ONLY damageprofiles
 
 
 --
+-- Name: editableformattedcontents_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY editableformattedcontents
+    ADD CONSTRAINT editableformattedcontents_pkey PRIMARY KEY (contentid);
+
+
+--
 -- Name: eveaccounts_creationdate_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1591,6 +1655,14 @@ ALTER TABLE ONLY eveaccounts
 
 ALTER TABLE ONLY eveaccounts
     ADD CONSTRAINT eveaccounts_pkey PRIMARY KEY (eveaccountid);
+
+
+--
+-- Name: eveapikeys_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY eveapikeys
+    ADD CONSTRAINT eveapikeys_pkey PRIMARY KEY (owneraccountid, keyid);
 
 
 --
@@ -1963,6 +2035,34 @@ CREATE INDEX cookietokens_accountid_idx ON cookietokens USING btree (accountid);
 --
 
 CREATE INDEX cookietokens_expirationdate_idx ON cookietokens USING btree (expirationdate);
+
+
+--
+-- Name: editableformattedcontents_mutable_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX editableformattedcontents_mutable_idx ON editableformattedcontents USING btree (mutable);
+
+
+--
+-- Name: editableformattedcontents_nonmutable_rawcontent_uniq; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX editableformattedcontents_nonmutable_rawcontent_uniq ON editableformattedcontents USING btree (md5(rawcontent)) WHERE (mutable = false);
+
+
+--
+-- Name: eveapikeys_active_updatedate_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX eveapikeys_active_updatedate_idx ON eveapikeys USING btree (updatedate NULLS FIRST) WHERE (active = true);
+
+
+--
+-- Name: eveapikeys_keyid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX eveapikeys_keyid_idx ON eveapikeys USING btree (keyid);
 
 
 --
@@ -2485,6 +2585,14 @@ ALTER TABLE ONLY accountcharacters
 
 
 --
+-- Name: accountcharacters_keyid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY accountcharacters
+    ADD CONSTRAINT accountcharacters_keyid_fkey FOREIGN KEY (accountid, keyid) REFERENCES eveapikeys(owneraccountid, keyid);
+
+
+--
 -- Name: accountfavorites_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -2498,6 +2606,14 @@ ALTER TABLE ONLY accountfavorites
 
 ALTER TABLE ONLY accountfavorites
     ADD CONSTRAINT accountfavorites_loadoutid_fkey FOREIGN KEY (loadoutid) REFERENCES loadouts(loadoutid);
+
+
+--
+-- Name: accounts_keyid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY accounts
+    ADD CONSTRAINT accounts_keyid_fkey FOREIGN KEY (accountid, keyid) REFERENCES eveapikeys(owneraccountid, keyid);
 
 
 --
@@ -2530,6 +2646,22 @@ ALTER TABLE ONLY contacts
 
 ALTER TABLE ONLY cookietokens
     ADD CONSTRAINT cookietokens_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: eveapikeys_owneraccountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY eveapikeys
+    ADD CONSTRAINT eveapikeys_owneraccountid_fkey FOREIGN KEY (owneraccountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: fittingchargepresets_descriptioncontentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingchargepresets
+    ADD CONSTRAINT fittingchargepresets_descriptioncontentid_fkey FOREIGN KEY (descriptioncontentid) REFERENCES editableformattedcontents(contentid);
 
 
 --
@@ -2578,6 +2710,14 @@ ALTER TABLE ONLY fittingdeltas
 
 ALTER TABLE ONLY fittingdeltas
     ADD CONSTRAINT fittingdeltas_fittinghash2_fkey FOREIGN KEY (fittinghash2) REFERENCES fittings(fittinghash);
+
+
+--
+-- Name: fittingdronepresets_descriptioncontentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingdronepresets
+    ADD CONSTRAINT fittingdronepresets_descriptioncontentid_fkey FOREIGN KEY (descriptioncontentid) REFERENCES editableformattedcontents(contentid);
 
 
 --
@@ -2681,7 +2821,7 @@ ALTER TABLE ONLY fittingmoduletargets
 --
 
 ALTER TABLE ONLY fittingmoduletargets
-    ADD CONSTRAINT fittingmoduletargets_source_fkey FOREIGN KEY (fittinghash, source, sourcefittinghash) REFERENCES fittingremotes(fittinghash, key, remotefittinghash);
+    ADD CONSTRAINT fittingmoduletargets_source_fkey FOREIGN KEY (fittinghash, source, sourcefittinghash) REFERENCES fittingremotes(fittinghash, key, remotefittinghash) DEFERRABLE;
 
 
 --
@@ -2690,6 +2830,14 @@ ALTER TABLE ONLY fittingmoduletargets
 
 ALTER TABLE ONLY fittingmoduletargets
     ADD CONSTRAINT fittingmoduletargets_target_fkey FOREIGN KEY (fittinghash, target) REFERENCES fittingremotes(fittinghash, key);
+
+
+--
+-- Name: fittingpresets_descriptioncontentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingpresets
+    ADD CONSTRAINT fittingpresets_descriptioncontentid_fkey FOREIGN KEY (descriptioncontentid) REFERENCES editableformattedcontents(contentid);
 
 
 --
@@ -2725,6 +2873,14 @@ ALTER TABLE ONLY fittings
 
 
 --
+-- Name: fittings_descriptioncontentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittings
+    ADD CONSTRAINT fittings_descriptioncontentid_fkey FOREIGN KEY (descriptioncontentid) REFERENCES editableformattedcontents(contentid);
+
+
+--
 -- Name: fittings_hullid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -2757,6 +2913,14 @@ ALTER TABLE ONLY loadoutcommentreplies
 
 
 --
+-- Name: loadoutcommentreplies_bodycontentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY loadoutcommentreplies
+    ADD CONSTRAINT loadoutcommentreplies_bodycontentid_fkey FOREIGN KEY (bodycontentid) REFERENCES editableformattedcontents(contentid);
+
+
+--
 -- Name: loadoutcommentreplies_commentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
 --
 
@@ -2770,6 +2934,14 @@ ALTER TABLE ONLY loadoutcommentreplies
 
 ALTER TABLE ONLY loadoutcommentreplies
     ADD CONSTRAINT loadoutcommentreplies_updatedbyaccountid_fkey FOREIGN KEY (updatedbyaccountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: loadoutcommentrevisions_bodycontentid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY loadoutcommentrevisions
+    ADD CONSTRAINT loadoutcommentrevisions_bodycontentid_fkey FOREIGN KEY (bodycontentid) REFERENCES editableformattedcontents(contentid);
 
 
 --

@@ -1,5 +1,5 @@
-staging
-=======
+v0.13.0, released 2014-06-03
+============================
 
 The [sysv] and [auth] sections have been added to config.ini. The
 uacontact setting has been added in [branding]. Two trust_x_* have
@@ -13,7 +13,7 @@ hp/HTMLPurifier`.
 IMPORTANT: after upgrading HTMLPurifier and running the database
 patches, add and appropriately fill the uri_munge_secret in the
 [osmium] section, in the configuration file, then run
-`./bin/upgrade/current/refactor-formatted-comments`.
+`./bin/upgrade/v0.12.1/refactor-formatted-comments`.
 
 Some changes have been made to the example robots.txt.
 
