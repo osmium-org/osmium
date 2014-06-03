@@ -440,7 +440,7 @@ class Page extends RawPage {
 		   && \Osmium\get_ini_setting('use_hsts')) {
 			$maxage = (int)\Osmium\get_ini_setting('https_cert_expiration') - time() - 86400;
 			if($maxage > 0) {
-				header('Strict-Transport-Policy: max-age='.$maxage);
+				header('Strict-Transport-Security: max-age='.$maxage);
 			}
 		}
 
