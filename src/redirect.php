@@ -31,5 +31,25 @@ if(!preg_match('%^((http|ftp)s?:)?//%', $to)) {
 	\Osmium\fatal(400);
 }
 
-header('HTTP/1.1 303 See Other', true, 303);
-header('Location: '.$to, true, 303);
+$ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+if($ref === '' || preg_match('%^https?://'.preg_quote($_SERVER['HTTP_HOST'], '%').'/?$%', $ref)) {
+	/* No need to hide the referer; a 303 is faster and standard HTTP. */
+	header('HTTP/1.1 303 See Other', true, 303);
+	header('Location: '.$to, true, 303);
+	die();
+}
+
+/* This method is non-standard, but widely supported accross
+ * browsers. When doing a redirect using Refresh, some browsers will
+ * blank the referrer (Firefox), while other will set it to the page
+ * that contained the redirect (the /internal/redirect/ URI, which is
+ * safe to leak). */
+header('Refresh: 0; url='.$to);
+$to = \Osmium\Chrome\escape($to);
+
+echo "<!DOCTYPE html><html>";
+echo "<head><title>Redirecting</title>";
+echo "<meta http-equiv='refresh' content='0; url={$to}'>";
+echo "<meta name='robots' content='noindex,nofollow'>";
+echo "</head>";
+echo "</html>";
