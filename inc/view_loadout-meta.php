@@ -547,21 +547,4 @@ if(isset($rauthorname)) {
 	];
 }
 
-if(isset($fit['ship']['typeid'])) {
-	$anchor = $p->element('a', [
-		'href' => '//zkillboard.com/ship/'.$fit['ship']['typeid'],
-		$fit['ship']['typename'].' activity on zKillboard',
-	]);
-
-	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
-		/* Don't leak private URIs */
-		$anchor->setAttribute('rel', 'noreferrer');
-	}
-
-	$actions[] = [
-		null,
-		$anchor,
-	];
-}
-
 make_list('Actions', $actions);
