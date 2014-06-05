@@ -300,6 +300,7 @@ h1#vltitle > form.retag {
 	text-decoration: none;
 	vertical-align: middle;
 	font-family: $sans-font;
+	margin-left: 1em;
 
 	&> input[type="text"] {
 		width: 25em;

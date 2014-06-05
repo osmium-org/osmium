@@ -436,7 +436,10 @@ $(function() {
 	lsform.on('submit', function(e) {
 		e.preventDefault();
 
-		var postopts = {};
+		var postopts = {
+			'o___csrf': $("div#osmium-data").data('token'),
+		};
+
 		lsform.find('input.source').each(function() {
 			var inp = $(this);
 			postopts[inp.prop('name')] = inp.val();

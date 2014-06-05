@@ -182,7 +182,7 @@ osmium_send_clf = function(opts) {
 
 	var postopts = $.extend({
 		type: osmium_clftype,
-		token: osmium_token,
+		'o___csrf': osmium_token,
 		relative: osmium_relative,
 		clf: osmium_compress_json(osmium_clf)
 	}, (("params" in opts) ? opts.params : {}));

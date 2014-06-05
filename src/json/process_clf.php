@@ -22,8 +22,7 @@ namespace Osmium\Json\ProcessCLF;
 require __DIR__.'/../../inc/root.php';
 require \Osmium\ROOT.'/inc/ajax-common.php';
 
-if(!isset($_POST['token']) || $_POST['token'] != \Osmium\State\get_token()
-   || !isset($_POST['type']) || !in_array($_POST['type'], array('new', 'view'))
+if(!isset($_POST['type']) || !in_array($_POST['type'], array('new', 'view'))
    || !isset($_GET['clftoken']) || !isset($_POST['clf'])) {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json("Invalid or missing parameters.");

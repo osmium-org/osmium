@@ -113,6 +113,7 @@ function get_rules($prefix) {
 			'%^/internal/redirect/(?<hash>[^/]+)$%D' => '/src/redirect.php',
 			'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
 			'%^/internal/ps/(?<name>[^/]+)$%D' => '/src/ajax/put_setting.php',
+			'%^/internal/retag/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/json/retag_loadout.php',
 		];
 
 	case "help":

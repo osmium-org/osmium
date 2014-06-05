@@ -44,6 +44,7 @@ osmium_showinfo_internal = function(opts, onerror) {
 	osmium_clfspinner_push();
 
 	opts.relative = osmium_relative;
+	opts['o___csrf'] = osmium_token;
 
 	$.ajax({
 		type: 'POST',

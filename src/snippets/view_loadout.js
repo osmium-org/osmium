@@ -69,7 +69,14 @@ $(function() {
 		var form = $(document.createElement('form'));
 		form.addClass('retag');
 		form.prop('method', 'post');
-		form.prop('action', osmium_relative + '/src/json/retag_loadout.php');
+		form.prop('action', osmium_relative + '/internal/retag/' + $("section#ship").data('loadoutid'));
+
+		form.append(
+			$(document.createElement('input'))
+				.prop('type', 'hidden')
+				.prop('name', 'o___csrf')
+				.val(osmium_token)
+		);
 
 		var inp = $(document.createElement('input'));
 		inp.prop('type', 'text');
@@ -83,13 +90,6 @@ $(function() {
 
 		inp.val(tags.join(' '));
 		form.append(inp);
-
-		form.append(
-			$(document.createElement('input'))
-				.prop('type', 'hidden')
-				.prop('name', 'loadoutid')
-				.val($("section#ship").data('loadoutid'))
-		);
 
 		form.append([
 			' ',
@@ -121,7 +121,7 @@ $(function() {
 
 			$.ajax({
 				type: 'POST',
-				url: osmium_relative + '/src/json/retag_loadout.php',
+				url: form.prop('action'),
 				data: postdata,
 				dataType: 'json',
 				complete: function() {

@@ -22,13 +22,13 @@ require __DIR__.'/../../inc/root.php';
 
 $json = [];
 
-if(!isset($_POST['tags']) || !isset($_POST['loadoutid'])) {
+if(!isset($_POST['tags']) || !isset($_GET['loadoutid'])) {
 	$json['error'] = 'Must supply tags and loadoutid.';
 	\Osmium\Chrome\return_json($json);
 	die();
 }
 
-$loadoutid = (int)$_POST['loadoutid'];
+$loadoutid = (int)$_GET['loadoutid'];
 $a = \Osmium\State\get_state('a');
 
 if(!isset($a['accountid'])) {

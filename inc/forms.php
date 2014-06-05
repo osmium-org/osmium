@@ -22,11 +22,7 @@ function post_redirect_get() {
 	if(isset($_POST) && $_POST !== [] && !defined('Osmium\NO_CSRF_CHECK')) {
 		if(!isset($_POST['o___csrf']) || $_POST['o___csrf'] !== \Osmium\State\get_token()) {
 			/* No/incorrect CSRF token */
-			/* XXX: uncomment this later, when all code has moved to using <o-form> */
-			/*
-			  unset($_POST);
-			  fatal(400, "Incorrect CSRF token. If you made a legitimate request, please report.");
-			*/
+			$_POST = [];
 		}
 	}
 

@@ -191,6 +191,6 @@ $tbody->appendCreate('tr', [
 ]);
 
 
-
+$p->data['token'] = \Osmium\State\get_token();
 $p->snippets[] = 'compare_dps';
 $p->render($ctx);
