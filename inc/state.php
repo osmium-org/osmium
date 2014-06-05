@@ -443,7 +443,22 @@ function put_activity() {
 	if(defined('Osmium\ACTIVITY_IGNORE')) return;
 	$a = get_state('a', null);
 	$a = ($a === null) ? get_client_attributes() : $a['accountid'];
-	if($a !== 'CLI') put_cache_memory($a, 0, 65, 'Activity_');
+	if($a === 'CLI') return;
+
+	$sem = semaphore_acquire('Activity');
+	$act = get_cache_memory_fb('Activity', []);
+
+	$cutoff = ($now = time()) - 120;
+
+	foreach($act as $k => $t) {
+		if($t < $cutoff) unset($act[$k]);
+	}
+
+	$act[$a] = $now;
+
+	put_cache_memory_fb('Activity', $act, 300);
+	put_cache_memory('ActivityCount', count($act), 300);
+	semaphore_release($sem);
 }
 
 /**
