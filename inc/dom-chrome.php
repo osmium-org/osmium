@@ -304,7 +304,7 @@ class Page extends RawPage {
 			$command = \Osmium\get_ini_setting('minify_command');
 
 			/* Concatenate & minify */
-			shell_exec('cat '.$ecf.' | '.$command.' >> '.$ecmf);
+			shell_exec('cat '.$ecf.' | '.$command.' > '.$ecmf);
 		}
 
 		clearstatcache(true, $minout);
