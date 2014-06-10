@@ -61,7 +61,7 @@ if(isset($_GET['import']) && $_GET['import'] == 'dna') {
     $forkuri = '/new/dna/'.$_GET['dna'];
     $historyuri = false;
     $canonicaluri = '/loadout/dna/'.$_GET['dna'];
-    $exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $dna) {
+    $exporturi = function($format, $ext, $incpresets = false, $params = array()) use(&$fit, &$dna) {
 	    $params['input'] = $dna;
 	    return '/api/convert/dna/'.$format.'/dna.'.$ext.\Osmium\DOM\Page::formatQueryString($params);
     };
@@ -238,7 +238,7 @@ if(!isset($revision)) {
 $forkuri = '/fork/'.$loadoutid.\Osmium\DOM\Page::formatQueryString($forkparams);
 
 if(!isset($exporturi)) {
-	$exporturi = function($format, $ext, $incpresets = false, $params = array()) use($fit, $exportparams) {
+	$exporturi = function($format, $ext, $incpresets = false, $params = array()) use(&$fit, &$exportparams) {
 		$uri = '/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
 		$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
 		$uri .= '.'.$ext;
