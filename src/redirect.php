@@ -23,7 +23,7 @@ require __DIR__.'/../inc/root.php';
 $to = urldecode($_SERVER['QUERY_STRING']);
 $hash = $_GET['hash'];
 
-if($hash !== ($foo = hash_hmac('sha256', $to, \Osmium\get_ini_setting('uri_munge_secret')))) {
+if($hash !== hash_hmac('sha256', $to, \Osmium\get_ini_setting('uri_munge_secret'))) {
 	\Osmium\fatal(400);
 }
 

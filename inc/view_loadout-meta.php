@@ -547,8 +547,11 @@ if(isset($rauthorname)) {
 }
 
 if(isset($fit['ship']['typeid'])) {
+	$href = 'https://zkillboard.com/ship/'.$fit['ship']['typeid'];
+	$munged = hash_hmac('sha256', $href, \Osmium\get_ini_setting('uri_munge_secret'));
+
 	$anchor = $p->element('a', [
-		'href' => '//zkillboard.com/ship/'.$fit['ship']['typeid'],
+		'o-rel-href' => '/internal/redirect/'.$munged.'?'.urlencode($href),
 		$fit['ship']['typename'].' activity on zKillboard',
 	]);
 
