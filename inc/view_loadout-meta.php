@@ -296,8 +296,7 @@ case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
 		];
 	}
 
-	array_unshift($text, [ 5, 28, 32, 32 ]);
-	$fvp = $text;
+	array_unshift($fvp, [ 5, 28, 32, 32 ]);
 	break;
 
 }
