@@ -61,7 +61,8 @@ trait LoadoutFormatter {
 
 		if($lrow === false) {
 			\Osmium\State\semaphore_release($sem);
-			return false;
+			trigger_error('loadout '.$loadoutid.' not found in loadoutssearchresults', E_USER_NOTICE);
+			return '';
 		}
 
 		$uri = '/'.\Osmium\Fit\get_fit_uri($lrow['loadoutid'], $lrow['visibility'], $lrow['privatetoken']);
