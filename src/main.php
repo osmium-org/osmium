@@ -166,7 +166,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen(
 		$section = $p->element('section', [ 'class' => 'popularfits' ]);
 		$section->appendCreate('h2', 'Popular fits');
 
-		$vercutoff = array_values(\Osmium\Fit\get_eve_db_versions())[2]['build'];
+		$vercutoff = \Osmium\Fit\get_build_cutoff();
 		$ids = \Osmium\Search\get_search_ids(
 			'', 'AND build >= '.$vercutoff.' ORDER BY score DESC', 0, 20
 		);

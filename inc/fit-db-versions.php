@@ -23,6 +23,13 @@ namespace Osmium\Fit;
  * database has major updates. */
 function get_eve_db_versions() {
 	return array(
+		797363 => array(
+			'tag' => 'kronos-12',
+			'name' => 'Kronos 1.2',
+			'build' => 797363,
+			'reldate' => gmmktime(0, 0, 0, 6, 13, 2014),
+			'dogmaver' => 13,
+		),
 		793961 => array(
 			'tag' => 'kronos-11',
 			'name' => 'Kronos 1.1',
