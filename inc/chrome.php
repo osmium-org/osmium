@@ -31,6 +31,10 @@ const CONTENT_FILTER_SANITIZE_TRUST = 2;
 const CONTENT_FILTER_SANITIZE = 4;
 const CONTENT_FILTER_SANITIZE_PHRASING = 8;
 
+const FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR = 1;
+const FATTRIBS_USE_RELOAD_TIME_FOR_DPS = 2;
+const FATTRIBS_USE_RELOAD_TIME_FOR_TANK = 4;
+
 const F_USED_SHOW_ABSOLUTE = 1;
 const F_USED_SHOW_DIFFERENCE = 2;
 const F_USED_SHOW_PERCENTAGE = 4;
@@ -60,6 +64,8 @@ function escape($s) {
  * significant digits.
  *
  * @param $min show this suffix at least (must be one of k, m or b)
+ *
+ * @deprecated use Formatter::formatKMB
  */
 function format($number, $sd = 3, $min = '') {
 	static $suffixes = [
@@ -147,6 +153,7 @@ function format_used($rawused, $rawtotal, $digits, $opts = F_USED_SHOW_ABSOLUTE)
 	return $ret;
 }
 
+/** @deprecated use Formatter::formatExactInteger */
 function format_number($num, $precisionoffset = 0) {
 	$num = floatval($num);
 	if($num < 0) {
@@ -252,6 +259,7 @@ function format_resonance($resonance) {
 		."</div>";
 }
 
+/** @deprecated use Formatter::formatExactInteger */
 function format_integer($i, $exact = true) {
 	if($exact) {
 		return number_format($i);
@@ -582,13 +590,6 @@ function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = n
 	$alt = escape($alt);
 
 	return "<span class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></span>";
-}
-
-/** Format a skill level in roman numerals.
- *
- * @deprecated see Formatter::formatSkillLevel() */
-function format_skill_level($level) {
-	return \Osmium\DOM\Page::formatSkillLevel($level);
 }
 
 function format_effect_category($id) {

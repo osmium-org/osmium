@@ -266,7 +266,7 @@ osmium_send_clf = function(opts) {
 				}
 			}
 
-			$('div#computed_attributes').html(payload.attributes);
+			$('div#computed_attributes').empty().append($(payload.attributes).children());
 			osmium_clf_rawattribs = payload.rawattribs;
 			osmium_gen_fattribs();
 			osmium_init_fattribs();

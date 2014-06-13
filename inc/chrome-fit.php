@@ -19,10 +19,6 @@
 
 namespace Osmium\Chrome;
 
-const FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR = 1;
-const FATTRIBS_USE_RELOAD_TIME_FOR_DPS = 2;
-const FATTRIBS_USE_RELOAD_TIME_FOR_TANK = 4;
-
 
 
 function get_remotes() {
@@ -38,107 +34,13 @@ function get_remotes() {
 	return $types;
 }
 
+/** @deprecated */
 function print_formatted_attribute_category($identifier, $title, $titledata, $titleclass, $contents) {
 	if($titleclass) $titleclass = " class='$titleclass'";
 	echo "<section id='$identifier'>\n";
 	echo "<h4$titleclass>$title <small>$titledata</small></h4>\n";
 	echo "<div>\n$contents</div>\n";
 	echo "</section>\n";
-}
-
-function print_nested_skill_requirements($typeid, $level, array &$skills, array $tree, array $invtree) {
-	if(isset($tree[$typeid])) {
-		foreach($tree[$typeid] as $stid => $sl) {
-			if(!isset($skills[$stid])) continue;
-			$ml = $skills[$stid];
-			unset($skills[$stid]);
-
-			print_nested_skill_requirements($stid, $ml, $skills, $tree, $invtree);
-		}
-	}
-
-	echo "<li>\n";
-
-	echo \Osmium\Fit\get_typename($typeid)." ".format_skill_level($level);
-
-	if(isset($invtree[$typeid])) {
-		$reqs = [];
-
-		foreach($invtree[$typeid] as $tid) {
-			$reqs[] = escape(\Osmium\Fit\get_typename($tid));
-		}
-
-		if($reqs !== []) {
-			echo "<div class='reqs'>Required by ".implode(', ', $reqs)."</div>";
-		}
-	}
-
-	echo "</li>\n";
-}
-
-function print_formatted_mastery(&$fit, $relative, array $prereqs_per_type) {
-	ob_start();
-
-	$missing_per_type = array();
-	\Osmium\Skills\get_missing_prerequisites($prereqs_per_type, $fit['skillset'], $missing_per_type);
-	$prereqs_unique = \Osmium\Skills\merge_skill_prerequisites($prereqs_per_type);
-	$missing_unique = \Osmium\Skills\merge_skill_prerequisites($missing_per_type);
-	list($missingsp, $totalsp, $secs) = \Osmium\Skills\sp_totals($prereqs_unique, $fit['skillset']);
-
-	$types_per_prereqs = [];
-	foreach($missing_per_type as $typeid => $arr) {
-		foreach($arr as $stid => $level) {
-			$types_per_prereqs[$stid][$typeid] = true;
-		}
-	}
-
-
-	foreach($types_per_prereqs as &$arr) {
-		$arr = array_reverse(array_keys($arr));
-	}
-
-	if($missing_unique === []) {
-		echo "<p class='placeholder'>No missing skills with current skillset ("
-			.escape($fit['skillset']['name']).").</p>\n";
-	}
-
-	if($missing_unique !== []) {
-		echo "<h5>Missing skillpoints</h5>\n";
-		echo "<ul>\n";
-
-		echo "<li>".format_integer($missingsp)." SP missing out of ".format_integer($totalsp)." SP required</li>\n";
-
-		echo "<li>";
-		if($fit['skillset']['name'] === 'All V' || $fit['skillset']['name'] === 'All 0') {
-			echo "approximately ";
-		}
-		echo format_long_duration($secs, 2)." of training time</li>\n";
-
-		echo "</ul>\n";
-	}
-
-	if($missing_unique !== []) {
-		echo "<h5>Missing skills</h5>\n";
-		echo "<ul>\n";
-
-		while($missing_unique !== []) {
-			reset($missing_unique);
-			$typeid = key($missing_unique);
-			$level = $missing_unique[$typeid];
-			unset($missing_unique[$typeid]);
-
-			print_nested_skill_requirements($typeid, $level, $missing_unique, $prereqs_per_type, $types_per_prereqs);
-		}
-
-		echo "</ul>\n";
-	}
-
-	print_formatted_attribute_category(
-		'mastery', 'Mastery',
-		"<span title='Effective skillset'>".escape($fit['skillset']['name'])."</span>",
-		($missingsp > 0) ? 'overflow' : '',
-		ob_get_clean()
-	);
 }
 
 function print_formatted_engineering(&$fit, $relative, $capacitor) {
@@ -581,60 +483,4 @@ function print_formatted_misc(&$fit) {
 
 	echo "</tbody>\n</table>\n";
 	print_formatted_attribute_category('misc', 'Miscellaneous', $grand_total, '', ob_get_clean());
-}
-
-/**
- * Print every section in the attributes bar for a given $fit.
- *
- * @param $opts An associative array, which can contain the following
- * keys:
- * 
- * - flags: a mixture of FATTRIBS_* constants
- * - cap: capacitor information to format (if unspecified, generate it on the fly)
- * - ehp: effective hitpoints to format (if unspecified, generate it on the fly)
- */
-function print_formatted_loadout_attributes(&$fit, $relative = '.', $opts = array()) {
-	/* NB: if you change the defaults here, also change the default
-	 * exported values in CLF export function. */
-	$flags = isset($opts['flags']) ? $opts['flags'] : FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR;
-
-	if(isset($opts['cap'])) {
-		$cap = $opts['cap'];
-	} else {
-		\Osmium\Dogma\auto_init($fit);
-	    dogma_get_capacitor_all(
-			$fit['__dogma_context'],
-			$flags & FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR,
-			$result
-	    );
-	    $cap = $result[dogma_get_hashcode($fit['__dogma_context'])];
-	}
-
-	$ia = isset($opts['ia']) ? $opts['ia'] : \Osmium\Fit\get_interesting_attributes($fit);
-
-	$ehp = isset($opts['ehp']) ? $opts['ehp'] :
-		\Osmium\Fit\get_ehp_and_resists($fit);
-
-	$prereqs = isset($opts['prerequisites']) ? $opts['prerequisites'] :
-		\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
-
-	print_formatted_engineering($fit, $relative, $cap);
-	print_formatted_offense($fit, $relative, $ia, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_DPS);
-	print_formatted_defense($fit, $relative, $ehp, $cap, $flags & FATTRIBS_USE_RELOAD_TIME_FOR_TANK);
-	print_formatted_incoming($fit, $relative, $ehp);
-	print_formatted_outgoing($fit, $relative);
-	print_formatted_navigation($fit, $relative);
-	print_formatted_targeting($fit, $relative);
-	print_formatted_mastery($fit, $relative, $prereqs);
-	print_formatted_misc($fit);
-}
-
-/**
- * Same usage as print_formatted_loadout_attributes(), but returns the
- * result as a string instead of printing it.
- */
-function get_formatted_loadout_attributes(&$fit, $relative = '.', $opts = array()) {
-	ob_start();
-	print_formatted_loadout_attributes($fit, $relative, $opts);
-	return ob_get_clean();
 }

@@ -337,12 +337,10 @@ if($loadoutid !== false) {
 
 $section = $div->appendCreate('section#attributes');
 $attribsdiv = $section->appendCreate('div.compact#computed_attributes');
-$attribsdiv->append($p->fragment(\Osmium\Chrome\get_formatted_loadout_attributes(
-	$fit, $ctx->relative, [
-		'cap' => $capacitors['local'],
-		'ia' => $ia_,
-	]
-))); /* XXX */
+$p->makeFormattedAttributes($attribsdiv, $fit, [
+	'cap' => $capacitors['local'],
+	'ia' => $ia_,
+]);
 
 
 

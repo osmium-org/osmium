@@ -1,6 +1,7 @@
 <?php
 /* Osmium
- * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -224,6 +225,155 @@ trait LoadoutFormatter {
 		foreach($ids as $id) $ol->append($this->formatLoadoutGridLayout($id));
 
 		return $ol;
+	}
+
+	/* Make a topologically sorted list of skill requirements. */
+	function makeSortedSkillRequirements(Element $parent, $typeid, $level,
+	                                     array &$skills, array $tree, array $invtree) {
+		if(isset($tree[$typeid])) {
+			foreach($tree[$typeid] as $stid => $sl) {
+				if(!isset($skills[$stid])) continue;
+				$ml = $skills[$stid];
+				unset($skills[$stid]);
+
+				$this->makeSortedSkillRequirements($parent, $stid, $ml, $skills, $tree, $invtree);
+			}
+		}
+
+		$li = $parent->appendCreate('li', \Osmium\Fit\get_typename($typeid).' '.$this->formatSkillLevel($level));
+
+		if(isset($invtree[$typeid])) {
+			$reqs = [];
+
+			foreach($invtree[$typeid] as $tid) {
+				$reqs[] = \Osmium\Fit\get_typename($tid);
+			}
+
+			if($reqs !== []) {
+				$li->appendCreate('div.reqs', 'Required by '.implode(', ', $reqs));
+			}
+		}
+
+	}
+
+	/* Make a section to be used in the formatted attributes section. */
+	function makeFormattedAttributesSection($id, $title, $titledata, $titleclass, $contents) {
+		$section = $this->createElement('section');
+		if($id) $section->setAttribute('id', $id);
+
+		$h = $section->appendCreate('h4', $title);
+		if($titleclass) $h->setAttribute('class', $titleclass);
+		if($titledata) $h->appendCreate('small', $titledata);
+
+		$section->appendCreate('div')->append($contents);
+		return $section;
+	}
+
+	/* Make the Mastery section used in the formatted attributes section. */
+	function makeFormattedAttributesMasterySection(&$fit, array $prereqs_per_type) {
+		$missing_per_type = array();
+		\Osmium\Skills\get_missing_prerequisites($prereqs_per_type, $fit['skillset'], $missing_per_type);
+		$prereqs_unique = \Osmium\Skills\merge_skill_prerequisites($prereqs_per_type);
+		$missing_unique = \Osmium\Skills\merge_skill_prerequisites($missing_per_type);
+		list($missingsp, $totalsp, $secs) = \Osmium\Skills\sp_totals($prereqs_unique, $fit['skillset']);
+
+		$types_per_prereqs = [];
+		foreach($missing_per_type as $typeid => $arr) {
+			foreach($arr as $stid => $level) {
+				$types_per_prereqs[$stid][$typeid] = true;
+			}
+		}
+
+		foreach($types_per_prereqs as &$arr) {
+			$arr = array_reverse(array_keys($arr));
+		}
+
+		$contents = [];
+
+		if($missing_unique === []) {
+			$contents[] = $this->element(
+				'p.placeholder',
+				'No missing skills (using '.$fit['skillset']['name'].').' 
+			);
+		} else {
+			$contents[] = $this->element('h5', 'Missing skillpoints');
+			$contents[] = ($ul = $this->createElement('ul'));
+
+			$ul->appendCreate(
+				'li',
+				$this->formatExactInteger($missingsp).' SP missing out of '
+				.$this->formatExactInteger($totalsp).' SP required'
+			);
+
+			$li = $ul->appendCreate(
+				'li',
+				$this->formatDuration($secs, false, 2).' of training time'
+			);
+
+			if($fit['skillset']['name'] === 'All V' || $fit['skillset']['name'] === 'All 0') {
+				$li->prepend('approximately ');
+			}
+
+			$contents[] = $this->element('h5', 'Missing skills');
+			$contents[] = ($ul = $this->createElement('ul'));
+
+			while($missing_unique !== []) {
+				reset($missing_unique);
+				$typeid = key($missing_unique);
+				$level = $missing_unique[$typeid];
+				unset($missing_unique[$typeid]);
+
+				$this->makeSortedSkillRequirements(
+					$ul,
+					$typeid, $level,
+					$missing_unique, $prereqs_per_type, $types_per_prereqs
+				);
+			}
+		}
+
+		return $this->makeFormattedAttributesSection(
+			'mastery', 'Mastery',
+			$this->element('span', [ 'title' => 'Effective skillset', $fit['skillset']['name'] ]),
+			$missingsp > 0 ? 'overflow' : false, /* XXX */
+			$contents
+		);
+	}
+
+	/* Make the formatted attributes section for a given loadout.
+	 *
+	 * @param $opts An associative array, which can contain the
+	 * following keys:
+	 * 
+	 * - flags: a mixture of FATTRIBS_* constants
+	 * - cap: capacitor information to format (if unspecified, generate it on the fly)
+	 * - ehp: effective hitpoints to format (if unspecified, generate it on the fly)
+	 */
+	function makeFormattedAttributes(Element $parent, &$fit, array $opts = []) {
+		/* NB: if you change the defaults here, also change the default
+		 * exported values in CLF export function. */
+		$flags = isset($opts['flags']) ? $opts['flags'] : \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR;
+
+		if(isset($opts['cap'])) {
+			$cap = $opts['cap'];
+		} else {
+			\Osmium\Dogma\auto_init($fit);
+			dogma_get_capacitor_all(
+				$fit['__dogma_context'],
+				$flags & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR,
+				$result
+			);
+			$cap = $result[dogma_get_hashcode($fit['__dogma_context'])];
+		}
+
+		$ia = isset($opts['ia']) ? $opts['ia'] : \Osmium\Fit\get_interesting_attributes($fit);
+
+		$ehp = isset($opts['ehp']) ? $opts['ehp'] :
+			\Osmium\Fit\get_ehp_and_resists($fit);
+
+		$prereqs = isset($opts['prerequisites']) ? $opts['prerequisites'] :
+			\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
+
+		$parent->append($this->makeFormattedAttributesMasterySection($fit, $prereqs));
 	}
 
 }
