@@ -23,7 +23,12 @@ require __DIR__.'/../inc/root.php';
 $to = urldecode($_SERVER['QUERY_STRING']);
 $hash = $_GET['hash'];
 
-if($hash !== ($foo = hash_hmac('sha256', $to, \Osmium\get_ini_setting('uri_munge_secret')))) {
+/* Note: this is vulnerable to timing attacks. At worst, this allows
+ * an attacker to forge a signed hash for a given URI, given enough
+ * time and requests. But this can already be trivially done by
+ * posting a comment with the URI in it anyway, so it's irrelevant
+ * here. */
+if($hash !== hash_hmac('sha256', $to, \Osmium\get_ini_setting('uri_munge_secret'))) {
 	\Osmium\fatal(400);
 }
 

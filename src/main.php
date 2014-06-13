@@ -67,7 +67,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('metrics', 30, function()
 	$nctx = \Osmium\State\count_cache_entries([ 'mmin' => 10 ], 'Loadout_New_')
 		+ \Osmium\State\count_memory_cache_entries(array(), 'Loadout_View_');
 
-	$nusers = max(1, \Osmium\State\count_memory_cache_entries(array(), 'Activity_'));
+	$nusers = \Osmium\State\get_cache_memory('ActivityCount', 1);
 
 	$ul = $section->appendCreate('ul');
 	$ul->appendCreate('li', get_estimate_count($p, 'loadouts', 'loadout', 'total loadouts'));

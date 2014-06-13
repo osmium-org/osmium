@@ -296,8 +296,7 @@ case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
 		];
 	}
 
-	array_unshift($text, [ 5, 28, 32, 32 ]);
-	$fvp = $text;
+	array_unshift($fvp, [ 5, 28, 32, 32 ]);
 	break;
 
 }
@@ -544,6 +543,26 @@ if(isset($rauthorname)) {
 			'o-rel-href' => '/search'.$p->formatQueryString([ 'q' => '@author "'.$rauthorname.'"' ]),
 			'Browse loadouts from '.$rauthorname,
 		] ],
+	];
+}
+
+if(isset($fit['ship']['typeid'])) {
+	$href = 'https://zkillboard.com/ship/'.$fit['ship']['typeid'];
+	$munged = hash_hmac('sha256', $href, \Osmium\get_ini_setting('uri_munge_secret'));
+
+	$anchor = $p->element('a', [
+		'o-rel-href' => '/internal/redirect/'.$munged.'?'.urlencode($href),
+		$fit['ship']['typename'].' activity on zKillboard',
+	]);
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		/* Don't leak private URIs */
+		$anchor->setAttribute('rel', 'noreferrer');
+	}
+
+	$actions[] = [
+		null,
+		$anchor,
 	];
 }
 

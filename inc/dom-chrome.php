@@ -298,15 +298,13 @@ class Page extends RawPage {
 		$ecf = escapeshellarg($out);
 		$ecmf = escapeshellarg($minout);
 
-		\Osmium\debug($snippets);
 		shell_exec($cmd = 'cat '.$snippets.' > '.$ecf);
-		\Osmium\debug($cmd);
 
 		if($min = \Osmium\get_ini_setting('minify_js')) {
 			$command = \Osmium\get_ini_setting('minify_command');
 
 			/* Concatenate & minify */
-			shell_exec('cat '.$ecf.' | '.$command.' >> '.$ecmf);
+			shell_exec('cat '.$ecf.' | '.$command.' > '.$ecmf);
 		}
 
 		clearstatcache(true, $minout);
