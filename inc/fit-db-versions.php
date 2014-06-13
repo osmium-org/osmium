@@ -19,132 +19,19 @@
 namespace Osmium\Fit;
 
 /** Get an array of EVE database versions, with associated
- * metadata. Obviously this needs to be updated every time the EVE
- * database has major updates. */
+ * metadata. Obviously the JSON file needs to be updated every time
+ * the EVE database has major updates. */
 function get_eve_db_versions() {
-	return array(
-		797363 => array(
-			'tag' => 'kronos-12',
-			'name' => 'Kronos 1.2',
-			'build' => 797363,
-			'reldate' => gmmktime(0, 0, 0, 6, 13, 2014),
-			'dogmaver' => 13,
-		),
-		793961 => array(
-			'tag' => 'kronos-11',
-			'name' => 'Kronos 1.1',
-			'build' => 793961,
-			'reldate' => gmmktime(0, 0, 0, 6, 5, 2014),
-			'dogmaver' => 13,
-		),
-		792006 => array(
-			'tag' => 'kronos-10',
-			'name' => 'Kronos 1.0',
-			'build' => 792006,
-			'reldate' => gmmktime(0, 0, 0, 6, 3, 2014),
-			'dogmaver' => 13,
-		),
-		772176 => array(
-			'tag' => 'rubicon-14',
-			'name' => 'Rubicon 1.4',
-			'build' => 772176,
-			'reldate' => gmmktime(0, 0, 0, 4, 28, 2014),
-			'dogmaver' => 12,
-		),
-		739267 => array(
-			'tag' => 'rubicon-13',
-			'name' => 'Rubicon 1.3',
-			'build' => 739267,
-			'reldate' => gmmktime(0, 0, 0, 3, 12, 2014),
-			'dogmaver' => 12,
-		),
-		722372 => array(
-			'tag' => 'rubicon-12',
-			'name' => 'Rubicon 1.2',
-			'build' => 722372,
-			'reldate' => gmmktime(0, 0, 0, 2, 18, 2014),
-			'dogmaver' => 11,
-		),
-		708191 => array(
-			'tag' => 'rubicon-11',
-			'name' => 'Rubicon 1.1',
-			'build' => 708191,
-			'reldate' => gmmktime(0, 0, 0, 1, 28, 2014),
-			'dogmaver' => 11,
-		),
-		653401 => array(
-			'tag' => 'rubicon-10',
-			'name' => 'Rubicon 1.0',
-			'build' => 653401,
-			'reldate' => gmmktime(0, 0, 0, 11, 19, 2013),
-			'dogmaver' => 10,
-		),
-		592399 => array(
-			'tag' => 'odyssey-11',
-			'name' => 'Odyssey 1.1',
-			'build' => 592399,
-			'reldate' => gmmktime(0, 0, 0, 9, 3, 2013),
-			'dogmaver' => 9,
-		),
-		548234 => array(
-			'tag' => 'odyssey-10',
-			'name' => 'Odyssey 1.0',
-			'build' => 548234,
-			'reldate' => gmmktime(0, 0, 0, 6, 4, 2013),
-			'dogmaver' => 8,
-		),
-		538542 => array(
-			'tag' => 'retribution-12',
-			'name' => 'Retribution 1.2',
-			'build' => 538542,
-			'reldate' => gmmktime(0, 0, 0, 5, 6, 2013),
-			'dogmaver' => 7,
-		),
-		529690 => array(
-			'tag' => 'retribution-11',
-			'name' => 'Retribution 1.1',
-			'build' => 529690,
-			'reldate' => gmmktime(0, 0, 0, 2, 19, 2013),
-			'dogmaver' => 6,
-		),
-		476047 => array(
-			'tag' => 'retribution-10',
-			'name' => 'Retribution 1.0',
-			'build' => 476047,
-			'reldate' => gmmktime(0, 0, 0, 12, 4, 2012),
-			'dogmaver' => 5,
-		),
-		433763 => array(
-			'tag' => 'inferno-13',
-			'name' => 'Inferno 1.3',
-			'build' => 433763,
-			'reldate' => gmmktime(0, 0, 0, 10, 16, 2012),
-			'dogmaver' => 4,
-		),
-		404131 => array(
-			'tag' => 'inferno-12',
-			'name' => 'Inferno 1.2',
-			'build' => 404131,
-			'reldate' => gmmktime(0, 0, 0, 8, 8, 2012),
-			'dogmaver' => 3,
-		),
-		390556 => array(
-			'tag' => 'inferno-11',
-			'name' => 'Inferno 1.1',
-			'build' => 390556,
-			'reldate' => gmmktime(0, 0, 0, 6, 25, 2012),
-			'dogmaver' => 2,
-		),
-		377452 => array(
-			'tag' => 'inferno-10',
-			'name' => 'Inferno 1.0',
-			'build' => 377452,
-			'reldate' => gmmktime(0, 0, 0, 5, 22, 2012),
-			'dogmaver' => 1,
-		),
-		/* Osmium was not released before this time, so there's little
-		 * point in including the version prior to this. */
-	);
+	static $vers = null;
+
+	if($vers === null) {
+		$rawvers = json_decode(file_get_contents(\Osmium\ROOT.'/ext/eve-versions.json'), true);
+		$vers = [];
+
+		foreach($rawvers as $ver) $vers[$ver['build']] = $ver;
+	}
+
+	return $vers;
 }
 
 /** Get the latest EVE database version. */
