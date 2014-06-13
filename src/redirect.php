@@ -54,7 +54,9 @@ $to = \Osmium\Chrome\escape($to);
 
 echo "<!DOCTYPE html><html>";
 echo "<head><title>Redirecting</title>";
-echo "<meta http-equiv='refresh' content='0; url={$to}'>";
-echo "<meta name='robots' content='noindex,nofollow'>";
+echo "<meta http-equiv='refresh' content='0; url={$to}' />";
+echo "<meta name='robots' content='noindex,nofollow' />";
+echo "<meta name='referrer' content='origin' />";
 echo "</head>";
+echo "<body></body>";
 echo "</html>";
