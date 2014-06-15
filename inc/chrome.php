@@ -91,6 +91,7 @@ function trim($s) {
 	return preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $s);
 }
 
+/** @deprecated */
 function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxoverflow = 10) {
 	$over = min($maxoverflow, max(0, $percent - 100));
 
@@ -115,39 +116,6 @@ function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxover
 	}
 	if($fill) {
 		$ret .= "<span class='bar fill'></span>";
-	}
-
-	return $ret;
-}
-
-function format_used($rawused, $rawtotal, $digits, $opts = F_USED_SHOW_ABSOLUTE) {
-	$lines = array();
-
-	$used = format_number($rawused).' / '.format_number($rawtotal);
-	$diff = ($rawtotal >= $rawused) ?
-		format_number($rawtotal - $rawused).' left' :
-		format_number($rawused - $rawtotal).' over';
-
-	if($opts & F_USED_SHOW_ABSOLUTE) {
-		$lines[] = "<span title='".escape($diff)."'>"
-			.escape($used)
-			."</span>";
-	}
-	if($opts & F_USED_SHOW_DIFFERENCE) {
-		$lines[] = "<span title='".escape($used)."'>"
-			.escape($diff)
-			."</span>";
-	}
-
-	$percent = $rawtotal > 0 ? (100 * $rawused / $rawtotal) : ($rawused > 0 ? 100 : 0);
-	if($opts & F_USED_SHOW_PERCENTAGE) {
-		$lines[] = ($rawtotal == 0 ? ($rawused == 0 ? 0 : '∞') : round($percent, $digits)).' %';
-	}
-
-	$ret = implode("<br />", $lines);
-
-	if($opts & F_USED_SHOW_PROGRESS_BAR) {
-		$ret .= format_small_progress_bar($percent);
 	}
 
 	return $ret;
@@ -225,23 +193,6 @@ function format_long_duration($seconds, $precision = 6) {
 	}
 
 	return implode(', ', $out);
-}
-
-/**
- * Format the capacitor stability percentage or the time it lasts.
- *
- * @param $array array that has the same structure than the return
- * value of get_capacitor_stability().
- */
-function format_capacitor($arr) {
-	$rate = round(-$arr['delta'] * 1000, 1).' GJ/s';
-	if($rate > 0) $rate = '+'.((string)$rate);
-
-	if($arr['stable']) {
-		return array(round(100 * $arr['stable_fraction'], 1)."%", $rate);
-	} else {
-		return array(format_duration($arr['depletion_time'] / 1000), $rate);
-	}
 }
 
 /**

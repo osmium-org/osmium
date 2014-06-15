@@ -227,6 +227,105 @@ trait LoadoutFormatter {
 		return $ol;
 	}
 
+	/* Make a small progress bar.
+	 *
+	 * @param $progress the progress, in percents (between 0 and 100+$maxoverflow)
+	 * @param $fill show a background for the progress bar
+	 * @param $ltr if true, the progress bar fills from left to right
+	 * @param $maxoverflow truncate overflows over this limit
+	 */
+	function makeSmallProgressBar($progress, $fill = true, $ltr = true, $maxoverflow = 10) {
+		$bar = $this->createElement('span');
+
+		if($progress > 100) $p = 'p100';
+		else if($progress >= 95) $p = 'p95';
+		else if($progress >= 80) $p = 'p80';
+		else $p = 'p00';
+
+		$bar->setAttribute(
+			'class',
+			($ltr ? 'lbar' : 'bar')
+			.' '.$p
+		);
+
+		$over = min($maxoverflow, max(0, $progress - 100));
+		$progress = max(0, min(100, $progress));
+
+		$bar->setAttribute('style', 'width: '.round($progress, 3).'%;');
+		$ret = [ $bar ];
+
+		if($over > 0) {
+			$over = round($over, 3).'%';
+			$ret[] = ($obar = $this->createElement('span'));
+
+			$obar->setAttribute(
+				'class',
+				($ltr ? 'bar' : 'lbar')
+				.' '.$p
+				.' over'
+			);
+
+			$obar->setAttribute(
+				'style',
+				'width: '.$over.'; '.($ltr ? 'right' : 'left').': -'.$over.';'
+			);
+		}
+
+		if($fill) {
+			$ret[] = ($fbar = $this->createElement('span'));
+			$fbar->setAttribute('class', 'bar fill');
+		}
+
+		return $ret;
+	}
+
+	/* Format a quantity with a known maximum. */
+	function formatUsedResource(Element $parent, $rawused, $rawtotal,
+	                            $opts = \Osmium\Chrome\F_USED_SHOW_ABSOLUTE) {
+		$used = $this->formatKMB($rawused).' / '.$this->formatKMB($rawtotal);
+		$diff = ($rawtotal >= $rawused)
+			? $this->formatKMB($rawtotal - $rawused).' left'
+			: $this->formatKMB($rawused - $rawtotal).' over';
+
+		$first = true;
+
+		if($opts & \Osmium\Chrome\F_USED_SHOW_ABSOLUTE) {
+			if($first) $first = false;
+			else $parent->appendCreate('br');
+
+			$parent->appendCreate('span', [ 'title' => $diff, $used ]);
+		}
+
+		if($opts & \Osmium\Chrome\F_USED_SHOW_DIFFERENCE) {
+			if($first) $first = false;
+			else $parent->appendCreate('br');
+
+			$parent->appendCreate('span', [ 'title' => $used, $diff ]);
+		}
+
+		if($opts & (\Osmium\Chrome\F_USED_SHOW_PERCENTAGE | \Osmium\Chrome\F_USED_SHOW_PROGRESS_BAR)) {
+			$percent = ($rawtotal > 0)
+				? (100 * $rawused / $rawtotal)
+				: ($rawused > 0 ? 100 : 0);
+		}
+
+		if($opts & \Osmium\Chrome\F_USED_SHOW_PERCENTAGE) {
+			if($first) $first = false;
+			else $parent->appendCreate('br');
+
+			$parent->append(
+				(($rawtotal > 0)
+				 ? $this->formatSDigits($percent, 4)
+				 : ($rawused > 0 ? '∞' : '0'))
+				.' %'
+			);
+		}
+
+		if($opts & \Osmium\Chrome\F_USED_SHOW_PROGRESS_BAR) {
+			$parent->append($this->makeSmallProgressBar($percent));
+		}
+	}
+
 	/* Make a topologically sorted list of skill requirements. */
 	function makeSortedSkillRequirements(Element $parent, $typeid, $level,
 	                                     array &$skills, array $tree, array $invtree) {
@@ -267,6 +366,140 @@ trait LoadoutFormatter {
 
 		$section->appendCreate('div')->append($contents);
 		return $section;
+	}
+
+	/* Make the Engineering section of the formatted attributes section. */
+	function makeFormattedAttributesEngineeringSection(&$fit, array $capacitor) {
+		$contents = [];
+		$over = false;
+
+
+
+		$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlotsLeft');
+		$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'turretSlots');
+		$overturrets = $slotsLeft < 0;
+
+		$contents[] = ($p = $this->createElement('p'));
+		if($overturrets) {
+			$over = true;
+			$p->setAttribute('class', 'overflow');
+		}
+
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Turret hardpoints',
+			'title' => 'Turret hardpoints',
+			'x' => 0, 'y' => 0,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+
+		$this->formatUsedResource(
+			$p->appendCreate('span#turrethardpoints'),
+			$slotsTotal - $slotsLeft, $slotsTotal,
+			\Osmium\Chrome\F_USED_SHOW_ABSOLUTE
+		);
+
+
+
+		$slotsLeft = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlotsLeft');
+		$slotsTotal = \Osmium\Dogma\get_ship_attribute($fit, 'launcherSlots');
+		$overlaunchers = $slotsLeft < 0;
+
+		$contents[] = ($p = $this->createElement('p'));
+		if($overlaunchers) {
+			$over = true;
+			$p->setAttribute('class', 'overflow');
+		}
+
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Launcher hardpoints',
+			'title' => 'Launcher hardpoints',
+			'x' => 0, 'y' => 1,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+
+		$this->formatUsedResource(
+			$p->appendCreate('span#launcherhardpoints'),
+			$slotsTotal - $slotsLeft, $slotsTotal,
+			\Osmium\Chrome\F_USED_SHOW_ABSOLUTE
+		);
+
+
+
+		$contents[] = ($p = $this->element('p#capacitor'));
+		$p->setAttribute('data-capacity', $capacitor['capacity']);
+		$p->setAttribute(
+			'data-usage',
+			$capacitor['stable'] ? ($capacitor['capacity'] * $capacitor['stable_fraction']) : 0
+		);
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Capacitor',
+			'title' => 'Capacitor',
+			'x' => 2, 'y' => 0,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+		$sp = $p->appendCreate('span');
+		$ssp = $sp->appendCreate('span');
+		if($capacitor['stable']) {
+			$ssp->setAttribute('title', $caplabel = 'Stability percentage');
+			$ssp->append($captext = $this->formatSDigits($capacitor['stable_fraction'] * 100, 3).'%');
+		} else {
+			$ssp->setAttribute('title', $caplabel = 'Estimated depletion time');
+			$ssp->append($captext = $this->formatDuration($capacitor['depletion_time'] / 1000, true, 2));
+		}
+		$rate = $this->formatSDigits(-$capacitor['delta'] * 1000, 3).' GJ/s';
+		if($capacitor['delta'] < 0) $rate = '+'.$rate;
+		$sp->appendCreate('br');
+		$sp->appendCreate('span', [
+			'title' => 'Capacitor delta at peak recharge rate',
+			$rate,
+		]);
+
+
+
+		foreach([
+			[ 'cpuLoad', 'cpuOutput', 'cpu', 'CPU', 1, 0 ],
+			[ 'powerLoad', 'powerOutput', 'power', 'Powergrid', 1, 1 ],
+			[ 'upgradeLoad', 'upgradeCapacity', 'upgradecapacity', 'Calibration (upgrade capacity)', 1, 2 ],
+		] as $rtype) {
+			$used = \Osmium\Dogma\get_ship_attribute($fit, $rtype[0]);
+			$total = \Osmium\Dogma\get_ship_attribute($fit, $rtype[1]);
+
+			$contents[] = ($p = $this->createElement('p'));
+			if($used > $total) {
+				$over = true;
+				$p->setAttribute('class', 'overflow');
+			}
+
+			$p->appendCreate('o-sprite', [
+				'alt' => $rtype[3],
+				'title' => $rtype[3],
+				'x' => $rtype[4], 'y' => $rtype[5],
+				'width' => 32, 'height' => 32,
+				'gridwidth' => 64, 'gridheight' => 64,
+			]);
+
+			$this->formatUsedResource(
+				$p->appendCreate('span#'.$rtype[2]),
+				$used, $total,
+				\Osmium\Chrome\F_USED_SHOW_DIFFERENCE
+				| \Osmium\Chrome\F_USED_SHOW_PERCENTAGE
+				| \Osmium\Chrome\F_USED_SHOW_PROGRESS_BAR
+			);
+		}
+
+
+
+		if($contents === []) return '';
+		return $this->makeFormattedAttributesSection(
+			'engineering',
+			'Engineering',
+			$this->element('span', [ 'title' => $caplabel, $captext ]),
+			$over ? 'overflow' : false,
+			$contents
+		);
 	}
 
 	/* Make the Mastery section used in the formatted attributes section. */
@@ -373,6 +606,7 @@ trait LoadoutFormatter {
 		$prereqs = isset($opts['prerequisites']) ? $opts['prerequisites'] :
 			\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
 
+		$parent->append($this->makeFormattedAttributesEngineeringSection($fit, $cap));
 		$parent->append($this->makeFormattedAttributesMasterySection($fit, $prereqs));
 	}
 
