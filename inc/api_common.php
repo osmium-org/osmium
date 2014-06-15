@@ -25,6 +25,52 @@ function get_fit_from_input_post_get() {
 
 	$src = $_GET['source_fmt'];
 
+	if($src === 'uri') {
+		if(!isset($_GET['input'])) \Osmium\fatal(400, 'Must provide input.');
+
+		$uri = $_GET['input'];
+		if(preg_match('%^(https?:)?//%', $uri)) {
+			/* Absolute URI */
+			$parts = parse_url($uri);
+
+			if($parts === false) \Osmium\fatal(400, 'Severely broken URI!');
+
+			$host = $parts['host'];
+			$shost = explode(':', $_SERVER['HTTP_HOST'], 2)[0];
+			if($shost !== $host) \Osmium\fatal(400, 'Only local URIs are supported');
+
+			$path = $parts['path'];
+		} else {
+			/* Relative URI */
+			$path = explode('?', $uri, 2)[0];
+		}
+
+		$path = explode('/loadout/', $path);
+		$path = '/loadout/'.array_pop($path);
+
+		if(preg_match(\Osmium\PUBLIC_LOADOUT_RULE, $path, $match)
+		   || preg_match(\Osmium\PRIVATE_LOADOUT_RULE, $path, $match)) {
+
+			$src = $match['loadoutid'];
+
+			foreach([
+				'revision' => 'revision',
+				'preset' => 'preset',
+				'chargepreset' => 'chargepreset',
+				'dronepreset' => 'dronepreset',
+				'privatetoken' => 'privatetoken',
+				'fleet' => 'fleet',
+				'remote' => 'remote',
+			] as $rname => $gname) {
+				if(!isset($match[$rname]) || $match[$rname] === '') continue;
+				$_GET[$gname] = $match[$rname];
+			}
+
+		} else {
+			\Osmium\fatal(400, 'URI does not match a loadout URI.');
+		}
+	}
+
 	if(is_numeric($src)) {
 		/* Assume loadout ID */
 		$loadoutid = (int)$src;

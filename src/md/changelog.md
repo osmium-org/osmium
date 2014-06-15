@@ -1,3 +1,9 @@
+# staging
+
+* **Using loadout IDs in `source_fmt` in API calls has been
+    deprecated.** Use `uri` instead. See the [help](./help/api/common)
+    for the new usage.
+
 # Version 0.13
 
 ## Version 0.13.0, released 2014-06-03

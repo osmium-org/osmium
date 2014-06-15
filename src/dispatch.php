@@ -171,8 +171,8 @@ function get_rules($prefix) {
 
 			'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
 
-			'%^/api/convert/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
-			'%^/api/json/loadout/(?<source_fmt>[1-9][0-9]*|clf|gzclf|evexml|eft|dna|autodetect)/attributes/(?<attributes>.+)$%D' => '/src/api/json/loadout_attributes.php',
+			'%^/api/convert/(?<source_fmt>[1-9][0-9]*|uri|clf|gzclf|evexml|eft|dna|autodetect)/(?<target_fmt>clf|md|evexml|eft|dna)(/.*)?$%D' => '/src/api/convert.php',
+			'%^/api/json/loadout/(?<source_fmt>[1-9][0-9]*|uri|clf|gzclf|evexml|eft|dna|autodetect)/attributes/(?<attributes>.+)$%D' => '/src/api/json/loadout_attributes.php',
 			'%^/api/json/loadout/query/(?<query>.*)$%D' => '/src/api/json/query_loadouts.php',
 
 			'%^/editcharacter/(?<name>.+)$%D' => '/src/edit_character.php',
