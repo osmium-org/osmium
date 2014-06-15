@@ -321,11 +321,13 @@ trait Formatter {
 		if($out === []) return $abbrev ? '1s' : 'less than 1 second';
 		$out = array_slice($out, 0, $precision);
 
-		$s = array_pop($out);
-		$m = array_pop($out);
-		if($m === null) return $s;
+		if(!$abbrev) {
+			$s = array_pop($out);
+			$m = array_pop($out);
+			if($m === null) return $s;
+			$out[] = $m.' and '.$s;
+		}
 
-		$out[] = $m.' and '.$s;
 		return implode($abbrev ? ' ' : ', ', $out);
 	}
 
