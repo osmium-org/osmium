@@ -572,6 +572,76 @@ trait LoadoutFormatter {
 		);
 	}
 
+	/* Make the Misc section used in the formatted attributes section. */
+	function makeFormattedAttributesMiscSection(&$fit) {
+		$contents = [];
+
+		$contents[] = ($table = $this->createElement('table'));
+		$tbody = $table->appendCreate('tbody');
+		$missing = array();
+		$prices = \Osmium\Fit\get_estimated_price($fit, $missing);
+		$total = 0;
+		$ptr = $tbody->appendCreate('tr');
+		$ptr->appendCreate('th', 'Estimated price:');
+		$pul = $ptr->appendCreate('td')->appendCreate('ul');
+
+		foreach($prices as $section => $p) {
+			if($p !== 'N/A') {
+				$total += $p;
+				$p = $this->formatKMB($p).' ISK';
+			}
+
+			$li = $pul->appendCreate('li');
+			$li->appendCreate('span', $p);
+			$li->append($section.': ');
+		}
+
+		if($total === 0 && count($missing) > 0) {
+			$total = 'N/A';
+		} else {
+			$total = $this->formatKMB($total).' ISK';
+			if(count($missing) > 0) {
+				$total = '≥ '.$total;
+			}
+		}
+
+		if($prices === []) {
+			$pul->appendCreate('li', 'N/A');
+		}
+
+		if(count($missing) > 0) {
+			$missing = implode(",\n", array_unique(array_map('Osmium\Fit\get_typename', $missing)));
+			$pul->setAttribute('title', "Estimate of the following types unavailable:\n".$missing);
+		}
+
+		$yield = \Osmium\Fit\get_mining_yield($fit);
+		if($yield > 0) {
+			$yield *= 3600000; /* From m³/ms to m³/h */
+			$row = $tbody->appendCreate('tr');
+			$row->appendCreate('th', 'Mining yield:');
+			$row->appendCreate('td', $this->formatNDigits($yield, 2).' m³/h');
+		}
+
+		$cargo = \Osmium\Dogma\get_ship_attribute($fit, 'capacity');
+		$row = $tbody->appendCreate('tr');
+		$row->appendCreate('th', 'Cargo capacity:');
+		$row->appendCreate('td', $this->formatNDigits($cargo).' m³');
+
+		if(count($fit['drones']) > 0) {
+			$dcrange = \Osmium\Dogma\get_char_attribute($fit, 'droneControlDistance');
+			$row = $tbody->appendCreate('tr');
+			$row->appendCreate('th', 'Drone control range:');
+			$row->appendCreate('td', $this->formatKMB($dcrange, 3, '', true).'m');
+		}
+
+		return $this->makeFormattedAttributesSection(
+			'misc', 'Miscellaneous',
+			$total,
+			'',
+			$contents
+		);
+	}
+
 	/* Make the formatted attributes section for a given loadout.
 	 *
 	 * @param $opts An associative array, which can contain the
@@ -608,6 +678,7 @@ trait LoadoutFormatter {
 
 		$parent->append($this->makeFormattedAttributesEngineeringSection($fit, $cap));
 		$parent->append($this->makeFormattedAttributesMasterySection($fit, $prereqs));
+		$parent->append($this->makeFormattedAttributesMiscSection($fit));
 	}
 
 }

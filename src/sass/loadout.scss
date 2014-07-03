@@ -262,6 +262,16 @@ div#computed_attributes > section {
 			text-align: left;
 			width: 50%;
 		}
+
+		&> tbody > tr > td > ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+
+			&> li > span {
+				float: right;
+			}
+		}
 	}
 
 	&.hascontextmenu {

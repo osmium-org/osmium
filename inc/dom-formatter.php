@@ -40,7 +40,7 @@ trait Formatter {
 	}
 
 	/* Format a number with an optional 'k', 'm' or 'b' prefix. */
-	static function formatKMB($n, $sd = 3, $min = '') {
+	static function formatKMB($n, $sd = 3, $min = '', $space = false) {
 		static $suffixes = [
 			'b' => 1e9,
 			'm' => 1e6,
@@ -51,7 +51,7 @@ trait Formatter {
 		if($n < 0) return '-'.self::formatKMB(-$n, $sd, $min);
 		foreach($suffixes as $s => $limit) {
 			if($n >= $limit || $s === $min) {
-				return self::formatSDigits($n / $limit, $sd).$s;
+				return self::formatSDigits($n / $limit, $sd).($space ? ' ' : '').$s;
 			}
 		}
 	}
