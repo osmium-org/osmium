@@ -616,18 +616,45 @@ trait LoadoutFormatter {
 
 		$yield = \Osmium\Fit\get_mining_yield($fit);
 		if($yield > 0) {
+			$tbody->appendCreate('tr')->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
 			$yield *= 3600000; /* From m³/ms to m³/h */
 			$row = $tbody->appendCreate('tr');
 			$row->appendCreate('th', 'Mining yield:');
 			$row->appendCreate('td', $this->formatNDigits($yield, 2).' m³/h');
 		}
 
-		$cargo = \Osmium\Dogma\get_ship_attribute($fit, 'capacity');
-		$row = $tbody->appendCreate('tr');
-		$row->appendCreate('th', 'Cargo capacity:');
-		$row->appendCreate('td', $this->formatNDigits($cargo).' m³');
+		static $bays = null;
+		if($bays === null) {
+			$bays = \Osmium\State\get_cache_memory_fb('shipbays', null);
+			if($bays === null) {
+				$bays = [ [ 38, 'Cargo capacity' ] ];
+				/* XXX: feels hacky */
+				$bq = \Osmium\Db\query(
+					'SELECT attributeid, displayname
+					FROM eve.dgmattribs
+					WHERE attributename ~ \'Capacity$\' AND displayname <> \'\' AND unitid = 9
+					ORDER BY attributeid ASC'
+				);
+				while($brow = \Osmium\Db\fetch_row($bq)) {
+					$bays[] = [ $brow[0], ucfirst(strtolower($brow[1])) ];
+				}
+				\Osmium\State\put_cache_memory_fb('shipbays', $bays, 86400);
+			}
+		}
+
+		$tbody->appendCreate('tr')->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
+
+		foreach($bays as $bay) {
+			$cargo = \Osmium\Dogma\get_ship_attribute($fit, $bay[0]);
+			if($cargo > 0) {
+				$row = $tbody->appendCreate('tr');
+				$row->appendCreate('th', $bay[1].':');
+				$row->appendCreate('td', $this->formatNDigits($cargo, 2).' m³');
+			}
+		}
 
 		if(count($fit['drones']) > 0) {
+			$tbody->appendCreate('tr')->appendCreate('td', [ 'colspan' => '2' ])->appendCreate('hr');
 			$dcrange = \Osmium\Dogma\get_char_attribute($fit, 'droneControlDistance');
 			$row = $tbody->appendCreate('tr');
 			$row->appendCreate('th', 'Drone control range:');

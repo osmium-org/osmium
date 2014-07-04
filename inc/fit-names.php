@@ -34,6 +34,7 @@ const ATT_Perception = 167;
 const ATT_Willpower = 168;
 
 const ATT_Boosterness = 1087;
+const ATT_Capacity = 38;
 const ATT_HiSlots = 14;
 const ATT_Implantness = 331;
 const ATT_LauncherSlotsLeft = 101;
