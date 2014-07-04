@@ -84,7 +84,7 @@ $capacitors = \Osmium\Fit\get_all_capacitors(
 $attribopts['cap'] = $capacitors['local'];
 foreach($capacitors as &$c) {
 	if(isset($c['depletion_time'])) {
-		$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
+		$c['depletion_time'] = \Osmium\DOM\Page::formatDuration($c['depletion_time'] / 1000, true, 2);
 	}
 }
 
