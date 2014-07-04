@@ -40,8 +40,6 @@ const F_USED_SHOW_DIFFERENCE = 2;
 const F_USED_SHOW_PERCENTAGE = 4;
 const F_USED_SHOW_PROGRESS_BAR = 8;
 
-require __DIR__.'/chrome-fit.php';
-
 
 /**
  * Escape a string.

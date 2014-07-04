@@ -1044,6 +1044,87 @@ trait LoadoutFormatter {
 		);
 	}
 
+	/** @internal */
+	private static function getRemoteTypes() {
+		static $types = [
+			'hull' => [ 'Raw hull hitpoints repaired per second', 524 ],
+			'armor' => [ 'Raw armor hitpoints repaired per second', 523 ],
+			'shield' => [ 'Raw shield hitpoints transferred per second', 405 ],
+			'capacitor' => [ 'Giga joules transferred per second', 529 ],
+			'neutralization' => [ 'Giga joules neutralized per second', 533 ],
+			'leech' => [ 'Giga joules leeched per second (in the best case)', 530 ],
+		];
+
+		return $types;
+	}
+
+	/* Make the Incoming section for fattribs. */
+	function makeFormattedAttributesIncomingSection(&$fit, array $ehp) {
+		$contents = [];
+
+		$incoming = \Osmium\Fit\get_incoming($fit);
+		foreach($this->getRemoteTypes() as $t => $info) {
+			if(!isset($incoming[$t])) continue;
+			list($amount, $unit) = $incoming[$t];
+			list($title, $img) = $info;
+			if($amount < 1e-300) continue;
+
+			if(isset($ehp[$t]) && $unit === 'HP') {
+				$avgresonance = 0;
+				foreach($fit['damageprofile']['damages'] as $type => $dmg) {
+					$avgresonance += $dmg * $ehp[$t]['resonance'][$type];
+				}
+
+				$amount /= $avgresonance;
+				$unit = 'EHP';
+				$title = str_replace('Raw ', 'Effective ', $title);
+			}
+
+			$unit .= '/s';
+			$amount *= 1000;
+			$famount = $this->formatKMB($amount).' '.$unit;
+
+			$contents[] = ($p = $this->element('p', [ 'title' => $title ]));
+			$p->appendCreate('o-eve-img', [ 'src' => '/Type/'.$img.'_64.png', 'alt' => $t ]);
+			$p->append($famount);
+		}
+
+		if($contents === []) return '';
+		return $this->makeFormattedAttributesSection(
+			'incoming', 'Incoming', '',
+			false,
+			$contents
+		);
+	}
+
+	/* Make the Outgoing section for fattribs. */
+	function makeFormattedAttributesOutgoingSection(&$fit) {
+		$contents = [];
+
+		$outgoing = \Osmium\Fit\get_outgoing($fit);
+		foreach($this->getRemoteTypes() as $t => $info) {
+			if(!isset($outgoing[$t])) continue;
+			list($amount, $unit) = $outgoing[$t];
+			list($title, $img) = $info;
+			if($amount < 1e-300) continue;
+
+			$unit .= '/s';
+			$amount *= 1000;
+			$famount = $this->formatKMB($amount).' '.$unit;
+
+			$contents[] = ($p = $this->element('p', [ 'title' => $title ]));
+			$p->appendCreate('o-eve-img', [ 'src' => '/Type/'.$img.'_64.png', 'alt' => $t ]);
+			$p->append($famount);
+		}
+
+		if($contents === []) return '';
+		return $this->makeFormattedAttributesSection(
+			'outgoing', 'Outgoing', '',
+			false,
+			$contents
+		);
+	}
+
 	/* Make the formatted attributes section for a given loadout.
 	 *
 	 * @param $opts An associative array, which can contain the
@@ -1089,6 +1170,10 @@ trait LoadoutFormatter {
 
 		$parent->append($this->makeFormattedAttributesNavigationSection($fit));
 		$parent->append($this->makeFormattedAttributesTargetingSection($fit));
+
+		$parent->append($this->makeFormattedAttributesIncomingSection($fit, $ehp));
+		$parent->append($this->makeFormattedAttributesOutgoingSection($fit));
+
 		$parent->append($this->makeFormattedAttributesMasterySection($fit, $prereqs));
 		$parent->append($this->makeFormattedAttributesMiscSection($fit));
 	}
