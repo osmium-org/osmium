@@ -502,6 +502,91 @@ trait LoadoutFormatter {
 		);
 	}
 
+	/* Make the Targeting section used in fattribs. */
+	function makeFormattedAttributesTargetingSection(&$fit) {
+		$contents = [];
+
+		static $types = array(
+			'radar' => [ 12, 0 ],
+			'ladar' => [ 13, 0 ],
+			'magnetometric' => [ 12, 1 ],
+			'gravimetric' => [ 13, 1 ],
+		);
+
+		$scanstrength = array();
+		$maxtype = null;
+		foreach($types as $t => $p) {
+			$scanstrength[$t] = \Osmium\Dogma\get_ship_attribute($fit, 'scan'.ucfirst($t).'Strength');
+			if($maxtype === null || $scanstrength[$t] > $scanstrength[$maxtype]) {
+				$maxtype = $t;
+			}
+		}
+
+		$targetrange = \Osmium\Dogma\get_ship_attribute($fit, 'maxTargetRange');
+		$numtargets = (int)min(\Osmium\Dogma\get_char_attribute($fit, 'maxLockedTargets'),
+		                       \Osmium\Dogma\get_ship_attribute($fit, 'maxLockedTargets'));
+		$ftargets = 'target'.($numtargets !== 1 ? 's' : '');
+		$scanres = \Osmium\Dogma\get_ship_attribute($fit, 'scanResolution');
+		$sigradius = \Osmium\Dogma\get_ship_attribute($fit, 'signatureRadius');
+
+		$contents[] = ($p = $this->createElement('p'));
+		$p->appendCreate('o-sprite', [
+			'alt' => ($alt = ucfirst($maxtype).' sensor strength'),
+			'title' => $alt,
+			'x' => $types[$maxtype][0],
+			'y' => $types[$maxtype][1],
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 32, 'gridheight' => 32,
+		]);
+		$span = $p->appendCreate('span');
+		$span->appendCreate('span', [ 'title' => 'Maximum locked targets', $numtargets.' '.$ftargets ]);
+		$span->appendCreate('br');
+		$span->appendCreate('span', [
+			'title' => 'Sensor strength',
+			$this->formatNDigits($scanstrength[$maxtype], 1).' points',
+		]);
+
+		$contents[] = ($p = $this->createElement('p'));
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Targeting',
+			'title' => 'Targeting',
+			'x' => 6, 'y' => 1,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+		$span = $p->appendCreate('span#targeting_range');
+		$span->appendCreate('span', [
+			'title' => 'Targeting range',
+			$this->formatKMB($targetrange, 3, '', true).'m',
+		]);
+		$span->appendCreate('br');
+		$span->appendCreate('span#scan_resolution', [
+			'title' => 'Scan resolution',
+			'data-value' => $scanres,
+			$this->formatExactInteger($scanres).' mm',
+		]);
+
+		$contents[] = ($p = $this->element('p#signature_radius', [
+			'title' => 'Signature radius',
+			'data-value' => $sigradius,
+		]));
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Signature radius',
+			'title' => 'Signature radius',
+			'x' => 12, 'y' => 4,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 32, 'gridheight' => 32,
+		]);
+		$p->appendCreate('span', $this->formatKMB($sigradius, 3, '', true).'m');
+
+		return $this->makeFormattedAttributesSection(
+			'targeting', 'Targeting',
+			$numtargets.' '.$ftargets.', '.$this->formatKMB($targetrange, 3, '', true).'m',
+			false,
+			$contents
+		);
+	}
+
 	/* Make the Mastery section used in the formatted attributes section. */
 	function makeFormattedAttributesMasterySection(&$fit, array $prereqs_per_type) {
 		$missing_per_type = array();
@@ -704,6 +789,7 @@ trait LoadoutFormatter {
 			\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
 
 		$parent->append($this->makeFormattedAttributesEngineeringSection($fit, $cap));
+		$parent->append($this->makeFormattedAttributesTargetingSection($fit));
 		$parent->append($this->makeFormattedAttributesMasterySection($fit, $prereqs));
 		$parent->append($this->makeFormattedAttributesMiscSection($fit));
 	}
