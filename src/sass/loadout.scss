@@ -306,11 +306,19 @@ div#computed_attributes > section {
 		}
 	}
 
-	&#defense > h4 > span.pname {
-		&:before { content: "("; }
-		&:after { content: ")"; }
-		font-size: 0.8em;
-		color: $aside-text-color;
+	&#defense {
+		& > h4 > span.pname {
+			&:before { content: "("; }
+			&:after { content: ")"; }
+			font-size: 0.8em;
+			color: $aside-text-color;
+		}
+
+		&> div > table#resists > tbody > tr {
+			&> td.kineticresist, &> td.emresist, &> td.thermalresist, &> td.explosiveresist {
+				width: 20%;
+			}
+		}
 	}
 }
 

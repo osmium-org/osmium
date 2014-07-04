@@ -279,6 +279,19 @@ trait LoadoutFormatter {
 		return $ret;
 	}
 
+	/* Format a resonance, in %. Includes a progress bar. */
+	function formatResonance($resonance) {
+		if($resonance < 0) $resonance = 0;
+		if($resonance > 1) $resonance = 1;
+
+		$percent = (1 - $resonance) * 100;
+
+		return $this->createElement('div')
+			->append($this->formatNDigits($percent, 1).'%')
+			->append($this->makeSmallProgressBar($percent, false, false, 0))
+			;
+	}
+
 	/* Format a quantity with a known maximum. */
 	function formatUsedResource(Element $parent, $rawused, $rawtotal,
 	                            $opts = \Osmium\Chrome\F_USED_SHOW_ABSOLUTE) {
@@ -498,6 +511,283 @@ trait LoadoutFormatter {
 			'Engineering',
 			$this->element('span', [ 'title' => $caplabel, $captext ]),
 			$over ? 'overflow' : false,
+			$contents
+		);
+	}
+
+	/* Make the Offense section used in fattribs. */
+	function makeFormattedAttributesOffenseSection(&$fit, array $ia, $reload) {
+		$contents = [];
+		$totaldps = 0;
+
+		$sources = [
+			[ 'turret', \Osmium\Fit\get_damage_from_turrets($fit, $ia, $reload), 'Turret', 0, 0, 64 ],
+			[ 'missile', \Osmium\Fit\get_damage_from_missiles($fit, $ia, $reload), 'Missile', 0, 1, 64 ],
+			[ 'smartbomb', \Osmium\Fit\get_damage_from_smartbombs($fit, $ia, $reload), 'Smartbomb', 0, 3, 64 ],
+			[ 'drone', \Osmium\Fit\get_damage_from_drones($fit, $ia, $reload), 'Drone', 0, 2, 64 ],
+		];
+
+		/* Sort by DPS, biggest sources first */
+		usort($sources, function($a, $b) { return $a[1][0] < $b[1][0] ? 1 : -1; });
+		
+		foreach($sources as $dtype) {
+			if($dtype[1][1] <= 0) continue;
+			$totaldps += $dtype[1][0];
+
+			$contents[] = ($p = $this->createElement('p'));
+			$p->appendCreate('o-sprite', [
+				'alt' => $dtype[2],
+				'title' => $dtype[2],
+				'x' => $dtype[3], 'y' => $dtype[4],
+				'width' => 32, 'height' => 32,
+				'gridwidth' => $dtype[5], 'gridheight' => $dtype[5],
+			]);
+			$span = $p->appendCreate('span');
+			$span->appendCreate('span#'.$dtype[0].'_dps', [
+				'title' => $dtype[2].' DPS',
+				$this->formatNDigits($dtype[1][0], 1),
+			]);
+			$span->appendCreate('br');
+			$span->appendCreate('span#'.$dtype[0].'_alpha', [
+				'title' => $dtype[2].' volley (alpha)',
+				$this->formatNDigits($dtype[1][1], 1),
+			]);
+		}
+
+		if($contents === []) return '';
+		return $this->makeFormattedAttributesSection(
+			'offense',
+			'Offense',
+			$this->element('span', [
+				'title' => 'Total damage per second',
+				$this->formatExactInteger($totaldps).' dps',
+			]),
+			false,
+			$contents
+		);
+	}
+
+	/* Make the Defense section used in fattribs. */
+	function makeFormattedAttributesDefenseSection(&$fit, array $ehp, array $cap, $reload) {
+		$contents = [];
+		$subtitles = [];
+
+		$layertrtpl = $this->createElement('tr');
+		$layertrtpl->appendCreate('th');
+		$layertrtpl->appendCreate('td.capacity');
+		$layertrtpl->appendCreate('td.emresist');
+		$layertrtpl->appendCreate('td.thermalresist');
+		$layertrtpl->appendCreate('td.kineticresist');
+		$layertrtpl->appendCreate('td.explosiveresist');
+
+		$contents[] = ($table = $this->element('table#resists'));
+
+		$tr = $table->appendCreate('thead')->appendCreate('tr');
+		$tr->appendCreate('th')->appendCreate('abbr', [ 'title' => 'Effective hitpoints', 'EHP' ]);
+		$th = $tr->appendCreate('th#ehp');
+		$th->appendCreate('span', [ 'title' => 'Worst case EHP', '≥'.$this->formatKMB($ehp['ehp']['min']) ]);
+		$th->appendCreate('br');
+		$th->appendCreate('strong', [ 'title' => 'Average EHP (approximation)', $this->formatKMB($ehp['ehp']['avg']) ]);
+		$th->appendCreate('br');
+		$th->appendCreate('span', [ 'title' => 'Best case EHP', '≤'.$this->formatKMB($ehp['ehp']['max']) ]);
+
+		foreach([
+			[ 'EM', 7, 29 ],
+			[ 'Thermal', 4, 29 ],
+			[ 'Kinetic', 5, 29 ],
+			[ 'Explosive', 6, 29 ],
+		] as $dtype) {
+			$tr->appendCreate('td')->appendCreate('o-sprite', [
+				'alt' => ($alt = $dtype[0].' resistance'), 'title' => $alt,
+				'x' => $dtype[1], 'y' => $dtype[2],
+				'width' => 32, 'height' => 32,
+				'gridwidth' => 32, 'gridheight' => 32,
+			]);
+		}
+
+		$tbody = $table->appendCreate('tbody');
+		foreach([
+			[ 'shield', 'Shield', 3, 0 ],
+			[ 'armor', 'Armor', 3, 1 ],
+			[ 'hull', 'Structure (hull)', 3, 2 ],
+		] as $layer) {
+			$tr = $layertrtpl->cloneNode(true);
+			$tr->setAttribute('id', $layer[0]);
+
+			$tr->childNodes->item(0)->appendCreate('o-sprite', [
+				'alt' => $layer[1], 'title' => $layer[1],
+				'x' => $layer[2], 'y' => $layer[3],
+				'width' => 32, 'height' => 32,
+				'gridwidth' => 64, 'gridheight' => 64,
+			]);
+
+			$tr->childNodes->item(1)->append($this->formatKMB($ehp[$layer[0]]['capacity']));
+
+			foreach([ 'em' => 2, 'thermal' => 3, 'kinetic' => 4, 'explosive' => 5 ] as $dtype => $didx) {
+				$tr->childNodes->item($didx)->append($this->formatResonance($ehp[$layer[0]]['resonance'][$dtype]));
+			}
+
+			$tbody->append($tr);
+		}
+
+		$layers = [
+			'hull' => [ 'Hull repairs', 'Hull EHP repaired per second', true, 4, 3 ],
+			'armor' => [ 'Armor repairs', 'Armor EHP repaired per second', true, 4, 2 ],
+			'shield' => [ 'Shield boost', 'Shield EHP boost per second', true, 4, 1 ],
+			'shield_passive' => [ 'Passive shield recharge', 'Peak shield EHP recharged per second', false, 4, 0 ],
+		];
+
+		$bimg = $this->element('o-sprite', [
+			'alt' => 'Burstable tank', 'title' => 'Burst tank',
+			'x' => 2, 'y' => 2,
+			'width' => 16, 'height' => 16,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+		$simg = $this->element('o-sprite', [
+			'alt' => 'Sustainable tank', 'title' => 'Sustainable tank',
+			'x' => 2, 'y' => 1,
+			'width' => 16, 'height' => 16,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+
+		$btotal = $stotal = 0;
+
+		$tanks = \Osmium\Fit\get_tank($fit, $ehp, $cap['delta'], $reload);
+		uasort($tanks, function($a, $b) { return $a[0] < $b[0] ? 1 : -1; });
+
+		foreach($tanks as $layername => $a) {
+			list($burst, $sustain) = $a;
+			if($burst <= 0) continue;
+
+			$btotal += $burst;
+			$stotal += $sustain;
+
+			list($alt, $title, $showboth, $sx, $sy) = $layers[$layername];
+			$contents[] = ($p = $this->createElement('p'));
+
+			$p->appendCreate('o-sprite', [
+				'title' => $title, 'alt' => $alt,
+				'x' => $sx, 'y' => $sy,
+				'width' => 32, 'height' => 32,
+				'gridwidth' => 64, 'gridheight' => 64,
+			]);
+
+			if($showboth) {
+				$span = $p->appendCreate('span');
+				$span->append($bimg->cloneNode(true));
+				$span->appendCreate('span', [
+					'title' => $title.' (burst)',
+					$this->formatNDigits(1000 * $burst, 1),
+				]);
+				$span->appendCreate('br');
+				$span->append($simg->cloneNode(true));
+				$span->appendCreate('span', [
+					'title' => $title.' (sustainable)',
+					$this->formatNDigits(1000 * $sustain, 1),
+				]);
+			} else {
+				$p->appendCreate('span', [ 'title' => $title, $this->formatNDigits(1000 * $burst, 1) ]);
+			}
+		}
+
+		$subtitles[] = $this->element('span', [
+			'title' => 'Average EHP',
+			$this->formatKMB($ehp['ehp']['avg'], 2).' ehp' ]
+		);
+
+		if($btotal > 0) {
+			$subtitles[] = ' – ';
+			$subtitles[] = $this->element('span', [
+				'title' => 'Combined burst tank',
+				$this->formatSDigits($btotal * 1000, 2).' dps',
+			]);
+		}
+
+		if($stotal > 0) {
+			$subtitles[] = ' – ';
+			$subtitles[] = $this->element('span', [
+				'title' => 'Combined sustainable tank',
+				$this->formatSDigits($stotal * 1000, 2).' dps',
+			]);
+		}
+
+		return $this->makeFormattedAttributesSection(
+			'defense',
+			[ 'Defense ', [ 'span.pname', $fit['damageprofile']['name'] ] ],
+			$subtitles,
+			false,
+			$contents
+		);
+	}
+
+	/* Make the Navigation section used in fattribs. */
+	function makeFormattedAttributesNavigationSection(&$fit) {
+		$contents = [];
+
+		$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
+		$agility = \Osmium\Dogma\get_ship_attribute($fit, 'agility');
+		$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass') * $agility / 1000000;
+		$warpspeed = \Osmium\Dogma\get_ship_attribute($fit, 'warpSpeedMultiplier') * \Osmium\Dogma\get_ship_attribute($fit, 'baseWarpSpeed');
+		$warpstrength = -\Osmium\Dogma\get_ship_attribute($fit, 'warpScrambleStatus');
+		$fpoints = 'point'.(abs($warpstrength) == 1 ? '' : 's');
+
+		$contents[] = ($p = $this->createElement('p'));
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Propulsion',
+			'title' => 'Propulsion',
+			'x' => 5, 'y' => 0,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+		$span = $p->appendCreate('span#maximum_velocity', [
+			'title' => 'Maximum velocity',
+			$fvelocity = $this->formatExactInteger($maxvelocity).' m/s',
+		]);
+
+		$contents[] = ($p = $this->createElement('p'));
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Agility',
+			'title' => 'Agility',
+			'x' => 10, 'y' => 2,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 32, 'gridheight' => 32,
+		]);
+		$span = $p->appendCreate('span');
+		$span->appendCreate('span#agility_modifier', [
+			'title' => 'Agility modifier',
+			$this->formatSDigits($agility, 4).' x',
+		]);
+		$span->appendCreate('br');
+		$span->appendCreate('span#align_time', [
+			'title' => 'Time to align (theoretical)',
+			$this->formatExactInteger(ceil($aligntime)).' s',
+			[ 'small', ' ('.$this->formatNDigits($aligntime, 1).')' ],
+		]);
+
+		$contents[] = ($p = $this->createElement('p'));
+		$p->appendCreate('o-sprite', [
+			'alt' => 'Warp core',
+			'title' => 'Warp core',
+			'x' => 5, 'y' => 2,
+			'width' => 32, 'height' => 32,
+			'gridwidth' => 64, 'gridheight' => 64,
+		]);
+		$span = $p->appendCreate('span');
+		$span->appendCreate('span#warp_speed', [
+			'title' => 'Maximum warp speed',
+			$this->formatNDigits($warpspeed, 1).' AU/s',
+		]);
+		$span->appendCreate('br');
+		$span->appendCreate('span#warp_core_strength', [
+			'title' => 'Warp core strength (can enter warp as long as the number of points is nonnegative)',
+			$this->formatExactInteger($warpstrength).' '.$fpoints,
+		]);
+
+		return $this->makeFormattedAttributesSection(
+			'navigation',
+			'Navigation',
+			$this->element('span', [ 'title' => 'Maximum velocity', $fvelocity ]),
+			false,
 			$contents
 		);
 	}
@@ -789,6 +1079,15 @@ trait LoadoutFormatter {
 			\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
 
 		$parent->append($this->makeFormattedAttributesEngineeringSection($fit, $cap));
+
+		$parent->append($this->makeFormattedAttributesOffenseSection(
+			$fit, $ia, $flags & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_DPS
+		));
+		$parent->append($this->makeFormattedAttributesDefenseSection(
+			$fit, $ehp, $cap, $flags & \Osmium\Chrome\FATTRIBS_USE_RELOAD_TIME_FOR_TANK
+		));
+
+		$parent->append($this->makeFormattedAttributesNavigationSection($fit));
 		$parent->append($this->makeFormattedAttributesTargetingSection($fit));
 		$parent->append($this->makeFormattedAttributesMasterySection($fit, $prereqs));
 		$parent->append($this->makeFormattedAttributesMiscSection($fit));

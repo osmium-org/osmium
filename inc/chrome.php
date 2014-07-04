@@ -195,21 +195,6 @@ function format_long_duration($seconds, $precision = 6) {
 	return implode(', ', $out);
 }
 
-/**
- * Format a resonance by displaying it as a resistance percentage.
- */
-function format_resonance($resonance) {
-	if($resonance < 0) return '100%';
-	if($resonance > 1) return '0%';
-
-	$percent = (1 - $resonance) * 100;
-
-	return "<div>"
-		.number_format($percent, 1)."%"
-		.format_small_progress_bar($percent, false, false, 0)
-		."</div>";
-}
-
 /** @deprecated use Formatter::formatExactInteger */
 function format_integer($i, $exact = true) {
 	if($exact) {

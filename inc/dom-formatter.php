@@ -28,7 +28,7 @@ trait Formatter {
 
 	/* Format a number with a given number of digits. */
 	static function formatNDigits($n, $digits = 3) {
-		return rtrim(rtrim(number_format($n, $digits), '0'), '.');
+		return rtrim(rtrim(number_format($n, max(1, $digits)), '0'), '.');
 	}
 
 	/* Format a number with a given number of /significant/ digits. */
