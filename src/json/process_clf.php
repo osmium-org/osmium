@@ -84,7 +84,7 @@ $capacitors = \Osmium\Fit\get_all_capacitors(
 $attribopts['cap'] = $capacitors['local'];
 foreach($capacitors as &$c) {
 	if(isset($c['depletion_time'])) {
-		$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
+		$c['depletion_time'] = \Osmium\DOM\Page::formatDuration($c['depletion_time'] / 1000, true, 2);
 	}
 }
 
@@ -92,9 +92,16 @@ $ia = $attribopts['ia'] = \Osmium\Fit\get_interesting_attributes($local);
 list($prereqs, $missing) = \Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($local);
 $attribopts['prerequisites'] = $prereqs;
 
+$p = new \Osmium\DOM\Page();
+$ctx = new \Osmium\DOM\RenderContext();
+$ctx->relative = $relative;
+$div = $p->content->appendCreate('div');
+$p->makeFormattedAttributes($div, $local, $attribopts);
+$p->renderCustomElements($ctx);
+
 $payload = array(
 	'clftoken' => $token,
-	'attributes' => \Osmium\Chrome\get_formatted_loadout_attributes($local, $relative, $attribopts),
+	'attributes' => $div->renderNode(),
 	'ia' => $ia,
 	'ncycles' => array(),
 	'rawattribs' => array(

@@ -337,12 +337,10 @@ if($loadoutid !== false) {
 
 $section = $div->appendCreate('section#attributes');
 $attribsdiv = $section->appendCreate('div.compact#computed_attributes');
-$attribsdiv->append($p->fragment(\Osmium\Chrome\get_formatted_loadout_attributes(
-	$fit, $ctx->relative, [
-		'cap' => $capacitors['local'],
-		'ia' => $ia_,
-	]
-))); /* XXX */
+$p->makeFormattedAttributes($attribsdiv, $fit, [
+	'cap' => $capacitors['local'],
+	'ia' => $ia_,
+]);
 
 
 
@@ -784,7 +782,7 @@ require __DIR__.'/../inc/view_loadout-meta.php';
 
 foreach($capacitors as &$c) {
 	if(!isset($c['depletion_time'])) continue;
-	$c['depletion_time'] = \Osmium\Chrome\format_duration($c['depletion_time'] / 1000);
+	$c['depletion_time'] = $p->formatDuration($c['depletion_time'] / 1000, true, 2);
 }
 
 $p->data['capacitors'] = $capacitors;

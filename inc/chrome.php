@@ -31,12 +31,14 @@ const CONTENT_FILTER_SANITIZE_TRUST = 2;
 const CONTENT_FILTER_SANITIZE = 4;
 const CONTENT_FILTER_SANITIZE_PHRASING = 8;
 
+const FATTRIBS_USE_RELOAD_TIME_FOR_CAPACITOR = 1;
+const FATTRIBS_USE_RELOAD_TIME_FOR_DPS = 2;
+const FATTRIBS_USE_RELOAD_TIME_FOR_TANK = 4;
+
 const F_USED_SHOW_ABSOLUTE = 1;
 const F_USED_SHOW_DIFFERENCE = 2;
 const F_USED_SHOW_PERCENTAGE = 4;
 const F_USED_SHOW_PROGRESS_BAR = 8;
-
-require __DIR__.'/chrome-fit.php';
 
 
 /**
@@ -54,222 +56,9 @@ function escape($s) {
 	return htmlspecialchars($s, ENT_QUOTES);
 }
 
-/* Format a number with a fixed number of significant digits.
- *
- * @param $sd number of significant digits. If negative, keep all
- * significant digits.
- *
- * @param $min show this suffix at least (must be one of k, m or b)
- */
-function format($number, $sd = 3, $min = '') {
-	static $suffixes = [
-		'b' => 1e9,
-		'm' => 1e6,
-		'k' => 1e3,
-		'' => 1
-	];
-
-	if($number < 0) return '-'.format(-$number, $sd, $min);
-
-	if($sd < 0) return number_format($number / $suffixes[$min]).$min;
-
-	foreach($suffixes as $s => $limit) {
-		if($number >= $limit || $s === $min) {
-			return round_sd($number / $limit, $sd - 1).$s;
-		}
-	}
-}
-
 /** Much better than the junk trim() function from the PHP library */
 function trim($s) {
 	return preg_replace('%^\p{Z}*(.*?)\p{Z}*$%u', '$1', $s);
-}
-
-function format_small_progress_bar($percent, $fill = true, $ltr = true, $maxoverflow = 10) {
-	$over = min($maxoverflow, max(0, $percent - 100));
-
-	$bclass = $ltr ? 'lbar' : 'bar';
-	$oclass = $ltr ? 'bar' : 'lbar';
-	if($percent > 100) {
-		$c = 'p100';
-	} else if($percent >= 95) {
-		$c = 'p95';
-	} else if($percent >= 80) {
-		$c = 'p80';
-	} else {
-		$c = 'p00';
-	}
-	$progress = max(0, min(100, $percent));
-
-	$ret = "<span class='{$bclass} {$c}' style='width: ".round($progress, 2)."%;'></span>";
-	if($over > 0) {
-		$over = round($over, 2).'%';
-		$ret .= "<span class='{$oclass} {$c} over' style='width: {$over}; "
-			.($ltr ? 'right' : 'left').": -{$over};'></span>";
-	}
-	if($fill) {
-		$ret .= "<span class='bar fill'></span>";
-	}
-
-	return $ret;
-}
-
-function format_used($rawused, $rawtotal, $digits, $opts = F_USED_SHOW_ABSOLUTE) {
-	$lines = array();
-
-	$used = format_number($rawused).' / '.format_number($rawtotal);
-	$diff = ($rawtotal >= $rawused) ?
-		format_number($rawtotal - $rawused).' left' :
-		format_number($rawused - $rawtotal).' over';
-
-	if($opts & F_USED_SHOW_ABSOLUTE) {
-		$lines[] = "<span title='".escape($diff)."'>"
-			.escape($used)
-			."</span>";
-	}
-	if($opts & F_USED_SHOW_DIFFERENCE) {
-		$lines[] = "<span title='".escape($used)."'>"
-			.escape($diff)
-			."</span>";
-	}
-
-	$percent = $rawtotal > 0 ? (100 * $rawused / $rawtotal) : ($rawused > 0 ? 100 : 0);
-	if($opts & F_USED_SHOW_PERCENTAGE) {
-		$lines[] = ($rawtotal == 0 ? ($rawused == 0 ? 0 : '∞') : round($percent, $digits)).' %';
-	}
-
-	$ret = implode("<br />", $lines);
-
-	if($opts & F_USED_SHOW_PROGRESS_BAR) {
-		$ret .= format_small_progress_bar($percent);
-	}
-
-	return $ret;
-}
-
-function format_number($num, $precisionoffset = 0) {
-	$num = floatval($num);
-	if($num < 0) {
-		$sign = '-';
-		$num = -$num;
-	} else {
-		$sign = '';
-	}
-
-	if($num < 10000) return $sign.round($num, max(0, 1 + $precisionoffset));
-	else if($num < 1000000) {
-		return $sign.round($num / 1000, max(0, 2 + $precisionoffset)).'k';
-	} else {
-		return $sign.round($num / 1000000, max(0, 3 + $precisionoffset)).'m';
-	}
-}
-
-/** @deprecated use Formatter::formatDuration(_, true) */
-function format_duration($seconds) {
-	$s = fmod($seconds, 60);
-	$m = round($seconds - $s) / 60;
-
-	$s = floor($s);
-
-	if($s == 0 && $m == 0) return '0s';
-	else {
-		$k = '';
-		if($m != 0) { $k .= $m.'m'; }
-		if($s != 0) { $k .= $s.'s'; }
-		return $k;
-	}
-}
-
-/** @deprecated use Formatter::formatDuration() */
-function format_long_duration($seconds, $precision = 6) {
-	list($y, $m, $d, $h, $i, $s) = explode('-', date('Y-m-d-H-i-s', 0));
-	list($Y, $M, $D, $H, $I, $S) = explode('-', date('Y-m-d-H-i-s', $seconds));
-
-	$years = $Y - $y;
-	$months = $M - $m;
-	$days = $D - $d;
-	$hours = $H - $h;
-	$minutes = $I - $i;
-	$seconds = $S - $s;
-
-	$out = array(
-		'year' => $years,
-		'month' => $months,
-		'day' => $days,
-		'hour' => $hours,
-		'minute' => $minutes,
-		'second' => $seconds,
-	);
-	foreach($out as $k => $v) {
-		if($v == 0) unset($out[$k]);
-		else if($v === 1) $out[$k] = $v.' '.$k;
-		else $out[$k] = $v.' '.$k.'s';
-	}
-	$out = array_slice($out, 0, $precision);
-
-	$c = count($out);
-	if($c === 0) {
-		return 'less than 1 '.$k;
-	}
-	if($c >= 2) {
-		$s = array_pop($out);
-		$m = array_pop($out);
-		$out[] = $m.' and '.$s;
-	}
-
-	return implode(', ', $out);
-}
-
-/**
- * Format the capacitor stability percentage or the time it lasts.
- *
- * @param $array array that has the same structure than the return
- * value of get_capacitor_stability().
- */
-function format_capacitor($arr) {
-	$rate = round(-$arr['delta'] * 1000, 1).' GJ/s';
-	if($rate > 0) $rate = '+'.((string)$rate);
-
-	if($arr['stable']) {
-		return array(round(100 * $arr['stable_fraction'], 1)."%", $rate);
-	} else {
-		return array(format_duration($arr['depletion_time'] / 1000), $rate);
-	}
-}
-
-/**
- * Format a resonance by displaying it as a resistance percentage.
- */
-function format_resonance($resonance) {
-	if($resonance < 0) return '100%';
-	if($resonance > 1) return '0%';
-
-	$percent = (1 - $resonance) * 100;
-
-	return "<div>"
-		.number_format($percent, 1)."%"
-		.format_small_progress_bar($percent, false, false, 0)
-		."</div>";
-}
-
-function format_integer($i, $exact = true) {
-	if($exact) {
-		return number_format($i);
-	}
-
-	if($i >= 1e9) {
-		return number_format($i / 1e9, 3).'b';
-	}
-
-	if($i >= 1e6) {
-		return number_format($i / 1e6, 3).'m';
-	}
-
-	if($i >= 1e4) {
-		return number_format($i / 1e3, 2).'k';
-	}
-
-	return number_format($i);
 }
 
 /**
@@ -542,53 +331,12 @@ function format_type_description($desc) {
 	return sanitize_html(format_md(nl2br($desc, true)));
 }
 
-function format_isk($isk, $withunit = true) {
-	if($isk >= 10000000000) {
-		$isk = round($isk / 1000000000, 2).'b';
-	} else if($isk >= 1000000000) {
-		$isk = round($isk / 1000000000, 3).'b';
-	} else if($isk > 100000000) {
-		$isk = round($isk / 1000000, 1).'m';
-	} else if($isk > 10000000) {
-		$isk = round($isk / 1000000, 2).'m';
-	} else if($isk > 1000000) {
-		$isk = round($isk / 1000000, 3).'m';
-	} else {
-		$isk = round($isk / 1000, 1).'k';
-	}
-
-	return $isk.($withunit ? ' ISK' : '');
-}
-
 function truncate_string($s, $length, $fill = '…') {
 	if(mb_strlen($s) > $length) {
 		$s = mb_substr($s, 0, $length - mb_strlen($fill)).$fill;
 	}
 
 	return $s;
-}
-
-/* @deprecated */
-function sprite($relative, $alt, $grid_x, $grid_y, $grid_width, $grid_height = null, $width = null, $height = null) {
-	if($grid_height === null) $grid_height = $grid_width;
-	if($width === null) $width = $grid_width;
-	if($height === null) $height = $width;
-
-	$posx = $grid_x * $width;
-	$posy = $grid_y * $height;
-	$imgwidth = $width / $grid_width * 1024;
-	$imgheight = $height / $grid_height * 1024;
-
-	$alt = escape($alt);
-
-	return "<span class='mainsprite' style='width: {$width}px; height: {$height}px;'><img src='{$relative}/static-".\Osmium\STATICVER."/icons/sprite.png' alt='{$alt}' title='{$alt}' style='width: {$imgwidth}px; height: {$imgheight}px; top: -{$posx}px; left: -{$posy}px;' /></span>";
-}
-
-/** Format a skill level in roman numerals.
- *
- * @deprecated see Formatter::formatSkillLevel() */
-function format_skill_level($level) {
-	return \Osmium\DOM\Page::formatSkillLevel($level);
 }
 
 function format_effect_category($id) {

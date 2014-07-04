@@ -28,7 +28,7 @@ trait Formatter {
 
 	/* Format a number with a given number of digits. */
 	static function formatNDigits($n, $digits = 3) {
-		return rtrim(rtrim(number_format($n, $digits), '0'), '.');
+		return rtrim(rtrim(number_format($n, max(1, $digits)), '0'), '.');
 	}
 
 	/* Format a number with a given number of /significant/ digits. */
@@ -40,7 +40,7 @@ trait Formatter {
 	}
 
 	/* Format a number with an optional 'k', 'm' or 'b' prefix. */
-	static function formatKMB($n, $sd = 3, $min = '') {
+	static function formatKMB($n, $sd = 3, $min = '', $space = false) {
 		static $suffixes = [
 			'b' => 1e9,
 			'm' => 1e6,
@@ -51,7 +51,7 @@ trait Formatter {
 		if($n < 0) return '-'.self::formatKMB(-$n, $sd, $min);
 		foreach($suffixes as $s => $limit) {
 			if($n >= $limit || $s === $min) {
-				return self::formatSDigits($n / $limit, $sd).$s;
+				return self::formatSDigits($n / $limit, $sd).($space ? ' ' : '').$s;
 			}
 		}
 	}
@@ -321,11 +321,13 @@ trait Formatter {
 		if($out === []) return $abbrev ? '1s' : 'less than 1 second';
 		$out = array_slice($out, 0, $precision);
 
-		$s = array_pop($out);
-		$m = array_pop($out);
-		if($m === null) return $s;
+		if(!$abbrev) {
+			$s = array_pop($out);
+			$m = array_pop($out);
+			if($m === null) return $s;
+			$out[] = $m.' and '.$s;
+		}
 
-		$out[] = $m.' and '.$s;
 		return implode($abbrev ? ' ' : ', ', $out);
 	}
 

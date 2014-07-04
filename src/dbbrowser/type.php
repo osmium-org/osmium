@@ -218,7 +218,7 @@ if($nprereqs > 0) {
 				[ 'o-eve-img', [ 'src' => '/Type/'.$skill.'_64.png', 'alt' => '' ] ],
 				[ 'a', [ 'o-rel-href' => '/db/type/'.$skill, \Osmium\Fit\get_typename($skill) ] ],
 				' ',
-				\Osmium\Chrome\format_skill_level($level),
+				$e->formatSkillLevel($level),
 			]);
 
 			$newbl = $blacklist; /* Copy the array */
@@ -284,7 +284,7 @@ if($nreqby !== []) {
 	foreach($nreqby as $l => $c) {
 		$ul->appendCreate('li', [[ 'a', [
 			'href' => '#l'.$l,
-			\Osmium\Chrome\format_skill_level($l)
+			$p->formatSkillLevel($l)
 		] ]]);
 	}
 

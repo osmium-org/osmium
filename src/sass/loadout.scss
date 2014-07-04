@@ -258,9 +258,35 @@ div#computed_attributes > section {
 	&#misc > div > table {
 		width: 100%;
 
-		&> tbody > tr > td, &> tbody > tr > th {
-			text-align: left;
-			width: 50%;
+		&> tbody > tr > td, &> tbody > tr {
+			&> td {
+				text-align: right;
+
+				&> hr {
+					opacity: 0;
+					width: 1em;
+					margin: 0;
+					padding: 0;
+				}
+			}
+
+			&> th {
+				text-align: left;
+			}
+		}
+
+		&> tbody > tr > td > ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+
+			&> li {
+				text-align: left;
+			}
+
+			&> li > span {
+				float: right;
+			}
 		}
 	}
 
@@ -280,11 +306,19 @@ div#computed_attributes > section {
 		}
 	}
 
-	&#defense > h4 > span.pname {
-		&:before { content: "("; }
-		&:after { content: ")"; }
-		font-size: 0.8em;
-		color: $aside-text-color;
+	&#defense {
+		& > h4 > span.pname {
+			&:before { content: "("; }
+			&:after { content: ")"; }
+			font-size: 0.8em;
+			color: $aside-text-color;
+		}
+
+		&> div > table#resists > tbody > tr {
+			&> td.kineticresist, &> td.emresist, &> td.thermalresist, &> td.explosiveresist {
+				width: 20%;
+			}
+		}
 	}
 }
 
