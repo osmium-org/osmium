@@ -503,36 +503,3 @@ function get_search_cond_from_advanced() {
 
 	return $cond;
 }
-
-
-
-/* @deprecated XXX */
-function print_type_list($relative, $query, $limit = 20) {
-	if(!$query) return [];
-
-	$q = query(get_type_search_query($query, [], $limit));
-
-	if($q === false) return [];
-	$typeids = [];
-
-	while($t = fetch_row($q)) {
-		if($typeids === []) {
-			echo "<ol class='type_sr'>\n";
-		}
-
-		$typeid = $t[0];
-		$typeids[] = $typeid;
-
-		$tn = \Osmium\Chrome\escape(\Osmium\Fit\get_typename($typeid));
-
-		echo "<li><a href='{$relative}/db/type/{$typeid}' title='{$tn}'>"
-			."<img src='//image.eveonline.com/Type/{$typeid}_64.png' alt='' />"
-			."{$tn}</a></li>\n";
-	}
-
-	if($typeids !== []) {
-		echo "</ol>\n";
-	}
-
-	return $typeids;
-}

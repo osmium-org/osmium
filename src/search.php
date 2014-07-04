@@ -39,10 +39,23 @@ if($query === false) {
 	);
 } else {
 	if(!isset($_GET['p']) || $_GET['p'] === '1') {
-		ob_start();
-		$typeids = \Osmium\Search\print_type_list('.', $query);
-		$typelist = ob_get_clean();
-		$ntypes = count($typeids);
+		$tq = $query ? (\Osmium\Search\query(\Osmium\Search\get_type_search_query($query, [], 20)) ?: []) : [];
+		$firstid = null;
+
+		$typelist = $p->element('ol.type_sr');
+		while($t = \Osmium\Search\fetch_row($tq)) {
+			$typeid = $t[0];
+			$tn = \Osmium\Fit\get_typename($typeid);
+
+			if($firstid === null) $firstid = $t[0];
+
+			$li = $typelist->appendCreate('li');
+			$a = $li->appendCreate('a', [ 'o-rel-href' => '/db/type/'.$typeid, 'title' => $tn ]);
+			$a->appendCreate('o-eve-img', [ 'src' => '/Type/'.$typeid.'_64.png', 'alt' => '' ]);
+			$a->append($tn);
+		}
+
+		$ntypes = $typelist->childNodes->length;
 	} else {
 		$ntypes = 0;
 	}
@@ -58,7 +71,7 @@ if($query === false) {
 	if(!isset($_GET['p'])) {
 		if($ntypes === 1 && $nloadouts === 0) {
 			/* Redirect to type page */
-			header('Location: ./db/type/'.$typeids[0]);
+			header('Location: ./db/type/'.$firstid);
 			die();
 		}
 	}
@@ -72,7 +85,7 @@ if($query === false) {
 	if($ntypes > 0) {
 		$p->content->appendCreate('section', [ 'class' => 'sr' ])->append([
 			[ 'h2', 'Types' ],
-			$p->fragment($typelist), /* XXX */
+			$typelist,
 		]);
 	}
 
