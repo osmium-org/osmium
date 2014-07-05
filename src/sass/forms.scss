@@ -33,7 +33,7 @@ optgroup, option {
 	border: 0;
 }
 
-input[type='submit'], input[type='button'], button {
+form:not(.saa) input[type='submit'], input[type='button'], button {
 	font-family: $sans-font;
 	color: $button-text-color;
 	border-color: $button-border-color;

@@ -36,7 +36,7 @@ if(!\Osmium\State\can_access_fit($fit) ||
 	\Osmium\fatal(403, 'Please access the loadout page first (and eventually input the password), then retry.');
 }
 
-if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token() && isset($_GET['rollback'])) {
+if($can_edit && isset($_POST) && $_POST !== [] && isset($_GET['rollback'])) {
 	\Osmium\Db\query('BEGIN');
 
 	$hash = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
@@ -71,7 +71,8 @@ if($can_edit && isset($_GET['tok']) && $_GET['tok'] == \Osmium\State\get_token()
 		\Osmium\Fit\insert_fitting_delta_against_previous_revision(\Osmium\Fit\get_fit($loadoutid));
 		\Osmium\Db\query('COMMIT');
 
-		\Osmium\State\invalidate_cache('loadout-'.$loadoutid);
+		\Osmium\State\invalidate_cache('loadout-'.$loadoutid, 'Loadout_Cache_');
+		header('Location: ..'.$loadouturi);
 	} else {
 		\Osmium\Db\query('ROLLBACK');
 	}
@@ -134,10 +135,9 @@ while($rev = \Osmium\Db\fetch_assoc($histq)) {
 		;
 
 	if(!$first && $can_edit) {
-		$par->append(' — ')->appendCreate('small')->appendCreate('a.dangerous', [
+		$par->append(' — ')->appendCreate('small')->appendCreate('o-state-altering-a.dangerous', [
 			'href' => $p->formatQueryString([
 				'rollback' => $rev['revision'],
-				'tok' => \Osmium\State\get_token(),
 			]),
 			'rollback to this revision',
 		]);

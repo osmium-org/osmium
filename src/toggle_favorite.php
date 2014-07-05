@@ -20,11 +20,13 @@ namespace Osmium\ToggleFavorite;
 
 require __DIR__.'/../inc/root.php';
 
-\Osmium\State\assume_logged_in('..');
+const RELATIVE = '../..';
+
+\Osmium\State\assume_logged_in(RELATIVE);
 
 $loadoutid = intval($_GET['loadoutid']);
 
-if(!isset($_GET['tok']) || $_GET['tok'] != \Osmium\State\get_token()) {
+if(!isset($_POST) || $_POST === []) {
 	\Osmium\fatal(400);
 }
 
@@ -74,9 +76,9 @@ if($fav === false) {
 
 if(isset($_GET['redirect'])) {
 	if($_GET['redirect'] === 'loadout') {
-		header('Location: ../'.\Osmium\Fit\fetch_fit_uri($loadoutid)."#meta");
+		header('Location: '.RELATIVE.'/'.\Osmium\Fit\fetch_fit_uri($loadoutid)."#meta");
 	} else if($_GET['redirect'] === 'profile') {
-		header('Location: ../profile/'.$accountid.'#pfavorites');
+		header('Location: '.RELATIVE.'/profile/'.$accountid.'#pfavorites');
 	}
 }
 die();

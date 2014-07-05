@@ -211,14 +211,14 @@ if($myprofile) {
 		);
 
 		$ol = $pfavs->appendCreate('ol');
-		$qs = $p->formatQueryString([ 'tok' => \Osmium\State\get_token(), 'redirect' => 'profile' ]);
+		$qs = $p->formatQueryString([ 'redirect' => 'profile' ]);
 
 		foreach($stale as $id) {
 			$ol->appendCreate('li', [
 				'Loadout ',
 				[ 'a', [ 'o-rel-href' => '/loadout/'.$id, '#'.$id ] ],
 				' — ',
-				[ 'a', [ 'o-rel-href' => '/favorite/'.$id.$qs, 'unfavorite' ] ]
+				[ 'o-state-altering-a', [ 'o-rel-href' => '/internal/favorite/'.$id.$qs, 'unfavorite' ] ]
 			]);
 		}
 	}

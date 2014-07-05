@@ -354,6 +354,7 @@ form.saa {
 a, form.saa > input[type="submit"] {
 	cursor: pointer;
 	text-decoration: underline;
+	font-family: $sans-font;
 
 	&, &:visited {
 		color: $link-text-color;
@@ -375,6 +376,7 @@ a, form.saa > input[type="submit"] {
 		&:hover, &:focus {
 			color: $dangerous-link-text-color !important;
 			border-color: $dangerous-link-border-color !important;
+			text-shadow: rgba($dangerous-link-text-color, .75) 0 0 .5em !important;
 		}
 	}
 }

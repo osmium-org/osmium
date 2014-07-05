@@ -475,12 +475,12 @@ if($can_edit) {
 	];
 
 	unset($opts['revision']);
+	unset($opts['tok']);
 
 	$actions[] = [
 		null,
-		[ 'strong', [[ 'a', [
+		[ 'strong', [[ 'o-state-altering-a', [
 			'o-rel-href' => '/delete/'.$loadoutid.$p->formatQueryString($opts),
-			'rel' => 'nofollow',
 			'class' => 'dangerous confirm',
 			'Delete this loadout',
 		] ]] ],
@@ -508,10 +508,7 @@ if($loggedin && $loadoutid !== false) {
 		$favimg = [ 2, 25, 32, 32 ];
 	}
 
-	$opts = [
-		'tok' => \Osmium\State\get_token(),
-		'redirect' => 'loadout',
-	];
+	$opts = [ 'redirect' => 'loadout' ];
 
 	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 		$opts['privatetoken'] = $fit['metadata']['privatetoken'];
@@ -519,7 +516,7 @@ if($loggedin && $loadoutid !== false) {
 
 	$actions[] = [
 		$favimg,
-		[ 'a', [ 'o-rel-href' => '/favorite/'.$loadoutid.$p->formatQueryString($opts), $title ] ],
+		[ 'o-state-altering-a', [ 'o-rel-href' => '/internal/favorite/'.$loadoutid.$p->formatQueryString($opts), $title ] ],
 		': favorite loadouts are listed on your ',
 		[ 'a', [ 'o-rel-href' => '/profile/'.$a['accountid'].'#pfavorites', 'profile page' ] ],
 		'.',

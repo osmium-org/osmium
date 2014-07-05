@@ -111,6 +111,8 @@ function get_rules($prefix) {
 			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 			'%^/internal/showinfo$%D' => '/src/json/show_info.php',
 
+			'%^/internal/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
+
 			'%^/internal/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
 			'%^/internal/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
 
@@ -182,8 +184,6 @@ function get_rules($prefix) {
 
 			'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
 			'%^/editcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'commentreply']],
-
-			'%^/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
 
 			'%^/loadouthistory/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/view_loadout_history.php',
 			'%^/flagginghistory/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_flagging_history.php',

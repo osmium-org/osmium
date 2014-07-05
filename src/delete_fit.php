@@ -22,8 +22,8 @@ require __DIR__.'/../inc/root.php';
 
 \Osmium\State\assume_logged_in('..');
 
-if($_GET['tok'] != \Osmium\State\get_token()) {
-	\Osmium\fatal(403);
+if(!isset($_POST) || $_POST === []) {
+	\Osmium\fatal(400);
 }
 
 $loadoutid = isset($_GET['loadoutid']) ? $_GET['loadoutid'] : 0;

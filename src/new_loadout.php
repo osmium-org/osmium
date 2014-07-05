@@ -77,7 +77,8 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
 
 
 
-if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])) {
+if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])
+   && $_GET['tok'] == \Osmium\State\get_token()) {
 	$loadoutid = (int)$_GET['loadoutid'];
 	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
 

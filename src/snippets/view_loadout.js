@@ -57,7 +57,7 @@ $(function() {
 		osmium_init_export();
 	});
 
-	$('body').on('click', 'a.confirm', function() {
+	$('body').on('click', '.confirm', function() {
 		return confirm("You are about to do a destructive action.\n\nIt cannot be undone.\n\nContinue?");
 	});
 
