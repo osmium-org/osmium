@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,31 +16,35 @@
  */
 
 osmium_fattribs_load = function() {
-	$("div#computed_attributes > section").each(function() {
-		var key = 'osmium_fattribs_' + $(this).attr('id');
-		if(localStorage.getItem(key) === "0") {
-			$("section#" + $(this).attr('id') + " > div").hide()
-				.parent().addClass('hidden');
-		}
-	});
+	var hidden = $('div#osmium-data').data('fattribshidden');
+	if(!hidden) return;
+
+	var hc = hidden.length;
+	var s = $("div#computed_attributes");
+	for(var i = 0; i < hc; ++i) s.children("section#" + hidden[i]).addClass('hidden').children('div').hide();
 };
 
-osmium_fattribs_toggle = function(id) {
-	var key = 'osmium_fattribs_' + id;
-	if(localStorage.getItem(key) !== "0") {
-		localStorage.setItem(key, "0");
-		$("section#" + id + " > div").hide()
-			.parent().addClass('hidden');
+osmium_fattribs_toggle = function(section) {
+	if(section.hasClass('hidden')) {
+		section.children('div').fadeIn(250);
+		section.removeClass('hidden');
 	} else {
-		localStorage.setItem(key, "1");
-		$("section#" + id + " > div").fadeIn(500)
-			.parent().removeClass('hidden');
+		section.children('div').fadeOut(250);
+		section.addClass('hidden');
 	}
+
+	var hidden = [];
+
+	$("div#computed_attributes > section.hidden").each(function() {
+		hidden.push($(this).prop('id'));
+	});
+
+	osmium_put_setting('fattribs_hidden', hidden);
 };
 
 $(function() {
 	$(document).on('click', "div#computed_attributes > section > h4", function() {
-		osmium_fattribs_toggle($(this).parent().attr('id'));
+		osmium_fattribs_toggle($(this).parent());
 	});
 
 	osmium_fattribs_load();

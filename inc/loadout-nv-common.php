@@ -42,6 +42,8 @@ class Page extends \Osmium\DOM\Page {
 		$cdp = \Osmium\State\get_setting('custom_damage_profiles', []);
 		$this->data['customdamageprofiles'] = $cdp === [] ? new \stdClass() : $cdp;
 
+		$this->data['fattribshidden'] = \Osmium\State\get_setting('fattribs_hidden', []);
+
 		$this->finalize($ctx);
 	}
 

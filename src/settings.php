@@ -475,5 +475,5 @@ if(!$haschars) {
 }
 
 
-$p->snippets[] = 'settings';
+$p->snippets[] = 'account_settings';
 $p->render($ctx);

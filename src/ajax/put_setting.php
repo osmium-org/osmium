@@ -28,10 +28,7 @@ function fail() {
 	die();
 }
 
-if(!isset($_GET['name'])
-   || !isset($_GET['token'])
-   || $_GET['token'] != \Osmium\State\get_token()
-   || !isset($_POST['payload'])) {
+if(!isset($_GET['name']) || !isset($_POST['payload'])) {
 	fail();
 }
 
@@ -67,6 +64,27 @@ case 'default_skillset':
 	$names = \Osmium\Fit\get_available_skillset_names_for_account();
 	if(!in_array($payload, $names, true)) fail();
 	\Osmium\State\put_setting('default_skillset', $payload);
+	break;
+
+case 'fattribs_hidden':
+	if(!is_array($payload)) break;
+	$idlist = array_flip([
+		'engineering',
+		'defense',
+		'navigation',
+		'targeting',
+		'incoming',
+		'outgoing',
+		'mastery',
+		'misc',
+	]);
+
+
+	foreach($payload as $k => $v) {
+		if(!isset($idlist[$v])) unset($payload[$k]);
+	}
+
+	\Osmium\State\put_setting('fattribs_hidden', array_values($payload));
 	break;
 
 default:

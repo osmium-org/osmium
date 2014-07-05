@@ -21,6 +21,7 @@
 /*<<< require external /static-1/jquery.jsPlumb-1.6.0-min.js >>>*/
 /*<<< require external /static-1/rawdeflate.min.js >>>*/
 
+/*<<< require snippet settings >>>*/
 /*<<< require snippet mousetrap >>>*/
 /*<<< require snippet keyboard >>>*/
 /*<<< require snippet localstorage_fallback >>>*/

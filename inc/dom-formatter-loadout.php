@@ -1159,6 +1159,9 @@ trait LoadoutFormatter {
 		$prereqs = isset($opts['prerequisites']) ? $opts['prerequisites'] :
 			\Osmium\Fit\get_skill_prerequisites_and_missing_prerequisites($fit)[0];
 
+		/* NB: when adding/removing/altering sections, make sure to
+		 * update the ID list in put_setting.php. */
+
 		$parent->append($this->makeFormattedAttributesEngineeringSection($fit, $cap));
 
 		$parent->append($this->makeFormattedAttributesOffenseSection(

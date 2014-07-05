@@ -84,12 +84,7 @@ osmium_init_fattribs = function() {
 					}, { 'default': true });
 
 					osmium_ctxmenu_add_option(smenu, "Set default", function() {
-						$.ajax({
-							type: 'POST',
-							url: osmium_relative + '/internal/ps/default_skillset?'
-								+ $.param({ token: osmium_token }),
-							data: { payload: JSON.stringify(sname) }
-						});
+						osmium_put_setting('default_skillset', sname);
 					}, {});
 
 					return smenu;
@@ -226,9 +221,5 @@ osmium_init_fattribs = function() {
 };
 
 osmium_commit_custom_damage_profiles = function() {
-	$.ajax({
-		type: 'POST',
-		url: osmium_relative + '/internal/ps/custom_damage_profiles?' + $.param({ token: osmium_token }),
-		data: { payload: JSON.stringify(osmium_custom_damage_profiles) }
-	});
+	osmium_put_setting('custom_damage_profiles', osmium_custom_damage_profiles);
 };
