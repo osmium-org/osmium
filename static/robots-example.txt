@@ -8,9 +8,6 @@ Sitemap: http://my-domain.tld/sitemap.xml.gz
 
 User-agent: *
 Disallow: /api/
-Disallow: /delete/
-Disallow: /deletecomment/
-Disallow: /deletecommentreply/
 Disallow: /edit/
 Disallow: /editcomment/
 Disallow: /editcommentreply/

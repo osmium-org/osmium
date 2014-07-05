@@ -1,3 +1,9 @@
+staging
+=======
+
+Some rules in robots-example.txt have been removed. You can safely
+remove them from your robots.txt.
+
 v0.13.0, released 2014-06-03
 ============================
 

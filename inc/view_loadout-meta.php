@@ -480,7 +480,7 @@ if($can_edit) {
 	$actions[] = [
 		null,
 		[ 'strong', [[ 'o-state-altering-a', [
-			'o-rel-href' => '/delete/'.$loadoutid.$p->formatQueryString($opts),
+			'o-rel-href' => '/internal/delete/'.$loadoutid.$p->formatQueryString($opts),
 			'class' => 'dangerous confirm',
 			'Delete this loadout',
 		] ]] ],

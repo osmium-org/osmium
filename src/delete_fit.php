@@ -89,5 +89,5 @@ while($row = \Osmium\Db\fetch_row($q)) {
 /* FIXME check that transaction was successful before unindexing this */
 \Osmium\Search\unindex($loadoutid);
 
-header('Location: ../');
+header('Location: ../../');
 die();

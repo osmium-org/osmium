@@ -113,6 +113,7 @@ function get_rules($prefix) {
 
 			'%^/internal/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
 
+			'%^/internal/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 			'%^/internal/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
 			'%^/internal/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
 
@@ -171,7 +172,6 @@ function get_rules($prefix) {
 			'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
 
 			'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
-			'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 			'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
 			'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
