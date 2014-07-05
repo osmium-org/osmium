@@ -193,7 +193,10 @@ section#comments {
 			}
 		}
 
-		&> a.add_comment, &> header > div.meta > a, &> ul.replies > li > span.meta > a {
+		&> a.add_comment, &> header > div.meta > a,
+		&> ul.replies > li > span.meta > a,
+		&> header > div.meta > form.saa > input[type="submit"],
+		&> ul.replies > li > span.meta > form.saa > input[type="submit"] {
 			color: $loadout-comment-meta-text-color;
 			text-decoration: none;
 

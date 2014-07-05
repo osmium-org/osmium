@@ -20,7 +20,7 @@ namespace Osmium\Page\DeleteComment;
 
 require __DIR__.'/../inc/root.php';
 
-if(!\Osmium\State\is_logged_in() || $_GET['tok'] != \Osmium\State\get_token()) {
+if(!\Osmium\State\is_logged_in() || !isset($_POST) || $_POST === []) {
 	\Osmium\fatal(403);
 }
 
@@ -91,7 +91,7 @@ if($type == 'comment') {
 	\Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_COMMENT, null, $id, $row['loadoutid']);
 	\Osmium\Db\query('COMMIT;');
 
-	$afteruri = '#vcomments';
+	$afteruri = '#comments';
 } else if($type == 'commentreply') {
 	$row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT lcr.accountid, lcr.commentid, loadoutid, lcr.bodycontentid
@@ -133,5 +133,5 @@ if($type == 'comment') {
 	\Osmium\fatal(400);
 }
 
-header('Location: ../'.\Osmium\Fit\fetch_fit_uri($row['loadoutid']).$afteruri);
+header('Location: ../../'.\Osmium\Fit\fetch_fit_uri($row['loadoutid']).$afteruri);
 die();

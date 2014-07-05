@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,15 +21,10 @@ namespace Osmium\Page\Logout;
 require __DIR__.'/../inc/root.php';
 
 if(!\Osmium\State\is_logged_in()) {
-	goto redirect; /* Boooo */
+	goto Redirect; /* Boooo */
 }
 
-if(!isset($_GET['tok'])) {
-	\Osmium\fatal(400);
-}
-
-$tok = $_GET['tok'];
-if($tok != \Osmium\State\get_token()) {
+if(!isset($_POST) || $_POST === []) {
 	\Osmium\fatal(400);
 }
 
@@ -37,7 +32,7 @@ $global = isset($_GET['global']) && $_GET['global'];
 
 \Osmium\State\logoff($global);
 
-redirect:
+Redirect:
 header('HTTP/1.1 303 See Other', true, 303);
 header('Location: ../', true, 303);
 die(); /* Our work here is done. */

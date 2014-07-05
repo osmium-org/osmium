@@ -151,7 +151,7 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 	} else {
 		$a = \Osmium\State\get_state('a');
 		if(isset($a['notwhitelisted']) && $a['notwhitelisted'] && !in_array($req, [
-			'/logout/'.\Osmium\State\get_token(),
+			'/internal/logout',
 			'/settings',
 		], true)) {
 			header('Location: '.$prefix.'/settings#s_apiauth');

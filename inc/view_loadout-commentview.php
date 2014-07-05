@@ -185,9 +185,8 @@ function format_comment($row, &$replybefore = null) {
 		]);
 
 		$meta->append(' — ');
-		$meta->appendCreate('a.dangerous.confirm', [
-			'o-rel-href' => '/deletecomment/'.$row['commentid']
-			.$p->formatQueryString([ 'tok' => \Osmium\State\get_token() ]),
+		$meta->appendCreate('o-state-altering-a.dangerous.confirm', [
+			'o-rel-href' => '/internal/deletecomment/'.$row['commentid'],
 			$tmp, 'delete',
 		]);
 	}
@@ -297,9 +296,8 @@ function format_comment_reply($row) {
 		]);
 
 		$meta->append(' — ');
-		$meta->appendCreate('a.dangerous.confirm', [
-			'o-rel-href' => '/deletecommentreply/'.$row['commentreplyid']
-			.$p->formatQueryString([ 'tok' => \Osmium\State\get_token() ]),
+		$meta->appendCreate('o-state-altering-a.dangerous.confirm', [
+			'o-rel-href' => '/internal/deletecommentreply/'.$row['commentreplyid'],
 			$tmp, 'delete',
 		]);
 	}

@@ -267,12 +267,12 @@ div#wrapper > nav:first-child {
 			text-decoration: none;
 		}
 
-		input[placeholder] {
+		&> form input[placeholder] {
 			width: 9em;
 			background-color: rgba($input-bg-color, .2);
 		}
 
-		input {
+		&.login > form input {
 			padding: 0.2em;
 		}
 	}
@@ -312,6 +312,46 @@ img {
 }
 
 a {
+	&.profile {
+		color: $emphasis-text-color;
+		text-decoration: none;
+
+		&:hover {
+			color: $link-text-color;
+			text-decoration: underline;
+		}
+	}
+
+	&> img {
+		border: none;
+	}
+
+	&.external[target='_blank']:before {
+		background-image: url('./icons/external.svg');
+		background-size: contain;
+		content: ' ';
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		margin-right: .125em;
+	}
+}
+
+form.saa {
+	display: inline;
+
+	&> input[type="submit"] {
+		display: inline;
+		font-size: 1em;
+		line-height: 1.2em;
+		background: none;
+		padding: 0;
+		margin: 0;
+		border: 0;
+	}
+}
+
+a, form.saa > input[type="submit"] {
 	cursor: pointer;
 	text-decoration: underline;
 
@@ -336,30 +376,6 @@ a {
 			color: $dangerous-link-text-color !important;
 			border-color: $dangerous-link-border-color !important;
 		}
-	}
-
-	&.profile {
-		color: $emphasis-text-color;
-		text-decoration: none;
-
-		&:hover {
-			color: $link-text-color;
-			text-decoration: underline;
-		}
-	}
-
-	&> img {
-		border: none;
-	}
-
-	&.external[target='_blank']:before {
-		background-image: url('./icons/external.svg');
-		background-size: contain;
-		content: ' ';
-		display: inline-block;
-		width: 1em;
-		height: 1em;
-		margin-right: .125em;
 	}
 }
 

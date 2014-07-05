@@ -947,7 +947,6 @@ class Page extends RawPage {
 			$p = $div->appendCreate('p');
 
 			$a = \Osmium\State\get_state('a');
-			$tok = \Osmium\State\get_token();
 
 			if(isset($a['apiverified']) && $a['apiverified'] ===  't'
 			   && isset($a['characterid']) && $a['characterid'] > 0) {
@@ -983,12 +982,12 @@ class Page extends RawPage {
 					(string)$ncount
 				]],
 				' ',
-				[ 'a', [ 'o-rel-href' => '/logout/'.$tok, 'Sign out' ] ],
+				[ 'o-state-altering-a', [ 'o-rel-href' => '/internal/logout', 'Sign out' ] ],
 				' ',
 				[ 'small', [
 					'(',
-					[ 'a', [
-						'o-rel-href' => '/logout/'.$tok.self::formatQueryString([ 'global' => '1' ]),
+					[ 'o-state-altering-a', [
+						'o-rel-href' => '/internal/logout'.self::formatQueryString([ 'global' => '1' ]),
 						'title' => 'Terminate all my sessions, even on other computers or browsers',
 						'all',
 					]],

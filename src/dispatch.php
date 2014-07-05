@@ -110,6 +110,11 @@ function get_rules($prefix) {
 			'%^/internal/syncclf$%D' => '/src/json/process_clf.php',
 			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 			'%^/internal/showinfo$%D' => '/src/json/show_info.php',
+
+			'%^/internal/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
+			'%^/internal/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
+
+			'%^/internal/logout$%D' => '/src/logout.php',
 			'%^/internal/redirect/(?<hash>[^/]+)$%D' => '/src/redirect.php',
 			'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
 			'%^/internal/ps/(?<name>[^/]+)$%D' => '/src/ajax/put_setting.php',
@@ -163,8 +168,6 @@ function get_rules($prefix) {
 			'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 			'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
 
-			'%^/logout/(?<tok>[0-9]+)$%D' => '/src/logout.php',
-
 			'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
 			'%^/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
 			'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
@@ -179,8 +182,6 @@ function get_rules($prefix) {
 
 			'%^/editcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'comment']],
 			'%^/editcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/edit_comment.php', ['type' => 'commentreply']],
-			'%^/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
-			'%^/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
 
 			'%^/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
 

@@ -328,6 +328,45 @@ class RawPage extends Document {
 
 			return $span;
 		});
+
+
+
+		/* A button that looks and acts like a hyperlink (<a> tag),
+		 * but triggers a POST request and sends a CSRF token. Useful
+		 * for state-altering links. */
+		$this->registerCustomElement('o-state-altering-a', function(Element $e, RenderContext $ctx) {
+			$form = $e->ownerDocument->createElement('form');
+
+			if($e->hasAttribute('o-rel-href')) {
+				$form->setAttribute('o-rel-action', $e->getAttribute('o-rel-href'));
+				$e->removeAttribute('o-rel-href');
+			} else {
+				$form->setAttribute('action', $e->getAttribute('href'));
+				$e->removeAttribute('href');
+			}
+
+			$form->appendCreate('input', [
+				'type' => 'hidden',
+				'name' => 'o___csrf',
+				'value' => \Osmium\State\get_token(),
+			]);
+
+			$form->appendCreate('input', [
+				'type' => 'submit',
+				'value' => $e->textContent,
+			]);
+
+			/* Move attributes over */
+			while($e->attributes->length > 0) {
+				$attr = $e->attributes->item(0);
+				$form->setAttributeNode($attr);
+			}
+
+			$form->addClass('saa');
+			$form->setAttribute('method', 'post');
+
+			return $form;
+		});
 	}
 
 
