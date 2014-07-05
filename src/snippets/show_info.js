@@ -45,10 +45,11 @@ osmium_showinfo_internal = function(opts, onerror) {
 
 	opts.relative = osmium_relative;
 	opts['o___csrf'] = osmium_token;
+	opts['clftoken'] = osmium_clftoken;
 
 	$.ajax({
 		type: 'POST',
-		url: osmium_relative + '/internal/showinfo/' + osmium_clftoken,
+		url: osmium_relative + '/internal/showinfo',
 		data: opts,
 		dataType: 'json',
 		error: onerror,

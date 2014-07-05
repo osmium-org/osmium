@@ -185,7 +185,8 @@ osmium_send_clf = function(opts) {
 		type: osmium_clftype,
 		'o___csrf': osmium_token,
 		relative: osmium_relative,
-		clf: osmium_compress_json(osmium_clf)
+		clf: osmium_compress_json(osmium_clf),
+		clftoken: osmium_clftoken
 	}, (("params" in opts) ? opts.params : {}));
 
 	osmium_clfspinner_push();
@@ -194,7 +195,7 @@ osmium_send_clf = function(opts) {
 
 	$.ajax({
 		type: 'POST',
-		url: osmium_relative + '/internal/syncclf/' + osmium_clftoken,
+		url: osmium_relative + '/internal/syncclf',
 		data: postopts,
 		dataType: 'json',
 		complete: function() {

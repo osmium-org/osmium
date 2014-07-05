@@ -107,9 +107,9 @@ function get_rules($prefix) {
 	case "internal":
 		return [
 			'%^/internal/nc$%D' => '/src/ajax/get_notification_count.php',
-			'%^/internal/syncclf/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/process_clf.php',
+			'%^/internal/syncclf$%D' => '/src/json/process_clf.php',
 			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
-			'%^/internal/showinfo/(?<clftoken>[0-9]+|___demand___)$%D' => '/src/json/show_info.php',
+			'%^/internal/showinfo$%D' => '/src/json/show_info.php',
 			'%^/internal/redirect/(?<hash>[^/]+)$%D' => '/src/redirect.php',
 			'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
 			'%^/internal/ps/(?<name>[^/]+)$%D' => '/src/ajax/put_setting.php',

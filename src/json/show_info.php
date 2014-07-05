@@ -20,8 +20,8 @@ namespace Osmium\Json\ShowInfo;
 
 require __DIR__.'/../../inc/root.php';
 
-if(isset($_GET['clftoken'])) {
-	$fit = \Osmium\State\get_loadout($_GET['clftoken']);
+if(isset($_POST['clftoken'])) {
+	$fit = \Osmium\State\get_loadout($_POST['clftoken']);
 } else {
 	header('HTTP/1.1 400 Bad Request', true, 400);
 	\Osmium\Chrome\return_json(array());
