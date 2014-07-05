@@ -583,7 +583,7 @@ $loverlay->appendCreate('p.error_box#needjs', 'Not loading? Try enabling Javascr
 
 
 $p->snippets[] = 'new_loadout';
-$p->data['shortlist'] = \Osmium\AjaxCommon\get_module_shortlist();
+$p->data['shortlist'] = \Osmium\State\get_setting('shortlist_modules', []);
 
 $p->finalizeWithFit($ctx, $fit, $tok);
 $p->render($ctx);

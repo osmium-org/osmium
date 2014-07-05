@@ -21,6 +21,7 @@ namespace Osmium\Ajax\PutSetting;
 require __DIR__.'/../../inc/root.php';
 
 const MAX_DAMAGE_PROFILES = 50;
+const SHORTLIST_MAXIMUM_LENGTH = 200;
 
 function fail() {
 	/* XXX: refactor this, dummy */
@@ -85,6 +86,17 @@ case 'fattribs_hidden':
 	}
 
 	\Osmium\State\put_setting('fattribs_hidden', array_values($payload));
+	break;
+
+case 'shortlist_modules':
+	if(!is_array($payload)) break;
+	array_walk($payload, 'intval');
+
+	\Osmium\State\put_setting(
+		'shortlist_modules', array_unique(
+			array_slice($payload, 0, SHORTLIST_MAXIMUM_LENGTH)
+		)
+	);
 	break;
 
 default:

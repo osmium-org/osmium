@@ -500,14 +500,11 @@ osmium_add_shortlist_contextmenu = function(li) {
 };
 
 osmium_commit_shortlist = function() {
-	var opts = {
-		token: osmium_token
-	};
+	var sl = [];
 
 	$("div#nlsources > section#shortlist > ul.types > li.module").each(function() {
-		var t = $(this);
-		opts[t.index()] = t.data('typeid');
+		sl.push($(this).data('typeid'));
 	});
 
-	$.get("../src/json/shortlist_modules.php", opts);
+	osmium_put_setting('shortlist_modules', sl);
 };

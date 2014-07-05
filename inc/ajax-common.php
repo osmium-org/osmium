@@ -49,10 +49,6 @@ function get_green_fit(&$fit, &$cachename, &$loadoutid, &$revision) {
 	return true;
 }
 
-function get_module_shortlist() {
-    return \Osmium\State\get_setting('shortlist_modules', array());
-}
-
 function get_slot_usage(&$fit) {
 	$usage = array();
 
