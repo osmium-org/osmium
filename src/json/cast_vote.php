@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,13 +22,13 @@ require __DIR__.'/../../inc/root.php';
 
 $result = array();
 
-if(!isset($_GET['loadoutid']) || !isset($_GET['targettype']) || !isset($_GET['action'])) {
+if(!isset($_POST['loadoutid']) || !isset($_GET['targettype']) || !isset($_GET['action'])) {
 	$result['error'] = 'Invalid parameters';
 	$result['success'] = false;
 	\Osmium\Chrome\return_json($result);
 }
 
-$loadoutid = intval($_GET['loadoutid']);
+$loadoutid = intval($_POST['loadoutid']);
 $targettype = $_GET['targettype'];
 $action = $_GET['action'];
 
@@ -75,7 +75,7 @@ if($targettype === 'loadout') {
 	$id1 = $loadoutid;
 	$id2 = $id3 = null;
 } else if($targettype === 'comment') {
-	if(!isset($_GET['commentid'])) {
+	if(!isset($_POST['commentid'])) {
 		$result['error'] = 'commentid not specified';
 		$result['success'] = false;
 		\Osmium\Chrome\return_json($result);
@@ -84,7 +84,7 @@ if($targettype === 'loadout') {
     $targetaccountid = \Osmium\Db\fetch_row(
 		\Osmium\Db\query_params(
 			'SELECT accountid FROM osmium.loadoutcomments WHERE commentid = $1 AND loadoutid = $2',
-			array($_GET['commentid'], $loadoutid)
+			array($_POST['commentid'], $loadoutid)
 			));
 
     if($targetaccountid === false) {
@@ -95,7 +95,7 @@ if($targettype === 'loadout') {
 
     $targetaccountid = $targetaccountid[0];
 	$targettype = \Osmium\Reputation\VOTE_TARGET_TYPE_COMMENT;
-	$id1 = $_GET['commentid'];
+	$id1 = $_POST['commentid'];
 	$id2 = $loadoutid;
 	$id3 = null;
 } else {

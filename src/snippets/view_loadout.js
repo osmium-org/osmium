@@ -215,41 +215,46 @@ osmium_init_votes = function() {
 
 		var targettype = t.parent().data('targettype');
 		var opts = {
-			targettype: targettype,
-			action: action,
+			'o___csrf': osmium_token,
 			loadoutid: $("section#ship").data('loadoutid')
 		};
 
 		if(targettype == 'comment') {
-			opts['commentid'] = t.parent().parent().data('commentid');
+			opts.commentid = t.parent().parent().data('commentid');
 		}
 
-		$.getJSON(osmium_relative + '/src/json/cast_vote.php', opts, function(data) {
-			if(!data['success']) {
-				score.text(parseInt(score.text(), 10) - delta);
+		$.ajax({
+			type: 'POST',
+			url: osmium_relative + '/internal/vote/' + targettype + '/' + action,
+			data: opts,
+			dataType: 'json',
+			success: function(data) {
+				if(!data['success']) {
+					score.text(parseInt(score.text(), 10) - delta);
 
-				if(upvoted) {
-					t.parent().children('a.upvote').addClass('voted');
-				} else {
-					t.parent().children('a.upvote').removeClass('voted');
+					if(upvoted) {
+						t.parent().children('a.upvote').addClass('voted');
+					} else {
+						t.parent().children('a.upvote').removeClass('voted');
+					}
+
+					if(downvoted) {
+						t.parent().children('a.downvote').addClass('voted');
+					} else {
+						t.parent().children('a.downvote').removeClass('voted');
+					}
+
+					var error = $(document.createElement('div'));
+					error.addClass('verror');
+					error.text(data['error']);
+					error.append('<br /><small>(click to close)</small>');
+					error.hide();
+					error.click(function() {
+						$(this).fadeOut(250);
+					});
+					t.parent().append(error);
+					error.fadeIn(250);
 				}
-
-				if(downvoted) {
-					t.parent().children('a.downvote').addClass('voted');
-				} else {
-					t.parent().children('a.downvote').removeClass('voted');
-				}
-
-				var error = $(document.createElement('div'));
-				error.addClass('verror');
-				error.text(data['error']);
-				error.append('<br /><small>(click to close)</small>');
-				error.hide();
-				error.click(function() {
-					$(this).fadeOut(250);
-				});
-				t.parent().append(error);
-				error.fadeIn(250);
 			}
 		});
 	});

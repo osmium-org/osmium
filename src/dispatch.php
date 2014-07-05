@@ -117,6 +117,8 @@ function get_rules($prefix) {
 			'%^/internal/deletecomment/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'comment']],
 			'%^/internal/deletecommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/delete_comment.php', ['type' => 'commentreply']],
 
+			'%^/internal/vote/(?<targettype>[^/]+)/(?<action>[^/]+)$%D' => '/src/json/cast_vote.php',
+
 			'%^/internal/logout$%D' => '/src/logout.php',
 			'%^/internal/redirect/(?<hash>[^/]+)$%D' => '/src/redirect.php',
 			'%^/internal/compare/dps/ia$%D' => '/src/json/compare_dps_ia.php',
