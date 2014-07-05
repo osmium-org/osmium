@@ -32,8 +32,8 @@ $p = new \Osmium\DOM\Page();
 
 if(isset($_POST['account_name'])) {
 	$q = \Osmium\Db\query_params(
-		'SELECT COUNT(accountid) FROM osmium.accounts
-		WHERE accountname = $1',
+		'SELECT COUNT(accountid) FROM osmium.accountcredentials
+		WHERE username = $1',
 		array($_POST['account_name'])
 	);
 	list($an) = \Osmium\Db\fetch_row($q);
@@ -63,16 +63,16 @@ if(isset($_POST['account_name'])) {
 	} else {
 		$hash = \Osmium\State\hash_password($pw);
 
-		\Osmium\Db\query_params(
-			'INSERT INTO osmium.accounts (accountname, passwordhash, nickname,
+		\Osmium\Db\query('BEGIN');
+
+		list($accountid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'INSERT INTO osmium.accounts (nickname,
 			creationdate, lastlogindate, keyid, apiverified,
 			characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 			isfittingmanager, ismoderator, flagweight, reputation) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
-			)', 
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+			) RETURNING accountid', 
 			array(
-				$_POST['account_name'],
-				$hash,
 				$_POST['nickname'],
 				time(),
 				0,
@@ -88,14 +88,24 @@ if(isset($_POST['account_name'])) {
 				'f',
 				\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
 				\Osmium\Reputation\DEFAULT_REPUTATION,
-			));
+			)));
+
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
+			VALUES ($1, $2, $3)', [
+				$accountid,
+				$_POST['account_name'],
+				$hash,
+			]);
+
+		\Osmium\Db\query('COMMIT');
 
 		$settings = \Osmium\State\get_state('__settings', []);
 		foreach($settings as $k => $v) {
 			$settings[$k] = \Osmium\State\get_setting($k);
 		}
 		
-		\Osmium\State\do_post_login($_POST['account_name'], false);
+		\Osmium\State\do_post_login($accountid, false);
 		$_POST = array();
 
 		foreach($settings as $k => $v) {

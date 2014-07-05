@@ -39,12 +39,12 @@ function is_logged_in() {
  * Hook that gets called when the user successfully logged in (either
  * directly from the login form, or from a cookie token).
  *
- * @param $account_name the name of the account the user logged into.
+ * @param $accountid ID of the account to log in as
  *
  * @param $use_tookie if true, a cookie must be set to mimic a
  * "remember me" feature.
  */
-function do_post_login($account_name, $use_cookie = null) {
+function do_post_login($accountid, $use_cookie = null) {
 	if(isset($_SESSION)) {
 		/* Get rid of old $_SESSION */
 		unset($_SESSION);
@@ -58,14 +58,14 @@ function do_post_login($account_name, $use_cookie = null) {
 		FROM osmium.accounts a
 		LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = accountid AND eak.keyid = a.keyid
 		AND eak.active = true
-		WHERE accountname = $1',
-		[ $account_name ]
+		WHERE accountid = $1',
+		[ $accountid ]
 	));
 
 	register_eve_api_key_account_auth($a['accountid'], $a['keyid'], $a['verificationcode']);
 
 	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, accountname, nickname,
+		'SELECT accountid, nickname,
 		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, apiverified,
 		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 		ismoderator, isfittingmanager
@@ -284,22 +284,22 @@ function try_login() {
 	$pw = $_POST['password'];
 	$remember = isset($_POST['remember']) && $_POST['remember'] === 'on';
 
-	$hash = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT passwordhash FROM osmium.accounts WHERE accountname = $1',
+	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT accountid, passwordhash FROM osmium.accountcredentials WHERE username = $1',
 		array($account_name)
 	));
 
-	if($hash !== false && check_password($pw, $hash[0])) {
-		if(password_needs_rehash($hash[0])) {
+	if($a !== false && check_password($pw, $a['passwordhash'])) {
+		if(password_needs_rehash($a['passwordhash'])) {
 			$newhash = hash_password($pw);
 			\Osmium\Db\query_params(
-				'UPDATE osmium.accounts SET passwordhash = $1
-				WHERE accountname = $2',
+				'UPDATE osmium.accountcredentials SET passwordhash = $1
+				WHERE username = $2',
 				array($newhash, $account_name)
 			);
 		}
 
-		do_post_login($account_name, $remember);
+		do_post_login($a['accountid'], $remember);
 		return true;
 	} else {
 		return 'Invalid credentials. Please check your account name and passphrase.';
@@ -330,14 +330,7 @@ function try_recover() {
 	));
 
 	if(check_client_attributes($client_attributes)) {
-		$k = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'SELECT accountname FROM osmium.accounts WHERE accountid = $1',
-			array($account_id)
-		));
-		if($k !== false) {
-			list($name) = $k;
-			do_post_login($name, true);
-		}
+		do_post_login($account_id, true);
 	}
 
 	\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', array($token));

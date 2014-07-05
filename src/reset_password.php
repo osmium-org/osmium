@@ -56,7 +56,7 @@ if(isset($_POST['key_id'])) {
 		$p->formerrors['key_id'][] = 'No character is associated with this API key.';
 
 	} else if(($a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, accountname
+		'SELECT accountid
 		FROM osmium.accounts WHERE characterid = $1',
 		[ $characterid ]
 	))) === false) {
@@ -71,14 +71,21 @@ if(isset($_POST['key_id'])) {
 	} else {
 		$hash = \Osmium\State\hash_password($pw);
 
+		$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT accountid, username FROM osmium.accountcredentials
+			WHERE accountid = $1 AND username IS NOT NULL',
+			[ $a['accountid'] ]
+		));
+
 		\Osmium\Db\query_params(
-			'UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
+			'UPDATE osmium.accountcredentials SET passwordhash = $1
+			WHERE accountid = $2 AND passwordhash IS NOT NULL',
 			array($hash, $a['accountid'])
 		);
 
 		$p->content->appendCreate('p')->appendCreate('strong', [
 			'Passphrase reset was successful. You can now login on the account ',
-			[ 'em', $a['accountname'] ],
+			[ 'code', $a['username'] ],
 			' using your new passphrase.',
 		]);
 

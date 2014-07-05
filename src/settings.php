@@ -32,7 +32,7 @@ $a = \Osmium\State\get_state('a');
 
 if(isset($_POST['unverify'])) {
 	\Osmium\State\unverify_account($a['accountid']);
-	\Osmium\State\do_post_login($a['accountname']);
+	\Osmium\State\do_post_login($a['accountid']);
 	$a = \Osmium\State\get_state('a');
 	unset($_POST['key_id']);
 	unset($_POST['v_code']);
@@ -53,7 +53,7 @@ if(isset($_POST['unverify'])) {
 	if($verified === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 	} else {
-		\Osmium\State\do_post_login($a['accountname']);
+		\Osmium\State\do_post_login($a['accountid']);
 		$a = \Osmium\State\get_state('a');
 	}
 
@@ -94,8 +94,8 @@ if(isset($_POST['curpw'])) {
 		$accountid = \Osmium\State\get_state('a')['accountid'];
 		$apw = \Osmium\Db\fetch_row(
 			\Osmium\Db\query_params(
-				'SELECT passwordhash FROM osmium.accounts
-				WHERE accountid = $1',
+				'SELECT passwordhash FROM osmium.accountcredentials
+				WHERE accountid = $1 AND passwordhash IS NOT NULL',
 				array($accountid)
 			)
 		)[0];
@@ -109,8 +109,8 @@ if(isset($_POST['curpw'])) {
 		} else {
 			$newhash = \Osmium\State\hash_password($new);
 			\Osmium\Db\query_params(
-				'UPDATE osmium.accounts SET passwordhash = $1
-				WHERE accountid = $2',
+				'UPDATE osmium.accountcredentials SET passwordhash = $1
+				WHERE accountid = $2 AND passwordhash IS NOT NULL',
 				array($newhash, $accountid)
 			);
 
