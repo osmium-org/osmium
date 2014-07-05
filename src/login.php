@@ -31,6 +31,7 @@ if(\Osmium\State\is_logged_in()) {
 
 $p = new \Osmium\DOM\Page();
 $p->title = 'Sign in';
+$p->index = !isset($_POST['request_uri']) && !isset($_GET['r']);
 
 if(isset($_POST['account_name']) && isset($_POST['password'])) {
 	if(($errormsg = \Osmium\State\try_login()) === true) {
@@ -46,7 +47,7 @@ $p->content->appendCreate('h1', $p->title);
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
 $tbody = $p->content->appendCreate('o-form', [
-	'o-rel-action' => $_SERVER['REQUEST_URI'],
+	'o-rel-action' => $_SERVER['REQUEST_URI'].$p->formatQueryString([ 'r' => $redirect ]),
 	'method' => 'post',
 ])->appendCreate('table')->appendCreate('tbody');
 
