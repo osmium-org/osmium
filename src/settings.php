@@ -21,6 +21,7 @@ namespace Osmium\Page\Settings;
 require __DIR__.'/../inc/root.php';
 
 const MASK = '********';
+const NICKNAME_CHANGE_WINDOW = 1209600;
 
 $p = new \Osmium\DOM\Page();
 $ctx = new \Osmium\DOM\RenderContext();
@@ -73,9 +74,113 @@ if(isset($_POST['unverify'])) {
 $div = $p->content->appendCreate('div#account_settings');
 
 $ul = $div->appendCreate('ul.tindex');
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changenick', 'Change nickname' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changepw', 'Change passphrase' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_characters', 'Characters and skills' ]);
+
+
+
+$section = $div->appendCreate('section#s_changenick');
+$section->appendCreate('h1', 'Change nickname');
+
+$lastchange = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT lastnicknamechange FROM osmium.accounts
+	WHERE accountid = $1',
+	[ $a['accountid'] ]
+))[0];
+
+$now = time();
+$cutoff = $now - NICKNAME_CHANGE_WINDOW;
+
+if(($lastchange === null || $lastchange <= $cutoff) && isset($_POST['newnick'])) {
+	/* XXX: refactor this with sudo mode */
+	$apw = \Osmium\Db\fetch_row(
+		\Osmium\Db\query_params(
+			'SELECT passwordhash FROM osmium.accountcredentials
+				WHERE accountid = $1 AND passwordhash IS NOT NULL',
+			array($a['accountid'])
+		)
+	)[0];
+
+	if(!\Osmium\State\check_password($_POST['ncurpw'], $apw)) {
+		$p->formerrors['ncurpw'][] = [
+			'Incorrect passphrase. If you forgot your passphrase, sign out and use the ',
+			[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset passphrase' ] ],
+			' page.',
+		];
+	} else {
+		$exists = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+			'SELECT COUNT(accountid) FROM osmium.accounts
+			WHERE nickname = $1',
+			[ $_POST['newnick'] ]
+		))[0];
+
+		$newnick = \Osmium\Chrome\trim($_POST['newnick']);
+
+		if(mb_strlen($newnick) < 3) {
+			/* XXX: duplicate code from register.php, refactor this later */
+			$p->formerrors['newnick'][] = 'Must be at least 3 characters.';
+		} else if($newnick === $a['nickname']) {
+			$p->formerrors['newnick'][] = 'This isn\'t going to work, dude.';
+		} else if($exists) {
+			$p->formerrors['newnick'][] = 'This nickname is already used by another account.';
+		} else {
+			$lastchange = time();
+			$a['nickname'] = $newnick;
+			\Osmium\State\put_state('a', $a);
+
+			\Osmium\Db\query_params(
+				'UPDATE osmium.accounts SET nickname = $2, lastnicknamechange = $3 WHERE accountid = $1',
+				[ $a['accountid'], $a['nickname'], $lastchange ]
+			);
+
+			$section->appendCreate('p.notice_box', 'Nickname was successfully changed.');
+		}
+	}
+}
+
+$canchange = ($lastchange === null || $lastchange <= $cutoff);
+
+if(!$canchange) {
+	$section->appendCreate(
+		'p',
+		'You last changed your nickname '.$p->formatDuration($now - $lastchange, false, 1)
+		.' ago. You will be able to change your nickname again in '
+		.$p->formatDuration($lastchange + NICKNAME_CHANGE_WINDOW - $now, false, 1).'.'
+	);
+}
+
+if($canchange) {
+	$section->appendCreate('p')->appendCreate(
+		'strong',
+		'To prevent abuse, you can only change your nickname every '
+		.$p->formatDuration(NICKNAME_CHANGE_WINDOW).'.'
+	);
+}
+
+$tbody = $section
+	->appendCreate('o-form', [ 'action' => '#s_changenick', 'method' => 'post' ])
+	                     ->appendCreate('table')
+	->appendCreate('tbody')
+	;
+
+if($canchange) {
+	$tbody->append($p->makeFormInputRow('password', 'ncurpw', 'Account passphrase'));
+}
+$tbody->append($p->makeFormRawRow(
+	[[ 'label', 'Current nickname' ]],
+	[[ 'input', [
+		'readonly' => 'readonly',
+		'type' => 'text',
+		'value' => $a['nickname'],
+	] ]]
+));
+
+if($canchange) {
+	$tbody->append($p->makeFormInputRow('text', 'newnick', 'New nickname'));
+	$tbody->append($p->makeFormSubmitRow('Change nickname'));
+}
 
 
 
@@ -91,7 +196,7 @@ if(isset($_POST['curpw'])) {
 	} else if(($s = \Osmium\State\is_password_sane($new)) !== true) {
 		$p->formerrors['newpw'][] = $s;
 	} else {
-		$accountid = \Osmium\State\get_state('a')['accountid'];
+		$accountid = $a['accountid'];
 		$apw = \Osmium\Db\fetch_row(
 			\Osmium\Db\query_params(
 				'SELECT passwordhash FROM osmium.accountcredentials

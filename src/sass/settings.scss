@@ -2,26 +2,7 @@ div#account_settings {
 	padding: 0 1em;
 
 	&> ul.tindex {
-		list-style-type: none;
-		text-align: center;
-
-		&> li {
-			display: inline-block;
-			padding: 0.5em 1em;
-
-			&.active {
-				font-weight: bold;
-
-				&> a {
-					text-decoration: none;
-				}
-			}
-		}
-
-		margin: 0;
-		padding: 0.5em 0;
-
-		border-bottom: 1px solid $subsection-border-color;
+		@include tabs;
 	}
 
 	&> section#s_characters {

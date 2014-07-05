@@ -48,6 +48,8 @@ if(isset($_POST['account_name'])) {
 	$pw = $_POST['password_0'];
 	$pw1 = $_POST['password_1'];
 
+	$_POST['nickname'] = \Osmium\Chrome\trim($_POST['nickname']);
+
 	if($an !== '0') {
 		$p->formerrors['account_name'][] = 'Sorry, this account name is already taken.';
 	} else if($nn !== '0') {
