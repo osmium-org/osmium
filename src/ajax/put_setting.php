@@ -71,6 +71,7 @@ case 'fattribs_hidden':
 	if(!is_array($payload)) break;
 	$idlist = array_flip([
 		'engineering',
+		'offense',
 		'defense',
 		'navigation',
 		'targeting',

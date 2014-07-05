@@ -355,12 +355,12 @@ function get_setting($key, $default = null) {
 
 	$accountid = get_state('a')['accountid'];
 
-	$k = \Osmium\Db\query_params('SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
-	while($r = \Osmium\Db\fetch_row($k)) {
-		$ret = $r[0];
-	}
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT value FROM osmium.accountsettings WHERE accountid = $1 AND key = $2',
+		[ $accountid, $key ]
+	));
 
-	return isset($ret) ? unserialize($ret) : $default;
+	return $r !== false ? unserialize($r[0]) : $default;
 }
 
 /**
@@ -369,13 +369,24 @@ function get_setting($key, $default = null) {
  */
 function put_setting($key, $value) {
 	if(!is_logged_in()) {
+		$tempsettings = get_state('__settings', []);
+		$tempsettings[$key] = true;
+		put_state('__settings', $tempsettings);
 		return put_state('__setting_'.$key, $value);
 	}
 
 	$accountid = get_state('a')['accountid'];
 
-	\Osmium\Db\query_params('DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2', array($accountid, $key));
-	\Osmium\Db\query_params('INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)', array($accountid, $key, serialize($value)));
+	\Osmium\Db\query('BEGIN');
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.accountsettings WHERE accountid = $1 AND key = $2',
+		[ $accountid, $key ]
+	);
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.accountsettings (accountid, key, value) VALUES ($1, $2, $3)',
+		[ $accountid, $key, serialize($value) ]
+	);
+	\Osmium\Db\query('COMMIT');
 
 	return $value;
 }

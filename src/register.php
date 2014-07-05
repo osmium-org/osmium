@@ -89,9 +89,19 @@ if(isset($_POST['account_name'])) {
 				\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
 				\Osmium\Reputation\DEFAULT_REPUTATION,
 			));
+
+		$settings = \Osmium\State\get_state('__settings', []);
+		foreach($settings as $k => $v) {
+			$settings[$k] = \Osmium\State\get_setting($k);
+		}
 		
 		\Osmium\State\do_post_login($_POST['account_name'], false);
 		$_POST = array();
+
+		foreach($settings as $k => $v) {
+			\Osmium\State\put_setting($k, $v);
+		}
+
 		header('Location: ./', true, 303);
 		die();
 	}
