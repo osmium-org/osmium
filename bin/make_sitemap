@@ -184,7 +184,7 @@ while($batch = \Osmium\Db\fetch_row($batchq)) {
 
 	/* Yes, boo */
 	$innerq = \Osmium\Db\query_params(
-		'SELECT a.accountid, a.lastlogindate
+		'SELECT a.accountid, greatest(a.creationdate, a.lastlogindate)
 		FROM osmium.accounts a
 		WHERE a.accountid >= $1 AND a.accountid < $2
 		ORDER BY a.accountid ASC',

@@ -27,7 +27,7 @@ if(!isset($_GET['accountid'])) {
 
 
 $row = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-	'SELECT accountid, creationdate, lastlogindate, apiverified,
+	'SELECT accountid, creationdate, greatest(creationdate, lastlogindate) AS lastlogindate, apiverified,
 	nickname, characterid, charactername, corporationid, corporationname,
 	allianceid, alliancename, ismoderator, flagweight, reputation
 	FROM osmium.accounts WHERE accountid = $1',
