@@ -50,7 +50,7 @@ if(isset($_GET['import']) && $_GET['import'] === 'dna') {
 
 
 if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
-   && \Osmium\State\is_logged_in() && $_GET['tok'] == \Osmium\State\get_token()) {
+   && \Osmium\State\is_logged_in() && isset($_POST) && $_POST !== []) {
 	$loadoutid = (int)$_GET['loadoutid'];
 	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
 
@@ -71,14 +71,14 @@ if(isset($_GET['edit']) && $_GET['edit'] && isset($_GET['loadoutid'])
     \Osmium\Fit\use_default_skillset_for_account($fit);
 	\Osmium\State\put_loadout($tok, $fit);
 
-	header('Location: ../new/'.$tok);
+	header('Location: ../../new/'.$tok);
 	die();
 }
 
 
 
 if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])
-   && $_GET['tok'] == \Osmium\State\get_token()) {
+   && isset($_POST) && $_POST !== []) {
 	$loadoutid = (int)$_GET['loadoutid'];
 	$revision = isset($_GET['revision']) ? (int)$_GET['revision'] : null;
 
@@ -174,7 +174,7 @@ if(isset($_GET['fork']) && $_GET['fork'] && isset($_GET['loadoutid'])
     \Osmium\Fit\use_default_skillset_for_account($fork);
 	\Osmium\State\put_loadout($tok, $fork);
 
-	header('Location: ../new/'.$tok);
+	header('Location: ../../new/'.$tok);
 	die();
 }
 

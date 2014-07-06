@@ -111,6 +111,9 @@ function get_rules($prefix) {
 			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 			'%^/internal/showinfo$%D' => '/src/json/show_info.php',
 
+			'%^/internal/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
+			'%^/internal/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
+
 			'%^/internal/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
 
 			'%^/internal/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',
@@ -172,9 +175,6 @@ function get_rules($prefix) {
 		return [
 			'%^/browse/(?<type>best|new)$%D' => '/src/browse.php',
 			'%^/profile/(?<accountid>[1-9][0-9]*)$%D' => '/src/view_profile.php',
-
-			'%^/edit/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['edit' => 1]],
-			'%^/fork/(?<loadoutid>[1-9][0-9]*)$%D' => ['/src/new_loadout.php', ['fork' => 1]],
 
 			'%^/compare/dps($|/)%D' => '/src/compare_dps.php',
 

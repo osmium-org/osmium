@@ -340,18 +340,24 @@ a {
 form.saa {
 	display: inline;
 
-	&> input[type="submit"] {
+	&> button {
 		display: inline;
 		font-size: 1em;
-		line-height: 1.2em;
+		overflow: visible;
 		background: none;
-		padding: 0;
-		margin: 0;
 		border: 0;
+		margin: 0;
+		padding: 0;
+
+		// Fuck you, Mozilla. Took a long time to find out.
+		&::-moz-focus-inner {
+			margin: 0;
+			padding: 0;
+		}
 	}
 }
 
-a, form.saa > input[type="submit"] {
+a, form.saa > button {
 	cursor: pointer;
 	text-decoration: underline;
 	font-family: $sans-font;

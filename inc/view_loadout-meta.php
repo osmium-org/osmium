@@ -456,7 +456,6 @@ if($loadoutid !== false && \Osmium\Flag\is_fit_flaggable($fit)) {
 
 if($can_edit) {
 	$opts = [
-		'tok' => \Osmium\State\get_token(),
 		'revision' => $fit['metadata']['revision'],
 	];
 
@@ -466,16 +465,14 @@ if($can_edit) {
 
 	$actions[] = [
 		null,
-		[ 'strong', [[ 'a', [
-			'o-rel-href' => '/edit/'.$loadoutid.$p->formatQueryString($opts),
-			'rel' => 'nofollow',
-			'Edit this loadout',
-		] ]] ],
+		[ 'o-state-altering-a', [
+			'o-rel-href' => '/internal/edit/'.$loadoutid.$p->formatQueryString($opts),
+			[ 'strong', 'Edit this loadout' ],
+		]],
 		': change the loadout (older versions are saved and can be viewed and rolled back through the history)',
 	];
 
 	unset($opts['revision']);
-	unset($opts['tok']);
 
 	$actions[] = [
 		null,

@@ -166,7 +166,6 @@ $canonicaluriwithrevision = '/'.\Osmium\Fit\get_fit_uri(
 );
 $historyuri = '/loadouthistory/'.$loadoutid;
 $forkparams = [];
-$forkparams['tok'] = \Osmium\State\get_token();
 $forkparams['revision'] = $fit['metadata']['revision'];
 $exportparams = [];
 
@@ -235,7 +234,7 @@ if(!isset($revision)) {
 	$revision = $fit['metadata']['revision'];
 }
 
-$forkuri = '/fork/'.$loadoutid.\Osmium\DOM\Page::formatQueryString($forkparams);
+$forkuri = '/internal/fork/'.$loadoutid.\Osmium\DOM\Page::formatQueryString($forkparams);
 
 if(!isset($exporturi)) {
 	$exporturi = function($format, $ext, $incpresets = false, $params = array()) use(&$fit, &$exportparams) {

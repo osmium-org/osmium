@@ -351,15 +351,19 @@ class RawPage extends Document {
 				'value' => \Osmium\State\get_token(),
 			]);
 
-			$b = $form->appendCreate('input', [
+			$b = $form->appendCreate('button', [
 				'type' => 'submit',
-				'value' => $e->textContent,
 			]);
 
 			/* Move attributes over */
 			while($e->attributes->length > 0) {
 				$attr = $e->attributes->item(0);
 				$b->setAttributeNode($attr);
+			}
+
+			/* Move children over */
+			while($e->childNodes->length > 0) {
+				$b->appendChild($e->childNodes->item(0));
 			}
 
 			$form->setAttribute('class', 'saa');

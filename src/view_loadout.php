@@ -407,8 +407,7 @@ if($maxrev !== false && $historyuri !== false) {
 	]]]));
 }
 
-$ul->prepend($p->element('li.external')->append([[ 'a', [
-	'rel' => 'nofollow',
+$ul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'o-rel-href' => $forkuri,
 	'title' => 'Make a copy of this loadout and start editing it',
 	'Fork',
@@ -416,7 +415,6 @@ $ul->prepend($p->element('li.external')->append([[ 'a', [
 
 if($can_edit) {
 	$editparams = [
-		'tok' => \Osmium\State\get_token(),
 		'revision' => $fit['metadata']['revision'],
 	];
 
@@ -424,9 +422,8 @@ if($can_edit) {
 		$editparams['privatetoken'] = $fit['metadata']['privatetoken'];
 	}
 
-	$ul->prepend($p->element('li.external')->append([[ 'a', [
-		'rel' => 'nofollow',
-		'o-rel-href' => '/edit/'.$loadoutid.$p->formatQueryString($editparams),
+	$ul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
+		'o-rel-href' => '/internal/edit/'.$loadoutid.$p->formatQueryString($editparams),
 		'Edit',
 	]]]));
 }

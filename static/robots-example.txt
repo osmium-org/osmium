@@ -8,13 +8,11 @@ Sitemap: http://my-domain.tld/sitemap.xml.gz
 
 User-agent: *
 Disallow: /api/
-Disallow: /edit/
 Disallow: /editcomment/
 Disallow: /editcommentreply/
 Disallow: /flag/
 Disallow: /flagcomment/
 Disallow: /flagcommentreply/
-Disallow: /fork/
 Disallow: /internal/
 Disallow: /loadout/dna/
 Disallow: /loadout/private/

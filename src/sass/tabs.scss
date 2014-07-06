@@ -11,7 +11,7 @@
 		display: inline-block;
 		position: relative;
 
-		&.active > a {
+		&.active > a, &.active > form.saa > button {
 			padding-top: 0.4em;
 			color: $tab-active-text-color;
 			text-decoration: none;
@@ -47,7 +47,7 @@
 			bottom: 0;
 		}
 
-		&> a {
+		&> a, &> form.saa > button {
 			vertical-align: bottom;
 			display: inline-block;
 			padding: 0.25em 0.5em;
@@ -65,9 +65,9 @@
 			float: right;
 			margin-left: 0.3em;
 
-			bottom: -1px;
+			bottom: -2px;
 
-			&> a { color: $aside-text-color; border-bottom: 0 !important; }
+			&> a, &> form.saa > button { color: $aside-text-color; border-bottom: 0 !important; }
 			&:before, &:after { display: none; }
 		}
 	}
