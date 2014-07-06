@@ -23,11 +23,11 @@ require __DIR__.'/../inc/root.php';
 
 date_default_timezone_set('UTC');
 
-$host = \Osmium\get_ini_setting('host');
-$port = \Osmium\get_ini_setting('port');
-$user = \Osmium\get_ini_setting('user');
-$password = \Osmium\get_ini_setting('password');
-$dbname = \Osmium\get_ini_setting('dbname');
+$host = \Osmium\get_ini_setting('pg_host');
+$port = \Osmium\get_ini_setting('pg_port');
+$user = \Osmium\get_ini_setting('pg_user');
+$password = \Osmium\get_ini_setting('pg_password');
+$dbname = \Osmium\get_ini_setting('pg_dbname');
 
 putenv('PGPASSWORD='.$password);
 

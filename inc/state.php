@@ -107,7 +107,7 @@ function do_post_login($accountid, $use_cookie = null) {
 		setcookie(
 			'T', $token, $expiration_date,
 			\Osmium\get_ini_setting('relative_path'),
-			\Osmium\HOST,
+			\Osmium\COOKIE_HOST,
 			\Osmium\HTTPS,
 			true
 		);
@@ -142,7 +142,7 @@ function logoff($global = false) {
 	setcookie(
 		'T', false, 0,
 		$rel = \Osmium\get_ini_setting('relative_path'),
-		\Osmium\HOST,
+		\Osmium\COOKIE_HOST,
 		\Osmium\HTTPS,
 		true
 	);
@@ -150,7 +150,7 @@ function logoff($global = false) {
 	setcookie(
 		'O', false, 0,
 		$rel,
-		\Osmium\HOST,
+		\Osmium\COOKIE_HOST,
 		\Osmium\HTTPS,
 		true
 	);
