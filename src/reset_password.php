@@ -72,8 +72,8 @@ if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', '
 
 		\Osmium\Db\query_params(
 			'UPDATE osmium.accountcredentials SET passwordhash = $1
-			WHERE accountid = $2 AND passwordhash IS NOT NULL',
-			array($hash, $a['accountid'])
+			WHERE accountid = $2 AND username = $3',
+			[ $hash, $a['accountid'], $a['username'] ]
 		);
 
 		$p->content->appendCreate('p')->appendCreate('strong', [
