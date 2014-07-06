@@ -18,5 +18,5 @@
 /*<<< require snippet tabs >>>*/
 
 $(function() {
-	osmium_tabify($("div#account_settings > ul.tindex"), 1);
+	osmium_tabify($("div#account_settings > ul.tindex"), 0);
 });

@@ -19,6 +19,7 @@
 namespace Osmium\Page\Settings;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/login-common.php';
 
 const MASK = '********';
 const NICKNAME_CHANGE_WINDOW = 1209600;
@@ -74,10 +75,10 @@ if(isset($_POST['unverify'])) {
 $div = $p->content->appendCreate('div#account_settings');
 
 $ul = $div->appendCreate('ul.tindex');
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changenick', 'Change nickname' ]);
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changepw', 'Change passphrase' ]);
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_characters', 'Characters and skills' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_accountauth', 'Authentication methods' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changenick', 'Change nickname' ]);
 
 
 
@@ -93,51 +94,20 @@ $lastchange = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
 $now = time();
 $cutoff = $now - NICKNAME_CHANGE_WINDOW;
 
-if(($lastchange === null || $lastchange <= $cutoff) && isset($_POST['newnick'])) {
-	/* XXX: refactor this with sudo mode */
-	$apw = \Osmium\Db\fetch_row(
-		\Osmium\Db\query_params(
-			'SELECT passwordhash FROM osmium.accountcredentials
-				WHERE accountid = $1 AND passwordhash IS NOT NULL',
-			array($a['accountid'])
-		)
-	)[0];
+if(($lastchange === null || $lastchange <= $cutoff) && isset($_POST['newnick'])
+   && \Osmium\Login\check_nickname($p, 'newnick')) {
+	/* XXX: require sudo mode */
 
-	if(!\Osmium\State\check_password($_POST['ncurpw'], $apw)) {
-		$p->formerrors['ncurpw'][] = [
-			'Incorrect passphrase. If you forgot your passphrase, sign out and use the ',
-			[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset passphrase' ] ],
-			' page.',
-		];
-	} else {
-		$exists = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'SELECT COUNT(accountid) FROM osmium.accounts
-			WHERE nickname = $1',
-			[ $_POST['newnick'] ]
-		))[0];
+	$lastchange = time();
+	$a['nickname'] = $_POST['newnick'];
+	\Osmium\State\put_state('a', $a);
 
-		$newnick = \Osmium\Chrome\trim($_POST['newnick']);
+	\Osmium\Db\query_params(
+		'UPDATE osmium.accounts SET nickname = $2, lastnicknamechange = $3 WHERE accountid = $1',
+		[ $a['accountid'], $a['nickname'], $lastchange ]
+	);
 
-		if(mb_strlen($newnick) < 3) {
-			/* XXX: duplicate code from register.php, refactor this later */
-			$p->formerrors['newnick'][] = 'Must be at least 3 characters.';
-		} else if($newnick === $a['nickname']) {
-			$p->formerrors['newnick'][] = 'This isn\'t going to work, dude.';
-		} else if($exists) {
-			$p->formerrors['newnick'][] = 'This nickname is already used by another account.';
-		} else {
-			$lastchange = time();
-			$a['nickname'] = $newnick;
-			\Osmium\State\put_state('a', $a);
-
-			\Osmium\Db\query_params(
-				'UPDATE osmium.accounts SET nickname = $2, lastnicknamechange = $3 WHERE accountid = $1',
-				[ $a['accountid'], $a['nickname'], $lastchange ]
-			);
-
-			$section->appendCreate('p.notice_box', 'Nickname was successfully changed.');
-		}
-	}
+	$section->appendCreate('p.notice_box', 'Nickname was successfully changed.');
 }
 
 $canchange = ($lastchange === null || $lastchange <= $cutoff);
@@ -165,9 +135,6 @@ $tbody = $section
 	->appendCreate('tbody')
 	;
 
-if($canchange) {
-	$tbody->append($p->makeFormInputRow('password', 'ncurpw', 'Account passphrase'));
-}
 $tbody->append($p->makeFormRawRow(
 	[[ 'label', 'Current nickname' ]],
 	[[ 'input', [
@@ -184,60 +151,147 @@ if($canchange) {
 
 
 
-$section = $div->appendCreate('section#s_changepw');
-$section->appendCreate('h1', 'Change passphrase');
+$section = $div->appendCreate('section#s_accountauth');
+$section->appendCreate('h1', 'Authentication methods');
 
-if(isset($_POST['curpw'])) {
-	$cur = $_POST['curpw'];
-	$new = $_POST['newpw'];
+if(isset($_POST['delete'])) {
+	$id = key($_POST['delete']);
 
-	if($new !== $_POST['newpw2']) {
-		$p->formerrors['newpw2'][] = 'The two passphrases are not equal.';
-	} else if(($s = \Osmium\State\is_password_sane($new)) !== true) {
-		$p->formerrors['newpw'][] = $s;
+	\Osmium\Db\query('BEGIN');
+
+	$count = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(accountcredentialsid)
+		FROM osmium.accountcredentials
+		WHERE accountid = $1',
+		[ $a['accountid'] ]
+	))[0];
+
+	if($count < 2) {
+		$section->appendCreate(
+			'p.error_box',
+			'You cannot delete your only way of signing in to your account. That\'s silly!'
+		);
+
+		\Osmium\Db\query('ROLLBACK');
 	} else {
-		$accountid = $a['accountid'];
-		$apw = \Osmium\Db\fetch_row(
-			\Osmium\Db\query_params(
-				'SELECT passwordhash FROM osmium.accountcredentials
-				WHERE accountid = $1 AND passwordhash IS NOT NULL',
-				array($accountid)
-			)
-		)[0];
-
-		if(!\Osmium\State\check_password($cur, $apw)) {
-			$p->formerrors['curpw'][] = [
-				'Incorrect passphrase. If you forgot your passphrase, sign out and use the ',
-				[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset passphrase' ] ],
-				' page.',
-			];
-		} else {
-			$newhash = \Osmium\State\hash_password($new);
-			\Osmium\Db\query_params(
-				'UPDATE osmium.accountcredentials SET passwordhash = $1
-				WHERE accountid = $2 AND passwordhash IS NOT NULL',
-				array($newhash, $accountid)
-			);
-
-			$section->appendCreate('p.notice_box', 'Passphrase was successfully changed.');
-		}
+		/* XXX: require sudo mode */
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.accountcredentials
+			WHERE accountcredentialsid = $1 AND accountid = $2',
+			[ $id, $a['accountid'] ]
+		);
+		\Osmium\Db\query('COMMIT');
 	}
 }
 
-$tbody = $section
-	->appendCreate('o-form', [ 'action' => '#s_changepw', 'method' => 'post' ])
+if(isset($_POST['changepw'])) {
+	$id = key($_POST['changepw']);
+
+	if(\Osmium\Login\check_passphrase(
+		$p, 'newpw['.$id.']', 'newpw2['.$id.']',
+		$_POST['newpw'][$id], $_POST['newpw2'][$id]
+	)) {
+		/* XXX: require sudo mode for this */
+
+		$newhash = \Osmium\State\hash_password($_POST['newpw'][$id]);
+		\Osmium\Db\query_params(
+			'UPDATE osmium.accountcredentials SET passwordhash = $1
+			WHERE accountcredentialsid = $3 AND accountid = $2 AND passwordhash IS NOT NULL',
+			[ $newhash, $a['accountid'], $id ]
+		);
+
+		$section->appendCreate('p.notice_box', 'Passphrase was successfully changed.');	
+	}
+}
+
+if(isset($_POST['username'])
+   && \Osmium\Login\check_username_and_passphrase($p, 'username', 'passphrase', 'passphrase2')) {
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
+		VALUES ($1, $2, $3)', [
+			$a['accountid'],
+			$_POST['username'],
+			\Osmium\State\hash_password($_POST['passphrase']),
+	]);
+}
+
+$table = $section->appendCreate('table.d');
+
+$thead = $table->appendCreate('thead');
+$tbody = $table->appendCreate('tbody');
+
+$trh = $thead->appendCreate('tr');
+$trh->appendCreate('th', '#');
+$trh->appendCreate('th', 'Type');
+$trh->appendCreate('th', 'UID');
+$trh->appendCreate('th', [ 'colspan' => '2', 'Actions' ]);
+
+$crq = \Osmium\Db\query_params(
+	'SELECT accountcredentialsid, username, passwordhash
+	FROM osmium.accountcredentials
+	WHERE accountid = $1
+	ORDER BY accountcredentialsid ASC',
+	[ $a['accountid'] ]
+);
+
+while($row = \Osmium\Db\fetch_assoc($crq)) {
+	$tr = $tbody->appendCreate('tr');
+	
+	$id = $row['accountcredentialsid'];
+	$tr->appendCreate('th', '#'.$id);
+	$type = $tr->appendCreate('th');
+	$uid = $tr->appendCreate('td')->appendCreate('code');
+
+	$actions = $tr
+		->appendCreate('td.actions')
+		->appendCreate('o-form', [ 'action' => '#s_accountauth', 'method' => 'post' ]);
+
+	$tr
+		->appendCreate('td')
+		->appendCreate('o-form', [ 'action' => '#s_accountauth', 'method' => 'post' ])
+		->appendCreate('input.confirm.dangerous', [
+			'type' => 'submit',
+			'name' => 'delete['.$id.']',
+			'value' => 'Delete this method',
+		]);
+
+	if($row['username'] !== null) {
+		$type->append('Username and passphrase');
+		$uid->append($row['username']);
+
+		$actions->appendCreate('o-input', [
+			'type' => 'password',
+			'placeholder' => 'New passphrase…',
+			'name' => 'newpw['.$id.']',
+		]);
+		$actions->appendCreate('o-input', [
+			'type' => 'password',
+			'placeholder' => 'Confirm passphrase…',
+			'name' => 'newpw2['.$id.']',
+		]);
+		$actions->appendCreate('input', [
+			'type' => 'submit',
+			'name' => 'changepw['.$id.']',
+			'value' => 'Change passphrase'
+		]);
+	}
+}
+
+$section->appendCreate('h1', 'Add a new authentication method');
+$ul = $section->appendCreate('ul');
+
+$li = $ul->appendCreate('li');
+$li->appendCreate('h3', 'Username and passphrase');
+$tbody = $li
+	->appendCreate('o-form', [ 'action' => '#s_accountauth', 'method' => 'post' ])
 	->appendCreate('table')
 	->appendCreate('tbody')
 	;
 
-$tbody->append($p->makeFormInputRow('password', 'curpw', 'Current passphrase'));
-$tbody->append($p->makeFormInputRow('password', 'newpw', 'New passphrase'));
-$tbody->append($p->makeFormInputRow('password', 'newpw2', [
-	'New passphrase',
-	[ 'br' ],
-	[ 'small', '(confirm)' ],
-]));
-$tbody->append($p->makeFormSubmitRow('Update passphrase'));
+$tbody->append($p->makeFormInputRow('text', 'username', 'User name'));
+$tbody->append($p->makeFormInputRow('password', 'passphrase', 'Passphrase'));
+$tbody->append($p->makeFormInputRow('password', 'passphrase2', [ 'Passphrase', [ 'br' ], [ 'small', '(confirm)' ] ]));
+$tbody->append($p->makeFormSubmitRow('Add username and passphrase'));
 
 
 

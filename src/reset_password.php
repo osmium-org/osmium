@@ -31,11 +31,10 @@ $ctx->relative = '.';
 $p->content->appendCreate('h1', $p->title);
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
-if(isset($_POST['key_id'])) {
+if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', 'password_1')) {
 	$keyid = $_POST['key_id'];
 	$vcode = $_POST['v_code'];
 	$pw = $_POST['password_0'];
-	$pw1 = $_POST['password_1'];
 
 	$keyinfo = \Osmium\EveApi\fetch(
 		'/account/APIKeyInfo.xml.aspx',
@@ -43,13 +42,7 @@ if(isset($_POST['key_id'])) {
 		null, $etype, $estr
 	);
 
-	if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-		$p->formerrors['password_0'][] = $s;
-
-	} else if($pw !== $pw1) {
-		$p->formerrors['password_1'][] = 'The two passphrases are not equal.';
-
-	} else if($keyinfo === false) {
+	if($keyinfo === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 
 	} else if(($characterid = (int)$keyinfo->result->key->rowset->row['characterID']) === 0) {

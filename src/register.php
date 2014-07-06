@@ -30,93 +30,62 @@ require \Osmium\ROOT.'/inc/login-common.php';
 
 $p = new \Osmium\DOM\Page();
 
-if(isset($_POST['account_name'])) {
-	$q = \Osmium\Db\query_params(
-		'SELECT COUNT(accountid) FROM osmium.accountcredentials
-		WHERE username = $1',
-		array($_POST['account_name'])
-	);
-	list($an) = \Osmium\Db\fetch_row($q);
+if(isset($_POST['account_name'])
+   && \Osmium\Login\check_username_and_passphrase($p, 'account_name', 'password_0', 'password_1')
+   && \Osmium\Login\check_nickname($p, 'nickname')) {
+	$hash = \Osmium\State\hash_password($_POST['password_0']);
 
-	$q = \Osmium\Db\query_params(
-		'SELECT COUNT(accountid) FROM osmium.accounts
-		WHERE nickname = $1',
-		array($_POST['nickname'])
-	);
-	list($nn) = \Osmium\Db\fetch_row($q);
+	\Osmium\Db\query('BEGIN');
 
-	$pw = $_POST['password_0'];
-	$pw1 = $_POST['password_1'];
-
-	$_POST['nickname'] = \Osmium\Chrome\trim($_POST['nickname']);
-
-	if($an !== '0') {
-		$p->formerrors['account_name'][] = 'Sorry, this account name is already taken.';
-	} else if($nn !== '0') {
-		$p->formerrors['nickname'][] = 'Sorry, this nickname is already taken.';
-	} else if(mb_strlen($_POST['account_name']) < 3) {
-		$p->formerrors['account_name'][] = 'Must be at least 3 characters.';
-	} else if(mb_strlen($_POST['nickname']) < 3) {
-		$p->formerrors['nickname'][] = 'Must be at least 3 characters.';
-	} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-		$p->formerrors['password_0'][] = $s;
-	} else if($pw !== $pw1) {
-		$p->formerrors['password_1'][] = 'The two passphrases do not match.';
-	} else {
-		$hash = \Osmium\State\hash_password($pw);
-
-		\Osmium\Db\query('BEGIN');
-
-		list($accountid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'INSERT INTO osmium.accounts (nickname,
+	list($accountid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'INSERT INTO osmium.accounts (nickname,
 			creationdate, lastlogindate, keyid, apiverified,
 			characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 			isfittingmanager, ismoderator, flagweight, reputation) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 			) RETURNING accountid', 
-			array(
-				$_POST['nickname'],
-				time(),
-				0,
-				null,
-				'f',
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				'f',
-				'f',
-				\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
-				\Osmium\Reputation\DEFAULT_REPUTATION,
-			)));
+		array(
+			$_POST['nickname'],
+			time(),
+			0,
+			null,
+			'f',
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			'f',
+			'f',
+			\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
+			\Osmium\Reputation\DEFAULT_REPUTATION,
+		)));
 
-		\Osmium\Db\query_params(
-			'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
 			VALUES ($1, $2, $3)', [
 				$accountid,
 				$_POST['account_name'],
 				$hash,
 			]);
 
-		\Osmium\Db\query('COMMIT');
+	\Osmium\Db\query('COMMIT');
 
-		$settings = \Osmium\State\get_state('__settings', []);
-		foreach($settings as $k => $v) {
-			$settings[$k] = \Osmium\State\get_setting($k);
-		}
-		
-		\Osmium\State\do_post_login($accountid, false);
-		$_POST = array();
-
-		foreach($settings as $k => $v) {
-			\Osmium\State\put_setting($k, $v);
-		}
-
-		header('Location: ./', true, 303);
-		die();
+	$settings = \Osmium\State\get_state('__settings', []);
+	foreach($settings as $k => $v) {
+		$settings[$k] = \Osmium\State\get_setting($k);
 	}
+		
+	\Osmium\State\do_post_login($accountid, false);
+	$_POST = array();
+
+	foreach($settings as $k => $v) {
+		\Osmium\State\put_setting($k, $v);
+	}
+
+	header('Location: ./', true, 303);
+	die();
 }
 
 $p->title = 'Sign up: create an account';

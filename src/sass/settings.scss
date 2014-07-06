@@ -16,4 +16,17 @@ div#account_settings {
 			}
 		}
 	}
+
+	&> section#s_accountauth {
+		&> table.d > tbody > tr {
+			&> td, &> th {
+				vertical-align: middle;
+				padding: 1.5em .5em;
+			}
+
+			&> td > form input {
+				line-height: 1.5em;
+			}
+		}
+	}
 }

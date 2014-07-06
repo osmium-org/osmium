@@ -106,14 +106,13 @@ form > table {
 	&> tbody > tr > th > label {
 		display: block;
 		text-align: right;
-		line-height: $field-height;
+		padding-top: 0.35em;
 	}
 
 	&> tbody > tr > td {
 		textarea, input, select {
 			width: 100%;
 			line-height: $field-height;
-			height: $field-height;
 
 			min-width: 30em;
 			@include layout-type(small) { min-width: 20em; }
