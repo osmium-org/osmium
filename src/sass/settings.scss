@@ -72,15 +72,17 @@ div#account_settings {
 			}
 		}
 
-		p#forcedvcode {
+		p#forcedvcode > strong {
 			font-size: 1.2em;
 
-			&> strong > code {
+			&> code {
 				display: inline-block;
 				padding: 0.25em 0.5em;
 				margin: 0.25em;
 				border: 1px solid $strong-emphasis-text-color;
 			}
+
+			&> form { display: inline; }
 		}
 	}
 }

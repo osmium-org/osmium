@@ -460,7 +460,7 @@ $par = $section->appendCreate('p', 'You can create an API key here: ');
 $par->appendCreate('a', [ 'href' => $uri, $uri ]);
 
 $vcode = \Osmium\State\get_state('eveapi_auth_vcode', null);
-if($vcode === null) {
+if($vcode === null || isset($_POST['refreshvcode'])) {
 	$vcode = preg_replace(
 		'%[^a-zA-Z0-9]%',
 		'',
@@ -473,6 +473,11 @@ if(!isset($_POST['v_code']) || $_POST['v_code'] === '') $_POST['v_code'] = $vcod
 $str = $section->appendCreate('p#forcedvcode')->appendCreate('strong', 'For security reasons, you must use the following verification code:');
 $str->appendCreate('br');
 $str->appendCreate('code', $vcode);
+$str->appendCreate('o-form', [ 'method' => 'post', 'action' => '#s_features' ])->appendCreate('input', [
+	'type' => 'submit',
+	'name' => 'refreshvcode',
+	'value' => 'Regenerate code'
+]);
 
 $section->appendCreate('p', 'You can disable or enable any calls you want, the suggested mask contains all the calls Osmium can make use of.');
 $section->appendCreate('p', 'If you are having errors, you may have to wait for the cache to expire, or create a new key to get around the caching.');
@@ -495,7 +500,7 @@ $tbody->append($p->makeFormRawRow(
 
 if(\Osmium\get_ini_setting('ccp_oauth_available')) {
 	$section->appendCreate('h1', 'Add EVE character from CCP OAuth2 (Single Sign On)');
-	$section->appendCreate('p', 'You must first associate your characters in the "Authentication methods" tab. They will then appear in the list below.');
+	$section->appendCreate('p', 'You must first associate your character in the "Authentication methods" tab. It will then appear in the list below.');
 
 	$tbody = $section
 		->appendCreate('o-form', [ 'action' => '#s_features', 'method' => 'post' ])
