@@ -20,6 +20,15 @@ namespace Osmium\Page\Main;
 
 require __DIR__.'/../inc/root.php';
 
+/* XXX callback URI fuckup */
+if(isset($_GET['code']) && isset($_GET['state'])) {
+	header('Location: ./internal/auth/ccpoauthcallback'.\Osmium\DOM\Page::formatQueryString([
+		'code' => $_GET['code'],
+		'state' => $_GET['state'],
+	]));
+	die();
+}
+
 $p = new \Osmium\DOM\Page();
 $a = \Osmium\State\get_state('a', [ 'accountid' => 0 ]);
 

@@ -486,3 +486,129 @@ function assume_logged_out() {
 	header('Location: '.\Osmium\get_ini_setting('relative_path'), true, 303);
 	die();
 }
+
+/* Redirect the user to the CCP SSO portal.
+ *
+ * @param $payload some data that dictates what to do when the API
+ * successfully returns a character.
+ */
+function ccp_oauth_redirect($payload) {
+	if(!\Osmium\get_ini_setting('ccp_oauth_available')) {
+		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
+	}
+
+	\Osmium\State\put_state('ccp_oauth_state', $state = get_nonce());
+	\Osmium\State\put_state('ccp_oauth_payload', $payload);
+	header(
+		'Location: '
+		.\Osmium\get_ini_setting('ccp_oauth_root')
+		.'/oauth/authorize'
+		.\Osmium\DOM\Page::formatQueryString([
+			'response_type' => 'code',
+			'redirect_uri' => 'https://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/')/*.'/internal/auth/ccpoauthcallback'*/, /* XXX callback URI fuckup */
+			'client_id' => \Osmium\get_ini_setting('ccp_oauth_clientid'),
+			'scope' => '',
+			'state' => $state,
+		])
+	);
+	die();
+}
+
+/* Verify the authorization code */
+function ccp_oauth_verify(&$errorstr = null) {
+	if(!\Osmium\get_ini_setting('ccp_oauth_available')) {
+		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
+	}
+
+	if(!isset($_GET['code']) || !isset($_GET['state'])
+	   || $_GET['state'] !== \Osmium\State\get_state('ccp_oauth_state')) {
+		return false;
+	}
+
+	$code = $_GET['code'];
+	$c = \Osmium\curl_init_branded(\Osmium\get_ini_setting('ccp_oauth_root').'/oauth/token');
+	curl_setopt($c, CURLOPT_POST, true);
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+
+	/* Passing the array to cURL sets the Content-Type to
+	 * multipart/form-data, something the CCP servers cannot
+	 * handle. Passing it a string gets around that. */
+	curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query([
+		'grant_type' => 'authorization_code',
+		'code' => $code,
+	]));
+	curl_setopt($c, CURLOPT_HTTPHEADER, [ 'Authorization: Basic '.base64_encode(
+		\Osmium\get_ini_setting('ccp_oauth_clientid').':'.\Osmium\get_ini_setting('ccp_oauth_secret')
+	) ]);
+
+	$rawjson = curl_exec($c);
+	if($errno = curl_errno($c)) {
+		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		return false;
+	}
+
+	if(($http_code = curl_getinfo($c, CURLINFO_HTTP_CODE)) !== 200) {
+		$errorstr = 'CCP OAuth returned HTTP code '.$http_code;
+		if($rawjson !== false) $errorstr .= ' ('.$rawjson.')';
+		return false;
+	}
+
+	curl_close($c);
+
+	if($rawjson === false) {
+		$errorstr = 'Unnumbered cURL error, please report!';
+		return false;
+	}
+
+	$json = json_decode($rawjson, true);
+	if(json_last_error() !== JSON_ERROR_NONE) {
+		$errorstr = 'Could not parse received JSON document.';
+		return false;
+	}
+
+	return $json;
+}
+
+/* Get the characterID from an access token. */
+function ccp_oauth_get_characterid($accesstoken, &$errorstr = null) {
+	if(!\Osmium\get_ini_setting('ccp_oauth_available')) {
+		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
+	}
+
+	if(!isset($_GET['code']) || !isset($_GET['state'])
+	   || $_GET['state'] !== \Osmium\State\get_state('ccp_oauth_state')) {
+		return false;
+	}
+
+	$code = $_GET['code'];
+	$c = \Osmium\curl_init_branded(\Osmium\get_ini_setting('ccp_oauth_root').'/oauth/verify');
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($c, CURLOPT_HTTPHEADER, [ 'Authorization: Bearer '.$accesstoken ]);
+
+	$rawjson = curl_exec($c);
+	if($errno = curl_errno($c)) {
+		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		return false;
+	}
+
+	if(($http_code = curl_getinfo($c, CURLINFO_HTTP_CODE)) !== 200) {
+		$errorstr = 'CCP OAuth returned HTTP code '.$http_code;
+		if($rawjson !== false) $errorstr .= ' ('.$rawjson.')';
+		return false;
+	}
+
+	curl_close($c);
+
+	if($rawjson === false) {
+		$errorstr = 'Unnumbered cURL error, please report!';
+		return false;
+	}
+
+	$json = json_decode($rawjson, true);
+	if(json_last_error() !== JSON_ERROR_NONE) {
+		$errorstr = 'Could not parse received JSON document.';
+		return false;
+	}
+
+	return $json;
+}

@@ -111,6 +111,8 @@ function get_rules($prefix) {
 			'%^/internal/searchtypes/(?<q>.*)$%D' => '/src/json/search_types.php',
 			'%^/internal/showinfo$%D' => '/src/json/show_info.php',
 
+			'%^/internal/auth/ccpoauthcallback$%D' => '/src/ccp_oauth_callback.php',
+
 			'%^/internal/favorite/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/toggle_favorite.php',
 
 			'%^/internal/delete/(?<loadoutid>[1-9][0-9]*)$%D' => '/src/delete_fit.php',

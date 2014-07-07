@@ -37,6 +37,7 @@ form:not(.saa) input[type='submit'], input[type='button'], button {
 	font-family: $sans-font;
 	color: $button-text-color;
 	border-color: $button-border-color;
+	line-height: $field-height;
 	@include linear-gradient-lighten-top($button-bg-color);
 
 	&.dangerous {
@@ -45,7 +46,7 @@ form:not(.saa) input[type='submit'], input[type='button'], button {
 		background-color: $dangerous-button-bg-color !important;
 	}
 
-	&:active {
+	&:active, &:focus {
 		color: $input-active-text-color;
 		border-color: $input-active-border-color;
 		@include linear-gradient-lighten-top($input-active-bg-color);

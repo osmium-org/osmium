@@ -49,13 +49,6 @@ const E_INTERNAL = 3;
 
 
 
-if(!function_exists('curl_strerror')) {
-	/* Fallback for PHP < 5.5 users */
-	function curl_strerror($no) { return $no; }
-}
-
-
-
 /**
  * Make an EVE API call. Handles caching.
  *

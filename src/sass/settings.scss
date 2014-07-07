@@ -27,6 +27,18 @@ div#account_settings {
 			&> td > form input {
 				line-height: 1.5em;
 			}
+
+			&> td.sso {
+				&> img {
+					float: left;
+					width: 4em;
+					height: 4em;
+				}
+
+				&> code {
+					line-height: 2em;
+				}
+			}
 		}
 	}
 }

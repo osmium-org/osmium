@@ -9,6 +9,8 @@ by the new host option. Be sure to fill it appropriately.
 
 The settings in the [postgresql] section have been prefixed by pg_.
 
+The [ccp_oauth] section has been added in config.ini.
+
 v0.13.0, released 2014-06-03
 ============================
 

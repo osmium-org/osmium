@@ -215,6 +215,14 @@ if(isset($_POST['username'])
 	]);
 }
 
+if(isset($_POST['ccpssoinit'])) {
+	/* XXX: require sudo mode */
+	\Osmium\State\ccp_oauth_redirect([
+		'action' => 'associate',
+		'accountid' => $a['accountid'],
+	]);
+}
+
 $table = $section->appendCreate('table.d');
 
 $thead = $table->appendCreate('thead');
@@ -227,7 +235,7 @@ $trh->appendCreate('th', 'UID');
 $trh->appendCreate('th', [ 'colspan' => '2', 'Actions' ]);
 
 $crq = \Osmium\Db\query_params(
-	'SELECT accountcredentialsid, username, passwordhash
+	'SELECT accountcredentialsid, username, passwordhash, ccpoauthcharacterid, ccpoauthownerhash
 	FROM osmium.accountcredentials
 	WHERE accountid = $1
 	ORDER BY accountcredentialsid ASC',
@@ -240,7 +248,7 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 	$id = $row['accountcredentialsid'];
 	$tr->appendCreate('th', '#'.$id);
 	$type = $tr->appendCreate('th');
-	$uid = $tr->appendCreate('td')->appendCreate('code');
+	$uid = $tr->appendCreate('td');
 
 	$actions = $tr
 		->appendCreate('td.actions')
@@ -257,7 +265,7 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 
 	if($row['username'] !== null) {
 		$type->append('Username and passphrase');
-		$uid->append($row['username']);
+		$uid->appendCreate('code', $row['username']);
 
 		$actions->appendCreate('o-input', [
 			'type' => 'password',
@@ -274,6 +282,17 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 			'name' => 'changepw['.$id.']',
 			'value' => 'Change passphrase'
 		]);
+	} else if($row['ccpoauthcharacterid'] !== null) {
+		$type->append('CCP OAuth2 (Single Sign On)');
+		$uid->setAttribute('class', 'sso');
+		$uid->appendCreate(
+			'o-eve-img',
+			[ 'alt' => '', 'src' => '/Character/'.$row['ccpoauthcharacterid'].'_128.jpg' ]
+		);
+		$code = $uid->appendCreate('code');
+		$code->append('Character #'.$row['ccpoauthcharacterid']);
+		$code->appendCreate('br');
+		$code->append('OwnerHash '.$row['ccpoauthownerhash']);
 	}
 }
 
@@ -292,6 +311,17 @@ $tbody->append($p->makeFormInputRow('text', 'username', 'User name'));
 $tbody->append($p->makeFormInputRow('password', 'passphrase', 'Passphrase'));
 $tbody->append($p->makeFormInputRow('password', 'passphrase2', [ 'Passphrase', [ 'br' ], [ 'small', '(confirm)' ] ]));
 $tbody->append($p->makeFormSubmitRow('Add username and passphrase'));
+
+$li = $p->element('li');
+$li->appendCreate('h3', 'CCP OAuth2 (Single Sign On)');
+$li->appendCreate('p')->appendCreate(
+	'o-form',
+	[ 'method' => 'post', 'action' => '#s_accountauth' ]
+)->appendCreate(
+	'input',
+	[ 'type' => 'submit', 'value' => 'Associate my EVE character', 'name' => 'ccpssoinit' ]
+);
+if(\Osmium\get_ini_setting('ccp_oauth_available')) $ul->append($li);
 
 
 

@@ -997,67 +997,14 @@ class Page extends RawPage {
 
 		} else {
 			$div->addClass('login');
-			$form = $div->appendCreate('o-form', [ 'method' => 'post' ]);
-
-			if(!\Osmium\HTTPS
-			   && \Osmium\get_ini_setting('https_available')
-			   && \Osmium\get_ini_setting('prefer_secure_login')) {
-				/* Use explicit https:// URI for the action */
-				$form->attr(
-					'action',
-					rtrim('https://'.$_SERVER['HTTP_HOST']
-					      .\Osmium\get_ini_setting('relative_path'), '/').'/login'
-				);
-			} else {
-				$form->attr('o-rel-action', '/login');
-			}
-
-			$wide = $this->element('span', [ 'class' => 'wide' ]);
-			$wide->appendCreate('input', [
-				'type' => 'text',
-				'name' => 'account_name',
-				'placeholder' => 'Account name [n]',
-				'accesskey' => 'n',
-			]);
-			$wide->append(' ');
-			$wide->appendCreate('input', [
-				'type' => 'password',
-				'name' => 'password',
-				'placeholder' => 'Passphrase',
-			]);
-			$wide->append(' ');
-			$wide->appendCreate('input', [
-				'type' => 'submit',
-				'name' => '__osmium_login',
-				'value' => 'Sign in',
-			]);
-			$wide->append([
-				' (',
-				[ 'input', [
-					'type' => 'checkbox',
-					'name' => 'remember',
-					'id' => 'state_box_remember',
-					'checked' => 'checked',
-				]],
-				[ 'small', [ [ 'label', [ 'for' => 'state_box_remember', 'Remember me' ] ] ] ],
-				')',
-			]);
-
-			$narrow = $this->element('span', [ 'class' => 'narrow' ]);
-			$narrow->appendCreate('a', [ 'o-rel-href' => '/login'.$this->formatQueryString([
+			$p = $div->appendCreate('p');
+			$p->appendCreate('a', [ 'o-rel-href' => '/login'.$this->formatQueryString([
 				'r' => $_SERVER['REQUEST_URI'],
 			]), 'Sign in' ]);
 
-			$p = $form->appendCreate('p', [ $wide, $narrow ]);
-
 			if(\Osmium\get_ini_setting('registration_enabled')) {
 				$reglink = [ 'a', [ 'o-rel-href' => '/register', [ 'strong', 'Sign up' ] ] ];
-				$requri = [ 'input', [
-					'type' => 'hidden',
-					'name' => 'request_uri',
-					'value' => $_SERVER['REQUEST_URI'],
-				]];
-				$p->append([ ' or ', $reglink, $requri ]);
+				$p->append([ ' or ', $reglink ]);
 			}
 		}
 
