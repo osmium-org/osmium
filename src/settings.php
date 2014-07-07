@@ -32,7 +32,44 @@ $ctx->relative = '.';
 \Osmium\State\assume_logged_in($ctx->relative);
 $a = \Osmium\State\get_state('a');
 
-if(isset($_POST['unverify'])) {
+$ssocharacternames = [];
+$ssocharacterids = [];
+$cidq = \Osmium\Db\query_params(
+	'SELECT ccpoauthcharacterid
+	FROM osmium.accountcredentials
+	WHERE accountid = $1
+	ORDER BY accountcredentialsid ASC',
+	[ $a['accountid'] ]
+);
+while($row = \Osmium\Db\fetch_row($cidq)) {
+	$ssocharacterids[] = $row[0];
+}
+while($ssocharacterids !== []) {
+	$batch = array_slice($ssocharacterids, 0, \Osmium\EveApi\CHARACTER_AFFILIATION_MAX_IDS);
+	$ssocharacterids = array_slice($ssocharacterids, \Osmium\EveApi\CHARACTER_AFFILIATION_MAX_IDS);
+	$xml = \Osmium\EveApi\fetch('/eve/CharacterAffiliation.xml.aspx', [
+		'ids' => implode(',', $batch),
+	], null, $etype, $estr);
+	if($xml === false) {
+		/* XXX: display this properly */
+		foreach($batch as $charid) $ssocharacternames[$charid] = 'Character #'.$charid;
+	} else {
+		foreach($xml->result->rowset->row as $row) {
+			$ssocharacternames[(string)$row['characterID']] = (string)$row['characterName'];
+		}
+	}
+}
+
+
+
+if(isset($_POST['verifyfromsso']) && isset($ssocharacternames[$_POST['characterid']])) {
+	if(\Osmium\State\register_ccp_oauth_character_account_auth($a['accountid'], $_POST['characterid'], $etype, $estr) !== true) {
+		$p->formerrors['characterid'][] = '('.$etype.') '.$estr;
+	} else {
+		\Osmium\State\do_post_login($a['accountid']);
+		$a = \Osmium\State\get_state('a');
+	}
+} else if(isset($_POST['unverify'])) {
 	\Osmium\State\unverify_account($a['accountid']);
 	\Osmium\State\do_post_login($a['accountid']);
 	$a = \Osmium\State\get_state('a');
@@ -72,11 +109,13 @@ if(isset($_POST['unverify'])) {
 	}
 }
 
+
+
 $div = $p->content->appendCreate('div#account_settings');
 
 $ul = $div->appendCreate('ul.tindex');
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_characters', 'Characters and skills' ]);
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_features', 'Account features' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_accountauth', 'Authentication methods' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changenick', 'Change nickname' ]);
 
@@ -242,6 +281,8 @@ $crq = \Osmium\Db\query_params(
 	[ $a['accountid'] ]
 );
 
+$hasuser = false;
+
 while($row = \Osmium\Db\fetch_assoc($crq)) {
 	$tr = $tbody->appendCreate('tr');
 	
@@ -264,6 +305,7 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 		]);
 
 	if($row['username'] !== null) {
+		$hasuser = true;
 		$type->append('Username and passphrase');
 		$uid->appendCreate('code', $row['username']);
 
@@ -290,10 +332,18 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 			[ 'alt' => '', 'src' => '/Character/'.$row['ccpoauthcharacterid'].'_128.jpg' ]
 		);
 		$code = $uid->appendCreate('code');
-		$code->append('Character #'.$row['ccpoauthcharacterid']);
+		$code->append($ssocharacternames[$row['ccpoauthcharacterid']]);
 		$code->appendCreate('br');
-		$code->append('OwnerHash '.$row['ccpoauthownerhash']);
+		$code->appendCreate('abbr', [ 'OwnerHash', 'title' => 'A unique identifier of the character owner. If this character ever gets transferred to another EVE account, this value will change and the character will no longer be able to authenticate this account.' ]);
+		$code->append(' '.$row['ccpoauthownerhash']);
 	}
+}
+
+if(!$hasuser) {
+	$table->before($p->element('p.warning_box', [[
+		'strong',
+		'This account does not have a username and passphrase. In case you lose access your current authentication methods, you will be locked out of your account. It is recommended you create a username and passphrase using the form below.'
+	]]));
 }
 
 $section->appendCreate('h1', 'Add a new authentication method');
@@ -325,44 +375,110 @@ if(\Osmium\get_ini_setting('ccp_oauth_available')) $ul->append($li);
 
 
 
-$section = $div->appendCreate('section#s_apiauth');
-$section->appendCreate('h1', 'Account status');
+$section = $div->appendCreate('section#s_features');
+$section->appendCreate('h1', 'Account features');
 
-if($a['apiverified'] === 't') {
-	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
-		$section->appendCreate(
-			'p.error_box',
-			'Your API credentials are correct, but your character is not allowed to access this Osmium instance. Please contact the administrators if you have trouble authenticating your character.'
-		);
-	} else {
-		$section->appendCreate('p.notice_box', 'Your account is API-verified.');
-	}
-} else {
-	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
-		$section->appendCreate(
-			'p.error_box',
-			'You need to API-verify your account before you can access this Osmium instance.'
-		);
-	} else {
-		$section->appendCreate('p.warning_box', [
-			'Your account is ',
-			[ 'strong', 'not' ],
-			' API-verified.',
-		]);
-	}
-
-	$section->appendCreate('p', 'Verifying your account with an API key will allow you to:');
-	$ul = $section->appendCreate('ul');
-	$ul->appendCreate('li', 'Share loadouts with your corporation or alliance, and access corporation or alliance-restricted loadouts;');
-	$ul->appendCreate('li', 'Have your character name used instead of your nickname;');
-	$ul->appendCreate('li', 'Reset your passphrase if you ever forget it.');
+if($a['apiverified'] === 't' && isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+	$section->appendCreate(
+		'p.error_box',
+		'Your character is not allowed to access this Osmium instance. Please contact the administrators if you have trouble authenticating your character.'
+	);
+} else if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+	$section->appendCreate(
+		'p.error_box',
+		'You need to add an EVE character to your account before you can access this Osmium instance.'
+	);
 }
 
-$section->appendCreate('h2', 'API credentials');
-$section->append(\Osmium\State\make_api_link());
+$ul = $section->appendCreate('ul#features');
+
+$li = $ul->appendCreate('li');
+if($a['apiverified'] === 't') {
+	$li->append('Character ');
+	$li->appendCreate('strong', $a['charactername']);
+	$li->append(' is used as your display name and used to check permissions.');
+
+	if($a['keyid'] > 0 && $a['expirationdate'] !== null) {
+		$expiresin = $a['expirationdate'] - time();
+		if($expiresin <= 0) {
+			$ul->appendCreate('li.m', 'API key is expired!');
+		} else {
+			$ul->appendCreate('li', 'API key expires ')->append($p->formatRelativeDate($a['expirationdate']));
+		}
+	}
+} else {
+	$li->append('Nickname ');
+	$li->appendCreate('strong', $a['nickname']);
+	$li->append(' is used as your display name.');
+}
+
+if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\ACCOUNT_STATUS_ACCESS_MASK) {
+	$ul->appendCreate(
+		'li.a',
+		'Your can cast votes. You still need the relevant privileges to cast specific votes.'
+	);
+} else {
+	$ul->appendCreate(
+		'li.m',
+		'You can not cast votes. It requires an API key with AccountStatus access.'
+	);
+}
+
+if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\CONTACT_LIST_ACCESS_MASK) {
+	$ul->appendCreate('li.a', 'Contact list is available for standings.');
+} else {
+	$li = $ul->appendCreate(
+		'li.m',
+		'Contact list not available. It requires an API key with ContactList access.'
+	);
+	$li->appendCreate('br');
+	$li->append('Loadouts you publish with standings-restricted permissions will not behave as expected, but you can still access standings-restricted loadouts published by others.');
+}
+
+if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\CHARACTER_SHEET_ACCESS_MASK) {
+	$li = $ul->appendCreate('li.a', 'Character sheet is available.');
+	if($a['isfittingmanager'] === 't') {
+		$li->append(' You are a fitting manager in your corporation.');
+	} else {
+		$li->append(' You are not a fitting manager in your corporation.');
+	}
+} else if($a['apiverified'] === 't') {
+	$ul->appendCreate(
+		'li.m',
+		'Character sheet not available. By default Osmium will assume you are not a fitting manager in your corporation.'
+	);
+}
+
+$section->appendCreate('h1', 'Add EVE character from API');
+
+$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.(
+	\Osmium\State\CHARACTER_SHEET_ACCESS_MASK
+	| \Osmium\State\CONTACT_LIST_ACCESS_MASK
+	| \Osmium\State\ACCOUNT_STATUS_ACCESS_MASK
+);
+$par = $section->appendCreate('p', 'You can create an API key here: ');
+$par->appendCreate('a', [ 'href' => $uri, $uri ]);
+
+$vcode = \Osmium\State\get_state('eveapi_auth_vcode', null);
+if($vcode === null) {
+	$vcode = preg_replace(
+		'%[^a-zA-Z0-9]%',
+		'',
+		'Osmium'.\Osmium\get_ini_setting('host').$a['accountid'].'n'.\Osmium\State\get_nonce()
+	);
+	\Osmium\State\put_state('eveapi_auth_vcode', $vcode);
+}
+if(!isset($_POST['v_code']) || $_POST['v_code'] === '') $_POST['v_code'] = $vcode;
+
+$str = $section->appendCreate('p#forcedvcode')->appendCreate('strong', 'For security reasons, you must use the following verification code:');
+$str->appendCreate('br');
+$str->appendCreate('code', $vcode);
+
+$section->appendCreate('p', 'You can disable or enable any calls you want, the suggested mask contains all the calls Osmium can make use of.');
+$section->appendCreate('p', 'If you are having errors, you may have to wait for the cache to expire, or create a new key to get around the caching.');
 
 $tbody = $section
-	->appendCreate('o-form', [ 'action' => '#s_apiauth', 'method' => 'post' ])
+	->appendCreate('o-form', [ 'action' => '#s_features', 'method' => 'post' ])
 	->appendCreate('table')
 	->appendCreate('tbody')
 	;
@@ -371,11 +487,55 @@ $tbody->append($p->makeFormInputRow('text', 'key_id', 'API Key ID'));
 $tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
 $tbody->append($p->makeFormRawRow(
 	'', [
-		[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Set API credentials' ] ],
+		[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Set API' ] ],
 		' ',
-		[ 'input', [ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove API credentials' ] ],
+		[ 'input', [ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove API' ] ],
 	]
 ));
+
+if(\Osmium\get_ini_setting('ccp_oauth_available')) {
+	$section->appendCreate('h1', 'Add EVE character from CCP OAuth2 (Single Sign On)');
+	$section->appendCreate('p', 'You must first associate your characters in the "Authentication methods" tab. They will then appear in the list below.');
+
+	$tbody = $section
+		->appendCreate('o-form', [ 'action' => '#s_features', 'method' => 'post' ])
+		->appendCreate('table')
+		->appendCreate('tbody')
+		;
+
+	$tr = $tbody->appendCreate('tr');
+	$tr->appendCreate('th')->appendCreate('label', [
+		'for' => 'characterid',
+		'Character',
+	]);
+
+	$select = $tr->appendCreate('td')->appendCreate('o-select', [
+		'name' => 'characterid',
+		'id' => 'characterid',
+	]);
+
+	foreach($ssocharacternames as $id => $name) {
+		$select->appendCreate('option', [
+			'value' => $id,
+			$name,
+		]);
+	}
+	if($ssocharacternames === []) {
+		$select->setAttribute('disabled', 'disabled');
+		$select->appendCreate('option', [
+			'value' => '0',
+			'N/A',
+		]);
+	}
+
+	$tbody->append($p->makeFormRawRow(
+		'', $p->element('input', [
+			'type' => 'submit',
+			'value' => 'Use character',
+			'name' => 'verifyfromsso',
+		])
+	));
+}
 
 
 

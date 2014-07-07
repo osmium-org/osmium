@@ -30,7 +30,11 @@ require \Osmium\ROOT.'/inc/login-common.php';
 
 $p = new \Osmium\DOM\Page();
 
-if(isset($_POST['account_name'])
+if(isset($_POST['ccpssoinit'])) {
+	\Osmium\State\ccp_oauth_redirect([
+		'action' => 'signup',
+	]);
+} else if(isset($_POST['account_name'])
    && \Osmium\Login\check_username_and_passphrase($p, 'account_name', 'password_0', 'password_1')
    && \Osmium\Login\check_nickname($p, 'nickname')) {
 	$hash = \Osmium\State\hash_password($_POST['password_0']);
@@ -119,7 +123,7 @@ $tbody = $p->content->appendCreate('o-form', [
 
 $tbody->append($p->makeFormInputRow(
 	'text', 'account_name',
-	[ 'Account name', [ 'br' ], [ 'small', '(used for logging in)' ] ]
+	[ 'Username', [ 'br' ], [ 'small', '(used for logging in)' ] ]
 ));
 $tbody->append($p->makeFormInputRow(
 	'text', 'nickname',
@@ -134,9 +138,19 @@ $tbody->append($p->makeFormInputRow(
 	[ 'Passphrase', [ 'br' ], [ 'small', '(confirm)' ] ]
 ));
 
-$tbody->append($p->makeFormSeparatorRow());
+$tbody->append($p->makeFormSubmitRow('Sign up with username and passphrase'));
 
-$tbody->append($p->makeFormSubmitRow('Sign up'));
+if(\Osmium\get_ini_setting('ccp_oauth_available')) {
+	$tbody->appendCreate('tr.separator')->appendCreate('th', [ 'colspan' => '2' ])->append('— or —');
+
+	$tr = $tbody->appendCreate('tr');
+	$tr->appendCreate('th');
+	$tr->appendCreate('td')->appendCreate('input', [
+		'name' => 'ccpssoinit',
+		'value' => 'Sign up with my EVE character',
+		'type' => 'submit',
+	]);
+}
 
 
 $ctx = new \Osmium\DOM\RenderContext();

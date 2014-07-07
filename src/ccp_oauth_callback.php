@@ -46,23 +46,35 @@ switch((string)$payload['action']) {
 case 'associate':
 	\Osmium\State\assume_logged_in();
 	$a = \Osmium\State\get_state('a');
-	$ccnt = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT COUNT(accountcredentialsid) FROM osmium.accountcredentials
+	$c = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT ccpoauthownerhash  FROM osmium.accountcredentials
 		WHERE ccpoauthcharacterid = $1',
 		[ $cid ]
-	))[0];
+	));
 
-	if($ccnt > 0) {
-		/* TODO: offer to delete the old association, but this may
-		 * leave an account without a way of logging in. A non-trivial
-		 * issue. */
-		\Osmium\fatal(500, 'Not yet implemented. This character is already associated to another account.');
+	if($c !== false && $c['ccpoauthownerhash'] === $oid) {
+		/* TODO: offer to delete the old association when it is safe */
+		\Osmium\fatal(400, 'This character is already associated to another account. Please sign in using that character then delete the association in the settings page.');
 	} else {
+		\Osmium\Db\query('BEGIN');
+
+		if($c !== false) {
+			/* Hash is different, meaning the character changed
+			 * ownership, so the old association is moot. Safe to
+			 * delete. */
+			\Osmium\Db\query_params(
+				'DELETE FROM osmium.accountcredentials
+				WHERE ccpoauthcharacterid = $1',
+				[ $cid ]
+			);
+		}
+
 		\Osmium\Db\query_params(
 			'INSERT INTO osmium.accountcredentials (accountid, ccpoauthcharacterid, ccpoauthownerhash)
 			VALUES ($1, $2, $3)',
 			[ $a['accountid'], $cid, $oid ]
 		);
+		\Osmium\Db\query('COMMIT');
 		header('Location: ../../settings#s_accountauth');
 		die();
 	}

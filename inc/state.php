@@ -66,7 +66,7 @@ function do_post_login($accountid, $use_cookie = null) {
 
 	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT accountid, nickname,
-		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, apiverified,
+		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, eak.mask, eak.expirationdate, apiverified,
 		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 		ismoderator, isfittingmanager
 		FROM osmium.accounts a
@@ -384,8 +384,9 @@ function get_eveaccount_id(&$error = null) {
 		$error = 'Please login first.';
 		return false;
 	}
-	if(!isset($a['apiverified']) || $a['apiverified'] !== 't') {
-		$error = 'You must verify your API first.';
+	if(!isset($a['apiverified']) || $a['apiverified'] !== 't'
+	   || $a['keyid'] === null || !($a['mask'] & ACCOUNT_STATUS_ACCESS_MASK)) {
+		$error = 'Requires API with AccountStatus access.';
 		return false;
 	}
 

@@ -349,6 +349,64 @@ function register_eve_api_key_account_auth($accountid, $keyid, $vcode, &$etype =
 	return true;
 }
 
+/* Try to API-verify an account from a CCP OAuth2 character.
+ *
+ * @note This function does not check that the characterid comes from
+ * CCP's OAuth2 service.
+ */
+function register_ccp_oauth_character_account_auth($accountid, $characterid, &$etype = null, &$estr = null) {
+	$charinfo = \Osmium\EveApi\fetch(
+		'/eve/CharacterInfo.xml.aspx',
+		[ 'characterID' => $characterid ],
+		null, $etype, $estr
+	);
+
+	if($charinfo === false) {
+		return false;
+	}
+
+	$alreadyused = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(accountid)
+		FROM osmium.accounts
+		WHERE characterid = $1 AND accountid <> $2',
+		[ $characterid, $accountid ]
+	))[0];
+
+	if($alreadyused) {
+		$etype = \Osmium\EveApi\E_USER;
+		$estr = 'Character '.$charactername.' is already used by another account. Use the password reset form if you forgot your credentials.';
+		return false;
+	}
+
+	\Osmium\Db\query('BEGIN');
+	\Osmium\Db\query_params(
+		'UPDATE osmium.accounts
+		SET apiverified = true, keyid = $1,
+		characterid = $2, charactername = $3,
+		corporationid = $4, corporationname = $5,
+		allianceid = $6, alliancename = $7,
+		isfittingmanager = false
+		WHERE accountid = $8',
+		[
+			null,
+			$characterid,
+			(string)$charinfo->result->characterName,
+			(int)$charinfo->result->corporationID,
+			(string)$charinfo->result->corporation,
+			(int)$charinfo->result->allianceID === 0 ? null : (int)$charinfo->result->allianceID,
+			(string)$charinfo->result->alliance === '' ? null : (string)$charinfo->result->alliance,
+			$accountid,
+		]
+	);
+
+	\Osmium\Db\query_params(
+		'DELETE FROM osmium.contacts WHERE accountid = $1',
+		[ $accountid ]
+	);
+	\Osmium\Db\query('COMMIT');
+	return true;
+}
+
 /**
  * Check whether the current account matches the whitelist.
  */
@@ -417,19 +475,4 @@ function check_whitelist($a) {
 	}
 
 	return false;
-}
-
-/** @internal */
-function make_api_link() {
-	$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.(
-		CHARACTER_SHEET_ACCESS_MASK | CONTACT_LIST_ACCESS_MASK | ACCOUNT_STATUS_ACCESS_MASK
-	);
-
-	return [
-		[ 'p', [ 'Create an API key here: ', [ 'a', [ 'href' => $uri, $uri ] ] ] ],
-		[ 'p', [
-			'You can disable contact list access, in which case standings-based permissions will not work. You can disable character sheet access, in which case fitting manager-based permissions will not work.',
-		] ],
-		[ 'p', 'If you are still having errors despite having updated your API key, either wait for the cache to expire or create a new API key to get around the caching.' ],
-	];
 }
