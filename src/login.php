@@ -138,7 +138,7 @@ if(\Osmium\get_ini_setting('registration_enabled')) {
 }
 
 $ul->appendCreate('li', [
-	'Forgot your passphrase? ',
+	'Locked out of your account? ',
 	[ 'a', [ 'o-rel-href' => '/resetpassword', 'Reset your passphrase.' ] ],
 ]);
 

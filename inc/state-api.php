@@ -37,7 +37,6 @@ function unverify_account($accountid) {
 	\Osmium\Db\query_params(
 		'UPDATE osmium.accounts a SET
 		apiverified = false, keyid = null,
-		charactername = null,
 		corporationid = null, corporationname = null,
 		allianceid = null, alliancename = null,
 		isfittingmanager = false

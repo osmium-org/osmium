@@ -97,6 +97,9 @@ case 'signin':
 	header('Location: '.$payload['request_uri'], true, 303);
 	break;
 
+case 'signup':
+	\Osmium\State\assume_logged_out();
+
 default:
 	\Osmium\fatal(400, 'Unknown payload action.');
 

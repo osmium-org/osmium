@@ -281,7 +281,7 @@ $crq = \Osmium\Db\query_params(
 	[ $a['accountid'] ]
 );
 
-$hasuser = false;
+$ccpoauthonly = true;
 
 while($row = \Osmium\Db\fetch_assoc($crq)) {
 	$tr = $tbody->appendCreate('tr');
@@ -304,8 +304,9 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 			'value' => 'Delete this method',
 		]);
 
+	if($row['ccpoauthcharacterid'] === null) $ccpoauthonly = false;
+
 	if($row['username'] !== null) {
-		$hasuser = true;
 		$type->append('Username and passphrase');
 		$uid->appendCreate('code', $row['username']);
 
@@ -339,10 +340,10 @@ while($row = \Osmium\Db\fetch_assoc($crq)) {
 	}
 }
 
-if(!$hasuser) {
+if($ccpoauthonly) {
 	$table->before($p->element('p.warning_box', [[
 		'strong',
-		'This account does not have a username and passphrase. In case you lose access your current authentication methods, you will be locked out of your account. It is recommended you create a username and passphrase using the form below.'
+		'If the characters below move to another EVE account, you will be locked out of your Osmium account for good. It is recommended you create a username and passphrase using the form below.'
 	]]));
 }
 
@@ -410,6 +411,14 @@ if($a['apiverified'] === 't') {
 	$li->append('Nickname ');
 	$li->appendCreate('strong', $a['nickname']);
 	$li->append(' is used as your display name.');
+}
+
+if($a['characterid'] !== null) {
+	$li = $ul->appendCreate('li.a', 'Passphrase can be reset at any time using character ');
+	$li->appendCreate('strong', $a['charactername'] ?: '#'.$a['characterid']);
+	$li->append('.');
+} else {
+	$ul->appendCreate('li.m', 'Passphrase can not be reset. It is strongly recommended you add an EVE character to your account.');
 }
 
 if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\ACCOUNT_STATUS_ACCESS_MASK) {
@@ -496,11 +505,8 @@ $tbody = $section
 $tbody->append($p->makeFormInputRow('text', 'key_id', 'API Key ID'));
 $tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
 $tbody->append($p->makeFormRawRow(
-	'', [
-		[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Set API' ] ],
-		' ',
-		[ 'input', [ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove API' ] ],
-	]
+	'',
+	[[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Use character' ] ]]
 ));
 
 if(\Osmium\get_ini_setting('ccp_oauth_available')) {

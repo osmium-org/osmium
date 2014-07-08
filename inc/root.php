@@ -142,6 +142,7 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 	if(!\Osmium\State\is_logged_in()) {
 
 		if(!in_array($req, [
+			'/internal/auth/ccpoauthcallback',
 			'/login',
 			'/register',
 			'/resetpassword',
@@ -151,10 +152,11 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 	} else {
 		$a = \Osmium\State\get_state('a');
 		if(isset($a['notwhitelisted']) && $a['notwhitelisted'] && !in_array($req, [
+			'/internal/auth/ccpoauthcallback',
 			'/internal/logout',
 			'/settings',
 		], true)) {
-			header('Location: '.$prefix.'/settings#s_apiauth');
+			header('Location: '.$prefix.'/settings#s_features');
 			die();
 		}
 	}
