@@ -19,4 +19,11 @@
 
 $(function() {
 	osmium_tabify($("div#account_settings > ul.tindex"), 0);
+
+	$("p#forcedvcode input[type='text']").focus(function() {
+		var inp = $(this);
+		setTimeout(function() {
+			inp.select();
+		}, 0);
+	});
 });

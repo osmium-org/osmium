@@ -470,10 +470,15 @@ if($vcode === null || isset($_POST['refreshvcode'])) {
 }
 if(!isset($_POST['v_code']) || $_POST['v_code'] === '') $_POST['v_code'] = $vcode;
 
-$str = $section->appendCreate('p#forcedvcode')->appendCreate('strong', 'For security reasons, you must use the following verification code:');
+$str = $section->appendCreate('p#forcedvcode', 'For security reasons, you must use the following verification code:');
 $str->appendCreate('br');
-$str->appendCreate('code', $vcode);
-$str->appendCreate('o-form', [ 'method' => 'post', 'action' => '#s_features' ])->appendCreate('input', [
+$form = $str->appendCreate('o-form', [ 'method' => 'post', 'action' => '#s_features' ]);
+$form->appendCreate('input', [
+	'type' => 'text',
+	'value' => $vcode,
+	'readonly' => 'readonly',
+]);
+$form->appendCreate('input', [
 	'type' => 'submit',
 	'name' => 'refreshvcode',
 	'value' => 'Regenerate code'
