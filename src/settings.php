@@ -71,6 +71,11 @@ if(isset($_POST['verifyfromsso']) && isset($ssocharacternames[$_POST['characteri
 	}
 } else if(isset($_POST['unverify'])) {
 	\Osmium\State\unverify_account($a['accountid']);
+	\Osmium\Db\query_params(
+		'UPDATE osmium.accounts SET characterid = NULL, charactername = NULL
+		WHERE accountid = $1',
+		[ $a['accountid'] ]
+	);
 	\Osmium\State\do_post_login($a['accountid']);
 	$a = \Osmium\State\get_state('a');
 	unset($_POST['key_id']);
@@ -84,12 +89,12 @@ if(isset($_POST['verifyfromsso']) && isset($ssocharacternames[$_POST['characteri
 		$v_code = $a['verificationcode'];
 	}
 
-	$verified = \Osmium\State\register_eve_api_key_account_auth(
+	if($v_code !== \Osmium\State\get_state('eveapi_auth_vcode')) {
+		$p->formerrors['v_code'][] = 'You must use the verification code given above.';
+	} else if($verified = \Osmium\State\register_eve_api_key_account_auth(
 		$a['accountid'], $key_id, $v_code,
 		$etype, $estr
-	);
-
-	if($verified === false) {
+	) === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 	} else {
 		\Osmium\State\do_post_login($a['accountid']);
@@ -468,30 +473,7 @@ $uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.(
 $par = $section->appendCreate('p', 'You can create an API key here: ');
 $par->appendCreate('a', [ 'href' => $uri, $uri ]);
 
-$vcode = \Osmium\State\get_state('eveapi_auth_vcode', null);
-if($vcode === null || isset($_POST['refreshvcode'])) {
-	$vcode = preg_replace(
-		'%[^a-zA-Z0-9]%',
-		'',
-		'Osmium'.\Osmium\get_ini_setting('host').$a['accountid'].'n'.\Osmium\State\get_nonce()
-	);
-	\Osmium\State\put_state('eveapi_auth_vcode', $vcode);
-}
-if(!isset($_POST['v_code']) || $_POST['v_code'] === '') $_POST['v_code'] = $vcode;
-
-$str = $section->appendCreate('p#forcedvcode', 'For security reasons, you must use the following verification code:');
-$str->appendCreate('br');
-$form = $str->appendCreate('o-form', [ 'method' => 'post', 'action' => '#s_features' ]);
-$form->appendCreate('input', [
-	'type' => 'text',
-	'value' => $vcode,
-	'readonly' => 'readonly',
-]);
-$form->appendCreate('input', [
-	'type' => 'submit',
-	'name' => 'refreshvcode',
-	'value' => 'Regenerate code'
-]);
+$section->append(\Osmium\Login\make_forced_vcode_box($p, $a['accountid'], 'v_code', '#s_features'));
 
 $section->appendCreate('p', 'You can disable or enable any calls you want, the suggested mask contains all the calls Osmium can make use of.');
 $section->appendCreate('p', 'If you are having errors, you may have to wait for the cache to expire, or create a new key to get around the caching.');
@@ -552,6 +534,13 @@ if(\Osmium\get_ini_setting('ccp_oauth_available')) {
 		])
 	));
 }
+
+$section->appendCreate('h1', 'Remove EVE character');
+$section->appendCreate('p', 'If you wish to remove the character associated to your account, use the button below. Use this if you plan to transfer the EVE character to someone else, but you want to keep the new owner from being able to reset the passphrase of your Osmium account.');
+$section->appendCreate('o-form', [ 'method' => 'post', 'action' => '#s_features' ])->appendCreate(
+	'input.dangerous.confirm',
+	[ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove character', ]
+);
 
 
 

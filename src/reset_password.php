@@ -36,13 +36,13 @@ if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', '
 	$vcode = $_POST['v_code'];
 	$pw = $_POST['password_0'];
 
-	$keyinfo = \Osmium\EveApi\fetch(
+	if($vcode !== \Osmium\State\get_state('eveapi_auth_vcode')) {
+		$p->formerrors['v_code'][] = 'You must use the verification code above.';
+	} else if($keyinfo = \Osmium\EveApi\fetch(
 		'/account/APIKeyInfo.xml.aspx',
 		[ 'keyID' => $keyid, 'vCode' => $vcode ],
 		null, $etype, $estr
-	);
-
-	if($keyinfo === false) {
+	) === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 
 	} else if(($characterid = (int)$keyinfo->result->key->rowset->row['characterID']) === 0) {
@@ -101,14 +101,14 @@ if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', '
 	}
 }
 
-$p->content->appendCreate('p')->append([
-	'If you cannot sign in to your account, you can regain access to it provided you added an EVE character at some point.',
-	[ 'br' ],
-	'You need to enter any API key that matches the character you added to your Osmium account.',
-	[ 'br' ],
+$p->content->appendCreate('p', 'If you cannot sign in to your account, you can regain access to it provided you added an EVE character at some point.');
+$p->content->appendCreate('p', 'You need to enter any API key that matches the character you added to your Osmium account.');
+$p->content->appendCreate('p', [
 	'You can create and see a list of your API keys here: ',
 	[ 'strong', [[ 'a', [ 'href' => 'https://support.eveonline.com/api', 'https://support.eveonline.com/api' ] ]] ]
 ]);
+
+$p->content->append(\Osmium\Login\make_forced_vcode_box($p, 'reset', 'v_code'));
 
 $tbody = $p->content
 	->appendCreate('o-form', [ 'action' => $_SERVER['REQUEST_URI'], 'method' => 'post' ])

@@ -71,21 +71,21 @@ div#account_settings {
 				&.a:before { content: "✔"; }
 			}
 		}
+	}
+}
 
-		p#forcedvcode {
-			font-size: 1.2em;
+p.forcedvcode {
+	font-size: 1.2em;
+	font-weight: bold;
+
+	&> form {
+		display: inline;
+
+		&> input[type="text"] {
+			font-family: $mono-font;
 			font-weight: bold;
-
-			&> form {
-				display: inline;
-
-				&> input[type="text"] {
-					font-family: $mono-font;
-					font-weight: bold;
-					width: 25em;
-					padding: .25em;
-				}
-			}
+			width: 30em;
+			padding: .25em;
 		}
 	}
 }

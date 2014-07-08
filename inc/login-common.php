@@ -40,6 +40,40 @@ function make_https_warning(\Osmium\DOM\RawPage $d) {
 	return $p;
 }
 
+function make_forced_vcode_box(\Osmium\DOM\Page $p, $uniq, $postname, $action = null) {
+	if($action === null) $action = $_SERVER['REQUEST_URI'];
+
+	$p->snippets[] = 'forced_vcode';
+	$e = $p->element('p.forcedvcode');
+
+	$vcode = \Osmium\State\get_state('eveapi_auth_vcode', null);
+	if($vcode === null || isset($_POST['refreshvcode'])) {
+		$vcode = preg_replace(
+			'%[^a-zA-Z0-9]%',
+			'',
+			'Osmium'.\Osmium\get_ini_setting('host').$uniq.'n'.\Osmium\State\get_nonce()
+		);
+		\Osmium\State\put_state('eveapi_auth_vcode', $vcode);
+	}
+	if(!isset($_POST[$postname]) || $_POST[$postname] === '') $_POST[$postname] = $vcode;
+
+	$e->append('For security reasons, you must use the following verification code:');
+	$e->appendCreate('br');
+	$form = $e->appendCreate('o-form', [ 'method' => 'post', 'action' => $action ]);
+	$form->appendCreate('input', [
+		'type' => 'text',
+		'value' => $vcode,
+		'readonly' => 'readonly',
+	]);
+	$form->appendCreate('input', [
+		'type' => 'submit',
+		'name' => 'refreshvcode',
+		'value' => 'Regenerate code'
+	]);
+
+	return $e;
+}
+
 /* Check that a passphrase is okay to use for an account.
  *
  * @see check_username_and_passphrase().
