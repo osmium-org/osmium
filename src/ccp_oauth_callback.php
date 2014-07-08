@@ -19,6 +19,7 @@
 namespace Osmium\Page\CCPOAuthCallback;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/login-common.php';
 
 $json = \Osmium\State\ccp_oauth_verify($estr);
 if($json === false) \Osmium\fatal(400, '(stage 1) '.$estr);
@@ -75,30 +76,82 @@ case 'associate':
 			[ $a['accountid'], $cid, $oid ]
 		);
 		\Osmium\Db\query('COMMIT');
-		header('Location: ../../settings#s_accountauth');
+		header('Location: ../../settings#s_accountauth', true, 303);
 		die();
 	}
 	break;
 
 case 'signin':
+case 'signup':
 	\Osmium\State\assume_logged_out();
-	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+	$target = isset($payload['request_uri']) ? $payload['request_uri'] : '../../';
+	$remember = isset($payload['remember']) ? $payload['remember'] : false;
+
+	$a1 = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT accountid FROM osmium.accountcredentials
 		WHERE ccpoauthcharacterid = $1 AND ccpoauthownerhash = $2',
 		[ $cid, $oid ]
 	));
 
-	if($a === false) {
-		/* TODO: create account on the fly and associate it */
-		\Osmium\fatal(500, 'Not yet implemented. There is no account associated to this character.');
+	$a2 = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT accountid FROM osmium.accounts
+		WHERE characterid = $1',
+		[ $cid ]
+	));
+
+	if($a1 === false && $a2 === false) {
+		/* First case: brand new character Osmium has never heard
+		 * of. Create an account then authenticate the account with
+		 * it. */
+
+		if($payload['action'] === 'signin') {
+			\Osmium\fatal(400, 'This character is not associated with an Osmium account. Use the "Sign up" page if you want to create an account using this character.');
+		}
+
+		\Osmium\Db\query('BEGIN');
+		$nickname = 'User'.$cid.'-'.\Osmium\State\get_nonce(); /* XXX: check for collisions… */
+		$accountid = \Osmium\Login\register_account($nickname);
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.accountcredentials
+			WHERE ccpoauthcharacterid = $1',
+			[ $cid ]
+		);
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.accountcredentials (accountid, ccpoauthcharacterid, ccpoauthownerhash)
+			VALUES ($1, $2, $3)',
+			[ $accountid, $cid, $oid ]
+		);
+		\Osmium\Db\query('COMMIT');
+
+		/* TODO: this call may fail as it relies on the EVE API,
+		 * either roll everything back (difficult) or show the error
+		 * to the user */
+		\Osmium\State\register_ccp_oauth_character_account_auth($accountid, $cid);
+
+		\Osmium\State\do_post_login($accountid, $remember);
+		header('Location: '.$target, true, 303);
+	} else if($a2 !== false && $a1 === false) {
+		/* Second case: character not yet used as a way of logging in
+		 * with OAuth, but an account is verified with this
+		 * character. In this case, just associate the character with
+		 * the existing account. */
+
+		\Osmium\Db\query_params(
+			'INSERT INTO osmium.accountcredentials (accountid, ccpoauthcharacterid, ccpoauthownerhash)
+			VALUES ($1, $2, $3)',
+			[ $a2['accountid'], $cid, $oid ]
+		);
+
+		\Osmium\State\do_post_login($a2['accountid'], $remember);
+		header('Location: '.$target, true, 303);
+	} else if($a1 !== false) {
+		/* Third case: character is already used as a way of logging
+		 * in, just log the user in. */
+
+		\Osmium\State\do_post_login($a1['accountid'], $remember);
+		header('Location: '.$target, true, 303);
 	}
-
-	\Osmium\State\do_post_login($a['accountid'], $payload['remember']);
-	header('Location: '.$payload['request_uri'], true, 303);
 	break;
-
-case 'signup':
-	\Osmium\State\assume_logged_out();
 
 default:
 	\Osmium\fatal(400, 'Unknown payload action.');

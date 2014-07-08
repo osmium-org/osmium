@@ -37,7 +37,7 @@ $ssocharacterids = [];
 $cidq = \Osmium\Db\query_params(
 	'SELECT ccpoauthcharacterid
 	FROM osmium.accountcredentials
-	WHERE accountid = $1
+	WHERE accountid = $1 AND ccpoauthcharacterid IS NOT NULL
 	ORDER BY accountcredentialsid ASC',
 	[ $a['accountid'] ]
 );

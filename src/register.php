@@ -40,32 +40,7 @@ if(isset($_POST['ccpssoinit'])) {
 	$hash = \Osmium\State\hash_password($_POST['password_0']);
 
 	\Osmium\Db\query('BEGIN');
-
-	list($accountid) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'INSERT INTO osmium.accounts (nickname,
-			creationdate, lastlogindate, keyid, apiverified,
-			characterid, charactername, corporationid, corporationname, allianceid, alliancename,
-			isfittingmanager, ismoderator, flagweight, reputation) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-			) RETURNING accountid', 
-		array(
-			$_POST['nickname'],
-			time(),
-			0,
-			null,
-			'f',
-			null,
-			null,
-			null,
-			null,
-			null,
-			null,
-			'f',
-			'f',
-			\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
-			\Osmium\Reputation\DEFAULT_REPUTATION,
-		)));
-
+	$accountid = \Osmium\Login\register_account($_POST['nickname']);
 	\Osmium\Db\query_params(
 		'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
 			VALUES ($1, $2, $3)', [
@@ -73,7 +48,6 @@ if(isset($_POST['ccpssoinit'])) {
 				$_POST['account_name'],
 				$hash,
 			]);
-
 	\Osmium\Db\query('COMMIT');
 
 	$settings = \Osmium\State\get_state('__settings', []);

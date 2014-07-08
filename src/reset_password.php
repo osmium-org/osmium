@@ -73,7 +73,10 @@ if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', '
 		if($a_ === false) {
 			/* Resetting the passphrase of an account without a
 			 * username/passphrase, generate a username on the fly so
-			 * the user can log in, at least… */
+			 * the user can log in, at least…
+			 *
+			 * XXX: check for collisions
+			 */
 			$a['username'] = 'User'.\Osmium\State\get_nonce();
 			\Osmium\Db\query_params(
 				'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)

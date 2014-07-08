@@ -151,3 +151,32 @@ function check_nickname(\Osmium\DOM\Page $p, $nnname, &$nn = null) {
 
 	return true;
 }
+
+/* Create a new account (without any credentials) and return the
+ * accountid. Recommended that you do this inside a transaction and
+ * immediately insert credentials afterwards. */
+function register_account($nickname) {
+	return \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'INSERT INTO osmium.accounts (nickname,
+		creationdate, lastlogindate, keyid, apiverified,
+		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
+		isfittingmanager, ismoderator, flagweight, reputation) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+		) RETURNING accountid', [
+			$nickname,
+			time(),
+			0,
+			null,
+			'f',
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			'f',
+			'f',
+			\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
+			\Osmium\Reputation\DEFAULT_REPUTATION,
+	]))[0];
+}

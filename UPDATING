@@ -11,6 +11,8 @@ The settings in the [postgresql] section have been prefixed by pg_.
 
 The [ccp_oauth] section has been added in config.ini.
 
+After updating, clear all sessions by running `make clear-sessions`.
+
 v0.13.0, released 2014-06-03
 ============================
 
