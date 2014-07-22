@@ -38,10 +38,11 @@ if($query === false) {
 		$p->makeSearchBox()
 	);
 } else {
-	if(!isset($_GET['p']) || $_GET['p'] === '1') {
-		$tq = $query ? (\Osmium\Search\query(\Osmium\Search\get_type_search_query($query, [], 20)) ?: []) : [];
-		$firstid = null;
+	if((!isset($_GET['p']) || $_GET['p'] === '1')
+	   && $query
+	   && $tq = \Osmium\Search\query(\Osmium\Search\get_type_search_query($query, [], 20))) {
 
+		$firstid = null;
 		$typelist = $p->element('ol.type_sr');
 		while($t = \Osmium\Search\fetch_row($tq)) {
 			$typeid = $t[0];
