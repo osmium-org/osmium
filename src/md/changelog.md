@@ -6,6 +6,20 @@
     deprecated.** Use `uri` instead. See the [help](./help/api/common)
     for the new usage.
 
+* Initial support for the CCP OAuth service (Single Sign-On).
+
+* Mostly redone account settings page:
+
+  * Nickname can now be changed every so often.
+
+  * Clearer API verification recap.
+
+  * Add more than one username/passphrase to an account.
+
+* API keys used for verification or passphrase reset can now have any
+  mask, but (for security reasons) must have a predetermined
+  verification code.
+
 ## Version 0.13.0, released 2014-06-03
 
 * **The syntax for the query loadouts API call has changed. Please update your

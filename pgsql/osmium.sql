@@ -48,6 +48,40 @@ CREATE TABLE accountcharacters (
 
 
 --
+-- Name: accountcredentials; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE accountcredentials (
+    accountcredentialsid integer NOT NULL,
+    accountid integer NOT NULL,
+    username text,
+    passwordhash text,
+    ccpoauthcharacterid integer,
+    ccpoauthownerhash text,
+    CONSTRAINT accountcredentials_meaningful_check CHECK ((((((username IS NOT NULL) AND (passwordhash IS NOT NULL)) AND (ccpoauthcharacterid IS NULL)) AND (ccpoauthownerhash IS NULL)) OR ((((username IS NULL) AND (passwordhash IS NULL)) AND (ccpoauthcharacterid IS NOT NULL)) AND (ccpoauthownerhash IS NOT NULL))))
+);
+
+
+--
+-- Name: accountcredentials_accountcredentialsid_seq; Type: SEQUENCE; Schema: osmium; Owner: -
+--
+
+CREATE SEQUENCE accountcredentials_accountcredentialsid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: accountcredentials_accountcredentialsid_seq; Type: SEQUENCE OWNED BY; Schema: osmium; Owner: -
+--
+
+ALTER SEQUENCE accountcredentials_accountcredentialsid_seq OWNED BY accountcredentials.accountcredentialsid;
+
+
+--
 -- Name: accountfavorites; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -64,8 +98,6 @@ CREATE TABLE accountfavorites (
 
 CREATE TABLE accounts (
     accountid integer NOT NULL,
-    accountname character varying(255) NOT NULL,
-    passwordhash character varying(255) NOT NULL,
     nickname character varying(255) NOT NULL,
     creationdate integer NOT NULL,
     lastlogindate integer NOT NULL,
@@ -80,7 +112,8 @@ CREATE TABLE accounts (
     isfittingmanager boolean NOT NULL,
     ismoderator boolean NOT NULL,
     flagweight integer NOT NULL,
-    reputation integer NOT NULL
+    reputation integer NOT NULL,
+    lastnicknamechange integer
 );
 
 
@@ -1453,6 +1486,13 @@ ALTER SEQUENCE votes_voteid_seq OWNED BY votes.voteid;
 
 
 --
+-- Name: accountcredentialsid; Type: DEFAULT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY accountcredentials ALTER COLUMN accountcredentialsid SET DEFAULT nextval('accountcredentials_accountcredentialsid_seq'::regclass);
+
+
+--
 -- Name: accountid; Type: DEFAULT; Schema: osmium; Owner: -
 --
 
@@ -1538,19 +1578,35 @@ ALTER TABLE ONLY accountcharacters
 
 
 --
+-- Name: accountcredentials_ccpoauthcharacterid_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY accountcredentials
+    ADD CONSTRAINT accountcredentials_ccpoauthcharacterid_uniq UNIQUE (ccpoauthcharacterid);
+
+
+--
+-- Name: accountcredentials_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY accountcredentials
+    ADD CONSTRAINT accountcredentials_pkey PRIMARY KEY (accountcredentialsid);
+
+
+--
+-- Name: accountcredentials_username_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY accountcredentials
+    ADD CONSTRAINT accountcredentials_username_uniq UNIQUE (username);
+
+
+--
 -- Name: accountfavorites_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY accountfavorites
     ADD CONSTRAINT accountfavorites_pkey PRIMARY KEY (accountid, loadoutid);
-
-
---
--- Name: accounts_accountname_uniq; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY accounts
-    ADD CONSTRAINT accounts_accountname_uniq UNIQUE (accountname);
 
 
 --
@@ -1905,6 +1961,13 @@ CREATE INDEX accountcharacters_accountid_idx ON accountcharacters USING btree (a
 
 
 --
+-- Name: accountcredentials_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE INDEX accountcredentials_accountid_idx ON accountcredentials USING btree (accountid);
+
+
+--
 -- Name: accountfavorites_accountid_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1916,13 +1979,6 @@ CREATE INDEX accountfavorites_accountid_idx ON accountfavorites USING btree (acc
 --
 
 CREATE INDEX accountfavorites_loadoutid_idx ON accountfavorites USING btree (loadoutid);
-
-
---
--- Name: accounts_accountname_idx; Type: INDEX; Schema: osmium; Owner: -; Tablespace: 
---
-
-CREATE INDEX accounts_accountname_idx ON accounts USING btree (accountname);
 
 
 --
@@ -2590,6 +2646,14 @@ ALTER TABLE ONLY accountcharacters
 
 ALTER TABLE ONLY accountcharacters
     ADD CONSTRAINT accountcharacters_keyid_fkey FOREIGN KEY (accountid, keyid) REFERENCES eveapikeys(owneraccountid, keyid);
+
+
+--
+-- Name: accountcredentials_accountid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY accountcredentials
+    ADD CONSTRAINT accountcredentials_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
 
 
 --

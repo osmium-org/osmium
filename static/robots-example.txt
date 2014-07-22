@@ -8,6 +8,10 @@ Sitemap: http://my-domain.tld/sitemap.xml.gz
 
 User-agent: *
 Disallow: /api/
+Disallow: /db/comparegroup/
+Disallow: /db/comparemarketgroup/
+Disallow: /db/comparetypes/
+Disallow: /db/comparevariations/
 Disallow: /editcomment/
 Disallow: /editcommentreply/
 Disallow: /flag/

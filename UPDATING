@@ -1,5 +1,7 @@
-staging
-=======
+v0.13.1, released 2014-07-22
+============================
+
+The osmium schema has been updated.
 
 Some rules in robots-example.txt have been removed. You can safely
 remove them from your robots.txt.

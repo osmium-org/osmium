@@ -147,10 +147,29 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
 		return false;
 	}
+  
+	try {
+		$xml = new \SimpleXMLElement($raw_xml);
+	} catch(\Exception $e) {
+		$xml = false;
+	}
 
 	if(($http_code = curl_getinfo($c, CURLINFO_HTTP_CODE)) !== 200) {
 		\Osmium\State\semaphore_release_nc($sem);
-		$errortype = ($http_code >= 400 && $http_code < 500) ? E_USER : E_BACKEND;
+		/* XXX: CCP is stupid, don't make the sane assumption that
+		 * they understand what HTTP codes mean. */
+		//$errortype = ($http_code >= 400 && $http_code < 500) ? E_USER : E_BACKEND;
+		$errortype = E_BACKEND;
+
+		if($xml !== false) {
+			if(isset($xml->error)) {
+				goto HasXML;
+			} else {
+				$errorstr = 'API returned non-error XML with HTTP code '.$http_code;
+			}
+
+			return false;
+		}
 
 		switch($http_code) {
 
@@ -176,9 +195,7 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 		return false;
 	}
   
-	try {
-		$xml = new \SimpleXMLElement($raw_xml);
-	} catch(\Exception $e) {
+	if($xml === false) {
 		\Osmium\State\semaphore_release_nc($sem);
 		$errortype = E_BACKEND;
 		$errorstr = 'API returned unparseable XML: '.$e->getMessage();
@@ -197,13 +214,13 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 	\Osmium\State\semaphore_release_nc($sem);
 
 HasXML:
-	if(isset($api->error) && !empty($api->error)) {
-		$code = (int)$api->error['code'];
+	if(isset($xml->error) && !empty($xml->error)) {
+		$code = (int)$xml->error['code'];
 
 		/* http://wiki.eve-id.net/APIv2_Eve_ErrorList_XML */
 		$errortype = ($code >= 100 && $code < 300) ? E_USER : E_BACKEND;
 
-		$errorstr = 'API error '.$code.': '.(string)$api->error
+		$errorstr = 'API error '.$code.': '.(string)$xml->error
 			.', retry after '.gmdate('H:i:s \U\T\C', strtotime((string)$xml->cachedUntil));
 		return false;
 	}
