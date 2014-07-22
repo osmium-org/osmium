@@ -20,6 +20,16 @@ namespace Osmium\Json\CastVote;
 
 require __DIR__.'/../../inc/root.php';
 
+/* XXX: this is a really, REALLY hacky fix. The proper fix (use
+ * POST+CSRF token) is in staging but requires a js-staticver bump. */
+if($_SERVER['REQUEST_METHOD'] !== 'GET'
+   || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+   || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest'
+   || !isset($_SERVER['HTTP_REFERER'])
+   || !preg_match('%^https?://'.preg_quote($_SERVER['HTTP_HOST']).'/%', $_SERVER['HTTP_REFERER'])) {
+	\Osmium\fatal(400);
+}
+
 $result = array();
 
 if(!isset($_POST['loadoutid']) || !isset($_GET['targettype']) || !isset($_GET['action'])) {
