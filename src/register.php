@@ -30,81 +30,40 @@ require \Osmium\ROOT.'/inc/login-common.php';
 
 $p = new \Osmium\DOM\Page();
 
-if(isset($_POST['account_name'])) {
-	$q = \Osmium\Db\query_params(
-		'SELECT COUNT(accountid) FROM osmium.accounts
-		WHERE accountname = $1',
-		array($_POST['account_name'])
-	);
-	list($an) = \Osmium\Db\fetch_row($q);
+if(isset($_POST['ccpssoinit'])) {
+	\Osmium\State\ccp_oauth_redirect([
+		'action' => 'signup',
+	]);
+} else if(isset($_POST['account_name'])
+   && \Osmium\Login\check_username_and_passphrase($p, 'account_name', 'password_0', 'password_1')
+   && \Osmium\Login\check_nickname($p, 'nickname')) {
+	$hash = \Osmium\State\hash_password($_POST['password_0']);
 
-	$q = \Osmium\Db\query_params(
-		'SELECT COUNT(accountid) FROM osmium.accounts
-		WHERE nickname = $1',
-		array($_POST['nickname'])
-	);
-	list($nn) = \Osmium\Db\fetch_row($q);
-
-	$pw = $_POST['password_0'];
-	$pw1 = $_POST['password_1'];
-
-	if($an !== '0') {
-		$p->formerrors['account_name'][] = 'Sorry, this account name is already taken.';
-	} else if($nn !== '0') {
-		$p->formerrors['nickname'][] = 'Sorry, this nickname is already taken.';
-	} else if(mb_strlen($_POST['account_name']) < 3) {
-		$p->formerrors['account_name'][] = 'Must be at least 3 characters.';
-	} else if(mb_strlen($_POST['nickname']) < 3) {
-		$p->formerrors['nickname'][] = 'Must be at least 3 characters.';
-	} else if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-		$p->formerrors['password_0'][] = $s;
-	} else if($pw !== $pw1) {
-		$p->formerrors['password_1'][] = 'The two passphrases do not match.';
-	} else {
-		$hash = \Osmium\State\hash_password($pw);
-
-		\Osmium\Db\query_params(
-			'INSERT INTO osmium.accounts (accountname, passwordhash, nickname,
-			creationdate, lastlogindate, keyid, apiverified,
-			characterid, charactername, corporationid, corporationname, allianceid, alliancename,
-			isfittingmanager, ismoderator, flagweight, reputation) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
-			)', 
-			array(
+	\Osmium\Db\query('BEGIN');
+	$accountid = \Osmium\Login\register_account($_POST['nickname']);
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
+			VALUES ($1, $2, $3)', [
+				$accountid,
 				$_POST['account_name'],
 				$hash,
-				$_POST['nickname'],
-				time(),
-				0,
-				null,
-				'f',
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				'f',
-				'f',
-				\Osmium\Flag\DEFAULT_FLAG_WEIGHT,
-				\Osmium\Reputation\DEFAULT_REPUTATION,
-			));
+			]);
+	\Osmium\Db\query('COMMIT');
 
-		$settings = \Osmium\State\get_state('__settings', []);
-		foreach($settings as $k => $v) {
-			$settings[$k] = \Osmium\State\get_setting($k);
-		}
-		
-		\Osmium\State\do_post_login($_POST['account_name'], false);
-		$_POST = array();
-
-		foreach($settings as $k => $v) {
-			\Osmium\State\put_setting($k, $v);
-		}
-
-		header('Location: ./', true, 303);
-		die();
+	$settings = \Osmium\State\get_state('__settings', []);
+	foreach($settings as $k => $v) {
+		$settings[$k] = \Osmium\State\get_setting($k);
 	}
+		
+	\Osmium\State\do_post_login($accountid, false);
+	$_POST = array();
+
+	foreach($settings as $k => $v) {
+		\Osmium\State\put_setting($k, $v);
+	}
+
+	header('Location: ./', true, 303);
+	die();
 }
 
 $p->title = 'Sign up: create an account';
@@ -138,7 +97,7 @@ $tbody = $p->content->appendCreate('o-form', [
 
 $tbody->append($p->makeFormInputRow(
 	'text', 'account_name',
-	[ 'Account name', [ 'br' ], [ 'small', '(used for logging in)' ] ]
+	[ 'Username', [ 'br' ], [ 'small', '(used for logging in)' ] ]
 ));
 $tbody->append($p->makeFormInputRow(
 	'text', 'nickname',
@@ -153,9 +112,19 @@ $tbody->append($p->makeFormInputRow(
 	[ 'Passphrase', [ 'br' ], [ 'small', '(confirm)' ] ]
 ));
 
-$tbody->append($p->makeFormSeparatorRow());
+$tbody->append($p->makeFormSubmitRow('Sign up with username and passphrase'));
 
-$tbody->append($p->makeFormSubmitRow('Sign up'));
+if(\Osmium\get_ini_setting('ccp_oauth_available')) {
+	$tbody->appendCreate('tr.separator')->appendCreate('th', [ 'colspan' => '2' ])->append('— or —');
+
+	$tr = $tbody->appendCreate('tr');
+	$tr->appendCreate('th');
+	$tr->appendCreate('td')->appendCreate('input', [
+		'name' => 'ccpssoinit',
+		'value' => 'Sign up with my EVE character',
+		'type' => 'submit',
+	]);
+}
 
 
 $ctx = new \Osmium\DOM\RenderContext();

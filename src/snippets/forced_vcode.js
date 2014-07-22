@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -15,8 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*<<< require snippet tabs >>>*/
-
 $(function() {
-	osmium_tabify($("div#account_settings > ul.tindex"), 0);
+	$("p.forcedvcode input[type='text']").focus(function() {
+		var inp = $(this);
+		setTimeout(function() {
+			inp.select();
+		}, 0);
+	});
 });

@@ -4,6 +4,15 @@ staging
 Some rules in robots-example.txt have been removed. You can safely
 remove them from your robots.txt.
 
+The sitemap_root config option has been removed, as it is superseeded
+by the new host option. Be sure to fill it appropriately.
+
+The settings in the [postgresql] section have been prefixed by pg_.
+
+The [ccp_oauth] section has been added in config.ini.
+
+After updating, clear all sessions by running `make clear-sessions`.
+
 v0.13.0, released 2014-06-03
 ============================
 

@@ -31,32 +31,25 @@ $ctx->relative = '.';
 $p->content->appendCreate('h1', $p->title);
 $p->content->append(\Osmium\Login\make_https_warning($p));
 
-if(isset($_POST['key_id'])) {
+if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', 'password_1')) {
 	$keyid = $_POST['key_id'];
 	$vcode = $_POST['v_code'];
 	$pw = $_POST['password_0'];
-	$pw1 = $_POST['password_1'];
 
-	$keyinfo = \Osmium\EveApi\fetch(
+	if($vcode !== \Osmium\State\get_state('eveapi_auth_vcode')) {
+		$p->formerrors['v_code'][] = 'You must use the verification code above.';
+	} else if($keyinfo = \Osmium\EveApi\fetch(
 		'/account/APIKeyInfo.xml.aspx',
 		[ 'keyID' => $keyid, 'vCode' => $vcode ],
 		null, $etype, $estr
-	);
-
-	if(($s = \Osmium\State\is_password_sane($pw)) !== true) {
-		$p->formerrors['password_0'][] = $s;
-
-	} else if($pw !== $pw1) {
-		$p->formerrors['password_1'][] = 'The two passphrases are not equal.';
-
-	} else if($keyinfo === false) {
+	) === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 
 	} else if(($characterid = (int)$keyinfo->result->key->rowset->row['characterID']) === 0) {
 		$p->formerrors['key_id'][] = 'No character is associated with this API key.';
 
 	} else if(($a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, accountname
+		'SELECT accountid
 		FROM osmium.accounts WHERE characterid = $1',
 		[ $characterid ]
 	))) === false) {
@@ -71,14 +64,38 @@ if(isset($_POST['key_id'])) {
 	} else {
 		$hash = \Osmium\State\hash_password($pw);
 
-		\Osmium\Db\query_params(
-			'UPDATE osmium.accounts SET passwordhash = $1 WHERE accountid = $2',
-			array($hash, $a['accountid'])
-		);
+		$a_ = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+			'SELECT accountid, username FROM osmium.accountcredentials
+			WHERE accountid = $1 AND username IS NOT NULL',
+			[ $a['accountid'] ]
+		));
+
+		if($a_ === false) {
+			/* Resetting the passphrase of an account without a
+			 * username/passphrase, generate a username on the fly so
+			 * the user can log in, at least…
+			 *
+			 * XXX: check for collisions
+			 */
+			$a['username'] = 'User'.\Osmium\State\get_nonce();
+			\Osmium\Db\query_params(
+				'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
+				VALUES ($1, $2, $3)',
+				[ $a['accountid'], $a['username'], $hash ]
+			);
+		} else {
+			$a = $a_;
+
+			\Osmium\Db\query_params(
+				'UPDATE osmium.accountcredentials SET passwordhash = $1
+				WHERE accountid = $2 AND username = $3',
+				[ $hash, $a['accountid'], $a['username'] ]
+			);
+		}
 
 		$p->content->appendCreate('p')->appendCreate('strong', [
 			'Passphrase reset was successful. You can now login on the account ',
-			[ 'em', $a['accountname'] ],
+			[ 'code', $a['username'] ],
 			' using your new passphrase.',
 		]);
 
@@ -87,12 +104,14 @@ if(isset($_POST['key_id'])) {
 	}
 }
 
-$p->content->appendCreate('p')->append([
-	'If you forgot the passphrase of your API-verified account, you can reset it by supplying an API key associated to the character you verified your account with.',
-	[ 'br' ],
-	'You can see a list of your API keys here: ',
+$p->content->appendCreate('p', 'If you cannot sign in to your account, you can regain access to it provided you added an EVE character at some point.');
+$p->content->appendCreate('p', 'You need to enter any API key that matches the character you added to your Osmium account.');
+$p->content->appendCreate('p', [
+	'You can create and see a list of your API keys here: ',
 	[ 'strong', [[ 'a', [ 'href' => 'https://support.eveonline.com/api', 'https://support.eveonline.com/api' ] ]] ]
 ]);
+
+$p->content->append(\Osmium\Login\make_forced_vcode_box($p, 'reset', 'v_code'));
 
 $tbody = $p->content
 	->appendCreate('o-form', [ 'action' => $_SERVER['REQUEST_URI'], 'method' => 'post' ])
@@ -112,6 +131,6 @@ $tbody->append($p->makeFormInputRow('password', 'password_1', [
 	[ 'small', '(confirm)' ],
 ]));
 
-$tbody->append($p->makeFormSubmitRow('Check API key'));
+$tbody->append($p->makeFormSubmitRow('Reset passphrase'));
 
 $p->render($ctx);

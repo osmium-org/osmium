@@ -89,8 +89,8 @@ const CLIENT_DATA_STATICVER = 32;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
-define(__NAMESPACE__.'\HOST',
-       isset($_SERVER['HTTP_HOST']) ? explode(':', $_SERVER['HTTP_HOST'], 2)[0] : 'local'
+define(__NAMESPACE__.'\COOKIE_HOST',
+       isset($_SERVER['HTTP_HOST']) ? explode(':', $_SERVER['HTTP_HOST'], 2)[0] : '127.0.0.1'
 );
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
@@ -98,7 +98,7 @@ if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
 }
 
 if(isset($_SERVER['REMOTE_ADDR'])) {
-	session_set_cookie_params(0, get_ini_setting('relative_path'), HOST, HTTPS, true);
+	session_set_cookie_params(0, get_ini_setting('relative_path'), COOKIE_HOST, HTTPS, true);
 	session_save_path(CACHE_DIRECTORY);
 	session_name('O');
 
@@ -142,6 +142,7 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 	if(!\Osmium\State\is_logged_in()) {
 
 		if(!in_array($req, [
+			'/internal/auth/ccpoauthcallback',
 			'/login',
 			'/register',
 			'/resetpassword',
@@ -151,10 +152,11 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 	} else {
 		$a = \Osmium\State\get_state('a');
 		if(isset($a['notwhitelisted']) && $a['notwhitelisted'] && !in_array($req, [
+			'/internal/auth/ccpoauthcallback',
 			'/internal/logout',
 			'/settings',
 		], true)) {
-			header('Location: '.$prefix.'/settings#s_apiauth');
+			header('Location: '.$prefix.'/settings#s_features');
 			die();
 		}
 	}

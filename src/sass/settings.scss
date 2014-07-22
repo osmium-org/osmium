@@ -2,26 +2,7 @@ div#account_settings {
 	padding: 0 1em;
 
 	&> ul.tindex {
-		list-style-type: none;
-		text-align: center;
-
-		&> li {
-			display: inline-block;
-			padding: 0.5em 1em;
-
-			&.active {
-				font-weight: bold;
-
-				&> a {
-					text-decoration: none;
-				}
-			}
-		}
-
-		margin: 0;
-		padding: 0.5em 0;
-
-		border-bottom: 1px solid $subsection-border-color;
+		@include tabs;
 	}
 
 	&> section#s_characters {
@@ -33,6 +14,78 @@ div#account_settings {
 			&> input[type='submit'] {
 				margin: .05em .2em;
 			}
+		}
+	}
+
+	&> section#s_accountauth {
+		&> table.d > tbody > tr {
+			&> td, &> th {
+				vertical-align: middle;
+				padding: 1.5em .5em;
+			}
+
+			&> td > form input {
+				line-height: 1.5em;
+			}
+
+			&> td.sso {
+				&> img {
+					float: left;
+					width: 4em;
+					height: 4em;
+					border-radius: .5em;
+				}
+
+				&> code {
+					line-height: 2em;
+				}
+			}
+		}
+	}
+
+	&> section#s_features {
+		&> ul#features {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			margin-bottom: 5em;
+
+			&> li {
+				padding: .25em 0 .25em 4em;
+				line-height: 1.5em;
+				position: relative;
+
+				&:before {
+					display: inline-block;
+					text-align: center;
+					width: 1.5em;
+					font-size: 1.5em;
+					vertical-align: middle;
+
+					position: absolute;
+					left: 0.66em;
+				}
+
+				&:before { content: "·"; }
+				&.m:before { content: "✘"; }
+				&.a:before { content: "✔"; }
+			}
+		}
+	}
+}
+
+p.forcedvcode {
+	font-size: 1.2em;
+	font-weight: bold;
+
+	&> form {
+		display: inline;
+
+		&> input[type="text"] {
+			font-family: $mono-font;
+			font-weight: bold;
+			width: 30em;
+			padding: .25em;
 		}
 	}
 }

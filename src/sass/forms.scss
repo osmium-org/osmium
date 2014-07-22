@@ -37,6 +37,7 @@ input[type='submit'], input[type='button'], form:not(.saa) button {
 	font-family: $sans-font;
 	color: $button-text-color;
 	border-color: $button-border-color;
+	line-height: $field-height;
 	@include linear-gradient-lighten-top($button-bg-color);
 
 	&.dangerous {
@@ -45,7 +46,7 @@ input[type='submit'], input[type='button'], form:not(.saa) button {
 		background-color: $dangerous-button-bg-color !important;
 	}
 
-	&:active {
+	&:active, &:focus {
 		color: $input-active-text-color;
 		border-color: $input-active-border-color;
 		@include linear-gradient-lighten-top($input-active-bg-color);
@@ -106,14 +107,13 @@ form > table {
 	&> tbody > tr > th > label {
 		display: block;
 		text-align: right;
-		line-height: $field-height;
+		padding-top: 0.35em;
 	}
 
 	&> tbody > tr > td {
 		textarea, input, select {
 			width: 100%;
 			line-height: $field-height;
-			height: $field-height;
 
 			min-width: 30em;
 			@include layout-type(small) { min-width: 20em; }

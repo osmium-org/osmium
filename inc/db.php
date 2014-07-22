@@ -22,11 +22,11 @@ $__osmium_pg_link = null;
 
 function connect() {
 	global $__osmium_pg_link;
-	$host = \Osmium\get_ini_setting('host');
-	$port = \Osmium\get_ini_setting('port');
-	$user = \Osmium\get_ini_setting('user');
-	$password = \Osmium\get_ini_setting('password');
-	$dbname = \Osmium\get_ini_setting('dbname');
+	$host = \Osmium\get_ini_setting('pg_host');
+	$port = \Osmium\get_ini_setting('pg_port');
+	$user = \Osmium\get_ini_setting('pg_user');
+	$password = \Osmium\get_ini_setting('pg_password');
+	$dbname = \Osmium\get_ini_setting('pg_dbname');
 
 	return $__osmium_pg_link = pg_connect("host=$host port=$port user=$user password=$password dbname=$dbname");
 }

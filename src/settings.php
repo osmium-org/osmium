@@ -19,8 +19,10 @@
 namespace Osmium\Page\Settings;
 
 require __DIR__.'/../inc/root.php';
+require \Osmium\ROOT.'/inc/login-common.php';
 
 const MASK = '********';
+const NICKNAME_CHANGE_WINDOW = 1209600;
 
 $p = new \Osmium\DOM\Page();
 $ctx = new \Osmium\DOM\RenderContext();
@@ -30,9 +32,51 @@ $ctx->relative = '.';
 \Osmium\State\assume_logged_in($ctx->relative);
 $a = \Osmium\State\get_state('a');
 
-if(isset($_POST['unverify'])) {
+$ssocharacternames = [];
+$ssocharacterids = [];
+$cidq = \Osmium\Db\query_params(
+	'SELECT ccpoauthcharacterid
+	FROM osmium.accountcredentials
+	WHERE accountid = $1 AND ccpoauthcharacterid IS NOT NULL
+	ORDER BY accountcredentialsid ASC',
+	[ $a['accountid'] ]
+);
+while($row = \Osmium\Db\fetch_row($cidq)) {
+	$ssocharacterids[] = $row[0];
+}
+while($ssocharacterids !== []) {
+	$batch = array_slice($ssocharacterids, 0, \Osmium\EveApi\CHARACTER_AFFILIATION_MAX_IDS);
+	$ssocharacterids = array_slice($ssocharacterids, \Osmium\EveApi\CHARACTER_AFFILIATION_MAX_IDS);
+	$xml = \Osmium\EveApi\fetch('/eve/CharacterAffiliation.xml.aspx', [
+		'ids' => implode(',', $batch),
+	], null, $etype, $estr);
+	if($xml === false) {
+		/* XXX: display this properly */
+		foreach($batch as $charid) $ssocharacternames[$charid] = 'Character #'.$charid;
+	} else {
+		foreach($xml->result->rowset->row as $row) {
+			$ssocharacternames[(string)$row['characterID']] = (string)$row['characterName'];
+		}
+	}
+}
+
+
+
+if(isset($_POST['verifyfromsso']) && isset($ssocharacternames[$_POST['characterid']])) {
+	if(\Osmium\State\register_ccp_oauth_character_account_auth($a['accountid'], $_POST['characterid'], $etype, $estr) !== true) {
+		$p->formerrors['characterid'][] = '('.$etype.') '.$estr;
+	} else {
+		\Osmium\State\do_post_login($a['accountid']);
+		$a = \Osmium\State\get_state('a');
+	}
+} else if(isset($_POST['unverify'])) {
 	\Osmium\State\unverify_account($a['accountid']);
-	\Osmium\State\do_post_login($a['accountname']);
+	\Osmium\Db\query_params(
+		'UPDATE osmium.accounts SET characterid = NULL, charactername = NULL
+		WHERE accountid = $1',
+		[ $a['accountid'] ]
+	);
+	\Osmium\State\do_post_login($a['accountid']);
 	$a = \Osmium\State\get_state('a');
 	unset($_POST['key_id']);
 	unset($_POST['v_code']);
@@ -45,15 +89,15 @@ if(isset($_POST['unverify'])) {
 		$v_code = $a['verificationcode'];
 	}
 
-	$verified = \Osmium\State\register_eve_api_key_account_auth(
+	if($v_code !== \Osmium\State\get_state('eveapi_auth_vcode')) {
+		$p->formerrors['v_code'][] = 'You must use the verification code given above.';
+	} else if($verified = \Osmium\State\register_eve_api_key_account_auth(
 		$a['accountid'], $key_id, $v_code,
 		$etype, $estr
-	);
-
-	if($verified === false) {
+	) === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 	} else {
-		\Osmium\State\do_post_login($a['accountname']);
+		\Osmium\State\do_post_login($a['accountid']);
 		$a = \Osmium\State\get_state('a');
 	}
 
@@ -70,110 +114,372 @@ if(isset($_POST['unverify'])) {
 	}
 }
 
+
+
 $div = $p->content->appendCreate('div#account_settings');
 
 $ul = $div->appendCreate('ul.tindex');
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changepw', 'Change passphrase' ]);
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_apiauth', 'Account status' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_characters', 'Characters and skills' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_features', 'Account features' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_accountauth', 'Authentication methods' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#s_changenick', 'Change nickname' ]);
 
 
 
-$section = $div->appendCreate('section#s_changepw');
-$section->appendCreate('h1', 'Change passphrase');
+$section = $div->appendCreate('section#s_changenick');
+$section->appendCreate('h1', 'Change nickname');
 
-if(isset($_POST['curpw'])) {
-	$cur = $_POST['curpw'];
-	$new = $_POST['newpw'];
+$lastchange = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT lastnicknamechange FROM osmium.accounts
+	WHERE accountid = $1',
+	[ $a['accountid'] ]
+))[0];
 
-	if($new !== $_POST['newpw2']) {
-		$p->formerrors['newpw2'][] = 'The two passphrases are not equal.';
-	} else if(($s = \Osmium\State\is_password_sane($new)) !== true) {
-		$p->formerrors['newpw'][] = $s;
-	} else {
-		$accountid = \Osmium\State\get_state('a')['accountid'];
-		$apw = \Osmium\Db\fetch_row(
-			\Osmium\Db\query_params(
-				'SELECT passwordhash FROM osmium.accounts
-				WHERE accountid = $1',
-				array($accountid)
-			)
-		)[0];
+$now = time();
+$cutoff = $now - NICKNAME_CHANGE_WINDOW;
 
-		if(!\Osmium\State\check_password($cur, $apw)) {
-			$p->formerrors['curpw'][] = [
-				'Incorrect passphrase. If you forgot your passphrase, sign out and use the ',
-				[ 'a', [ 'o-rel-href' => '/resetpassword', 'reset passphrase' ] ],
-				' page.',
-			];
-		} else {
-			$newhash = \Osmium\State\hash_password($new);
-			\Osmium\Db\query_params(
-				'UPDATE osmium.accounts SET passwordhash = $1
-				WHERE accountid = $2',
-				array($newhash, $accountid)
-			);
+if(($lastchange === null || $lastchange <= $cutoff) && isset($_POST['newnick'])
+   && \Osmium\Login\check_nickname($p, 'newnick')) {
+	/* XXX: require sudo mode */
 
-			$section->appendCreate('p.notice_box', 'Passphrase was successfully changed.');
-		}
-	}
+	$lastchange = time();
+	$a['nickname'] = $_POST['newnick'];
+	\Osmium\State\put_state('a', $a);
+
+	\Osmium\Db\query_params(
+		'UPDATE osmium.accounts SET nickname = $2, lastnicknamechange = $3 WHERE accountid = $1',
+		[ $a['accountid'], $a['nickname'], $lastchange ]
+	);
+
+	$section->appendCreate('p.notice_box', 'Nickname was successfully changed.');
+}
+
+$canchange = ($lastchange === null || $lastchange <= $cutoff);
+
+if(!$canchange) {
+	$section->appendCreate(
+		'p',
+		'You last changed your nickname '.$p->formatDuration($now - $lastchange, false, 1)
+		.' ago. You will be able to change your nickname again in '
+		.$p->formatDuration($lastchange + NICKNAME_CHANGE_WINDOW - $now, false, 1).'.'
+	);
+}
+
+if($canchange) {
+	$section->appendCreate('p')->appendCreate(
+		'strong',
+		'To prevent abuse, you can only change your nickname every '
+		.$p->formatDuration(NICKNAME_CHANGE_WINDOW).'.'
+	);
 }
 
 $tbody = $section
-	->appendCreate('o-form', [ 'action' => '#s_changepw', 'method' => 'post' ])
+	->appendCreate('o-form', [ 'action' => '#s_changenick', 'method' => 'post' ])
+	                     ->appendCreate('table')
+	->appendCreate('tbody')
+	;
+
+$tbody->append($p->makeFormRawRow(
+	[[ 'label', 'Current nickname' ]],
+	[[ 'input', [
+		'readonly' => 'readonly',
+		'type' => 'text',
+		'value' => $a['nickname'],
+	] ]]
+));
+
+if($canchange) {
+	$tbody->append($p->makeFormInputRow('text', 'newnick', 'New nickname'));
+	$tbody->append($p->makeFormSubmitRow('Change nickname'));
+}
+
+
+
+$section = $div->appendCreate('section#s_accountauth');
+$section->appendCreate('h1', 'Authentication methods');
+
+if(isset($_POST['delete'])) {
+	$id = key($_POST['delete']);
+
+	\Osmium\Db\query('BEGIN');
+
+	$count = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(accountcredentialsid)
+		FROM osmium.accountcredentials
+		WHERE accountid = $1',
+		[ $a['accountid'] ]
+	))[0];
+
+	if($count < 2) {
+		$section->appendCreate(
+			'p.error_box',
+			'You cannot delete your only way of signing in to your account. That\'s silly!'
+		);
+
+		\Osmium\Db\query('ROLLBACK');
+	} else {
+		/* XXX: require sudo mode */
+		\Osmium\Db\query_params(
+			'DELETE FROM osmium.accountcredentials
+			WHERE accountcredentialsid = $1 AND accountid = $2',
+			[ $id, $a['accountid'] ]
+		);
+		\Osmium\Db\query('COMMIT');
+	}
+}
+
+if(isset($_POST['changepw'])) {
+	$id = key($_POST['changepw']);
+
+	if(\Osmium\Login\check_passphrase(
+		$p, 'newpw['.$id.']', 'newpw2['.$id.']',
+		$_POST['newpw'][$id], $_POST['newpw2'][$id]
+	)) {
+		/* XXX: require sudo mode for this */
+
+		$newhash = \Osmium\State\hash_password($_POST['newpw'][$id]);
+		\Osmium\Db\query_params(
+			'UPDATE osmium.accountcredentials SET passwordhash = $1
+			WHERE accountcredentialsid = $3 AND accountid = $2 AND passwordhash IS NOT NULL',
+			[ $newhash, $a['accountid'], $id ]
+		);
+
+		$section->appendCreate('p.notice_box', 'Passphrase was successfully changed.');	
+	}
+}
+
+if(isset($_POST['username'])
+   && \Osmium\Login\check_username_and_passphrase($p, 'username', 'passphrase', 'passphrase2')) {
+	\Osmium\Db\query_params(
+		'INSERT INTO osmium.accountcredentials (accountid, username, passwordhash)
+		VALUES ($1, $2, $3)', [
+			$a['accountid'],
+			$_POST['username'],
+			\Osmium\State\hash_password($_POST['passphrase']),
+	]);
+}
+
+if(isset($_POST['ccpssoinit'])) {
+	/* XXX: require sudo mode */
+	\Osmium\State\ccp_oauth_redirect([
+		'action' => 'associate',
+		'accountid' => $a['accountid'],
+	]);
+}
+
+$table = $section->appendCreate('table.d');
+
+$thead = $table->appendCreate('thead');
+$tbody = $table->appendCreate('tbody');
+
+$trh = $thead->appendCreate('tr');
+$trh->appendCreate('th', '#');
+$trh->appendCreate('th', 'Type');
+$trh->appendCreate('th', 'UID');
+$trh->appendCreate('th', [ 'colspan' => '2', 'Actions' ]);
+
+$crq = \Osmium\Db\query_params(
+	'SELECT accountcredentialsid, username, passwordhash, ccpoauthcharacterid, ccpoauthownerhash
+	FROM osmium.accountcredentials
+	WHERE accountid = $1
+	ORDER BY accountcredentialsid ASC',
+	[ $a['accountid'] ]
+);
+
+$ccpoauthonly = true;
+
+while($row = \Osmium\Db\fetch_assoc($crq)) {
+	$tr = $tbody->appendCreate('tr');
+	
+	$id = $row['accountcredentialsid'];
+	$tr->appendCreate('th', '#'.$id);
+	$type = $tr->appendCreate('th');
+	$uid = $tr->appendCreate('td');
+
+	$actions = $tr
+		->appendCreate('td.actions')
+		->appendCreate('o-form', [ 'action' => '#s_accountauth', 'method' => 'post' ]);
+
+	$tr
+		->appendCreate('td')
+		->appendCreate('o-form', [ 'action' => '#s_accountauth', 'method' => 'post' ])
+		->appendCreate('input.confirm.dangerous', [
+			'type' => 'submit',
+			'name' => 'delete['.$id.']',
+			'value' => 'Delete this method',
+		]);
+
+	if($row['ccpoauthcharacterid'] === null) $ccpoauthonly = false;
+
+	if($row['username'] !== null) {
+		$type->append('Username and passphrase');
+		$uid->appendCreate('code', $row['username']);
+
+		$actions->appendCreate('o-input', [
+			'type' => 'password',
+			'placeholder' => 'New passphrase…',
+			'name' => 'newpw['.$id.']',
+		]);
+		$actions->appendCreate('o-input', [
+			'type' => 'password',
+			'placeholder' => 'Confirm passphrase…',
+			'name' => 'newpw2['.$id.']',
+		]);
+		$actions->appendCreate('input', [
+			'type' => 'submit',
+			'name' => 'changepw['.$id.']',
+			'value' => 'Change passphrase'
+		]);
+	} else if($row['ccpoauthcharacterid'] !== null) {
+		$type->append('CCP OAuth2 (Single Sign On)');
+		$uid->setAttribute('class', 'sso');
+		$uid->appendCreate(
+			'o-eve-img',
+			[ 'alt' => '', 'src' => '/Character/'.$row['ccpoauthcharacterid'].'_128.jpg' ]
+		);
+		$code = $uid->appendCreate('code');
+		$code->append($ssocharacternames[$row['ccpoauthcharacterid']]);
+		$code->appendCreate('br');
+		$code->appendCreate('abbr', [ 'OwnerHash', 'title' => 'A unique identifier of the character owner. If this character ever gets transferred to another EVE account, this value will change and the character will no longer be able to authenticate this account.' ]);
+		$code->append(' '.$row['ccpoauthownerhash']);
+	}
+}
+
+if($ccpoauthonly) {
+	$table->before($p->element('p.warning_box', [[
+		'strong',
+		'If the characters below move to another EVE account, you will be locked out of your Osmium account for good. It is recommended you create a username and passphrase using the form below.'
+	]]));
+}
+
+$section->appendCreate('h1', 'Add a new authentication method');
+$ul = $section->appendCreate('ul');
+
+$li = $ul->appendCreate('li');
+$li->appendCreate('h3', 'Username and passphrase');
+$tbody = $li
+	->appendCreate('o-form', [ 'action' => '#s_accountauth', 'method' => 'post' ])
 	->appendCreate('table')
 	->appendCreate('tbody')
 	;
 
-$tbody->append($p->makeFormInputRow('password', 'curpw', 'Current passphrase'));
-$tbody->append($p->makeFormInputRow('password', 'newpw', 'New passphrase'));
-$tbody->append($p->makeFormInputRow('password', 'newpw2', [
-	'New passphrase',
-	[ 'br' ],
-	[ 'small', '(confirm)' ],
-]));
-$tbody->append($p->makeFormSubmitRow('Update passphrase'));
+$tbody->append($p->makeFormInputRow('text', 'username', 'User name'));
+$tbody->append($p->makeFormInputRow('password', 'passphrase', 'Passphrase'));
+$tbody->append($p->makeFormInputRow('password', 'passphrase2', [ 'Passphrase', [ 'br' ], [ 'small', '(confirm)' ] ]));
+$tbody->append($p->makeFormSubmitRow('Add username and passphrase'));
+
+$li = $p->element('li');
+$li->appendCreate('h3', 'CCP OAuth2 (Single Sign On)');
+$li->appendCreate('p')->appendCreate(
+	'o-form',
+	[ 'method' => 'post', 'action' => '#s_accountauth' ]
+)->appendCreate(
+	'input',
+	[ 'type' => 'submit', 'value' => 'Associate my EVE character', 'name' => 'ccpssoinit' ]
+);
+if(\Osmium\get_ini_setting('ccp_oauth_available')) $ul->append($li);
 
 
 
-$section = $div->appendCreate('section#s_apiauth');
-$section->appendCreate('h1', 'Account status');
+$section = $div->appendCreate('section#s_features');
+$section->appendCreate('h1', 'Account features');
 
-if($a['apiverified'] === 't') {
-	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
-		$section->appendCreate(
-			'p.error_box',
-			'Your API credentials are correct, but your character is not allowed to access this Osmium instance. Please contact the administrators if you have trouble authenticating your character.'
-		);
-	} else {
-		$section->appendCreate('p.notice_box', 'Your account is API-verified.');
-	}
-} else {
-	if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
-		$section->appendCreate(
-			'p.error_box',
-			'You need to API-verify your account before you can access this Osmium instance.'
-		);
-	} else {
-		$section->appendCreate('p.warning_box', [
-			'Your account is ',
-			[ 'strong', 'not' ],
-			' API-verified.',
-		]);
-	}
-
-	$section->appendCreate('p', 'Verifying your account with an API key will allow you to:');
-	$ul = $section->appendCreate('ul');
-	$ul->appendCreate('li', 'Share loadouts with your corporation or alliance, and access corporation or alliance-restricted loadouts;');
-	$ul->appendCreate('li', 'Have your character name used instead of your nickname;');
-	$ul->appendCreate('li', 'Reset your passphrase if you ever forget it.');
+if($a['apiverified'] === 't' && isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+	$section->appendCreate(
+		'p.error_box',
+		'Your character is not allowed to access this Osmium instance. Please contact the administrators if you have trouble authenticating your character.'
+	);
+} else if(isset($a['notwhitelisted']) && $a['notwhitelisted']) {
+	$section->appendCreate(
+		'p.error_box',
+		'You need to add an EVE character to your account before you can access this Osmium instance.'
+	);
 }
 
-$section->appendCreate('h2', 'API credentials');
-$section->append(\Osmium\State\make_api_link());
+$ul = $section->appendCreate('ul#features');
+
+$li = $ul->appendCreate('li');
+if($a['apiverified'] === 't') {
+	$li->append('Character ');
+	$li->appendCreate('strong', $a['charactername']);
+	$li->append(' is used as your display name and used to check permissions.');
+
+	if($a['keyid'] > 0 && $a['expirationdate'] !== null) {
+		$expiresin = $a['expirationdate'] - time();
+		if($expiresin <= 0) {
+			$ul->appendCreate('li.m', 'API key is expired!');
+		} else {
+			$ul->appendCreate('li', 'API key expires ')->append($p->formatRelativeDate($a['expirationdate']));
+		}
+	}
+} else {
+	$li->append('Nickname ');
+	$li->appendCreate('strong', $a['nickname']);
+	$li->append(' is used as your display name.');
+}
+
+if($a['characterid'] !== null) {
+	$li = $ul->appendCreate('li.a', 'Passphrase can be reset at any time using character ');
+	$li->appendCreate('strong', $a['charactername'] ?: '#'.$a['characterid']);
+	$li->append('.');
+} else {
+	$ul->appendCreate('li.m', 'Passphrase can not be reset. It is strongly recommended you add an EVE character to your account.');
+}
+
+if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\ACCOUNT_STATUS_ACCESS_MASK) {
+	$ul->appendCreate(
+		'li.a',
+		'Your can cast votes. You still need the relevant privileges to cast specific votes.'
+	);
+} else {
+	$ul->appendCreate(
+		'li.m',
+		'You can not cast votes. It requires an API key with AccountStatus access.'
+	);
+}
+
+if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\CONTACT_LIST_ACCESS_MASK) {
+	$ul->appendCreate('li.a', 'Contact list is available for standings.');
+} else {
+	$li = $ul->appendCreate(
+		'li.m',
+		'Contact list not available. It requires an API key with ContactList access.'
+	);
+	$li->appendCreate('br');
+	$li->append('Loadouts you publish with standings-restricted permissions will not behave as expected, but you can still access standings-restricted loadouts published by others.');
+}
+
+if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\CHARACTER_SHEET_ACCESS_MASK) {
+	$li = $ul->appendCreate('li.a', 'Character sheet is available.');
+	if($a['isfittingmanager'] === 't') {
+		$li->append(' You are a fitting manager in your corporation.');
+	} else {
+		$li->append(' You are not a fitting manager in your corporation.');
+	}
+} else if($a['apiverified'] === 't') {
+	$ul->appendCreate(
+		'li.m',
+		'Character sheet not available. By default Osmium will assume you are not a fitting manager in your corporation.'
+	);
+}
+
+$section->appendCreate('h1', 'Add EVE character from API');
+
+$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.(
+	\Osmium\State\CHARACTER_SHEET_ACCESS_MASK
+	| \Osmium\State\CONTACT_LIST_ACCESS_MASK
+	| \Osmium\State\ACCOUNT_STATUS_ACCESS_MASK
+);
+$par = $section->appendCreate('p', 'You can create an API key here: ');
+$par->appendCreate('a', [ 'href' => $uri, $uri ]);
+
+$section->append(\Osmium\Login\make_forced_vcode_box($p, $a['accountid'], 'v_code', '#s_features'));
+
+$section->appendCreate('p', 'You can disable or enable any calls you want, the suggested mask contains all the calls Osmium can make use of.');
+$section->appendCreate('p', 'If you are having errors, you may have to wait for the cache to expire, or create a new key to get around the caching.');
 
 $tbody = $section
-	->appendCreate('o-form', [ 'action' => '#s_apiauth', 'method' => 'post' ])
+	->appendCreate('o-form', [ 'action' => '#s_features', 'method' => 'post' ])
 	->appendCreate('table')
 	->appendCreate('tbody')
 	;
@@ -181,12 +487,60 @@ $tbody = $section
 $tbody->append($p->makeFormInputRow('text', 'key_id', 'API Key ID'));
 $tbody->append($p->makeFormInputRow('text', 'v_code', 'Verification Code'));
 $tbody->append($p->makeFormRawRow(
-	'', [
-		[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Set API credentials' ] ],
-		' ',
-		[ 'input', [ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove API credentials' ] ],
-	]
+	'',
+	[[ 'input', [ 'type' => 'submit', 'name' => 'verify', 'value' => 'Use character' ] ]]
 ));
+
+if(\Osmium\get_ini_setting('ccp_oauth_available')) {
+	$section->appendCreate('h1', 'Add EVE character from CCP OAuth2 (Single Sign On)');
+	$section->appendCreate('p', 'You must first associate your character in the "Authentication methods" tab. It will then appear in the list below.');
+
+	$tbody = $section
+		->appendCreate('o-form', [ 'action' => '#s_features', 'method' => 'post' ])
+		->appendCreate('table')
+		->appendCreate('tbody')
+		;
+
+	$tr = $tbody->appendCreate('tr');
+	$tr->appendCreate('th')->appendCreate('label', [
+		'for' => 'characterid',
+		'Character',
+	]);
+
+	$select = $tr->appendCreate('td')->appendCreate('o-select', [
+		'name' => 'characterid',
+		'id' => 'characterid',
+	]);
+
+	foreach($ssocharacternames as $id => $name) {
+		$select->appendCreate('option', [
+			'value' => $id,
+			$name,
+		]);
+	}
+	if($ssocharacternames === []) {
+		$select->setAttribute('disabled', 'disabled');
+		$select->appendCreate('option', [
+			'value' => '0',
+			'N/A',
+		]);
+	}
+
+	$tbody->append($p->makeFormRawRow(
+		'', $p->element('input', [
+			'type' => 'submit',
+			'value' => 'Use character',
+			'name' => 'verifyfromsso',
+		])
+	));
+}
+
+$section->appendCreate('h1', 'Remove EVE character');
+$section->appendCreate('p', 'If you wish to remove the character associated to your account, use the button below. Use this if you plan to transfer the EVE character to someone else, but you want to keep the new owner from being able to reset the passphrase of your Osmium account.');
+$section->appendCreate('o-form', [ 'method' => 'post', 'action' => '#s_features' ])->appendCreate(
+	'input.dangerous.confirm',
+	[ 'type' => 'submit', 'name' => 'unverify', 'value' => 'Remove character', ]
+);
 
 
 

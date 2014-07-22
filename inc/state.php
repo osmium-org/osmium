@@ -39,12 +39,12 @@ function is_logged_in() {
  * Hook that gets called when the user successfully logged in (either
  * directly from the login form, or from a cookie token).
  *
- * @param $account_name the name of the account the user logged into.
+ * @param $accountid ID of the account to log in as
  *
  * @param $use_tookie if true, a cookie must be set to mimic a
  * "remember me" feature.
  */
-function do_post_login($account_name, $use_cookie = null) {
+function do_post_login($accountid, $use_cookie = null) {
 	if(isset($_SESSION)) {
 		/* Get rid of old $_SESSION */
 		unset($_SESSION);
@@ -58,15 +58,15 @@ function do_post_login($account_name, $use_cookie = null) {
 		FROM osmium.accounts a
 		LEFT JOIN osmium.eveapikeys eak ON eak.owneraccountid = accountid AND eak.keyid = a.keyid
 		AND eak.active = true
-		WHERE accountname = $1',
-		[ $account_name ]
+		WHERE accountid = $1',
+		[ $accountid ]
 	));
 
 	register_eve_api_key_account_auth($a['accountid'], $a['keyid'], $a['verificationcode']);
 
 	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
-		'SELECT accountid, accountname, nickname,
-		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, apiverified,
+		'SELECT accountid, nickname,
+		a.creationdate, lastlogindate, a.keyid, eak.verificationcode, eak.mask, eak.expirationdate, apiverified,
 		characterid, charactername, corporationid, corporationname, allianceid, alliancename,
 		ismoderator, isfittingmanager
 		FROM osmium.accounts a
@@ -107,7 +107,7 @@ function do_post_login($account_name, $use_cookie = null) {
 		setcookie(
 			'T', $token, $expiration_date,
 			\Osmium\get_ini_setting('relative_path'),
-			\Osmium\HOST,
+			\Osmium\COOKIE_HOST,
 			\Osmium\HTTPS,
 			true
 		);
@@ -142,7 +142,7 @@ function logoff($global = false) {
 	setcookie(
 		'T', false, 0,
 		$rel = \Osmium\get_ini_setting('relative_path'),
-		\Osmium\HOST,
+		\Osmium\COOKIE_HOST,
 		\Osmium\HTTPS,
 		true
 	);
@@ -150,7 +150,7 @@ function logoff($global = false) {
 	setcookie(
 		'O', false, 0,
 		$rel,
-		\Osmium\HOST,
+		\Osmium\COOKIE_HOST,
 		\Osmium\HTTPS,
 		true
 	);
@@ -284,22 +284,22 @@ function try_login() {
 	$pw = $_POST['password'];
 	$remember = isset($_POST['remember']) && $_POST['remember'] === 'on';
 
-	$hash = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT passwordhash FROM osmium.accounts WHERE accountname = $1',
+	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
+		'SELECT accountid, passwordhash FROM osmium.accountcredentials WHERE username = $1',
 		array($account_name)
 	));
 
-	if($hash !== false && check_password($pw, $hash[0])) {
-		if(password_needs_rehash($hash[0])) {
+	if($a !== false && check_password($pw, $a['passwordhash'])) {
+		if(password_needs_rehash($a['passwordhash'])) {
 			$newhash = hash_password($pw);
 			\Osmium\Db\query_params(
-				'UPDATE osmium.accounts SET passwordhash = $1
-				WHERE accountname = $2',
+				'UPDATE osmium.accountcredentials SET passwordhash = $1
+				WHERE username = $2',
 				array($newhash, $account_name)
 			);
 		}
 
-		do_post_login($account_name, $remember);
+		do_post_login($a['accountid'], $remember);
 		return true;
 	} else {
 		return 'Invalid credentials. Please check your account name and passphrase.';
@@ -330,14 +330,7 @@ function try_recover() {
 	));
 
 	if(check_client_attributes($client_attributes)) {
-		$k = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-			'SELECT accountname FROM osmium.accounts WHERE accountid = $1',
-			array($account_id)
-		));
-		if($k !== false) {
-			list($name) = $k;
-			do_post_login($name, true);
-		}
+		do_post_login($account_id, true);
 	}
 
 	\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', array($token));
@@ -391,8 +384,9 @@ function get_eveaccount_id(&$error = null) {
 		$error = 'Please login first.';
 		return false;
 	}
-	if(!isset($a['apiverified']) || $a['apiverified'] !== 't') {
-		$error = 'You must verify your API first.';
+	if(!isset($a['apiverified']) || $a['apiverified'] !== 't'
+	   || $a['keyid'] === null || !($a['mask'] & ACCOUNT_STATUS_ACCESS_MASK)) {
+		$error = 'Requires API with AccountStatus access.';
 		return false;
 	}
 
@@ -492,4 +486,130 @@ function assume_logged_out() {
 	header('HTTP/1.1 303 See Other', true, 303);
 	header('Location: '.\Osmium\get_ini_setting('relative_path'), true, 303);
 	die();
+}
+
+/* Redirect the user to the CCP SSO portal.
+ *
+ * @param $payload some data that dictates what to do when the API
+ * successfully returns a character.
+ */
+function ccp_oauth_redirect($payload) {
+	if(!\Osmium\get_ini_setting('ccp_oauth_available')) {
+		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
+	}
+
+	\Osmium\State\put_state('ccp_oauth_state', $state = get_nonce());
+	\Osmium\State\put_state('ccp_oauth_payload', $payload);
+	header(
+		'Location: '
+		.\Osmium\get_ini_setting('ccp_oauth_root')
+		.'/oauth/authorize'
+		.\Osmium\DOM\Page::formatQueryString([
+			'response_type' => 'code',
+			'redirect_uri' => 'https://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/')/*.'/internal/auth/ccpoauthcallback'*/, /* XXX callback URI fuckup */
+			'client_id' => \Osmium\get_ini_setting('ccp_oauth_clientid'),
+			'scope' => '',
+			'state' => $state,
+		])
+	);
+	die();
+}
+
+/* Verify the authorization code */
+function ccp_oauth_verify(&$errorstr = null) {
+	if(!\Osmium\get_ini_setting('ccp_oauth_available')) {
+		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
+	}
+
+	if(!isset($_GET['code']) || !isset($_GET['state'])
+	   || $_GET['state'] !== \Osmium\State\get_state('ccp_oauth_state')) {
+		return false;
+	}
+
+	$code = $_GET['code'];
+	$c = \Osmium\curl_init_branded(\Osmium\get_ini_setting('ccp_oauth_root').'/oauth/token');
+	curl_setopt($c, CURLOPT_POST, true);
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+
+	/* Passing the array to cURL sets the Content-Type to
+	 * multipart/form-data, something the CCP servers cannot
+	 * handle. Passing it a string gets around that. */
+	curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query([
+		'grant_type' => 'authorization_code',
+		'code' => $code,
+	]));
+	curl_setopt($c, CURLOPT_HTTPHEADER, [ 'Authorization: Basic '.base64_encode(
+		\Osmium\get_ini_setting('ccp_oauth_clientid').':'.\Osmium\get_ini_setting('ccp_oauth_secret')
+	) ]);
+
+	$rawjson = curl_exec($c);
+	if($errno = curl_errno($c)) {
+		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		return false;
+	}
+
+	if(($http_code = curl_getinfo($c, CURLINFO_HTTP_CODE)) !== 200) {
+		$errorstr = 'CCP OAuth returned HTTP code '.$http_code;
+		if($rawjson !== false) $errorstr .= ' ('.$rawjson.')';
+		return false;
+	}
+
+	curl_close($c);
+
+	if($rawjson === false) {
+		$errorstr = 'Unnumbered cURL error, please report!';
+		return false;
+	}
+
+	$json = json_decode($rawjson, true);
+	if(json_last_error() !== JSON_ERROR_NONE) {
+		$errorstr = 'Could not parse received JSON document.';
+		return false;
+	}
+
+	return $json;
+}
+
+/* Get the characterID from an access token. */
+function ccp_oauth_get_characterid($accesstoken, &$errorstr = null) {
+	if(!\Osmium\get_ini_setting('ccp_oauth_available')) {
+		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
+	}
+
+	if(!isset($_GET['code']) || !isset($_GET['state'])
+	   || $_GET['state'] !== \Osmium\State\get_state('ccp_oauth_state')) {
+		return false;
+	}
+
+	$code = $_GET['code'];
+	$c = \Osmium\curl_init_branded(\Osmium\get_ini_setting('ccp_oauth_root').'/oauth/verify');
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($c, CURLOPT_HTTPHEADER, [ 'Authorization: Bearer '.$accesstoken ]);
+
+	$rawjson = curl_exec($c);
+	if($errno = curl_errno($c)) {
+		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		return false;
+	}
+
+	if(($http_code = curl_getinfo($c, CURLINFO_HTTP_CODE)) !== 200) {
+		$errorstr = 'CCP OAuth returned HTTP code '.$http_code;
+		if($rawjson !== false) $errorstr .= ' ('.$rawjson.')';
+		return false;
+	}
+
+	curl_close($c);
+
+	if($rawjson === false) {
+		$errorstr = 'Unnumbered cURL error, please report!';
+		return false;
+	}
+
+	$json = json_decode($rawjson, true);
+	if(json_last_error() !== JSON_ERROR_NONE) {
+		$errorstr = 'Could not parse received JSON document.';
+		return false;
+	}
+
+	return $json;
 }

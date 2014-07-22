@@ -23,8 +23,9 @@ require __DIR__.'/../inc/root.php';
  * size), and should not contain more than 50,000 URLs. */
 const BATCH_SIZE = 50000;
 
-$root = rtrim(\Osmium\get_ini_setting('sitemap_root')
-              .\Osmium\get_ini_setting('relative_path'), '/');
+$proto = \Osmium\get_ini_setting('https_available') && \Osmium\get_ini_setting('https_canonical')
+	? 'https' : 'http';
+$root = $proto.'://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/');
 
 /* Sitemap requires ISO8601 */
 $fdate = function($ts) { return date('c', $ts); };
