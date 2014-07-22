@@ -1,0 +1,60 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\ReverifyAccounts;
+
+require __DIR__.'/../inc/root.php';
+
+if($argc === 3) {
+	list(, $modtotal, $modcurrent) = $argv;
+} else {
+	$modcurrent = 0;
+	$modtotal = 1;
+}
+
+if($modcurrent >= $modtotal) die();
+
+$q = \Osmium\Db\query_params(
+	'SELECT a.accountid, a.keyid, eak.verificationcode
+	FROM osmium.accounts a
+	JOIN osmium.eveapikeys eak ON eak.keyid = a.keyid AND eak.owneraccountid = a.accountid
+	WHERE a.keyid IS NOT NULL AND mod(a.keyid, $1) = $2
+	ORDER BY a.lastlogindate DESC',
+	array($modtotal, $modcurrent)
+);
+
+\Osmium\Db\query('BEGIN');
+
+while($key = \Osmium\Db\fetch_assoc($q)) {
+	$ret = \Osmium\State\register_eve_api_key_account_auth(
+		$key['accountid'],
+		$key['keyid'],
+		$key['verificationcode'],
+		$etype
+	);
+
+	if($ret === false) {
+		echo 'UBNI'[$etype];
+	}
+
+	echo '.';
+}
+
+\Osmium\Db\query('COMMIT');
+echo "\n";

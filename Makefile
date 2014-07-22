@@ -54,6 +54,9 @@ post-eve-schema-update: reindex-loadouts
 update-eveapis:
 	./bin/parallelize 16 ./bin/update_eveapis
 
+reverify-accounts:
+	./bin/parallelize 16 ./bin/reverify_accounts
+
 reindex-loadouts:
 	./bin/truncate_loadout_index
 	./bin/parallelize 8 ./bin/reindex_loadouts
