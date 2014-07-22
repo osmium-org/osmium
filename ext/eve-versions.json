@@ -1,16 +1,9 @@
 [
     {
-        "tag": "kronos-12",
-        "name": "Kronos 1.2",
-        "build": 797363,
-        "reldate": 1402617600,
-        "dogmaver": 13
-    },
-    {
-        "tag": "kronos-11",
-        "name": "Kronos 1.1",
-        "build": 793961,
-        "reldate": 1401926400,
+        "tag": "crius-10",
+        "name": "Crius 1.0",
+        "build": 812837,
+        "reldate": 1405987200,
         "dogmaver": 13
     },
     {
