@@ -506,7 +506,9 @@ function ccp_oauth_redirect($payload) {
 		.'/oauth/authorize'
 		.\Osmium\DOM\Page::formatQueryString([
 			'response_type' => 'code',
-			'redirect_uri' => 'https://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/')/*.'/internal/auth/ccpoauthcallback'*/, /* XXX callback URI fuckup */
+			'redirect_uri' => 'https://'.\Osmium\get_ini_setting('host')
+			                  .rtrim(\Osmium\get_ini_setting('relative_path'), '/')
+			                  .'/internal/auth/ccpoauthcallback',
 			'client_id' => \Osmium\get_ini_setting('ccp_oauth_clientid'),
 			'scope' => '',
 			'state' => $state,
