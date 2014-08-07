@@ -304,6 +304,11 @@ $searchexamples = array(
 
 $section = $nls->appendCreate('section#search');
 $form = $section->appendCreate('form', [ 'method' => 'get', 'action' => '?' ]);
+$form->appendCreate('input', [
+	'type' => 'hidden',
+	'name' => 'o___csrf',
+	'value' => \Osmium\State\get_token(),
+]);
 $form->appendCreate('ul.filters');
 $div = $form->appendCreate('div.query');
 $div->appendCreate('div')->appendCreate('input', [
