@@ -38,7 +38,7 @@ class Page extends RawPage {
 			'//fonts.googleapis.com',
 			'//cdnjs.cloudflare.com',
 		],
-		'font-src' => [ '//themes.googleusercontent.com' ],
+		'font-src' => [ '//fonts.gstatic.com' ],
 		'img-src' => [ "'self'", '//image.eveonline.com' ],
 		'script-src' => [ "'self'", '//cdnjs.cloudflare.com' ],
 		'connect-src' => [ "'self'" ],
