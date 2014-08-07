@@ -38,11 +38,11 @@ if(isset($_POST['key_id']) && \Osmium\Login\check_passphrase($p, 'password_0', '
 
 	if($vcode !== \Osmium\State\get_state('eveapi_auth_vcode')) {
 		$p->formerrors['v_code'][] = 'You must use the verification code above.';
-	} else if($keyinfo = \Osmium\EveApi\fetch(
+	} else if(($keyinfo = \Osmium\EveApi\fetch(
 		'/account/APIKeyInfo.xml.aspx',
 		[ 'keyID' => $keyid, 'vCode' => $vcode ],
 		null, $etype, $estr
-	) === false) {
+	)) === false) {
 		$p->formerrors['key_id'][] = '('.$etype.') '.$estr;
 
 	} else if(($characterid = (int)$keyinfo->result->key->rowset->row['characterID']) === 0) {
