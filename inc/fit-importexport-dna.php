@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -80,24 +80,8 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 			/* The game won't generate/recognize charges, but it
 			 * dosen't hurt to support them */
 
-			for($z = 0; $z < $qty; ++$z) {
-				/* Fit charge to first appropriate module */
-				foreach($modules as $type => $a) {
-					foreach($a as $index => $m) {
-						if(isset($charges[$type][$index])) continue;
-						if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module($m, $typeid)) continue;
-						
-						$charges[$type][$index] = $typeid;
-						add_charge($fit, $type, $index, $typeid);
-
-						continue 3;
-					}
-				}
-
-				$errors[] = 'Could not add charge "'.$typeid.'", discarded.';
-				/* There's no point trying to add the same charge
-				 * again, all the modules have already been tested */
-				break;
+			if(add_charge_auto($fit, $typeid, $qty) === 0) {
+				$errors[] = 'Did not know where to put charge '.$typeid.'. Discarded';
 			}
 		}
 		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {

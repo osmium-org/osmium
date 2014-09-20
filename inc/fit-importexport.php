@@ -360,6 +360,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 	select_ship($fit, $shipid);
 
 	$indexes = array();
+	$charges = array();
 
 	if(!isset($e->hardware)) return $fit;
 	foreach($e->hardware as $hardware) {
@@ -388,6 +389,19 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 			}
 
 			add_drone_auto($fit, $typeid, (int)$hardware['qty']);
+		} else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
+			if(!isset($hardware['slot']) || (string)$hardware['slot'] !== 'cargo') {
+				$errors[] = 'Nonsensical slot attribute for charge: "'.((string)$hardware['slot']).'". Discarded';
+				continue;
+			}
+
+			if(!isset($hardware['qty']) || (int)$hardware['qty'] < 0) {
+				$errors[] = 'Incorrect qty attribute for charge: "'.((int)$hardware['qty']).'". Discarded.';
+				continue;
+			}
+
+			if(!isset($charges[$typeid])) $charges[$typeid] = 0;
+			$charges[$typeid] += (int)$hardware['qty'];
 		} else {
 			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
 			if($slottype === 'unknown') {
@@ -408,6 +422,12 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 				$errors[] = 'No index found for module "'.$type.'". Discarded.';
 				continue;
 			}
+		}
+	}
+
+	foreach($charges as $typeid => $qty) {
+		if(add_charge_auto($fit, $typeid, $qty) === 0) {
+			$errors[] = 'Did not know where to put charge '.$typeid.'. Discarded';
 		}
 	}
 
@@ -973,6 +993,42 @@ function export_to_eve_xml_single(\DOMDocument $f, $fit, $embedclf = true) {
 		$aslot->appendChild($f->createTextNode('drone bay'));
 		$atype = $f->createAttribute('type');
 		$atype->appendChild($f->createTextNode($drone['typename']));
+		$ehardware->appendChild($aqty);
+		$ehardware->appendChild($aslot);
+		$ehardware->appendChild($atype);
+		$e->appendChild($ehardware);
+	}
+
+	$charges = [];
+	foreach($fit['charges'] as $type => $a) {
+		foreach($a as $index => $c) {
+			$cv = \Osmium\Dogma\get_charge_attribute($fit, $type, $index, 'volume');
+			$mc = \Osmium\Dogma\get_module_attribute($fit, $type, $index, 'capacity');
+
+			if($cv > 1e-300) {
+				$qty = (int)floor($mc / $cv);
+			} else {
+				$qty = 1;
+			}
+
+			if(!isset($charges[$c['typeid']])) {
+				$charges[$c['typeid']] = [ $qty, $c['typename'] ];
+			} else {
+				$charges[$c['typeid']][0] += $qty;
+			}
+		}
+	}
+
+	foreach($charges as $typeid => $c) {
+		list($qty, $name) = $c;
+
+		$ehardware = $f->createElement('hardware');
+		$aqty = $f->createAttribute('qty');
+		$aqty->appendChild($f->createTextNode($qty));
+		$aslot = $f->createAttribute('slot');
+		$aslot->appendChild($f->createTextNode('cargo'));
+		$atype = $f->createAttribute('type');
+		$atype->appendChild($f->createTextNode($name));
 		$ehardware->appendChild($aqty);
 		$ehardware->appendChild($aslot);
 		$ehardware->appendChild($atype);

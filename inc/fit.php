@@ -620,6 +620,35 @@ function remove_charge(&$fit, $slottype, $index) {
 }
 
 
+/*
+ * Add a charge to the first fitted module that can accept it.
+ *
+ * @returns the number of charges that were actually added.
+ */
+function add_charge_auto(&$fit, $chargetypeid, $quantity = 1) {
+	for($z = 0; $z < $quantity; ++$z) {
+		/* Fit charge to first appropriate module */
+		foreach($fit['modules'] as $type => $a) {
+			foreach($a as $index => $m) {
+				if(isset($fit['charges'][$type][$index])) continue;
+				if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module(
+					$m['typeid'], $chargetypeid
+				)) continue;
+
+				add_charge($fit, $type, $index, $chargetypeid);
+				continue 3;
+			}
+		}
+
+		/* There's no point trying to add the same charge
+		 * again, all the modules have already been tested */
+		break;
+	}
+
+	return $z;
+}
+
+
 
 /* ----------------------------------------------------- */
 
