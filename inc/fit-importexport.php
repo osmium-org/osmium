@@ -135,9 +135,7 @@ function get_import_formats() {
 
 					if(isset($xml->shipType)) {
 						$fits[] = try_parse_fit_from_eve_xml($xml, $errors);
-					} else if(isset($xml->fitting) && isset($xml->fitting->shipType)) {
-						$fits[] = try_parse_fit_from_eve_xml($xml->fitting, $errors);
-					} else if(isset($xml->fitting) && is_array($xml->fitting[0]->shipType)) {
+					} else if(isset($xml->fitting)) {
 						foreach($xml->fitting as $f) {
 							$fits[] = try_parse_fit_from_eve_xml($f, $errors);
 						}
