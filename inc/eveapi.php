@@ -33,7 +33,7 @@ const DEFAULT_API_TIMEOUT = 5;
 const MAX_API_REQUESTS_IN_ONE_SECOND = 20;
 
 /* Maximum number of IDs that can be passed to CharacterAffiliation. */
-const CHARACTER_AFFILIATION_MAX_IDS = 250;
+const CHARACTER_AFFILIATION_MAX_IDS = 100;
 
 
 
