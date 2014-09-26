@@ -412,7 +412,7 @@ function put_setting($key, $value) {
  * semaphore_acquire() use a different namespace.
  */
 function semaphore_acquire_nc($name, $prefix = 'Sem_NC') {
-	$f = fopen($filename = \Osmium\CACHE_DIRECTORY.'/'.$prefix.'_'.str_replace('/', '_', $name), 'cb');
+	$f = fopen($filename = get_cache_file($name, $prefix), 'cb');
 	touch($filename, 0);
 	if($f === false) return false;
 	if(flock($f, LOCK_EX) === false) return false;
