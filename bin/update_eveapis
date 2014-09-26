@@ -30,8 +30,6 @@ if($argc === 3) {
 
 if($modcurrent >= $modtotal) die();
 
-/* XXX: use /eve/CharacterAffiliation.xml.aspx in batch operations */
-
 $q = \Osmium\Db\query_params(
 	'SELECT owneraccountid, keyid, verificationcode
 	FROM osmium.eveapikeys
