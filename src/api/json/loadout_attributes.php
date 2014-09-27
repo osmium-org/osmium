@@ -18,6 +18,9 @@
 
 namespace Osmium\API\LoadoutAttributes;
 
+define('Osmium\NO_CSRF_CHECK', true);
+define('Osmium\NO_PRG', true);
+
 require __DIR__.'/../../../inc/root.php';
 require \Osmium\ROOT.'/inc/api_common.php';
 

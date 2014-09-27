@@ -32,7 +32,7 @@ function post_redirect_get() {
 		return;
 	}
 
-	if(isset($_GET['__NO_PRG'])) return;
+	if(isset($_GET['__NO_PRG']) || defined('Osmium\NO_PRG')) return;
 
 	$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '__cli';
 
