@@ -546,7 +546,7 @@ function ccp_oauth_verify(&$errorstr = null) {
 
 	$rawjson = curl_exec($c);
 	if($errno = curl_errno($c)) {
-		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		$errorstr = 'cURL error '.$errno;
 		return false;
 	}
 
@@ -590,7 +590,7 @@ function ccp_oauth_get_characterid($accesstoken, &$errorstr = null) {
 
 	$rawjson = curl_exec($c);
 	if($errno = curl_errno($c)) {
-		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		$errorstr = 'cURL error '.$errno;
 		return false;
 	}
 

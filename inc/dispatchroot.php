@@ -105,11 +105,6 @@ function get_osmium_version() {
 	return $version;
 }
 
-if(!function_exists('curl_strerror')) {
-	/* Fallback for PHP < 5.5 users */
-	function curl_strerror($no) { return $no; }
-}
-
 function curl_init_branded() {
 	$c = call_user_func_array('\curl_init', func_get_args());
 	$cver = curl_version();

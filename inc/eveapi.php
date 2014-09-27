@@ -144,7 +144,7 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 	if($errno = curl_errno($c)) {
 		\Osmium\State\semaphore_release_nc($sem);
 		$errortype = E_NETWORK;
-		$errorstr = 'cURL error '.$errno.': '.curl_strerror($errno);
+		$errorstr = 'cURL error '.$errno;
 		return false;
 	}
   
