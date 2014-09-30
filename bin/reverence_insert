@@ -40,8 +40,8 @@ def pgcnf(key):
     return ini.get('postgresql', key).strip("'").strip('"')
 
 pg = psycopg2.connect("host={} port={} user={} password={} dbname={}".format(
-    pgcnf('host'), pgcnf('port'), pgcnf('user'),
-    pgcnf('password'), pgcnf('dbname'),
+    pgcnf('pg_host'), pgcnf('pg_port'), pgcnf('pg_user'),
+    pgcnf('pg_password'), pgcnf('pg_dbname'),
 ))
 
 eve = blue.EVE(args.eve, cachepath=args.cache, server=args.server, languageID=args.locale)
@@ -236,11 +236,17 @@ processRows("eve.invmetatypes", {
 
 
 
-amp = eve.RemoteSvc("config").GetAverageMarketPricesForClient()
+amp = eve.RemoteSvc("config").GetAverageMarketPrices()
+
+def makeAveragePrices():
+    for v in amp.itervalues():
+        if v["averagePrice"] is not None:
+            yield v
+
 processRows("eve.averagemarketprices", {
     "typeid": "typeID",
     "averageprice": "averagePrice",
-}, amp.itervalues());
+}, makeAveragePrices());
 
 
 

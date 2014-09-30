@@ -15,7 +15,7 @@ required to update Osmium to a new EVE patch.
 
 3. Update common-loadout-format submodule in the osmium repository.
 
-4. Put the new patch in fit-db-versions.php. Only bump dogmaver when
+4. Put the new patch in ext/eve-versions.json. Only bump dogmaver when
    there were significant dogma changes, breaking most current
    loadouts.
 

@@ -1,5 +1,19 @@
 [
     {
+        "tag": "oceanus-10",
+        "name": "Oceanus 1.0",
+        "build": 830205,
+        "reldate": 1412035200,
+        "dogmaver": 14
+    },
+    {
+        "tag": "hyperion-10",
+        "name": "Hyperion 1.0",
+        "build": 821895,
+        "reldate": 1409011200,
+        "dogmaver": 13
+    },
+    {
         "tag": "crius-10",
         "name": "Crius 1.0",
         "build": 812837,

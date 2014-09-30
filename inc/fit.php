@@ -571,7 +571,7 @@ function get_module_states(&$fit, $typeid) {
 function add_charge(&$fit, $slottype, $index, $typeid) {
 	if(!isset($fit['modules'][$slottype][$index])) {
 		// @codeCoverageIgnoreStart
-		trigger_error('add_charge(): cannot add charge to an empty module!', E_USER_WARNING);
+		trigger_error('add_charge(): cannot add charge to an empty module ('.$slottype.' '.$index.')!', E_USER_WARNING);
 		return;
 		// @codeCoverageIgnoreEnd
 	}
@@ -1221,6 +1221,7 @@ function get_module_slottype(&$fit, $typeid) {
 	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_SubSystem, $t);
 	if($t) return 'subsystem';
 
+	trigger_error('Type '.$typeid.' has unknown slottype', E_USER_NOTICE);
 	return false;
 }
 
