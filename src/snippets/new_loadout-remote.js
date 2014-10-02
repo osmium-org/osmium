@@ -832,7 +832,7 @@ osmium_create_projected = function(key, clf, index) {
 								form.find('select#m-remote-skillset').val();
 
 							osmium_projected_regen_remote(key, function() {
-								$("a#closemodal").click();
+								osmium_modal_clear();
 							}, function(errors) {
 								form.find('span.spinner').remove();
 								form.find('input, select').prop('disabled', false);
