@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,9 +20,11 @@
 require __DIR__.'/../inc/root.php';
 
 $q = \Osmium\Db\query(
-	'SELECT typeid, typename, parenttypename, category, subcategory,
-	groupname, marketgroupname, metagroupid, metalevel
-	FROM osmium.typessearchdata'
+	'SELECT tsd.typeid, tsd.typename, parenttypename, category, subcategory,
+	tsd.groupname, marketgroupname, metagroupid, metalevel
+	FROM osmium.typessearchdata tsd
+	JOIN eve.invtypes it ON it.typeid = tsd.typeid AND it.published = true
+	JOIN eve.invgroups ig ON ig.groupid = it.groupid AND ig.published = true'
 	);
 
 $xml = new \DOMDocument('1.0', 'utf-8');

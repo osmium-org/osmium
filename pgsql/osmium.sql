@@ -207,9 +207,9 @@ CREATE VIEW allowedloadoutsbyaccount AS
  SELECT a.accountid,
     l.loadoutid
    FROM (((loadouts l
-   JOIN accounts author ON ((author.accountid = l.accountid)))
-   LEFT JOIN contacts c ON ((((author.apiverified = true) AND (author.accountid = c.accountid)) AND (l.viewpermission = ANY (ARRAY[5, 6])))))
-   JOIN accounts a ON ((((((((l.viewpermission = 0) OR (l.passwordmode = 1)) OR ((((l.viewpermission = 2) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.allianceid = author.allianceid))) OR ((((l.viewpermission = 3) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.corporationid = author.corporationid))) OR (a.accountid = author.accountid)) OR ((l.viewpermission = 5) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (0)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid)))))) OR ((l.viewpermission = 6) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (5)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid))))))));
+     JOIN accounts author ON ((author.accountid = l.accountid)))
+     LEFT JOIN contacts c ON ((((author.apiverified = true) AND (author.accountid = c.accountid)) AND (l.viewpermission = ANY (ARRAY[5, 6])))))
+     JOIN accounts a ON ((((((((l.viewpermission = 0) OR (l.passwordmode = 1)) OR ((((l.viewpermission = 2) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.allianceid = author.allianceid))) OR ((((l.viewpermission = 3) AND (a.apiverified = true)) AND (author.apiverified = true)) AND (a.corporationid = author.corporationid))) OR (a.accountid = author.accountid)) OR ((l.viewpermission = 5) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (0)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid)))))) OR ((l.viewpermission = 6) AND (((a.allianceid = author.allianceid) OR (a.corporationid = author.corporationid)) OR ((c.standing > (5)::double precision) AND (((c.contactid = a.characterid) OR (c.contactid = a.corporationid)) OR (c.contactid = a.allianceid))))))));
 
 
 --
@@ -330,8 +330,8 @@ CREATE VIEW editableloadoutsbyaccount AS
  SELECT accounts.accountid,
     loadouts.loadoutid
    FROM ((loadouts
-   JOIN accounts author ON ((author.accountid = loadouts.accountid)))
-   JOIN accounts ON (((((((((loadouts.editpermission = 3) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.allianceid = author.allianceid)) OR ((((loadouts.editpermission = 2) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid))) OR (((((loadouts.editpermission = 1) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid)) AND (accounts.isfittingmanager = true))) OR (accounts.accountid = author.accountid)) OR (accounts.ismoderator = true))));
+     JOIN accounts author ON ((author.accountid = loadouts.accountid)))
+     JOIN accounts ON (((((((((loadouts.editpermission = 3) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.allianceid = author.allianceid)) OR ((((loadouts.editpermission = 2) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid))) OR (((((loadouts.editpermission = 1) AND (accounts.apiverified = true)) AND (author.apiverified = true)) AND (accounts.corporationid = author.corporationid)) AND (accounts.isfittingmanager = true))) OR (accounts.accountid = author.accountid)) OR (accounts.ismoderator = true))));
 
 
 --
@@ -484,22 +484,22 @@ CREATE TABLE fittings (
 CREATE VIEW fittingdescriptions AS
  SELECT d.fittinghash,
     string_agg(efc.rawcontent, ', '::text) AS descriptions
-   FROM ((        (        (         SELECT f.fittinghash,
-                                    f.descriptioncontentid AS contentid
-                                   FROM fittings f
-                        UNION
-                                 SELECT f.fittinghash,
-                                    f.descriptioncontentid AS contentid
-                                   FROM fittingpresets f)
-                UNION
-                         SELECT f.fittinghash,
-                            f.descriptioncontentid AS contentid
-                           FROM fittingchargepresets f)
+   FROM (( SELECT f.fittinghash,
+            f.descriptioncontentid AS contentid
+           FROM fittings f
         UNION
-                 SELECT f.fittinghash,
-                    f.descriptioncontentid AS contentid
-                   FROM fittingdronepresets f) d
-   LEFT JOIN editableformattedcontents efc ON ((d.contentid = efc.contentid)))
+         SELECT f.fittinghash,
+            f.descriptioncontentid AS contentid
+           FROM fittingpresets f
+        UNION
+         SELECT f.fittinghash,
+            f.descriptioncontentid AS contentid
+           FROM fittingchargepresets f
+        UNION
+         SELECT f.fittinghash,
+            f.descriptioncontentid AS contentid
+           FROM fittingdronepresets f) d
+     LEFT JOIN editableformattedcontents efc ON ((d.contentid = efc.contentid)))
   GROUP BY d.fittinghash;
 
 
@@ -548,25 +548,25 @@ CREATE TABLE fittingmodules (
 CREATE VIEW fittingfittedtypes AS
  SELECT t.fittinghash,
     ((((string_agg((invtypes.typename)::text, ', '::text) || ', '::text) || COALESCE(string_agg((pt.typename)::text, ', '::text), ' '::text)) || ', '::text) || COALESCE(string_agg((invgroups.groupname)::text, ', '::text), ' '::text)) AS typelist
-   FROM (((((        (        (         SELECT DISTINCT fittingmodules.fittinghash,
-                                    fittingmodules.typeid
-                                   FROM fittingmodules
-                        UNION
-                                 SELECT DISTINCT fittingcharges.fittinghash,
-                                    fittingcharges.typeid
-                                   FROM fittingcharges)
-                UNION
-                         SELECT DISTINCT fittingdrones.fittinghash,
-                            fittingdrones.typeid
-                           FROM fittingdrones)
+   FROM ((((( SELECT DISTINCT fittingmodules.fittinghash,
+            fittingmodules.typeid
+           FROM fittingmodules
         UNION
-                 SELECT DISTINCT fittingimplants.fittinghash,
-                    fittingimplants.typeid
-                   FROM fittingimplants) t
-   JOIN eve.invtypes ON ((t.typeid = invtypes.typeid)))
-   LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)))
-   LEFT JOIN eve.invmetatypes imt ON ((imt.typeid = t.typeid)))
-   LEFT JOIN eve.invtypes pt ON ((pt.typeid = imt.parenttypeid)))
+         SELECT DISTINCT fittingcharges.fittinghash,
+            fittingcharges.typeid
+           FROM fittingcharges
+        UNION
+         SELECT DISTINCT fittingdrones.fittinghash,
+            fittingdrones.typeid
+           FROM fittingdrones
+        UNION
+         SELECT DISTINCT fittingimplants.fittinghash,
+            fittingimplants.typeid
+           FROM fittingimplants) t
+     JOIN eve.invtypes ON ((t.typeid = invtypes.typeid)))
+     LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)))
+     LEFT JOIN eve.invmetatypes imt ON ((imt.typeid = t.typeid)))
+     LEFT JOIN eve.invtypes pt ON ((pt.typeid = imt.parenttypeid)))
   GROUP BY t.fittinghash;
 
 
@@ -659,9 +659,9 @@ CREATE VIEW invboosters AS
     invtypes.typename,
     (dta.value)::integer AS boosterness
    FROM ((eve.invtypes
-   JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
-   JOIN eve.dgmtypeattribs dta ON (((dta.attributeid = 1087) AND (dta.typeid = invtypes.typeid))))
-  WHERE ((((invgroups.categoryid = 20) AND (invtypes.groupid = 303)) AND (invgroups.published = true)) AND (invtypes.published = true));
+     JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
+     JOIN eve.dgmtypeattribs dta ON (((dta.attributeid = 1087) AND (dta.typeid = invtypes.typeid))))
+  WHERE ((invgroups.categoryid = 20) AND (invtypes.groupid = 303));
 
 
 --
@@ -673,11 +673,11 @@ CREATE VIEW invcharges AS
     invtypes.typeid AS chargeid,
     invtypes.typename AS chargename
    FROM ((((eve.dgmtypeattribs modattribs
-   LEFT JOIN eve.dgmtypeattribs modchargesize ON (((modchargesize.attributeid = 128) AND (modchargesize.typeid = modattribs.typeid))))
-   JOIN eve.invtypes ON (((modattribs.value)::integer = invtypes.groupid)))
-   LEFT JOIN eve.dgmtypeattribs chargesize ON (((chargesize.attributeid = 128) AND (chargesize.typeid = invtypes.typeid))))
-   JOIN eve.invtypes modcapacity ON ((modcapacity.typeid = modattribs.typeid)))
-  WHERE ((((modattribs.attributeid = ANY (ARRAY[604, 605, 606, 609, 610])) AND (((chargesize.value IS NULL) OR (modchargesize.value IS NULL)) OR (chargesize.value = modchargesize.value))) AND (modcapacity.capacity >= invtypes.volume)) AND (invtypes.published = true));
+     LEFT JOIN eve.dgmtypeattribs modchargesize ON (((modchargesize.attributeid = 128) AND (modchargesize.typeid = modattribs.typeid))))
+     JOIN eve.invtypes ON (((modattribs.value)::integer = invtypes.groupid)))
+     LEFT JOIN eve.dgmtypeattribs chargesize ON (((chargesize.attributeid = 128) AND (chargesize.typeid = invtypes.typeid))))
+     JOIN eve.invtypes modcapacity ON ((modcapacity.typeid = modattribs.typeid)))
+  WHERE (((modattribs.attributeid = ANY (ARRAY[604, 605, 606, 609, 610])) AND (((chargesize.value IS NULL) OR (modchargesize.value IS NULL)) OR (chargesize.value = modchargesize.value))) AND (modcapacity.capacity >= invtypes.volume));
 
 
 --
@@ -691,8 +691,8 @@ CREATE VIEW invdrones AS
     invtypes.groupid,
     invgroups.groupname
    FROM (eve.invtypes
-   JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
-  WHERE (((invgroups.categoryid = 18) AND (invgroups.published = true)) AND (invtypes.published = true));
+     JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
+  WHERE (invgroups.categoryid = 18);
 
 
 --
@@ -704,9 +704,9 @@ CREATE VIEW invimplants AS
     invtypes.typename,
     (dta.value)::integer AS implantness
    FROM ((eve.invtypes
-   JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
-   JOIN eve.dgmtypeattribs dta ON (((dta.attributeid = 331) AND (dta.typeid = invtypes.typeid))))
-  WHERE ((((invgroups.categoryid = 20) AND (invtypes.groupid <> 303)) AND (invgroups.published = true)) AND (invtypes.published = true));
+     JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
+     JOIN eve.dgmtypeattribs dta ON (((dta.attributeid = 331) AND (dta.typeid = invtypes.typeid))))
+  WHERE ((invgroups.categoryid = 20) AND (invtypes.groupid <> 303));
 
 
 --
@@ -727,12 +727,12 @@ CREATE VIEW invmodules AS
     invtypes.marketgroupid,
     invmarketgroups.marketgroupname
    FROM (((((eve.invtypes
-   JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
-   LEFT JOIN eve.invmarketgroups ON ((invtypes.marketgroupid = invmarketgroups.marketgroupid)))
-   LEFT JOIN eve.invmetatypes ON ((invtypes.typeid = invmetatypes.typeid)))
-   LEFT JOIN eve.dgmtypeattribs techlevel ON (((techlevel.typeid = invtypes.typeid) AND (techlevel.attributeid = 422))))
-   LEFT JOIN eve.dgmtypeattribs metagroup ON (((metagroup.typeid = invtypes.typeid) AND (metagroup.attributeid = 1692))))
-  WHERE (((invgroups.categoryid = ANY (ARRAY[7, 32])) AND (invgroups.published = true)) AND (invtypes.published = true));
+     JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
+     LEFT JOIN eve.invmarketgroups ON ((invtypes.marketgroupid = invmarketgroups.marketgroupid)))
+     LEFT JOIN eve.invmetatypes ON ((invtypes.typeid = invmetatypes.typeid)))
+     LEFT JOIN eve.dgmtypeattribs techlevel ON (((techlevel.typeid = invtypes.typeid) AND (techlevel.attributeid = 422))))
+     LEFT JOIN eve.dgmtypeattribs metagroup ON (((metagroup.typeid = invtypes.typeid) AND (metagroup.attributeid = 1692))))
+  WHERE (invgroups.categoryid = ANY (ARRAY[7, 32]));
 
 
 --
@@ -743,7 +743,7 @@ CREATE VIEW invmetagroups AS
  SELECT DISTINCT invmetagroups.metagroupid,
     invmetagroups.metagroupname
    FROM (invmodules
-   LEFT JOIN eve.invmetagroups ON ((invmodules.metagroupid = invmetagroups.metagroupid)));
+     LEFT JOIN eve.invmetagroups ON ((invmodules.metagroupid = invmetagroups.metagroupid)));
 
 
 --
@@ -758,9 +758,9 @@ CREATE VIEW invships AS
     invtypes.marketgroupid,
     invmarketgroups.marketgroupname
    FROM ((eve.invtypes
-   JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
-   LEFT JOIN eve.invmarketgroups ON ((invtypes.marketgroupid = invmarketgroups.marketgroupid)))
-  WHERE (((invgroups.categoryid = 6) AND (invgroups.published = true)) AND (invtypes.published = true));
+     JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
+     LEFT JOIN eve.invmarketgroups ON ((invtypes.marketgroupid = invmarketgroups.marketgroupid)))
+  WHERE (invgroups.categoryid = 6);
 
 
 --
@@ -784,63 +784,63 @@ CREATE VIEW typessearchdata AS
     img.marketgroupid,
     img.marketgroupname,
     t.other
-   FROM (((((((((        (        (        (        (         SELECT invships.typeid,
-                                                    'ship'::text AS category,
-                                                    NULL::text AS subcategory,
-                                                    NULL::text AS other
-                                                   FROM invships
-                                        UNION
-                                                 SELECT invmodules.typeid,
-                                                    'module'::text AS category,
-                                                        CASE dte.effectid
-                                                            WHEN 11 THEN 'low'::text
-                                                            WHEN 12 THEN 'high'::text
-                                                            WHEN 13 THEN 'medium'::text
-                                                            WHEN 2663 THEN 'rig'::text
-                                                            WHEN 3772 THEN 'subsystem'::text
-                                                            ELSE NULL::text
-                                                        END AS subcategory,
-                                                        CASE hardpoint.effectid
-                                                            WHEN 40 THEN 'launcher'::text
-                                                            WHEN 42 THEN 'turret'::text
-                                                            ELSE NULL::text
-                                                        END AS other
-                                                   FROM ((invmodules
-                                              JOIN eve.dgmtypeeffects dte ON (((invmodules.typeid = dte.typeid) AND (dte.effectid = ANY (ARRAY[11, 12, 13, 2663, 3772])))))
-                                         LEFT JOIN eve.dgmtypeeffects hardpoint ON (((invmodules.typeid = hardpoint.typeid) AND (hardpoint.effectid = ANY (ARRAY[40, 42]))))))
-                                UNION
-                                         SELECT invcharges.chargeid AS typeid,
-                                            'charge'::text AS category,
-                                            NULL::text AS subcategory,
-                                            NULL::text AS other
-                                           FROM invcharges)
-                        UNION
-                                 SELECT invdrones.typeid,
-                                    'drone'::text AS category,
-                                    NULL::text AS subcategory,
-                                    (bw.value)::text AS other
-                                   FROM (invdrones
-                              LEFT JOIN eve.dgmtypeattribs bw ON (((bw.attributeid = 1272) AND (bw.typeid = invdrones.typeid)))))
-                UNION
-                         SELECT invimplants.typeid,
-                            'implant'::text AS category,
-                            (invimplants.implantness)::text AS subcategory,
-                            NULL::text AS other
-                           FROM invimplants)
+   FROM ((((((((( SELECT invships.typeid,
+            'ship'::text AS category,
+            NULL::text AS subcategory,
+            NULL::text AS other
+           FROM invships
         UNION
-                 SELECT invboosters.typeid,
-                    'booster'::text AS category,
-                    (invboosters.boosterness)::text AS subcategory,
-                    NULL::text AS other
-                   FROM invboosters) t
-   JOIN eve.invtypes it ON ((it.typeid = t.typeid)))
-   JOIN eve.invgroups ig ON ((it.groupid = ig.groupid)))
-   LEFT JOIN eve.invmarketgroups img ON ((img.marketgroupid = it.marketgroupid)))
-   LEFT JOIN eve.invmetatypes imt ON ((it.typeid = imt.typeid)))
-   LEFT JOIN eve.invtypes pit ON ((pit.typeid = imt.parenttypeid)))
-   LEFT JOIN eve.dgmtypeattribs dta_tl ON (((dta_tl.typeid = it.typeid) AND (dta_tl.attributeid = 422))))
-   LEFT JOIN eve.dgmtypeattribs dta_ml ON (((dta_ml.typeid = it.typeid) AND (dta_ml.attributeid = 633))))
-   LEFT JOIN eve.dgmtypeattribs dta_mg ON (((dta_mg.typeid = it.typeid) AND (dta_mg.attributeid = 1692))));
+         SELECT invmodules.typeid,
+            'module'::text AS category,
+                CASE dte.effectid
+                    WHEN 11 THEN 'low'::text
+                    WHEN 12 THEN 'high'::text
+                    WHEN 13 THEN 'medium'::text
+                    WHEN 2663 THEN 'rig'::text
+                    WHEN 3772 THEN 'subsystem'::text
+                    ELSE NULL::text
+                END AS subcategory,
+                CASE hardpoint.effectid
+                    WHEN 40 THEN 'launcher'::text
+                    WHEN 42 THEN 'turret'::text
+                    ELSE NULL::text
+                END AS other
+           FROM ((invmodules
+             JOIN eve.dgmtypeeffects dte ON (((invmodules.typeid = dte.typeid) AND (dte.effectid = ANY (ARRAY[11, 12, 13, 2663, 3772])))))
+             LEFT JOIN eve.dgmtypeeffects hardpoint ON (((invmodules.typeid = hardpoint.typeid) AND (hardpoint.effectid = ANY (ARRAY[40, 42])))))
+        UNION
+         SELECT invcharges.chargeid AS typeid,
+            'charge'::text AS category,
+            NULL::text AS subcategory,
+            NULL::text AS other
+           FROM invcharges
+        UNION
+         SELECT invdrones.typeid,
+            'drone'::text AS category,
+            NULL::text AS subcategory,
+            (bw.value)::text AS other
+           FROM (invdrones
+             LEFT JOIN eve.dgmtypeattribs bw ON (((bw.attributeid = 1272) AND (bw.typeid = invdrones.typeid))))
+        UNION
+         SELECT invimplants.typeid,
+            'implant'::text AS category,
+            (invimplants.implantness)::text AS subcategory,
+            NULL::text AS other
+           FROM invimplants
+        UNION
+         SELECT invboosters.typeid,
+            'booster'::text AS category,
+            (invboosters.boosterness)::text AS subcategory,
+            NULL::text AS other
+           FROM invboosters) t
+     JOIN eve.invtypes it ON ((it.typeid = t.typeid)))
+     JOIN eve.invgroups ig ON ((it.groupid = ig.groupid)))
+     LEFT JOIN eve.invmarketgroups img ON ((img.marketgroupid = it.marketgroupid)))
+     LEFT JOIN eve.invmetatypes imt ON ((it.typeid = imt.typeid)))
+     LEFT JOIN eve.invtypes pit ON ((pit.typeid = imt.parenttypeid)))
+     LEFT JOIN eve.dgmtypeattribs dta_tl ON (((dta_tl.typeid = it.typeid) AND (dta_tl.attributeid = 422))))
+     LEFT JOIN eve.dgmtypeattribs dta_ml ON (((dta_ml.typeid = it.typeid) AND (dta_ml.attributeid = 633))))
+     LEFT JOIN eve.dgmtypeattribs dta_mg ON (((dta_mg.typeid = it.typeid) AND (dta_mg.attributeid = 1692))));
 
 
 --
@@ -853,14 +853,14 @@ CREATE VIEW invmodulestates AS
     true AS onlinable,
     ((tsd.subcategory = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text])) AND (( SELECT count(dte.effectid) AS count
            FROM (eve.dgmtypeeffects dte
-      JOIN eve.dgmeffects de ON ((((de.effectid = dte.effectid) AND (de.effectid <> 16)) AND ((de.effectcategory)::integer = ANY (ARRAY[1, 2, 3, 5])))))
-     WHERE (dte.typeid = tsd.typeid)
-    LIMIT 1) > 0)) AS activable,
+             JOIN eve.dgmeffects de ON ((((de.effectid = dte.effectid) AND (de.effectid <> 16)) AND ((de.effectcategory)::integer = ANY (ARRAY[1, 2, 3, 5])))))
+          WHERE (dte.typeid = tsd.typeid)
+         LIMIT 1) > 0)) AS activable,
     ((tsd.subcategory = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text])) AND (( SELECT count(dte.effectid) AS count
            FROM (eve.dgmtypeeffects dte
-      JOIN eve.dgmeffects de ON (((de.effectid = dte.effectid) AND (de.effectcategory = 5))))
-     WHERE (dte.typeid = tsd.typeid)
-    LIMIT 1) > 0)) AS overloadable
+             JOIN eve.dgmeffects de ON (((de.effectid = dte.effectid) AND (de.effectcategory = 5))))
+          WHERE (dte.typeid = tsd.typeid)
+         LIMIT 1) > 0)) AS overloadable
    FROM typessearchdata tsd
   WHERE (tsd.category = 'module'::text);
 
@@ -877,11 +877,11 @@ CREATE VIEW invshipslots AS
     COALESCE((rs.value)::integer, 0) AS rigslots,
     COALESCE((ss.value)::integer, 0) AS subsystemslots
    FROM (((((invships
-   LEFT JOIN eve.dgmtypeattribs hs ON (((hs.typeid = invships.typeid) AND (hs.attributeid = 14))))
-   LEFT JOIN eve.dgmtypeattribs ms ON (((ms.typeid = invships.typeid) AND (ms.attributeid = 13))))
-   LEFT JOIN eve.dgmtypeattribs ls ON (((ls.typeid = invships.typeid) AND (ls.attributeid = 12))))
-   LEFT JOIN eve.dgmtypeattribs rs ON (((rs.typeid = invships.typeid) AND (rs.attributeid = 1154))))
-   LEFT JOIN eve.dgmtypeattribs ss ON (((ss.typeid = invships.typeid) AND (ss.attributeid = 1367))));
+     LEFT JOIN eve.dgmtypeattribs hs ON (((hs.typeid = invships.typeid) AND (hs.attributeid = 14))))
+     LEFT JOIN eve.dgmtypeattribs ms ON (((ms.typeid = invships.typeid) AND (ms.attributeid = 13))))
+     LEFT JOIN eve.dgmtypeattribs ls ON (((ls.typeid = invships.typeid) AND (ls.attributeid = 12))))
+     LEFT JOIN eve.dgmtypeattribs rs ON (((rs.typeid = invships.typeid) AND (rs.attributeid = 1154))))
+     LEFT JOIN eve.dgmtypeattribs ss ON (((ss.typeid = invships.typeid) AND (ss.attributeid = 1367))));
 
 
 --
@@ -894,8 +894,8 @@ CREATE VIEW invskills AS
     invtypes.groupid,
     invgroups.groupname
    FROM (eve.invtypes
-   JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
-  WHERE ((invgroups.categoryid = 16) AND (invtypes.published = true));
+     JOIN eve.invgroups ON ((invtypes.groupid = invgroups.groupid)))
+  WHERE (invgroups.categoryid = 16);
 
 
 --
@@ -908,27 +908,27 @@ CREATE VIEW invtypevariations AS
     t.vartypename,
     COALESCE((imt.metagroupid)::integer, 1) AS varmgid,
     COALESCE((mg.value)::integer, 0) AS varml
-   FROM (((        (         SELECT it.typeid,
-                            imt_1.typeid AS vartypeid,
-                            vit.typename AS vartypename
-                           FROM (((eve.invtypes it
-                      LEFT JOIN eve.invmetatypes p ON ((p.typeid = it.typeid)))
-                 JOIN eve.invmetatypes imt_1 ON (((imt_1.parenttypeid = it.typeid) OR (imt_1.parenttypeid = p.parenttypeid))))
-            JOIN eve.invtypes vit ON ((vit.typeid = imt_1.typeid)))
-                UNION
-                         SELECT it.typeid,
-                            p.parenttypeid AS vartypeid,
-                            vit.typename AS vartypename
-                           FROM ((eve.invtypes it
-                      JOIN eve.invmetatypes p ON ((p.typeid = it.typeid)))
-                 JOIN eve.invtypes vit ON ((vit.typeid = p.parenttypeid))))
+   FROM ((( SELECT it.typeid,
+            imt_1.typeid AS vartypeid,
+            vit.typename AS vartypename
+           FROM (((eve.invtypes it
+             LEFT JOIN eve.invmetatypes p ON ((p.typeid = it.typeid)))
+             JOIN eve.invmetatypes imt_1 ON (((imt_1.parenttypeid = it.typeid) OR (imt_1.parenttypeid = p.parenttypeid))))
+             JOIN eve.invtypes vit ON ((vit.typeid = imt_1.typeid)))
         UNION
-                 SELECT it.typeid,
-                    it.typeid AS vartypeid,
-                    it.typename AS vartypename
-                   FROM eve.invtypes it) t
-   LEFT JOIN eve.invmetatypes imt ON ((imt.typeid = t.vartypeid)))
-   LEFT JOIN eve.dgmtypeattribs mg ON (((mg.attributeid = 633) AND (mg.typeid = t.vartypeid))));
+         SELECT it.typeid,
+            p.parenttypeid AS vartypeid,
+            vit.typename AS vartypename
+           FROM ((eve.invtypes it
+             JOIN eve.invmetatypes p ON ((p.typeid = it.typeid)))
+             JOIN eve.invtypes vit ON ((vit.typeid = p.parenttypeid)))
+        UNION
+         SELECT it.typeid,
+            it.typeid AS vartypeid,
+            it.typename AS vartypename
+           FROM eve.invtypes it) t
+     LEFT JOIN eve.invmetatypes imt ON ((imt.typeid = t.vartypeid)))
+     LEFT JOIN eve.dgmtypeattribs mg ON (((mg.attributeid = 633) AND (mg.typeid = t.vartypeid))));
 
 
 --
@@ -1029,7 +1029,7 @@ CREATE VIEW loadoutcommentslatestrevision AS
  SELECT loadoutcomments.commentid,
     max(loadoutcommentrevisions.revision) AS latestrevision
    FROM (loadoutcomments
-   JOIN loadoutcommentrevisions ON ((loadoutcommentrevisions.commentid = loadoutcomments.commentid)))
+     JOIN loadoutcommentrevisions ON ((loadoutcommentrevisions.commentid = loadoutcomments.commentid)))
   GROUP BY loadoutcomments.commentid;
 
 
@@ -1082,8 +1082,8 @@ CREATE VIEW loadoutcommentupdownvotes AS
     COALESCE(uv.count, (0)::bigint) AS upvotes,
     COALESCE(dv.count, (0)::bigint) AS downvotes
    FROM ((loadoutcomments c
-   LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 2)) AND (uv.targetid1 = c.commentid)) AND (uv.targetid2 = c.loadoutid)) AND (uv.targetid3 IS NULL))))
-   LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 2)) AND (dv.targetid1 = c.commentid)) AND (dv.targetid2 = c.loadoutid)) AND (dv.targetid3 IS NULL))));
+     LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 2)) AND (uv.targetid1 = c.commentid)) AND (uv.targetid2 = c.loadoutid)) AND (uv.targetid3 IS NULL))))
+     LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 2)) AND (dv.targetid1 = c.commentid)) AND (dv.targetid2 = c.loadoutid)) AND (dv.targetid3 IS NULL))));
 
 
 --
@@ -1122,8 +1122,8 @@ CREATE VIEW loadoutscores AS
     COALESCE(dv.count, (0)::bigint) AS downvotes,
     ((((COALESCE((uv.count)::numeric, 0.5) + 1.9208) / (COALESCE((uv.count)::numeric, 0.5) + (COALESCE(dv.count, (0)::bigint))::numeric)) - ((1.96 * sqrt((((COALESCE((uv.count)::numeric, 0.5) * (COALESCE(dv.count, (0)::bigint))::numeric) / (COALESCE((uv.count)::numeric, 0.5) + (COALESCE(dv.count, (0)::bigint))::numeric)) + 0.9604))) / (COALESCE((uv.count)::numeric, 0.5) + (COALESCE(dv.count, (0)::bigint))::numeric))) / ((1)::numeric + (3.8416 / (COALESCE((uv.count)::numeric, 0.5) + (COALESCE(dv.count, (0)::bigint))::numeric)))) AS score
    FROM ((loadouts l
-   LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 1)) AND (uv.targetid1 = l.loadoutid)) AND (uv.targetid2 IS NULL)) AND (uv.targetid3 IS NULL))))
-   LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 1)) AND (dv.targetid1 = l.loadoutid)) AND (dv.targetid2 IS NULL)) AND (dv.targetid3 IS NULL))));
+     LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 1)) AND (uv.targetid1 = l.loadoutid)) AND (uv.targetid2 IS NULL)) AND (uv.targetid3 IS NULL))))
+     LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 1)) AND (dv.targetid1 = l.loadoutid)) AND (dv.targetid2 IS NULL)) AND (dv.targetid3 IS NULL))));
 
 
 --
@@ -1134,7 +1134,7 @@ CREATE VIEW loadoutslatestrevision AS
  SELECT loadouts.loadoutid,
     max(loadouthistory.revision) AS latestrevision
    FROM (loadouts
-   JOIN loadouthistory ON ((loadouthistory.loadoutid = loadouts.loadoutid)))
+     JOIN loadouthistory ON ((loadouthistory.loadoutid = loadouts.loadoutid)))
   GROUP BY loadouts.loadoutid;
 
 
@@ -1198,17 +1198,17 @@ CREATE VIEW loadoutssearchdata AS
     COALESCE(lda.estimatedprice, (0)::double precision) AS estimatedprice,
     l.viewpermission
    FROM (((((((((((loadouts l
-   JOIN loadoutslatestrevision ON ((l.loadoutid = loadoutslatestrevision.loadoutid)))
-   JOIN accounts ON ((l.accountid = accounts.accountid)))
-   JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision))))
-   JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash)))
-   JOIN loadouthistory l0 ON (((l0.loadoutid = loadoutslatestrevision.loadoutid) AND (l0.revision = 1))))
-   JOIN fittings f0 ON ((f0.fittinghash = l0.fittinghash)))
-   JOIN loadoutscores ls ON ((ls.loadoutid = l.loadoutid)))
-   JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)))
-   LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = l.loadoutid)))
-   LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)))
-   LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = l.loadoutid)));
+     JOIN loadoutslatestrevision ON ((l.loadoutid = loadoutslatestrevision.loadoutid)))
+     JOIN accounts ON ((l.accountid = accounts.accountid)))
+     JOIN loadouthistory ON (((loadouthistory.loadoutid = loadoutslatestrevision.loadoutid) AND (loadouthistory.revision = loadoutslatestrevision.latestrevision))))
+     JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash)))
+     JOIN loadouthistory l0 ON (((l0.loadoutid = loadoutslatestrevision.loadoutid) AND (l0.revision = 1))))
+     JOIN fittings f0 ON ((f0.fittinghash = l0.fittinghash)))
+     JOIN loadoutscores ls ON ((ls.loadoutid = l.loadoutid)))
+     JOIN eve.invtypes ON ((invtypes.typeid = fittings.hullid)))
+     LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = l.loadoutid)))
+     LEFT JOIN eve.invgroups ON ((invgroups.groupid = invtypes.groupid)))
+     LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = l.loadoutid)));
 
 
 --
@@ -1221,8 +1221,8 @@ CREATE VIEW loadoutupdownvotes AS
     COALESCE(uv.count, (0)::bigint) AS upvotes,
     COALESCE(dv.count, (0)::bigint) AS downvotes
    FROM ((loadouts l
-   LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 1)) AND (uv.targetid1 = l.loadoutid)) AND (uv.targetid2 IS NULL)) AND (uv.targetid3 IS NULL))))
-   LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 1)) AND (dv.targetid1 = l.loadoutid)) AND (dv.targetid2 IS NULL)) AND (dv.targetid3 IS NULL))));
+     LEFT JOIN votecount uv ON ((((((uv.type = 1) AND (uv.targettype = 1)) AND (uv.targetid1 = l.loadoutid)) AND (uv.targetid2 IS NULL)) AND (uv.targetid3 IS NULL))))
+     LEFT JOIN votecount dv ON ((((((dv.type = 2) AND (dv.targettype = 1)) AND (dv.targetid1 = l.loadoutid)) AND (dv.targetid2 IS NULL)) AND (dv.targetid3 IS NULL))));
 
 
 --
@@ -1263,14 +1263,14 @@ CREATE VIEW loadoutssearchresults AS
     lda.ehp,
     lda.estimatedprice
    FROM ((((((((loadouts
-   JOIN loadoutslatestrevision ON ((loadouts.loadoutid = loadoutslatestrevision.loadoutid)))
-   JOIN loadouthistory ON (((loadoutslatestrevision.latestrevision = loadouthistory.revision) AND (loadouthistory.loadoutid = loadouts.loadoutid))))
-   JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash)))
-   JOIN accounts ON ((accounts.accountid = loadouts.accountid)))
-   JOIN eve.invtypes ON ((fittings.hullid = invtypes.typeid)))
-   JOIN loadoutupdownvotes ON ((loadoutupdownvotes.loadoutid = loadouts.loadoutid)))
-   LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = loadouts.loadoutid)))
-   LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = loadouts.loadoutid)));
+     JOIN loadoutslatestrevision ON ((loadouts.loadoutid = loadoutslatestrevision.loadoutid)))
+     JOIN loadouthistory ON (((loadoutslatestrevision.latestrevision = loadouthistory.revision) AND (loadouthistory.loadoutid = loadouts.loadoutid))))
+     JOIN fittings ON ((fittings.fittinghash = loadouthistory.fittinghash)))
+     JOIN accounts ON ((accounts.accountid = loadouts.accountid)))
+     JOIN eve.invtypes ON ((fittings.hullid = invtypes.typeid)))
+     JOIN loadoutupdownvotes ON ((loadoutupdownvotes.loadoutid = loadouts.loadoutid)))
+     LEFT JOIN loadoutcommentcount lcc ON ((lcc.loadoutid = loadouts.loadoutid)))
+     LEFT JOIN loadoutdogmaattribs lda ON ((lda.loadoutid = loadouts.loadoutid)));
 
 
 --
@@ -1369,8 +1369,8 @@ CREATE TABLE recentkillsdna (
 CREATE VIEW requirableskills AS
  SELECT DISTINCT (dta.value)::integer AS skilltypeid
    FROM ((eve.invtypes it
-   JOIN eve.invgroups ig ON ((ig.groupid = it.groupid)))
-   JOIN eve.dgmtypeattribs dta ON (((dta.typeid = it.typeid) AND (dta.attributeid = ANY (ARRAY[182, 183, 184, 1285, 1289, 1290])))))
+     JOIN eve.invgroups ig ON ((ig.groupid = it.groupid)))
+     JOIN eve.dgmtypeattribs dta ON (((dta.typeid = it.typeid) AND (dta.attributeid = ANY (ARRAY[182, 183, 184, 1285, 1289, 1290])))))
   WHERE (ig.categoryid = ANY (ARRAY[6, 7, 8, 18, 20, 32]));
 
 
@@ -1379,17 +1379,17 @@ CREATE VIEW requirableskills AS
 --
 
 CREATE VIEW searchableloadouts AS
-         SELECT allowedloadoutsbyaccount.accountid,
-            allowedloadoutsbyaccount.loadoutid
-           FROM (allowedloadoutsbyaccount
-      JOIN loadouts ON ((allowedloadoutsbyaccount.loadoutid = loadouts.loadoutid)))
-     WHERE ((loadouts.visibility = 0) AND (loadouts.viewpermission <> 0))
+ SELECT allowedloadoutsbyaccount.accountid,
+    allowedloadoutsbyaccount.loadoutid
+   FROM (allowedloadoutsbyaccount
+     JOIN loadouts ON ((allowedloadoutsbyaccount.loadoutid = loadouts.loadoutid)))
+  WHERE ((loadouts.visibility = 0) AND (loadouts.viewpermission <> 0))
 UNION
-         SELECT 0 AS accountid,
-            allowedloadoutsanonymous.loadoutid
-           FROM (allowedloadoutsanonymous
-      JOIN loadouts ON ((allowedloadoutsanonymous.loadoutid = loadouts.loadoutid)))
-     WHERE (loadouts.visibility = 0);
+ SELECT 0 AS accountid,
+    allowedloadoutsanonymous.loadoutid
+   FROM (allowedloadoutsanonymous
+     JOIN loadouts ON ((allowedloadoutsanonymous.loadoutid = loadouts.loadoutid)))
+  WHERE (loadouts.visibility = 0);
 
 
 --
@@ -1397,57 +1397,57 @@ UNION
 --
 
 CREATE VIEW siattributes AS
-        (        (         SELECT dgmtypeattribs.typeid,
-                            dgmtypeattribs.attributeid,
-                            dgmattribs.attributename,
-                            dgmattribs.displayname,
-                            dgmtypeattribs.value,
-                            dgmattribs.unitid,
-                            dgmunits.displayname AS udisplayname,
-                            dgmattribs.categoryid,
-                            dgmattribs.published
-                           FROM ((eve.dgmtypeattribs
-                      JOIN eve.dgmattribs ON ((dgmtypeattribs.attributeid = dgmattribs.attributeid)))
-                 LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid)))
-                UNION ALL
-                         SELECT invtypes.typeid,
-                            dgmattribs.attributeid,
-                            dgmattribs.attributename,
-                            dgmattribs.displayname,
-                            invtypes.volume AS value,
-                            dgmattribs.unitid,
-                            dgmunits.displayname AS udisplayname,
-                            dgmattribs.categoryid,
-                            dgmattribs.published
-                           FROM ((eve.invtypes
-                      JOIN eve.dgmattribs ON ((dgmattribs.attributeid = 161)))
-                 LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid))))
-        UNION ALL
-                 SELECT invtypes.typeid,
-                    dgmattribs.attributeid,
-                    dgmattribs.attributename,
-                    dgmattribs.displayname,
-                    invtypes.capacity AS value,
-                    dgmattribs.unitid,
-                    dgmunits.displayname AS udisplayname,
-                    dgmattribs.categoryid,
-                    dgmattribs.published
-                   FROM ((eve.invtypes
-              JOIN eve.dgmattribs ON ((dgmattribs.attributeid = 38)))
-         LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid))))
+ SELECT dgmtypeattribs.typeid,
+    dgmtypeattribs.attributeid,
+    dgmattribs.attributename,
+    dgmattribs.displayname,
+    dgmtypeattribs.value,
+    dgmattribs.unitid,
+    dgmunits.displayname AS udisplayname,
+    dgmattribs.categoryid,
+    dgmattribs.published
+   FROM ((eve.dgmtypeattribs
+     JOIN eve.dgmattribs ON ((dgmtypeattribs.attributeid = dgmattribs.attributeid)))
+     LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid)))
 UNION ALL
-         SELECT invtypes.typeid,
-            dgmattribs.attributeid,
-            dgmattribs.attributename,
-            dgmattribs.displayname,
-            invtypes.mass AS value,
-            dgmattribs.unitid,
-            dgmunits.displayname AS udisplayname,
-            dgmattribs.categoryid,
-            dgmattribs.published
-           FROM ((eve.invtypes
-      JOIN eve.dgmattribs ON ((dgmattribs.attributeid = 4)))
-   LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid)));
+ SELECT invtypes.typeid,
+    dgmattribs.attributeid,
+    dgmattribs.attributename,
+    dgmattribs.displayname,
+    invtypes.volume AS value,
+    dgmattribs.unitid,
+    dgmunits.displayname AS udisplayname,
+    dgmattribs.categoryid,
+    dgmattribs.published
+   FROM ((eve.invtypes
+     JOIN eve.dgmattribs ON ((dgmattribs.attributeid = 161)))
+     LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid)))
+UNION ALL
+ SELECT invtypes.typeid,
+    dgmattribs.attributeid,
+    dgmattribs.attributename,
+    dgmattribs.displayname,
+    invtypes.capacity AS value,
+    dgmattribs.unitid,
+    dgmunits.displayname AS udisplayname,
+    dgmattribs.categoryid,
+    dgmattribs.published
+   FROM ((eve.invtypes
+     JOIN eve.dgmattribs ON ((dgmattribs.attributeid = 38)))
+     LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid)))
+UNION ALL
+ SELECT invtypes.typeid,
+    dgmattribs.attributeid,
+    dgmattribs.attributename,
+    dgmattribs.displayname,
+    invtypes.mass AS value,
+    dgmattribs.unitid,
+    dgmunits.displayname AS udisplayname,
+    dgmattribs.categoryid,
+    dgmattribs.published
+   FROM ((eve.invtypes
+     JOIN eve.dgmattribs ON ((dgmattribs.attributeid = 4)))
+     LEFT JOIN eve.dgmunits ON ((dgmattribs.unitid = dgmunits.unitid)));
 
 
 --
@@ -1458,10 +1458,10 @@ CREATE VIEW tagcount AS
  SELECT ft.tagname,
     count(ft.fittinghash) AS count
    FROM ((((allowedloadoutsanonymous a
-   JOIN loadoutslatestrevision llr ON ((a.loadoutid = llr.loadoutid)))
-   JOIN loadouthistory lh ON (((lh.loadoutid = a.loadoutid) AND (lh.revision = llr.latestrevision))))
-   JOIN loadouts l ON ((l.loadoutid = a.loadoutid)))
-   JOIN fittingtags ft ON ((ft.fittinghash = lh.fittinghash)))
+     JOIN loadoutslatestrevision llr ON ((a.loadoutid = llr.loadoutid)))
+     JOIN loadouthistory lh ON (((lh.loadoutid = a.loadoutid) AND (lh.revision = llr.latestrevision))))
+     JOIN loadouts l ON ((l.loadoutid = a.loadoutid)))
+     JOIN fittingtags ft ON ((ft.fittinghash = lh.fittinghash)))
   WHERE (l.visibility = 0)
   GROUP BY ft.tagname;
 
