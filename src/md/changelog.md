@@ -1,5 +1,9 @@
 # Version 0.13
 
+## Version 0.13.2, released 2014-10-02
+
+* Lots of bugs fixed.
+
 ## Version 0.13.1, released 2014-07-22
 
 * **Using loadout IDs in `source_fmt` in API calls has been

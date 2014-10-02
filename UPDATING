@@ -1,3 +1,9 @@
+v0.13.2, released 2014-10-02
+============================
+
+The osmium schema has been updated, but you only need to clear the
+cache, apply the patch and regenerate the Sphinx type index.
+
 v0.13.1, released 2014-07-22
 ============================
 
