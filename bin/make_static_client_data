@@ -165,7 +165,8 @@ $static['groups'] = $flatgroups;
 /* ---------------------------------------------------------- */
 
 $q = \Osmium\Db\query(
-	'SELECT moduleid, chargeid FROM osmium.invcharges
+	'SELECT moduleid, chargeid FROM osmium.invcharges ic
+	JOIN eve.invtypes it ON it.typeid = ic.chargeid AND it.published = true
 	ORDER BY moduleid ASC, chargeid ASC'
 	);
 
