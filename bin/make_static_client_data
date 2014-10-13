@@ -354,7 +354,7 @@ $ammoq = \Osmium\Db\query(
 	'SELECT moduleid, groupid, ic.chargeid, it.typename,
 	COALESCE(em.value, 0) AS emd, COALESCE(ex.value, 0) AS exd,
 	COALESCE(ki.value, 0) AS kid, COALESCE(th.value, 0) AS thd
-	FROM invcharges ic
+	FROM osmium.invcharges ic
 	JOIN eve.invtypes it ON it.typeid = ic.chargeid
 	LEFT JOIN eve.invmetatypes imt ON imt.typeid = ic.chargeid
 	LEFT JOIN eve.dgmtypeattribs em ON em.typeid = ic.chargeid AND em.attributeid = 114

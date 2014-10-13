@@ -27,7 +27,7 @@ echo "Caching groupdna…\n";
 $q = \Osmium\Db\query_params(
 	'SELECT count(characterid), groupdna, sum(exp(-($1 - lastkill) / (2 * 86400))) AS score
 	FROM (
-	SELECT groupdna, max(killtime) AS lastkill, characterid FROM recentkillsdna GROUP BY groupdna, characterid
+	SELECT groupdna, max(killtime) AS lastkill, characterid FROM osmium.recentkillsdna GROUP BY groupdna, characterid
 	) g
 	GROUP BY groupdna
 	ORDER BY score DESC',
@@ -44,7 +44,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 
 	$bestdna = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
 		'SELECT dna
-		FROM recentkillsdna
+		FROM osmium.recentkillsdna
 		WHERE groupdna = $1
 		GROUP BY dna
 		ORDER BY count(DISTINCT characterid) DESC
@@ -160,7 +160,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	if($doctrinec < 2 * $numrows) {
 		$alliancesq = \Osmium\Db\query_params(
 			'SELECT count(DISTINCT characterid), allianceid, alliancename
-			FROM recentkillsdna
+			FROM osmium.recentkillsdna
 			WHERE groupdna = $1 AND allianceid > 0
 			GROUP BY allianceid, alliancename
 			ORDER BY count DESC
