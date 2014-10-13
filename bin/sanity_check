@@ -176,11 +176,11 @@ check('for some data in the eve PostgreSQL schema', function() {
 }, CHECK_REQUIRED);
 
 check('for osmium PostgreSQL schema', function() {
-	$q = @\Osmium\Db\query('SELECT MAX(accountid) FROM osmium.accounts');
+	$q = @\Osmium\Db\query('SELECT 1 FROM osmium.accounts');
 	if($q === false) return false;
 	$r = \Osmium\Db\fetch_row($q);
 	if($r === false) return false;
-	return isset($r[0]) && is_numeric($r[0]);
+	return (int)$r[0] === 1;
 }, CHECK_REQUIRED);
 
 check('for Sphinx', function() {
