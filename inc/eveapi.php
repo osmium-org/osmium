@@ -138,6 +138,7 @@ function fetch($name, array $params, $timeout = null, &$errortype = null, &$erro
 	curl_setopt($c, CURLOPT_POSTFIELDS, $params);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, $timeout);
 	curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
+	curl_setopt($c, CURLOPT_ENCODING, 'gzip');
 
 	$raw_xml = curl_exec($c);
 
