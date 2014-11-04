@@ -1,4 +1,11 @@
 [
+	{
+        "tag": "phoebe-10",
+        "name": "Phoebe 1.0",
+        "build": 838420,
+        "reldate": 1415059200,
+        "dogmaver": 15
+    },
     {
         "tag": "oceanus-10",
         "name": "Oceanus 1.0",
