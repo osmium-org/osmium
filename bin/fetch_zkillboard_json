@@ -156,11 +156,11 @@ function zkillboard_api($call) {
 	static $retries = [ 0, 15, 30, 60, 60 ];
 
 	$c = \Osmium\curl_init_branded();
-	//$c = curl_init();
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 	curl_setopt($c, CURLOPT_HEADER, 1);
 	curl_setopt($c, CURLOPT_TIMEOUT, 60);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 60);
+	curl_setopt($c, CURLOPT_ENCODING, 'gzip');
 
 	foreach($retries as $ret) {
 		sleep($ret);
