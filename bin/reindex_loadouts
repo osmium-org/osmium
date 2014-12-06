@@ -43,8 +43,8 @@ do {
 			$offset,
 			$modtotal,
 			$modcurrent
-		)
-	);
+			)
+		);
 	$offset += BATCH_SIZE;
 
 	$ids = array();
@@ -58,8 +58,13 @@ do {
 	$q = \Osmium\Search\query_select_searchdata('WHERE loadoutid IN ('.$in.') ORDER BY loadoutid DESC', array());
 
 	while($row = \Osmium\Db\fetch_assoc($q)) {
-		\Osmium\Search\index($row);
-		echo ".";
+		if(\Osmium\Search\index($row) === false) {
+			echo 'X('.$row['loadoutid'].'): ';
+			echo mysqli_error(\Osmium\Search\get_link());
+			echo "\n";
+		} else {
+			echo '.';
+		}
 	}
 } while(true);
 
