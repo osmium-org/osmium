@@ -201,8 +201,8 @@ trait Formatter {
 
 
 
-	/* Format <a href=showinfo> and <url=showinfo> links. */
-	function formatShowinfoLinks($text) {
+	/* Format <b>, <u>, <a href=showinfo> and <url=showinfo> tags. */
+	function formatCCPTagSoup($text) {
 		$pieces = preg_split(
 			'%(<a href=showinfo:([1-9][0-9]*)(?:// ?[1-9][0-9]*)?>|</a>|<url=showinfo:([1-9][0-9]*)(?:// ?[1-9][0-9]*)?>|</url>)%',
 			$text,
@@ -231,6 +231,8 @@ trait Formatter {
 
 				--$stackc;
 				$p = array_pop($stack);
+			} else {
+				$p = strip_tags($p); /* XXX: hackish */
 			}
 
 			$stack[$stackc][1][] = $p;
@@ -281,7 +283,7 @@ trait Formatter {
 			                            $this->formatNumberWithUnit($t['bonus'], $t['unitid'], $t['displayname'])
 			                            : '·' ]);
 
-			$li->append($this->formatShowinfoLinks($t['message']));
+			$li->append($this->formatCCPTagSoup($t['message']));
 		}
 
 		return $prevsrc === null ? false : $div;
