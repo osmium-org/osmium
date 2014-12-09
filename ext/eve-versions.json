@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "rhea-10",
+        "name": "Rhea 1.0",
+        "build": 851318,
+        "reldate": 1418083200,
+        "dogmaver": 15
+    },
+	{
         "tag": "phoebe-10",
         "name": "Phoebe 1.0",
         "build": 838420,
