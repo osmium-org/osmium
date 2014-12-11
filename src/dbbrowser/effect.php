@@ -105,11 +105,11 @@ $ul->appendCreate('li', [ 'Post expression: ', [ 'small', [ 'class' => 'raw', $e
 
 
 $typesq = \Osmium\Db\query_params(
-	'SELECT it.typeid, it.typename
+	'SELECT it.typeid, it.typename, it.published
 	FROM eve.dgmtypeeffects dte
-	JOIN eve.invtypes it ON it.typeid = dte.typeid AND it.published = true
+	JOIN eve.invtypes it ON it.typeid = dte.typeid
 	WHERE dte.effectid = $1
-	ORDER BY it.typename ASC',
+	ORDER BY it.published DESC, it.typename ASC',
 	array($e['effectid'])
 );
 
@@ -119,10 +119,12 @@ $ntypes = 0;
 
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
 	++$ntypes;
-	$ul->appendCreate('li', [ [ 'a', [
+	$li = $ul->appendCreate('li', [ [ 'a', [
 		'o-rel-href' => '/db/type/'.$t['typeid'],
 		$t['typename']
 	]]]);
+
+	if($t['published'] !== 't') $li->addClass('unpublished');
 }
 
 if($ntypes > 0) {

@@ -72,8 +72,8 @@ $small = $h2->appendCreate('small', 'attribute '.$a['attributeid']);
 
 if($a['published'] !== 't') {
 	$small->prepend([
-		[ 'span', [ 'class' => 'unpublished', 'not public' ] ],
-		' – ',
+		[ 'span.unpublished', 'not public' ],
+		' — ',
 	]);
 }
 
@@ -92,11 +92,11 @@ $dbb->appendCreate('ul')->append([
 
 
 $typesq = \Osmium\Db\query_params(
-	'SELECT it.typeid, it.typename, dta.value
+	'SELECT it.typeid, it.typename, dta.value, it.published
 	FROM eve.dgmtypeattribs dta
-	JOIN eve.invtypes it ON it.typeid = dta.typeid AND it.published = true
+	JOIN eve.invtypes it ON it.typeid = dta.typeid
 	WHERE dta.attributeid = $1 AND dta.value <> $2
-	ORDER BY it.typename ASC',
+	ORDER BY it.published DESC, it.typename ASC',
 	array($a['attributeid'], $a['defaultvalue'])
 );
 
@@ -106,11 +106,13 @@ $ntypes = 0;
 
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
 	++$ntypes;
-	$ul->appendCreate('li', [
+	$li = $ul->appendCreate('li', [
 		[ 'span', [ 'class' => 'tval', $t['value'] ] ],
 		' ',
 		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ],
 	]);
+
+	if($t['published'] !== 't') $li->addClass('unpublished');
 }
 
 if($ntypes > 0) {

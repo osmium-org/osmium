@@ -70,8 +70,8 @@ $h2 = $header->appendCreate('h2', $type['typename']);
 $small = $h2->appendCreate('small', 'type '.$type['typeid']);
 if($type['published'] !== 't') {
 	$small->prepend([
-		[ 'span', [ 'class' => 'unpublished' ], 'not public' ],
-		' – ',
+		[ 'span.unpublished', 'not public' ],
+		' — ',
 	]);
 }
 
@@ -253,7 +253,7 @@ if($nprereqs > 0) {
 /* —————————— Required by —————————— */
 
 $sreqq = \Osmium\Db\query_params(
-	'SELECT it.typeid, it.typename, l.value::integer as level
+	'SELECT it.typeid, it.typename, l.value::integer as level, it.published
 	FROM eve.invtypes it
 	JOIN eve.dgmtypeattribs s ON s.typeid = it.typeid
 	AND s.attributeid IN (182, 183, 184, 1285, 1289, 1290)
@@ -267,8 +267,7 @@ $sreqq = \Osmium\Db\query_params(
 	WHEN 1289 THEN 1287
 	WHEN 1290 THEN 1288
 	ELSE NULL END
-	WHERE it.published = true
-	ORDER BY level ASC, it.typeid ASC',
+	ORDER BY level ASC, it.published DESC, it.typeid ASC',
 	array($type['typeid'])
 );
 
@@ -285,11 +284,13 @@ while($t = \Osmium\Db\fetch_assoc($sreqq)) {
 
 	++$nreqby[$t['level']];
 
-	$ul->appendCreate('li', [
+	$li = $ul->appendCreate('li', [
 		[ 'o-eve-img', [ 'src' => '/Type/'.$t['typeid'].'_64.png', 'alt' => '' ] ],
 		' ',
 		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ],
 	]);
+
+	if($t['published'] !== 't') $li->addClass('unpublished');
 }
 
 if($nreqby !== []) {

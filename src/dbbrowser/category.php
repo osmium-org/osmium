@@ -54,10 +54,10 @@ $small = $h2->appendCreate('small', 'category '.$categoryid);
 
 
 $groupsq = \Osmium\Db\query_params(
-	'SELECT ig.groupid, ig.groupname
+	'SELECT ig.groupid, ig.groupname, ig.published
 	FROM eve.invgroups ig
-	WHERE ig.categoryid = $1 AND ig.published = true
-	ORDER BY ig.groupname ASC',
+	WHERE ig.categoryid = $1
+	ORDER BY ig.published DESC, ig.groupname ASC',
 	array($c['categoryid'])
 );
 
@@ -67,9 +67,11 @@ $ngroups = 0;
 
 while($g = \Osmium\Db\fetch_assoc($groupsq)) {
 	++$ngroups;
-	$ul->appendCreate('li', [
+	$li = $ul->appendCreate('li', [
 		[ 'a', [ 'o-rel-href' => '/db/group/'.$g['groupid'], $g['groupname'] ] ]
 	]);
+
+	if($g['published'] !== 't') $li->addClass('unpublished');
 }
 
 if($ngroups > 0) {

@@ -53,7 +53,10 @@ $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $g['groupname']);
 $small = $h2->appendCreate('small', 'group '.$groupid);
 if($g['published'] !== 't') {
-	$small->prepend([[ 'span', [ 'class' => 'unpublished', 'not public' ] ]]);
+	$small->prepend([
+		[ 'span.unpublished', 'not public' ],
+		' — ',
+	]);
 }
 
 $nav = $dbb->appendCreate('nav');
@@ -66,10 +69,10 @@ $ul->append([
 
 
 $typesq = \Osmium\Db\query_params(
-	'SELECT it.typeid, it.typename
+	'SELECT it.typeid, it.typename, it.published
 	FROM eve.invtypes it
-	WHERE it.groupid = $1 AND it.published = true
-	ORDER BY it.typename ASC',
+	WHERE it.groupid = $1
+	ORDER BY it.published DESC, it.typename ASC',
 	array($g['groupid'])
 );
 
@@ -79,9 +82,11 @@ $ntypes = 0;
 
 while($t = \Osmium\Db\fetch_assoc($typesq)) {
 	++$ntypes;
-	$ul->appendCreate('li', [
+	$li = $ul->appendCreate('li', [
 		[ 'a', [ 'o-rel-href' => '/db/type/'.$t['typeid'], $t['typename'] ] ]
 	]);
+
+	if($t['published'] !== 't') $li->addClass('unpublished');
 }
 
 if($ntypes > 0) {

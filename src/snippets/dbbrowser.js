@@ -152,6 +152,12 @@ $(function() {
 			}
 
 			typelist.children('li').sort(function(a, b) {
+				var au = a.className === 'unpublished';
+				var bu = b.className === 'unpublished';
+
+				if(au & !bu) return 1;
+				if(bu & !au) return -1;
+				
 				var as = a.lastChild.textContent.toString();
 				var bs = b.lastChild.textContent.toString();
 				return asc * ((as < bs) ? -1 : ((as > bs) ? 1 : 0));
@@ -170,6 +176,12 @@ $(function() {
 				}
 
 				typelist.children('li').sort(function(a, b) {
+					var au = a.className === 'unpublished';
+					var bu = b.className === 'unpublished';
+
+					if(au & !bu) return 1;
+					if(bu & !au) return -1;
+					
 					var af = parseFloat(a.firstChild.textContent);
 					var bf = parseFloat(b.firstChild.textContent);
 					return asc * (af - bf);

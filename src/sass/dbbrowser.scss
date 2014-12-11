@@ -154,6 +154,11 @@ div#dbb {
 				&> img:first-child {
 					height: 2em;
 				}
+
+				&.unpublished {
+					opacity: .5;
+					text-decoration: line-through;
+				}
 			}
 		}
 	}
@@ -214,6 +219,11 @@ div#dbb {
 
 			&.h {
 				margin-top: 1em;
+			}
+
+			&.unpublished {
+				opacity: .5;
+				text-decoration: line-through;
 			}
 
 			@include ellipsis;
