@@ -88,7 +88,7 @@ function get_source(\Osmium\DOM\RawPage $p, $textarea_name, $uri_name, $file_nam
 			return false;
 		}
 
-		return fetch($_FILES[$file_name]['tmp_name']);
+		return file_get_contents($_FILES[$file_name]['tmp_name']);
 	}
 
 	return false;
