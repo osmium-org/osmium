@@ -113,6 +113,21 @@ if($desctext !== '') {
 	$desc->appendCreate('p', [ 'class' => 'placeholder', 'This type has no description.' ]);
 }
 
+if((int)$type['categoryid'] === 6) {
+	$ul = $desc->appendCreate('ul');
+	
+	$ul->appendCreate('li')->appendCreate('a', [
+		'o-rel-href' => '/new/dna/'.$type['typeid'].'::',
+		'Create a new '.$type['typename'].' loadout',
+	]);
+
+	$ul->appendCreate('li')->appendCreate('a', [
+		'o-rel-href' => '/browse/best'.$p->formatQueryString([ 'q' => '@ship "'.$type['typename'].'"' ]),
+		'Browse popular '.$type['typename'].' loadouts',
+	]);
+}
+
+
 
 
 $ultabs = $dbb->appendCreate('ul', [ 'class' => 'tabs' ]);
