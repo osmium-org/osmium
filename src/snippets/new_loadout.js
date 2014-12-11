@@ -16,7 +16,6 @@
  */
 
 /*<<< require snippet loadout_common >>>*/
-/*<<< require snippet new_loadout-control >>>*/
 /*<<< require snippet new_loadout-sources >>>*/
 /*<<< require snippet new_loadout-ship >>>*/
 /*<<< require snippet new_loadout-presets >>>*/

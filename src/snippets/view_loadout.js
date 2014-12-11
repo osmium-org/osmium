@@ -176,6 +176,7 @@ osmium_init = function() {
 };
 
 osmium_gen = function() {
+	osmium_gen_ship();
 	osmium_gen_modules();
 	osmium_gen_fattribs();
 	osmium_gen_drones();

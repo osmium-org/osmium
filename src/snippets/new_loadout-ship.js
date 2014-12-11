@@ -15,8 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*<<< require snippet new_loadout-control >>>*/
+
 osmium_gen_ship = function() {
-	var section = $('div#nlattribs > section#ship');
+	var section = $('section#ship');
 	var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
 	var img, h, small, shipname, groupname;
 

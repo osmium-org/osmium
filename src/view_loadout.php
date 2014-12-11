@@ -207,7 +207,13 @@ if(count($fit['metadata']['tags']) > 0 || $canretag) {
 
 
 if(isset($fit['ship']['typeid'])) {
-	$groupname = \Osmium\Fit\get_groupname(\Osmium\Fit\get_groupid($fit['ship']['typeid']));
+	if(isset($fit['mode']['typeid'])) {
+		$groupname = $fit['mode']['typename'];
+	} else {
+		$groupname = \Osmium\Fit\get_groupname(
+			\Osmium\Fit\get_groupid($fit['ship']['typeid'])
+		);
+	}
 } else {
 	$groupname = '';
 }
