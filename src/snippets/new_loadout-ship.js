@@ -17,7 +17,8 @@
 
 osmium_gen_ship = function() {
 	var section = $('div#nlattribs > section#ship');
-	var img, h, shipname, groupname;
+	var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
+	var img, h, small, shipname, groupname;
 
 	if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
 		groupname = osmium_types[osmium_clf.ship.typeid][5];
@@ -62,7 +63,13 @@ osmium_gen_ship = function() {
 
 	h = $(document.createElement('h1'));
 	h.append(img);
-	h.append($(document.createElement('small')).addClass('groupname').text(groupname));
+
+	small = $(document.createElement('small')).addClass('groupname').text(groupname);
+	if(('X-mode' in p) && ('typeid' in p['X-mode'])) {
+		small.append(' (' + osmium_modes[osmium_clf.ship.typeid][p['X-mode'].typeid] + ')');
+	}
+	
+	h.append(small);
 	h.append($(document.createElement('strong')).append(
 		$(document.createElement('span')).addClass('name').text(shipname)
 	).prop('title', shipname));
@@ -84,6 +91,29 @@ osmium_init_ship = function() {
 		}, { icon: [ 1, 13, 64, 64 ] });
 
 		osmium_ctxmenu_add_separator(menu);
+
+		if(osmium_clf.ship.typeid in osmium_modes) {
+			var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
+			var mtid = ('X-mode' in p) && ('typeid' in p['X-mode']) ? p['X-mode'].typeid : 0;
+			
+			osmium_ctxmenu_add_subctxmenu(menu, 'Ship modes', function() {
+				var smenu = osmium_ctxmenu_create();
+				var modes = osmium_modes[osmium_clf.ship.typeid];
+
+				for(var t in modes) {
+					osmium_ctxmenu_add_option(smenu, modes[t], (function(t) {
+						return function() {
+							osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']]['X-mode'] = { typeid: t };
+							osmium_gen_ship();
+							osmium_undo_push();
+							osmium_commit_clf();
+						};
+					})(t), { toggled: t == mtid });
+				}
+
+				return smenu;
+			}, {});
+		}
 
 		osmium_ctxmenu_add_subctxmenu(menu, "Reload times", function() {
 			var smenu = osmium_ctxmenu_create();

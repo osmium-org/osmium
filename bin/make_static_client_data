@@ -423,4 +423,13 @@ while($r = \Osmium\Db\fetch_row($sideeffectsq)) {
 
 /* ---------------------------------------------------------- */
 
+/* XXX, for obvious reasons */
+$static['modes'][34317] = [
+	34319 => 'Defense Mode',
+	34323 => 'Propulsion Mode',
+	34321 => 'Sharpshooter Mode',
+];
+
+/* ---------------------------------------------------------- */
+
 file_put_contents(__DIR__.'/../static/cache/clientdata.json', json_encode($static));

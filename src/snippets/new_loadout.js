@@ -162,6 +162,26 @@ osmium_add_to_clf = function(item) {
 	if(cat === 'ship') {
 		osmium_clf.ship = { typeid: typeid };
 
+		/* Delete all modes */
+		for(var i in osmium_clf.presets) {
+			delete osmium_clf.presets[i]['X-mode'];
+		}
+
+		/* If necessary, pick a mode */
+		if(osmium_clf.ship.typeid in osmium_modes) {
+			var modes = osmium_modes[osmium_clf.ship.typeid];
+			var mtid;
+
+			for(var t in modes) {
+				mtid = t;
+				break;
+			}
+
+			for(var i in osmium_clf.presets) {
+				osmium_clf.presets[i]['X-mode'] = { typeid: mtid };
+			}
+		}
+
 		/* Regen everything as changing a ship changes pretty much
 		 * everything. */
 		osmium_user_initiated_push(false);
