@@ -60,6 +60,10 @@ function get_unique($fit) {
 			'description' => (string)$preset['description']
 		);
 
+		if(isset($preset['mode']['typeid'])) {
+			$uniquep['mode'] = (int)$preset['mode']['typeid'];
+		}
+
 		foreach($preset['modules'] as $type => $d) {
 			$z = 0;
 			foreach($d as $index => $module) {
@@ -349,6 +353,20 @@ function commit_fitting(&$fit, &$error = null) {
 
 		if($ret === false) {
 			return false;
+		}
+
+		if(isset($preset['mode']['typeid'])) {
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingmodules (fittinghash, presetid, slottype, index, typeid, state) VALUES($1, $2, $3, $4, $5, $6)', [
+					$fittinghash,
+					$presetid,
+					'mode',
+					0,
+					$preset['mode']['typeid'],
+					STATE_ONLINE,
+				]);
+
+			if($ret === false) return false;
 		}
 
 		$normalizedindexes = array();
@@ -968,13 +986,18 @@ function get_fitting($fittinghash) {
 		$presetsmap[$preset['presetid']] = $fit['modulepresetid'];
 
 		$modulesq = \Osmium\Db\query_params(
-			'SELECT index, typeid, state
+			'SELECT index, typeid, state, slottype
 			FROM osmium.fittingmodules
 			WHERE fittinghash = $1 AND presetid = $2
 			ORDER BY index ASC',
 			array($fittinghash, $preset['presetid'])
 		);
 		while($row = \Osmium\Db\fetch_row($modulesq)) {
+			if($row['3'] === 'mode') {
+				set_mode($fit, (int)$row[1]);
+				continue;
+			}
+			
 			add_module($fit, (int)$row[0], (int)$row[1], (int)$row[2]);
 		}
 
