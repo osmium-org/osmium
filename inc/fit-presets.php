@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -55,6 +55,13 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 					$i['dogma_index']
 				);
 			}
+
+			if(isset($fit['mode']['typeid'])) {
+				dogma_remove_module(
+					$fit['__dogma_context'],
+					$fit['mode']['dogma_index']
+				);
+			}
 		}
 	}
 
@@ -63,6 +70,7 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 	$fit['modulepresetid'] = $presetid;
 	$fit['modulepresetname'] =& $fit['presets'][$presetid]['name'];
 	$fit['modulepresetdesc'] =& $fit['presets'][$presetid]['description'];
+	$fit['mode'] =& $fit['presets'][$presetid]['mode'];
 	$fit['modules'] =& $fit['presets'][$presetid]['modules'];
 	$fit['chargepresets'] =& $fit['presets'][$presetid]['chargepresets'];
 	$fit['implants'] =& $fit['presets'][$presetid]['implants'];
@@ -107,6 +115,15 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 				$fit['__dogma_context'],
 				$i['typeid'],
 				$i['dogma_index']
+			);
+		}
+
+		if(isset($fit['mode']['typeid'])) {
+			dogma_add_module_s(
+				$fit['__dogma_context'],
+				$fit['mode']['typeid'],
+				$fit['mode']['dogma_index'],
+				DOGMA_STATE_Online
 			);
 		}
 	}
@@ -227,6 +244,7 @@ function create_preset(&$fit, $name, $description, $newid = null) {
 	$preset = array(
 		'name' => $name,
 		'description' => $description,
+		'mode' => array(),
 		'modules' => array(),
 		'chargepresets' => array(),
 		'implants' => array(),

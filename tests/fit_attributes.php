@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -569,5 +569,22 @@ class FitAttributes extends PHPUnit_Framework_TestCase {
 			'',
 			0.000000001
 		);
+	}
+
+	/**
+	 * @group fit
+	 */
+	public function testModes() {
+		\Osmium\Fit\create($fit);
+		\Osmium\Fit\select_ship($fit, 34317); /* Confessor */
+
+		$v0 = \Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity');
+		\Osmium\Fit\set_mode($fit, 34323); /* Propulsion mode */
+		$v1 = \Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity');
+		\Osmium\Fit\set_mode($fit, null);
+		$v2 = \Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity');
+
+		$this->assertSame($v0, $v2);
+		$this->assertGreaterThan($v0, $v1);
 	}
 }

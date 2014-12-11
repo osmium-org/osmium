@@ -251,6 +251,10 @@ function clf_parse_presets_1(&$fit, &$presets, &$errors) {
 		}
 		$names[$name] = $id;
 
+		if(isset($preset['X-mode']['typeid'])) {
+			set_mode($fit, $preset['X-mode']['typeid']);
+		}
+		
 		if(isset($preset['modules']) && is_array($preset['modules'])) {
 			clf_parse_modules_1($fit, $preset['modules'], $errors);
 		}
@@ -683,6 +687,13 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 			$jsonpreset['presetname'] = $preset['name'];
 			if($preset['description'] != '') {
 				$jsonpreset['presetdescription'] = $preset['description'];
+			}
+		}
+		
+		if(isset($preset['mode']['typeid'])) {
+			$jsonpreset['X-mode']['typeid'] = $preset['mode']['typeid'];
+			if(!$minify) {
+				$jsonpreset['X-mode']['typename'] = $preset['mode']['typename'];
 			}
 		}
 
@@ -1195,8 +1206,13 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 	$clfsideeffects = array();
 	$z = 0;
 
+	if(isset($clfp['X-mode']['typeid'])) {
+		/* set_mode() is lazy */
+		set_mode($fit, $clfp['X-mode']['typeid']);
+	}
+	
 	foreach(isset($clfp['modules']) ? $clfp['modules'] : array() as $m) {
-		/* add_module() is lazy, it's okay to blindly call it here */
+		/* add_module() is lazy too */
 		add_module($fit, $m['index'], $m['typeid'], $clfstates[$m['state']]);
 
 		$type = get_module_slottype($fit, $m['typeid']);
@@ -1272,6 +1288,10 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 
 		if(isset($clfimplants[$typeid])) continue;
 		remove_implant($fit, $typeid);
+	}
+
+	if(!isset($clfp['X-mode']['typeid']) && isset($fit['mode']['typeid'])) {
+		set_mode($fit, null);
 	}
 }
 

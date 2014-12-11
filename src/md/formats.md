@@ -71,6 +71,10 @@ programs are encouraged to support them when applicable.
   Osmium will generate it when exporting if some side effects have
   been enabled by the user, and will restore them when importing.
 
+- `X-mode`: additional key in a preset element. If present, it is an
+  object with two keys, `typeid` and `typename` specifying the mode of
+  the ship for this preset.
+
 ### Osmium-specific extensions
 
 The properties below are not standard and are Osmium specific. They

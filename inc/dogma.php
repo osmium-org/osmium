@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -107,6 +107,15 @@ function late_init(&$fit, $opts = DOGMA_INIT_DEFAULT_OPTS) {
 
 	if(isset($fit['ship']['typeid']) && $fit['ship']['typeid'] > 0) {
 		dogma_set_ship($fit['__dogma_context'], $fit['ship']['typeid']);
+	}
+
+	if(isset($fit['mode']['typeid'])) {
+		dogma_add_module_s(
+			$fit['__dogma_context'],
+			$fit['mode']['typeid'],
+			$fit['mode']['dogma_index'],
+			DOGMA_STATE_Online
+		);
 	}
 
 	foreach($fit['modules'] as $type => &$sub) {

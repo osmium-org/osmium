@@ -164,6 +164,8 @@ function get_state_names() {
  * modulepresetdesc => (string)
  * modules => array(<slot_type> => array(<index> => array(typeid, typename, dogma_index, state, target)))
  *
+ * mode => array(typeid, typename, dogma_index) or array()
+ *
  * chargepresetid => (integer) 
  * chargepresetname => (string)
  * chargepresetdesc => (string)
@@ -557,6 +559,50 @@ function get_module_states(&$fit, $typeid) {
 
 	dogma_type_has_active_effects($typeid, $activable);
 	return array($activable, false);
+}
+
+
+
+/* ----------------------------------------------------- */
+
+
+
+/**
+ * Set the ship mode.
+ *
+ * @param $modetypeid type ID of the mode. Pass NULL to unset the mode.
+ */
+function set_mode(&$fit, $modetypeid) {	
+	/* Remove a previous mode */
+	if(isset($fit['mode']['typeid'])) {
+		/* Be lazy */
+		if($fit['mode']['typeid'] === (int)$modetypeid) return;
+		
+		if(\Osmium\Dogma\has_context($fit)) {
+			dogma_remove_module(
+				$fit['__dogma_context'],
+				$fit['mode']['dogma_index']
+			);
+		}
+		
+		unset($fit['mode']['typeid']);
+		unset($fit['mode']['typename']);
+		unset($fit['mode']['dogma_index']);
+	}
+
+	if((int)$modetypeid === 0) return;
+
+	$fit['mode']['typeid'] = (int)$modetypeid;
+	$fit['mode']['typename'] = get_typename($modetypeid);
+
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_add_module_s(
+			$fit['__dogma_context'],
+			$modetypeid,
+			$fit['mode']['dogma_index'],
+			DOGMA_STATE_Online
+		);
+	}
 }
 
 
