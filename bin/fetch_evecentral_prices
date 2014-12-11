@@ -31,7 +31,7 @@ if($argc === 3) {
 if($modcurrent >= $modtotal) die();
 
 const BS = 5; /* Number of types per API call */
-const MIN_VOLUME = 1000; /* Do not use median price if volume is < this threshold */
+const MIN_VOLUME = 100; /* Do not use median price if volume is < this threshold */
 const NDAYS = 7; /* Only update 1/7th of all types every day */
 
 $typesq = \Osmium\Db\query_params(
@@ -81,14 +81,12 @@ while(true) {
 			'DELETE FROM eve.averagemarketprices WHERE typeid = $1',
 			[ (int)$type['id'] ]
 		);
-
-		$row = ((int)$type->buy->volume > (int)$type->sell->volume) ? $type->buy : $type->sell;
 		
-		if((int)$row->volume < MIN_VOLUME) continue;
+		if((int)$type->sell->volume < MIN_VOLUME) continue;
 		
 		\Osmium\Db\query_params(
 			'INSERT INTO eve.averagemarketprices (typeid, averageprice) VALUES ($1, $2)',
-			[ (int)$type['id'], (float)$row->median ]
+			[ (int)$type['id'], (float)$type->sell->median ]
 		);
 	}
 
