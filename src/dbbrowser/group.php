@@ -51,12 +51,9 @@ $dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
 $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $g['groupname']);
-$small = $h2->appendCreate('small', 'group '.$groupid);
 if($g['published'] !== 't') {
-	$small->prepend([
-		[ 'span.unpublished', 'not public' ],
-		' — ',
-	]);
+	$h2->addClass('unpublished');
+	$h2->setAttribute('title', 'This group is not public.');
 }
 
 $nav = $dbb->appendCreate('nav');

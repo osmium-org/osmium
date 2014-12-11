@@ -49,7 +49,6 @@ $dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
 $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $c['categoryname']);
-$small = $h2->appendCreate('small', 'category '.$categoryid);
 
 
 

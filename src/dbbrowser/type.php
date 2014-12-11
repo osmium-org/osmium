@@ -67,12 +67,22 @@ $dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
 $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $type['typename']);
-$small = $h2->appendCreate('small', 'type '.$type['typeid']);
-if($type['published'] !== 't') {
-	$small->prepend([
-		[ 'span.unpublished', 'not public' ],
-		' — ',
+
+$ap = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT averageprice FROM eve.averagemarketprices
+    WHERE typeid = $1',
+	[ $type['typeid'] ]
+));
+if($ap !== false) {
+	$h2->appendCreate('span.amp', [
+		'title' => 'approximate market value',
+		$p->formatNDigits($p->truncateSDigits($ap[0], 2), 2, false).' ISK'
 	]);
+}
+
+if($type['published'] !== 't') {
+	$h2->addClass('unpublished');
+	$h2->setAttribute('title', 'This type is not public.');
 }
 
 $nav = $dbb->appendCreate('nav');

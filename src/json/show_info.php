@@ -110,6 +110,19 @@ $suffix = number_format(microtime(true), 6, '', '');
 
 $hdr = $p->element('header', [ 'class' => 'hsi' ]);
 $h2 = $hdr->appendCreate('h2');
+
+$ap = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+	'SELECT averageprice FROM eve.averagemarketprices
+        WHERE typeid = $1',
+	[ $typeid ]
+));
+if($ap !== false) {
+	$h2->appendCreate('span.amp', [
+		'title' => 'approximate market value',
+		$p->formatNDigits($p->truncateSDigits($ap[0], 2), 2, false).' ISK'
+	]);
+}
+
 $h2->appendCreate('o-eve-img', [ 'src' => '/Type/'.$typeid.'_64.png', 'alt' => '' ]);
 $h2->appendCreate('a', [ 'o-rel-href' => '/db/type/'.$typeid, $typename ]);
 
@@ -143,7 +156,7 @@ $desc = \Osmium\Chrome\trim($desc);
 if($desc !== '') {
 	$desc = $p->fragment(\Osmium\Chrome\format_type_description($desc));
 	$ultabs->appendCreate('li')->appendCreate('a', [ 'href' => '#sidesc-'.$suffix, 'Description' ]);
-	$p->appendChild($p->element('section', [ 'class' => 'sidesc', 'id' => 'sidesc-'.$suffix, $desc ]));
+	$p->appendChild($sdesc = $p->element('section', [ 'class' => 'sidesc', 'id' => 'sidesc-'.$suffix, $desc ]));
 }
 
 

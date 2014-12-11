@@ -59,7 +59,6 @@ $dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
 $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $mg['mgname0']);
-$small = $h2->appendCreate('small', 'marketgroup '.$mgid);
 
 if($mg['mgid1'] !== null) {
 	$ul = $dbb->appendCreate('nav')->appendCreate('ul');

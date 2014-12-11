@@ -68,13 +68,10 @@ if($a['displayname']) {
 
 $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $name);
-$small = $h2->appendCreate('small', 'attribute '.$a['attributeid']);
 
 if($a['published'] !== 't') {
-	$small->prepend([
-		[ 'span.unpublished', 'not public' ],
-		' — ',
-	]);
+	$h2->addClass('unpublished');
+	$h2->setAttribute('title', 'This attribute is not public.');
 }
 
 $def = (!$a['defaultvalue'] && in_array($a['unitid'], [ 115, 116, 129 ]))

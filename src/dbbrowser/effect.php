@@ -50,10 +50,7 @@ if($e === false) \Osmium\fatal(404);
 $dbb = $p->content->appendCreate('div', [ 'id' => 'dbb' ]);
 
 $hdr = $dbb->appendCreate('header');
-$hdr->appendCreate('h2', [
-	[ 'span', [ 'class' => 'raw', $e['effectname'] ] ],
-	[ 'small', 'effect '.$e['effectid'] ],
-]);
+$hdr->appendCreate('h2', $e['effectname']);
 
 $ul = $dbb->appendCreate('ul');
 $ul->appendCreate('li', [

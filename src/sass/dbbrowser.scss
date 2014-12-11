@@ -8,19 +8,22 @@ div#dbb {
 		font-size: 3em;
 		margin-bottom: 0;
 
-		&> small {
-			font-family: $mono-font;
-			font-size: .5em;
+		&.unpublished {
 			opacity: .5;
+			text-decoration: line-through;
 		}
 
-		&> small > span.unpublished {
-			color: $error-text-color;
-		}
+		&> span.amp {
+			color: $aside-text-color;
+			font-size: .8em;
 
-		&> span.raw {
-			font-size: 0.5em;
-			vertical-align: bottom;
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			
+			&:before {
+				content: "≈";
+			}
 		}
 	}
 

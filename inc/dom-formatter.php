@@ -27,16 +27,27 @@ trait Formatter {
 	}
 
 	/* Format a number with a given number of digits. */
-	static function formatNDigits($n, $digits = 3) {
-		return rtrim(rtrim(number_format($n, max(1, $digits)), '0'), '.');
+	static function formatNDigits($n, $digits = 3, $trim = true) {
+		$n = number_format($n, max(1, $digits));
+		return $trim ? rtrim(rtrim($n, '0'), '.') : $n;
 	}
 
-	/* Format a number with a given number of /significant/ digits. */
+	/* Format a number with a given number of /significant/ digits.
+	 *
+	 * @deprecated use truncateSDigits
+	 */
 	static function formatSDigits($n, $digits = 3) {
 		if(!$n) return $n;
 
 		$normalized = $n / ($m = pow(10, floor(log10(abs($n)))));
 		return self::formatNDigits($normalized, $digits - 1) * $m;
+	}
+
+	/* Only keep the first $digits significant digits of a number
+	 * $n. */
+	static function truncateSDigits($n, $digits = 3) {
+		if(!$n) return $n;
+		return round($n / ($m = pow(10, floor(log10(abs($n))))), $digits - 1) * $m;
 	}
 
 	/* Format a number with an optional 'k', 'm' or 'b' prefix. */
