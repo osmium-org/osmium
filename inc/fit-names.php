@@ -56,6 +56,7 @@ const TYPE_100MNMicrowarpdriveII = 12084;
 const GROUP_Booster = 303;
 const GROUP_FighterBomber = 1023;
 const GROUP_FighterDrone = 549;
+const GROUP_ShipModifiers = 1306;
 
 
 

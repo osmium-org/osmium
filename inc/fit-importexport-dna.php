@@ -58,6 +58,11 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 		if($qty <= 0) continue;
 
 		if(\CommonLoadoutFormat\check_typeof_type($typeid, 'module')) {
+			if((int)get_groupid($typeid) === GROUP_ShipModifiers) {
+				set_mode($fit, $typeid);
+				continue;
+			}
+			
 			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
 			if($slottype === 'unknown') {
 				$errors[] = 'Unknown typeid "'.$typeid.'". Discarded.';
@@ -242,6 +247,10 @@ function export_to_dna($fit) {
 	}
 
 	$tids = array();
+
+	if(isset($fit['mode']['typeid'])) {
+		$tids[$fit['mode']['typeid']] = 1;
+	}
 
 	foreach($slotorder as $type) {
 		if(isset($fit['modules'][$type])) {	
