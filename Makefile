@@ -71,6 +71,9 @@ reformat-deltas:
 reformat-editable-formatted-contents:
 	./bin/parallelize 8 ./bin/reformat_editable_formatted_contents
 
+update-average-prices:
+	./bin/parallelize 4 ./bin/fetch_evecentral_prices
+
 .PHONY: default tags tests db-tests all-tests test-coverage		\
  clear-harmless-cache clear-api-cache clear-sessions themes		\
  staticcache post-eve-schema-update reindex-loadouts reformat-deltas	\

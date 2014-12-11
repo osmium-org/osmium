@@ -12,6 +12,7 @@ require __DIR__.'/../inc/cron.php';
 		passthru('./bin/prune_database');
 		passthru('make update-eveapis');
 		passthru('make update-affiliations');
+		passthru('make update-average-prices');
 		passthru('./bin/reindex_loadouts');
 		passthru('./bin/make_sitemap');
 	},
