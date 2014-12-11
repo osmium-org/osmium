@@ -227,6 +227,8 @@ if($nprereqs > 0) {
 		$ul = $e->element('ul');
 
 		foreach($prereqs as $skill => $level) {
+			if(isset($blacklist[$skill])) continue;
+			
 			$li = $ul->appendCreate('li');
 
 			$li->appendCreate('header', [
