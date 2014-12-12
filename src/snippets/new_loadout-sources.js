@@ -390,12 +390,25 @@ osmium_add_generic_showinfo = function(menu, typeid) {
 	}, { icon: osmium_showinfo_sprite_position });
 };
 
-osmium_add_generic_browse_mg = function(menu, typeid, opts) {
-	if(opts === undefined) opts = {};
+osmium_add_generic_browse = function(menu, typeid) {
+	osmium_ctxmenu_add_subctxmenu(menu, "Compare", function() {
+		var sub = osmium_ctxmenu_create();
 
-	var title = ("title" in opts) ? opts.title : "Browse market group";
+		osmium_ctxmenu_add_option(sub, "Compare variations", function() {
+			window.open(osmium_relative + '/db/comparevariations/' + typeid + '/auto', '_blank');
+		}, { icon: 'external.svg' });
 
-	osmium_ctxmenu_add_option(menu, title, function() {
+		var mg = osmium_types[typeid][9];
+		if(mg > 0) {
+			osmium_ctxmenu_add_option(sub, "Compare market group", function() {
+				window.open(osmium_relative + '/db/comparemarketgroup/' + mg + '/auto', '_blank');
+			}, { icon: 'external.svg' });
+		}
+
+		return sub;
+	}, {});
+
+	osmium_ctxmenu_add_option(menu, "Browse market group", function() {
 		var mgroot = $("div#nlsources > section#browse div.mgroot");
 		var groupid = osmium_types[typeid][9];
 		var stack = [];
@@ -423,36 +436,6 @@ osmium_add_generic_browse_mg = function(menu, typeid, opts) {
 	}, { icon: [ 0, 11, 64, 64 ] });
 };
 
-osmium_add_generic_compare_sub = function(menu, li) {
-	osmium_ctxmenu_add_subctxmenu(menu, "Compare", function() {
-		var sub = osmium_ctxmenu_create();
-		var typeid = li.data('typeid');
-
-		if(li.closest('section#search').length === 1) {
-			osmium_ctxmenu_add_option(sub, "Compare those types", function() {
-				var typelist = [];
-				li.parent().children('li').each(function() {
-					typelist.push($(this).data('typeid'));
-				});
-				window.open(osmium_relative + '/db/comparetypes/' + typelist.join(',') + '/auto', '_blank');
-			}, { icon: 'external.svg' });
-		}
-
-		osmium_ctxmenu_add_option(sub, "Compare variations", function() {
-			window.open(osmium_relative + '/db/comparevariations/' + typeid + '/auto', '_blank');
-		}, { icon: 'external.svg' });
-
-		var mg = osmium_types[typeid][9];
-		if(mg > 0) {
-			osmium_ctxmenu_add_option(sub, "Compare market group", function() {
-				window.open(osmium_relative + '/db/comparemarketgroup/' + mg + '/auto', '_blank');
-			}, { icon: 'external.svg' });
-		}
-
-		return sub;
-	}, {});
-};
-
 osmium_add_non_shortlist_contextmenu = function(li) {
 	osmium_ctxmenu_bind(li, function() {
 		var menu = osmium_ctxmenu_create();
@@ -473,8 +456,7 @@ osmium_add_non_shortlist_contextmenu = function(li) {
 			osmium_commit_shortlist();
 		}, {});
 		osmium_ctxmenu_add_separator(menu);
-		osmium_add_generic_compare_sub(menu, li);
-		osmium_add_generic_browse_mg(menu, li.data('typeid'));
+		osmium_add_generic_browse(menu, li.data('typeid'));
 		osmium_add_generic_showinfo(menu, li.data('typeid'));
 
 		return menu;
@@ -491,8 +473,7 @@ osmium_add_shortlist_contextmenu = function(li) {
 			osmium_commit_shortlist();
 		}, {});
 		osmium_ctxmenu_add_separator(menu);
-		osmium_add_generic_compare_sub(menu, li);
-		osmium_add_generic_browse_mg(menu, li.data('typeid'));
+		osmium_add_generic_browse(menu, li.data('typeid'));
 		osmium_add_generic_showinfo(menu, li.data('typeid'));
 
 		return menu;

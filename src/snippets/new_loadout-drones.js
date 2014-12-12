@@ -148,7 +148,7 @@ osmium_gen_drones = function() {
 					}
 
 					if(!osmium_loadout_readonly) {
-						osmium_add_generic_browse_mg(menu, t);
+						osmium_add_generic_browse(menu, t);
 					}
 
 					osmium_ctxmenu_add_option(menu, "Show drone info", function() {

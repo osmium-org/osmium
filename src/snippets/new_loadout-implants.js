@@ -71,7 +71,7 @@ osmium_gen_implants = function() {
 
 						osmium_ctxmenu_add_separator(menu);
 
-						osmium_add_generic_browse_mg(menu, t);
+						osmium_add_generic_browse(menu, t);
 					}
 
 					osmium_ctxmenu_add_option(menu, "Show implant info", function() {

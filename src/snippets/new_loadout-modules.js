@@ -677,31 +677,49 @@ osmium_add_module = function(typeid, index, state, chargeid) {
 
 		if(!osmium_loadout_readonly) {
 			if(hascharges && li.data('chargetypeid') !== null) {
-				osmium_add_generic_browse_mg(menu, typeid,
-											 { title: "Browse market group (m)" });
-				osmium_add_generic_browse_mg(menu, li.data('chargetypeid'),
-											 { title: "Browse market group (c)" });
-			} else {
-				osmium_add_generic_browse_mg(menu, typeid);
+				osmium_ctxmenu_add_heading(menu, "Module");
 			}
-		}
-
-		osmium_ctxmenu_add_option(menu, "Show module info", function() {
-			osmium_showinfo({
-				type: "module",
-				slottype: li.data('slottype'),
-				index: li.data('index')
-			});
-		}, { icon: osmium_showinfo_sprite_position, 'default': osmium_loadout_readonly });
-
-		if(hascharges && li.data('chargetypeid') !== null) {
-			osmium_ctxmenu_add_option(menu, "Show charge info", function() {
+			
+			osmium_add_generic_browse(menu, typeid);
+			osmium_ctxmenu_add_option(menu, "Show module info", function() {
 				osmium_showinfo({
-					type: "charge",
+					type: "module",
 					slottype: li.data('slottype'),
 					index: li.data('index')
 				});
-			}, { icon: osmium_showinfo_sprite_position });
+			}, { icon: osmium_showinfo_sprite_position, 'default': osmium_loadout_readonly });
+			
+			if(hascharges && li.data('chargetypeid') !== null) {
+				osmium_ctxmenu_add_separator(menu);
+				osmium_ctxmenu_add_heading(menu, "Charge");
+				
+				osmium_add_generic_browse(menu, li.data('chargetypeid'));
+				osmium_ctxmenu_add_option(menu, "Show charge info", function() {
+					osmium_showinfo({
+						type: "charge",
+						slottype: li.data('slottype'),
+						index: li.data('index')
+					});
+				}, { icon: osmium_showinfo_sprite_position });
+			}
+		} else {
+			osmium_ctxmenu_add_option(menu, "Show module info", function() {
+				osmium_showinfo({
+					type: "module",
+					slottype: li.data('slottype'),
+					index: li.data('index')
+				});
+			}, { icon: osmium_showinfo_sprite_position, 'default': osmium_loadout_readonly });
+
+			if(hascharges && li.data('chargetypeid') !== null) {
+				osmium_ctxmenu_add_option(menu, "Show charge info", function() {
+					osmium_showinfo({
+						type: "charge",
+						slottype: li.data('slottype'),
+						index: li.data('index')
+					});
+				}, { icon: osmium_showinfo_sprite_position });
+			}
 		}
 
 		return menu;

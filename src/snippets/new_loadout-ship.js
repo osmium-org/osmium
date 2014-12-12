@@ -306,7 +306,7 @@ osmium_init_ship = function() {
 			osmium_ctxmenu_add_separator(menu);
 
 			if(!osmium_loadout_readonly) {
-				osmium_add_generic_browse_mg(menu, osmium_clf.ship.typeid);
+				osmium_add_generic_browse(menu, osmium_clf.ship.typeid);
 			}
 
 			osmium_ctxmenu_add_option(menu, "Show ship info", function() {

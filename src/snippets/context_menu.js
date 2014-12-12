@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -104,6 +104,17 @@ osmium_ctxmenu_add_separator = function(menu) {
 	menu.append(li);
 };
 
+osmium_ctxmenu_add_heading = function(menu, name, opts) {
+	var li = $(document.createElement('li'));
+
+	li.addClass('hd');
+	li.addClass('disabled');
+	li.append($(document.createElement('span')).text(name));
+	osmium_ctxmenu_apply_opts(menu, li, opts);
+
+	menu.append(li);
+};
+
 /* Same parameters as osmium_ctxmenu_add_option(), but the action is
  * replaced by a submenu constructor function. */
 osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
@@ -180,6 +191,8 @@ osmium_ctxmenu_add_subctxmenu = function(menu, name, submenu_ctor, opts) {
 
 /* @internal */
 osmium_ctxmenu_apply_opts = function(menu, li, opts) {
+	if(opts === undefined) opts = {};
+	
 	if("title" in opts) {
 		li.prop('title', opts.title);
 	}
