@@ -76,6 +76,14 @@ div#nlsources {
 			}
 		}
 	}
+	
+	&> section.ps-container > div.ps-scrollbar-y-rail {
+		right: -5px;
+
+		&, &> div.ps-scrollbar-y {
+			border-radius: 0;
+		}
+	}
 }
 
 div#nlsources > section#search {
