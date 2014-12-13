@@ -60,3 +60,6 @@ Pattern](https://secure.flickr.com/photos/zooboing/4594422812/)", by
 [Patrick Hoesly](https://secure.flickr.com/photos/zooboing/), used
 under [CC-BY-2.0](https://creativecommons.org/licenses/by/2.0/),
 desaturated from original.
+
+Osmium uses data from [zKillboard](https://zkillboard.com/) and
+[EVE-Central](https://eve-central.com/).
