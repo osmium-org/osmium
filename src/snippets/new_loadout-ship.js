@@ -94,7 +94,8 @@ osmium_init_ship = function() {
 
 		osmium_ctxmenu_add_separator(menu);
 
-		if(osmium_clf.ship.typeid in osmium_modes) {
+		if("ship" in osmium_clf && "typeid" in osmium_clf.ship
+		   && osmium_clf.ship.typeid in osmium_modes) {
 			var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
 			var mtid = ('X-mode' in p) && ('typeid' in p['X-mode']) ? p['X-mode'].typeid : 0;
 			
