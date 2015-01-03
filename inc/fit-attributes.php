@@ -98,15 +98,20 @@ function get_ehp_and_resists(&$fit) {
 	foreach($layers as $a) {
 		list($name, $attributename, $resistprefix) = $a;
 
+		foreach([ 'em', 'thermal', 'kinetic', 'explosive' ] as $dtype) {
+			
+			$out[$name]['resonance'][$dtype] = min(
+				1,
+				max(
+					0, 
+					\Osmium\Dogma\get_ship_attribute(
+						$fit, lcfirst($resistprefix.ucfirst($dtype).'DamageResonance')
+					)
+				)
+			);
+		}
+		
 		$out[$name]['capacity'] = \Osmium\Dogma\get_ship_attribute($fit, $attributename);
-		$out[$name]['resonance']['em'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'EmDamageResonance'));
-		$out[$name]['resonance']['thermal'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'ThermalDamageResonance'));
-		$out[$name]['resonance']['kinetic'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'KineticDamageResonance'));
-		$out[$name]['resonance']['explosive'] = \Osmium\Dogma\get_ship_attribute(
-			$fit, lcfirst($resistprefix.'ExplosiveDamageResonance'));
 
 		$out['ehp']['min'] += $out[$name]['capacity'] / max($out[$name]['resonance']);
 		$out['ehp']['max'] += $out[$name]['capacity'] / min($out[$name]['resonance']);
@@ -118,6 +123,8 @@ function get_ehp_and_resists(&$fit) {
 
 		$out['ehp']['avg'] += $out[$name]['capacity'] / $avgresonance;
 	}
+
+	\Osmium\debug($out);
 
 	return $out;
 }
