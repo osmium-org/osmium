@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -63,7 +63,7 @@ if($a['displayname']) {
 		];
 	}
 } else {
-	$name = [ 'span', [ 'class' => 'raw', $a['attributename'] ] ];
+	$name = [[ 'span', [ 'class' => 'raw', $a['attributename'] ] ]];
 }
 
 $header = $dbb->appendCreate('header');
