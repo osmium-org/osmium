@@ -2,7 +2,9 @@ staging
 =======
 
 The [eve_kill] section has been added to config.ini. If you want to
-import Eve-Kill data, you need to install the Stomp extension.
+import Eve-Kill data, you need to install the Stomp extension. You
+will also need to run the fetcher daemon, see README-Install for more
+details.
 
 v0.13.3, released 2014-12-13
 ============================

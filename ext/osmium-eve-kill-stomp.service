@@ -1,0 +1,12 @@
+[Unit]
+Description=Eve-Kill STOMP client (Osmium)
+Requires=network.target
+
+[Service]
+# Change this!
+User=osmium
+Group=http
+ExecStart=/srv/http/osmium/bin/eve_kill_stomp_client
+
+[Install]
+WantedBy=multi-user.target

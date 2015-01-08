@@ -94,6 +94,11 @@ below (for example, Debian uses `www-data`).
 	your account ID by going on your profile page and looking at the
 	number in the URL.)
 
+13. (Optional) If you want to fetch killmails from Eve-Kill, you will
+    have to run the `bin/eve_kill_stomp_client` script as a daemon. A
+    systemd unit file and a supervisor configuration example are in
+    `ext/`.
+
 Dependencies
 ============
 

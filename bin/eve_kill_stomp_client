@@ -26,9 +26,6 @@ if(!\Osmium\get_ini_setting('enable_eve_kill')) {
 	die();
 }
 
-/* XXX: daemonize me! */
-/* XXX: mention me in README-Install */
-
 /* The zKillboard documentation doesn't say if the dates are in UTC,
  * but they probably are */
 date_default_timezone_set('UTC');
