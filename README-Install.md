@@ -108,6 +108,7 @@ Dependencies
   * (Optional) iconv extension (`iconv.so`)
   * (Optional) intl extension (`intl.so`)
   * (Optional) APC (or APCu for PHP >= 5.5) extension (`apc.so`)
+  * (Optional) Stomp extension (`stomp.so`)
 
 * PostgreSQL >= 9.0
 

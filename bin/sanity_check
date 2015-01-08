@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -89,8 +89,11 @@ foreach(array(
 	check_func($func);
 }
 
-check_ext('dom');
-check_method('DOMImplementation', 'createDocument');
+check_ext('dom', CHECK_REQUIRED);
+check_method('DOMImplementation', 'createDocument', CHECK_REQUIRED);
+
+check_ext('stomp');
+check_method('Stomp', 'ack');
 
 check_ext('intl');
 check_method('Normalizer', 'normalize');
@@ -99,9 +102,11 @@ check_method('Normalizer', 'normalize');
 @include_once 'HTMLPurifier.auto.php';
 check_method('HTMLPurifier', 'purify', CHECK_REQUIRED);
 
-check('for HTMLPurifier >= '.MIN_HP_VER, function() {
-	return array(version_compare(HTMLPurifier::VERSION, MIN_HP_VER, '>='), HTMLPurifier::VERSION);
-}, CHECK_REQUIRED);
+if(class_exists('HTMLPurifier')) {
+	check('for HTMLPurifier >= '.MIN_HP_VER, function() {
+		return array(version_compare(HTMLPurifier::VERSION, MIN_HP_VER, '>='), HTMLPurifier::VERSION);
+	}, CHECK_REQUIRED);
+}
 
 check('whether config.ini exists', function() {
 	$ini = __DIR__.'/../config.ini';

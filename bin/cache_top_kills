@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,6 +21,12 @@ namespace Osmium\CLI\CacheTopKills;
 
 require __DIR__.'/../inc/root.php';
 require \Osmium\ROOT.'/inc/ajax-common.php';
+
+echo "Purging old kills…\n";
+\Osmium\Db\query_params(
+	'DELETE FROM osmium.recentkillsdna WHERE killtime < $1',
+	array(time() - 7*86400)
+);
 
 echo "Caching groupdna…\n";
 

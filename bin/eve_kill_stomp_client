@@ -1,0 +1,136 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2013, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\EveKillStompClient;
+
+require __DIR__.'/../inc/root.php';
+
+if(!\Osmium\get_ini_setting('enable_eve_kill')) {
+	echo "Eve-Kill support is not enabled in config.ini.\n";
+	die();
+}
+
+/* XXX: daemonize me! */
+/* XXX: mention me in README-Install */
+
+/* The zKillboard documentation doesn't say if the dates are in UTC,
+ * but they probably are */
+date_default_timezone_set('UTC');
+
+$d = \Osmium\Db\prepare('delkill', 'DELETE FROM recentkillsdna WHERE killid = $1');
+$i = \Osmium\Db\prepare(
+	'inskill',
+	'INSERT INTO recentkillsdna (killid, killtime, dna, groupdna, solarsystemid,
+	characterid, charactername, corporationid, corporationname, allianceid, alliancename)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)'
+);
+
+if($d === false || $i === false) {
+	fprintf(STDERR, "pgsql error\n");
+	die(1);
+}
+
+/* Not a typo. This allows the script to continue running after read
+ * timeouts. */
+while(true) try {
+	$stomp = new \Stomp(
+		\Osmium\get_ini_setting('eve_kill_stomp_uri'),
+		\Osmium\get_ini_setting('eve_kill_stomp_user'),
+		\Osmium\get_ini_setting('eve_kill_stomp_pass')
+	);
+
+	$stomp->setReadTimeout(5);
+	/* XXX: what do the options mean? */
+	$stomp->subscribe('/topic/kills', [
+		'id' => \Osmium\get_ini_setting('eve_kill_stomp_id').'-'.gethostname(),
+		'persistent' => 'true',
+		'ack' => 'client',
+		'prefetch-count' => 1,
+	]);
+
+	while($frame = $stomp->readFrame()) {
+		$stomp->ack($frame->headers['message-id']);
+		
+		$k = json_decode($frame->body, true);
+		if(json_last_error() !== JSON_ERROR_NONE || $k === false) {
+			throw new \Exception((string)$frame->body);
+			continue;
+		}
+
+		if(!isset($k['killID']) || $k['killID'] <= 0) continue;
+	    		
+		$dna = $k['victim']['shipTypeID'];
+
+		foreach($k['items'] as $item) {
+			$f = (int)$item['flag'];
+			if(!(
+				/* See invflags */
+				($f >= 11 && $f <= 34) /* Low, medium, high slots */
+				|| ($f >= 92 && $f <= 99) /* Rig slots */
+				|| ($f >= 125 && $f <= 132) /* Subsystem slots */
+				|| ($f === 87) /* Drone bay */
+				|| ($f === 88) /* Booster */
+				|| ($f === 89) /* Implant */
+			)) {
+				continue;
+			}
+
+			$typeid = (int)$item['typeID'];
+			$qty = (int)$item['qtyDropped'] + (int)$item['qtyDestroyed'];
+			if($qty === 0) continue;
+			$dna .= ':'.$typeid.';'.$qty;
+		}
+
+		$dna .= '::';
+
+		$dna = \Osmium\Fit\mangle_dna($dna);
+		$gdna = \Osmium\Fit\uniquify_dna($dna);
+
+		if($dna === false || $gdna === false) {
+			continue;
+		}
+
+		$d = \Osmium\Db\execute('delkill', array($k['killID']));
+		$i = \Osmium\Db\execute(
+			'inskill',
+			array(
+				$k['killID'],
+				strtotime($k['killTime']),
+				$dna,
+				$gdna,
+				$k['solarSystemID'],
+				$k['victim']['characterID'],
+				$k['victim']['characterName'],
+				$k['victim']['corporationID'],
+				$k['victim']['corporationName'],
+				$k['victim']['allianceID'] > 0 ? $k['victim']['allianceID'] : null,
+				$k['victim']['allianceID'] > 0 ? $k['victim']['allianceName'] : null,
+			)
+		);
+
+		if($d === false || $i === false) throw new \Exception('pgsql failure');
+
+		echo '.';
+	}
+} catch(\Exception $e) {
+	ob_start();
+	var_dump($e);
+	fprintf(STDERR, ob_get_clean());
+	die(1);
+}
