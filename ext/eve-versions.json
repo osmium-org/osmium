@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "proteus-10",
+        "name": "Proteus 1.0",
+        "build": 855117,
+        "reldate": 1421107200,
+        "dogmaver": 16
+    },
+	{
         "tag": "rhea-10",
         "name": "Rhea 1.0",
         "build": 851318,
