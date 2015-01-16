@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -224,6 +224,11 @@ osmium_send_clf = function(opts) {
 
 			osmium_capacitors = payload.capacitors;
 			osmium_ia = payload.ia;
+
+			if("slots" in payload) osmium_clf_slots = payload.slots;
+			if("hardpoints" in payload) osmium_clf_hardpoints = payload.hardpoints;
+			
+			osmium_update_slotcounts();
 
 			for(var key in osmium_capacitors) {
 				osmium_regen_remote_capacitor(key);

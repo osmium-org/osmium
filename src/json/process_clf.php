@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -113,6 +113,7 @@ $payload = array(
 	),
 	'capacitors' => $capacitors,
 	'missingprereqs' => $missing,
+	'slots' => \Osmium\AjaxCommon\get_slot_usage($local),
 );
 
 foreach($local['modules'] as $slottype => $sub) {
@@ -137,7 +138,6 @@ foreach($local['modules'] as $slottype => $sub) {
 );
 
 if($type === 'new') {
-	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);
 	$payload['hardpoints'] = array(
 		'turret' => \Osmium\Dogma\get_ship_attribute($local, 'turretSlotsLeft'),
 		'launcher' => \Osmium\Dogma\get_ship_attribute($local, 'launcherSlotsLeft'),

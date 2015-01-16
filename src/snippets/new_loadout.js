@@ -88,12 +88,6 @@ $(function() {
 osmium_loadout_readonly = false;
 osmium_clftype = 'new';
 osmium_on_clf_payload = function(payload) {
-	if("ship" in osmium_clf && "typeid" in osmium_clf.ship) {
-		osmium_clf_slots = payload.slots;
-		osmium_clf_hardpoints = payload.hardpoints;
-	}
-	osmium_update_slotcounts();
-
 	$("section#metadata tr#recommended_tags").remove();
 	if(payload.rectags.length > 0) {
 		var tr = $(document.createElement('tr'));
