@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2014 Josiah Boning <jboning@gmail.com>
+ * Copyright (C) 2014, 2015 Josiah Boning <jboning@gmail.com>
  * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -101,6 +101,16 @@ function sp_totals($prereqs_unique, $skillset) {
 
 	static $attributemap = null;
 
+	if($attributemap === null) {
+		$attributemap = [
+			\Osmium\Fit\ATT_Perception => 'perception',
+			\Osmium\Fit\ATT_Willpower => 'willpower',
+			\Osmium\Fit\ATT_Intelligence => 'intelligence',
+			\Osmium\Fit\ATT_Memory => 'memory',
+			\Osmium\Fit\ATT_Charisma => 'charisma',
+		];
+	}
+
 	foreach($prereqs_unique as $stid => $level) {
 		$current = isset($skillset['override'][$stid])
 			? $skillset['override'][$stid] : $skillset['default'];
@@ -114,20 +124,10 @@ function sp_totals($prereqs_unique, $skillset) {
 			continue;
 		}
 
-		if($attributemap === null) {
-			$attributemap = [
-				\Osmium\Fit\ATT_Perception => 'perception',
-				\Osmium\Fit\ATT_Willpower => 'willpower',
-				\Osmium\Fit\ATT_Intelligence => 'intelligence',
-				\Osmium\Fit\ATT_Memory => 'memory',
-				\Osmium\Fit\ATT_Charisma => 'charisma',
-			];
-		}
-
 		list($primary, $secondary) = \Osmium\Fit\get_skill_attributes($stid);
 		$spps = (
-			2.0 * $skillset['attributes'][$attributemap[$primary]]
-			+ $skillset['attributes'][$attributemap[$secondary]]
+			$skillset['attributes'][$attributemap[$primary]]
+			+ .5 * $skillset['attributes'][$attributemap[$secondary]]
 		) / 60.0;
 
 		$sp = $needed - sp_to_level_at_rank($current, $rank);
