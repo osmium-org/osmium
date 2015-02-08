@@ -201,7 +201,7 @@ check('for Sphinx', function() {
 }, CHECK_REQUIRED);
 
 check('for some data in the osmium_types Sphinx index', function() {
-	$q = @\Osmium\Search\query('SELECT id FROM osmium_types WHERE MATCH(\'dc2\')');
+	$q = @\Osmium\Search\query('SELECT id FROM osmium_types WHERE ml = 0');
 	if($q === false) return false;
 	$r = @\Osmium\Search\fetch_assoc($q);
 	if($r === false) return false;
