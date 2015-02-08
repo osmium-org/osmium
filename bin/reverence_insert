@@ -70,7 +70,7 @@ def processRows(tablename, columnmap, rowset):
             if row.typeID == 33857 or row.typeID == 33858:
                 continue
 
-        cur.execute(querystring, [ (k(row) if callable(k) else row[k])
+        cur.execute(querystring, [ (k(row) if callable(k) else getattr(row,k) if hasattr(row,k) else row[k])
                                    for k in columnmap.viewvalues() ])
         i += 1
         if i % 25000 == 0:
