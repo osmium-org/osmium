@@ -38,8 +38,8 @@ while($row = \Osmium\Db\fetch_row($q)) {
 replace('skill_attributes', $skillattribs, $cnf);
 
 replace('sphinx_data', \Osmium\get_ini_setting('sphinx_data'), $cnf);
-replace('sphinx_log', \Osmium\get_ini_setting('sphinx_data'), $cnf);
-replace('sphinx_run', \Osmium\get_ini_setting('sphinx_data'), $cnf);
+replace('sphinx_log', \Osmium\get_ini_setting('sphinx_log'), $cnf);
+replace('sphinx_run', \Osmium\get_ini_setting('sphinx_run'), $cnf);
 
 replace('osmium_root', \Osmium\ROOT, $cnf);
 
