@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -261,27 +261,39 @@ while($row = \Osmium\Db\fetch_row($q)) {
 
 /* ---------------------------------------------------------- */
 
+const GROUP_AssaultFrigate = 324;
+const GROUP_AttackBC = 1201;
+const GROUP_Battleship = 27;
+const GROUP_Carrier = 547;
+const GROUP_CombatBC = 419;
+const GROUP_Cruiser = 26;
+const GROUP_Frigate = 25;
+const GROUP_HAC = 358;
+const GROUP_Industrial = 28;
+const GROUP_Interceptor = 831;
+const GROUP_Titan = 30;
+
 $groups = array(
-	'Interceptor' => [ ['Interceptor'], true, true, null ],
-	'Frigate' => [ ['Frigate', 'Assault Ship'], true, true, null ],
-	'Frigate+MWD' => [ ['Frigate', 'Assault Ship'], true, false, function($ctx) {
+	'Interceptor' => [ [ GROUP_Interceptor ], true, true, null ],
+	'Frigate' => [ [ GROUP_Frigate, GROUP_AssaultFrigate ], true, true, null ],
+	'Frigate+MWD' => [ [ GROUP_Frigate, GROUP_AssaultFrigate ], true, false, function($ctx) {
 			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_1MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
 		} ],
-	'Cruiser' => [ ['Cruiser', 'Heavy Assault Cruiser'], true, true, null ],
-	'Cruiser+MWD' => [ ['Cruiser', 'Heavy Assault Cruiser'], true, false, function($ctx) {
+	'Cruiser' => [ [ GROUP_Cruiser, GROUP_HAC ], true, true, null ],
+	'Cruiser+MWD' => [ [ GROUP_Cruiser, GROUP_HAC ], true, false, function($ctx) {
 			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_10MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
 		} ],
-	'Industrial' => [ ['Industrial'], true, true, null ],
-	'Battlecruiser' => [ ['Combat Battlecruiser', 'Attack Battlecruiser'], true, true, null ],
-	'Battlecruiser+MWD' => [ ['Combat Battlecruiser', 'Attack Battlecruiser'], true, false, function($ctx) {
+	'Industrial' => [ [ GROUP_Industrial ], true, true, null ],
+	'Battlecruiser' => [ [ GROUP_CombatBC, GROUP_AttackBC ], true, true, null ],
+	'Battlecruiser+MWD' => [ [ GROUP_CombatBC, GROUP_AttackBC ], true, false, function($ctx) {
 			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_10MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
 		} ],
-	'Battleship' => [ ['Battleship'], true, true, null ],
-	'Battleship+MWD' => [ ['Battleship'], true, false, function($ctx) {
+	'Battleship' => [ [ GROUP_Battleship ], true, true, null ],
+	'Battleship+MWD' => [ [ GROUP_Battleship ], true, false, function($ctx) {
 			dogma_add_module_s($ctx, \Osmium\Fit\TYPE_100MNMicrowarpdriveII, $key, DOGMA_STATE_Active);
 		} ],
-	'Carrier' => [ ['Carrier'], true, true, null ],
-	'Titan' => [ ['Titan'], true, true, null ],
+	'Carrier' => [ [ GROUP_Carrier ], true, true, null ],
+	'Titan' => [ [ GROUP_Titan ], true, true, null ],
 );
 foreach($groups as $g => $d) {
 	list($gnames, $istargetee, $istargeter, $beforehook) = $d;
@@ -296,7 +308,7 @@ foreach($groups as $g => $d) {
 	foreach($gnames as $gname) {
 		$q = \Osmium\Db\query_params(
 			'SELECT typeid FROM osmium.invships
-			WHERE groupname = $1',
+			WHERE groupid = $1',
 			array($gname)
 		);
 
