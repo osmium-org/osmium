@@ -173,19 +173,19 @@ if(defined('FAIL')) {
 require __DIR__.'/../inc/root.php';
 
 check('for some data in the eve PostgreSQL schema', function() {
-	$q = @\Osmium\Db\query_params('SELECT typename FROM eve.invtypes WHERE typeid = $1', array(2048));
+	$q = @\Osmium\Db\query_params('SELECT volume FROM eve.invtypes WHERE typeid = $1', array(2048));
 	if($q === false) return false;
 	$r = @\Osmium\Db\fetch_row($q);
 	if($r === false) return false;
-	return isset($r[0]) && $r[0] === 'Damage Control II';
+	return isset($r[0]) && (int)$r[0] === 5;
 }, CHECK_REQUIRED);
 
 check('for osmium PostgreSQL schema', function() {
-	$q = @\Osmium\Db\query('SELECT 1 FROM osmium.accounts');
+	$q = @\Osmium\Db\query('SELECT COUNT(accountid) FROM osmium.accounts');
 	if($q === false) return false;
 	$r = \Osmium\Db\fetch_row($q);
 	if($r === false) return false;
-	return (int)$r[0] === 1;
+	return true;
 }, CHECK_REQUIRED);
 
 check('for Sphinx', function() {
