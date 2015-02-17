@@ -77,5 +77,5 @@ Pattern](https://secure.flickr.com/photos/zooboing/4594422812/)", by
 under [CC-BY-2.0](https://creativecommons.org/licenses/by/2.0/),
 desaturated from original.
 
-* Osmium uses data from [zKillboard](https://zkillboard.com/) and
+* Osmium uses data from [Eve-Kill](https://eve-kill.com/) and
 [EVE-Central](https://eve-central.com/).

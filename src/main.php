@@ -196,7 +196,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('fotw', 603, function() u
 	$section = $p->element('section', [ 'class' => 'fotw' ]);
 	$section->appendCreate('h2', [
 		'Flavors of the week ',
-		[ 'small', [ 'data from ', [ 'a', [ 'href' => 'https://zkillboard.com/', 'zKillboard' ] ] ] ],
+		[ 'small', [ 'data from ', [ 'a', [ 'href' => 'https://eve-kill.com/', 'Eve-Kill' ] ] ] ],
 	]);
 
 	$topkills = \Osmium\State\get_cache('top_kills', null);
@@ -245,7 +245,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('doctrines', 604, functio
 	$section = $p->element('section', [ 'class' => 'doctrines' ]);
 	$section->appendCreate('h2', [
 		'Popular alliance doctrines ',
-		[ 'small', [ 'data from ', [ 'a', [ 'href' => 'https://zkillboard.com/', 'zKillboard' ] ] ] ],
+		[ 'small', [ 'data from ', [ 'a', [ 'href' => 'https://eve-kill.com/', 'Eve-Kill' ] ] ] ],
 	]);
 
 	$topkills = \Osmium\State\get_cache('top_kills', null);

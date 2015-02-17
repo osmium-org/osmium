@@ -1,11 +1,19 @@
 # Version 0.13
 
+## Version 0.13.4, released 2015-02-17
+
+* Fix slot counts while editing tech III ships.
+
+* Other minor bugfixes.
+
+* Fetch recent kills from Eve-Kill using STOMP.
+
 ## Version 0.13.3, released 2014-12-13
 
 * Support Confessor modes.
 
 * Unpublished types, groups and attributes are now more explicitely
-  show in the database browser.
+  shown in the database browser.
 
 * Type prices are updated weekly using EVE-Central.
 

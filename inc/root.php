@@ -82,7 +82,7 @@ const STATICVER = 17;
 const CSS_STATICVER = 27;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 33;
+const JS_STATICVER = 34;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 40;

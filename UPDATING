@@ -1,5 +1,5 @@
-staging
-=======
+v0.13.4, released 2015-02-17
+============================
 
 The [eve_kill] section has been added to config.ini. If you want to
 import Eve-Kill data, you need to install the Stomp extension. You
