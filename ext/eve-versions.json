@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "tiamat-10",
+        "name": "Tiamat 1.0",
+        "build": 862956,
+        "reldate": 1424172000,
+        "dogmaver": 16
+    },
+	{
         "tag": "proteus-10",
         "name": "Proteus 1.0",
         "build": 855117,

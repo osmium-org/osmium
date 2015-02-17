@@ -441,6 +441,11 @@ $static['modes'][34317] = [
 	34323 => 'Propulsion Mode',
 	34321 => 'Sharpshooter Mode',
 ];
+$static['modes'][34562] = [
+	34564 => 'Defense Mode',
+	34566 => 'Propulsion Mode',
+	34570 => 'Sharpshooter Mode',
+];
 
 /* ---------------------------------------------------------- */
 
