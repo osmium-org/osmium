@@ -15,7 +15,7 @@ itself.
 
 * Import the `pgsql/eve.sql` schema;
 
-* Install [Reverence](https://github.com/ntt/reverence) and psycopg2;
+* Install [Reverence](https://github.com/DarkFenX/reverence) and psycopg2;
 
 * Run the `./bin/reverence_insert` script.
 
