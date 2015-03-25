@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -363,7 +363,7 @@ function select_ship(&$fit, $new_typeid) {
  * modules which cannot be activated.
  */
 function add_module(&$fit, $index, $typeid, $state = null) {
-	$type = get_module_slottype($fit, $typeid);
+	$type = get_module_slottype($typeid);
 
 	if(isset($fit['modules'][$type][$index])) {
 		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
@@ -405,7 +405,7 @@ function add_module(&$fit, $index, $typeid, $state = null) {
  * charge presets.
  */
 function remove_module(&$fit, $index, $typeid) {
-	$type = get_module_slottype($fit, $typeid);
+	$type = get_module_slottype($typeid);
 
 	if(!isset($fit['modules'][$type][$index]['typeid'])) {
 		// @codeCoverageIgnoreStart
@@ -481,7 +481,7 @@ function change_module_state_by_location(&$fit, $type, $index, $state) {
  * change_module_state_by_location() for the full caveat.
  */
 function change_module_state_by_typeid(&$fit, $index, $typeid, $state) {
-	return change_module_state_by_location($fit, get_module_slottype($fit, $typeid), $index, $state);
+	return change_module_state_by_location($fit, get_module_slottype($typeid), $index, $state);
 }
 
 /**
@@ -677,9 +677,7 @@ function add_charge_auto(&$fit, $chargetypeid, $quantity = 1) {
 		foreach($fit['modules'] as $type => $a) {
 			foreach($a as $index => $m) {
 				if(isset($fit['charges'][$type][$index])) continue;
-				if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module(
-					$m['typeid'], $chargetypeid
-				)) continue;
+				if(!is_charge_fittable($m['typeid'], $chargetypeid)) continue;
 
 				add_charge($fit, $type, $index, $chargetypeid);
 				continue 3;
@@ -1171,7 +1169,7 @@ function set_module_target_by_typeid(&$fit, $sourcekey, $index, $typeid, $target
 	return set_module_target_by_location(
 		$fit,
 		$sourcekey,
-		get_module_slottype($fit, $typeid),
+		get_module_slottype($typeid),
 		$index,
 		$targetkey
 	);
@@ -1243,15 +1241,16 @@ function get_module_state_by_location($fit, $type, $index) {
  * one of the STATE_* constants.
  */
 function get_module_state_by_typeid(&$fit, $index, $typeid) {
-	return get_module_state_by_location($fit, get_module_slottype($fit, $typeid), $index);
+	return get_module_state_by_location($fit, get_module_slottype($typeid), $index);
 }
 
 /**
  * Get the type of slot a module occupies.
  *
- * __deprecated__
+ * @returns one of: 'low', 'medium', 'high', 'rig', 'subsystem' or
+ * 'unknown'.
  */
-function get_module_slottype(&$fit, $typeid) {
+function get_module_slottype($typeid) {
 	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_LoPower, $t);
 	if($t) return 'low';
 

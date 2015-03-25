@@ -2,6 +2,11 @@
 
 namespace Osmium\Fit;
 
+const CATEGORY_Charge = 8;
+const CATEGORY_Drone = 18;
+const CATEGORY_Implant = 20;
+const CATEGORY_Module = 7;
+const CATEGORY_Ship = 6;
 const CATEGORY_Skill = 16;
 
 const EFFECT_ArmorRepair = 27;
@@ -61,18 +66,15 @@ const GROUP_ShipModifiers = 1306;
 
 
 /** @internal */
-function get_cached_thing_generic($table, $field, $wherename, $whereval) {
-	$key = 'NameCache_'.$table.'_'.$field.'_'.$wherename.'_'.$whereval;
+function get_cached_thing_generic($query, array $params = []) {
+	$key = 'NameCache_'.$query.'_'.json_encode($params);
 	$cache = \Osmium\State\get_cache_memory($key);
 
 	if($cache !== null) {
 		return $cache;
 	}
 
-	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		"SELECT $field FROM $table WHERE $wherename = $1 LIMIT 1",
-		array($whereval)
-	));
+	$r = \Osmium\Db\fetch_row(\Osmium\Db\query_params($query, $params));
 
 	$val = ($r === false) ? false : $r[0];
 	\Osmium\State\put_cache_memory($key, $val, 86400);
@@ -81,121 +83,137 @@ function get_cached_thing_generic($table, $field, $wherename, $whereval) {
 
 function get_attributedisplayname($attributeid) {
 	return get_cached_thing_generic(
-		'eve.dgmattribs',
 		/* Use display name if available, if not patch up the attribute name */
-		'CASE displayname WHEN \'\' THEN regexp_replace(upper(left(attributename, 1)) || right(attributename, -1), \'([a-z])([A-Z0-9])\', \'\1 \2\', \'g\') ELSE displayname END',
-		'attributeid',
-		(int)$attributeid
+		'SELECT CASE displayname
+        WHEN \'\' THEN regexp_replace(upper(left(attributename, 1))
+        || right(attributename, -1), \'([a-z])([A-Z0-9])\', \'\1 \2\', \'g\')
+        ELSE displayname END
+        FROM eve.dgmattribs WHERE attributeid = $1',
+		[ $attributeid ]
 	);
 }
 
 function get_attributename($attributeid) {
 	return get_cached_thing_generic(
-		'eve.dgmattribs', 'attributename', 'attributeid', (int)$attributeid
+		'SELECT attributename FROM eve.dgmattribs WHERE attributeid = $1',
+		[ $attributeid ]
 	);
 }
 
 function get_attributeid($attributename) {
 	return get_cached_thing_generic(
-		'eve.dgmattribs', 'attributeid', 'attributename', $attributename
+		'SELECT attributeid FROM eve.dgmattribs WHERE attributename = $1',
+		[ $attributename ]
 	);
 }
 
 function get_unitid($attributeid) {
 	return get_cached_thing_generic(
-		'eve.dgmattribs', 'unitid', 'attributeid', (int)$attributeid
+		'SELECT unitid FROM osmium.dgmattribs WHERE attributeid = $1',
+		[ $attributeid ]
 	);
 }
 
 function get_attributedefaultvalue($attributeid) {
 	return get_cached_thing_generic(
-		'eve.dgmattribs', 'defaultvalue', 'attributeid', (int)$attributeid
+		'SELECT defaultvalue FROM eve.dgmattribs WHERE attributeid = $1',
+		[ $attributeid ]
 	);
 }
 
 function get_unitdisplayname($unitid) {
 	return get_cached_thing_generic(
-		'eve.dgmunits', 'displayname', 'unitid', (int)$unitid
+		'SELECT displayname FROM eve.dgmunits WHERE unitid = $1',
+		[ $unitid ]
 	);
 }
 
 function get_typename($typeid) {
 	return get_cached_thing_generic(
-		'eve.invtypes', 'typename', 'typeid', (int)$typeid
+		'SELECT typename FROM eve.invtypes WHERE typeid = $1',
+		[ $typeid ]
 	);
 }
 
 function get_effectname($effectid) {
 	return get_cached_thing_generic(
-		'eve.dgmeffects', 'effectname', 'effectid', (int)$effectid
+		'SELECT effectname FROM eve.dgmeffects WHERE effectid = $1',
+		[ $effectid ]
 	);
 }
 
 function get_marketgroupname($mgid) {
 	return get_cached_thing_generic(
-		'eve.invmarketgroups', 'marketgroupname', 'marketgroupid', (int)$mgid
+		'SELECT marketgroupname FROM eve.invmarketgroups WHERE marketgroupid = $1',
+		[ $mgid ]
 	);
 }
 
 function get_typeid($typename) {
-	return get_cached_thing_generic(
-		'eve.invtypes', 'typeid', 'typename', $name
+	/* XXX: use patch history for typename changes */
+	return (int)get_cached_thing_generic(
+		'SELECT typeid FROM eve.invtypes WHERE typename = $1',
+		[ $typename ]
 	);
 }
 
 function get_groupid($typeid) {
-	return get_cached_thing_generic(
-		'eve.invtypes', 'groupid', 'typeid', (int)$typeid
+	return (int)get_cached_thing_generic(
+		'SELECT groupid FROM eve.invtypes WHERE typeid = $1',
+		[ $typeid ]
 	);
 }
 
 function get_volume($typeid) {
 	return get_cached_thing_generic(
-		'eve.invtypes', 'volume', 'typeid', (int)$typeid
+		'SELECT volume FROM eve.invtypes WHERE typeid = $1',
+		[ $typeid ]
 	);
 }
 
 function get_average_market_price($typeid) {
 	return get_cached_thing_generic(
-		'eve.averagemarketprices', 'averageprice', 'typeid', (int)$typeid
+		'SELECT averageprice FROM eve.averagemarketprices WHERE typeid = $1',
+		[ $typeid ]
 	);
 }
 
 function get_parent_typeid($typeid) {
-	$parent = get_cached_thing_generic(
-		'eve.invmetatypes', 'parenttypeid', 'typeid', (int)$typeid
+	$parent = (int)get_cached_thing_generic(
+		'SELECT parenttypeid FROM eve.invmetatypes WHERE typeid = $1',
+		[ $typeid ]
 	);
 
 	return $parent ?: $typeid;
 }
 
 function get_categoryid($typeid) {
-	return get_cached_thing_generic(
-		'eve.invtypes JOIN eve.invgroups ON invgroups.groupid = invtypes.groupid',
-		'categoryid',
-		'typeid',
-		(int)$typeid
+	return (int)get_cached_thing_generic(
+		'SELECT categoryid FROM eve.invtypes
+		JOIN eve.invgroups ON invgroups.groupid = invtypes.groupid
+        WHERE typeid = $1',
+		[ $typeid ]
 	);
 }
 
 function get_groupname($groupid) {
 	return get_cached_thing_generic(
-		'eve.invgroups', 'groupname', 'groupid', (int)$groupid
+		'SELECT groupname FROM eve.invgroups WHERE groupid = $1',
+		[ $groupid ]
 	);
 }
 
 function get_categoryname($catid) {
 	return get_cached_thing_generic(
-		'eve.invcategories', 'categoryname', 'categoryid', (int)$catid
+		'SELECT categoryname FROM eve.invcategories WHERE categoryid = $1',
+		[ $catid ]
 	);
 }
 
 function get_group_any_typeid($groupid) {
 	return get_cached_thing_generic(
-		'eve.invtypes',
-		'typeid',
-		'groupid',
-		(int)$groupid
+		'SELECT typeid FROM eve.invtypes WHERE groupid = $1',
+		[ $groupid ]
 	);
 }
 
@@ -302,4 +320,36 @@ function get_skill_attributes($typeid) {
 
 	\Osmium\State\put_cache_memory($key, $attribs, 86400);
 	return $attribs;
+}
+
+function get_type_category_str($typeid) {
+	switch(get_categoryid($typeid)) {
+		
+	case CATEGORY_Module:
+		return 'module';
+
+	case CATEGORY_Ship:
+		return 'ship';
+
+	case CATEGORY_Charge:
+		return 'charge';
+
+	case CATEGORY_Drone:
+		return 'drone';
+
+	case CATEGORY_Implant:
+		return (int)get_groupid($typeid) === GROUP_Booster ? 'booster' : 'implant';
+
+	default:
+		return 'unknown';
+		
+	}
+}
+
+function is_charge_fittable($moduleid, $chargeid) {
+	return (bool)get_cached_thing_generic(
+		'SELECT chargeid FROM osmium.invcharges
+        WHERE moduleid = $1 AND chargeid = $2',
+		[ $moduleid, $chargeid ]
+	);
 }

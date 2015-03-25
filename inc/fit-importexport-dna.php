@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -57,13 +57,15 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 
 		if($qty <= 0) continue;
 
-		if(\CommonLoadoutFormat\check_typeof_type($typeid, 'module')) {
+		switch(get_categoryid($typeid)) {
+
+		case CATEGORY_Module:
 			if((int)get_groupid($typeid) === GROUP_ShipModifiers) {
 				set_mode($fit, $typeid);
 				continue;
 			}
 			
-			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
+			$slottype = get_module_slottype($typeid);
 			if($slottype === 'unknown') {
 				$errors[] = 'Unknown typeid "'.$typeid.'". Discarded.';
 				continue;
@@ -80,28 +82,33 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 				$modules[$slottype][$index] = $typeid;
 				add_module($fit, $index, $typeid);
 			}
-		}
-		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
+			break;
+
+		case CATEGORY_Charge:
 			/* The game won't generate/recognize charges, but it
 			 * dosen't hurt to support them */
 
 			if(add_charge_auto($fit, $typeid, $qty) === 0) {
 				$errors[] = 'Did not know where to put charge '.$typeid.'. Discarded';
 			}
-		}
-		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {
+			break;
+
+		case CATEGORY_Drone:
 			add_drone_auto($fit, $typeid, $qty);
-		}
-		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'implant')
-		        || \CommonLoadoutFormat\check_typeof_type($typeid, 'booster')) {
+			break;
+
+		case CATEGORY_Implant:
 			/* Non-"standard" DNA, support it anyway */
 			if($qty !== 1) {
 				$errors[] = 'Adding implant '.$typeid.' only once (quantity of '.$qty.' specified).';
 			}
 			add_implant($fit, $typeid);
-		}
-		else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'ship')) {
+			break;
+
+		case CATEGORY_Ship:
 			select_ship($fit, $typeid);
+			break;
+			
 		}
 	}
 
@@ -150,7 +157,7 @@ function mangle_dna($dna) {
 		$qty = (int)$qty;
 
 		foreach($types as $t => &$a) {
-			if(!\CommonLoadoutFormat\check_typeof_type($typeid, $t)) {
+			if(get_type_category_str($typeid) !== $t) {
 				continue;
 			}
 
@@ -205,7 +212,7 @@ function uniquify_dna($dna) {
 		$qty = (int)$qty;
 
 		foreach($types as $t => &$a) {
-			if(!\CommonLoadoutFormat\check_typeof_type($typeid, $t)) {
+			if(get_type_category_str($typeid) !== $t) {
 				continue;
 			}
 

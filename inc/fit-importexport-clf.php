@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -288,7 +288,7 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 	$indexes = array();
 
 	foreach($modules as $k => &$m) {
-		$type = \CommonLoadoutFormat\get_module_slottype($m['typeid']);
+		$type = get_module_slottype($m['typeid']);
 		if($type == 'unknown') {
 			unset($modules[$k]);
 		}
@@ -323,8 +323,7 @@ function clf_parse_modules_1(&$fit, &$modules, &$errors) {
 /** @internal */
 function clf_parse_implants_1(&$fit, &$implants, &$errors) {
 	foreach($implants as $i) {
-		if(\CommonLoadoutFormat\check_typeof_type($i['typeid'], 'implant')
-		   || \CommonLoadoutFormat\check_typeof_type($i['typeid'], 'booster')) {
+		if(get_categoryid($i['typeid']) === CATEGORY_Implant) {
 			add_implant($fit, $i['typeid']);
 
 			if(isset($i['X-sideeffects']) && is_array($i['X-sideeffects'])) {
@@ -387,10 +386,8 @@ function clf_parse_chargepresets_1(&$fit, &$cpresets, &$modules, &$errors) {
 				if(!isset($c['cpid'])) $c['cpid'] = 0;
 				if($c['cpid'] != $cpreset['id']) continue;
 
-				if(!\CommonLoadoutFormat\check_typeof_type(
-					   $c['typeid'], "charge")) continue;
-				if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module(
-					   $m['typeid'], $c['typeid'])) continue;
+				if(get_categoryid($c['typeid']) !== CATEGORY_Charge) continue;
+				if(!is_charge_fittable($m['typeid'], $c['typeid'])) continue;
 
 				/* The type and index are correct here, they were fixed previously */
 				add_charge($fit, $m['slottype'], $m['index'], $c['typeid']);
@@ -452,7 +449,7 @@ function clf_parse_dronepresets_1(&$fit, &$drones, &$errors) {
 /** @internal */
 function clf_parse_drones_1(&$fit, &$drones, $from, &$errors) {
 	foreach($drones as &$d) {
-		if(!\CommonLoadoutFormat\check_typeof_type($d['typeid'], "drone")) continue;
+		if(get_categoryid($d['typeid']) !== CATEGORY_Drone) continue;
 
 		if($from === 'bay') {
 			$qbay = $d['quantity'];
@@ -1215,7 +1212,7 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 		/* add_module() is lazy too */
 		add_module($fit, $m['index'], $m['typeid'], $clfstates[$m['state']]);
 
-		$type = get_module_slottype($fit, $m['typeid']);
+		$type = get_module_slottype($m['typeid']);
 
         if(isset($m['charges'])) {
             foreach($m['charges'] as $c) {

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -347,12 +347,12 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		$shipname = (string)$e->shipType['value'];
 	}
 
-	if(($shipid = \CommonLoadoutFormat\get_typeid($shipname)) === false) {
+	if(($shipid = get_typeid($shipname)) === false) {
 		$errors[] = 'Could not fetch typeID of "'.$shipname.'". Obsolete/unpublished ship? Stopping.';
 		return false;
 	}
 
-	if(!\CommonLoadoutFormat\check_typeof_type($shipid, "ship")) {
+	if(get_categoryid($shipid) !== CATEGORY_Ship) {
 		$errors[] = 'Typeid '.$shipid.' is not the typeid of a ship.';
 		return false;
 	}
@@ -370,14 +370,14 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 		}
 
 		$type = (string)$hardware['type'];
-		$typeid = \CommonLoadoutFormat\get_typeid($type);
+		$typeid = get_typeid($type);
 
 		if($typeid === false) {
 			$errors[] = 'Could not get typeid of "'.$type.'". Discarded.';
 			continue;
 		}
 
-		if(\CommonLoadoutFormat\check_typeof_type($typeid, "drone")) {
+		if(get_categoryid($typeid) === CATEGORY_Drone) {
 			if(!isset($hardware['slot']) || (string)$hardware['slot'] !== 'drone bay') {
 				$errors[] = 'Nonsensical slot attribute for drone: "'.((string)$hardware['slot']).'". Discarded';
 				continue;
@@ -389,7 +389,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 			}
 
 			add_drone_auto($fit, $typeid, (int)$hardware['qty']);
-		} else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
+		} else if(get_categoryid($typeid) === CATEGORY_Charge) {
 			if(!isset($hardware['slot']) || (string)$hardware['slot'] !== 'cargo') {
 				$errors[] = 'Nonsensical slot attribute for charge: "'.((string)$hardware['slot']).'". Discarded';
 				continue;
@@ -403,7 +403,7 @@ function try_parse_fit_from_eve_xml(\SimpleXMLElement $e, &$errors) {
 			if(!isset($charges[$typeid])) $charges[$typeid] = 0;
 			$charges[$typeid] += (int)$hardware['qty'];
 		} else {
-			$slottype = \CommonLoadoutFormat\get_module_slottype($typeid);
+			$slottype = get_module_slottype($typeid);
 			if($slottype === 'unknown') {
 				$errors[] = 'Type "'.$type.'" is neither a drone nor a module. Discarded.';
 				continue;
@@ -462,13 +462,13 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 	}
 
 	$shipname = trim($match[1]);
-	$shiptype = \CommonLoadoutFormat\get_typeid($shipname);
+	$shiptype = get_typeid($shipname);
 	if($shiptype === false) {
 		$errors[] = 'Ship "'.$shipname.'" not found.';
 		return false;
 	}
 
-	if(!\CommonLoadoutFormat\check_typeof_type($shiptype, 'ship')) {
+	if(get_categoryid($shiptype) !== CATEGORY_Ship) {
 		$errors[] = 'Type "'.$shipname.'" is not a ship.';
 		return false;
 	}
@@ -506,16 +506,16 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 			$qty = 1;
 		}
 
-		$moduleid = \CommonLoadoutFormat\get_typeid($module);
+		$moduleid = get_typeid($module);
 		if($moduleid === false) {
 			$errors[] = 'Type "'.$module.'" not found.';
 			continue;
 		}
 
-		if(\CommonLoadoutFormat\check_typeof_type($moduleid, 'drone')) {
+		if(get_categoryid($moduleid) ===  CATEGORY_Drone) {
 			add_drone_auto($fit, $moduleid, $qty);
 		} else {
-			$slottype = \CommonLoadoutFormat\get_module_slottype($moduleid);
+			$slottype = get_module_slottype($moduleid);
 			if($slottype === 'unknown') {
 				$errors[] = 'Type "'.$module.'" is neither a drone nor a module. Discarded.';
 				continue;
@@ -529,18 +529,18 @@ function try_parse_fit_from_eft_format($eftstring, &$errors) {
 			add_module($fit, $index, $moduleid);
 
 			if($charge !== false) {
-				$chargeid = \CommonLoadoutFormat\get_typeid($charge);
+				$chargeid = get_typeid($charge);
 				if($chargeid === false) {
 					$errors[] = 'Type "'.$charge.'" not found.';
 					continue;
 				}
 
-				if(!\CommonLoadoutFormat\check_typeof_type($chargeid, 'charge')) {
+				if(get_categoryid($chargeid) !== CATEGORY_Charge) {
 					$errors[] = 'Type "'.$charge.'" is not a charge.';
 					continue;
 				}
 
-				if(!\CommonLoadoutFormat\check_charge_can_be_fitted_to_module($moduleid, $chargeid)) {
+				if(!is_charge_fittable($moduleid, $chargeid)) {
 					$errors[] = 'Charge "'.$charge.'" cannot be fitted to module "'.$module.'".';
 					continue;
 				}
@@ -576,7 +576,7 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 
 	$v = $json['victim'];
 	if(!isset($v['shipType']['id']) || !is_int($v['shipType']['id'])
-	   || !\CommonLoadoutFormat\check_typeof_type($v['shipType']['id'], 'ship')) {
+	   || get_category_id($v['shipType']['id']) !== CATEGORY_Ship) {
 		$errors[] = 'Fatal: no ship or inadequate ship typeid';
 		return false;
 	}
@@ -601,8 +601,7 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 				if($a['flag'] !== $b['flag']) return $a['flag'] - $b['flag'];
 
 				/* Put charges last */
-				return \CommonLoadoutFormat\check_typeof_type($a['itemType']['id'], 'module')
-					? (-1) : 1;
+				return get_categoryid($a['itemType']['id']) === CATEGORY_Module ? (-1) : 1;
 			}
 		);
 
@@ -616,9 +615,13 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 			   || (125 <= $f && $f <= 132) /* Subsystem slots */
 			   || (87 <= $f && $f <= 89) /* Drone / booster / implant */
 			) {
-				if(\CommonLoadoutFormat\check_typeof_type($typeid, 'module')) {
+				switch(get_category($typeid)) {
+
+				case CATEGORY_Module:
 					add_module($fit, $f, $typeid);
-				} else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'charge')) {
+					break;
+
+				case CATEGORY_Charge:
 					$type = null;
 					foreach($fit['modules'] as $type => $mods) {
 						if(isset($mods[$f])) break;
@@ -627,11 +630,16 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 					if(isset($fit['modules'][$type][$f])) {
 						add_charge($fit, $type, $f, $typeid);
 					}
-				} else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'drone')) {
+					break;
+
+				case CATEGORY_Drone:
 					add_drone_auto($fit, $typeid, 1);
-				} else if(\CommonLoadoutFormat\check_typeof_type($typeid, 'implant')
-				          || \CommonLoadoutFormat\check_typeof_type($typeid, 'booster')) {
+					break;
+
+				case CATEGORY_Implant:
 					add_implant($fit, $typeid);
+					break;
+
 				}
 			}
 		}
@@ -658,7 +666,7 @@ function try_parse_fit_from_fitting_window_cp($s, array &$errors = array()) {
 			$match
 		)) continue;
 
-		if(($typeid = \CommonLoadoutFormat\get_typeid(trim($match['typename']))) !== false) {
+		if(($typeid = get_typeid(trim($match['typename']))) !== false) {
 			$dna[] = $typeid.';'.$match['qty'];
 		} else {
 			$errors[] = 'Could not parse typename: '.$match['typename'];
