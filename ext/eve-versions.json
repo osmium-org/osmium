@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "scylla-10",
+        "name": "Scylla 1.0",
+        "build": 871030,
+        "reldate": 1427196000,
+        "dogmaver": 17
+    },
+	{
         "tag": "tiamat-10",
         "name": "Tiamat 1.0",
         "build": 862956,
