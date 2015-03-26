@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -1401,7 +1401,11 @@ function get_skill_prerequisites_for_loadout($fit, $recursive = true) {
 	}
 
 	foreach ($fit['modules'] as $type => $by_index) {
+		if($type === 'rig') continue;
+		
 		foreach ($by_index as $idx => $module) {
+			if($module['state'] === STATE_OFFLINE) continue;
+			
 			$types[$module['typeid']] = true;
 
 			if(isset($fit['charges'][$type][$idx]['typeid'])) {
