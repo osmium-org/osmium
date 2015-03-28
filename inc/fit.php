@@ -361,9 +361,15 @@ function select_ship(&$fit, $new_typeid) {
  * @param $state state of the module (on of the STATE_* constants). If
  * unspecified, the default is STATE_ACTIVE or STATE_ONLINE for
  * modules which cannot be activated.
+ *
+ * @return true on success, false on error
  */
 function add_module(&$fit, $index, $typeid, $state = null) {
 	$type = get_module_slottype($typeid);
+
+	if($type === 'unknown') {
+		return false;
+	}
 
 	if(isset($fit['modules'][$type][$index])) {
 		if($fit['modules'][$type][$index]['typeid'] == $typeid) {
@@ -372,7 +378,7 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 	            change_module_state_by_typeid($fit, $index, $typeid, $state);
             }
 
-			return;
+			return true;
 		}
 
 		remove_module($fit, $index, $fit['modules'][$type][$index]['typeid']);
@@ -397,6 +403,8 @@ function add_module(&$fit, $index, $typeid, $state = null) {
 			\Osmium\Dogma\get_dogma_states()[$state]
 		);
 	}
+
+	return true;
 }
 
 /**
