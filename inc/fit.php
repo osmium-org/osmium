@@ -1266,8 +1266,7 @@ function get_module_slottype($typeid) {
 	dogma_type_has_effect($typeid, DOGMA_STATE_Offline, EFFECT_SubSystem, $t);
 	if($t) return 'subsystem';
 
-	trigger_error('Type '.$typeid.' has unknown slottype', E_USER_NOTICE);
-	return false;
+	return 'unknown';
 }
 
 
