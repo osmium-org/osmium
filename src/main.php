@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -309,9 +309,6 @@ $p->title = $name.' / '.$desc;
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '.';
 $p->canonical = '/';
-if(date('md') === '0401') {
-	$p->snippets[] = 'april_fools';
-}
 $p->render($ctx);
 die();
 
