@@ -8,15 +8,18 @@ Sitemap: http://my-domain.tld/sitemap.xml.gz
 
 User-agent: *
 Disallow: /api/
+Disallow: /browse/
 Disallow: /db/comparegroup/
 Disallow: /db/comparemarketgroup/
 Disallow: /db/comparetypes/
 Disallow: /db/comparevariations/
+Disallow: /editcharacter/
 Disallow: /editcomment/
 Disallow: /editcommentreply/
 Disallow: /flag/
 Disallow: /flagcomment/
 Disallow: /flagcommentreply/
+Disallow: /flagginghistory/
 Disallow: /internal/
 Disallow: /loadout/dna/
 Disallow: /loadout/private/
@@ -25,6 +28,10 @@ Disallow: /moderation
 Disallow: /moderation/
 Disallow: /new
 Disallow: /new/
+Disallow: /notifications
+Disallow: /privileges
+Disallow: /search
+Disallow: /settings
 Disallow: /src/
 
 # Add your own rules here…
