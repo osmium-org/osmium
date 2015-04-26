@@ -30,7 +30,16 @@ function export_to_svg($fit){
 		? 'https' : 'http';
 	$root = $proto.'://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/');
 
-	$d->registerCustomElement('o-sprite', function(\Osmium\DOM\Element $e, \Osmium\DOM\RenderContext $ctx) use($root) {
+	$d->registerCustomAttribute(
+		'o-rel-xhref',
+		function(\Osmium\DOM\Element $e, $v, \Osmium\DOM\RenderContext $ctx) use($root) {
+			$e->setAttribute('x:href', $root.$v);
+		}
+	);
+
+	$d->registerCustomElement(
+		'o-sprite',
+		function(\Osmium\DOM\Element $e, \Osmium\DOM\RenderContext $ctx) {
 			$d = $e->ownerDocument;
 			$svg = $d->createElement('svg');
 			$svg->appendChild($image = $d->createElement('image'));
@@ -56,7 +65,7 @@ function export_to_svg($fit){
 			if(!isset($gridwidth)) $gridwidth = $gridheight;
 			if(!isset($gridheight)) $gridheight = $gridwidth;
 
-			$image->setAttribute('x:href', $root.'/static-'.\Osmium\STATICVER.'/icons/sprite.png');
+			$image->setAttribute('o-rel-xhref', '/static-'.\Osmium\STATICVER.'/icons/sprite.png');
 			$image->setAttribute('x', '0');
 			$image->setAttribute('y', '0');
 			$image->setAttribute('width', '1024');
@@ -76,9 +85,8 @@ function export_to_svg($fit){
 			}
 
 			return $svg;
-		});
-
-	$name = \Osmium\get_ini_setting('name');
+		}
+	);
 
 	/* XXX: does this need escaping? */
 	$d->appendChild($d->createProcessingInstruction(
@@ -125,23 +133,43 @@ function export_to_svg($fit){
 	]);
 
 	$g->appendCreate('a', [
-		'x:href' => $root,
+		'o-rel-xhref' => '',
 		'target' => '_top',
 	])->appendCreate('image#logo', [
-		'x:href' => $root.'/static-'.\Osmium\STATICVER.'/favicon.png',
+		'o-rel-xhref' => '/static-'.\Osmium\STATICVER.'/favicon.png',
 		'x' => '37.5',
 		'y' => '0.5',
 		'width' => '2',
 		'height' => '2',
-	])->appendCreate('title', 'Visit the '.$name.' main page');
+	])->appendCreate('title', 'Visit the '.\Osmium\get_ini_setting('name').' main page');
 
-	$g = $svg->appendCreate('g#head', [
-		'transform' => 'translate(.5 .5)'
-	]);
+
+	
+	$g = svg_gen_header($fit, $d);
+	$g->setAttribute('transform', 'translate(.5 .5)');
+	$svg->append($g);
+
+	$g = svg_gen_modules($fit, $d);
+	$g->setAttribute('transform', 'translate(.5 6)');
+	$svg->append($g);
+	
+	$g = svg_gen_other($fit, $d);
+	$g->setAttribute('transform', 'translate(.5 17.5)');
+	$svg->append($g);
+	
+
+	$d->finalize(new \Osmium\DOM\RenderContext());
+	return $d->saveXML();
+}
+
+/** @internal */
+function svg_gen_header($fit, \Osmium\DOM\Document $d) {
+	$g = $d->createElement('g');
+	$g->setAttribute('id', 'head');
 
 	$a = $g->appendCreate('a#ship', [
 		'target' => '_top',
-		'x:href' => $root.'/db/type/'.$fit['ship']['typeid'],
+		'o-rel-xhref' => '/db/type/'.$fit['ship']['typeid'],
 	]);
 
 	$a->appendCreate('image', [
@@ -183,31 +211,37 @@ function export_to_svg($fit){
 	$a->appendCreate('text', [
 		'x' => '5.5',
 		'y' => '4.2',
-		'See this loadout on '.$name,
+		'See this loadout on '.\Osmium\get_ini_setting('name'),
 	]);
 
 	if($_GET['source_fmt'] === 'uri') {
 		$a->setAttribute('x:href', $_GET['input']);
 	} else if(isset($fit['metadata']['loadoutid'])) {
-		$a->setAttribute('x:href', $root.'/'.get_fit_uri(
+		$a->setAttribute('o-rel-xhref', '/'.get_fit_uri(
 			$fit['metadata']['loadoutid'],
 			$fit['metadata']['visibility'],
 			$fit['metadata']['privatetoken']
 		));
 	} else {
-		$a->setAttribute('x:href', $root.'/loadout/dna/'.export_to_dna($fit));
+		$a->setAttribute('o-rel-xhref', '/loadout/dna/'.export_to_dna($fit));
 	}
 
-	$mg = $svg->appendCreate('g#modules', [
-		'transform' => 'translate(0.5 6)',
-	]);
+	return $g;
+}
+
+/** @internal */
+function svg_gen_modules($fit, \Osmium\DOM\Document $d) {
+	$mg = $d->createElement('g');
+	$mg->setAttribute('id', 'modules');
 
 	$stypes = get_slottypes();
+	$states = get_state_names();
 
-	$r = 1.75;
-	$padding = 0.25;
-	$inc = $padding + 2 * $r;
-	$typeiconratio = 1.5;
+	$r = 1.75; /* Radius of a "module circle" */
+	$padding = .5; /* Space between "module circles" */
+	$inc = $padding + 2 * $r; /* Distance between two centers on a same row */
+	$typeiconratio = 1.75; /* How big should module icons be */
+	
 	foreach([ 'high', 'medium', 'low' ] as $i => $type) {
 		$tg = $mg->appendCreate('g.module', [
 			'id' => $type,
@@ -228,19 +262,56 @@ function export_to_svg($fit){
 			return $g;
 		};
 
-		foreach($fit['modules'][$type] as $m) {
+		foreach($fit['modules'][$type] as $idx => $m) {
 			$g = $makecont();
 
-			$g->appendCreate('a', [
-				'x:href' => $root.'/db/type/'.$m['typeid'],
+			$a = $g->appendCreate('a', [
+				'o-rel-xhref' => '/db/type/'.$m['typeid'],
 				'target' => '_top',
-			])->appendCreate('image', [
+			]);
+
+			$a->appendCreate('image.m', [
 				'x:href' => '//image.eveonline.com/Type/'.$m['typeid'].'_64.png',
 				'width' => (string)($typeiconratio * $r),
 				'height' => (string)($typeiconratio * $r),
 				'x' => (string)((2 - $typeiconratio) * .5 * $r),
 				'y' => (string)((2 - $typeiconratio) * .5 * $r),
-			])->appendCreate('title', $m['typename']);
+			]);
+
+			$a->appendCreate('title', $m['typename']);
+
+			if(isset($fit['charges'][$type][$idx])) {
+				$c = $fit['charges'][$type][$idx];
+
+				$a = $g->appendCreate('a', [
+					'o-rel-xhref' => '/db/type/'.$c['typeid'],
+					'target' => '_top',
+				]);
+
+				$a->appendCreate('image.c', [
+					'x:href' => '//image.eveonline.com/Type/'.$c['typeid'].'_64.png',
+					'width' => (string)($typeiconratio * $r * .5),
+					'height' => (string)($typeiconratio * $r * .5),
+					'x' => (string)((2 - $typeiconratio) * .5 * $r + .625 * $r * $typeiconratio),
+					'y' => (string)((2 - $typeiconratio) * .5 * $r + .625 * $r * $typeiconratio),
+				]);
+
+				$a->appendCreate('title', $c['typename']);
+			}
+
+			list($activable,) = get_module_states($fit, $m['typeid']);
+			if(!(($activable && $m['state'] === STATE_ACTIVE) || $m['state'] == STATE_ONLINE)) {
+				$g->appendCreate('o-sprite', [
+					'width' => (string)($typeiconratio * $r * .5),
+					'height' => (string)($typeiconratio * $r * .5),
+					'x' => (string)((2 - $typeiconratio) * .5 * $r - .125 * $r * $typeiconratio),
+					'y' => (string)((2 - $typeiconratio) * .5 * $r + .625 * $r * $typeiconratio),
+					'spx' => $states[$m['state']][1][0],
+					'spy' => $states[$m['state']][1][1],
+					'gridwidth' => $states[$m['state']][1][2],
+					'gridheight' => $states[$m['state']][1][3],
+				])->appendCreate('title', $states[$m['state']][0]);
+			}
 		}
 
 		while($z < 8) {
@@ -263,6 +334,176 @@ function export_to_svg($fit){
 		}
 	}
 
-	$d->finalize(new \Osmium\DOM\RenderContext());
-	return $d->saveXML();
+	return $mg;
+}
+
+/** @internal */
+function svg_gen_other($fit, \Osmium\DOM\Document $d) {
+	$rg = $d->createElement('g');
+	$rg->setAttribute('id', 'other');
+
+	$z = 0;
+	$max = 16;
+	$side = 3;
+	$rows = 8;
+	$padding = .5;
+	
+	$sinfo = get_slottypes();
+	$avrigs = \Osmium\Dogma\get_ship_attribute($fit, $sinfo['rig'][3]);
+	$avsubs = \Osmium\Dogma\get_ship_attribute($fit, $sinfo['subsystem'][3]);
+	
+	$required = count($fit['implants']) + $avrigs + $avsubs;
+	foreach($fit['drones'] as $drone) {
+		$required += $drone['quantityinspace'];
+	}
+	
+	$inc = $side + $padding;
+	
+	$makecont = function() use(&$d, &$rg, &$z, $side, $inc, $rows, $max, $required) {
+		$y = $inc * (($z - ($z % $rows)) / $rows);
+		$x = $inc * ($z % $rows);
+		++$z;
+
+		$g = $d->createElement('g');
+		$g->setAttribute('class', 'module');
+		$g->setAttribute('transform', 'translate('.$x.' '.$y.')');
+		
+		$g->appendCreate('rect', [
+			'width' => (string)$side,
+			'height' => (string)$side,
+		]);
+		
+		if($required > $max && $z >= $max) {
+			if($z === $max) {
+				$rg->append($g);
+
+				$g->addClass('more');
+				$g->appendCreate('text.c', [
+					'x' => (string)($side * .5),
+					'y' => (string)($side * .5),
+					(string)($required - $max),
+				]);
+				$g->appendCreate('text.m', [
+					'x' => (string)($side * .5),
+					'y' => (string)($side * .8),
+					'more…',
+				]);
+
+				$g = $d->createElement('g');
+			}
+			
+			return $g;
+		}
+		
+		$rg->append($g);
+		return $g;
+	};
+
+	$rigcount = 0;
+	foreach($fit['modules']['rig'] as $m) {
+		$g = $makecont();
+		++$rigcount;
+
+		$a = $g->appendCreate('a', [
+			'o-rel-xhref' => '/db/type/'.$m['typeid'],
+			'target' => '_top',
+		]);
+
+		$a->appendCreate('image.m', [
+			'x:href' => '//image.eveonline.com/Type/'.$m['typeid'].'_64.png',
+			'width' => (string)$side,
+			'height' => (string)$side,
+		]);
+
+		$a->appendCreate('title', $m['typename']);
+	}
+
+	while($rigcount < $avrigs) {
+		$g = $makecont();
+		++$rigcount;
+
+		$g->appendCreate('o-sprite', [
+			'width' => (string)$side,
+			'height' => (string)$side,
+			'spx' => $sinfo['rig'][1][0],
+			'spy' => $sinfo['rig'][1][1],
+			'gridwidth' => $sinfo['rig'][1][2],
+			'gridheight' => $sinfo['rig'][1][3],
+		])->appendCreate('title', 'Unused rig slot');
+	}
+
+	$subcount = 0;
+	foreach(isset($fit['modules']['subsystem']) ? $fit['modules']['subsystem'] : [] as $m) {
+		$g = $makecont();
+		++$subcount;
+
+		$a = $g->appendCreate('a', [
+			'o-rel-xhref' => '/db/type/'.$m['typeid'],
+			'target' => '_top',
+		]);
+
+		$a->appendCreate('image.m', [
+			'x:href' => '//image.eveonline.com/Type/'.$m['typeid'].'_64.png',
+			'width' => (string)$side,
+			'height' => (string)$side,
+		]);
+
+		$a->appendCreate('title', $m['typename']);
+	}
+
+	while($subcount < $avsubs) {
+		$g = $makecont();
+		++$subcount;
+		
+		$g->appendCreate('o-sprite', [
+			'width' => (string)$side,
+			'height' => (string)$side,
+			'spx' => $sinfo['subsystem'][1][0],
+			'spy' => $sinfo['subsystem'][1][1],
+			'gridwidth' => $sinfo['subsystem'][1][2],
+			'gridheight' => $sinfo['subsystem'][1][3],
+		])->appendCreate('title', 'Unused subsystem slot, this loadout is broken!');
+	}
+
+	foreach($fit['drones'] as $drone) {
+		for($i = 0; $i < $drone['quantityinspace']; ++$i) {
+			$g = $makecont();
+
+			$a = $g->appendCreate('a', [
+				'o-rel-xhref' => '/db/type/'.$drone['typeid'],
+				'target' => '_top',
+			]);
+
+			$a->appendCreate('image.m', [
+				'x:href' => '//image.eveonline.com/Type/'.$drone['typeid'].'_64.png',
+				'width' => (string)$side,
+				'height' => (string)$side,
+			]);
+
+			$a->appendCreate('title', $drone['typename']);
+		}
+	}
+	
+	foreach($fit['implants'] as $i) {
+		$g = $makecont();
+
+		$a = $g->appendCreate('a', [
+			'o-rel-xhref' => '/db/type/'.$i['typeid'],
+			'target' => '_top',
+		]);
+
+		$a->appendCreate('image.m', [
+			'x:href' => '//image.eveonline.com/Type/'.$i['typeid'].'_64.png',
+			'width' => (string)$side,
+			'height' => (string)$side,
+		]);
+
+		$a->appendCreate('title', $i['typename']);
+	}
+
+	while($z < $max) {
+		$makecont()->addClass('nd');
+	}
+	
+	return $rg;
 }

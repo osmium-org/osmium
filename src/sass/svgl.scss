@@ -54,8 +54,8 @@ g#head {
 	}
 }
 
-g#modules > g > g.module {
-	&> circle {
+g#modules > g > g.module, g#other > g {
+	&> circle, &> rect {
 		fill: hsla(0, 0%, 30%, .4);
 		stroke: hsla(0, 0%, 30%, .8);
 		stroke-width: .1;
@@ -63,5 +63,18 @@ g#modules > g > g.module {
 
 	&.nd {
 		opacity: .5;
+	}
+
+	&.more > text {
+		text-anchor: middle;
+		
+		&.c {
+			font-size: .08em;
+			font-weight: bold;
+		}
+
+		&.m {
+			font-size: .04em;
+		}
 	}
 }
