@@ -1,0 +1,67 @@
+@import "//fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono";
+
+g#bg {
+	&> rect {
+		fill: hsla(0, 0%, 0%, .7);
+	}
+
+	&> a > image#logo {
+		opacity: .5;
+
+		&:hover { opacity: 1; }
+	}
+}
+
+text {
+	fill: hsl(0, 0%, 90%);
+	font-size: .05em;
+
+	font-family: "Droid Sans", Helvetica, Arial, sans-serif;
+	&.serif {
+		font-family: "Droid Serif", Georgia, serif;
+	}
+	&.mono {
+		font-family: "Droid Sans Mono", monospace;
+	}
+}
+
+a text {
+	text-decoration: underline;
+}
+
+g#head {
+	&> a#ship {		
+		&> rect {
+			fill: hsla(0, 0%, 5%, .4);
+		}
+
+		&> text {
+			text-anchor: middle;
+			text-decoration: none;
+			font-size: 0.04em;
+		}
+	}
+	
+	&> text#title {
+		font-size: .10em;
+		font-weight: bold;
+		fill: hsl(0, 0%, 100%);
+	}
+
+	&> text#group {
+		font-size: .08em;
+		fill: hsl(0, 0%, 80%);
+	}
+}
+
+g#modules > g > g.module {
+	&> circle {
+		fill: hsla(0, 0%, 30%, .4);
+		stroke: hsla(0, 0%, 30%, .8);
+		stroke-width: .1;
+	}
+
+	&.nd {
+		opacity: .5;
+	}
+}

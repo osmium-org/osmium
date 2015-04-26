@@ -20,6 +20,7 @@ namespace Osmium\Fit;
 
 require __DIR__.'/fit-importexport-clf.php';
 require __DIR__.'/fit-importexport-dna.php';
+require __DIR__.'/fit-importexport-svg.php';
 
 
 
@@ -60,6 +61,11 @@ function get_export_formats() {
 			'DNA', 'text/plain',
 			function($fit, $opts = array()) {
 				return export_to_dna($fit);
+			}),
+		'svg' => array(
+			'SVG', 'image/svg+xml',
+			function($fit, $opts = array()) {
+				return export_to_svg($fit);
 			}),
 		);
 }

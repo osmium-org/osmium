@@ -293,7 +293,8 @@ class RawPage extends Document {
 			while($i < $e->attributes->length) {
 				$attr = $e->attributes->item($i);
 
-				if(in_array($attr->name, [ 'x', 'y', 'gridwidth', 'gridheight', 'width', 'height' ], true)) {
+				if(in_array($attr->name, [ 'x', 'y', 'gridwidth', 'gridheight',
+				                           'width', 'height' ], true)) {
 					${$attr->name} = $attr->value;
 					++$i;
 					continue;

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -64,6 +64,25 @@ function make_list($heading, array $elements) {
 $share = [];
 $uriprefix = (\Osmium\HTTPS ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST']
 	.rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+$title = 'View '.$fit['metadata']['name'].' on Osmium';
+
+$object = $p->element('object', [
+	'type' => 'image/svg+xml',
+	'data' => $svguri = $uriprefix.$exporturi('svg', 'svg'),
+]);
+$object->appendCreate('a', [
+	'href' => $uriprefix.$canonicaluri,
+	$title,
+]);
+
+$share[] = [
+	null,
+	'Embed this loadout in your website/wiki/forum/etc. ',
+	[ 'a', [ 'href' => $svguri, '(see demo)' ] ],
+	':',
+	[ 'br' ],
+	[ 'pre', $object->renderNode() ],
+];
 
 if(isset($canonicaluriwithrevision)) {
 	$share[] = [
@@ -71,7 +90,7 @@ if(isset($canonicaluriwithrevision)) {
 		'# Permanent link ',
 		[ 'small', '(latest revision):' ],
 		[ 'br' ],
-		[ 'code', $uriprefix.$canonicaluri ],
+		[ 'pre', $uriprefix.$canonicaluri ],
 	];
 
 	$share[] = [
@@ -79,18 +98,16 @@ if(isset($canonicaluriwithrevision)) {
 		'# Permanent link ',
 		[ 'small', '(revision #'.$fit['metadata']['revision'].'):' ],
 		[ 'br' ],
-		[ 'code', $uriprefix.$canonicaluriwithrevision ],
+		[ 'pre', $uriprefix.$canonicaluriwithrevision ],
 	];
 } else {
 	$share[] = [
 		null,
 		'# Permanent link:',
 		[ 'br' ],
-		[ 'code', $uriprefix.$canonicaluri ],
+		[ 'pre', $uriprefix.$canonicaluri ],
 	];
 }
-
-$title = 'View '.$fit['metadata']['name'].' on Osmium';
 
 $share[] = [
 	null,
