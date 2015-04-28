@@ -18,6 +18,8 @@
 
 namespace Osmium\Fit;
 
+/* XXX: add Expires header on non-authed, public loadouts */
+
 /**
  * Export a loadout to a SVG document that can be embedded on another
  * webpage.
@@ -142,8 +144,6 @@ function export_to_svg($fit){
 		'width' => '2',
 		'height' => '2',
 	])->appendCreate('title', 'Visit the '.\Osmium\get_ini_setting('name').' main page');
-
-
 	
 	$g = svg_gen_header($fit, $d);
 	$g->setAttribute('transform', 'translate(.5 .5)');
@@ -278,7 +278,9 @@ function svg_gen_modules($fit, \Osmium\DOM\Document $d) {
 				'y' => (string)((2 - $typeiconratio) * .5 * $r),
 			]);
 
-			$a->appendCreate('title', $m['typename']);
+			$title = $a->appendCreate('title', $m['typename']);
+			$ia = \Osmium\Chrome\format_long_range(get_module_interesting_attributes($fit, $type, $idx));
+			if($ia) $title->append("\n".$ia);
 
 			if(isset($fit['charges'][$type][$idx])) {
 				$c = $fit['charges'][$type][$idx];
@@ -465,22 +467,24 @@ function svg_gen_other($fit, \Osmium\DOM\Document $d) {
 		])->appendCreate('title', 'Unused subsystem slot, this loadout is broken!');
 	}
 
-	foreach($fit['drones'] as $drone) {
+	foreach($fit['drones'] as $typeid => $drone) {
 		for($i = 0; $i < $drone['quantityinspace']; ++$i) {
 			$g = $makecont();
 
 			$a = $g->appendCreate('a', [
-				'o-rel-xhref' => '/db/type/'.$drone['typeid'],
+				'o-rel-xhref' => '/db/type/'.$typeid,
 				'target' => '_top',
 			]);
 
 			$a->appendCreate('image.m', [
-				'x:href' => '//image.eveonline.com/Type/'.$drone['typeid'].'_64.png',
+				'x:href' => '//image.eveonline.com/Type/'.$typeid.'_64.png',
 				'width' => (string)$side,
 				'height' => (string)$side,
 			]);
 
-			$a->appendCreate('title', $drone['typename']);
+			$title = $a->appendCreate('title', $drone['typename']);
+			$ia = \Osmium\Chrome\format_long_range(get_drone_interesting_attributes($fit, $typeid));
+			if($ia) $title->append("\n".$ia);
 		}
 	}
 	
