@@ -140,7 +140,7 @@ function export_to_svg($fit){
 	])->appendCreate('image#logo', [
 		'o-rel-xhref' => '/static-'.\Osmium\STATICVER.'/favicon.png',
 		'x' => '37.5',
-		'y' => '0.5',
+		'y' => '4.75',
 		'width' => '2',
 		'height' => '2',
 	])->appendCreate('title', 'Visit the '.\Osmium\get_ini_setting('name').' main page');
@@ -155,6 +155,10 @@ function export_to_svg($fit){
 	
 	$g = svg_gen_other($fit, $d);
 	$g->setAttribute('transform', 'translate(.5 17.5)');
+	$svg->append($g);
+	
+	$g = svg_gen_attributes($fit, $d);
+	$g->setAttribute('transform', 'translate(39.5 1.25)');
 	$svg->append($g);
 	
 
@@ -345,9 +349,9 @@ function svg_gen_other($fit, \Osmium\DOM\Document $d) {
 	$rg->setAttribute('id', 'other');
 
 	$z = 0;
-	$max = 16;
+	$max = 20;
 	$side = 3;
-	$rows = 8;
+	$rows = 10;
 	$padding = .5;
 	
 	$sinfo = get_slottypes();
@@ -510,4 +514,63 @@ function svg_gen_other($fit, \Osmium\DOM\Document $d) {
 	}
 	
 	return $rg;
+}
+
+/** @internal */
+function svg_gen_attributes($fit, \Osmium\DOM\Document $d) {
+	$ag = $d->createElement('g');
+	$ag->setAttribute('id', 'attributes');
+
+	$ia = get_interesting_attributes($fit);
+	$dps = get_damage_all($fit, $ia)[0];
+
+	$ehp = get_ehp_and_resists(
+		$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25, ]
+	);
+
+	$cap = get_capacitor_stability($fit);
+
+	$tpsr = 0;
+	$tpss = 0;
+	foreach(get_tank($fit, $ehp, $cap['delta']) as $t) {
+		$tpsr += $t[0];
+		$tpss += $t[1];
+	}
+
+	$missing = [];
+	$price = array_sum(get_estimated_price($fit, $missing));
+	if($missing !== []) $price = 'N/A';
+
+	$t = $ag->appendCreate('text');
+	$t->appendCreate('tspan.v', (string)$d->formatKMB($dps, 2));
+	$t->append(' ');
+	$t->appendCreate('tspan.l', 'DPS');
+	$t->appendCreate('title', 'Damage per second');
+
+	$t = $ag->appendCreate('text', [ 'y' => '1', ]);
+	$t->appendCreate('tspan.v', (string)$d->formatKMB($ehp['ehp']['avg'], 2, 'k'));
+	$t->append(' ');
+	$t->appendCreate('tspan.l', 'EHP');
+	$t->appendCreate('title', 'Effective hitpoints (uniform damage type)');
+
+	if(abs($tpsr - $tpss) < .001) {
+		$tps = (string)$d->formatKMB(1000 * $tpsr, 2);
+		$title = 'Tank (sustained in EHP/s)';
+	} else {
+		$tps = $d->formatKMB(1000 * $tpsr, 2).'|'.$d->formatKMB(1000 * $tpss, 2);
+		$title = 'Tank (reinforced|sustained in EHP/s)';
+	}
+	$t = $ag->appendCreate('text', [ 'y' => '2' ]);
+	$t->appendCreate('tspan.v', $tps);
+	$t->append(' ');
+	$t->appendCreate('tspan.l', 'TPS');
+	$t->appendCreate('title', $title);
+
+	$t = $ag->appendCreate('text', [ 'y' => '3', ]);
+	$t->appendCreate('tspan.v', $price === 'N/A' ? $price : (string)$d->formatKMB($price, 2));
+	$t->append(' ');
+	$t->appendCreate('tspan.l', 'ISK');
+	$t->appendCreate('title', 'Estimated price');
+
+	return $ag;
 }

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -865,12 +865,7 @@ function commit_loadout_dogma_attribs(&$fit) {
 	);
 
 	$ia = get_interesting_attributes($fit);
-
-	$dps = 0;
-	$dps += get_damage_from_turrets($fit, $ia)[0];
-	$dps += get_damage_from_missiles($fit, $ia)[0];
-	$dps += get_damage_from_smartbombs($fit, $ia)[0];
-	$dps += get_damage_from_drones($fit, $ia)[0];
+	$dps = get_damage_all($fit, $ia)[0];
 
 	$ehp = get_ehp_and_resists(
 		$fit, [ 'em' => .25, 'explosive' => .25, 'kinetic' => .25, 'thermal' => .25 ]

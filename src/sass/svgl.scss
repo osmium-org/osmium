@@ -78,3 +78,11 @@ g#modules > g > g.module, g#other > g {
 		}
 	}
 }
+
+g#attributes > text {
+	text-anchor: end;
+	
+	&> tspan.v {
+		font-weight: bold;
+	}
+}
