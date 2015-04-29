@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -165,14 +165,15 @@ function get_fit_from_input_post_get() {
 
 function outputp($data, $ctype, $cache = null, $sessionbound = false) {
 	if($cache === null) $cache = 3600;
-	if($cache > 0) {
-		header('Cache-Control: '.($sessionbound ? 'private' : 'public'));
+	if($cache > 0 && $sessionbound === false) {
+		/* Cache-Control: private for session-bound content looks good
+		 * on paper, but badly-programmed proxies may cache the
+		 * request anyway. (I'm looking at you, Varnish.) */
+		
+		header('Cache-Control: public');
 		header('Expires: '.gmdate('r', time() + $cache));
 		header_remove('Pragma');
-
-		if(!$sessionbound) {
-			header_remove('Set-Cookie');
-		}
+		header_remove('Set-Cookie');
 	}
 
 	$jsonopts = isset($_GET['minify']) && !$_GET['minify'] ? JSON_PRETTY_PRINT : 0;

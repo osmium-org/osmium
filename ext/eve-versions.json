@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "mosaic-10",
+        "name": "Mosaic 1.0",
+        "build": 877986,
+        "reldate": 1430226000,
+        "dogmaver": 17
+    },
+	{
         "tag": "scylla-10",
         "name": "Scylla 1.0",
         "build": 871030,

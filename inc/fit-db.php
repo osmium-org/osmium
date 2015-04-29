@@ -1396,7 +1396,11 @@ function get_skill_prerequisites_for_loadout($fit, $recursive = true) {
 	}
 
 	foreach ($fit['modules'] as $type => $by_index) {
+		if($type === 'rig') continue;
+		
 		foreach ($by_index as $idx => $module) {
+			if($module['state'] === STATE_OFFLINE) continue;
+			
 			$types[$module['typeid']] = true;
 
 			if(isset($fit['charges'][$type][$idx]['typeid'])) {

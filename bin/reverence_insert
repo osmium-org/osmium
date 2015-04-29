@@ -45,7 +45,7 @@ pg = psycopg2.connect("host={} port={} user={} password={} dbname={}".format(
     pgcnf('pg_password'), pgcnf('pg_dbname'),
 ))
 
-eve = blue.EVE(args.eve, cachepath=args.cache, server=args.server, languageID=args.locale, respath=args.res)
+eve = blue.EVE(args.eve, cachepath=args.cache, server=args.server, languageID=args.locale, sharedcachepath=args.res)
 cfg = eve.getconfigmgr()
 
 def processRows(tablename, columnmap, rowset):
