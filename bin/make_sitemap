@@ -50,13 +50,10 @@ $lastmod->appendChild($idx->createTextNode($fdate(filemtime(__DIR__.'/../inc/roo
 if(\Osmium\get_ini_setting('anonymous_access')) {
 	$static = [
 		'/',
-		'/search',
 		'/import',
 		'/convert',
 		'/login',
 		'/resetpassword',
-		'/browse/new',
-		'/browse/best',
 		'/changelog',
 		'/about',
 		'/help',
@@ -69,7 +66,6 @@ if(\Osmium\get_ini_setting('anonymous_access')) {
 		'/help/api/loadout-query',
 		'/help/api/loadout-attributes',
 		'/compare/dps',
-		'/privileges',
 	];
 
 	if(\Osmium\get_ini_setting('registration_enabled')) {
