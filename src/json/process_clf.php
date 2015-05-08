@@ -113,8 +113,11 @@ $payload = array(
 	),
 	'capacitors' => $capacitors,
 	'missingprereqs' => $missing,
-	'slots' => \Osmium\AjaxCommon\get_slot_usage($local),
 );
+
+if(isset($local['ship']) && isset($local['ship']['typeid']) && $local['ship']['typeid'] > 0) {
+	$payload['slots'] = \Osmium\AjaxCommon\get_slot_usage($local);
+}
 
 foreach($local['modules'] as $slottype => $sub) {
 	foreach($sub as $index => $m) {
