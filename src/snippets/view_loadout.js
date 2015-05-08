@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -41,6 +41,18 @@ $(function() {
 
 	osmium_load_static_client_data(osmium_cdatastaticver, function(cdata) {
 		osmium_gen();
+
+		/* XXX. On T3 loadouts, gen_ship() will overwrite clf_slots
+		 * using the bare T3 slotcounts (0/0/0).
+		 *
+		 * Usually this is later corrected by committing the CLF and
+		 * reading the slot counts back from process_clf. But in the
+		 * initial phase, we don't commit the CLF. So undo the mess
+		 * gen_ship() did, then regenerate the modules again.
+		 */
+		osmium_clf_slots = odata.data('clfslots');
+		osmium_gen_modules();
+		
 		osmium_init();
 
 		if($("a[href='#remote']").parent().hasClass('active')) {
