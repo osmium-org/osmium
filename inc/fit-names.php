@@ -8,6 +8,7 @@ const CATEGORY_Implant = 20;
 const CATEGORY_Module = 7;
 const CATEGORY_Ship = 6;
 const CATEGORY_Skill = 16;
+const CATEGORY_Subsystem = 32;
 
 const EFFECT_ArmorRepair = 27;
 const EFFECT_EMPWave = 38;
@@ -326,6 +327,7 @@ function get_type_category_str($typeid) {
 	switch(get_categoryid($typeid)) {
 		
 	case CATEGORY_Module:
+	case CATEGORY_Subsystem:
 		return 'module';
 
 	case CATEGORY_Ship:

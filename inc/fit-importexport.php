@@ -618,6 +618,7 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 				switch(get_category($typeid)) {
 
 				case CATEGORY_Module:
+				case CATEGORY_Subsystem:
 					add_module($fit, $f, $typeid);
 					break;
 
