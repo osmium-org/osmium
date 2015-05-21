@@ -75,6 +75,10 @@ programs are encouraged to support them when applicable.
   object with two keys, `typeid` and `typename` specifying the mode of
   the ship for this preset.
 
+- `X-beacons`: additional key in a preset element. If present, it is
+  an array of type IDs representing the effect beacons to apply to the
+  ship.
+
 ### Osmium-specific extensions
 
 The properties below are not standard and are Osmium specific. They
@@ -241,6 +245,10 @@ imposed) than strict DNA. Here is how the format is parsed:
   - If the type ID is an implant (or booster) type ID, add *one*
     implant (or booster) to the fitting. Osmium will refuse to add the
     same implant (or booster) multiple times.
+
+  - If the type ID is an effect beacon, apply it to the
+    fitting. Multiple beacons can be applied, but only one of each
+    type at most.
 
 ## Remote format {#remote}
 
