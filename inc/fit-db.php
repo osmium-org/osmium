@@ -100,6 +100,10 @@ function get_unique($fit) {
 			$uniquep['implants'][(int)$i['typeid']] = true;
 		}
 
+		foreach($preset['beacons'] as $b) {
+			$uniquep['beacons'][(int)$b['typeid']] = true;
+		}
+
 		$unique['presets'][] = $uniquep;
 	}
 

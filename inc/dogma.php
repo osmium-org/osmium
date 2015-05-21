@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -155,6 +155,14 @@ function late_init(&$fit, $opts = DOGMA_INIT_DEFAULT_OPTS) {
 				);
 			}
 		}
+	}
+
+	foreach($fit['beacons'] as &$b) {
+		dogma_add_area_beacon(
+			$fit['__dogma_context'],
+			$b['typeid'],
+			$b['dogma_index']
+		);
 	}
 
 	if($withfleet) {
