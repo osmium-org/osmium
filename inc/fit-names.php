@@ -2,6 +2,7 @@
 
 namespace Osmium\Fit;
 
+const CATEGORY_Celestial = 2;
 const CATEGORY_Charge = 8;
 const CATEGORY_Drone = 18;
 const CATEGORY_Implant = 20;
@@ -60,6 +61,7 @@ const TYPE_10MNMicrowarpdriveII = 12076;
 const TYPE_100MNMicrowarpdriveII = 12084;
 
 const GROUP_Booster = 303;
+const GROUP_EffectBeacon = 920;
 const GROUP_FighterBomber = 1023;
 const GROUP_FighterDrone = 549;
 const GROUP_ShipModifiers = 1306;
@@ -341,6 +343,9 @@ function get_type_category_str($typeid) {
 
 	case CATEGORY_Implant:
 		return (int)get_groupid($typeid) === GROUP_Booster ? 'booster' : 'implant';
+
+	case CATEGORY_Celestial:
+		return (int)get_groupid($typeid) === GROUP_EffectBeacon ? 'beacon' : 'unknown';
 
 	default:
 		return 'unknown';
