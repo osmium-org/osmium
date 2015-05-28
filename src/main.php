@@ -316,7 +316,7 @@ die();
 
 function get_estimate_count(\Osmium\DOM\Page $p, $table, $single, $plural) {
 	$n = (int)\Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT reltuples FROM pg_class WHERE relname = $1',
+		'SELECT reltuples::integer FROM pg_class WHERE relname = $1',
 		array($table)
 	))[0];
 	return [ [ 'strong', $p->formatExactInteger($n) ], ' ', $n === 1 ? $single : $plural ];
