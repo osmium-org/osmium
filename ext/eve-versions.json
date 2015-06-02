@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "carnyx-10",
+        "name": "Carnyx 1.0",
+        "build": 893722,
+        "reldate": 1433250000,
+        "dogmaver": 17
+    },
+	{
         "tag": "mosaic-10",
         "name": "Mosaic 1.0",
         "build": 877986,
