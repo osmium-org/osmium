@@ -123,7 +123,7 @@ $(function() {
 						var highisgood = ctable.children('thead')
 							.children('tr').children()
 							.eq(td.index()).data('hig');
-						var gain = delta >= 0;
+						var gain = (baseval < otherval);
 						if(highisgood) {
 							td.addClass(gain ? 'gain' : 'loss');
 						} else {
