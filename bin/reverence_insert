@@ -133,11 +133,6 @@ higoverrides = {
     975: False, # hullExplosiveDamageResistance
     976: False, # hullKineticDamageResistance
     977: False, # hullThermalDamageResistance
-    
-    984: False, # emDamageResistanceBonus
-    985: False, # explosiveDamageResistanceBonus
-    986: False, # kineticDamageResistanceBonus
-    987: False, # thermalDamageResistanceBonus
 }
 
 processRows("eve.dgmattribs", {
