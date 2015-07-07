@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "aegis-10",
+        "name": "Aegis 1.0",
+        "build": 910243,
+        "reldate": 1436274000,
+        "dogmaver": 18
+    },
+	{
         "tag": "carnyx-10",
         "name": "Carnyx 1.0",
         "build": 893722,
