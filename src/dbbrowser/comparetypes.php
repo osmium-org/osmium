@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -166,6 +166,7 @@ if($_GET['groupid'] > 0) {
 
 $tlist = implode(',', $typeids);
 $attributes = [];
+$noprune = []; /* These attributes will not be autoremoved if there is no difference in the selected types */
 $metaattribidx = -1;
 $hasauto = false;
 
@@ -194,6 +195,7 @@ foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
 	if(ctype_digit($attrib)) {
 		/* Simple attribute */
 		$attributes[(int)$attrib] = true;
+		$noprune[(int)$attrib] = true;
 		continue;
 	}
 
@@ -218,48 +220,52 @@ if(isset($nav)) $dbb->append($nav);
 
 
 
-$alist = implode(',', array_keys($attributes));
-$highisgood = [];
-$higq = \Osmium\Db\query(
-	'SELECT attributeid, highisgood
-	FROM eve.dgmattribs
-	WHERE attributeid IN ('.$alist.')'
-);
-while($hig = \Osmium\Db\fetch_row($higq)) {
-	$highisgood[$hig[0]] = ($hig[1] === 't');
-}
-
 $typeattribsq = \Osmium\Db\query(
 	'SELECT typeid, attributeid, value, unitid, udisplayname
 	FROM osmium.siattributes
 	WHERE typeid IN ('.$tlist.')
-	AND attributeid IN ('.$alist.')
 	AND published = true
 	ORDER BY attributeid ASC'
 );
 
 $data = [];
+$alist = [ -1 ];
+$highisgood = [];
 
 while($ta = \Osmium\Db\fetch_assoc($typeattribsq)) {
 	$data[$ta['typeid']][$ta['attributeid']] = [
 		$ta['value'],
 		$p->formatNumberWithUnit($ta['value'], $ta['unitid'], $ta['udisplayname']),
 	];
+	$alist[$ta['attributeid']] = true;
 }
+
+$higq = \Osmium\Db\query(
+	'SELECT attributeid, highisgood
+	FROM eve.dgmattribs
+	WHERE attributeid IN ('.implode(',',array_keys($alist)).')'
+);
+while($hig = \Osmium\Db\fetch_row($higq)) {
+	$highisgood[$hig[0]] = ($hig[1] === 't');
+}
+
+
 
 /* Prune attributes with no differences */
-$attributevals = [];
-foreach($data as $typeid => $sub) {
-	foreach($sub as $attributeid => $val) {
-		$attributevals[$attributeid][$val[0]] = true;
+if($hasauto) {
+	$attributevals = [];
+	foreach($data as $typeid => $sub) {
+		foreach($sub as $attributeid => $val) {
+			$attributevals[$attributeid][$val[0]] = true;
+		}
 	}
-}
 
-foreach($attributevals as $attributeid => $vals) {
-	if($attributeid < 0) continue;
+	foreach($attributevals as $attributeid => $vals) {
+		if($attributeid < 0) continue;
 
-	if(count($vals) < 2) {
-		unset($attributes[$attributeid]);
+		if(count($vals) < 2 && !isset($noprune[$attributeid])) {
+			unset($attributes[$attributeid]);
+		}
 	}
 }
 

@@ -130,9 +130,7 @@ Here is the syntax of a RPN attribute:
      `2`, `-.5`, `1.9e-10`, etc.
 
   * `a`: pop the stack, treat the popped value as an attribute ID, and
-    push the value of this attribute on the stack. **You must also
-    specify any attribute you want to use with `a` on its own in the
-    attribute list.**
+    push the value of this attribute on the stack.
 	
   * `add`, `mul`: add or multiply the two last elements of the stack,
     and push the result.
