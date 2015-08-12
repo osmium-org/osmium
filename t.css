@@ -1,0 +1,15 @@
+@import url("http://fonts.googleapis.com/css?family=Droid+Serif:400,400italic,700,700italic|Droid+Sans:400,700|Droid+Sans+Mono");
+html, body { min-height: 100%; height: 100%; }
+body { font-family: "Droid Serif"; margin: 0; padding: 0 2em; }
+pre, code, tt, textarea, kbd { font-family: "Droid Sans Mono"; }
+div#wrap { max-width: 70em; padding: 0 1em; border-top: 0; border-bottom: 0; }
+div#wrap > header:first-child > h1:first-child { text-align: center; margin-top: 0; padding-top: 0.5em; }
+div#wrap > *:last-child { margin-bottom: 0; padding-bottom: 2em; }
+div#wrap > h1 { padding: 0.05em 0.25em; }
+div#wrap > p, div#wrap > ul, div#wrap > ol { line-height: 1.25em; }
+img { vertical-align: middle; }
+ul { list-style-type: square; }
+code { background-color: #f0f3f5; }
+a { color: #0a3d5c; }
+a:active { color: red; }
+hr { display: none; }
