@@ -25,7 +25,7 @@ $(function() {
 	ul.append(
 		$(document.createElement('li')).append(
 			$(document.createElement('a'))
-				.prop('href', 'https://github.com/Artefact2/osmium/issues/new')
+				.prop('href', 'https://github.com/osmium-org/osmium/issues/new')
 				.text('Report an issue')
 		)
 	);
