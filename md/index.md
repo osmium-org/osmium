@@ -93,6 +93,7 @@ You can use `git tag -v` to check the authenticity of version tags.
 * **[Report an issue](https://github.com/osmium-org/osmium/issues/new)**
 * [Project repository on Github](https://github.com/osmium-org/osmium)
 * [Forum thread on the EVE forums](https://forums.eveonline.com/default.aspx?g=posts&m=1630542#post1630542)
+* [Chat on the `#osmium` IRC channel](http://irc.lc/coldfront/osmium/osmiumguest@@@)
 
 # Support {#support}
 
@@ -128,4 +129,4 @@ you choose!), next to the amount you gave.
 # Contact {#contact}
 
 * By email: <artefact2@gmail.com>
-* On IRC: `#osmium` at `irc.coldfront.net` ([link for your IRC client](irc://irc.coldfront.net/#osmium), [link for your browser](http://irc.lc/coldfront/osmium/guest@@@))
+* On IRC: `#osmium` at `irc.coldfront.net` ([link for your IRC client](irc://irc.coldfront.net/#osmium), [link for your browser](http://irc.lc/coldfront/osmium/osmiumguest@@@))
