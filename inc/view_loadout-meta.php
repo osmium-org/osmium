@@ -143,7 +143,7 @@ $export = [];
 $export[] = [
 	null,
 	[ 'a', [
-		'o-rel-href' => $exporturi('clf', 'json'),
+		'o-rel-href' => $exporturi('clf', 'json', [ 'preset_agnostic' => true ]),
 		'type' => 'application/json',
 		'rel' => 'nofollow',
 		[ 'strong', 'Export to CLF (Common Loadout Format)' ]
@@ -153,7 +153,7 @@ $export[] = [
 $export[] = [
 	null,
 	[ 'a', [
-		'o-rel-href' => $exporturi('clf', 'json', false, [ 'minify' => 1 ]),
+		'o-rel-href' => $exporturi('clf', 'json', [ 'preset_agnostic' => true ], [ 'minify' => 1 ]),
 		'type' => 'application/json',
 		'rel' => 'nofollow',
 		[ 'strong', 'Export to minified CLF' ]
@@ -163,7 +163,7 @@ $export[] = [
 $export[] = [
 	null,
 	[ 'a', [
-		'o-rel-href' => $exporturi('md', 'txt'),
+		'o-rel-href' => $exporturi('md', 'txt', [ 'preset_agnostic' => true ]),
 		'type' => 'text/plain',
 		'rel' => 'nofollow',
 		[ 'strong', 'Export to Markdown+gzCLF' ]
@@ -173,7 +173,7 @@ $export[] = [
 $export[] = [
 	null,
 	[ 'a', [
-		'o-rel-href' => $exporturi('evexml', 'xml', true),
+		'o-rel-href' => $exporturi('evexml', 'xml'),
 		'type' => 'application/xml',
 		'rel' => 'nofollow',
 		[ 'strong', 'Export to XML+gzCLF' ]
@@ -184,21 +184,21 @@ $export[] = [
 	null,
 	'Lossy formats: ',
 	[ 'a', [
-		'o-rel-href' => $exporturi('evexml', 'xml', true, [ 'embedclf' => 0 ]),
+		'o-rel-href' => $exporturi('evexml', 'xml', [ 'embedclf' => 0 ]),
 		'type' => 'application/xml',
 		'rel' => 'nofollow',
 		'XML'
 	] ],
 	', ',
 	[ 'a', [
-		'o-rel-href' => $exporturi('eft', 'txt', true),
+		'o-rel-href' => $exporturi('eft', 'txt'),
 		'type' => 'text/plain',
 		'rel' => 'nofollow',
 		'EFT'
 	] ],
 	', ',
 	[ 'a', [
-		'o-rel-href' => $exporturi('dna', 'txt', true),
+		'o-rel-href' => $exporturi('dna', 'txt'),
 		'type' => 'text/plain',
 		'rel' => 'nofollow',
 		'DNA'

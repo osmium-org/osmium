@@ -18,8 +18,6 @@
 
 namespace Osmium\Fit;
 
-/* XXX: add Expires header on non-authed, public loadouts */
-
 /**
  * Export a loadout to a SVG document that can be embedded on another
  * webpage.

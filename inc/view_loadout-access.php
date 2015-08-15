@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -237,25 +237,32 @@ if(!isset($revision)) {
 $forkuri = '/internal/fork/'.$loadoutid.\Osmium\DOM\Page::formatQueryString($forkparams);
 
 if(!isset($exporturi)) {
-	$exporturi = function($format, $ext, $incpresets = false, $params = array()) use(&$fit, &$exportparams) {
+	$exporturi = function($format, $ext, $fmtparams = [], $params = []) use(&$fit, &$exportparams, $revision_overridden) {
 		$uri = '/api/convert/'.$fit['metadata']['loadoutid'].'/'.$format.'/';
 		$uri .= slugify($fit['metadata']['loadoutid'], $fit['metadata']['name']);
 		$uri .= '.'.$ext;
 
-		$params['revision'] = $fit['metadata']['revision'];
-
-		if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
-			$params['privatetoken'] = $fit['metadata']['privatetoken'];
+		if($revision_overridden){
+			$params['revision'] = $fit['metadata']['revision'];
 		}
 
 		if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 			$params['privatetoken'] = $fit['metadata']['privatetoken'];
 		}
 
-		if($incpresets) {
-			$params['preset'] = $fit['modulepresetid'];
-			$params['chargepreset'] = $fit['chargepresetid'];
-			$params['dronepreset'] = $fit['dronepresetid'];
+		if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+			$params['privatetoken'] = $fit['metadata']['privatetoken'];
+		}
+
+		if(!isset($fmtparams['preset_agnostic']) || !$fmtparams['preset_agnostic']) {
+			if($fit['modulepresetid'] > 0) $params['preset'] = $fit['modulepresetid'];
+			if($fit['chargepresetid'] > 0) $params['chargepreset'] = $fit['chargepresetid'];
+			if($fit['dronepresetid'] > 0) $params['dronepreset'] = $fit['dronepresetid'];
+
+			if($fit['modulepresetid'] > 0 || $fit['chargepresetid'] > 0 || $fit['dronepresetid'] > 0) {
+				/* Force revision in the exported URI. Because these presets may not exist in a future revision. */
+				$params['revision'] = $fit['metadata']['revision'];
+			}
 		}
 
 		return $uri.\Osmium\DOM\Page::formatQueryString(array_merge($exportparams, $params));
