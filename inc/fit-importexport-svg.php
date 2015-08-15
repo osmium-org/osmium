@@ -22,7 +22,7 @@ namespace Osmium\Fit;
  * Export a loadout to a SVG document that can be embedded on another
  * webpage.
  */
-function export_to_svg($fit){
+function export_to_svg($fit, $embedclf = true){
 	$d = new \Osmium\DOM\RawPage();
 	$root = \Osmium\get_absolute_root();
 
@@ -107,8 +107,7 @@ function export_to_svg($fit){
 		.\Osmium\get_osmium_version()
 		.".\n\n"
 		.$root
-		."\n\n"
-		.export_to_gzclf($fit)
+		.($embedclf ? "\n\n".export_to_gzclf($fit) : "\n")
 	);
 
 	$g = $svg->appendCreate('g#bg');

@@ -65,7 +65,8 @@ function get_export_formats() {
 		'svg' => array(
 			'SVG', 'image/svg+xml',
 			function($fit, $opts = array()) {
-				return export_to_svg($fit);
+				$embedclf = !isset($opts['embedclf']) || $opts['embedclf'];
+				return export_to_svg($fit, $embedclf);
 			}),
 		);
 }
