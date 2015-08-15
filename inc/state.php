@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -498,6 +498,10 @@ function ccp_oauth_redirect($payload) {
 		\Osmium\fatal(403, 'CCP OAuth not available on this Osmium instance.');
 	}
 
+	if(!\Osmium\get_ini_setting('https_available') || !\Osmium\get_ini_setting('https_canonical')) {
+		\Osmium\fatal(403, 'HTTPS not available (or not preferred) on this Osmium instance.');
+	}
+
 	\Osmium\State\put_state('ccp_oauth_state', $state = get_nonce());
 	\Osmium\State\put_state('ccp_oauth_payload', $payload);
 	header(
@@ -506,9 +510,7 @@ function ccp_oauth_redirect($payload) {
 		.'/oauth/authorize'
 		.\Osmium\DOM\Page::formatQueryString([
 			'response_type' => 'code',
-			'redirect_uri' => 'https://'.\Osmium\get_ini_setting('host')
-			                  .rtrim(\Osmium\get_ini_setting('relative_path'), '/')
-			                  .'/internal/auth/ccpoauthcallback',
+			'redirect_uri' => \Osmium\get_absolute_root().'/internal/auth/ccpoauthcallback',
 			'client_id' => \Osmium\get_ini_setting('ccp_oauth_clientid'),
 			'scope' => '',
 			'state' => $state,

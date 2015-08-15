@@ -1,3 +1,7 @@
+# staging
+
+* Add option to export loadouts as SVG. Add code template to embed it into another webpage.
+
 # Version 0.13
 
 ## Version 0.13.4, released 2015-02-17

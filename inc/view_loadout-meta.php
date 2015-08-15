@@ -62,8 +62,7 @@ function make_list($heading, array $elements) {
 }
 
 $share = [];
-$uriprefix = (\Osmium\HTTPS ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST']
-	.rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+$uriprefix = \Osmium\get_absolute_root();
 $title = 'View '.$fit['metadata']['name'].' on Osmium';
 
 $object = $p->element('object', [

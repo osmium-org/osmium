@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -81,6 +81,21 @@ function get_ini_setting($key, $default = null) {
 	}
 
 	return isset($cnf[$key]) ? $cnf[$key] : $default;
+}
+
+/* Get the absolute URI to the Osmium main page. No trailing /. */
+function get_absolute_root() {
+	static $root = null;
+	if($root !== null) return $root;
+
+	$proto = 'http';
+	if((defined('Osmium\HTTPS') && \Osmium\HTTPS)
+	   || (get_ini_setting('https_available') && get_ini_setting('https_canonical'))) {
+		$proto .= 's';
+	}
+	$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : get_ini_setting('host');
+	
+	return $root = $proto.'://'.$host.rtrim(get_ini_setting('relative_path'), '/');
 }
 
 function get_osmium_version() {

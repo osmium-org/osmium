@@ -26,11 +26,7 @@ namespace Osmium\Fit;
  */
 function export_to_svg($fit){
 	$d = new \Osmium\DOM\RawPage();
-
-	/* XXX: refactor this! */
-	$proto = \Osmium\get_ini_setting('https_available') && \Osmium\get_ini_setting('https_canonical')
-		? 'https' : 'http';
-	$root = $proto.'://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/');
+	$root = \Osmium\get_absolute_root();
 
 	$d->registerCustomAttribute(
 		'o-rel-xhref',
