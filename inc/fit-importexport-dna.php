@@ -65,6 +65,7 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 				continue;
 			}
 			
+		case CATEGORY_Subsystem:
 			$slottype = get_module_slottype($typeid);
 			if($slottype === 'unknown') {
 				$errors[] = 'Unknown typeid "'.$typeid.'". Discarded.';

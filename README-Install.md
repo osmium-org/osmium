@@ -9,7 +9,7 @@ below (for example, Debian uses `www-data`).
    the submodules:
 
    ~~~~
-   git clone git://github.com/Artefact2/osmium.git
+   git clone git://github.com/osmium-org/osmium.git
    cd osmium
    git checkout production
    git submodule init
@@ -103,7 +103,7 @@ Dependencies
 ============
 
 * PHP >= 5.4, with:
-  * [dogma extension](https://github.com/Artefact2/php-dogma), using libdogma 1.1.x (`dogma.so`)
+  * [dogma extension](https://github.com/osmium-org/php-dogma), using libdogma 1.1.x (`dogma.so`)
   * PostgreSQL extension (`pgsql.so`)
   * MySQLi extension (`mysqli.so`)
   * cURL extension (`curl.so`)

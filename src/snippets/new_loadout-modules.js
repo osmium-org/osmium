@@ -177,7 +177,9 @@ osmium_update_overflow = function(slotsdiv) {
 
 	if(used > total) {
 		smallcount.addClass('overflow');
-		slotsdiv.children('ul').children('li').slice(total - used).addClass('overflow');
+		slotsdiv.children('ul').children('li')
+			.removeClass('overflow')
+			.slice(total - used).addClass('overflow');
 	} else {
 		smallcount.removeClass('overflow');
 		slotsdiv.children('ul').children('li.overflow').removeClass('overflow');

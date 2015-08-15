@@ -4,8 +4,7 @@ Getting the Osmium data dump
 The quick way
 -------------
 
-A collection of Osmium data dumps are available at
-<http://artefact2.com/files/osmium-data/>. Use these at your own risk.
+A collection of Osmium data dumps are available as [Github releases](https://github.com/osmium-org/osmium/releases).
 
 The long way
 ------------
