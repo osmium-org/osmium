@@ -1,3 +1,7 @@
+# staging
+
+* Add option to export loadouts as SVG. Add code template to embed it into another webpage.
+
 # Version 0.13
 
 ## Version 0.13.4, released 2015-02-17
@@ -209,7 +213,7 @@
 ## Version 0.9.0, released 2013-07-18
 
 * Performance: now using
-  [libdogma](https://github.com/Artefact2/libdogma) as a drop-in dogma
+  [libdogma](https://github.com/osmium-org/libdogma) as a drop-in dogma
   engine
 
 * Performance: local loadout is made as needed in view_loadout

@@ -51,7 +51,7 @@ if($fit === false) {
 	die();
 }
 
-if(!\Osmium\State\can_access_fit($fit) || !\Osmium\State\is_fit_green($loadoutid)) {
+if(!\Osmium\State\is_fit_green($loadoutid)) {
 	$json['error'] = "Please refresh page and try again.";
 	\Osmium\Chrome\return_json($json);
 	die();

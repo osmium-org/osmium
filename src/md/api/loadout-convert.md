@@ -24,7 +24,7 @@ Convert a loadout from one format to another.
 <tfoot></tfoot>
 <tbody>
 
-<tr><td>URI</td><td>target_fmt</td><td>string</td><td>yes</td><td>clf, md, evexml, eft, dna</td><td>N/A</td>
+<tr><td>URI</td><td>target_fmt</td><td>string</td><td>yes</td><td>clf, md, evexml, eft, dna, svg</td><td>N/A</td>
 <td>The format to export the loadout in.</td></tr>
 
 <tr><td>URI</td><td>padding</td><td>string</td><td>no</td><td>any</td><td><em>none</em></td>

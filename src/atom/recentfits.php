@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -51,19 +51,11 @@ while($row = \Osmium\Db\fetch_row($q)) {
 	$ids[] = (int)$row[0];
 }
 
-$fpath = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
-$fpath = explode('/', $fpath);
-array_pop($fpath);
-array_pop($fpath);
-$fpath = implode('/', $fpath);
-
-$proto = \Osmium\HTTPS ? 'https': 'http';
-$host = $_SERVER['HTTP_HOST'];
-$abs = rtrim($proto.'://'.$host.'/'.$fpath, '/');
+$abs = \Osmium\get_absolute_root();
 
 header('Content-Type: application/atom+xml');
 
-$idprefix = 'http://artefact2.com/osmium/atom/local/'.$_SERVER['HTTP_HOST'].$fpath;
+$idprefix = 'http://artefact2.com/2015/osmium/atom/local/'.(explode('://', $abs, 2)[1]);
 $atom = new \DOMDocument();
 $feed = $atom->appendChild($atom->createElement('feed'));
 
@@ -71,7 +63,7 @@ $xmlns = $feed->appendChild($atom->createAttribute('xmlns'));
 $xmlns->appendChild($atom->createTextNode('http://www.w3.org/2005/Atom'));
 
 $xmlnsosmium = $feed->appendChild($atom->createAttribute('xmlns:osmium'));
-$xmlnsosmium->appendChild($atom->createTextNode('http://artefact2.com/osmium/atom/schema'));
+$xmlnsosmium->appendChild($atom->createTextNode('http://artefact2.com/2015/osmium/atom/schema'));
 
 $id = $feed->appendChild($atom->createElement('id'));
 $id->appendChild($atom->createTextNode($idprefix.'/'.$type));

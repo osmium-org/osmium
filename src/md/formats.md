@@ -16,7 +16,7 @@ wanting to implement these formats in their own programs.
 This is the recommended format for general use: storage, program
 interoperability, etc. It has been designed to be resilient, easy to
 parse, unambiguous and extendable. The format is [clearly
-specified](http://artefact2.com/clf/spec-common-loadout-format-01).
+specified](https://github.com/osmium-org/common-loadout-format/blob/master/specifications/spec-common-loadout-format-01.md).
 
 ### Non-standard extensions
 

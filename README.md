@@ -19,15 +19,15 @@ For the full list of Osmium contributors, see the `CREDITS` file.
 
 Osmium uses libdogma, released under the GNU General Public License,
 version 3 (or later).
-<https://github.com/Artefact2/libdogma>
+<https://github.com/osmium-org/libdogma>
 
 Osmium uses php-dogma, released under the GNU Affero General Public
 License, version 3 (or later).
-<https://github.com/Artefact2/php-dogma>
+<https://github.com/osmium-org/php-dogma>
 
 Osmium uses the Common Loadout Format PHP validator, released under
 the WTFPL license, version 2.
-<https://github.com/Artefact2/common-loadout-format>
+<https://github.com/osmium-org/common-loadout-format>
 
 Osmium uses jQuery, released under the MIT license.
 <https://jquery.org/>

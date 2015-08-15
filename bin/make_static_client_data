@@ -435,17 +435,20 @@ while($r = \Osmium\Db\fetch_row($sideeffectsq)) {
 
 /* ---------------------------------------------------------- */
 
-/* XXX, for obvious reasons */
-$static['modes'][34317] = [
-	34319 => 'Defense Mode',
-	34323 => 'Propulsion Mode',
-	34321 => 'Sharpshooter Mode',
-];
-$static['modes'][34562] = [
-	34564 => 'Defense Mode',
-	34566 => 'Propulsion Mode',
-	34570 => 'Sharpshooter Mode',
-];
+$smq = \Osmium\Db\query('SELECT typeid, typename FROM eve.invtypes WHERE groupid = 1306');
+while($modifier = \Osmium\Db\fetch_row($smq)) {
+	/* XXX, for obvious reasons */
+	if(!preg_match('%^(?<ship>.+) (?<mode>(Defense|Propulsion|Sharpshooter) Mode)$%', $modifier[1], $match)) {
+		die('Ship modifier has weird type name: '.$modifier[0].' '.$modifier[1]."\n");
+	}
+
+	$stid = \Osmium\Fit\get_typeid($match['ship']);
+	if(!$stid) {
+		die('Ship modifier has unknown ship: '.$modifier[0].' '.$modifier[1]."\n");
+	}
+
+	$static['modes'][(int)$stid][(int)$modifier[0]] = $match['mode'];
+}
 
 /* ---------------------------------------------------------- */
 

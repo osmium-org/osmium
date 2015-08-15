@@ -82,7 +82,7 @@ $dbb->appendCreate('ul')->appendCreate('li', [
 
 $dbb->appendCreate('ul')->append([
 	[ 'li', [ 'Stacking penalized: ', [ 'strong', $a['stackable'] === 't' ? 'never' : 'yes' ] ] ],
-	[ 'li', [ 'The ', [ 'strong', $a['highisgood'] ? 'higher' : 'lower' ],
+	[ 'li', [ 'The ', [ 'strong', $a['highisgood'] === 't' ? 'higher' : 'lower' ],
 	          ', the better ', [ 'small', '(grossly inaccurate)' ] ] ],
 ]);
 
