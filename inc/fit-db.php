@@ -457,6 +457,21 @@ function commit_fitting(&$fit, &$error = null) {
 			}
 		}
 
+		foreach($preset['beacons'] as $typeid => $b) {
+			$ret = \Osmium\Db\query_params(
+				'INSERT INTO osmium.fittingbeacons (fittinghash, presetid, typeid) VALUES ($1, $2, $3)',
+				array(
+					$fittinghash,
+					$presetid,
+					$b['typeid'],
+				)
+			);
+
+			if($ret === false) {
+				return false;
+			}
+		}
+
 		++$presetid;
 	}
   
@@ -1040,6 +1055,16 @@ function get_fitting($fittinghash) {
 		);
 		while($implant = \Osmium\Db\fetch_row($implantsq)) {
 			add_implant($fit, $implant[0]);
+		}
+
+		$beaconsq = \Osmium\Db\query_params(
+			'SELECT typeid
+			FROM osmium.fittingbeacons
+			WHERE fittinghash = $1 AND presetid = $2',
+			array($fittinghash, $preset['presetid'])
+		);
+		while($beacon = \Osmium\Db\fetch_row($beaconsq)) {
+			add_beacon($fit, $beacon[0]);
 		}
 	}
 	
