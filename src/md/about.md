@@ -13,4 +13,4 @@ You…
 * Want to support the developers?
 * Want to report a bug or a feature request?
 
-Please see the [Osmium meta page](http://artefact2.com/osmium/).
+Please see the [Osmium meta page](https://osmium-org.github.io/osmium/).

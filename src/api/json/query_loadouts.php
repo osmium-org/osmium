@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -94,14 +94,7 @@ while($row = \Osmium\Db\fetch_assoc($q)) {
 	$rows[$row['loadoutid']] = $row;
 }
 
-$uriprefix = (\Osmium\HTTPS ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST'];
-$uripath = explode('/', $_SERVER['REQUEST_URI']);
-array_pop($uripath);
-array_pop($uripath);
-array_pop($uripath);
-array_pop($uripath);
-array_pop($uripath);
-$uriprefix .= implode('/', $uripath);
+$uriprefix = \Osmium\get_absolute_root();
 
 $result = array();
 foreach($ids as $id) {

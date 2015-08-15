@@ -1,14 +1,17 @@
 THEMES=dark light
 
-default: themes static/cache/clientdata.json cache/OsmiumCache_top_kills static/cache/sitemap-root.xml.gz
+default: css static/cache/clientdata.json cache/OsmiumCache_top_kills static/cache/sitemap-root.xml.gz
 
-themes: $(addprefix static/, $(addsuffix .css, $(THEMES))) static/fatal.css
+css: $(addprefix static/, $(addsuffix .css, $(THEMES))) static/fatal.css static/svgl.css
 
 static/fatal.css: src/sass/fatal.scss
-	sass --unix-newlines -t compact $< | tr -s '\n' > $@
+	sass --unix-newlines -t compressed $< | tr -s '\n' > $@
+
+static/svgl.css: src/sass/svgl.scss
+	sass --unix-newlines -t compressed $< | tr -s '\n' > $@
 
 static/%.css: src/sass/themes/%.scss src/sass/*.scss
-	sass --unix-newlines -t compact $< | tr -s '\n' > $@
+	sass --unix-newlines -t compressed $< | tr -s '\n' > $@
 
 static/cache/clientdata.json:
 	./bin/make_static_client_data

@@ -23,6 +23,7 @@ require __DIR__.'/../inc/root.php';
  * size), and should not contain more than 50,000 URLs. */
 const BATCH_SIZE = 50000;
 
+/* XXX: refactor this! */
 $proto = \Osmium\get_ini_setting('https_available') && \Osmium\get_ini_setting('https_canonical')
 	? 'https' : 'http';
 $root = $proto.'://'.\Osmium\get_ini_setting('host').rtrim(\Osmium\get_ini_setting('relative_path'), '/');

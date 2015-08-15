@@ -13,7 +13,7 @@ itself.
 
 If you find this page unclear, or out-of-date, or you didn't find what
 you were looking for, please [contact the
-developers](http://artefact2.com/osmium/#contact).
+developers](https://osmium-org.github.io/osmium/#contact).
 
 ## When searching loadouts {#loadouts}
 

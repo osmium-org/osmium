@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -454,6 +454,28 @@ function get_damage_from_drones(&$fit, array $ia) {
 		$cd[0] + $f[0] + $fb[0],
 		$cd[1] + $f[1] + $fb[1],
 	];
+}
+
+/**
+ * Get DPS/volley damage from a lodaout, including all damage sources.
+ */
+function get_damage_all(&$fit, array $ia) {
+	$d = [
+		get_damage_from_turrets($fit, $ia),
+		get_damage_from_missiles($fit, $ia),
+		get_damage_from_smartbombs($fit, $ia),
+		get_damage_from_drones($fit, $ia),
+	];
+
+	$dps = 0;
+	$volley = 0;
+
+	foreach($d as $dt) {
+		$dps += $dt[0];
+		$volley += $dt[1];
+	}
+
+	return [ $dps, $volley ];
 }
 
 /**
