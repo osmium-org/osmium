@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -306,6 +306,18 @@ osmium_add_to_clf = function(item) {
 		if(osmium_user_initiated) {
 			$('a[href="#implants"]').parent().click();
 		}
+	} else if(cat === 'beacon') {
+		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
+		if(!('X-beacons' in p)) p['X-beacons'] = [];
+
+		if(p['X-beacons'].indexOf(typeid) === -1) {
+			p['X-beacons'].push(typeid);
+
+			/* TODO */
+			/*osmium_gen_beacons();*/
+		}
+	} else {
+		alert('Unknown category ' + cat);
 	}
 
 	osmium_commit_clf();
