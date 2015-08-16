@@ -873,6 +873,10 @@ class Page extends RawPage {
 			                          'Import one or more fittings from various formats'),
 			$this->makeNavigationLink('/convert', 'Convert', 'Convert',
 			                          'Quickly convert fittings from one format to another'),
+			$this->makeNavigationLink('/browse/best', 'Browse loadouts', 'Loadouts',
+			                          'Browse the loadouts most rated by the community'),
+			$this->makeNavigationLink('/db', 'Browse types', 'Types',
+			                          'Browse and compare types (items) from the game database'),
 		]);
 
 		if(\Osmium\State\is_logged_in()) {
