@@ -124,8 +124,6 @@ function get_ehp_and_resists(&$fit) {
 		$out['ehp']['avg'] += $out[$name]['capacity'] / $avgresonance;
 	}
 
-	\Osmium\debug($out);
-
 	return $out;
 }
 

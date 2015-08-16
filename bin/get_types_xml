@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,87 +23,51 @@ $q = \Osmium\Db\query(
 	'SELECT tsd.typeid, tsd.typename, parenttypename, category, subcategory,
 	tsd.groupname, marketgroupname, metagroupid, metalevel
 	FROM osmium.typessearchdata tsd
-	JOIN eve.invtypes it ON it.typeid = tsd.typeid AND it.published = true
-	JOIN eve.invgroups ig ON ig.groupid = it.groupid AND ig.published = true'
+	JOIN eve.invtypes it ON it.typeid = tsd.typeid AND it.published = true'
 	);
 
-$xml = new \DOMDocument('1.0', 'utf-8');
-$docset = $xml->appendChild($xml->createElement('sphinx:docset'));
+$xml = new \Osmium\DOM\Document();
+$docset = $xml->appendChild($xml->element('sphinx:docset'));
+$schema = $docset->appendCreate('sphinx:schema');
 
-$schema = $docset->appendChild($xml->createElement('sphinx:schema'));
+$autofields = [ 'typename', 'parenttypename', 'groupname', 'marketgroupname' ];
 
-$field = $schema->appendChild($xml->createElement('sphinx:field'));
-$name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('typename'));
-
-$field = $schema->appendChild($xml->createElement('sphinx:field'));
-$name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('parenttypename'));
-
-$field = $schema->appendChild($xml->createElement('sphinx:field'));
-$name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('groupname'));
-
-$field = $schema->appendChild($xml->createElement('sphinx:field'));
-$name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('marketgroupname'));
-
-$field = $schema->appendChild($xml->createElement('sphinx:field'));
-$name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('synonyms'));
-
-$field = $schema->appendChild($xml->createElement('sphinx:field'));
-$name = $field->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('parentsynonyms'));
-
-$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
-$name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('mg'));
-$type = $attr->appendChild($xml->createAttribute('type'));
-$type->appendChild($xml->createTextNode('int'));
-$bits = $attr->appendChild($xml->createAttribute('bits'));
-$bits->appendChild($xml->createTextNode('32'));
-
-$attr = $schema->appendChild($xml->createElement('sphinx:attr'));
-$name = $attr->appendChild($xml->createAttribute('name'));
-$name->appendChild($xml->createTextNode('ml'));
-$type = $attr->appendChild($xml->createAttribute('type'));
-$type->appendChild($xml->createTextNode('int'));
-$bits = $attr->appendChild($xml->createAttribute('bits'));
-$bits->appendChild($xml->createTextNode('32'));
-
-while($row = \Osmium\Db\fetch_assoc($q)) {
-	$document = $docset->appendChild($xml->createElement('sphinx:document'));
-	$id = $document->appendChild($xml->createAttribute('id'));
-	$id->appendChild($xml->createTextNode($row['typeid']));
-
-	$typename = $document->appendChild($xml->createElement('typename'));
-	$typename->appendChild($xml->createTextNode($row['typename']));
-
-	$typename = $document->appendChild($xml->createElement('parenttypename'));
-	$typename->appendChild($xml->createTextNode($row['parenttypename']));
-
-	$groupname = $document->appendChild($xml->createElement('groupname'));
-	$groupname->appendChild($xml->createTextNode($row['groupname']));
-
-	$groupname = $document->appendChild($xml->createElement('marketgroupname'));
-	$groupname->appendChild($xml->createTextNode($row['marketgroupname']));
-
-	$synonyms = $document->appendChild($xml->createElement('synonyms'));
-	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['typename'])));
-
-	$synonyms = $document->appendChild($xml->createElement('parentsynonyms'));
-	$synonyms->appendChild($xml->createTextNode(get_synonyms($row['parenttypename'])));
-
-	$metagroupid = $document->appendChild($xml->createElement('mg'));
-	$metagroupid->appendChild($xml->createTextNode($row['metagroupid']));
-
-	$metalevel = $document->appendChild($xml->createElement('ml'));
-	$metalevel->appendChild($xml->createTextNode($row['metalevel']));
+foreach($autofields as $f) {
+	$schema->appendCreate('sphinx:field', [ 'name' => $f ]);
 }
 
-$xml->formatOutput = true;
-echo $xml->saveXML();
+$schema->appendCreate('sphinx:field', [ 'name' => 'synonyms' ]);
+$schema->appendCreate('sphinx:field', [ 'name' => 'parentsynonyms' ]);
+
+$schema->appendCreate('sphinx:attr', [
+	'name' => 'mg',
+	'type' => 'int',
+	'bits' => '32',
+]);
+$schema->appendCreate('sphinx:attr', [
+	'name' => 'ml',
+	'type' => 'int',
+	'bits' => '32',
+]);
+
+while($row = \Osmium\Db\fetch_assoc($q)) {
+	$document = $docset->appendCreate('sphinx:document', [
+		'id' => $row['typeid'],
+	]);
+
+	foreach($autofields as $f) {
+		$document->appendCreate($f, (string)$row[$f]);
+	}
+
+	$document->appendCreate('synonyms', get_synonyms($row['typename']));
+	$document->appendCreate('parentsynonyms', get_synonyms($row['parenttypename']));
+
+	$document->appendCreate('mg', (string)$row['metagroupid']);
+	$document->appendCreate('ml', (string)$row['metalevel']);
+}
+
+$xml->save('php://output');
+die();
 
 function get_synonyms($name) {
 	static $prefixes = array('Micro', 'Small', 'Medium', 'Large', 'X-Large');

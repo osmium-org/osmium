@@ -103,6 +103,11 @@ osmium_init_sources = function() {
 			data: data,
 			success: function(json) {
 				for(var i in json.payload) {
+					if(!(json.payload[i] in osmium_types)) {
+						alert('Type ' + payload[i] + ' not in static client data ; try deleting your cache and refreshing. Please report issue if this persists.');
+						continue;
+					}
+					
 					var m = osmium_types[json.payload[i]];
 					li = $(document.createElement('li'));
 					li.addClass('module');

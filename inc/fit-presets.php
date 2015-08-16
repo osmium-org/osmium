@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -49,6 +49,13 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 				}
 			}
 
+			foreach($fit['beacons'] as $b) {
+				dogma_remove_area_beacon(
+					$fit['__dogma_context'],
+					$b['dogma_index']
+				);
+			}
+
 			foreach($fit['implants'] as $typeid => $i) {
 				dogma_remove_implant(
 					$fit['__dogma_context'],
@@ -74,6 +81,7 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 	$fit['modules'] =& $fit['presets'][$presetid]['modules'];
 	$fit['chargepresets'] =& $fit['presets'][$presetid]['chargepresets'];
 	$fit['implants'] =& $fit['presets'][$presetid]['implants'];
+	$fit['beacons'] =& $fit['presets'][$presetid]['beacons'];
 
 	if(count($fit['chargepresets']) == 0 && $createdefaultchargepreset) {
 		/* Add an empty preset */
@@ -124,6 +132,14 @@ function use_preset(&$fit, $presetid, $createdefaultchargepreset = true) {
 				$fit['mode']['typeid'],
 				$fit['mode']['dogma_index'],
 				DOGMA_STATE_Online
+			);
+		}
+
+		foreach($fit['beacons'] as $b) {
+			dogma_add_area_beacon(
+				$fit['__dogma_context'],
+				$b['typeid'],
+				$b['dogma_index']
 			);
 		}
 	}
@@ -248,6 +264,7 @@ function create_preset(&$fit, $name, $description, $newid = null) {
 		'modules' => array(),
 		'chargepresets' => array(),
 		'implants' => array(),
+		'beacons' => array(),
 		);
 
 	return create_preset_generic($fit, 'presets', $preset, $newid);

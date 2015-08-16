@@ -178,7 +178,9 @@ function get_state_names() {
  *
  * implants => array(<typeid> => array(typeid, typename, slot, dogma_index, sideeffects => array(effectid)))
  *
- * presets => array(<presetid> => array(name, description, modules, chargepresets, implants))
+ * beacons => array(<typeid> => array(typeid, typename, dogma_index))
+ *
+ * presets => array(<presetid> => array(name, description, modules, chargepresets, implants, beacons))
  *
  * chargepresets => array(<presetid> => array(name, description, charges))
  *
@@ -851,6 +853,42 @@ function transfer_drone(&$fit, $typeid, $from, $quantity = 1) {
 
 	$fit['drones'][$typeid]['quantityin'.$from] -= $quantity;
 	$fit['drones'][$typeid]['quantityin'.$to] += $quantity;
+}
+
+
+
+/* ----------------------------------------------------- */
+
+
+
+/* Add an effect beacon to a $fit. Will not add the same beacon
+ * twice. */
+function add_beacon(&$fit, $typeid) {
+	if(isset($fit['beacons'][$typeid])) return;
+
+	$fit['beacons'][$typeid] = [
+		'typeid' => (int)$typeid,
+		'typename' => get_typename($typeid),
+	];
+
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_add_area_beacon(
+			$fit['__dogma_context'],
+			(int)$typeid,
+			$fit['beacons'][$typeid]['dogma_index']
+		);
+	}
+}
+
+/* Remove an effect beacon from a $fit. */
+function remove_beacon(&$fit, $typeid) {
+	if(!isset($fit['beacons'][$typeid])) return;
+
+	if(\Osmium\Dogma\has_context($fit)) {
+		dogma_remove_area_beacon($fit['__dogma_context'], $fit['beacons'][$typeid]['dogma_index']);
+	}
+
+	unset($fit['beacons'][$typeid]);
 }
 
 

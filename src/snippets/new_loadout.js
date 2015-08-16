@@ -1,5 +1,5 @@
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +23,7 @@
 /*<<< require snippet new_loadout-modules >>>*/
 /*<<< require snippet new_loadout-drones >>>*/
 /*<<< require snippet new_loadout-implants >>>*/
+/*<<< require snippet new_loadout-beacons >>>*/
 /*<<< require snippet new_loadout-remote >>>*/
 
 $(function() {
@@ -130,6 +131,7 @@ osmium_gen = function() {
 	osmium_gen_fattribs();
 	osmium_gen_drones();
 	osmium_gen_implants();
+	osmium_gen_beacons();
 	osmium_gen_remote();
 };
 
@@ -144,6 +146,7 @@ osmium_init = function() {
 	osmium_init_fattribs();
 	osmium_init_drones();
 	osmium_init_implants();
+	osmium_init_beacons();
 	osmium_init_remote();
 };
 
@@ -306,6 +309,21 @@ osmium_add_to_clf = function(item) {
 		if(osmium_user_initiated) {
 			$('a[href="#implants"]').parent().click();
 		}
+	} else if(cat === 'beacon') {
+		var p = osmium_clf.presets[osmium_clf['X-Osmium-current-presetid']];
+		if(!('X-beacons' in p)) p['X-beacons'] = [];
+
+		if(p['X-beacons'].indexOf(typeid) === -1) {
+			p['X-beacons'].push(typeid);
+
+			osmium_gen_beacons();
+
+			if(osmium_user_initiated) {
+				$('a[href="#area"]').parent().click();
+			}
+		}
+	} else {
+		alert('Unknown category ' + cat);
 	}
 
 	osmium_commit_clf();

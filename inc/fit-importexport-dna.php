@@ -109,6 +109,17 @@ function try_parse_fit_from_shipdna($dnastring, $name, &$errors) {
 		case CATEGORY_Ship:
 			select_ship($fit, $typeid);
 			break;
+
+		case CATEGORY_Celestial:
+			if(get_groupid($typeid) == GROUP_EffectBeacon) {
+				if($qty !== 1) {
+					$errors[] = 'Only adding beacon '.$typeid.' once (wanted '.$qty.').';
+				}
+				add_beacon($fit, $typeid);
+			} else {
+				$errors[] = 'No clue know what to do with celestial '.$typeid.'. Discarded';
+			}
+			break;
 			
 		}
 	}
@@ -142,6 +153,7 @@ function mangle_dna($dna) {
 		'drone' => [],
 		'implant' => [],
 		'booster' => [],
+		'beacon' => [],
 	);
 
 	$dnaparts = explode(':', rtrim($dna, ':'));
@@ -302,6 +314,10 @@ function export_to_dna($fit) {
 
 	foreach($fit['implants'] as $i) {
 		$tids[$i['typeid']] = 1;
+	}
+
+	foreach($fit['beacons'] as $b) {
+		$tids[$b['typeid']] = 1;
 	}
 
 	$ftids = array();

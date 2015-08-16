@@ -731,6 +731,13 @@ function export_to_markdown($fit, $embedclf = true) {
 			$md .= 'Ship mode: '.$preset['mode']['typename']."\n\n";
 		}
 
+		if(isset($preset['beacons']) && $preset['beacons'] !== []) {
+			foreach($preset['beacons'] as $b) {
+				$md .= 'Effect beacon: '.$b['typename']."\n";
+			}
+			$md .= "\n";
+		}
+
 		/* Enforce consistent ordering of slot types, instead of just using foreach */
 		foreach(get_slottypes() as $type => $tdata) {
 			if(!isset($preset['modules'][$type]) || count($preset['modules'][$type]) == 0) continue;

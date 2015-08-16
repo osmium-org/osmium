@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -387,33 +387,18 @@ if($latestdbver['dogmaver'] - $intendeddbver['dogmaver'] > 1) {
 	}
 }
 
-$ul = $div->appendCreate('ul.tabs');
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#loadout', 'Loadout' ]);
-$ul->appendCreate('li')->appendCreate('a', [
-	'href' => '#presets',
-	'Presets ('.max(
-		count($fit['presets']),
-		count($fit['chargepresets']),
-		count($fit['dronepresets'])
-	).')',
-]);
-$ul->appendCreate('li')->appendCreate('a', [
-	'href' => '#remote',
-	'Fleet ('.(isset($fit['fleet']) ? count($fit['fleet']) : 0)
-	.') & Projected ('.(isset($fit['remote']) ? count($fit['remote']) : 0).')',
-]);
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('.$commentcount.')' ]);
-$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#meta', 'Meta' ]);
+$tabsul = $div->appendCreate('ul.tabs');
+$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#loadout', 'Loadout' ]);
 
-if($maxrev !== false && $historyuri !== false) {
-	$ul->prepend($p->element('li.external')->append([[ 'a', [
+if($maxrev !== false && $historyuri !== false && $maxrev > 1) {
+	$tabsul->prepend($p->element('li.external')->append([[ 'a', [
 		'o-rel-href' => $historyuri,
 		'title' => 'View different revisions of this loadout, and compare changes',
 		'History ('.($maxrev - 1).')',
 	]]]));
 }
 
-$ul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
+$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'o-rel-href' => $forkuri,
 	'title' => 'Make a copy of this loadout and start editing it',
 	'Fork',
@@ -428,7 +413,7 @@ if($can_edit) {
 		$editparams['privatetoken'] = $fit['metadata']['privatetoken'];
 	}
 
-	$ul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
+	$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 		'o-rel-href' => '/internal/edit/'.$loadoutid.$p->formatQueryString($editparams),
 		'Edit',
 	]]]));
@@ -712,6 +697,26 @@ foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) 
 	}
 }
 
+
+
+$asection = $section->appendCreate('section#area');
+if($fit['beacons'] !== []) {
+	$div = $asection->appendCreate('div');
+	$div->appendCreate('h3', 'Area effects');
+	$ul = $div->appendCreate('ul');
+	
+	foreach($fit['beacons'] as $b) {
+		$li = $ul->appendCreate('li');
+
+		$li->appendCreate('o-eve-img', [
+			'src' => '/Type/'.$b['typeid'].'_64.png',
+			'alt' => '',
+		]);
+
+		$li->appendCreate('span.name', $b['typename']);
+	}
+}
+
 $dsection = $section->appendCreate('section#description');
 $dsection->appendCreate('h3', 'Fitting description');
 
@@ -723,61 +728,85 @@ if($desc === '') {
 }
 
 
+if(count($fit['presets']) > 1
+   || count($fit['chargepresets']) > 1
+   || count($fit['dronepresets']) > 1
+   || !empty($fit['modulepresetdesc'])
+   || !empty($fit['chargepresetdesc'])
+   || !empty($fit['dronepresetdesc'])) {
+	$section = $div->appendCreate('section#presets');
+		$tbody = $section->appendCreate('o-form', [ 'method' => 'post', 'action' => $_SERVER['REQUEST_URI'] ])
+		                 ->appendCreate('table')->appendCreate('tbody');
+		$first = true;
 
-$section = $div->appendCreate('section#presets');
-$tbody = $section->appendCreate('o-form', [ 'method' => 'post', 'action' => $_SERVER['REQUEST_URI'] ])
-	->appendCreate('table')->appendCreate('tbody');
-$first = true;
+		foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
+		          ['chargepresets', 'chargepreset', 'Charge preset', 'scpreset'],
+		          ['dronepresets', 'dronepreset', 'Drone preset', 'sdpreset'] ] as $ptype) {
+			list($parraykey, $pkey, $fname, $name) = $ptype;
 
-foreach([ ['presets', 'modulepreset', 'Preset', 'spreset'],
-          ['chargepresets', 'chargepreset', 'Charge preset', 'scpreset'],
-          ['dronepresets', 'dronepreset', 'Drone preset', 'sdpreset'] ] as $ptype) {
-	list($parraykey, $pkey, $fname, $name) = $ptype;
+			if($first) {
+				$first = false;
+			} else {
+				$tbody->append($p->makeFormSeparatorRow());
+			}
 
-	if($first) {
-		$first = false;
-	} else {
-		$tbody->append($p->makeFormSeparatorRow());
-	}
+			$select = $p->element('o-select', [
+				'name' => $name,
+				'id' => $name,
+				'selected' => $fit[$pkey.'id'],
+			]);
+			foreach($fit[$parraykey] as $id => $preset) {
+				$select->appendCreate('option', [ 'value' => $id, $preset['name'] ]);
+			}
 
-	$select = $p->element('o-select', [
-		'name' => $name,
-		'id' => $name,
-		'selected' => $fit[$pkey.'id'],
-	]);
-	foreach($fit[$parraykey] as $id => $preset) {
-		$select->appendCreate('option', [ 'value' => $id, $preset['name'] ]);
-	}
+			$tbody->append($p->makeFormRawRow(
+				[[ 'label', [ 'for' => $name, $fname ] ]],
+				$select
+			));
 
-	$tbody->append($p->makeFormRawRow(
-		[[ 'label', [ 'for' => $name, $fname ] ]],
-		$select
-	));
+			$desc = \Osmium\Chrome\trim($fit[$pkey.'desc']);
+			if(empty($desc)) {
+				$desc = $p->element('p.placeholder', 'Empty description.');
+			} else {
+				$desc = $p->fragment(\Osmium\Chrome\format_sanitize_md($desc)); /* XXX */
+			}
 
-	$desc = \Osmium\Chrome\trim($fit[$pkey.'desc']);
-	if(empty($desc)) {
-		$desc = $p->element('p.placeholder', 'Empty description.');
-	} else {
-		$desc = $p->fragment(\Osmium\Chrome\format_sanitize_md($desc)); /* XXX */
-	}
+			$tbody->append($p->makeFormRawRow(
+				[[ 'label', 'Description' ]],
+				[[ 'div.pdesc', $desc ]]
+			));
+		}
 
-	$tbody->append($p->makeFormRawRow(
-		[[ 'label', 'Description' ]],
-		[[ 'div.pdesc', $desc ]]
-	));
+		$tabsul->appendCreate('li')->appendCreate('a', [
+			'href' => '#presets',
+			'Presets ('.max(
+				count($fit['presets']),
+				count($fit['chargepresets']),
+				count($fit['dronepresets'])
+			).')',
+		]);
 }
 
 
-$div->append($p->makeRemoteSection($fit, true));
+if((isset($fit['fleet']) && $fit['fleet'] !== []) || (isset($fit['remote']) && $fit['remote'] !== [])) {
+	$div->append($p->makeRemoteSection($fit, true));
+	$tabsul->appendCreate('li')->appendCreate('a', [
+		'href' => '#remote',
+		'Fleet ('.(isset($fit['fleet']) ? count($fit['fleet']) : 0)
+		.') & Projected ('.(isset($fit['remote']) ? count($fit['remote']) : 0).')',
+	]);
+}
 
 
 
 /* Prints paginated comments and the "add comment" form. */
 require __DIR__.'/../inc/view_loadout-commentview.php';
+$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('.$commentcount.')' ]);
 
 /* Pretty prints permissions, show actions, moderator actions, export
  * and share links. */
 require __DIR__.'/../inc/view_loadout-meta.php';
+$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#meta', 'Meta' ]);
 
 
 

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -91,6 +91,15 @@ if($_POST['type'] == 'module' && isset($_POST['slottype']) && isset($_POST['inde
 	$getatt = function($aname) use(&$fit, $typeid) {
 		return \Osmium\Dogma\get_implant_attribute($fit, $typeid, $aname);
 	};
+} else if(($_POST['type'] === 'beacon')
+          && isset($_POST['typeid'])
+          && isset($fit['beacons'][$_POST['typeid']])) {
+	$typeid = $_POST['typeid'];
+	$typename = $fit['beacons'][$typeid]['typename'];
+	$loc = [ DOGMA_LOC_Area_Beacon, 'area_beacon_index' => $fit['beacons'][$typeid]['dogma_index'] ];
+	$getatt = function($aname) use(&$fit, $typeid) {
+		return \Osmium\Dogma\get_beacon_attribute($fit, $typeid, $aname);
+	};
 } else if($_POST['type'] === 'generic') {
 	$typeid = (int)$_POST['typeid'];
 	$typename = \Osmium\Fit\get_typename($typeid);
@@ -177,6 +186,7 @@ $aq = \Osmium\Db\query_params(
 
 $previouscatid = null;
 $attributenames = [];
+$tr = null;
 
 while($a = \Osmium\Db\fetch_assoc($aq)) {
 	$a['displayname'] = ucfirst($a['displayname']);
@@ -201,7 +211,7 @@ while($a = \Osmium\Db\fetch_assoc($aq)) {
 	$tr->appendCreate('td', $p->formatNumberWithUnit($val, $a['unitid'], $a['udisplayname']));
 }
 
-if($previouscatid !== null) {
+if($tr !== null) {
 	$ultabs->appendCreate('li')->appendCreate('a', [ 'href' => '#siattributes-'.$suffix, 'Attributes' ]);
 	$p->appendChild($section);
 }

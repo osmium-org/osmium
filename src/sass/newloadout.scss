@@ -305,6 +305,10 @@ section#implants > div {
 	}
 }
 
+section#area > div {
+	@include module-list;
+}
+
 section#remote {
 	@include readable;
 

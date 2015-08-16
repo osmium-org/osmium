@@ -273,6 +273,10 @@ function clf_parse_presets_1(&$fit, &$presets, &$errors) {
 		if(isset($preset['boosters']) && is_array($preset['boosters'])) {
 			clf_parse_implants_1($fit, $preset['boosters'], $errors);
 		}
+
+		if(isset($preset['X-beacons']) && is_array($preset['X-beacons'])) {
+			clf_parse_beacons_1($fit, $preset['X-beacons'], $errors);
+		}
 	}
 }
 
@@ -331,6 +335,15 @@ function clf_parse_implants_1(&$fit, &$implants, &$errors) {
 					toggle_implant_side_effect($fit, $i['typeid'], $effectid, true);
 				}
 			}
+		}
+	}
+}
+
+/** @internal */
+function clf_parse_beacons_1(&$fit, &$beacons, &$errors) {
+	foreach($beacons as $typeid) {
+		if(get_groupid($typeid) === GROUP_EffectBeacon) {
+			add_beacon($fit, $typeid);
 		}
 	}
 }
@@ -786,6 +799,12 @@ function export_to_common_loadout_format_1($fit, $opts = CLF_EXPORT_DEFAULT_OPTS
 			}
 		}
 
+		if($extraprops) {
+			foreach($preset['beacons'] as $b) {
+				$jsonpreset['X-beacons'][] = $b['typeid'];
+			}
+		}
+
 		if(!$minify) {
 			$slotsort = function($x, $y) { return $x['slot'] - $y['slot']; };
 			if(isset($jsonpreset['implants'])) usort($jsonpreset['implants'], $slotsort);
@@ -1201,6 +1220,7 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 	$clfcharges = array();
 	$clfimplants = array();
 	$clfsideeffects = array();
+	$clfbeacons = array();
 	$z = 0;
 
 	if(isset($clfp['X-mode']['typeid'])) {
@@ -1237,6 +1257,11 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 	foreach(isset($clfp['implants']) ? $clfp['implants'] : array() as $i) {
 		add_implant($fit, $i['typeid']);
 		$clfimplants[$i['typeid']] = true;
+	}
+
+	foreach(isset($clfp['X-beacons']) ? $clfp['X-beacons'] : array() as $typeid) {
+		add_beacon($fit, $typeid);
+		$clfbeacons[$typeid] = true;
 	}
 
 	foreach(isset($clfp['boosters']) ? $clfp['boosters'] : array() as $i) {
@@ -1285,6 +1310,12 @@ function synchronize_preset_from_clf_1(&$fit, $clfp, $cpid) {
 
 		if(isset($clfimplants[$typeid])) continue;
 		remove_implant($fit, $typeid);
+	}
+
+	foreach($fit['beacons'] as $typeid => $b) {
+		if(!isset($clfbeacons[$typeid])) {
+			remove_beacon($fit, $typeid);
+		}
 	}
 
 	if(!isset($clfp['X-mode']['typeid']) && isset($fit['mode']['typeid'])) {
