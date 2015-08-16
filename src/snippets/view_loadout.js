@@ -21,6 +21,7 @@
 /*<<< require snippet new_loadout-modules >>>*/
 /*<<< require snippet new_loadout-drones >>>*/
 /*<<< require snippet new_loadout-implants >>>*/
+/*<<< require snippet new_loadout-beacons >>>*/
 /*<<< require snippet new_loadout-remote >>>*/
 
 $(function() {
@@ -184,6 +185,7 @@ osmium_init = function() {
 	osmium_init_fattribs();
 	osmium_init_drones();
 	osmium_init_implants();
+	osmium_init_beacons();
 	osmium_init_remote();
 };
 
@@ -193,6 +195,7 @@ osmium_gen = function() {
 	osmium_gen_fattribs();
 	osmium_gen_drones();
 	osmium_gen_implants();
+	osmium_gen_beacons();
 	osmium_gen_remote();
 };
 

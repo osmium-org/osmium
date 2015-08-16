@@ -697,6 +697,26 @@ foreach(array('implants' => $implants, 'boosters' => $boosters) as $k => $imps) 
 	}
 }
 
+
+
+$asection = $section->appendCreate('section#area');
+if($fit['beacons'] !== []) {
+	$div = $asection->appendCreate('div');
+	$div->appendCreate('h3', 'Area effects');
+	$ul = $div->appendCreate('ul');
+	
+	foreach($fit['beacons'] as $b) {
+		$li = $ul->appendCreate('li');
+
+		$li->appendCreate('o-eve-img', [
+			'src' => '/Type/'.$b['typeid'].'_64.png',
+			'alt' => '',
+		]);
+
+		$li->appendCreate('span.name', $b['typename']);
+	}
+}
+
 $dsection = $section->appendCreate('section#description');
 $dsection->appendCreate('h3', 'Fitting description');
 

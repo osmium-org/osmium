@@ -23,6 +23,7 @@
 /*<<< require snippet new_loadout-modules >>>*/
 /*<<< require snippet new_loadout-drones >>>*/
 /*<<< require snippet new_loadout-implants >>>*/
+/*<<< require snippet new_loadout-beacons >>>*/
 /*<<< require snippet new_loadout-remote >>>*/
 
 $(function() {
@@ -130,6 +131,7 @@ osmium_gen = function() {
 	osmium_gen_fattribs();
 	osmium_gen_drones();
 	osmium_gen_implants();
+	osmium_gen_beacons();
 	osmium_gen_remote();
 };
 
@@ -144,6 +146,7 @@ osmium_init = function() {
 	osmium_init_fattribs();
 	osmium_init_drones();
 	osmium_init_implants();
+	osmium_init_beacons();
 	osmium_init_remote();
 };
 
@@ -313,8 +316,11 @@ osmium_add_to_clf = function(item) {
 		if(p['X-beacons'].indexOf(typeid) === -1) {
 			p['X-beacons'].push(typeid);
 
-			/* TODO */
-			/*osmium_gen_beacons();*/
+			osmium_gen_beacons();
+
+			if(osmium_user_initiated) {
+				$('a[href="#area"]').parent().click();
+			}
 		}
 	} else {
 		alert('Unknown category ' + cat);

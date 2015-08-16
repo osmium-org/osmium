@@ -375,6 +375,26 @@ function get_implant_attribute(&$fit, $typeid, $att) {
 }
 
 /**
+ * Get the final value of a beacon attribute (of the current preset).
+ */
+function get_beacon_attribute(&$fit, $typeid, $att) {
+	if(!isset($fit['beacons'][$typeid])) {
+		return false;
+	}
+
+	auto_init($fit);
+
+	$ret = dogma_get_area_beacon_attribute(
+		$fit['__dogma_context'],
+		$fit['beacons'][$typeid]['dogma_index'],
+		get_att($att),
+		$val
+	);
+
+	return $ret === DOGMA_OK ? $val : false;
+}
+
+/**
  * Get the attribute of an arbitrary location of a remote loadout.
  */
 function get_remote_attribute(&$fit, $key, $loc, $att) {

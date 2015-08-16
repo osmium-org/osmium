@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -337,6 +337,7 @@ $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#modules', 'Modules & Ch
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#drones', 'Drones' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#implants', 'Implants & Boosters' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#remote', 'Fleet & Projected' ]);
+$ul->appendCreate('li')->appendCreate('a', [ 'href' => '#area', 'Area' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#presets', 'Presets' ]);
 $ul->appendCreate('li')->appendCreate('a', [ 'href' => '#metadata', 'Metadata' ]);
 
@@ -379,6 +380,9 @@ $section->appendCreate('div.implants')->append([ [ 'h3', 'Implants' ], [ 'ul' ] 
 $section->appendCreate('div.boosters')->append([ [ 'h3', 'Boosters' ], [ 'ul' ] ]);
 
 $nlm->append($p->makeRemoteSection($fit));
+
+$section = $nlm->appendCreate('section#area');
+$section->appendCreate('div')->append([ [ 'h3', 'Area effects' ], [ 'ul' ] ]);
 
 $section = $nlm->appendCreate('section#presets');
 $tbody = $section
