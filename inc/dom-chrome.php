@@ -471,12 +471,14 @@ class Page extends RawPage {
 
 
 	/* For use in makeSearchBox(). */
-	const MSB_SEARCH = 1;
+	const MSB_SEARCH = 1; /* Loadouts and types */
 	const MSB_FILTER = 2;
+	const MSB_SEARCH_TYPES = 3; /* Search only types */
 
 	/* Make a search box. */
 	function makeSearchBox($mode = self::MSB_SEARCH) {
-		static $idx = 0;
+		static $idx = -1;
+		++$idx;
 
 		static $examples = [
 			"@ship Drake | Tengu @tags missile-boat",
@@ -490,14 +492,14 @@ class Page extends RawPage {
 
 		$f = $this->element('o-form', [ 'method' => 'get' ]);
 
-		if($mode === self::MSB_SEARCH) {
+		if($mode !== self::MSB_FILTER) {
 			$f->setAttribute('o-rel-action', '/search');
 		} else {
 			$f->setAttribute('action', '');
 		}
 
 		$sprite = $this->element('o-sprite', [
-			'x' => $mode === self::MSB_SEARCH ? 2 : 3,
+			'x' => $mode === self::MSB_FILTER ? 3 : 2,
 			'y' => 12,
 			'gridwidth' => 64,
 			'gridheight' => 64,
@@ -515,7 +517,9 @@ class Page extends RawPage {
 				'id' => 'search'.$idx,
 				'type' => 'search',
 				'name' => 'q',
-				'placeholder' => $examples[mt_rand(0, count($examples) - 1)]
+				'placeholder' => $mode !== self::MSB_SEARCH_TYPES ?
+				$examples[mt_rand(0, count($examples) - 1)]
+				: 'type name, group name or abbreviation…',
 			]],
 			[ 'input', [
 				'type' => 'submit',
@@ -523,6 +527,18 @@ class Page extends RawPage {
 			]],
 			[ 'br' ],
 		]);
+
+		if($mode === self::MSB_SEARCH_TYPES) {
+			$label->append('Search types');
+
+			$p->appendCreate('input', [
+				'type' => 'hidden',
+				'name' => 'm',
+				'value' => 't',
+			]);
+			
+			return $f;
+		}
 
 		if(isset($_GET['ad']) && $_GET['ad'] === '1') {
 			/* Advanced search mode */
@@ -607,7 +623,6 @@ class Page extends RawPage {
 			]);
 		}
 
-		++$idx;
 		return $f;
 	}
 

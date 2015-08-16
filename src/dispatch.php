@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -48,6 +48,7 @@ function get_rules($prefix) {
 			'%^/convert%D' => '/src/convert.php',
 			'%^/register$%D' => '/src/register.php',
 			'%^/settings$%D' => '/src/settings.php',
+			'%^/db%D' => '/src/dbbrowser/main.php',
 			'%^/resetpassword$%D' => '/src/reset_password.php',
 			'%^/notifications$%D' => '/src/view_notifications.php',
 			'%^/privileges$%D' => '/src/view_privileges.php',
@@ -95,9 +96,9 @@ function get_rules($prefix) {
 
 	case "db":
 		return [
-			'%^/db/type/(?<typeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/type.php',
-			'%^/db/group/(?<groupid>[1-9][0-9]*)$%D' => '/src/dbbrowser/group.php',
-			'%^/db/category/(?<categoryid>[1-9][0-9]*)$%D' => '/src/dbbrowser/category.php',
+			'%^/db/type/(?<typeid>0|[1-9][0-9]*)$%D' => '/src/dbbrowser/type.php',
+			'%^/db/group/(?<groupid>0|[1-9][0-9]*)$%D' => '/src/dbbrowser/group.php',
+			'%^/db/category/(?<categoryid>0|[1-9][0-9]*)$%D' => '/src/dbbrowser/category.php',
 			'%^/db/marketgroup/(?<mgid>[1-9][0-9]*)$%D' => '/src/dbbrowser/marketgroup.php',
 			'%^/db/attribute/(?<attributeid>[1-9][0-9]*)$%D' => '/src/dbbrowser/attribute.php',
 			'%^/db/effect/(?<effectid>[1-9][0-9]*)$%D' => '/src/dbbrowser/effect.php',

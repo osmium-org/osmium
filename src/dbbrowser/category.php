@@ -39,7 +39,7 @@ $c = \Osmium\Db\fetch_assoc(
 		'SELECT ic.categoryid, ic.categoryname
 		FROM eve.invcategories ic
 		WHERE categoryid = $1',
-		array($_GET['categoryid'])
+		array($categoryid)
 	)
 );
 

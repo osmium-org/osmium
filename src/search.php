@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,7 @@ namespace Osmium\Page\Search;
 
 require __DIR__.'/../inc/root.php';
 
-if(isset($_GET['q'])) {
+if(isset($_GET['q']) && $_GET['q'] !== '') {
 	$query = $_GET['q'];
 } else {
 	$query = false;
@@ -32,10 +32,15 @@ $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '.';
 $p->index = false;
 
+$typesonly = isset($_GET['m']) && $_GET['m'] === 't';
+$smode = $typesonly ? $p::MSB_SEARCH_TYPES : $p::MSB_SEARCH;
+
 if($query === false) {
-	$p->title = (isset($_GET['ad']) && $_GET['ad'] == 1) ? 'Advanced search' : 'Search lodaouts';
+	$p->title = (isset($_GET['ad']) && $_GET['ad'] == 1) ? 'Advanced search' : (
+		$typesonly ? 'Search types' : 'Search lodaouts'
+	);
 	$p->content->appendCreate('div', [ 'id' => 'search_full' ])->append(
-		$p->makeSearchBox()
+		$p->makeSearchBox($smode)
 	);
 } else {
 	if((!isset($_GET['p']) || $_GET['p'] === '1')
@@ -57,6 +62,10 @@ if($query === false) {
 		}
 
 		$ntypes = $typelist->childNodes->length;
+
+		if($ntypes === 0) {
+			$typelist->appendCreate('li.placeholder', 'No results.');
+		}
 	} else {
 		$ntypes = 0;
 	}
@@ -80,17 +89,17 @@ if($query === false) {
 
 
 	$p->content->appendCreate('div', [ 'id' => 'search_mini' ])->append(
-		$p->makeSearchBox()
+		$p->makeSearchBox($smode)
 	);
 
-	if($ntypes > 0) {
+	if($ntypes > 0 || $typesonly) {
 		$p->content->appendCreate('section', [ 'class' => 'sr' ])->append([
 			[ 'h2', 'Types' ],
 			$typelist,
 		]);
 	}
 
-	if($nloadouts > 0 || $ntypes === 0) {
+	if(!$typesonly && ($nloadouts > 0 || $ntypes === 0)) {
 		$p->content->appendCreate('section', [ 'class' => 'sr' ])
 			->append([[ 'h2', 'Loadouts' ]])
 			->append($loadoutsr);
