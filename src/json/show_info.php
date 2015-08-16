@@ -186,6 +186,7 @@ $aq = \Osmium\Db\query_params(
 
 $previouscatid = null;
 $attributenames = [];
+$tr = null;
 
 while($a = \Osmium\Db\fetch_assoc($aq)) {
 	$a['displayname'] = ucfirst($a['displayname']);
@@ -210,7 +211,7 @@ while($a = \Osmium\Db\fetch_assoc($aq)) {
 	$tr->appendCreate('td', $p->formatNumberWithUnit($val, $a['unitid'], $a['udisplayname']));
 }
 
-if($previouscatid !== null) {
+if($tr !== null) {
 	$ultabs->appendCreate('li')->appendCreate('a', [ 'href' => '#siattributes-'.$suffix, 'Attributes' ]);
 	$p->appendChild($section);
 }
