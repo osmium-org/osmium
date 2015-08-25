@@ -64,7 +64,7 @@ In order of descending priority:
 
 # Latest release {#latest}
 
-**Latest release is version 0.13.4 (Aegis 1.0).**
+**See the [releases](https://github.com/osmium-org/osmium/releases) on GitHub.**
 
 See the
 **[changelog](https://github.com/osmium-org/osmium/blob/staging/src/md/changelog.md)**
