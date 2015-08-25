@@ -1,6 +1,6 @@
 # Version 0.13
 
-# Version 0.13.5, released 2015-08-25
+## Version 0.13.5, released 2015-08-25
 
 * Add option to export loadouts as SVG. Add code template to embed it into another webpage.
 
