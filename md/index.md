@@ -6,7 +6,6 @@ Title: Osmium, the official meta homepage
 <a href='#goals'>Goals</a> |
 <a href='#latest'>Releases</a> |
 <a href='#links'>Links</a> |
-<a href='#support'>Support</a> |
 <a href='#contact'>Contact</a> |
 <a href='#screenshots'>Screenshots</a>
 </p>
@@ -94,37 +93,6 @@ You can use `git tag -v` to check the authenticity of version tags.
 * [Project repository on Github](https://github.com/osmium-org/osmium)
 * [Forum thread on the EVE forums](https://forums.eveonline.com/default.aspx?g=posts&m=1630542#post1630542)
 * [Chat on the `#osmium` IRC channel](http://irc.lc/coldfront/osmium/osmiumguest@@@)
-
-# Support {#support}
-
-The Osmium project is a non-profit project, and it will always be. All
-code (including dependencies) is released under a free (according to
-the [FSF](https://www.gnu.org/licenses/license-list.html) and the
-[OSI](http://opensource.org/licenses/category)) license, and as you
-can see there are no ads on it and the service is free to use. The
-project relies on user contributions to keep going.
-
-[The project needs money for the hosting, mainly. If you like Osmium
-and want to show your support, please help us pay for it! See the full
-list of expenses on this page.](expenses.xhtml)
-
-If you contribute money, you can also have your named listed on the
-[supporters page](supporters.xhtml) (real name, nickname or character name,
-you choose!), next to the amount you gave.
-
-* Bitcoins:
-  [**1F9BE5TVFzsPtkWoz8TdtZkKQGxBP1uQEn**](bitcoin:1F9BE5TVFzsPtkWoz8TdtZkKQGxBP1uQEn)
-  ([What are bitcoins?](http://www.weusecoins.com/))
-
-  Bitcoins are the fastest and the preffered way to contribute. If you
-  can, please use this method!
-
-  [![1F9BE5TVFzsPtkWoz8TdtZkKQGxBP1uQEn](files/img/osmium_address.png)](bitcoin:1F9BE5TVFzsPtkWoz8TdtZkKQGxBP1uQEn)
-
-  *What if I don't have bitcoins?* You can buy bitcoins with your
-  local currency on various exchanges.
-
-* [Paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=URMSZJWLKW8C8&lc=US&item_name=Osmium%20project&item_number=osmium&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted)
 
 # Contact {#contact}
 
