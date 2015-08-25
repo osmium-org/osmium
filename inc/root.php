@@ -79,13 +79,13 @@ if(!get_ini_setting('tolerate_errors') && PHP_SAPI !== "cli") {
 const STATICVER = 17;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 27;
+const CSS_STATICVER = 28;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 34;
+const JS_STATICVER = 35;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 44;
+const CLIENT_DATA_STATICVER = 45;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 

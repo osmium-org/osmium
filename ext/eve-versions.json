@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "galatea-10",
+        "name": "Galatea 1.0",
+        "build": 957210,
+        "reldate": 1440421200,
+        "dogmaver": 18
+    },
+	{
         "tag": "aegis-10",
         "name": "Aegis 1.0",
         "build": 910243,

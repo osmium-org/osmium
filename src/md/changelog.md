@@ -1,10 +1,10 @@
-# staging
+# Version 0.13
+
+# Version 0.13.5, released 2015-08-25
 
 * Add option to export loadouts as SVG. Add code template to embed it into another webpage.
 
 * Support adding effect beacons (like wormhole or incursion effects) to loadouts.
-
-# Version 0.13
 
 ## Version 0.13.4, released 2015-02-17
 
