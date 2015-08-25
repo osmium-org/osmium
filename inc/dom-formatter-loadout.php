@@ -724,7 +724,11 @@ trait LoadoutFormatter {
 	function makeFormattedAttributesNavigationSection(&$fit) {
 		$contents = [];
 
-		$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
+		/* XXX: code smell! */
+		$maxvelocity = round(min(
+			\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'),
+			\Osmium\Dogma\get_ship_attribute($fit, 'speedLimit')
+		));
 		$agility = \Osmium\Dogma\get_ship_attribute($fit, 'agility');
 		$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass') * $agility / 1000000;
 		$warpspeed = \Osmium\Dogma\get_ship_attribute($fit, 'warpSpeedMultiplier') * \Osmium\Dogma\get_ship_attribute($fit, 'baseWarpSpeed');
