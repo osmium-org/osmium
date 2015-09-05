@@ -422,7 +422,7 @@ if($loggedin && $loadoutid !== false) {
 		$title = 'Add loadout to your list of saved loadouts. Saved loadouts can be seen on your profile.';
 	}
 
-	$opts = [ 'redirect' => 'loadout' ];
+	$opts = [ 'redirect' => $_SERVER['REQUEST_URI'] ];
 
 	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
 		$opts['privatetoken'] = $fit['metadata']['privatetoken'];

@@ -211,14 +211,14 @@ if($myprofile) {
 		);
 
 		$ol = $pfavs->appendCreate('ol');
-		$qs = $p->formatQueryString([ 'redirect' => 'profile' ]);
+		$qs = $p->formatQueryString([ 'redirect' => $_SERVER['REQUEST_URI'] ]);
 
 		foreach($stale as $id) {
 			$ol->appendCreate('li', [
 				'Loadout ',
 				[ 'a', [ 'o-rel-href' => '/loadout/'.$id, '#'.$id ] ],
 				' — ',
-				[ 'o-state-altering-a', [ 'o-rel-href' => '/internal/favorite/'.$id.$qs, 'unfavorite' ] ]
+				[ 'o-state-altering-a', [ 'o-rel-href' => '/internal/favorite/'.$id.$qs, 'unsave' ] ]
 			]);
 		}
 	}
@@ -228,7 +228,7 @@ if($myprofile) {
 	} else {
 		$pfavs->appendCreate('p', [
 			'class' => 'placeholder',
-			'You have no favorite loadouts.',
+			'You have no saved loadouts.',
 		]);
 	}
 }
