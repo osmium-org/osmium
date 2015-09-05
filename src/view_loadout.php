@@ -404,6 +404,37 @@ $tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'Fork',
 ]]]));
 
+if($loggedin && $loadoutid !== false) {
+	list($fav) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(loadoutid) FROM osmium.accountfavorites
+		WHERE accountid = $1 AND loadoutid = $2',
+		array(
+			$a['accountid'],
+			$loadoutid
+		)
+	));
+
+	if($fav) {
+		$label = 'Unsave';
+		$title = 'Remove loadout from list of saved loadouts. Saved loadouts can be seen on your profile.';
+	} else {
+		$label = 'Save';
+		$title = 'Add loadout to your list of saved loadouts. Saved loadouts can be seen on your profile.';
+	}
+
+	$opts = [ 'redirect' => 'loadout' ];
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$opts['privatetoken'] = $fit['metadata']['privatetoken'];
+	}
+
+	$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
+		'o-rel-href' => '/internal/favorite/'.$loadoutid.$p->formatQueryString($opts),
+		'title' => $title,
+		$label,
+	]]]));
+}
+
 if($can_edit) {
 	$editparams = [
 		'revision' => $fit['metadata']['revision'],

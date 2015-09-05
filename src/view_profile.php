@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -154,7 +154,7 @@ if($myprofile || $ismoderator) {
 
 $content->appendCreate('ul', [
 	'class' => 'tabs',
-	$myprofile ? [ 'li', [[ 'a', [ 'href' => '#pfavorites', 'Favorites' ] ]] ] : '',
+	$myprofile ? [ 'li', [[ 'a', [ 'href' => '#psaved', 'Saved' ] ]] ] : '',
 	[ 'li', [[ 'a', [ 'href' => '#ploadouts', 'Recent' ] ]] ],
 	[ 'li', [[ 'a', [ 'href' => '#reputation', 'Reputation' ] ]] ],
 	[ 'li', [[ 'a', [ 'href' => '#votes', 'Votes' ] ]] ],
@@ -183,8 +183,8 @@ $ploadouts->append(\Osmium\Search\make_pretty_results(
 
 
 if($myprofile) {
-	$pfavs = $content->appendCreate('section', [ 'id' => 'pfavorites', 'class' => 'psection' ]);
-	$pfavs->appendCreate('h2', 'My favorite loadouts');
+	$pfavs = $content->appendCreate('section', [ 'id' => 'psaved', 'class' => 'psection' ]);
+	$pfavs->appendCreate('h2', 'Saved loadouts');
 
 	/* TODO pagination */
 	$favorites = array();
@@ -207,7 +207,7 @@ if($myprofile) {
 	if($stale !== []) {
 		$pfavs->appendCreate(
 			'p',
-			'These following loadouts you added as favorites are no longer accessible to you:'
+			'These following loadouts you saved are no longer accessible to you:'
 		);
 
 		$ol = $pfavs->appendCreate('ol');
