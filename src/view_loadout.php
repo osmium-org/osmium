@@ -799,9 +799,11 @@ if((isset($fit['fleet']) && $fit['fleet'] !== []) || (isset($fit['remote']) && $
 
 
 
-/* Prints paginated comments and the "add comment" form. */
-require __DIR__.'/../inc/view_loadout-commentview.php';
-$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('.$commentcount.')' ]);
+if($commentsallowed || $commentcount > 0) {
+	/* Prints paginated comments and the "add comment" form. */
+	require __DIR__.'/../inc/view_loadout-commentview.php';
+	$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('.$commentcount.')' ]);
+}
 
 /* Pretty prints permissions, show actions, moderator actions, export
  * and share links. */
