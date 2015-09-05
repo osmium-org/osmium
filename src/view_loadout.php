@@ -448,6 +448,21 @@ if($can_edit) {
 		'o-rel-href' => '/internal/edit/'.$loadoutid.$p->formatQueryString($editparams),
 		'Edit',
 	]]]));
+
+	unset($editparams['revision']);
+
+	$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a.dangerous.confirm', [
+		'o-rel-href' => '/internal/delete/'.$loadoutid.$p->formatQueryString($editparams),
+		'Delete',
+	]]]));
+}
+
+if($loadoutid !== false && \Osmium\Flag\is_fit_flaggable($fit)) {
+	$tabsul->prepend($p->element('li.external')->append([[ 'a.dangerous', [
+		'o-rel-href' => '/flag/'.$loadoutid,
+		'title' => 'Report this loadout: this loadout requires moderator attention',
+		'⚑',
+	]]]));
 }
 
 
