@@ -390,6 +390,73 @@ if($latestdbver['dogmaver'] - $intendeddbver['dogmaver'] > 1) {
 $tabsul = $div->appendCreate('ul.tabs');
 $tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#loadout', 'Loadout' ]);
 
+$abs = \Osmium\get_absolute_root().$canonicaluri;
+$title = 'View '.$fit['metadata']['name'].' on '.\Osmium\get_ini_setting('name');
+$shareli = $p->element('li.external.subtabs.nojs#share');
+$shareli->appendCreate('a', [
+	'href' => $abs,
+	'data-contents' => $abs,
+	'Share'
+]);
+$obj = $p->element('object', [
+	'type' => 'image/svg+xml',
+	'data' => $svguri = $abs.$exporturi('svg', 'svg'),
+]);
+$obj->appendCreate('a', [
+	'href' => $abs.$canonicaluri,
+	$title,
+]);
+$shareul = $shareli->appendCreate('ul');
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => $obj->renderNode(),
+	'SVG Embed'
+]);
+$shareul = $shareli->appendCreate('ul');
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => '['.$title.']('.$abs.$canonicaluri.')',
+	'Markdown'
+]);
+$shareul = $shareli->appendCreate('ul');
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => '[url='.$abs.']'.$title.'[/url]',
+	'BBCode'
+]);
+$anch = $p->element('a', [
+	'href' => $abs.$canonicaluri,
+	$title,
+]);
+$shareul = $shareli->appendCreate('ul');
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => $anch->renderNode(),
+	'HTML'
+]);
+$tabsul->prepend($shareli);
+
+$exportli = $p->element('li.external.subtabs.nojs#export');
+$exportli->appendCreate('a', [
+	'o-rel-href' => $exporturi('clf', 'json', [ 'preset_agnostic' => true ]),
+	'Export'
+]);
+$exportul = $exportli->appendCreate('ul');
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('evexml', 'xml'),
+	'XML'
+]);
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('eft', 'txt'),
+	'EFT'
+]);
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('dna', 'txt'),
+	'data-ccpdna' => $dna,
+	'DNA'
+]);
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('md', 'txt', [ 'preset_agnostic' => true ]),
+	'Markdown'
+]);
+$tabsul->prepend($exportli);
+
 if($maxrev !== false && $historyuri !== false && $maxrev > 1) {
 	$tabsul->prepend($p->element('li.external')->append([[ 'a', [
 		'o-rel-href' => $historyuri,

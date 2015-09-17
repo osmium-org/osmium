@@ -33,7 +33,7 @@ osmium_tabify = function(ul, selected) {
 	var i = 0;
 	var selected_pref = 0;
 
-	ul.find('li > a').each(function() {
+	ul.find('li > a[href]').each(function() {
 		var t = $(this);
 		var href = t.attr('href');
 		if(href.substring(0, 1) != '#') return;
@@ -146,7 +146,7 @@ osmium_tab_click = function(e) {
 };
 
 osmium_tabify_nohash = function(ul, selected) {
-	ul.find('li > a').on('click', function(e) {
+	ul.find('li > a[href]').on('click', function(e) {
 		var t = $(this);
 		var href = t.attr('href');
 		if(href.substring(0, 1) !== '#') return;
