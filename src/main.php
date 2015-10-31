@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -206,7 +206,7 @@ $maincont->append($p->fragment(get_cache_memory_or_gen('fotw', 603, function() u
 
 	$ol = $section->appendCreate('ol');
 	foreach($topkills['fotw'] as $f) {
-		list($shipid, ) = explode(':', $f['dna'], 2);
+		$shipid = (int)explode(';', explode(':', $f['dna'], 2)[0], 2)[0];
 
 		$shiptypename = \Osmium\Fit\get_typename($shipid);
 		$fname = $shiptypename.' fitting'.($f['tags'] ? ': '.implode(', ', $f['tags']) : '');
