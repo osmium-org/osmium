@@ -71,6 +71,8 @@ while(true) try {
 		}
 
 		if(!isset($k['killID']) || $k['killID'] <= 0) continue;
+
+		if(\Osmium\Fit\get_categoryid($k['victim']['shipTypeID']) !== \Osmium\Fit\CATEGORY_Ship) continue;
 	    		
 		$dna = $k['victim']['shipTypeID'];
 
