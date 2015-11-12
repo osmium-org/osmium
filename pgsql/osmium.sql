@@ -401,6 +401,17 @@ CREATE VIEW fittingaggtags AS
 
 
 --
+-- Name: fittingbeacons; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE fittingbeacons (
+    fittinghash character(40) NOT NULL,
+    presetid integer NOT NULL,
+    typeid integer NOT NULL
+);
+
+
+--
 -- Name: fittingchargepresets; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -651,6 +662,17 @@ ALTER SEQUENCE flags_flagid_seq OWNED BY flags.flagid;
 
 
 --
+-- Name: invbeacons; Type: VIEW; Schema: osmium; Owner: -
+--
+
+CREATE VIEW invbeacons AS
+ SELECT invtypes.typeid,
+    invtypes.typename
+   FROM eve.invtypes
+  WHERE (invtypes.groupid = 920);
+
+
+--
 -- Name: invboosters; Type: VIEW; Schema: osmium; Owner: -
 --
 
@@ -832,7 +854,13 @@ CREATE VIEW typessearchdata AS
             'booster'::text AS category,
             (invboosters.boosterness)::text AS subcategory,
             NULL::text AS other
-           FROM invboosters) t
+           FROM invboosters
+        UNION
+         SELECT invbeacons.typeid,
+            'beacon'::text AS category,
+            NULL::text AS subcategory,
+            NULL::text AS other
+           FROM invbeacons) t
      JOIN eve.invtypes it ON ((it.typeid = t.typeid)))
      JOIN eve.invgroups ig ON ((it.groupid = ig.groupid)))
      LEFT JOIN eve.invmarketgroups img ON ((img.marketgroupid = it.marketgroupid)))
@@ -1719,6 +1747,14 @@ ALTER TABLE ONLY eveaccounts
 
 ALTER TABLE ONLY eveapikeys
     ADD CONSTRAINT eveapikeys_pkey PRIMARY KEY (owneraccountid, keyid);
+
+
+--
+-- Name: fittingbeacons_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY fittingbeacons
+    ADD CONSTRAINT fittingbeacons_pkey PRIMARY KEY (fittinghash, presetid, typeid);
 
 
 --
@@ -2718,6 +2754,22 @@ ALTER TABLE ONLY cookietokens
 
 ALTER TABLE ONLY eveapikeys
     ADD CONSTRAINT eveapikeys_owneraccountid_fkey FOREIGN KEY (owneraccountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: fittingbeacons_fittinghash_presetid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingbeacons
+    ADD CONSTRAINT fittingbeacons_fittinghash_presetid_fkey FOREIGN KEY (fittinghash, presetid) REFERENCES fittingpresets(fittinghash, presetid);
+
+
+--
+-- Name: fittingbeacons_typeid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY fittingbeacons
+    ADD CONSTRAINT fittingbeacons_typeid_fkey FOREIGN KEY (typeid) REFERENCES eve.invtypes(typeid);
 
 
 --
