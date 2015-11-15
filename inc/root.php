@@ -131,7 +131,7 @@ if(!\Osmium\State\is_logged_in()) {
 	\Osmium\State\try_recover();
 }
 
-if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
+if((!get_ini_setting('anonymous_access') || get_ini_setting('whitelist')) && isset($_SERVER['REQUEST_URI'])) {
 	header('X-Robots-Tag: noindex, nofollow');
 
 	$prefix = rtrim(get_ini_setting('relative_path'), '/');
@@ -139,7 +139,7 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 
 	if(!\Osmium\State\is_logged_in()) {
 
-		if(!in_array($req, [
+		if(!get_ini_setting('anonymous_access') && !in_array($req, [
 			'/internal/auth/ccpoauthcallback',
 			'/login',
 			'/register',
