@@ -18,6 +18,8 @@ itself.
 
 * Run the `./bin/reverence_insert` script.
 
+* Optionally insert traits with `./bin/insert_traits`. Requires a Phobos dump.
+
 ~~~~
 # Import the schema
 psql osmium osmium_user < pgsql/eve.sql
