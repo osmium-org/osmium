@@ -411,12 +411,10 @@ $shareul->appendCreate('li')->appendCreate('a', [
 	'data-contents' => $obj->renderNode(),
 	'SVG Embed'
 ]);
-$shareul = $shareli->appendCreate('ul');
 $shareul->appendCreate('li')->appendCreate('a', [
 	'data-contents' => '['.$title.']('.$abs.$canonicaluri.')',
 	'Markdown'
 ]);
-$shareul = $shareli->appendCreate('ul');
 $shareul->appendCreate('li')->appendCreate('a', [
 	'data-contents' => '[url='.$abs.']'.$title.'[/url]',
 	'BBCode'
@@ -425,7 +423,6 @@ $anch = $p->element('a', [
 	'href' => $abs.$canonicaluri,
 	$title,
 ]);
-$shareul = $shareli->appendCreate('ul');
 $shareul->appendCreate('li')->appendCreate('a', [
 	'data-contents' => $anch->renderNode(),
 	'HTML'
