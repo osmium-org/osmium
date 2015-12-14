@@ -192,4 +192,8 @@ $(function() {
 			typelist.before(p);
 		})($(this));
 	});
+
+	$("div#dbb ul#type-elements > li").click(function() {
+		alert($(this).prop('title'));
+	});
 });

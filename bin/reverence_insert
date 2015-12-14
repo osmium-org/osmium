@@ -214,7 +214,7 @@ processRows("eve.invtypes", {
     "typename": (lambda row: cfg._localization.primary[row.typeNameID][0]),
     "mass": "mass",
     "volume": "volume",
-    "capacity": "capacity",
+    "capacity": (lambda row: row.capacity if hasattr(row, "capacity") else 0),
     "published": "published",
     "marketgroupid": (lambda row: row.marketGroupID if hasattr(row, "marketGroupID") and row.marketGroupID < 350000 else None),
     "description": (lambda row: cfg._localization.primary[row.descriptionID][0] if hasattr(row, "descriptionID") else ""),
@@ -256,49 +256,3 @@ processRows("eve.averagemarketprices", {
     "typeid": "typeID",
     "averageprice": "averagePrice",
 }, makeAveragePrices());
-
-
-
-trlabels = { v:k for k, v in cfg._localization.languageLabels.iteritems() }
-trrows = cfg._localization.primary
-
-def makeTranslatedMessages():
-    for k, v in trrows.iteritems():
-        yield {
-            "nameID": k,
-            "label": trlabels[k] if k in trlabels else None,
-            "message": v[0],
-        }
-
-processRows("eve.tramessages", {
-    "nameid": "nameID",
-    "label": "label",
-    "message": "message",
-}, makeTranslatedMessages())
-
-
-
-def makeTypeBonuses():
-    for id, row in cfg.fsdTypeOverrides.iteritems():
-        if not hasattr(row, "infoBubbleTypeBonuses"):
-            continue
-
-        for source, bonuses in row.infoBubbleTypeBonuses.iteritems():
-            for bonus in bonuses.itervalues():
-                yield {
-                    "typeID": id,
-                    "sourceTypeID": source if source >= 0 else None,
-                    "sourceOther": source if source < 0 else None,
-                    "bonus": bonus.bonus if hasattr(bonus, "bonus") else None,
-                    "nameID": bonus.nameID,
-                    "unitID": bonus.unitID if hasattr(bonus, "unitID") else None,
-                }
-
-processRows("eve.fsdtypebonuses", {
-    "typeid": "typeID",
-    "sourcetypeid": "sourceTypeID",
-    "sourceother": "sourceOther",
-    "bonus": "bonus",
-    "nameid": "nameID",
-    "unitid": "unitID",
-}, makeTypeBonuses())

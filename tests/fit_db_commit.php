@@ -220,7 +220,7 @@ class FitDbCommit extends PHPUnit_Framework_TestCase {
 		\Osmium\Db\query('DELETE FROM osmium.loadoutdogmaattribs WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.accountfavorites WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.loadouthistory WHERE loadoutid IN ('.$l.')');
-		\Osmium\Db\query('DELETE FROM osmium.loadouts WHERE loadoutid IN ('.$l.')');_
+		\Osmium\Db\query('DELETE FROM osmium.loadouts WHERE loadoutid IN ('.$l.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingfleetboosters WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingcharges WHERE fittinghash IN ('.$h.')');
 		\Osmium\Db\query('DELETE FROM osmium.fittingchargepresets WHERE fittinghash IN ('.$h.')');

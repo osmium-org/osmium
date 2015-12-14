@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -85,7 +85,7 @@ const CSS_STATICVER = 28;
 const JS_STATICVER = 35;
 
 /** Bump this when clientdata.json is updated */
-const CLIENT_DATA_STATICVER = 45;
+const CLIENT_DATA_STATICVER = 48;
 
 define(__NAMESPACE__.'\CACHE_DIRECTORY', ROOT.'/cache');
 
@@ -131,7 +131,7 @@ if(!\Osmium\State\is_logged_in()) {
 	\Osmium\State\try_recover();
 }
 
-if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
+if((!get_ini_setting('anonymous_access') || get_ini_setting('whitelist')) && isset($_SERVER['REQUEST_URI'])) {
 	header('X-Robots-Tag: noindex, nofollow');
 
 	$prefix = rtrim(get_ini_setting('relative_path'), '/');
@@ -139,7 +139,7 @@ if(!get_ini_setting('anonymous_access') && isset($_SERVER['REQUEST_URI'])) {
 
 	if(!\Osmium\State\is_logged_in()) {
 
-		if(!in_array($req, [
+		if(!get_ini_setting('anonymous_access') && !in_array($req, [
 			'/internal/auth/ccpoauthcallback',
 			'/login',
 			'/register',

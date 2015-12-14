@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -113,6 +113,7 @@ if($type['mgid0'] !== null) {
 
 $desc = $dbb->appendCreate('div', [ 'id' => 'desc' ]);
 $desc->appendCreate('o-eve-img', [ 'src' => '/Type/'.$type['typeid'].'_64.png', 'alt' => '' ]);
+$elements = $desc->appendCreate('ul#type-elements.tags');
 $desctext = \Osmium\Chrome\trim($type['description']);
 
 if($desctext !== '') {
@@ -137,8 +138,20 @@ if((int)$type['categoryid'] === 6) {
 	]);
 }
 
-
-
+$q = \Osmium\Db\query_params(
+	'SELECT ie.name, ie.description
+    FROM eve.infotypeelements ite
+    JOIN eve.infoelements ie ON ie.elementid = ite.elementid
+    WHERE ite.typeid = $1
+    ORDER BY ite.priority ASC',
+	[ $type['typeid'] ]
+);
+while($row = \Osmium\Db\fetch_row($q)) {
+	$elements->appendCreate('li', [
+		'title' => $row[1],
+		$row[0],
+	]);
+}
 
 $ultabs = $dbb->appendCreate('ul', [ 'class' => 'tabs' ]);
 

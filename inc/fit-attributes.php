@@ -263,12 +263,12 @@ function get_tank(&$fit, $ehp, $capdelta, $reload = false) {
 /** @internal */
 function get_remote_effects() {
 	static $remoteeffects = array(
-		'hull' => [ [ [ EFFECT_RemoteHullRepair, 'structureDamageAmount' ] ], 'HP' ],
-		'armor' => [ [ [ EFFECT_TargetArmorRepair, 'armorDamageAmount' ] ], 'HP' ],
-		'shield' => [ [ [ EFFECT_ShieldTransfer, 'shieldBonus' ] ], 'HP' ],
+		'hull' => [ [ [ EFFECT_RemoteHullRepairFalloff, 'structureDamageAmount' ] ], 'HP' ],
+		'armor' => [ [ [ EFFECT_RemoteArmorRepairFalloff, 'armorDamageAmount' ] ], 'HP' ],
+		'shield' => [ [ [ EFFECT_RemoteShieldTransferFalloff, 'shieldBonus' ] ], 'HP' ],
 		'capacitor' => [ [ [ EFFECT_EnergyTransfer, 'powerTransferAmount' ] ], 'GJ' ],
-		'neutralization' => [ [ [ EFFECT_EnergyDestabilizationNew, 'energyDestabilizationAmount' ] ], "GJ" ],
-		'leech' => [ [ [ EFFECT_Leech, 'powerTransferAmount' ] ], "GJ" ],
+		'neutralization' => [ [ [ EFFECT_EnergyNeutralizerFalloff, 'energyDestabilizationAmount' ] ], "GJ" ],
+		'leech' => [ [ [ EFFECT_EnergyNosferatuFalloff, 'powerTransferAmount' ] ], "GJ" ],
 	);
 
 	return $remoteeffects;

@@ -1,5 +1,19 @@
 [
 	{
+        "tag": "frostline-10",
+        "name": "Frostline 1.0",
+        "build": 988883,
+        "reldate": 1449594000,
+        "dogmaver": 19
+    },
+	{
+        "tag": "vanguard-10",
+        "name": "Vanguard 1.0",
+        "build": 967556,
+        "reldate": 1443531600,
+        "dogmaver": 18
+    },
+	{
         "tag": "galatea-10",
         "name": "Galatea 1.0",
         "build": 957210,
