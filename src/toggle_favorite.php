@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -26,7 +26,7 @@ const RELATIVE = '../..';
 
 $loadoutid = intval($_GET['loadoutid']);
 
-if(!isset($_POST) || $_POST === []) {
+if(!isset($_POST) || $_POST === [] || !isset($_GET['redirect'])) {
 	\Osmium\fatal(400);
 }
 
@@ -74,11 +74,5 @@ if($fav === false) {
 	);
 }
 
-if(isset($_GET['redirect'])) {
-	if($_GET['redirect'] === 'loadout') {
-		header('Location: '.RELATIVE.'/'.\Osmium\Fit\fetch_fit_uri($loadoutid)."#meta");
-	} else if($_GET['redirect'] === 'profile') {
-		header('Location: '.RELATIVE.'/profile/'.$accountid.'#pfavorites');
-	}
-}
+header('Location: '.$_GET['redirect']);
 die();

@@ -390,6 +390,70 @@ if($latestdbver['dogmaver'] - $intendeddbver['dogmaver'] > 1) {
 $tabsul = $div->appendCreate('ul.tabs');
 $tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#loadout', 'Loadout' ]);
 
+$abs = \Osmium\get_absolute_root().$canonicaluri;
+$title = 'View '.$fit['metadata']['name'].' on '.\Osmium\get_ini_setting('name');
+$shareli = $p->element('li.external.subtabs.nojs#share');
+$shareli->appendCreate('a', [
+	'href' => $abs,
+	'data-contents' => $abs,
+	'Share'
+]);
+$obj = $p->element('object', [
+	'type' => 'image/svg+xml',
+	'data' => $svguri = $abs.$exporturi('svg', 'svg'),
+]);
+$obj->appendCreate('a', [
+	'href' => $abs.$canonicaluri,
+	$title,
+]);
+$shareul = $shareli->appendCreate('ul');
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => $obj->renderNode(),
+	'SVG Embed'
+]);
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => '['.$title.']('.$abs.$canonicaluri.')',
+	'Markdown'
+]);
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => '[url='.$abs.']'.$title.'[/url]',
+	'BBCode'
+]);
+$anch = $p->element('a', [
+	'href' => $abs.$canonicaluri,
+	$title,
+]);
+$shareul->appendCreate('li')->appendCreate('a', [
+	'data-contents' => $anch->renderNode(),
+	'HTML'
+]);
+$tabsul->prepend($shareli);
+
+$exportli = $p->element('li.external.subtabs.nojs#export');
+$exportli->appendCreate('a', [
+	'o-rel-href' => $exporturi('clf', 'json', [ 'preset_agnostic' => true ]),
+	'Export'
+]);
+$exportul = $exportli->appendCreate('ul');
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('evexml', 'xml'),
+	'XML'
+]);
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('eft', 'txt'),
+	'EFT'
+]);
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('dna', 'txt'),
+	'data-ccpdna' => $dna,
+	'DNA'
+]);
+$exportul->appendCreate('li')->appendCreate('a', [
+	'o-rel-href' => $exporturi('md', 'txt', [ 'preset_agnostic' => true ]),
+	'Markdown'
+]);
+$tabsul->prepend($exportli);
+
 if($maxrev !== false && $historyuri !== false && $maxrev > 1) {
 	$tabsul->prepend($p->element('li.external')->append([[ 'a', [
 		'o-rel-href' => $historyuri,
@@ -404,6 +468,37 @@ $tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'Fork',
 ]]]));
 
+if($loggedin && $loadoutid !== false) {
+	list($fav) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT COUNT(loadoutid) FROM osmium.accountfavorites
+		WHERE accountid = $1 AND loadoutid = $2',
+		array(
+			$a['accountid'],
+			$loadoutid
+		)
+	));
+
+	if($fav) {
+		$label = 'Unsave';
+		$title = 'Remove loadout from list of saved loadouts. Saved loadouts can be seen on your profile.';
+	} else {
+		$label = 'Save';
+		$title = 'Add loadout to your list of saved loadouts. Saved loadouts can be seen on your profile.';
+	}
+
+	$opts = [ 'redirect' => $_SERVER['REQUEST_URI'] ];
+
+	if($fit['metadata']['visibility'] == \Osmium\Fit\VISIBILITY_PRIVATE) {
+		$opts['privatetoken'] = $fit['metadata']['privatetoken'];
+	}
+
+	$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
+		'o-rel-href' => '/internal/favorite/'.$loadoutid.$p->formatQueryString($opts),
+		'title' => $title,
+		$label,
+	]]]));
+}
+
 if($can_edit) {
 	$editparams = [
 		'revision' => $fit['metadata']['revision'],
@@ -416,6 +511,21 @@ if($can_edit) {
 	$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 		'o-rel-href' => '/internal/edit/'.$loadoutid.$p->formatQueryString($editparams),
 		'Edit',
+	]]]));
+
+	unset($editparams['revision']);
+
+	$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a.dangerous.confirm', [
+		'o-rel-href' => '/internal/delete/'.$loadoutid.$p->formatQueryString($editparams),
+		'Delete',
+	]]]));
+}
+
+if($loadoutid !== false && \Osmium\Flag\is_fit_flaggable($fit)) {
+	$tabsul->prepend($p->element('li.external')->append([[ 'a.dangerous', [
+		'o-rel-href' => '/flag/'.$loadoutid,
+		'title' => 'Report this loadout: this loadout requires moderator attention',
+		'⚑',
 	]]]));
 }
 
