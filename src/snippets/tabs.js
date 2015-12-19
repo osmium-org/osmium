@@ -115,6 +115,7 @@ osmium_tabify = function(ul, selected) {
 	}
 
 	$(window).scrollTop(0);
+	osmium_subtabify(ul);
 };
 
 osmium_tab_click = function(e) {
@@ -174,4 +175,50 @@ osmium_tabify_nohash = function(ul, selected) {
 	});
 
 	ul.children('li').eq(selected).children('a').click();
+	osmium_subtabify(ul);
+};
+
+osmium_subtabify = function(ul) {
+	ul.children('li.subtabs.nojs').each(function() {
+		var li = $(this);
+		li.removeClass('nojs');
+
+		li.on('show', function() {
+			if(li.hasClass('hover')) return;
+			li.parent().children('li.hover').trigger('hide');
+			li.addClass('hover');
+			li.children('ul').hide().slideDown(100);
+		});
+
+		li.on('hide', function() {
+			li.children('ul').slideUp(100, function() {
+				li.removeClass('hover');
+			});
+		});
+		
+		li.on('click', 'a', function() {
+			if(li.hasClass('hover')) {
+				li.trigger('hide');
+			} else {
+				li.trigger('show');
+			}
+			return false;
+		});
+
+		li.hover(function() {
+			li.data('mouseover', true);
+			setTimeout(function() {
+				if(li.data('mouseover')) {
+					li.trigger('show');
+				}
+			}, 250);
+		}, function() {
+			li.data('mouseover', false);
+			setTimeout(function() {
+				if(!li.data('mouseover')) {
+					li.trigger('hide');
+				}
+			}, 500);
+		});
+	});
 };

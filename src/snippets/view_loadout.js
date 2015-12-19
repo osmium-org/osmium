@@ -287,7 +287,7 @@ osmium_init_comment_replies = function() {
 };
 
 osmium_init_export = function() {
-	$("li#export a").click(function(e) {
+	$("li#export > ul > li > a").click(function(e) {
 		e.preventDefault();
 
 		var t = $(this);
@@ -319,7 +319,7 @@ osmium_init_export = function() {
 };
 
 osmium_init_share = function() {
-	$("li#share a[data-contents]").click(function(e) {
+	$("li#share > ul > li > a[data-contents]").click(function(e) {
 		e.preventDefault();
 		var t = $(this);
 		osmium_modal_rotextarea(t.text(), t.data('contents'));

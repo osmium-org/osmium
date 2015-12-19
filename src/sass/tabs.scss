@@ -3,48 +3,22 @@
 	margin: 0;
 	padding: 0.5em 1em 0 1em;
 	text-align: center;
-	overflow: hidden;
+
+	border-bottom: 1px solid rgba($tab-border-color, .7);
 
 	// XXX This is just a mess
 
 	&> li {
 		display: inline-block;
 		position: relative;
+		margin: 0 .15em;
 
 		&.active > a, &.active > form.saa > button {
 			padding-top: 0.4em;
 			color: $tab-active-text-color;
 			text-decoration: none;
 			text-shadow: $tab-active-text-color 0 0 1px;
-
-			border-bottom-color: transparent !important;
 			opacity: 1.0;
-		}
-
-		&:before, &:after {
-			content: " ";
-			display: inline-block;
-			vertical-align: bottom;
-			width: 0.15em;
-
-			border-bottom: 1px solid $tab-border-color;
-			opacity: .7;
-		}
-
-		&:first-child:not(.external):before, &.external + li:not(.external):before {
-			position: absolute;
-			z-index: 1;
-			width: 500em;
-			left: -500em;
-			bottom: 0;
-		}
-
-		&:last-child:after {
-			position: absolute;
-			z-index: 1;
-			width: 500em;
-			left: 0;
-			bottom: 0;
 		}
 
 		&> a, &> form.saa > button {
@@ -57,18 +31,66 @@
 			z-index: 2;
 
 			border: 1px solid $tab-border-color;
-			border-bottom-color: $tab-border-color !important;
+			border-bottom: 0;
 			opacity: .7;
 		}
 
 		&.external {
 			float: right;
 			margin-left: 0.3em;
+			margin-right: 0em;
 
 			bottom: -2px;
 
-			&> a, &> form.saa > button { color: $aside-text-color; border-bottom: 0 !important; }
+			&> a, &> form.saa > button { color: $aside-text-color; }
 			&:before, &:after { display: none; }
+		}
+
+		&.subtabs {
+			&> a:after {
+				content: "▼";
+			}
+			
+			&> ul {
+				display: none;
+				text-align: right;
+				
+				position: absolute;
+				top: calc(100%-1px);
+				right: 0;
+				z-index: 10;
+
+				background-color: rgba($contextmenu-bg-color, .9);
+				border: 1px solid $tab-border-color;
+				min-width: 10em;
+				max-width: 15em;
+				margin: 0;
+				padding: 0;
+				list-style-type: none;
+
+				&> li {
+					position: relative;
+					border-top: 1px dotted $tab-border-color;
+					
+					&> a {
+						display: block;						
+						color: $aside-text-color;
+						padding: .25em .5em;
+					}
+
+					&:first-child {
+						border-top: 0;
+					}
+
+					&:hover {
+						background-color: rgba($contextmenu-entry-active-bg-color, .9);
+					}
+				}
+			}
+
+			&.nojs:hover > ul, &.hover > ul {
+				display: block;
+			}
 		}
 	}
 }

@@ -19,7 +19,7 @@ div#nlattribs {
 
 div#nlsources, div#nlmain, div#nlattribs {
 	@include column;
-
+	
 	&> ul.tabs {
 		@include tabs;
 	}
