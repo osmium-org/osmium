@@ -618,7 +618,7 @@ function ccp_oauth_get_characterid($accesstoken, &$errorstr = null) {
 	return $json;
 }
 
-/* Get an accesstoken from a refresh token  */
+/* Get an access token from a refresh token.  */
 function ccp_oauth_get_token() {
 	$refreshtoken = \Osmium\State\get_state('refresh_token');
 	$fields = array('grant_type' => 'refresh_token','refresh_token' => $refreshtoken);
@@ -654,7 +654,7 @@ function ccp_oauth_get_fittings($characterid) {
 	return $json;
 }
  
-/*  Return fitting data from a CREST loadout */
+/*  Return fitting data from a CREST loadout. */
 function crest_to_fit($fitting_data) {
 $fit = \Osmium\Fit\try_parse_fit_from_shipdna($fitting_data['ship']['id_str'] . '::', $fitting_data['name'], $errors);
 if ($errors == NULL)  {
@@ -681,13 +681,13 @@ array_push($fit['metadata']['tags'], 'crest');
 return $fit;
 }
 
-/* Post a fitting to EVE. */
+/* Post a fitting to the EVE client. */
 function ccp_oauth_post_fitting($characterid, $fitting_data) {
 	$accesstoken = ccp_oauth_get_token();
 	$c = \Osmium\curl_init_branded(\Osmium\get_ini_setting('ccp_oauth_crest').'/characters/'. $characterid .'/fittings/');
-	$authHeader = "Authorization: Bearer $accesstoken";
+	$header = "Authorization: Bearer $accesstoken";
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($c, CURLOPT_HTTPHEADER, array($authHeader, 'Content-Type:application/json'));
+	curl_setopt($c, CURLOPT_HTTPHEADER, array($header, 'Content-Type:application/json'));
 	curl_setopt($c, CURLOPT_POSTFIELDS, $fitting_data);
 	$result = curl_exec($c);
 	$httpCode = curl_getinfo($c, CURLINFO_HTTP_CODE);

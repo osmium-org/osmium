@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Osmium\Test;
+namespace Osmium\CrestImport;
 
 require __DIR__.'/../inc/root.php';
 require __DIR__.'/../inc/import-common.php';

@@ -29,16 +29,22 @@ $p = new \Osmium\LoadoutCommon\Page();
 $ctx = new \Osmium\DOM\RenderContext();
 
 
-
 /* Check permissions, password, private tokens. Populates the $fit,
  * $revision, $lodaoutid, $forkuri, $historyuri, $exporturi and
  * $revision_overridden variables. Fills $ctx->relative. */
 require __DIR__.'/../inc/view_loadout-access.php';
 
-
-
 $loggedin = \Osmium\State\is_logged_in();
 $a = \Osmium\State\get_state('a', array());
+
+if(isset($_POST['crestexport'])) {
+
+\Osmium\State\ccp_oauth_redirect([
+		'action' => 'export',
+		'loadoutid' => $loadoutid,
+		'request_uri' => $_SERVER['REQUEST_URI'],
+	], 'characterFittingsRead characterFittingsWrite');
+}
 
 if($loadoutid !== false) {
 	$author = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
@@ -461,6 +467,13 @@ if($maxrev !== false && $historyuri !== false && $maxrev > 1) {
 		'History ('.($maxrev - 1).')',
 	]]]));
 }
+
+$tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
+	'o-rel-href' => $_SERVER['REQUEST_URI'],
+	'title' => 'Export fitting to your EVE client',
+	'name' => 'crestexport',
+	'CREST Export',
+]]]));
 
 $tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'o-rel-href' => $forkuri,
