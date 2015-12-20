@@ -468,12 +468,16 @@ if($maxrev !== false && $historyuri !== false && $maxrev > 1) {
 	]]]));
 }
 
+if(\Osmium\get_ini_setting('ccp_oauth_available') AND \Osmium\State\is_logged_in()) {
+
 $tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'o-rel-href' => $_SERVER['REQUEST_URI'],
 	'title' => 'Export fitting to your EVE client',
 	'name' => 'crestexport',
 	'CREST Export',
 ]]]));
+
+}
 
 $tabsul->prepend($p->element('li.external')->append([[ 'o-state-altering-a', [
 	'o-rel-href' => $forkuri,
