@@ -1134,11 +1134,9 @@ function export_to_eft($fit) {
 
 /**
  * Convert a loadout to be imported to CREST.
- * Requires a loadoutid
- * The returned data is in json format
+ * The returned data is the json_encoded data in the CREST format.
  */
-function export_to_crest($fit) {
-	$modules = get_modules($fit);
+function export_to_crest_format($fit) {
 	$crestroot = \Osmium\get_ini_setting('ccp_oauth_crest');
 	
 	$export = [

@@ -73,7 +73,7 @@ case 'export':
 		\Osmium\fatal(403, 'Please supply privatetoken and/or password');
 	}
 	
-	$fitting_data = \Osmium\Fit\export_to_crest($fit);
+	$fitting_data = \Osmium\Fit\export_to_crest_format($fit);
 	$result = \Osmium\State\ccp_oauth_post_fitting($cjson['CharacterID'],$fitting_data);
 
 	if($result['httpCode'] == '201') {
