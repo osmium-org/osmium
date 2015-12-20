@@ -59,7 +59,21 @@ case 'export':
 	\Osmium\State\put_state('access_token', $json['access_token']);
 	\Osmium\State\put_state('refresh_token', $json['refresh_token']);
 	$target = isset($payload['request_uri']) ? $payload['request_uri'] : '../../';
-	$fitting_data = \Osmium\Fit\export_to_crest($payload['loadoutid']);
+
+	if(!\Osmium\State\can_view_fit($payload['loadoutid'])) {
+		\Osmium\fatal(404);
+	}
+
+	$fit = \Osmium\Fit\get_fit($payload['loadoutid']);
+	if($fit === false) {
+		\Osmium\fatal(500, 'get_fit('.(int)$payload['loadoutid'].') returned false');
+	}
+
+	if(!\Osmium\State\can_access_fit($fit)) {
+		\Osmium\fatal(403, 'Please supply privatetoken and/or password');
+	}
+	
+	$fitting_data = \Osmium\Fit\export_to_crest($fit);
 	$result = \Osmium\State\ccp_oauth_post_fitting($cjson['CharacterID'],$fitting_data);
 
 	if($result['httpCode'] == '201') {
