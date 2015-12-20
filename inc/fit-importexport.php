@@ -1127,3 +1127,83 @@ function export_to_eft($fit) {
 
 	return $r;
 }
+
+
+
+
+
+/**
+ * Convert a loadout to be imported to CREST.
+ * Requires a loadoutid
+ * The returned data is in json format
+ */
+function export_to_crest($fit) {
+	$modules = get_modules($fit);
+	$crestroot = \Osmium\get_ini_setting('ccp_oauth_crest');
+	
+	$export = [
+		'name' => $fit['metadata']['name'],
+		'description' => $fit['metadata']['description'],
+		'ship' => [
+			'id' => (int)$fit['ship']['typeid'],
+			'name' => $fit['ship']['typename'],
+			'href' => $crestroot.'/types/'.$fit['ship']['typeid'].'/',
+		],
+		'items' => [],
+	];
+
+	$crestify = function(array $i, $flag, $quantity = 1) use($crestroot) {
+		return [
+			'flag' => $flag,
+			'quantity' => $quantity,
+			'type' => [
+				'id' => $i['typeid'],
+				'name' => $i['typename'],
+				'href' => $crestroot.'/types/'.$i['typeid'].'/'
+			],
+		];
+	};
+
+	/* XXX: use proper invflags? Or at least constants in fit-names? */
+	$startflags = [
+		'rig' => 92,
+		'subsystem' => 125,
+		'high' => 27,
+		'medium' => 19,
+		'low' => 11,
+	];
+
+	foreach(get_modules($fit) as $type => $mods) {
+		$flagoffset = 0;
+		
+		foreach($mods as $i) {
+			$export['items'][] = $crestify($i, $startflags[$type] + $flagoffset);
+			++$flagoffset;
+		}
+	}
+
+	foreach($fit['drones'] as $d) {
+		$export['items'][] = $crestify($d, 87, $d['quantityinbay'] + $d['quantityinspace']);
+	}
+
+	$qcharges = [];
+	foreach($fit['chargepresets'] as $cp) {
+		foreach($cp['charges'] as $charges) {
+			foreach($charges as $c) {
+				if(!isset($qcharges[$c['typeid']])) {
+					$qcharges[$c['typeid']] = [ 1, $c ];
+				} else {
+					++$qcharges[$c['typeid']][0];
+				}
+			}
+		}
+	}
+
+	foreach($qcharges as $typeid => $a) {
+		list($qty, $c) = $a;
+
+		$export['items'][] = $crestify($c, 5, $qty);
+	}
+
+	return json_encode($export);
+}

@@ -59,7 +59,7 @@ case 'export':
 	\Osmium\State\put_state('access_token', $json['access_token']);
 	\Osmium\State\put_state('refresh_token', $json['refresh_token']);
 	$target = isset($payload['request_uri']) ? $payload['request_uri'] : '../../';
-	$fitting_data = \Osmium\Fit\convert_crest_fitting($payload['loadoutid']);
+	$fitting_data = \Osmium\Fit\export_to_crest($payload['loadoutid']);
 	$result = \Osmium\State\ccp_oauth_post_fitting($cjson['CharacterID'],$fitting_data);
 
 	if($result['httpCode'] == '201') {
