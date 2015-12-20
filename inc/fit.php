@@ -1339,13 +1339,13 @@ function convert_crest_fitting($loadoutid) {
 		$i=0;
 		foreach ($modules['rig'] as $item) {
 			$flag = 92 + $i;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		$i++;
 		}}
 
@@ -1354,13 +1354,13 @@ function convert_crest_fitting($loadoutid) {
 		$i=0;
 		foreach ($modules['subsystem'] as $item) {
 			$flag = 125 + $i;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		$i++;
 		}}
 
@@ -1369,13 +1369,13 @@ function convert_crest_fitting($loadoutid) {
 		$i=0;
 		foreach ($modules['low'] as $item) {
 			$flag = 11 + $i;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		$i++;
 		}}
 
@@ -1384,13 +1384,13 @@ function convert_crest_fitting($loadoutid) {
 		$i=0;
 		foreach ($modules['medium'] as $item) {
 			$flag = 19 + $i;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		$i++;
 		}}
 
@@ -1399,13 +1399,13 @@ function convert_crest_fitting($loadoutid) {
 		$i=0;
 		foreach ($modules['high'] as $item) {
 			$flag = 27 + $i;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		$i++;
 		}}
 
@@ -1413,13 +1413,13 @@ function convert_crest_fitting($loadoutid) {
 		if (isset($fit['dronepresets'][0]['drones'])){
 		foreach ($fit['dronepresets'][0]['drones'] as $item) {
 			$flag = 87;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = $item['quantityinbay'] + $item['quantityinspace'];
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = $item['quantityinbay'] + $item['quantityinspace'];
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		}}
 
 		for ($i = 0; $i < count($fit['chargepresets']); $i++) {
@@ -1428,26 +1428,26 @@ function convert_crest_fitting($loadoutid) {
 		if (isset($fit['chargepresets'][$i]['charges']['high'])){
 		foreach (array_unique($fit['chargepresets'][$i]['charges']['high'], SORT_REGULAR) as $item) {
 			$flag = 5;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		}}
 
 		//charges medium slots (all presets)
 		if (isset($fit['chargepresets'][$i]['charges']['medium'])){
 		foreach (array_unique($fit['chargepresets'][$i]['charges']['medium'], SORT_REGULAR) as $item) {
 			$flag = 5;
-			$nextItem = [];	
-			$nextItem['flag'] = $flag;
-			$nextItem['quantity'] = 1;
-			$nextItem['type']['id'] = $item['typeid'];
-			$nextItem['type']['name'] = $item['typename'];
-			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
-			$export['items'][] = $nextItem;
+			$nextitem = [];	
+			$nextitem['flag'] = $flag;
+			$nextitem['quantity'] = 1;
+			$nextitem['type']['id'] = $item['typeid'];
+			$nextitem['type']['name'] = $item['typename'];
+			$nextitem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextitem;
 		}}
 
 		}
