@@ -1317,6 +1317,146 @@ function get_module_slottype($typeid) {
 
 
 
+/**
+ * Convert a loadout to be imported to CREST.
+ * Requires a loadoutid
+ * The returned data is in json format
+ */
+function convert_crest_fitting($loadoutid) {
+	$fit = get_fit($loadoutid);
+	$modules = get_modules($fit);
+
+		$export = [];
+		$export['name'] = $fit['metadata']['name'];
+		$export['description'] = $fit['metadata']['description'];
+		$export['ship']['id'] = (int)$fit['ship']['typeid'];
+		$export['ship']['name'] = $fit['ship']['typename'];
+		$export['ship']['href'] = "https://public-crest.eveonline.com/types/" . $fit['ship']['typeid'] . "/";
+		$export['items'] = [];
+
+		//rigs
+		if (isset($modules['rig'])){
+		$i=0;
+		foreach ($modules['rig'] as $item) {
+			$flag = 92 + $i;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		$i++;
+		}}
+
+		//subsystem slots
+		if (isset($modules['subsystem'])){
+		$i=0;
+		foreach ($modules['subsystem'] as $item) {
+			$flag = 125 + $i;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		$i++;
+		}}
+
+		//low slots
+		if (isset($modules['low'])){
+		$i=0;
+		foreach ($modules['low'] as $item) {
+			$flag = 11 + $i;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		$i++;
+		}}
+
+		//medium slots
+		if (isset($modules['medium'])){
+		$i=0;
+		foreach ($modules['medium'] as $item) {
+			$flag = 19 + $i;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		$i++;
+		}}
+
+		//high slots
+		if (isset($modules['high'])){
+		$i=0;
+		foreach ($modules['high'] as $item) {
+			$flag = 27 + $i;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		$i++;
+		}}
+
+		//Drones (default preset only)
+		if (isset($fit['dronepresets'][0]['drones'])){
+		foreach ($fit['dronepresets'][0]['drones'] as $item) {
+			$flag = 87;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = $item['quantityinbay'] + $item['quantityinspace'];
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		}}
+
+		for ($i = 0; $i < count($fit['chargepresets']); $i++) {
+
+		//charges high slots (all presets)
+		if (isset($fit['chargepresets'][$i]['charges']['high'])){
+		foreach (array_unique($fit['chargepresets'][$i]['charges']['high'], SORT_REGULAR) as $item) {
+			$flag = 5;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		}}
+
+		//charges medium slots (all presets)
+		if (isset($fit['chargepresets'][$i]['charges']['medium'])){
+		foreach (array_unique($fit['chargepresets'][$i]['charges']['medium'], SORT_REGULAR) as $item) {
+			$flag = 5;
+			$nextItem = [];	
+			$nextItem['flag'] = $flag;
+			$nextItem['quantity'] = 1;
+			$nextItem['type']['id'] = $item['typeid'];
+			$nextItem['type']['name'] = $item['typename'];
+			$nextItem['type']['href'] = "https://public-crest.eveonline.com/types/" . $item['typeid'] . "/";
+			$export['items'][] = $nextItem;
+		}}
+
+		}
+
+	return json_encode($export);
+}
+
+
+
 /* ----------------------------------------------------- */
 
 

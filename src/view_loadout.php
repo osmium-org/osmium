@@ -43,7 +43,7 @@ if(isset($_POST['crestexport'])) {
 		'action' => 'export',
 		'loadoutid' => $loadoutid,
 		'request_uri' => $_SERVER['REQUEST_URI'],
-	], 'characterFittingsRead characterFittingsWrite');
+	 ], 'characterFittingsWrite');
 }
 
 if($loadoutid !== false) {
