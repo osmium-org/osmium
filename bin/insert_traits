@@ -20,7 +20,7 @@
 require __DIR__.'/../inc/root.php';
 
 if($argc !== 2) {
-	fprintf(STDERR, "Usage: %s <path-to-infobubbles.json>\n");
+	fprintf(STDERR, "Usage: %s <path-to-infobubbles.json>\n", $argv[0]);
 	die(1);
 }
 
