@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "citadel-10",
+        "name": "Citadel 1.0",
+        "build": 1035137,
+        "reldate": 1461762000,
+        "dogmaver": 21
+    },
+	{
         "tag": "march2016-10",
         "name": "March 2016",
         "build": 1017895,

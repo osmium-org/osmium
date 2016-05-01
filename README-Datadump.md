@@ -18,13 +18,17 @@ itself.
 
 * Run the `./bin/reverence_insert` script.
 
-* Optionally insert traits with `./bin/insert_traits`. Requires a Phobos dump.
-
 ~~~~
 # Import the schema
 psql osmium osmium_user < pgsql/eve.sql
 
 ./bin/reverence_insert -c <path_to_cache> <path_to_eve>
+~~~~
+
+* Optionally insert traits with `./bin/insert_traits`. Requires a Phobos dump.
+
+~~~~
+./bin/insert_traits /path/to/phobos/infobubbles.json
 ~~~~
 
 That's it! You can now dump the eve schema for later use (for example
