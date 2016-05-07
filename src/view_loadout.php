@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -250,6 +250,17 @@ if(isset($fit['ship']['typeid'])) {
 	$h1->appendCreate('div.notype');
 	$h1->appendCreate('small.groupname');
 	$h1->appendCreate('strong', 'N/A');
+}
+
+$metaicons = $p->makeLoadoutMetaIcons([
+	'viewpermission' => $fit['metadata']['view_permission'],
+	'editpermission' => $fit['metadata']['edit_permission'],
+	'visibility' => $fit['metadata']['visibility'],
+	'passwordmode' => $fit['metadata']['password_mode'],
+], true);
+if($metaicons->childNodes->length > 0) {
+	$metaicons->addClass('metaicons');
+	$section->append($metaicons);
 }
 
 $intendeddbver = \Osmium\Fit\get_closest_version_by_build($fit['metadata']['evebuildnumber']);
@@ -914,12 +925,6 @@ if($commentsallowed || $commentcount > 0) {
 	require __DIR__.'/../inc/view_loadout-commentview.php';
 	$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#comments', 'Comments ('.$commentcount.')' ]);
 }
-
-/* Pretty prints permissions, show actions, moderator actions, export
- * and share links. */
-require __DIR__.'/../inc/view_loadout-meta.php';
-$tabsul->appendCreate('li')->appendCreate('a', [ 'href' => '#meta', 'Meta' ]);
-
 
 
 
