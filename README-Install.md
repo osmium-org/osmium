@@ -152,7 +152,9 @@ the `osmium_user` user, follow these steps:
 3. Import the Osmium tables/views:
 
     ~~~~
-    psql osmium osmium_user < pgsql/osmium.sql
+    psql osmium osmium_user
+    \i pgsql/osmium.sql
+    ALTER DATABASE osmium SET search_path TO osmium,eve;    
     ~~~~
 
 Initial Sphinx setup

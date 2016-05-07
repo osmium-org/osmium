@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -340,7 +340,14 @@ if($commentsallowed && $loggedin && $cancomment) {
 } else if($loggedin && $commentsallowed) {
 	$section->appendCreate('p.placeholder', 'You do not have the necessary privilege to comment this loadout.');
 } else if(!$loggedin && $commentsallowed) {
-	$section->appendCreate('p.placeholder', 'You have to login to comment on this loadout.');
+	$section->appendCreate('p.placeholder', [
+		'You have to ',
+		[ 'a', [
+			'o-rel-href' => '/login'.$p->formatQueryString([ 'r' => $_SERVER['REQUEST_URI'] ]),
+			'sign in',
+		]],
+		' to comment on this loadout.',
+	]);
 } else if(!$commentsallowed) {
 	$section->appendCreate('p.placeholder', 'This loadout cannot be commented on.');
 }

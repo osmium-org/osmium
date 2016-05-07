@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -465,7 +465,7 @@ if($a['apiverified'] === 't' && $a['mask'] & \Osmium\State\CHARACTER_SHEET_ACCES
 
 $section->appendCreate('h1', 'Add EVE character from API');
 
-$uri = 'https://support.eveonline.com/api/Key/CreatePredefined/'.(
+$uri = 'https://community.eveonline.com/support/api-key/CreatePredefined/?accessmask='.(
 	\Osmium\State\CHARACTER_SHEET_ACCESS_MASK
 	| \Osmium\State\CONTACT_LIST_ACCESS_MASK
 	| \Osmium\State\ACCOUNT_STATUS_ACCESS_MASK
@@ -583,7 +583,7 @@ $tbody->append($p->makeFormSubmitRow('Create character'));
 
 
 $section->appendCreate('h3', 'Manage characters');
-$csapi = 'https://support.eveonline.com/api/Key/CreatePredefined/8';
+$csapi = 'https://community.eveonline.com/support/api-key/CreatePredefined/?accessmask=8';
 $section->appendCreate('p', [
 	'You can use any API key for importing skills and attributes as long as it has CharacterSheet access.',
 	[ 'br' ],

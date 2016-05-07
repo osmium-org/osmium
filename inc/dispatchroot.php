@@ -126,6 +126,8 @@ function curl_init_branded() {
 	$over = ltrim(get_osmium_version(), 'v');
 	$contact = get_ini_setting('uacontact');
 	curl_setopt($c, CURLOPT_USERAGENT, "Osmium/{$over} (curl/{$cver['version']}; {$contact})");
+	/* For EVE API, EVE Oauth… */
+	curl_setopt($c, CURLOPT_CAINFO, \Osmium\ROOT.'/ext/ca/GeoTrustGlobalCA.pem');
 	return $c;
 }
 

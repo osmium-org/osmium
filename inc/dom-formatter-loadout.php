@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  * Copyright (C) 2013 Josiah Boning <jboning@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -100,70 +100,7 @@ trait LoadoutFormatter {
 			$lrow['name'],
 		]);
 
-		$sideicons = $this->createElement('div');
-
-		if($lrow['viewpermission'] > 0) {
-			switch((int)$lrow['viewpermission']) {
-
-			case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
-				$sp = [ 2, 13, 64, 64 ];
-				$aname=  ($lrow['apiverified'] === 't' && $lrow['allianceid'] > 0)
-					? $lrow['alliancename'] : 'My alliance';
-				$alt = '('.$aname.' only)';
-				break;
-
-			case \Osmium\Fit\VIEW_CORPORATION_ONLY:
-				$sp = [ 3, 13, 64, 64 ];
-				$cname=  $lrow['apiverified'] === 't' ? $lrow['corporationname'] : 'My corporation';
-				$alt = '('.$cname.' only)';
-				break;
-
-			case \Osmium\Fit\VIEW_OWNER_ONLY:
-				$sp = [ 1, 25, 32, 32 ];
-				$alt = '(only visible by me)';
-				break;
-
-			case \Osmium\Fit\VIEW_GOOD_STANDING:
-				$sp = [ 5, 28, 32, 32 ];
-				$alt = '(only visible by corporation, alliance, and contacts with good standing)';
-				break;
-
-			case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
-				$sp = [ 4, 28, 32, 32 ];
-				$alt = '(only visible by corporation, alliance, and contacts with excellent standing)';
-				break;
-
-			}
-
-			$sideicons->appendCreate('o-sprite', [
-				'x' => $sp[0], 'y' => $sp[1],
-				'gridwidth' => $sp[2], 'gridheight' => $sp[3],
-				'width' => 16, 'height' => 16,
-				'alt' => $alt,
-				'title' => $alt,
-			]);
-		}
-
-		if((int)$lrow['visibility'] === \Osmium\Fit\VISIBILITY_PRIVATE) {
-			$sideicons->appendCreate('o-sprite', [
-				'x' => 4, 'y' => 13,
-				'gridwidth' => 64, 'gridheight' => 64,
-				'width' => 16, 'height' => 16,
-				'alt' => '(hidden loadout)',
-				'title' => '(hidden loadout)',
-			]);
-		}
-
-		if((int)$lrow['passwordmode'] === \Osmium\Fit\PASSWORD_EVERYONE) {
-			$sideicons->appendCreate('o-sprite', [
-				'x' => 0, 'y' => 25,
-				'gridwidth' => 32, 'gridheight' => 32,
-				'width' => 16, 'height' => 16,
-				'alt' => '(requires password)',
-				'title' => '(requires password)',
-			]);
-		}
-
+		$sideicons = $this->makeLoadoutMetaIcons($lrow);
 		if($sideicons->childNodes->length > 0) {
 			$sideicons->setAttribute('class', 'sideicons');
 			$li->append($sideicons);
@@ -215,6 +152,118 @@ trait LoadoutFormatter {
 		\Osmium\State\put_cache_memory('Loadout_Grid_'.$loadoutid, $li->renderNode(), 600);
 		\Osmium\State\semaphore_release($sem);
 		return $li;
+	}
+
+	/** Generate a list of icons indicating loadout permissions, etc.
+	 *
+	 * @param $loadoutmeta array with the following keys:
+	 * viewpermission, editpermission, visibility, passwordmode
+	 */
+	function makeLoadoutMetaIcons(array $loadoutmeta, $showeditperm = false) {
+		$sideicons = $this->createElement('div');
+		
+		if($loadoutmeta['viewpermission'] > 0) {
+			switch((int)$loadoutmeta['viewpermission']) {
+
+			case \Osmium\Fit\VIEW_ALLIANCE_ONLY:
+				$sp = [ 2, 13, 64, 64 ];
+				$alt = '(alliance only access)';
+				break;
+
+			case \Osmium\Fit\VIEW_CORPORATION_ONLY:
+				$sp = [ 3, 13, 64, 64 ];
+				$alt = '(corporation only access)';
+				break;
+
+			case \Osmium\Fit\VIEW_OWNER_ONLY:
+				$sp = [ 1, 25, 32, 32 ];
+				$alt = '(only visible by me)';
+				break;
+
+			case \Osmium\Fit\VIEW_GOOD_STANDING:
+				$sp = [ 5, 28, 32, 32 ];
+				$alt = '(only visible by corporation, alliance, and contacts with good standing)';
+				break;
+
+			case \Osmium\Fit\VIEW_EXCELLENT_STANDING:
+				$sp = [ 4, 28, 32, 32 ];
+				$alt = '(only visible by corporation, alliance, and contacts with excellent standing)';
+				break;
+
+			}
+
+			$sideicons->appendCreate('o-sprite', [
+				'x' => $sp[0], 'y' => $sp[1],
+				'gridwidth' => $sp[2], 'gridheight' => $sp[3],
+				'width' => 16, 'height' => 16,
+				'alt' => $alt,
+				'title' => $alt,
+			]);
+		}
+		
+		if($showeditperm && $loadoutmeta['editpermission'] > 0) {
+			switch((int)$loadoutmeta['editpermission']) {
+
+			case \Osmium\Fit\EDIT_ALLIANCE_ONLY:
+				$sp = [ 2, 13, 64, 64 ];
+				$alt = '(alliance only edit)';
+				break;
+
+			case \Osmium\Fit\EDIT_CORPORATION_ONLY:
+				$sp = [ 3, 13, 64, 64 ];
+				$alt = '(corporation only edit)';
+				break;
+
+			case \Osmium\Fit\EDIT_OWNER_ONLY:
+				$sp = [ 1, 25, 32, 32 ];
+				$alt = '(only editable by me)';
+				break;
+
+			case \Osmium\Fit\EDIT_OWNER_AND_FITTING_MANAGER_ONLY:
+				$sp = [ 3, 13, 64, 64 ];
+				$alt = '(only editable by me and fitting managers in my corporation)';
+				break;
+
+			}
+
+			$sideicons->appendCreate('o-sprite', [
+				'x' => $sp[0], 'y' => $sp[1],
+				'gridwidth' => $sp[2], 'gridheight' => $sp[3],
+				'width' => 16, 'height' => 16,
+				'alt' => $alt,
+				'title' => $alt,
+			]);
+		}
+
+		if((int)$loadoutmeta['visibility'] === \Osmium\Fit\VISIBILITY_PRIVATE) {
+			$sideicons->appendCreate('o-sprite', [
+				'x' => 4, 'y' => 13,
+				'gridwidth' => 64, 'gridheight' => 64,
+				'width' => 16, 'height' => 16,
+				'alt' => '(hidden loadout, not subject to public moderation and yields no reputation)',
+				'title' => '(hidden loadout, not subject to public moderation and yields no reputation)',
+			]);
+		}
+
+		if((int)$loadoutmeta['passwordmode'] === \Osmium\Fit\PASSWORD_EVERYONE) {
+			$sideicons->appendCreate('o-sprite', [
+				'x' => 0, 'y' => 25,
+				'gridwidth' => 32, 'gridheight' => 32,
+				'width' => 16, 'height' => 16,
+				'alt' => '(requires password)',
+				'title' => '(requires password)',
+			]);
+		} else if((int)$loadoutmeta['passwordmode'] === \Osmium\Fit\PASSWORD_FOREIGN_ONLY) {
+			$sideicons->appendCreate('o-sprite', [
+				'x' => 0, 'y' => 25,
+				'gridwidth' => 32, 'gridheight' => 32,
+				'width' => 16, 'height' => 16,
+				'alt' => '(anyone can access using password)',
+				'title' => '(anyone can access using password)',
+			]);
+		}
+
+		return $sideicons;
 	}
 
 	/* Show loadouts in a grid layout. Returns an <ol> tag. */
@@ -724,7 +773,11 @@ trait LoadoutFormatter {
 	function makeFormattedAttributesNavigationSection(&$fit) {
 		$contents = [];
 
-		$maxvelocity = round(\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'));
+		/* XXX: code smell! */
+		$maxvelocity = round(min(
+			\Osmium\Dogma\get_ship_attribute($fit, 'maxVelocity'),
+			\Osmium\Dogma\get_ship_attribute($fit, 'speedLimit')
+		));
 		$agility = \Osmium\Dogma\get_ship_attribute($fit, 'agility');
 		$aligntime = -log(0.25) * \Osmium\Dogma\get_ship_attribute($fit, 'mass') * $agility / 1000000;
 		$warpspeed = \Osmium\Dogma\get_ship_attribute($fit, 'warpSpeedMultiplier') * \Osmium\Dogma\get_ship_attribute($fit, 'baseWarpSpeed');

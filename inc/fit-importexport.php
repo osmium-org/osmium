@@ -583,7 +583,7 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 
 	$v = $json['victim'];
 	if(!isset($v['shipType']['id']) || !is_int($v['shipType']['id'])
-	   || get_category_id($v['shipType']['id']) !== CATEGORY_Ship) {
+	   || get_categoryid($v['shipType']['id']) !== CATEGORY_Ship) {
 		$errors[] = 'Fatal: no ship or inadequate ship typeid';
 		return false;
 	}
@@ -622,7 +622,7 @@ function try_parse_fit_from_crest_killmail($jsonstring, &$errors) {
 			   || (125 <= $f && $f <= 132) /* Subsystem slots */
 			   || (87 <= $f && $f <= 89) /* Drone / booster / implant */
 			) {
-				switch(get_category($typeid)) {
+				switch(get_categoryid($typeid)) {
 
 				case CATEGORY_Module:
 				case CATEGORY_Subsystem:

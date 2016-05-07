@@ -68,6 +68,7 @@ $(function() {
 		osmium_init_votes();
 		osmium_init_comment_replies();
 		osmium_init_export();
+		osmium_init_share();
 	});
 
 	$('body').on('click', '.confirm', function() {
@@ -286,7 +287,7 @@ osmium_init_comment_replies = function() {
 };
 
 osmium_init_export = function() {
-	$("section#export a[type]").click(function(e) {
+	$("li#export > ul > li > a").click(function(e) {
 		e.preventDefault();
 
 		var t = $(this);
@@ -307,12 +308,20 @@ osmium_init_export = function() {
 		});
 	});
 
-	$("section#export, h1#vltitle").on('click', 'a[data-ccpdna]', function() {
+	$("body").on('click', 'a[data-ccpdna]', function() {
 		var t = $(this);
 		t.blur();
 
 		if(typeof CCPEVE === 'object' && 'showFitting' in CCPEVE && typeof CCPEVE.showFitting === 'function') {
 			CCPEVE.showFitting(t.data('ccpdna'));
 		}
+	});
+};
+
+osmium_init_share = function() {
+	$("li#share > ul > li > a[data-contents]").click(function(e) {
+		e.preventDefault();
+		var t = $(this);
+		osmium_modal_rotextarea(t.text(), t.data('contents'));
 	});
 };

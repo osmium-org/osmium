@@ -48,6 +48,13 @@ div#dbb {
 			font-decoration: underline;
 			color: $emphasis-text-color !important;
 		}
+
+		&> ul#type-elements > li {
+			margin: 0 .25em;
+			font-weight: bold;
+
+			cursor: help;
+		}
 	}
 
 	&> nav > ul {
