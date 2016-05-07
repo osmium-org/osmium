@@ -1,3 +1,8 @@
+staging
+=======
+
+The libdogmactl has been added into config.ini under [osmium].
+
 v0.13.5, released 2015-08-25
 ============================
 

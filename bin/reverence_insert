@@ -170,8 +170,8 @@ processRows("eve.dgmeffects", {
     "isoffensive": "isOffensive",
     "isassistance": "isAssistance",
     "iswarpsafe": "isWarpSafe",
-    "preexpression": (lambda row: cfg.dgmexpressions.Get(row.preExpression).expressionName),
-    "postexpression": (lambda row: cfg.dgmexpressions.Get(row.postExpression).expressionName),
+    "preexpression": "preExpression",
+    "postexpression": "postExpression",
 }, cfg.dgmeffects);
 
 

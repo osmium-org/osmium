@@ -72,8 +72,8 @@ CREATE TABLE dgmeffects (
     isoffensive boolean,
     isassistance boolean,
     iswarpsafe boolean,
-    preexpression text,
-    postexpression text
+    preexpressionid smallint,
+    postexpressionid smallint
 );
 
 
