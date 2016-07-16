@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2015, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -26,6 +26,26 @@ const MINIMUM_PASSWORD_ENTROPY = 40;
 
 /** Default expire duration for the token cookie. 14 days. */
 const COOKIE_AUTH_DURATION = 1209600;
+
+/** Start a session, but will avoid to create new sessions for
+ * nothing. */
+function maybe_start_session($force = false, $id = null) {	
+	/* Session already started */
+	if(isset($_SESSION)) return;
+		
+	/* No sessions for CLI */
+	if(!isset($_SERVER['REMOTE_ADDR'])) return;
+
+	/* Don't create an empty session */
+	if(!isset($_COOKIE['O']) && !$force) return;
+	
+	session_set_cookie_params(0, \Osmium\get_ini_setting('relative_path'), \Osmium\COOKIE_HOST, \Osmium\HTTPS, true);
+	session_save_path(\Osmium\CACHE_DIRECTORY);
+	session_name('O');
+	
+	if($id !== null) session_id($id);
+	session_start();
+}
 
 /**
  * Checks whether the current user is logged in.
@@ -80,11 +100,8 @@ function do_post_login($accountid, $use_cookie = null) {
 		$a['notwhitelisted'] = true;
 	}
 
-	session_id('Account-'.$a['accountid'].'-'.get_nonce());
-	session_start();
-	$_SESSION['__osmium_state'] = array(
-		'a' => $a
-	);
+	maybe_start_session(true, 'Account-'.$a['accountid'].'-'.get_nonce());
+	put_state('a', $a);
 
 	if($use_cookie) {
 		$token = get_nonce().'.'.(string)microtime(true);
