@@ -94,21 +94,8 @@ define(__NAMESPACE__.'\COOKIE_HOST',
 );
 
 if(!is_dir(CACHE_DIRECTORY) || !is_writeable(CACHE_DIRECTORY)) {
-	fatal(500, "Cache directory <code>'".CACHE_DIRECTORY."'</code> is not writeable.");
+	fatal(500, "Cache directory '".CACHE_DIRECTORY."' is not writeable.");
 }
-
-session_set_cookie_params(0, get_ini_setting('relative_path'), COOKIE_HOST, HTTPS, true);
-session_save_path(CACHE_DIRECTORY);
-session_name('O');
-
-if(isset($_SERVER['REMOTE_ADDR']) && isset($_COOKIE['O'])) {
-	/* Only resume session if necessary, don't create a new
-	 * session for nothing! */
-	session_start();
-}
-
-libxml_use_internal_errors(true);
-libxml_disable_entity_loader(true);
 
 require ROOT.'/inc/dom.php';
 require ROOT.'/inc/chrome.php';

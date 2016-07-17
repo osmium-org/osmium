@@ -316,9 +316,7 @@ function invalidate_cache_memory_fb($key, $prefix = '') {
  * @param $default the value to return if $key is not found.
  */
 function get_state($key, $default = null) {
-	if(!isset($_SESSION) && isset($_SERVER['REMOTE_ADDR'])) {
-		session_start();
-	}
+	maybe_start_session();
 
 	if(isset($_SESSION['__osmium_state'][$key])) {
 		return $_SESSION['__osmium_state'][$key];
@@ -330,9 +328,7 @@ function get_state($key, $default = null) {
  * not persist between sessions.
  */
 function put_state($key, $value) {
-	if(!isset($_SESSION) && isset($_SERVER['REMOTE_ADDR'])) {
-		session_start();
-	}
+	maybe_start_session(true);
 
 	if(!isset($_SESSION['__osmium_state']) || !is_array($_SESSION['__osmium_state'])) {
 		$_SESSION['__osmium_state'] = array();
