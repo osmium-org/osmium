@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -84,10 +84,13 @@ while($row = \Osmium\Db\fetch_row($q)) {
 );
 \Osmium\Log\add_log_entry(\Osmium\Log\LOG_TYPE_DELETE_LOADOUT, null, $loadoutid);
 
-\Osmium\Db\query('COMMIT;');
+$r = \Osmium\Db\query('COMMIT;');
 
-/* FIXME check that transaction was successful before unindexing this */
+if($r === false) {
+	\Osmium\fatal(500, 'Loadout delete transaction failed');
+}
+
 \Osmium\Search\unindex($loadoutid);
 
-header('Location: ../../');
+header('Location: ../../profile/'.\Osmium\State\get_state('a')['accountid'].'#ploadouts');
 die();

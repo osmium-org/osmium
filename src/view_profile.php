@@ -52,7 +52,7 @@ $header = $content->appendCreate('header');
 $header->appendCreate('h2', [
 	$nameelement,
 	[ 'small', [
-		$myprofile ? ' (this is you!) ' : '',
+		$myprofile ? ' (this is me!) ' : '',
 		$row['ismoderator'] === 't' ? ' '.\Osmium\Flag\MODERATOR_SYMBOL.'Moderator ' : '',
 	]]
 ]);
