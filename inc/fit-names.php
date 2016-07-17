@@ -176,7 +176,7 @@ function get_volume($typeid) {
 
 function get_average_market_price($typeid) {
 	return get_cached_thing_generic(
-		'SELECT averageprice FROM eve.averagemarketprices WHERE typeid = $1',
+		'SELECT averageprice FROM osmium.averagemarketprices WHERE typeid = $1',
 		[ $typeid ]
 	);
 }

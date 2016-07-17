@@ -69,7 +69,7 @@ $header = $dbb->appendCreate('header');
 $h2 = $header->appendCreate('h2', $type['typename']);
 
 $ap = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-	'SELECT averageprice FROM eve.averagemarketprices
+	'SELECT averageprice FROM osmium.averagemarketprices
     WHERE typeid = $1',
 	[ $type['typeid'] ]
 ));

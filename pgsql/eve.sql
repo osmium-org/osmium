@@ -2,16 +2,12 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.3.5
--- Dumped by pg_dump version 9.5.2
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
-SET row_security = off;
 
 --
 -- Name: eve; Type: SCHEMA; Schema: -; Owner: -
@@ -27,17 +23,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: averagemarketprices; Type: TABLE; Schema: eve; Owner: -
---
-
-CREATE TABLE averagemarketprices (
-    typeid integer NOT NULL,
-    averageprice numeric(15,2) NOT NULL
-);
-
-
---
--- Name: dgmattribs; Type: TABLE; Schema: eve; Owner: -
+-- Name: dgmattribs; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE dgmattribs (
@@ -54,7 +40,7 @@ CREATE TABLE dgmattribs (
 
 
 --
--- Name: dgmeffects; Type: TABLE; Schema: eve; Owner: -
+-- Name: dgmeffects; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE dgmeffects (
@@ -72,13 +58,13 @@ CREATE TABLE dgmeffects (
     isoffensive boolean,
     isassistance boolean,
     iswarpsafe boolean,
-    preexpressionid smallint,
-    postexpressionid smallint
+    preexpression text,
+    postexpression text
 );
 
 
 --
--- Name: dgmtypeattribs; Type: TABLE; Schema: eve; Owner: -
+-- Name: dgmtypeattribs; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE dgmtypeattribs (
@@ -89,7 +75,7 @@ CREATE TABLE dgmtypeattribs (
 
 
 --
--- Name: dgmtypeeffects; Type: TABLE; Schema: eve; Owner: -
+-- Name: dgmtypeeffects; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE dgmtypeeffects (
@@ -99,7 +85,7 @@ CREATE TABLE dgmtypeeffects (
 
 
 --
--- Name: dgmunits; Type: TABLE; Schema: eve; Owner: -
+-- Name: dgmunits; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE dgmunits (
@@ -109,7 +95,7 @@ CREATE TABLE dgmunits (
 
 
 --
--- Name: infoelements; Type: TABLE; Schema: eve; Owner: -
+-- Name: infoelements; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE infoelements (
@@ -120,7 +106,7 @@ CREATE TABLE infoelements (
 
 
 --
--- Name: infotypebonuses; Type: TABLE; Schema: eve; Owner: -
+-- Name: infotypebonuses; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE infotypebonuses (
@@ -137,7 +123,7 @@ CREATE TABLE infotypebonuses (
 
 
 --
--- Name: infotypeelements; Type: TABLE; Schema: eve; Owner: -
+-- Name: infotypeelements; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE infotypeelements (
@@ -148,7 +134,7 @@ CREATE TABLE infotypeelements (
 
 
 --
--- Name: invcategories; Type: TABLE; Schema: eve; Owner: -
+-- Name: invcategories; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE invcategories (
@@ -158,7 +144,7 @@ CREATE TABLE invcategories (
 
 
 --
--- Name: invgroups; Type: TABLE; Schema: eve; Owner: -
+-- Name: invgroups; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE invgroups (
@@ -170,7 +156,7 @@ CREATE TABLE invgroups (
 
 
 --
--- Name: invmarketgroups; Type: TABLE; Schema: eve; Owner: -
+-- Name: invmarketgroups; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE invmarketgroups (
@@ -181,7 +167,7 @@ CREATE TABLE invmarketgroups (
 
 
 --
--- Name: invmetagroups; Type: TABLE; Schema: eve; Owner: -
+-- Name: invmetagroups; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE invmetagroups (
@@ -191,7 +177,7 @@ CREATE TABLE invmetagroups (
 
 
 --
--- Name: invmetatypes; Type: TABLE; Schema: eve; Owner: -
+-- Name: invmetatypes; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE invmetatypes (
@@ -202,7 +188,7 @@ CREATE TABLE invmetatypes (
 
 
 --
--- Name: invtypes; Type: TABLE; Schema: eve; Owner: -
+-- Name: invtypes; Type: TABLE; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE TABLE invtypes (
@@ -219,15 +205,7 @@ CREATE TABLE invtypes (
 
 
 --
--- Name: averagemarketprices_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY averagemarketprices
-    ADD CONSTRAINT averagemarketprices_pkey PRIMARY KEY (typeid);
-
-
---
--- Name: dgmattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: dgmattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY dgmattribs
@@ -235,7 +213,7 @@ ALTER TABLE ONLY dgmattribs
 
 
 --
--- Name: dgmeffects_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: dgmeffects_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY dgmeffects
@@ -243,7 +221,7 @@ ALTER TABLE ONLY dgmeffects
 
 
 --
--- Name: dgmtypeattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: dgmtypeattribs_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY dgmtypeattribs
@@ -251,7 +229,7 @@ ALTER TABLE ONLY dgmtypeattribs
 
 
 --
--- Name: dgmtypeeffects_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: dgmtypeeffects_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY dgmtypeeffects
@@ -259,7 +237,7 @@ ALTER TABLE ONLY dgmtypeeffects
 
 
 --
--- Name: dgmunits_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: dgmunits_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY dgmunits
@@ -267,7 +245,7 @@ ALTER TABLE ONLY dgmunits
 
 
 --
--- Name: infoelements_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: infoelements_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY infoelements
@@ -275,7 +253,7 @@ ALTER TABLE ONLY infoelements
 
 
 --
--- Name: infotypeelements_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: infotypeelements_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY infotypeelements
@@ -283,7 +261,7 @@ ALTER TABLE ONLY infotypeelements
 
 
 --
--- Name: invcategories_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: invcategories_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY invcategories
@@ -291,7 +269,7 @@ ALTER TABLE ONLY invcategories
 
 
 --
--- Name: invgroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: invgroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY invgroups
@@ -299,7 +277,7 @@ ALTER TABLE ONLY invgroups
 
 
 --
--- Name: invmarketgroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: invmarketgroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY invmarketgroups
@@ -307,7 +285,7 @@ ALTER TABLE ONLY invmarketgroups
 
 
 --
--- Name: invmetagroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: invmetagroups_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY invmetagroups
@@ -315,7 +293,7 @@ ALTER TABLE ONLY invmetagroups
 
 
 --
--- Name: invmetatypes_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: invmetatypes_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY invmetatypes
@@ -323,7 +301,7 @@ ALTER TABLE ONLY invmetatypes
 
 
 --
--- Name: invtypes_pkey; Type: CONSTRAINT; Schema: eve; Owner: -
+-- Name: invtypes_pkey; Type: CONSTRAINT; Schema: eve; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY invtypes
@@ -331,144 +309,136 @@ ALTER TABLE ONLY invtypes
 
 
 --
--- Name: dgmattribs_attributename_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmattribs_attributename_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmattribs_attributename_idx ON dgmattribs USING btree (attributename);
 
 
 --
--- Name: dgmattribs_unitid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmattribs_unitid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmattribs_unitid_idx ON dgmattribs USING btree (unitid);
 
 
 --
--- Name: dgmeffects_effectcategory_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmeffects_effectcategory_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmeffects_effectcategory_idx ON dgmeffects USING btree (effectcategory);
 
 
 --
--- Name: dgmeffects_effectname_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmeffects_effectname_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmeffects_effectname_idx ON dgmeffects USING btree (effectname);
 
 
 --
--- Name: dgmtypeattribs_attributeid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmtypeattribs_attributeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmtypeattribs_attributeid_idx ON dgmtypeattribs USING btree (attributeid);
 
 
 --
--- Name: dgmtypeattribs_typeid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmtypeattribs_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmtypeattribs_typeid_idx ON dgmtypeattribs USING btree (typeid);
 
 
 --
--- Name: dgmtypeeffects_effectid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmtypeeffects_effectid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmtypeeffects_effectid_idx ON dgmtypeeffects USING btree (effectid);
 
 
 --
--- Name: dgmtypeeffects_typeid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: dgmtypeeffects_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX dgmtypeeffects_typeid_idx ON dgmtypeeffects USING btree (typeid);
 
 
 --
--- Name: infotypebonuses_typeid_sourcetypeid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: infotypebonuses_typeid_sourcetypeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX infotypebonuses_typeid_sourcetypeid_idx ON infotypebonuses USING btree (typeid, sourcetypeid);
 
 
 --
--- Name: invgroups_categoryid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invgroups_categoryid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invgroups_categoryid_idx ON invgroups USING btree (categoryid);
 
 
 --
--- Name: invgroups_published_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invgroups_published_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invgroups_published_idx ON invgroups USING btree (published);
 
 
 --
--- Name: invmarketgroups_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invmarketgroups_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invmarketgroups_parentgroupid_idx ON invmarketgroups USING btree (parentgroupid);
 
 
 --
--- Name: invmetatypes_metagroupid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invmetatypes_metagroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invmetatypes_metagroupid_idx ON invmetatypes USING btree (metagroupid);
 
 
 --
--- Name: invmetatypes_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invmetatypes_parentgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invmetatypes_parentgroupid_idx ON invmetatypes USING btree (parenttypeid);
 
 
 --
--- Name: invmetatypes_typeid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invmetatypes_typeid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invmetatypes_typeid_idx ON invmetatypes USING btree (typeid);
 
 
 --
--- Name: invtypes_groupid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invtypes_groupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invtypes_groupid_idx ON invtypes USING btree (groupid);
 
 
 --
--- Name: invtypes_marketgroupid_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invtypes_marketgroupid_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invtypes_marketgroupid_idx ON invtypes USING btree (marketgroupid);
 
 
 --
--- Name: invtypes_published_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invtypes_published_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invtypes_published_idx ON invtypes USING btree (published);
 
 
 --
--- Name: invtypes_typename_idx; Type: INDEX; Schema: eve; Owner: -
+-- Name: invtypes_typename_idx; Type: INDEX; Schema: eve; Owner: -; Tablespace: 
 --
 
 CREATE INDEX invtypes_typename_idx ON invtypes USING btree (typename);
-
-
---
--- Name: averagemarketprices_typeid_fkey; Type: FK CONSTRAINT; Schema: eve; Owner: -
---
-
-ALTER TABLE ONLY averagemarketprices
-    ADD CONSTRAINT averagemarketprices_typeid_fkey FOREIGN KEY (typeid) REFERENCES invtypes(typeid);
 
 
 --

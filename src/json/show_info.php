@@ -121,7 +121,7 @@ $hdr = $p->element('header', [ 'class' => 'hsi' ]);
 $h2 = $hdr->appendCreate('h2');
 
 $ap = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-	'SELECT averageprice FROM eve.averagemarketprices
+	'SELECT averageprice FROM osmium.averagemarketprices
         WHERE typeid = $1',
 	[ $typeid ]
 ));

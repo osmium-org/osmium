@@ -213,6 +213,16 @@ CREATE VIEW allowedloadoutsbyaccount AS
 
 
 --
+-- Name: averagemarketprices; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
+--
+
+CREATE TABLE averagemarketprices (
+    typeid integer NOT NULL,
+    averageprice numeric(15,2) NOT NULL
+);
+
+
+--
 -- Name: clients; Type: TABLE; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -1678,6 +1688,14 @@ ALTER TABLE ONLY accountsettings
 
 
 --
+-- Name: averagemarketprices_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY averagemarketprices
+    ADD CONSTRAINT averagemarketprices_pkey PRIMARY KEY (typeid);
+
+
+--
 -- Name: clients_pkey; Type: CONSTRAINT; Schema: osmium; Owner: -; Tablespace: 
 --
 
@@ -2722,6 +2740,14 @@ ALTER TABLE ONLY accounts
 
 ALTER TABLE ONLY accountsettings
     ADD CONSTRAINT accountsettings_accountid_fkey FOREIGN KEY (accountid) REFERENCES accounts(accountid);
+
+
+--
+-- Name: averagemarketprices_typeid_fkey; Type: FK CONSTRAINT; Schema: osmium; Owner: -
+--
+
+ALTER TABLE ONLY averagemarketprices
+    ADD CONSTRAINT averagemarketprices_typeid_fkey FOREIGN KEY (typeid) REFERENCES eve.invtypes(typeid);
 
 
 --

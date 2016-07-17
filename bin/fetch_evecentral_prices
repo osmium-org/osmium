@@ -78,14 +78,14 @@ while(true) {
 
 	foreach($doc->marketstat->type as $type) {
 		\Osmium\Db\query_params(
-			'DELETE FROM eve.averagemarketprices WHERE typeid = $1',
+			'DELETE FROM osmium.averagemarketprices WHERE typeid = $1',
 			[ (int)$type['id'] ]
 		);
 		
 		if((int)$type->sell->volume < MIN_VOLUME) continue;
 		
 		\Osmium\Db\query_params(
-			'INSERT INTO eve.averagemarketprices (typeid, averageprice) VALUES ($1, $2)',
+			'INSERT INTO osmium.averagemarketprices (typeid, averageprice) VALUES ($1, $2)',
 			[ (int)$type['id'], (float)$type->sell->median ]
 		);
 	}
