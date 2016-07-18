@@ -35,7 +35,7 @@ passthru(
 	'find '.escapeshellarg($cache)
 	.' -maxdepth 1 -type f'
 	.' -name "sess_*"'
-	.' -atime +2'
-	.' -o -size 0'
+	.' \( -atime +2'
+	.' -o -size 0 \)'
 	.' -delete'
 );
