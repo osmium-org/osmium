@@ -179,7 +179,7 @@ $aq = \Osmium\Db\query_params(
 	'SELECT attributeid, attributename, displayname, value,
 	unitid, udisplayname, categoryid, published
 	FROM osmium.siattributes
-	WHERE typeid = $1 AND displayname <> \'\' AND published = true
+	WHERE typeid = $1 AND displayname <> \'\' AND published = true AND attributeid > 0
 	ORDER BY categoryid ASC, attributeid ASC',
 	array($typeid)
 );

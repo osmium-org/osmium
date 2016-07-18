@@ -22,6 +22,7 @@ require __DIR__.'/../../inc/root.php';
 
 const MAX_TYPES = 50;
 const MAX_ATTRIBS = 50;
+const RPN_BEFORE = -1000;
 
 $p = new \Osmium\DOM\Page();
 
@@ -167,7 +168,7 @@ if($_GET['groupid'] > 0) {
 $tlist = implode(',', $typeids);
 $attributes = [];
 $noprune = []; /* These attributes will not be autoremoved if there is no difference in the selected types */
-$metaattribidx = -1;
+$metaattribidx = RPN_BEFORE;
 $hasauto = false;
 
 foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
@@ -209,7 +210,7 @@ foreach(explode(',', $_GET['attributes'], MAX_ATTRIBS) as $attrib) {
 		continue;
 	}
 
-	\Osmium\fatal(400, 'Unrecognized attribute <code>'.\Osmium\Chrome\escape($attrib).'</code>');
+	\Osmium\fatal(400, 'Unrecognized attribute '.\Osmium\Chrome\escape($attrib));
 }
 
 
@@ -221,7 +222,7 @@ if(isset($nav)) $dbb->append($nav);
 
 
 $typeattribsq = \Osmium\Db\query(
-	'SELECT typeid, attributeid, value, unitid, udisplayname
+	'SELECT typeid, attributeid, value, unitid, udisplayname, displayname
 	FROM osmium.siattributes
 	WHERE typeid IN ('.$tlist.')
 	AND published = true
@@ -229,6 +230,7 @@ $typeattribsq = \Osmium\Db\query(
 );
 
 $data = [];
+$adata = [];
 $alist = [ -1 ];
 $highisgood = [];
 
@@ -237,6 +239,9 @@ while($ta = \Osmium\Db\fetch_assoc($typeattribsq)) {
 		$ta['value'],
 		$p->formatNumberWithUnit($ta['value'], $ta['unitid'], $ta['udisplayname']),
 	];
+	if($ta['attributeid'] < 0) {
+		$adata[$ta['attributeid']] = $ta['displayname'];
+	}
 	$alist[$ta['attributeid']] = true;
 }
 
@@ -261,7 +266,7 @@ if($hasauto) {
 	}
 
 	foreach($attributevals as $attributeid => $vals) {
-		if($attributeid < 0) continue;
+		if($attributeid <= RPN_BEFORE) continue;
 
 		if(count($vals) < 2 && !isset($noprune[$attributeid])) {
 			unset($attributes[$attributeid]);
@@ -291,7 +296,7 @@ $tr->appendCreate('td');
 
 foreach($attributes as $aid => $a) {
 	$hig = isset($highisgood[$aid]) ? (int)$highisgood[$aid] : -1;
-	$dn = ($aid >= 0) ? ucfirst(\Osmium\Fit\get_attributedisplayname($aid)) : $a[1];
+	$dn = ($aid > 0) ? ucfirst(\Osmium\Fit\get_attributedisplayname($aid)) : ($aid > RPN_BEFORE ? $adata[$aid] : $a[1]);
 
 	$tr->appendCreate('th', [
 		'data-aid' => $aid,
@@ -366,7 +371,7 @@ foreach($typeids as $i => $typeid) {
 	]);
 
 	foreach($attributes as $attributeid => $a) {
-		if($attributeid >= 0) {
+		if($attributeid > RPN_BEFORE) {
 			$val = isset($data[$typeid][$attributeid]) ?
 				$data[$typeid][$attributeid] : [ null, $p->element('small', 'N/A') ];
 		} else if(isset($a[0]) && $a[0] === 'rpn') {

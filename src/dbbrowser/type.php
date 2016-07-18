@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014, 2015, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -187,9 +187,9 @@ while($a = \Osmium\Db\fetch_assoc($aq)) {
 
 	$tr = $tbody->appendCreate('tr');
 
-	$tr->appendCreate('td', [
+	$tr->appendCreate('td', $a['attributeid'] > 0 ? [
 		[ 'a', [ 'o-rel-href' => '/db/attribute/'.$a['attributeid'], $a['attributeid'] ] ]
-	]);
+	] : $a['attributeid']);
 
 	$tr->appendCreate('td', [
 		'class' => 'small', 'colspan' => ($hasdname ? 1 : 2),
