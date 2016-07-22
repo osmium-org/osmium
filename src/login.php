@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2013, 2014, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -40,7 +40,11 @@ if(isset($_POST['ccpssoinit'])) {
 		'remember' => isset($_POST['remember']) && $_POST['remember'] === 'on',
 	]);
 } else if(isset($_POST['unpp']) && isset($_POST['account_name']) && isset($_POST['password'])) {
-	if(($errormsg = \Osmium\State\try_login()) === true) {
+	if(($errormsg = \Osmium\State\try_login(
+		$_POST['account_name'],
+		$_POST['password'],
+		$_POST['remember'] === 'on'
+	)) === true) {
 		header('Location: '.$redirect, true, 303);
 		die();
 	}
@@ -98,7 +102,7 @@ $tbody->appendCreate('tr')->append([
 			'name' => 'remember',
 			'tabindex' => '4',
 		] ],
-		[ 'label', [ 'for' => 'checkbox', 'Remember me ', [ 'small', '(uses a cookie)' ] ] ],
+		[ 'label', [ 'for' => 'remember', 'Remember me ', [ 'small', '(uses a cookie)' ] ] ],
 	]],
 ]);
 

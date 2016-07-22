@@ -82,7 +82,9 @@ function do_post_login($accountid, $use_cookie = null) {
 		[ $accountid ]
 	));
 
-	register_eve_api_key_account_auth($a['accountid'], $a['keyid'], $a['verificationcode']);
+	if($a['keyid'] !== null && $a['verificationcode'] !== null) {
+		register_eve_api_key_account_auth($a['accountid'], $a['keyid'], $a['verificationcode']);
+	}
 
 	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT accountid, nickname,
@@ -104,25 +106,26 @@ function do_post_login($accountid, $use_cookie = null) {
 	put_state('a', $a);
 
 	if($use_cookie) {
-		$token = get_nonce().'.'.(string)microtime(true);
-		$account_id = $a['accountid'];
-		$attributes = get_client_attributes();
-		$expiration_date = time() + COOKIE_AUTH_DURATION;
+		/* At least 256 bits of entropy */
+		$token = get_nonce().get_nonce().get_nonce().get_nonce().'.'.(string)microtime(true);
 
 		\Osmium\Db\query_params(
 			'INSERT INTO osmium.cookietokens
 			(token, accountid, clientattributes, expirationdate)
 			VALUES ($1, $2, $3, $4)',
 			array(
-				$token,
-				$account_id,
-				$attributes,
-				$expiration_date
+				/* This token is a strong password equivalent, simple hash is enough. */
+				hash_token($token),
+				$a['accountid'],
+				get_client_attributes(),
+				$edate = time() + COOKIE_AUTH_DURATION
 			)
 		);
 
+		\Osmium\Db\query('commit;');
+		
 		setcookie(
-			'T', $token, $expiration_date,
+			'T', $a['accountid'].':'.$token, $edate,
 			\Osmium\get_ini_setting('relative_path'),
 			\Osmium\COOKIE_HOST,
 			\Osmium\HTTPS,
@@ -288,18 +291,20 @@ function password_needs_rehash($hash) {
 	return $h !== $f;
 }
 
+/*
+ * Hash a machine-generated token.
+ */ 
+function hash_token($tok) {
+	return sha1($tok);
+}
+
 /**
- * Try to login the current visitor, taking credentials directly from
- * $_POST.
+ * Try to login the current visitor.
  *
  * @returns true on success, or a string containing an error message.
  */
-function try_login() {
+function try_login($account_name, $pw, $remember = null) {
 	if(is_logged_in()) return;
-
-	$account_name = $_POST['account_name'];
-	$pw = $_POST['password'];
-	$remember = isset($_POST['remember']) && $_POST['remember'] === 'on';
 
 	$a = \Osmium\Db\fetch_assoc(\Osmium\Db\query_params(
 		'SELECT accountid, passwordhash FROM osmium.accountcredentials WHERE username = $1',
@@ -330,27 +335,24 @@ function try_login() {
 function try_recover() {
 	if(is_logged_in()) return;
 	$token = isset($_COOKIE['T']) ? $_COOKIE['T'] : (isset($_COOKIE['Osmium']) ? $_COOKIE['Osmium'] : '');
-	if($token === '') return;
+	if($token === '' || strpos($token, ':') === false) return;
 
-	list($has_token) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT COUNT(token) FROM osmium.cookietokens
-		WHERE token = $1 AND expirationdate >= $2',
-		array($token, time())
+	list($aid, $tok) = explode(':', $token, 2);
+	$tok = hash_token($tok);
+
+	$attribs = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
+		'SELECT clientattributes FROM osmium.cookietokens
+		WHERE accountid = $1 AND token = $2 AND expirationdate >= $3',
+		[ $aid, $tok, time() ]
 	));
 
-	if($has_token < 1) return;
+	if($attribs === false) return;
 
-	list($account_id, $client_attributes) = \Osmium\Db\fetch_row(\Osmium\Db\query_params(
-		'SELECT accountid, clientattributes
-		FROM osmium.cookietokens WHERE token = $1',
-		array($token)
-	));
+	\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', [ $tok ]);
 
-	if(check_client_attributes($client_attributes)) {
-		do_post_login($account_id, true);
+	if(check_client_attributes($attribs[0])) {
+		do_post_login($aid, true);
 	}
-
-	\Osmium\Db\query_params('DELETE FROM osmium.cookietokens WHERE token = $1', array($token));
 }
 
 /**

@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -164,6 +164,7 @@ function register_eve_api_key($accountid, $keyid, $vcode, &$etype = null, &$estr
 
 /* Try to API-verify an account with a given API key. */
 function register_eve_api_key_account_auth($accountid, $keyid, $vcode, &$etype = null, &$estr = null) {
+	/* XXX: needs to be properly ROLLBACK'd */
 	\Osmium\Db\query('BEGIN');
 
 	$keyinfo = register_eve_api_key($accountid, $keyid, $vcode, $etype, $estr);
