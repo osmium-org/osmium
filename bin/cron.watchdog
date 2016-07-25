@@ -1,0 +1,75 @@
+#!/usr/bin/env php
+<?php
+
+/* cron.watchdog - make sure everything is okay, prevent owners if
+ * not.
+ * 
+ * Change this to whatever is applicable to *your* Osmium setup. */
+
+require __DIR__.'/../inc/cron.php';
+
+function alert($message) {
+	$last = \Osmium\State\get_cache($ckey = 'watchdog_notif_'.sha1($message));
+	
+	if($last !== null && $last >= time() - 7200) {
+		/* Dont send more than one notification per 2 hours */
+		return;
+	}
+
+	$c = \Osmium\curl_init_branded(sprintf(
+		'https://smsapi.free-mobile.fr/sendmsg?user=%s&pass=%s&msg=%s',
+		\Osmium\get_ini_setting('free_mobile_user'),
+		\Osmium\get_ini_setting('free_moblie_pass'),
+		urlencode(sprintf("%sZ: %s", gmdate('Y-m-d H:i:s'), $message))
+	));
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+	curl_setopt($c, CURLOPT_TIMEOUT, 10);
+
+
+	$ret = curl_exec($c);
+	$code = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
+
+	if($ret !== false && $code === 200) {
+		\Osmium\State\put_cache($ckey, time(), 7200);
+		return;
+	}
+
+	fprintf(STDERR, "alert(): could not send alert \"%s\", curl_exec() returned %d with HTTP %d\n", $message, $ret, $code);
+}
+
+\Osmium\Cron\run(
+	'cron.watchdog',
+	function() {
+		$c = \Osmium\curl_init_branded('https://o.smium.org/');
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+		$ret = curl_exec($c);
+		$code = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
+		$time = (int)curl_getinfo($c, CURLINFO_TOTAL_TIME);
+		
+		if($ret === false || ($code !== 200 && $code !== 503)) {
+			alert(sprintf(
+				"Osmium is b0rked, curl_exec() returned %d with HTTP %d",
+				$ret,
+				$code
+			));
+			return;
+		}
+
+		if($time >= 5) {
+			alert("Osmium is slow, main page took more than 5 seconds");
+		}
+
+		$mem = explode("\n", trim(shell_exec('free | grep '.escapeshellarg('Mem\|Swap'))));
+		foreach($mem as &$line) $line = preg_split("%\s+%", $line, -1, PREG_SPLIT_NO_EMPTY);
+
+		$total = (int)$mem[0][1] + (int)$mem[1][1];
+		$used = (int)$mem[0][2] + (int)$mem[1][2];
+
+		if($used / $total > .8) {
+			alert("Osmium is running out of memory, >80% RAM+swap used");
+		}
+	},
+	10,
+	60
+);
