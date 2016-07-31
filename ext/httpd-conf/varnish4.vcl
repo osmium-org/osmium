@@ -1,9 +1,7 @@
 /* This is a suggestion for a Varnish configuration if you decide to *
  * use Varnish. Tweak to your liking. */
 
-/* For varnish 4 users: uncomment the line below and replace all
- * "remove" commands by "unset". */
-/*vcl 4.0;*/
+vcl 4.0;
 
 backend default {
 		.host = "127.0.0.1";
@@ -15,11 +13,10 @@ sub vcl_recv {
 	 * varnish is the proxy that communicates with the actual
 	 * clients. You will have to change the trust_x_forwarded_for
 	 * setting in config.ini to On. */
-	remove req.http.X-Forwarded-For;
+	unset req.http.X-Forwarded-For;
 	set req.http.X-Forwarded-For = client.ip;
 
-	/* For varnish 4 users, replace req.request by req.method. */
-	if(req.request != "GET" && req.request != "HEAD") {
+	if(req.method != "GET" && req.method != "HEAD") {
 		return(pass);
 	}
 
@@ -32,7 +29,7 @@ sub vcl_recv {
 		} elsif(req.http.Accept-Encoding ~ "deflate") {
 			set req.http.Accept-Encoding = "deflate";
 		} else {
-			remove req.http.Accept-Encoding;
+			unset req.http.Accept-Encoding;
 		}
 	}
 
@@ -44,27 +41,30 @@ sub vcl_recv {
 
 	/* Canonicalize the hostname - optional. */
 	if(req.http.host == "smium.org" || req.http.host == "www.smium.org") {
-		error 750 "Moved Temporarily";
+		return(synth(750, "Moved Temporarily"));
 	}
 
-	/* For varnish 4 users, use return(hash); instead. */
-	return(lookup);
+	/* Do not cache any request with a cookie. */
+	if(req.http.Cookie) {
+		return(pass);
+	}
+
+	return(hash);
 }
 
-/* For varnish 4 users, this is called vcl_backend_response, not vcl_fetch. */
-sub vcl_fetch {
+sub vcl_backend_response {
 	unset beresp.http.Server;
 
 	return(deliver);
 }
 
 sub vcl_deliver {
-	/* Remove useless headers to save a tiny bit of bandwidth and to
+	/* Unset useless headers to save a tiny bit of bandwidth and to
 	 * not leak server info. */
-	remove resp.http.Age;
-	remove resp.http.Via;
-	remove resp.http.X-Powered-By;
-	remove resp.http.X-Varnish;
+	unset resp.http.Age;
+	unset resp.http.Via;
+	unset resp.http.X-Powered-By;
+	unset resp.http.X-Varnish;
 
 	/* Fail-safe to prevent indexing duplicate content if you have
 	 * multiple domain names. */
@@ -75,11 +75,11 @@ sub vcl_deliver {
 	return(deliver);
 }
 
-sub vcl_error {
+sub vcl_synth {
 	/* Hostname canonicalization - see above. */
-	if(obj.status == 750) {
-		set obj.http.Location = "http://o.smium.org/";
-		set obj.status = 302;
+	if(resp.status == 750) {
+		set resp.http.Location = "http://o.smium.org/";
+		set resp.status = 302;
 		return(deliver);
 	}
 }
