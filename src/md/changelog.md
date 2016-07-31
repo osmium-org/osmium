@@ -1,3 +1,14 @@
+# Staging
+
+* "Favorite" loadouts are now called "saved" loadouts.
+
+* View loadout page no longer has a "meta" tab. Hopefully this makes
+  the interface easier for newcomers.
+
+* Metagroup filters in new loadout search now apply instantly.
+
+* Lots of bugfixes.
+
 # Version 0.13
 
 ## Version 0.13.5, released 2015-08-25
