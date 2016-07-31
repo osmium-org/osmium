@@ -284,6 +284,14 @@ osmium_init_browser = function() {
 
 		t.closest('section').trigger('osmium-update-overflow');
 	});
+
+	/* XXX: a normal user will never figure this out on his own */
+	$("a[href='#browse']").click(function() {
+		if(!($(this).parent().hasClass('active'))) return;
+
+		/* Collapse all opened groups */
+		section.find('li:not(.folded)').click();
+	});
 };
 
 osmium_init_shortlist = function() {

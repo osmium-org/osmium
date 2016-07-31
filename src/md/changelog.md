@@ -1,11 +1,14 @@
 # Staging
 
-* "Favorite" loadouts are now called "saved" loadouts.
-
 * View loadout page no longer has a "meta" tab. Hopefully this makes
   the interface easier for newcomers.
 
 * Metagroup filters in new loadout search now apply instantly.
+
+* In new loadout, clicking the "Browse" section a second time will
+  collapse all open groups.
+
+* "Favorite" loadouts are now called "saved" loadouts.
 
 * Lots of bugfixes.
 
