@@ -37,7 +37,10 @@ function maybe_start_session($force = false, $id = null) {
 	if(!isset($_SERVER['REMOTE_ADDR'])) return;
 
 	/* Don't create an empty session */
-	if(!isset($_COOKIE['O']) && !$force) return;
+	if(!isset($_COOKIE['O']) && !$force) {
+		header('Cache-Control: public, max-age=60');
+		return;
+	}
 	
 	session_set_cookie_params(0, \Osmium\get_ini_setting('relative_path'), \Osmium\COOKIE_HOST, \Osmium\HTTPS, true);
 	session_save_path(\Osmium\CACHE_DIRECTORY);
