@@ -1,5 +1,12 @@
 [
 	{
+        "tag": "yc118-8-10",
+        "name": "YC118.8 1.0",
+        "build": 1074500,
+        "reldate": 1473768000,
+        "dogmaver": 21
+    },
+	{
         "tag": "citadel-10",
         "name": "Citadel 1.0",
         "build": 1035137,

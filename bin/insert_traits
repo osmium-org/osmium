@@ -35,9 +35,14 @@ if($info === false || json_last_error() !== JSON_ERROR_NONE) {
 );
 
 foreach($info['infoBubbleElements'] as $id => $element) {
+	if(!isset($element['name']))
+		$element['name'] = $element['name_en-us'];
+	if(!isset($element['description']))
+		$element['description'] = $element['description_en-us'];
+	
 	\Osmium\Db\query_params(
 		'INSERT INTO eve.infoelements (elementid, name, description) VALUES ($1, $2, $3);',
-		[ $id, $element['name_en-us'], $element['description_en-us'], ]
+		[ $id, $element['name'], $element['description'], ]
 	);
 }
 
@@ -52,20 +57,32 @@ foreach($info['infoBubbleTypeElements'] as $typeid => $e) {
 }
 
 foreach($info['infoBubbleTypeBonuses'] as $typeid => $data) {
-	foreach($data as $source => $bonii) {
-		foreach($bonii as $prio => $bonus) {
-			\Osmium\Db\query_params(
-				'INSERT INTO eve.infotypebonuses (
-                typeid, sourcetypeid, sourceother, priority, name, unitid, bonus
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7);', [
+	foreach($data as $categ => $bonii) { /* miscBonuses, roleBonuses, types */
+		if($categ !== 'types') $bonii = [ 0 => $bonii ]; /* XXX */
+		foreach($bonii as $stid => $boniipertype) {
+			foreach($boniipertype as $bonus) {
+			
+				if(!isset($bonus['name'])) {
+					if(!isset($bonus['name_en-us'])) {
+						var_dump($type, $source, $bonus);
+						die();
+					}
+					$bonus['name'] = $bonus['name_en-us'];
+				}
+			
+				\Osmium\Db\query_params(
+					'INSERT INTO eve.infotypebonuses (
+                    typeid, sourcetypeid, sourceother, priority, name, unitid, bonus
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7);', [
 	                $typeid,
-	                (int)$source >= 0 ? $source : null,
-	                (int)$source < 0 ? $source : null,
-	                $prio,
-	                $bonus['name_en-us'],
+	                $categ === 'types' ? (int)$stid : null,
+	                $categ === 'types' ? null : ($categ === 'roleBonuses' ? 1 : ($categ === 'miscBonuses' ? 2 : 0)),
+	                (int)$bonus['importance'],
+	                $bonus['name'],
 	                (isset($bonus['unitID']) && $bonus['unitID'] > 0) ? $bonus['unitID'] : null,
 	                isset($bonus['bonus']) ? $bonus['bonus'] : null,
-			]);
+                ]);
+			}
 		}
 	}
 }

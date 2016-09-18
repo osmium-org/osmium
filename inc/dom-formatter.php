@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014, 2015, 2016 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -255,7 +255,7 @@ trait Formatter {
 	/* Format a type's traits. */
 	function formatTypeTraits($shiptypeid) {
 		$traitsq = \Osmium\Db\query_params(
-			'SELECT COALESCE(sourcetypeid, sourceother) AS source,
+			'SELECT COALESCE(sourcetypeid, -sourceother) AS source,
 			bonus, name AS message, u.unitid, u.displayname
 			FROM eve.infotypebonuses itb
 			LEFT JOIN eve.dgmunits u ON u.unitid = itb.unitid
