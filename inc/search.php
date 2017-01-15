@@ -331,9 +331,9 @@ function index($loadout) {
 		) VALUES ('
 
 		.$loadout['loadoutid'].','
-		.$loadout['restrictedtoaccountid'].','
-		.$loadout['restrictedtocorporationid'].','
-		.$loadout['restrictedtoallianceid'].','
+		.(int)$loadout['restrictedtoaccountid'].','
+		.(int)$loadout['restrictedtocorporationid'].','
+		.(int)$loadout['restrictedtoallianceid'].','
 		.'('.implode(', ', $goodstandings).')'.','
 		.'('.implode(', ', $excellentstandings).'),'
 
