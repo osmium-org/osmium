@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /* Osmium
- * Copyright (C) 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2014, 2017 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,12 @@ $q = \Osmium\Db\query(
 	'SELECT skilltypeid FROM osmium.requirableskills ORDER BY skilltypeid ASC'
 );
 
-$cnf = file_get_contents(\Osmium\ROOT.'/sphinx/sphinx.conf-skel');
+if(!file_exists($f = \Osmium\ROOT.'/sphinx/sphinx.conf-local')) {
+	fprintf(STDERR, "%s: please copy sphinx.conf-skel to sphinx.conf-local (and maybe tweak it to your liking)\n", $argv[0]);
+	die(1);
+}
+
+$cnf = file_get_contents($f);
 
 
 $skillattribs = '';

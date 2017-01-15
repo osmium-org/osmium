@@ -3,11 +3,10 @@ cache/*
 config.ini
 pgsql/osmium-full-*
 pgsql/osmium-sde-*
-sphinx/*
+sphinx/sphinx.conf-local
 static/*.css
 static/cache/*
 static/robots.txt
 tests/coverage
 !cache/.empty_file
-!sphinx/sphinx.conf-skel
 !static/cache/.empty_file

@@ -160,13 +160,17 @@ the `osmium_user` user, follow these steps:
 Initial Sphinx setup
 ====================
 
-1. Make a sphinx.conf file by running `./bin/make_sphinx_conf`.
+0. Copy `sphinx/sphinx.conf-skel` to `sphinx/sphinx.conf-local`. Tweak
+   the local file to your liking.
+
+1. Make a sphinx.conf file by running `./bin/make_sphinx_conf`, place
+   it in `/etc/sphinx`.
 
 2. Generate the type search index:
 
    ~~~~
    (stop searchd)
-   cd /path/to/sphinx.conf
+   cd /path/to/osmium
    indexer osmium_types
    (start searchd)
    ~~~~
