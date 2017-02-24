@@ -271,7 +271,7 @@ function autodetect_format($source) {
 	}
 
 	try {
-		$xml = new \SimpleXMLElement($source);
+		$xml = @new \SimpleXMLElement($source);
 
 		if(isset($xml->shipType) || isset($xml->fitting->shipType) || isset($xml->fitting[0]->shipType)) {
 			return 'evexml';
