@@ -3,6 +3,7 @@ cache/*
 config.ini
 pgsql/osmium-full-*
 pgsql/osmium-sde-*
+pgsql/osmium-pg
 sphinx/sphinx.conf-local
 static/*.css
 static/cache/*

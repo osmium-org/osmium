@@ -53,6 +53,10 @@ below (for example, Debian uses `www-data`).
 
    @hourly /path/to/osmium/bin/cron.hourly >/dev/null
    @daily  /path/to/osmium/bin/cron.daily  >/dev/null
+
+   # Optional but recommended (dump the database in a git repo, which
+   # you should backup somewhere offsite!)
+   @daily /path/to/osmium/bin/backup_osmium_incremental >/dev/null
    ~~~~
 
 10. Configure your HTTP server. Check the `ext/httpd-conf/` directory
