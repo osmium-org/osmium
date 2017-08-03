@@ -38,3 +38,21 @@ p.placeholder {
 	padding: 0.5em;
 	font-style: italic;
 }
+
+p.alert {
+    box-sizing: border-box;
+    overflow: hidden;
+    @include prefixize(animation-name, alertpopin);
+    @include prefixize(animation-duration, 1s);
+    @include prefixize(animation-fill-mode, forwards);
+
+    &.error_box {
+	background-color: rgba($error-border-color, .05);
+    }
+}
+
+@include keyframes(alertpopin) {
+    0% { max-height: 0em; border-width: 0px; margin: 0; }
+    99% { max-height: 0em; border-width: 0px; margin: 0; }
+    100% { max-height: 50em; border-width: 1px; margin: .5em; }
+}

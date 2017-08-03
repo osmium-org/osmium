@@ -79,10 +79,10 @@ if(!get_ini_setting('tolerate_errors') && PHP_SAPI !== "cli") {
 const STATICVER = 17;
 
 /** Bump this when CSS files are updated */
-const CSS_STATICVER = 28;
+const CSS_STATICVER = 29;
 
 /** Bump this when JS snippets are updated */
-const JS_STATICVER = 35;
+const JS_STATICVER = 36;
 
 /** Bump this when clientdata.json is updated */
 const CLIENT_DATA_STATICVER = 52;

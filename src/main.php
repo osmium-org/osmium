@@ -1,6 +1,6 @@
 <?php
 /* Osmium
- * Copyright (C) 2012, 2013, 2014 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * Copyright (C) 2012, 2013, 2014, 2017 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -57,6 +57,22 @@ $p->content->appendCreate('div', [
 
 
 $maincont = $p->content->appendCreate('div', [ 'class' => 'mainpcont' ]);
+
+
+
+$alerts = \Osmium\get_ini_setting('alerts', []);
+foreach($alerts as $id) {
+    $aexpires = \Osmium\get_ini_setting('alert_expires', []);
+    $aclass = \Osmium\get_ini_setting('alert_class', []);
+    $acontent = \Osmium\get_ini_setting('alert_content', []);
+    
+    if($aexpires[$id] < time()) continue;
+    $ap = $maincont->appendCreate('p.alert', [ 'data-id' => $id ]);
+    if(in_array($aclass[$id], [ 'error', 'warning', 'notice' ])) {
+        $ap->addClass($aclass[$id].'_box'); /* XXX make prettier alerts */
+        $ap->append($p->fragment(\Osmium\Chrome\filter_content($acontent[$id], \Osmium\Chrome\CONTENT_FILTER_MARKDOWN)));
+    }
+}
 
 
 
@@ -309,6 +325,7 @@ $p->title = $name.' / '.$desc;
 $ctx = new \Osmium\DOM\RenderContext();
 $ctx->relative = '.';
 $p->canonical = '/';
+$p->snippets[] = 'alerts';
 $p->render($ctx);
 die();
 
