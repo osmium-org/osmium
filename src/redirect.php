@@ -20,7 +20,7 @@ namespace Osmium\Page\Redirect;
 
 require __DIR__.'/../inc/root.php';
 
-$to = urldecode($_SERVER['QUERY_STRING']);
+$to = $_GET['to'];
 $hash = $_GET['hash'];
 
 /* Note: this is vulnerable to timing attacks. At worst, this allows
