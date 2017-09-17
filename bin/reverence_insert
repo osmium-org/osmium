@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Osmium
-# Copyright (C) 2014, 2015 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+# Copyright (C) 2014, 2015, 2017 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,6 +31,7 @@ parser.add_argument("-r", "--res", metavar="shared-resources-path")
 parser.add_argument("-s", "--server", default="Tranquility", metavar="server-name")
 parser.add_argument("-l", "--locale", default="en-us", metavar="language")
 parser.add_argument("-f", "--force", help="don't ask for confirmation before importing", action="store_true")
+parser.add_argument("-i", "--interactive", help="interactive debug mode, drop in reverence shell", action="store_true")
 
 args = parser.parse_args()
 
@@ -48,6 +49,13 @@ pg = psycopg2.connect("host={} port={} user={} password={} dbname={}".format(
 eve = blue.EVE(args.eve, cachepath=args.cache, server=args.server, languageID=args.locale, sharedcachepath=args.res)
 cfg = eve.getconfigmgr()
 
+if args.interactive:
+    import readline
+    import code
+    print "Entering reverence shell, use variables eve and cfg"
+    code.interact()
+    sys.exit(0)
+    
 def processRows(tablename, columnmap, rowset):
     print "Truncating table %s..." % tablename,
     sys.stdout.flush()
