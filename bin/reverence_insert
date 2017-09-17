@@ -80,12 +80,9 @@ def processRows(tablename, columnmap, rowset):
         if tablename == "eve.invtypes" or tablename == "eve.averagemarketprices":
             if row.typeID == 33857 or row.typeID == 33858 or row.typeID >= 350000:
                 continue
-
-        try:
-            cur.execute(querystring, [ (k(row) if callable(k) else getattr(row,k) if hasattr(row,k) else row[k])
-                                       for k in columnmap.viewvalues() ])
-        except(KeyError):
-            pass
+            
+        cur.execute(querystring, [ (k(row) if callable(k) else getattr(row,k) if hasattr(row,k) else row[k])
+                                   for k in columnmap.viewvalues() ])
             
         i += 1
         if i % 25000 == 0:
@@ -219,13 +216,13 @@ processRows("eve.invmetagroups", {
 processRows("eve.invtypes", {
     "typeid": "typeID",
     "groupid": "groupID",
-    "typename": (lambda row: cfg._localization.primary[row.typeNameID][0]),
+    "typename": (lambda row: cfg._localization.primary[row.typeNameID][0] if hasattr(row, "typeNameID") and row.typeNameID in cfg._localization.primary else ""),
     "mass": "mass",
     "volume": "volume",
     "capacity": (lambda row: row.capacity if hasattr(row, "capacity") else 0),
     "published": "published",
     "marketgroupid": (lambda row: row.marketGroupID if hasattr(row, "marketGroupID") and row.marketGroupID < 350000 else None),
-    "description": (lambda row: cfg._localization.primary[row.descriptionID][0] if hasattr(row, "descriptionID") else ""),
+    "description": (lambda row: cfg._localization.primary[row.descriptionID][0] if hasattr(row, "descriptionID") and row.descriptionID in cfg._localization.primary else ""),
 }, cfg.invtypes);
 
 
