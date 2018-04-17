@@ -195,6 +195,8 @@ function get_rules($prefix) {
 			'%^/flag/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'loadout']],
 			'%^/flagcomment/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'comment']],
 			'%^/flagcommentreply/(?<id>[1-9][0-9]*)$%D' => ['/src/cast_flag.php', ['type' => 'commentreply']],
+
+			'%^/exportall/(?<type>clf|eft)/%D' => '/src/exportall.php',
 		];
 
 	}

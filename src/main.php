@@ -65,13 +65,25 @@ foreach($alerts as $id) {
     $aexpires = \Osmium\get_ini_setting('alert_expires', []);
     $aclass = \Osmium\get_ini_setting('alert_class', []);
     $acontent = \Osmium\get_ini_setting('alert_content', []);
-    
+
     if($aexpires[$id] < time()) continue;
     $ap = $maincont->appendCreate('p.alert', [ 'data-id' => $id ]);
     if(in_array($aclass[$id], [ 'error', 'warning', 'notice' ])) {
         $ap->addClass($aclass[$id].'_box'); /* XXX make prettier alerts */
         $ap->append($p->fragment(\Osmium\Chrome\filter_content($acontent[$id], \Osmium\Chrome\CONTENT_FILTER_MARKDOWN)));
     }
+}
+
+
+
+if($a['accountid'] > 0) {
+	$name = $a['charactername'] ?? $a['nickname'] ?? $a['accountid'];
+	$exportp = $maincont->appendCreate('p.warning_box');
+	$exportp->appendCreate('form', [ 'method' => 'post', 'o-rel-action' => '/exportall/clf/'.$name.'.json', 'style' => 'display: inline;' ])
+		->appendCreate('input', [ 'type' => 'submit', 'value' => 'Bulk export all my loadouts (CLF)' ]);
+	$exportp->append(' ');
+	$exportp->appendCreate('form', [ 'method' => 'post', 'o-rel-action' => '/exportall/eft/'.$name.'.txt', 'style' => 'display: inline;' ])
+		->appendCreate('input', [ 'type' => 'submit', 'value' => 'Bulk export all my loadouts (EFT format)' ]);
 }
 
 
