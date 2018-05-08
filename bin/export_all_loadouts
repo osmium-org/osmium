@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+/* Osmium
+ * Copyright (C) 2018 Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Osmium\CLI\ExportAllLoadouts;
+
+require __DIR__.'/../inc/root.php';
+
+function escape_filename($s) {
+	return trim(preg_replace('%[^a-z0-9_]+%', '-', strtolower($s)), '- ');
+}
+
+$exports = [
+	'clf' => [ 'json', function($f) { return \Osmium\Fit\export_to_common_loadout_format($f,
+																						 \Osmium\Fit\CLF_EXPORT_DEFAULT_OPTS
+																						 | \Osmium\Fit\CLF_EXPORT_MINIFY); } ],
+	'eft' => [ 'txt', function($f) { return \Osmium\Fit\export_to_eft($f); } ],
+	];
+
+
+
+
+$q = \Osmium\Db\query_params(
+	'SELECT l.loadoutid, MAX(lh.updatedate), CASE WHEN a.apiverified THEN a.charactername ELSE a.nickname END
+	FROM loadouts l
+	JOIN loadouthistory lh ON lh.loadoutid = l.loadoutid
+	JOIN accounts a ON a.accountid = l.accountid
+	WHERE l.viewpermission = $1 AND l.visibility = $2 AND l.passwordmode = $3
+	GROUP BY l.loadoutid, a.apiverified, a.charactername, a.nickname',
+	[ \Osmium\Fit\VIEW_EVERYONE, \Osmium\Fit\VISIBILITY_PUBLIC, \Osmium\Fit\PASSWORD_NONE ]
+	);
+
+while($row = \Osmium\Db\fetch_row($q)) {
+	echo '.';
+
+	$loadout = \Osmium\Fit\get_fit((int)$row[0]);
+	if($loadout === false) {
+		fprintf(STDERR, "get_fit(%d) failed\n", (int)$row[0]);
+		continue;
+	}
+
+	$path = gmdate('Y', (int)$row[1]).'/'.escape_filename($loadout['ship']['typename']);
+	$file = (int)$row[0].','.escape_filename($row[2]).','.escape_filename($loadout['metadata']['name']).','.implode(',', $loadout['metadata']['tags']);
+
+	foreach($exports as $type => list($ext, $export)) {
+		if(!file_exists($f = $type.'/'.$path)) {
+			mkdir($f, 0777, true);
+		}
+		assert(is_dir(f));
+
+		$f .= '/'.$file.'.'.$ext;
+		file_put_contents($f, $export($loadout));
+		touch($f, (int)$row[1], (int)$row[1]);
+	}
+}
+
+echo "\n";
